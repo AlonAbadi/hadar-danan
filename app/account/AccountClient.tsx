@@ -330,8 +330,9 @@ function initials(name: string | null, email: string): string {
   return email.charAt(0).toUpperCase();
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("he-IL");
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getUTCDate()}.${d.getUTCMonth() + 1}.${d.getUTCFullYear()}`;
 }
 
 // ── Component ─────────────────────────────────────────────────
@@ -485,7 +486,7 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
               </div>
               {userData?.hive_next_billing_date && (
                 <div style={{ fontSize: 12, color: "#9E9990", textAlign: "right" }}>
-                  חידוש: {new Date(userData.hive_next_billing_date).toLocaleDateString("he-IL")}
+                  חידוש: {formatDate(userData.hive_next_billing_date)}
                 </div>
               )}
             </div>
