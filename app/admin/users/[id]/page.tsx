@@ -75,7 +75,42 @@ const PAGE_LABELS: Record<string, string> = {
   "/quiz":           "קוויז",
 };
 
+const VIDEO_TITLE: Record<string, string> = {
+  "1178865564": "הדרכה חינמית",
+};
+
 const SKIP_EVENTS = new Set(["QUIZ_ANSWER", "QUIZ_CTA_CLICK"]);
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type RawEvent = {
+  id:         string;
+  created_at: string;
+  type:       unknown;
+  metadata:   unknown;
+};
+
+type VideoEventRow = {
+  id:              string;
+  video_id:        string;
+  event_type:      string;
+  percent_watched: number | null;
+  created_at:      string;
+};
+
+// Unified event for the timeline (regular events + video milestones)
+type TimelineEvent = {
+  uid:        string;
+  created_at: string;
+  evType:     string;                          // "VIDEO_MILESTONE" or raw event type
+  metadata:   Record<string, unknown> | null;
+};
+
+type Session = {
+  index:    number;
+  startIso: string;
+  events:   TimelineEvent[];
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -118,81 +153,103 @@ function getInitials(name: string | null, email: string): string {
   return str.slice(0, 2).toUpperCase();
 }
 
-type RawEvent = {
-  id: string;
-  created_at: string;
-  type: unknown;
-  metadata: unknown;
-};
+// Convert raw DB events + video milestones into unified timeline items
+function toVideoMilestones(videoEvents: VideoEventRow[]): TimelineEvent[] {
+  const THRESHOLDS = [25, 50, 75, 90];
+  // already sorted ascending by created_at from query
+  const reached: Record<string, Set<number>> = {};
+  const milestones: TimelineEvent[] = [];
 
-type SessionEvent = {
-  id: string;
-  created_at: string;
-  type: string;
-  metadata: Record<string, unknown> | null;
-};
+  for (const ev of videoEvents) {
+    const vid = ev.video_id;
+    if (!reached[vid]) reached[vid] = new Set();
+    const pct = ev.percent_watched ?? 0;
+    const isCompleted = ev.event_type === "completed";
 
-type Session = {
-  index: number;
-  startIso: string;
-  events: SessionEvent[];
-};
+    for (const threshold of THRESHOLDS) {
+      if ((pct >= threshold || (isCompleted && threshold === 90)) && !reached[vid].has(threshold)) {
+        reached[vid].add(threshold);
+        milestones.push({
+          uid:        `vm-${vid}-${threshold}-${ev.id}`,
+          created_at: ev.created_at,
+          evType:     "VIDEO_MILESTONE",
+          metadata:   { video_id: vid, percent: threshold },
+        });
+      }
+    }
+  }
+  return milestones;
+}
 
-function groupIntoSessions(raw: RawEvent[]): Session[] {
-  const sorted = [...raw].reverse(); // chronological
+function rawToTimeline(events: RawEvent[]): TimelineEvent[] {
+  return events.map((ev) => ({
+    uid:        ev.id,
+    created_at: ev.created_at,
+    evType:     String(ev.type ?? ""),
+    metadata:   (ev.metadata as Record<string, unknown>) ?? null,
+  }));
+}
+
+function groupIntoSessions(unified: TimelineEvent[]): Session[] {
+  // sort chronologically
+  const sorted = [...unified].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+
   const sessions: Session[] = [];
   let cur: Session | null = null;
 
   for (const ev of sorted) {
-    const ts = new Date(ev.created_at).getTime();
+    const ts  = new Date(ev.created_at).getTime();
     const last = cur?.events[cur.events.length - 1];
     if (!cur || (last && ts - new Date(last.created_at).getTime() > 30 * 60 * 1000)) {
       cur = { index: sessions.length + 1, startIso: ev.created_at, events: [] };
       sessions.push(cur);
     }
-    cur.events.push({
-      id:         ev.id,
-      created_at: ev.created_at,
-      type:       String(ev.type ?? ""),
-      metadata:   (ev.metadata as Record<string, unknown>) ?? null,
-    });
+    cur.events.push(ev);
   }
 
   return sessions.reverse(); // newest first
 }
 
-function describeEvent(type: string, meta: Record<string, unknown> | null): {
+function describeEvent(evType: string, meta: Record<string, unknown> | null): {
   label: string; dot: string; skip: boolean;
 } {
-  if (SKIP_EVENTS.has(type)) return { label: "", dot: "", skip: true };
+  if (SKIP_EVENTS.has(evType)) return { label: "", dot: "", skip: true };
   const m = meta ?? {};
 
-  switch (type) {
+  switch (evType) {
+    case "VIDEO_MILESTONE": {
+      const vid   = m.video_id as string;
+      const pct   = m.percent  as number;
+      const title = VIDEO_TITLE[vid] ?? `סרטון ${vid}`;
+      if (pct >= 90) return { label: `צפה/תה בסרטון עד הסוף: ${title}`,    dot: "#4CAF82", skip: false };
+      return         { label: `צפה/תה ב-${pct}% מהסרטון: ${title}`,        dot: "#7F77DD", skip: false };
+    }
     case "PAGE_VIEW": {
-      const page = m.page as string | undefined;
+      const page  = m.page as string | undefined;
       const label = PAGE_LABELS[page ?? ""] ?? page ?? "עמוד";
       return { label: `צפה/תה בעמוד: ${label}`, dot: "#378ADD", skip: false };
     }
     case "USER_SIGNED_UP":
-      return { label: "נרשם/ה לאתר", dot: "#4CAF82", skip: false };
+      return { label: "נרשם/ה לאתר",       dot: "#4CAF82", skip: false };
     case "QUIZ_STARTED":
-      return { label: "התחיל/ה קוויז", dot: "#7F77DD", skip: false };
+      return { label: "התחיל/ה קוויז",      dot: "#7F77DD", skip: false };
     case "QUIZ_COMPLETED": {
-      const rec = m.recommended_product as string | undefined;
-      const pct = m.match_percent as number | undefined;
+      const rec  = m.recommended_product as string | undefined;
+      const pct  = m.match_percent       as number | undefined;
       const prod = rec ? (QUIZ_LABELS[rec] ?? rec) : "";
-      const pctStr = pct ? ` ${pct}%` : "";
       return {
-        label: `השלים/ה קוויז${prod ? ` - מומלץ: ${prod}${pctStr}` : ""}`,
-        dot: "#7F77DD", skip: false,
+        label: `השלים/ה קוויז${prod ? ` - מומלץ: ${prod}${pct ? ` ${pct}%` : ""}` : ""}`,
+        dot:   "#7F77DD", skip: false,
       };
     }
     case "QUIZ_LEAD":
-      return { label: "השאיר/ה פרטים", dot: "#7F77DD", skip: false };
+      return { label: "השאיר/ה פרטים",     dot: "#7F77DD", skip: false };
     case "CHECKOUT_STARTED": {
       const product = m.product as string | undefined;
       const amount  = m.amount  as number | undefined;
-      const parts = [
+      const parts   = [
         "התחיל/ה רכישה",
         product ? (PRODUCT_LABELS[product] ?? product) : null,
         amount  ? `\u20AA${amount.toLocaleString("he-IL")}` : null,
@@ -202,7 +259,7 @@ function describeEvent(type: string, meta: Record<string, unknown> | null): {
     case "PURCHASE_COMPLETED": {
       const product = m.product as string | undefined;
       const amount  = m.amount  as number | undefined;
-      const parts = [
+      const parts   = [
         "רכש/ה",
         product ? (PRODUCT_LABELS[product] ?? product) : null,
         amount  ? `\u20AA${amount.toLocaleString("he-IL")}` : null,
@@ -210,17 +267,17 @@ function describeEvent(type: string, meta: Record<string, unknown> | null): {
       return { label: parts.join(" - "), dot: "#4CAF82", skip: false };
     }
     case "CALL_BOOKED":
-      return { label: "קבע/ה פגישה", dot: "#C9964A", skip: false };
+      return { label: "קבע/ה פגישה",       dot: "#C9964A", skip: false };
     case "EMAIL_OPENED":
-      return { label: "פתח/ה אימייל", dot: "#378ADD", skip: false };
+      return { label: "פתח/ה אימייל",      dot: "#378ADD", skip: false };
     case "LINK_CLICKED":
-      return { label: "לחץ/ה על לינק", dot: "#378ADD", skip: false };
+      return { label: "לחץ/ה על לינק",     dot: "#378ADD", skip: false };
     case "HIVE_JOINED":
-      return { label: "הצטרף/ה לכוורת", dot: "#C9964A", skip: false };
+      return { label: "הצטרף/ה לכוורת",   dot: "#C9964A", skip: false };
     case "HIVE_CANCELLED":
       return { label: "ביטל/ה מנוי כוורת", dot: "#E05555", skip: false };
     default:
-      return { label: type, dot: "#9E9990", skip: false };
+      return { label: evType, dot: "#9E9990", skip: false };
   }
 }
 
@@ -248,11 +305,13 @@ function InfoRow({ label, value, ltr }: { label: string; value?: string | null; 
   return (
     <div style={{
       display: "flex", gap: 12, alignItems: "flex-start",
-      padding: "7px 0", borderBottom: "1px solid rgba(44,50,62,0.4)",
+      padding: "7px 0", borderBottom: "1px solid rgba(44,50,62,0.5)",
     }}>
-      <span style={{ color: "#9E9990", fontSize: 13, width: 110, flexShrink: 0 }}>{label}</span>
+      <span style={{ color: "#9E9990", fontSize: 13, width: 110, flexShrink: 0, lineHeight: 1.5 }}>
+        {label}
+      </span>
       <span style={{
-        color: "#EDE9E1", fontSize: 13, fontWeight: 500,
+        color: "#EDE9E1", fontSize: 13, fontWeight: 500, lineHeight: 1.5,
         direction: ltr ? "ltr" : undefined, wordBreak: "break-all",
       }}>
         {value || "-"}
@@ -263,7 +322,10 @@ function InfoRow({ label, value, ltr }: { label: string; value?: string | null; 
 
 function Chip({ children, bg, color }: { children: ReactNode; bg: string; color: string }) {
   return (
-    <span style={{ background: bg, color, fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>
+    <span style={{
+      background: bg, color, fontSize: 11, fontWeight: 700,
+      padding: "3px 8px", borderRadius: 6, lineHeight: 1.4,
+    }}>
       {children}
     </span>
   );
@@ -294,33 +356,38 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const user = userRes.data;
   if (!user) notFound();
 
-  const events     = (eventsRes.data    ?? []) as RawEvent[];
-  const purchases  = purchasesRes.data  ?? [];
-  const notes      = notesRes.data      ?? [];
-  const quizResult = (quizRes.data ?? [])[0] ?? null;
+  // Fetch video events by email (separate query — needs user email)
+  const videoEventsRes = await safeFrom(supabase, "video_events")
+    .select("id, video_id, event_type, percent_watched, created_at")
+    .eq("user_email", user.email)
+    .order("created_at", { ascending: true });
 
-  // ── Derived ──
-  const initials   = getInitials(user.name, user.email);
-  const leadScore  = LEAD_SCORE[user.status] ?? 0;
-  const sc         = scoreColor(leadScore);
-  const ss         = STATUS_STYLE[user.status] ?? STATUS_STYLE.lead;
+  const events      = (eventsRes.data     ?? []) as RawEvent[];
+  const purchases   = purchasesRes.data   ?? [];
+  const notes       = notesRes.data       ?? [];
+  const quizResult  = (quizRes.data ?? [])[0] ?? null;
+  const videoEvents = (videoEventsRes.data ?? []) as VideoEventRow[];
 
-  const now48 = Date.now() - 48 * 60 * 60 * 1000;
+  // ── Derived ──────────────────────────────────────────────
+  const initials  = getInitials(user.name, user.email);
+  const leadScore = LEAD_SCORE[user.status] ?? 0;
+  const sc        = scoreColor(leadScore);
+  const ss        = STATUS_STYLE[user.status] ?? STATUS_STYLE.lead;
+
+  const now48     = Date.now() - 48 * 60 * 60 * 1000;
   const pendingCart = purchases.filter(
     (p) => p.status === "pending" && new Date(p.created_at).getTime() >= now48,
   );
-  const hasCart = pendingCart.length > 0;
-  const cartHoursAgo = hasCart
+  const hasCart       = pendingCart.length > 0;
+  const cartHoursAgo  = hasCart
     ? Math.round((Date.now() - new Date(pendingCart[pendingCart.length - 1].created_at).getTime()) / 3_600_000)
     : 0;
 
-  const quizScores = quizResult?.scores
-    ? (quizResult.scores as Record<string, number>)
-    : null;
-  const premiumScore     = quizScores?.premium     ?? 0;
-  const partnershipScore = quizScores?.partnership ?? 0;
-  const isPremium     = premiumScore     >= 8;
-  const isPartnership = partnershipScore >= 8;
+  const quizScores    = quizResult?.scores ? (quizResult.scores as Record<string, number>) : null;
+  const premiumScore  = quizScores?.premium     ?? 0;
+  const partnerScore  = quizScores?.partnership ?? 0;
+  const isPremium     = premiumScore  >= 8;
+  const isPartnership = partnerScore  >= 8;
 
   const sortedScores = quizScores
     ? Object.entries(quizScores).sort(([, a], [, b]) => b - a)
@@ -335,23 +402,42 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
     ? "972" + user.phone.replace(/^0/, "").replace(/\D/g, "")
     : null;
 
-  const sessions = groupIntoSessions(events);
+  // ── Video processing ─────────────────────────────────────
+  // Summary: max percent reached per video
+  const videoSummary = Object.entries(
+    videoEvents.reduce<Record<string, number>>((acc, ev) => {
+      const vid = ev.video_id;
+      const pct = ev.event_type === "completed" ? 100 : (ev.percent_watched ?? 0);
+      acc[vid]  = Math.max(acc[vid] ?? 0, pct);
+      return acc;
+    }, {}),
+  ).map(([vid, maxPct]) => ({ vid, title: VIDEO_TITLE[vid] ?? `סרטון ${vid}`, maxPct }));
+
+  // Timeline: merge events + video milestones
+  const videoMilestones = toVideoMilestones(videoEvents);
+  const unified = [...rawToTimeline(events), ...videoMilestones];
+  const sessions = groupIntoSessions(unified);
 
   return (
     <>
       <style>{`
         * { box-sizing: border-box; }
-        body { margin: 0; background: #080C14; }
-        .up-root { direction: rtl; font-family: 'Assistant', sans-serif; background: #080C14; min-height: 100vh; color: #EDE9E1; }
+        body { margin: 0; background: #080C14; color: #EDE9E1; }
+        .up-root {
+          direction: rtl;
+          font-family: 'Assistant', sans-serif;
+          background: #080C14;
+          min-height: 100vh;
+          color: #EDE9E1;
+        }
         @media (max-width: 768px) {
           .up-two-col { grid-template-columns: 1fr !important; }
-          .up-actions { flex-wrap: wrap !important; }
         }
       `}</style>
 
       <div className="up-root">
 
-        {/* ── Header bar ───────────────────────────────────────────── */}
+        {/* ── Header ───────────────────────────────────────────────── */}
         <header style={{
           background: "#0D1219", borderBottom: "1px solid #2C323E",
           padding: "14px 24px", display: "flex", alignItems: "center",
@@ -377,8 +463,8 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
             </div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
               <Chip bg={ss.bg} color={ss.color}>{STATUS_LABELS[user.status] ?? user.status}</Chip>
-              {hasCart     && <Chip bg="rgba(239,159,39,0.15)"  color="#EF9F27">נטש עגלה</Chip>}
-              {isPremium   && <Chip bg="rgba(232,185,74,0.15)"  color="#E8B94A">ליד פרימיום פוטנציאלי</Chip>}
+              {hasCart      && <Chip bg="rgba(239,159,39,0.15)"  color="#EF9F27">נטש עגלה</Chip>}
+              {isPremium    && <Chip bg="rgba(232,185,74,0.15)"  color="#E8B94A">ליד פרימיום פוטנציאלי</Chip>}
               {isPartnership && <Chip bg="rgba(127,119,221,0.15)" color="#7F77DD">ליד שותפות פוטנציאלי</Chip>}
             </div>
           </div>
@@ -403,14 +489,12 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               <div style={{ fontSize: 14, fontWeight: 700, color: "#EF9F27", marginBottom: 6 }}>
                 נטישת עגלה - לפני {cartHoursAgo} שעות
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {pendingCart.map((p) => (
-                  <div key={p.id} style={{ fontSize: 13, color: "#9E9990" }}>
-                    {PRODUCT_LABELS[p.product as string] ?? p.product}
-                    {PRODUCT_PRICES[p.product as string] ? ` - \u20AA${PRODUCT_PRICES[p.product as string]}` : ""}
-                  </div>
-                ))}
-              </div>
+              {pendingCart.map((p) => (
+                <div key={p.id} style={{ fontSize: 13, color: "#9E9990", marginTop: 3 }}>
+                  {PRODUCT_LABELS[p.product as string] ?? p.product}
+                  {PRODUCT_PRICES[p.product as string] ? ` - \u20AA${PRODUCT_PRICES[p.product as string]}` : ""}
+                </div>
+              ))}
             </div>
           )}
 
@@ -445,8 +529,9 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           {/* ── Two-column grid ───────────────────────────────────────── */}
           <div className="up-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
 
-            {/* Left: personal + marketing */}
+            {/* Left column: personal + marketing */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
               <Card title="פרטים אישיים">
                 <InfoRow label="שם"      value={user.name} />
                 <InfoRow label="אימייל"  value={user.email} ltr />
@@ -468,8 +553,9 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               </Card>
             </div>
 
-            {/* Right: quiz scores + purchases */}
+            {/* Right column: quiz + purchases + video summary */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
               <Card title="ציוני קוויז">
                 {sortedScores ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -503,22 +589,26 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                     ))}
                   </div>
                 ) : (
-                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0" }}>אין תוצאות קוויז</p>
+                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+                    אין תוצאות קוויז
+                  </p>
                 )}
               </Card>
 
               <Card title="רכישות">
                 {purchases.length === 0 ? (
-                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0" }}>אין רכישות עדיין</p>
+                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+                    אין רכישות עדיין
+                  </p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {purchases.map((p) => (
                       <div key={p.id} style={{
                         display: "flex", alignItems: "center", gap: 8,
-                        padding: "9px 0", borderBottom: "1px solid rgba(44,50,62,0.4)",
+                        padding: "9px 0", borderBottom: "1px solid rgba(44,50,62,0.5)",
                         flexWrap: "wrap",
                       }}>
-                        <span style={{ fontSize: 13, color: "#EDE9E1", flex: 1, minWidth: 100 }}>
+                        <span style={{ fontSize: 13, color: "#EDE9E1", flex: 1, minWidth: 90 }}>
                           {PRODUCT_LABELS[p.product as string] ?? p.product}
                         </span>
                         <span style={{
@@ -531,10 +621,8 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                         </span>
                         <span style={{
                           fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 5, flexShrink: 0,
-                          background: p.status === "completed"
-                            ? "rgba(76,175,130,0.15)"
-                            : p.status === "pending"
-                            ? "rgba(239,159,39,0.15)"
+                          background: p.status === "completed" ? "rgba(76,175,130,0.15)"
+                            : p.status === "pending"           ? "rgba(239,159,39,0.15)"
                             : "rgba(224,85,85,0.15)",
                           color: p.status === "completed" ? "#4CAF82"
                             : p.status === "pending"      ? "#EF9F27"
@@ -550,10 +638,41 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                   </div>
                 )}
               </Card>
+
+              {/* Video summary card */}
+              <Card title="צפיות בסרטונים">
+                {videoSummary.length === 0 ? (
+                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+                    אין צפיות מתועדות
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {videoSummary.map(({ vid, title, maxPct }) => (
+                      <div key={vid}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                          <span style={{ fontSize: 13, color: "#EDE9E1" }}>{title}</span>
+                          <span style={{ fontSize: 12, color: maxPct >= 90 ? "#4CAF82" : "#9E9990", fontWeight: 600 }}>
+                            {maxPct >= 90 ? "עד הסוף" : `${maxPct}%`}
+                          </span>
+                        </div>
+                        <div style={{ background: "#0D1219", borderRadius: 4, height: 5, overflow: "hidden" }}>
+                          <div style={{
+                            width: `${maxPct}%`, height: "100%",
+                            background: maxPct >= 90
+                              ? "linear-gradient(90deg, #4CAF82, #2E8B57)"
+                              : "linear-gradient(90deg, #7F77DD, #5B54AA)",
+                            borderRadius: 4,
+                          }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
             </div>
           </div>
 
-          {/* ── Automations ────────────────────────────────────────────── */}
+          {/* ── Automations ───────────────────────────────────────────── */}
           <Card
             title="אוטומציות"
             badge={
@@ -569,9 +688,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               {
                 title: "WhatsApp אוטומטי - נטישת עגלה",
                 desc:  "נשלח 2 שעות אחרי נטישה",
-                badge: hasCart
-                  ? { label: "ממתין", bg: "rgba(239,159,39,0.15)", color: "#EF9F27" }
-                  : null,
+                badge: hasCart ? { label: "ממתין", bg: "rgba(239,159,39,0.15)", color: "#EF9F27" } : null,
               },
               {
                 title: "אימייל פולואו-אפ",
@@ -604,10 +721,12 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
             ))}
           </Card>
 
-          {/* ── Timeline ───────────────────────────────────────────────── */}
+          {/* ── Timeline ──────────────────────────────────────────────── */}
           <Card title="מסלול הביקור">
             {sessions.length === 0 ? (
-              <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0" }}>אין אירועים עדיין</p>
+              <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+                אין אירועים עדיין
+              </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {sessions.map((session) => (
@@ -618,14 +737,18 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                       paddingBottom: 8, marginBottom: 10,
                       borderBottom: "1px solid rgba(44,50,62,0.6)",
                     }}>
-                      ביקור {session.index} - {new Date(session.startIso).toLocaleString("he-IL", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      ביקור {session.index} -{" "}
+                      {new Date(session.startIso).toLocaleString("he-IL", {
+                        day: "2-digit", month: "2-digit", year: "2-digit",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                       {session.events.map((ev) => {
-                        const { label, dot, skip } = describeEvent(ev.type, ev.metadata);
+                        const { label, dot, skip } = describeEvent(ev.evType, ev.metadata);
                         if (skip) return null;
                         return (
-                          <div key={ev.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div key={ev.uid} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             <div style={{
                               width: 7, height: 7, borderRadius: "50%",
                               background: dot, flexShrink: 0,
