@@ -57,11 +57,15 @@ const C = {
     height: 6,
     background: "#2C323E",
     borderRadius: 3,
+    position: "relative" as const,
   },
   progressFill: (pct: number): React.CSSProperties => ({
+    position: "absolute",
+    top: 0,
+    right: 0,
     height: 6,
     borderRadius: 3,
-    background: "linear-gradient(90deg, #E8B94A, #C9964A)",
+    background: "linear-gradient(270deg, #E8B94A, #C9964A)",
     width: `${pct}%`,
     transition: "width 0.4s",
   }),
@@ -168,7 +172,7 @@ const C = {
   sidebar: {
     width: 320,
     flexShrink: 0,
-    borderRight: "1px solid #2C323E",
+    borderLeft: "1px solid #2C323E",
     background: "#141820",
     overflowY: "auto" as const,
     maxHeight: "calc(100vh - 8rem)",
@@ -217,7 +221,7 @@ const C = {
     width: "100%",
     background: active ? "rgba(201,150,74,0.1)" : "transparent",
     border: "none",
-    borderRight: active ? "3px solid #C9964A" : "3px solid transparent",
+    borderLeft: active ? "3px solid #C9964A" : "3px solid transparent",
     cursor: "pointer",
     textAlign: "right" as const,
     fontFamily: "Assistant, sans-serif",
@@ -332,7 +336,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
   const progressPct = (completedCount / TOTAL_LESSONS) * 100;
 
   return (
-    <div style={C.page} lang="he">
+    <div style={C.page} dir="rtl" lang="he">
       {/* Header */}
       <header style={C.header}>
         <div style={C.headerInner}>
@@ -358,6 +362,38 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
 
       {/* Layout */}
       <div style={C.layout}>
+        {/* Sidebar - must come first in DOM so it appears on the right in RTL flex */}
+        <aside style={C.sidebar}>
+          <div style={C.sidebarHeader}>תוכן הקורס</div>
+          {COURSE_MODULES.map((mod) => (
+            <div key={mod.id} style={{ borderBottom: "1px solid #2C323E" }}>
+              <div style={C.moduleHeader}>
+                <div style={{ ...C.moduleNum, direction: "ltr" }}>{mod.id}</div>
+                <div style={C.moduleTitle}>{mod.title}</div>
+              </div>
+              {mod.lessons.map((lesson) => {
+                const isActive = lesson.id === activeId;
+                const isDone   = completed.has(lessonVideoId(lesson.id));
+                return (
+                  <button
+                    key={lesson.id}
+                    style={C.lessonBtn(isActive, isDone)}
+                    onClick={() => goTo(lesson.id)}
+                  >
+                    <div style={{ ...C.lessonDot(isActive, isDone), direction: "ltr" }}>
+                      {isDone ? "v" : lesson.id}
+                    </div>
+                    <span style={C.lessonBtnLabel(isActive, isDone)}>
+                      {lesson.title}
+                    </span>
+                    <span style={C.lessonBtnDur}>{lesson.duration}&apos;</span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </aside>
+
         {/* Main */}
         <main style={C.main}>
           {/* Video */}
@@ -431,17 +467,17 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
             )}
           </div>
 
-          {/* Nav buttons */}
+          {/* Nav buttons - prev on right, next on left (RTL flex order) */}
           {completedCount < TOTAL_LESSONS && (
             <div style={C.navRow}>
               {prevLesson && (
                 <button style={C.navBtn(false)} onClick={() => goTo(prevLesson.id)}>
-                  - שיעור קודם
+                  שיעור קודם
                 </button>
               )}
               {nextLesson && (
                 <button style={C.nextBtn} onClick={() => goTo(nextLesson.id)}>
-                  שיעור הבא -
+                  שיעור הבא
                 </button>
               )}
             </div>
@@ -475,38 +511,6 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
             </div>
           )}
         </main>
-
-        {/* Sidebar */}
-        <aside style={C.sidebar}>
-          <div style={C.sidebarHeader}>תוכן הקורס</div>
-          {COURSE_MODULES.map((mod) => (
-            <div key={mod.id} style={{ borderBottom: "1px solid #2C323E" }}>
-              <div style={C.moduleHeader}>
-                <div style={C.moduleNum}>{mod.id}</div>
-                <div style={C.moduleTitle}>{mod.title}</div>
-              </div>
-              {mod.lessons.map((lesson) => {
-                const isActive = lesson.id === activeId;
-                const isDone   = completed.has(lessonVideoId(lesson.id));
-                return (
-                  <button
-                    key={lesson.id}
-                    style={C.lessonBtn(isActive, isDone)}
-                    onClick={() => goTo(lesson.id)}
-                  >
-                    <div style={C.lessonDot(isActive, isDone)}>
-                      {isDone ? "v" : lesson.id}
-                    </div>
-                    <span style={C.lessonBtnLabel(isActive, isDone)}>
-                      {lesson.title}
-                    </span>
-                    <span style={C.lessonBtnDur}>{lesson.duration}&apos;</span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </aside>
       </div>
 
       {/* Vimeo SDK - only load when needed */}
