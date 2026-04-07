@@ -9,14 +9,17 @@ interface Props {
   userEmail: string;
 }
 
-export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
-  const completedSet       = new Set(completedVideoIds);
-  const firstUncompletedId = ALL_LESSONS.find((l) => !completedSet.has(lessonVideoId(l.id)))?.id ?? 1;
+function fmtMin(min: number): string {
+  return `${String(min).padStart(2, "0")}:00`;
+}
 
-  const [activeId, setActiveId]         = useState(firstUncompletedId);
-  const [completed, setCompleted]       = useState<Set<string>>(new Set(completedVideoIds));
-  const [reportedAt, setReportedAt]     = useState<Set<string>>(new Set(completedVideoIds));
-  const [accordionOpen, setAccordionOpen] = useState(false);
+export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
+  const initialCompleted   = new Set(completedVideoIds);
+  const firstUncompletedId = ALL_LESSONS.find((l) => !initialCompleted.has(lessonVideoId(l.id)))?.id ?? 1;
+
+  const [activeId, setActiveId]     = useState(firstUncompletedId);
+  const [completed, setCompleted]   = useState<Set<string>>(initialCompleted);
+  const [reportedAt, setReportedAt] = useState<Set<string>>(initialCompleted);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const activeLesson   = ALL_LESSONS.find((l) => l.id === activeId)!;
@@ -26,8 +29,9 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
   const progressPct    = (completedCount / TOTAL_LESSONS) * 100;
   const prevLesson     = ALL_LESSONS.find((l) => l.id === activeId - 1);
   const nextLesson     = ALL_LESSONS.find((l) => l.id === activeId + 1);
+  const lessonDone     = completed.has(lessonVideoId(activeId));
 
-  // Vimeo Player API - fires markComplete at 90% watch time
+  // Vimeo Player API - mark complete at 90%
   useEffect(() => {
     if (isPlaceholder || !iframeRef.current) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,89 +59,250 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
 
   function goTo(lessonId: number) {
     setActiveId(lessonId);
-    setAccordionOpen(false);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // ── Lesson list (shared between sidebar and mobile accordion) ──
+  // ── Lesson list (sidebar + mobile bottom) ─────────────────
   const LessonList = () => (
     <>
-      {COURSE_MODULES.map((mod) => {
-        const isDone   = (id: number) => completed.has(lessonVideoId(id));
-        const isActive = (id: number) => id === activeId;
-        return (
-          <div key={mod.id} style={{ borderBottom: "1px solid #2C323E" }}>
-            {/* Module header */}
-            <div style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "10px 16px", background: "#1A2030",
-            }}>
-              <span style={{
-                width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-                background: "rgba(201,150,74,0.15)", color: "#C9964A",
-                fontSize: 11, fontWeight: 800,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                direction: "ltr",
-              }}>{mod.id}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#EDE9E1" }}>{mod.title}</span>
-            </div>
-            {/* Lessons */}
-            {mod.lessons.map((lesson) => (
+      {COURSE_MODULES.map((mod) => (
+        <div key={mod.id}>
+          {/* Module header */}
+          <div style={{
+            padding: "8px 16px",
+            fontSize: 11, fontWeight: 700, color: "#9E9990",
+            textAlign: "right",
+            background: "#0D1219",
+            borderBottom: "1px solid #1D2430",
+          }}>
+            מודול {mod.id} - {mod.title}
+          </div>
+
+          {/* Lesson rows */}
+          {mod.lessons.map((lesson) => {
+            const isActive = lesson.id === activeId;
+            const isDone   = completed.has(lessonVideoId(lesson.id));
+            return (
               <button
                 key={lesson.id}
                 onClick={() => goTo(lesson.id)}
                 style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  padding: "10px 16px", width: "100%",
-                  background: isActive(lesson.id) ? "rgba(201,150,74,0.08)" : "transparent",
-                  border: "none",
-                  borderLeft: isActive(lesson.id) ? "3px solid #C9964A" : "3px solid transparent",
-                  cursor: "pointer", textAlign: "right",
-                  fontFamily: "Assistant, sans-serif",
-                  transition: "background 0.1s",
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "12px 16px", width: "100%",
+                  background: isActive ? "rgba(201,150,74,0.07)" : "transparent",
+                  border: "none", borderBottom: "1px solid #1D2430",
+                  cursor: "pointer", fontFamily: "Assistant, sans-serif",
+                  textAlign: "right", direction: "rtl",
                 }}
               >
+                {/* RIGHT: number badge (rounded square) */}
                 <span style={{
-                  width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+                  width: 28, height: 28, borderRadius: 6, flexShrink: 0,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 10, fontWeight: 800, direction: "ltr",
-                  background: isDone(lesson.id)
-                    ? "rgba(52,168,83,0.2)"
-                    : isActive(lesson.id) ? "rgba(201,150,74,0.15)" : "rgba(255,255,255,0.05)",
-                  color: isDone(lesson.id) ? "#34A853" : isActive(lesson.id) ? "#C9964A" : "#9E9990",
-                  border: isDone(lesson.id)
-                    ? "1px solid rgba(52,168,83,0.4)"
-                    : isActive(lesson.id) ? "1px solid rgba(201,150,74,0.4)" : "1px solid transparent",
+                  fontSize: 12, fontWeight: 800, direction: "ltr",
+                  background: isDone
+                    ? "rgba(52,168,83,0.15)"
+                    : isActive ? "rgba(201,150,74,0.15)" : "rgba(255,255,255,0.05)",
+                  color: isDone ? "#34A853" : isActive ? "#C9964A" : "#9E9990",
+                  border: `1px solid ${isDone ? "rgba(52,168,83,0.3)" : isActive ? "rgba(201,150,74,0.3)" : "transparent"}`,
                 }}>
-                  {isDone(lesson.id) ? "v" : lesson.id}
+                  {isDone ? "v" : lesson.id}
                 </span>
-                <span style={{
-                  flex: 1, fontSize: 13, lineHeight: 1.4, textAlign: "right",
-                  color: isActive(lesson.id) ? "#E8B94A" : isDone(lesson.id) ? "#C9964A" : "#9E9990",
-                }}>
-                  {lesson.title}
-                </span>
-                <span style={{ fontSize: 11, color: "#3A404E", flexShrink: 0 }}>
-                  {lesson.duration}&apos;
-                </span>
+
+                {/* MIDDLE: title + duration */}
+                <div style={{ flex: 1, textAlign: "right" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#E8B94A" : "#EDE9E1", marginBottom: 2 }}>
+                    {lesson.title}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#9E9990" }}>{lesson.duration} דקות</div>
+                </div>
+
+                {/* LEFT: status badge */}
+                {(isDone || isActive) && (
+                  <span style={{
+                    flexShrink: 0, fontSize: 11, fontWeight: 700,
+                    padding: "3px 8px", borderRadius: 12,
+                    background: isDone ? "rgba(52,168,83,0.12)" : "rgba(201,150,74,0.12)",
+                    color: isDone ? "#34A853" : "#E8B94A",
+                  }}>
+                    {isDone ? "הושלם" : "המשך"}
+                  </span>
+                )}
               </button>
-            ))}
-          </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      ))}
     </>
   );
 
+  // ── Nav buttons (shared layout, RTL: first=right, second=left) ──
+  const NavButtons = () => (
+    <div style={{ display: "flex", gap: 10 }}>
+      {/* RIGHT: הבא (gold) - first in DOM in RTL flex */}
+      <button
+        onClick={() => nextLesson && goTo(nextLesson.id)}
+        disabled={!nextLesson}
+        style={{
+          flex: 1, padding: "12px 16px", borderRadius: 8, border: "none",
+          background: nextLesson ? "linear-gradient(135deg, #E8B94A, #9E7C3A)" : "#1D2430",
+          color: nextLesson ? "#080C14" : "#3A404E",
+          fontSize: 14, fontWeight: 800,
+          cursor: nextLesson ? "pointer" : "not-allowed",
+          fontFamily: "Assistant, sans-serif",
+        }}
+      >
+        השיעור הבא
+      </button>
+      {/* LEFT: קודם (ghost) - second in DOM */}
+      <button
+        onClick={() => prevLesson && goTo(prevLesson.id)}
+        disabled={!prevLesson}
+        style={{
+          flex: 1, padding: "12px 16px", borderRadius: 8,
+          border: "1px solid #2C323E", background: "transparent",
+          color: prevLesson ? "#EDE9E1" : "#3A404E",
+          fontSize: 14, fontWeight: 700,
+          cursor: prevLesson ? "pointer" : "not-allowed",
+          fontFamily: "Assistant, sans-serif",
+        }}
+      >
+        השיעור הקודם
+      </button>
+    </div>
+  );
+
+  // ── Video area ─────────────────────────────────────────────
+  const VideoArea = () => (
+    <div style={{
+      borderRadius: 12, overflow: "hidden",
+      border: "1px solid #2C323E", background: "#000",
+      position: "relative", paddingTop: "56.25%",
+    }}>
+      {isPlaceholder ? (
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", gap: 12,
+          background: "#0D1219",
+        }}>
+          <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>הסרטון יעלה בקרוב</div>
+          <button
+            onClick={() => markComplete(activeId)}
+            style={{
+              padding: "9px 20px", borderRadius: 8,
+              border: "1px solid rgba(201,150,74,0.3)",
+              background: "rgba(201,150,74,0.08)",
+              color: "#C9964A", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "Assistant, sans-serif",
+            }}
+          >
+            {lessonDone ? "הושלם" : "סמן כהושלם"}
+          </button>
+        </div>
+      ) : (
+        <iframe
+          ref={iframeRef}
+          key={activeId}
+          src={`https://player.vimeo.com/video/${activeLesson.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+          referrerPolicy="strict-origin-when-cross-origin"
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+          title={activeLesson.title}
+        />
+      )}
+    </div>
+  );
+
+  // ── Lesson progress bar (below video) ─────────────────────
+  // RTL: first=right (total duration), last=left (current time)
+  const LessonProgressBar = () => (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+      <span style={{ fontSize: 12, color: "#9E9990", whiteSpace: "nowrap" }}>
+        {fmtMin(activeLesson.duration)}
+      </span>
+      <div style={{ flex: 1, height: 4, background: "#2C323E", borderRadius: 2, position: "relative" }}>
+        <div style={{
+          position: "absolute", top: 0, right: 0, height: 4, borderRadius: 2,
+          background: "linear-gradient(270deg, #E8B94A, #C9964A)",
+          width: lessonDone ? "100%" : "0%",
+          transition: "width 0.4s",
+        }} />
+      </div>
+      <span style={{ fontSize: 12, whiteSpace: "nowrap", color: lessonDone ? "#34A853" : "#9E9990" }}>
+        {lessonDone ? "הושלם" : "0:00"}
+      </span>
+    </div>
+  );
+
+  // ── Lesson meta + description ──────────────────────────────
+  const LessonMeta = () => (
+    <>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#9E9990", textAlign: "right", marginTop: 16, marginBottom: 4 }}>
+        מודול {activeModule.id} - {activeModule.title}
+      </div>
+      <div style={{ fontSize: 13, color: "#9E9990", textAlign: "right", marginBottom: 12 }}>
+        שיעור {activeId} · {activeLesson.duration} דקות
+      </div>
+      <div style={{
+        background: "#0D1219", border: "1px solid #2C323E",
+        borderRadius: 10, padding: "14px 16px", marginBottom: 16,
+        textAlign: "right",
+      }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1" }}>
+          {activeLesson.title}
+        </div>
+      </div>
+    </>
+  );
+
+  // ── Completion banner ──────────────────────────────────────
+  const CompletionBanner = () => (
+    <div style={{
+      background: "rgba(232,185,74,0.08)", border: "1px solid rgba(232,185,74,0.25)",
+      borderRadius: 12, padding: "20px 24px", textAlign: "center", marginTop: 16,
+    }}>
+      <div style={{ fontSize: 18, fontWeight: 800, color: "#E8B94A", marginBottom: 6 }}>
+        סיימת את הקורס!
+      </div>
+      <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 16 }}>
+        הצעד הבא - פגישת אסטרטגיה אישית עם הדר
+      </div>
+      <Link href="/strategy" style={{
+        display: "inline-block", padding: "10px 24px", borderRadius: 8,
+        background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
+        color: "#080C14", fontSize: 14, fontWeight: 800,
+        textDecoration: "none", fontFamily: "Assistant, sans-serif",
+      }}>
+        קבע פגישת אסטרטגיה
+      </Link>
+    </div>
+  );
+
+  // ── Render ─────────────────────────────────────────────────
   return (
     <div dir="rtl" lang="he" style={{ minHeight: "100vh", background: "#080C14", color: "#EDE9E1", fontFamily: "Assistant, sans-serif" }}>
 
-      {/* ── Header ── */}
-      <header style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(8,12,20,0.96)", backdropFilter: "blur(12px)",
-        borderBottom: "1px solid #2C323E", padding: "0 20px",
-      }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      {/* MOBILE HEADER (hidden on desktop) */}
+      <div className="cp-mob-hdr">
+        <Link href="/course" style={{
+          fontSize: 13, fontWeight: 700, color: "#9E9990",
+          textDecoration: "none",
+        }}>
+          ← חזור לקורס
+        </Link>
+        <span style={{
+          fontSize: 12, fontWeight: 700, color: "#C9964A",
+          padding: "3px 10px", borderRadius: 20,
+          background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.25)",
+        }}>
+          שיעור {activeId}/{TOTAL_LESSONS}
+        </span>
+      </div>
+
+      {/* DESKTOP HEADER (hidden on mobile) */}
+      <header className="cp-desk-hdr">
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 52 }}>
           <span style={{
             fontSize: 14, fontWeight: 800,
             background: "linear-gradient(135deg, #E8B94A, #C9964A)",
@@ -145,245 +310,141 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
           }}>
             קורס TrueSignal דיגיטלי
           </span>
-          <span style={{ fontSize: 12, color: "#9E9990" }}>8 מודולים - 16 שיעורים</span>
+          <span style={{ fontSize: 12, color: "#9E9990" }}>
+            {completedCount}/{TOTAL_LESSONS} שיעורים הושלמו
+          </span>
+        </div>
+        <div style={{ maxWidth: 1280, margin: "0 auto", paddingBottom: 10 }}>
+          <div style={{ height: 3, background: "#2C323E", borderRadius: 2, position: "relative" }}>
+            <div style={{
+              position: "absolute", top: 0, right: 0, height: 3, borderRadius: 2,
+              background: "linear-gradient(270deg, #E8B94A, #C9964A)",
+              width: `${progressPct}%`, transition: "width 0.4s",
+            }} />
+          </div>
         </div>
       </header>
 
-      {/* ── Progress bar ── */}
-      <div style={{ background: "#141820", borderBottom: "1px solid #2C323E", padding: "8px 20px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#C9964A", whiteSpace: "nowrap" }}>
-            {completedCount}/{TOTAL_LESSONS} הושלמו
-          </span>
-          <div style={{ flex: 1, height: 6, background: "#2C323E", borderRadius: 3, position: "relative" }}>
-            <div style={{
-              position: "absolute", top: 0, right: 0,
-              height: 6, borderRadius: 3,
-              background: "linear-gradient(270deg, #E8B94A, #C9964A)",
-              width: `${progressPct}%`,
-              transition: "width 0.4s",
-            }} />
-          </div>
-          <span style={{ fontSize: 12, color: "#9E9990", whiteSpace: "nowrap" }}>
-            {Math.round(progressPct)}%
-          </span>
-        </div>
-      </div>
-
-      {/* ── Layout ── */}
+      {/* LAYOUT: sidebar (right, desktop) + main (left) */}
       {/*
-        dir="rtl" makes flex-direction: row go right-to-left.
-        Sidebar is first in DOM → appears on the RIGHT.
-        Main is second in DOM → appears on the LEFT.
+        dir="rtl" makes flex-row flow right-to-left.
+        Sidebar = first in DOM → RIGHT.
+        Main    = second in DOM → LEFT.
       */}
       <div className="cp-layout">
 
-        {/* ── Sidebar (right, desktop only) ── */}
+        {/* SIDEBAR - desktop only, right column */}
         <aside className="cp-sidebar">
           <div style={{
             padding: "14px 16px", borderBottom: "1px solid #2C323E",
             fontSize: 13, fontWeight: 800, color: "#EDE9E1", textAlign: "right",
+            position: "sticky", top: 0, background: "#141820", zIndex: 1,
           }}>
             תוכן הקורס
           </div>
           <LessonList />
         </aside>
 
-        {/* ── Main content (left) ── */}
+        {/* MAIN CONTENT - left column */}
         <main className="cp-main">
 
-          {/* Video */}
-          <div style={{
-            borderRadius: 12, overflow: "hidden",
-            border: "1px solid #2C323E", background: "#000",
-            position: "relative", paddingTop: "56.25%",
-            marginBottom: 16,
-          }}>
-            {isPlaceholder ? (
-              <div style={{
-                position: "absolute", inset: 0,
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12,
-                background: "#0D1219",
-              }}>
-                <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>הסרטון יעלה בקרוב</div>
-                <button
-                  onClick={() => markComplete(activeId)}
-                  style={{
-                    padding: "9px 20px", borderRadius: 8,
-                    border: "1px solid rgba(201,150,74,0.3)",
-                    background: "rgba(201,150,74,0.08)",
-                    color: "#C9964A", fontSize: 13, fontWeight: 700,
-                    cursor: "pointer", fontFamily: "Assistant, sans-serif",
-                  }}
-                >
-                  {completed.has(lessonVideoId(activeId)) ? "הושלם" : "סמן כהושלם"}
-                </button>
-              </div>
-            ) : (
-              <iframe
-                ref={iframeRef}
-                key={activeId}
-                src={`https://player.vimeo.com/video/${activeLesson.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
-                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                referrerPolicy="strict-origin-when-cross-origin"
-                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-                title={activeLesson.title}
-              />
-            )}
+          <VideoArea />
+          <LessonProgressBar />
+          <LessonMeta />
+
+          <div style={{ marginBottom: 24 }}>
+            <NavButtons />
           </div>
 
-          {/* Nav buttons: prev (right) + next (left) - in RTL flex, first = right */}
-          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-            <button
-              onClick={() => prevLesson && goTo(prevLesson.id)}
-              disabled={!prevLesson}
-              style={{
-                flex: 1, padding: "11px 16px", borderRadius: 8,
-                border: "1px solid #2C323E", background: "transparent",
-                color: prevLesson ? "#EDE9E1" : "#3A404E",
-                fontSize: 14, fontWeight: 700,
-                cursor: prevLesson ? "pointer" : "not-allowed",
-                fontFamily: "Assistant, sans-serif",
-              }}
-            >
-              השיעור הקודם
-            </button>
-            <button
-              onClick={() => nextLesson && goTo(nextLesson.id)}
-              disabled={!nextLesson}
-              style={{
-                flex: 1, padding: "11px 16px", borderRadius: 8,
-                border: "none",
-                background: nextLesson ? "linear-gradient(135deg, #E8B94A, #9E7C3A)" : "#1D2430",
-                color: nextLesson ? "#080C14" : "#3A404E",
-                fontSize: 14, fontWeight: 800,
-                cursor: nextLesson ? "pointer" : "not-allowed",
-                fontFamily: "Assistant, sans-serif",
-              }}
-            >
-              השיעור הבא
-            </button>
-          </div>
+          {completedCount === TOTAL_LESSONS && <CompletionBanner />}
 
-          {/* Lesson label - centered */}
-          <div style={{ textAlign: "center", marginBottom: 16 }}>
-            <div style={{ fontSize: 12, color: "#C9964A", fontWeight: 700, marginBottom: 6 }}>
-              מודול {activeModule.id} - שיעור {activeId}
-            </div>
-            <h1 style={{ fontSize: 20, fontWeight: 800, color: "#EDE9E1", margin: "0 0 4px" }}>
-              {activeLesson.title}
-            </h1>
-            <div style={{ fontSize: 13, color: "#9E9990" }}>{activeLesson.duration} דקות</div>
-          </div>
-
-          {/* Completion banner */}
-          {completedCount === TOTAL_LESSONS && (
+          {/* MOBILE LESSON LIST - below nav, hidden on desktop */}
+          <div className="cp-mob-list">
             <div style={{
-              background: "rgba(232,185,74,0.08)", border: "1px solid rgba(232,185,74,0.25)",
-              borderRadius: 12, padding: "20px 24px", textAlign: "center", marginTop: 8,
+              fontSize: 13, fontWeight: 800, color: "#EDE9E1",
+              textAlign: "right", marginBottom: 10, marginTop: 8,
             }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#E8B94A", marginBottom: 6 }}>
-                סיימת את הקורס!
-              </div>
-              <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 16 }}>
-                הצעד הבא - פגישת אסטרטגיה אישית עם הדר
-              </div>
-              <Link href="/strategy" style={{
-                display: "inline-block", padding: "10px 24px", borderRadius: 8,
-                background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
-                color: "#080C14", fontSize: 14, fontWeight: 800,
-                textDecoration: "none", fontFamily: "Assistant, sans-serif",
-              }}>
-                קבע פגישת אסטרטגיה
-              </Link>
+              כל השיעורים
             </div>
-          )}
-
-          {/* Mobile accordion - hidden on desktop via CSS */}
-          <div className="cp-accordion">
-            <button
-              onClick={() => setAccordionOpen((o) => !o)}
-              style={{
-                width: "100%", padding: "14px 16px",
-                background: "#141820", border: "none",
-                borderTop: "1px solid #2C323E",
-                borderBottom: accordionOpen ? "none" : "1px solid #2C323E",
-                color: "#EDE9E1", fontSize: 14, fontWeight: 700,
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                cursor: "pointer", fontFamily: "Assistant, sans-serif",
-                marginTop: 20,
-              }}
-            >
-              <span>תוכן הקורס</span>
-              <span style={{
-                fontSize: 12, color: "#C9964A", fontWeight: 800,
-                transform: accordionOpen ? "rotate(180deg)" : "none",
-                transition: "transform 0.2s",
-                display: "inline-block",
-              }}>
-                v
-              </span>
-            </button>
-            {accordionOpen && (
-              <div style={{ background: "#141820", borderBottom: "1px solid #2C323E" }}>
-                <LessonList />
-              </div>
-            )}
+            <div style={{ border: "1px solid #2C323E", borderRadius: 10, overflow: "hidden" }}>
+              <LessonList />
+            </div>
           </div>
 
         </main>
       </div>
 
-      {/* Vimeo SDK */}
+      {/* Vimeo SDK - load only when real IDs exist */}
       {ALL_LESSONS.some((l) => l.videoId !== "PLACEHOLDER") && (
         // eslint-disable-next-line @next/next/no-sync-scripts
         <script src="https://player.vimeo.com/api/player.js" />
       )}
 
       <style>{`
-        /* Desktop: two-column layout */
+        /* ── Mobile (default) ── */
+        .cp-mob-hdr {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 16px;
+          background: #141820;
+          border-bottom: 1px solid #2C323E;
+        }
+        .cp-desk-hdr {
+          display: none;
+        }
         .cp-layout {
-          max-width: 1280px;
-          margin: 0 auto;
           display: flex;
           flex-direction: row;
-          /* dir="rtl" on parent makes flex row flow right-to-left:
-             sidebar (first in DOM) = RIGHT, main (second in DOM) = LEFT */
-          min-height: calc(100vh - 8rem);
+          max-width: 1280px;
+          margin: 0 auto;
         }
         .cp-sidebar {
-          width: 280px;
-          flex-shrink: 0;
-          background: #141820;
-          border-left: 1px solid #2C323E;
-          position: sticky;
-          top: 8rem;
-          max-height: calc(100vh - 8rem);
-          overflow-y: auto;
-          align-self: flex-start;
+          display: none;
         }
         .cp-main {
           flex: 1;
           min-width: 0;
-          padding: 20px 24px 48px;
+          padding: 16px;
+          padding-bottom: 48px;
         }
-        .cp-accordion {
-          display: none;
+        .cp-mob-list {
+          display: block;
+          margin-top: 8px;
         }
 
-        /* Mobile: single column, accordion replaces sidebar */
-        @media (max-width: 767px) {
-          .cp-layout {
-            flex-direction: column;
-          }
-          .cp-sidebar {
+        /* ── Desktop (768px+) ── */
+        @media (min-width: 768px) {
+          .cp-mob-hdr {
             display: none;
           }
-          .cp-main {
-            padding: 12px 12px 32px;
-          }
-          .cp-accordion {
+          .cp-desk-hdr {
             display: block;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(8,12,20,0.96);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #2C323E;
+            padding: 0 24px;
+          }
+          .cp-sidebar {
+            display: block;
+            width: 280px;
+            flex-shrink: 0;
+            background: #141820;
+            border-left: 1px solid #2C323E;
+            position: sticky;
+            top: 6rem;
+            max-height: calc(100vh - 6rem);
+            overflow-y: auto;
+            align-self: flex-start;
+          }
+          .cp-main {
+            padding: 24px 28px 64px;
+          }
+          .cp-mob-list {
+            display: none;
           }
         }
       `}</style>
