@@ -182,23 +182,10 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
       {isPlaceholder ? (
         <div style={{
           position: "absolute", inset: 0,
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center", gap: 12,
+          display: "flex", alignItems: "center", justifyContent: "center",
           background: "#0D1219",
         }}>
           <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>הסרטון יעלה בקרוב</div>
-          <button
-            onClick={() => markComplete(activeId)}
-            style={{
-              padding: "9px 20px", borderRadius: 8,
-              border: "1px solid rgba(201,150,74,0.3)",
-              background: "rgba(201,150,74,0.08)",
-              color: "#C9964A", fontSize: 13, fontWeight: 700,
-              cursor: "pointer", fontFamily: "Assistant, sans-serif",
-            }}
-          >
-            {lessonDone ? "הושלם" : "סמן כהושלם"}
-          </button>
         </div>
       ) : (
         <iframe
@@ -238,7 +225,24 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
   // ── Lesson meta + description ──────────────────────────────
   const LessonMeta = () => (
     <>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#9E9990", textAlign: "right", marginTop: 16, marginBottom: 4 }}>
+      {/* "סמן כהושלם" button - below progress bar, above module title */}
+      {!lessonDone && (
+        <div style={{ textAlign: "center", marginTop: 14, marginBottom: 4 }}>
+          <button
+            onClick={() => markComplete(activeId)}
+            style={{
+              padding: "9px 24px", borderRadius: 8,
+              border: "none",
+              background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
+              color: "#080C14", fontSize: 13, fontWeight: 800,
+              cursor: "pointer", fontFamily: "Assistant, sans-serif",
+            }}
+          >
+            סמן כהושלם
+          </button>
+        </div>
+      )}
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#9E9990", textAlign: "right", marginTop: 14, marginBottom: 4 }}>
         מודול {activeModule.id} - {activeModule.title}
       </div>
       <div style={{ fontSize: 13, color: "#9E9990", textAlign: "right", marginBottom: 12 }}>
@@ -249,8 +253,11 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
         borderRadius: 10, padding: "14px 16px", marginBottom: 16,
         textAlign: "right",
       }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1" }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1", marginBottom: 6 }}>
           {activeLesson.title}
+        </div>
+        <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.7 }}>
+          {activeLesson.description}
         </div>
       </div>
     </>
