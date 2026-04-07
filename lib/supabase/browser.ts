@@ -1,19 +1,17 @@
 /**
- * Browser-side Supabase client - uses the ANON key.
- * Safe to import in Client Components. RLS blocks all table access -
- * this client is only used for public-facing read operations if needed.
+ * Browser-side Supabase client using @supabase/ssr.
+ * Handles session cookies automatically. Safe to import in Client Components.
  */
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient as createSSRBrowserClient } from "@supabase/ssr";
 import type { Database } from "./types";
 
-let client: ReturnType<typeof createClient<Database>> | null = null;
+let client: ReturnType<typeof createSSRBrowserClient<Database>> | null = null;
 
 export function createBrowserClient() {
   if (client) return client;
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  client = createClient<Database>(url, key);
+  client = createSSRBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
   return client;
 }

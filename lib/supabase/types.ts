@@ -36,6 +36,8 @@ export interface Database {
           hive_started_at: string | null;
           hive_cancelled_at: string | null;
           hive_next_billing_date: string | null;
+          auth_id: string | null;
+          email_verified: boolean;
         };
         Insert: {
           id?: string;
@@ -59,6 +61,8 @@ export interface Database {
           hive_started_at?: string | null;
           hive_cancelled_at?: string | null;
           hive_next_billing_date?: string | null;
+          auth_id?: string | null;
+          email_verified?: boolean;
         };
         Update: {
           id?: string;
@@ -82,6 +86,8 @@ export interface Database {
           hive_started_at?: string | null;
           hive_cancelled_at?: string | null;
           hive_next_billing_date?: string | null;
+          auth_id?: string | null;
+          email_verified?: boolean;
         };
         Relationships: [];
       };
