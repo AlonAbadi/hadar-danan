@@ -6,12 +6,13 @@ import type { UserStatus } from "@/lib/supabase/types";
 
 // ── State machine ────────────────────────────────────────────
 // Maps event type → { required current status → new status }
-const TRANSITIONS: Record<string, { from: UserStatus; to: UserStatus }> = {
-  EMAIL_OPENED:        { from: "lead",        to: "engaged" },
-  LINK_CLICKED:        { from: "lead",        to: "engaged" },
-  CHECKOUT_STARTED:    { from: "engaged",     to: "high_intent" },
-  PURCHASE_COMPLETED:  { from: "high_intent", to: "buyer" },
-  CALL_BOOKED:         { from: "buyer",       to: "booked" },
+const TRANSITIONS: Record<string, { from: UserStatus | UserStatus[]; to: UserStatus }> = {
+  QUIZ_COMPLETED:      { from: "lead",                    to: "engaged" },
+  EMAIL_OPENED:        { from: "lead",                    to: "engaged" },
+  LINK_CLICKED:        { from: "lead",                    to: "engaged" },
+  CHECKOUT_STARTED:    { from: ["lead", "engaged"],       to: "high_intent" },
+  PURCHASE_COMPLETED:  { from: "high_intent",             to: "buyer" },
+  CALL_BOOKED:         { from: "buyer",                   to: "booked" },
 };
 
 // Events that should also trigger email sequences
@@ -99,11 +100,15 @@ export async function POST(req: NextRequest) {
     // ── State machine transition ─────────────────────────────
     if (resolvedUserId && TRANSITIONS[type]) {
       const { from, to } = TRANSITIONS[type];
-      await supabase
+      const query = supabase
         .from("users")
         .update({ status: to })
-        .eq("id", resolvedUserId)
-        .eq("status", from); // only advance if at the expected step
+        .eq("id", resolvedUserId);
+      if (Array.isArray(from)) {
+        await query.in("status", from);
+      } else {
+        await query.eq("status", from);
+      }
     }
 
     // ── Trigger email sequences ──────────────────────────────

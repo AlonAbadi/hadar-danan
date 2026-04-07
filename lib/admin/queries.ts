@@ -118,13 +118,13 @@ export async function getLeads(params: {
 
 function getLeadScore(status: string): number {
   const scores: Record<string, number> = {
-    lead: 10,
-    engaged: 30,
-    high_intent: 55,
-    buyer: 80,
-    booked: 100,
-    premium_lead: 90,
-    partnership_lead: 95,
+    lead:             20,
+    engaged:          40,
+    high_intent:      75,
+    buyer:            90,
+    booked:           100,
+    premium_lead:     85,
+    partnership_lead: 90,
   };
   return scores[status] ?? 0;
 }
