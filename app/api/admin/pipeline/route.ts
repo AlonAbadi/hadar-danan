@@ -1,0 +1,100 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@/lib/supabase/server';
+import { UserStatus } from '@/lib/supabase/types';
+
+function isAdminAuthorized(req: NextRequest): boolean {
+  const auth = req.headers.get('Authorization') || req.headers.get('authorization');
+  if (!auth?.startsWith('Basic ')) return false;
+  try {
+    const [user, pass] = Buffer.from(auth.slice(6), 'base64').toString().split(':');
+    return user === process.env.ADMIN_USERNAME && pass === process.env.ADMIN_PASSWORD;
+  } catch {
+    return false;
+  }
+}
+
+const VALID_STATUSES: UserStatus[] = [
+  'lead', 'engaged', 'high_intent', 'buyer', 'booked', 'premium_lead', 'partnership_lead',
+];
+
+// GET /api/admin/pipeline
+export async function GET(req: NextRequest) {
+  if (!isAdminAuthorized(req)) {
+    return NextResponse.json({ error: 'אין הרשאה' }, { status: 401 });
+  }
+
+  const supabase = createServerClient();
+  const { searchParams } = new URL(req.url);
+  const statusParam = searchParams.get('status');
+  const search      = searchParams.get('search');
+  const limit       = Math.min(parseInt(searchParams.get('limit')  ?? '50', 10), 200);
+  const offset      = parseInt(searchParams.get('offset') ?? '0', 10);
+
+  const status = statusParam && VALID_STATUSES.includes(statusParam as UserStatus)
+    ? (statusParam as UserStatus)
+    : null;
+
+  try {
+    let query = supabase
+      .from('users')
+      .select(
+        'id, name, email, phone, status, hive_status, created_at, utm_source, utm_campaign',
+        { count: 'exact' }
+      )
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (status)  query = query.eq('status', status);
+    if (search) {
+      query = query.or(
+        `name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`
+      );
+    }
+
+    const { data: users, error, count } = await query;
+
+    if (error) {
+      await supabase.from('error_logs').insert({
+        context: 'api/admin/pipeline',
+        error: String(error),
+        payload: { status, search, limit, offset },
+      });
+      return NextResponse.json({ users: [], total: 0 });
+    }
+
+    // Fetch purchase summaries for these users
+    const userIds: string[] = (users ?? []).map((u) => u.id);
+    const purchaseMap: Record<string, { count: number; total_spent: number }> = {};
+
+    if (userIds.length > 0) {
+      const { data: purchases } = await supabase
+        .from('purchases')
+        .select('user_id, status, amount')
+        .in('user_id', userIds);
+
+      for (const p of purchases ?? []) {
+        if (!purchaseMap[p.user_id]) purchaseMap[p.user_id] = { count: 0, total_spent: 0 };
+        purchaseMap[p.user_id].count++;
+        if (p.status === 'completed') {
+          purchaseMap[p.user_id].total_spent += p.amount ?? 0;
+        }
+      }
+    }
+
+    const result = (users ?? []).map((u) => ({
+      ...u,
+      last_activity_at: null as string | null, // populated after migration 013
+      purchase_count: purchaseMap[u.id]?.count ?? 0,
+      total_spent:    purchaseMap[u.id]?.total_spent ?? 0,
+    }));
+
+    return NextResponse.json({ users: result, total: count ?? 0 });
+  } catch (error) {
+    await supabase.from('error_logs').insert({
+      context: 'api/admin/pipeline',
+      error: String(error),
+      payload: { status, search, limit, offset },
+    });
+    return NextResponse.json({ users: [], total: 0 });
+  }
+}
