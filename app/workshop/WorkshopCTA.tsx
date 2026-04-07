@@ -153,13 +153,33 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
     ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent("היי הדר! יש לי שאלה לגבי הסדנה יום אחד")}`
     : null;
 
+  const BTN_STYLE: React.CSSProperties = {
+    display: "inline-block",
+    width: "auto",
+    padding: "15px 36px",
+    borderRadius: 14,
+    fontSize: 15,
+    fontWeight: 800,
+    border: "none",
+    cursor: "pointer",
+  };
+
+  const WRAPPER_STYLE: React.CSSProperties = {
+    textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 12,
+  };
+
   if (phase === "idle") {
     if (quizUserId) {
       return (
-        <div className="flex flex-col gap-3">
+        <div style={WRAPPER_STYLE}>
           <button
             onClick={() => doCheckout(quizUserId)}
-            className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold"
+            className="btn-cta-gold active:scale-[0.98]"
+            style={BTN_STYLE}
           >
             {quizName ? `${quizName}, ` : ""}
             {toPay === 0
@@ -185,10 +205,11 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
     }
 
     return (
-      <div className="flex flex-col gap-3">
+      <div style={WRAPPER_STYLE}>
         <button
           onClick={() => setPhase("form")}
-          className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold"
+          className="btn-cta-gold active:scale-[0.98]"
+          style={BTN_STYLE}
         >
           {toPay === 0
             ? "קבל גישה חינם ←"
@@ -215,12 +236,13 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
   // Quiz user in loading/error state — no registration form
   if (quizUserId && (phase === "loading" || phase === "error")) {
     return (
-      <div className="flex flex-col gap-3">
+      <div style={WRAPPER_STYLE}>
         {errorMsg && <p className="text-red-400 text-sm text-center">{errorMsg}</p>}
         <button
           onClick={() => doCheckout(quizUserId)}
           disabled={phase === "loading"}
-          className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] disabled:opacity-60 btn-cta-gold"
+          className="btn-cta-gold active:scale-[0.98] disabled:opacity-60"
+          style={BTN_STYLE}
         >
           {phase === "loading" ? "מעביר לתשלום..." : "נסה שוב ←"}
         </button>
@@ -265,7 +287,8 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
       <button
         type="submit"
         disabled={phase === "loading"}
-        className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] disabled:opacity-60 btn-cta-gold"
+        className="w-full btn-cta-gold active:scale-[0.98] disabled:opacity-60"
+        style={{ borderRadius: 14, padding: "15px 36px", fontSize: 15, fontWeight: 800, border: "none", cursor: "pointer" }}
       >
         {phase === "loading"
           ? "מעביר לתשלום..."
