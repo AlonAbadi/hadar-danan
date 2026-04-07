@@ -35,140 +35,100 @@ async function getHubKPIs() {
 }
 
 const NAV_CARDS = [
-  {
-    title: 'דשבורד מכירות',
-    desc: 'הכנסות, גרפים, conversion funnel',
-    href: '/admin/sales',
-  },
-  {
-    title: 'ניהול לידים CRM',
-    desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',
-    href: '/admin/leads',
-  },
-  {
-    title: 'אימיילים',
-    desc: 'רצפי אימייל, open rate, שליחה ידנית',
-    href: '/admin/emails',
-  },
-  {
-    title: 'וידאו ואנליטיקס',
-    desc: 'מעקב צפיות, milestones',
-    href: '/admin/video',
-  },
-  {
-    title: 'הזמנות',
-    desc: 'ניהול פגישות אסטרטגיה',
-    href: '/admin/bookings',
-  },
-  {
-    title: 'כוורת',
-    desc: 'חברי קהילה, ניהול מנויים',
-    href: '/admin/hive',
-  },
-  {
-    title: 'A/B Testing',
-    desc: 'ניסויים פעילים, תוצאות',
-    href: '/admin/ab',
-  },
-  {
-    title: 'לוגים',
-    desc: 'שגיאות, אירועים, מעקב מערכת',
-    href: '/admin/logs',
-  },
+  { title: 'סקירה כללית',      desc: 'הכנסות, גרפים, conversion funnel',          href: '/admin/sales' },
+  { title: 'פאנל מכירות',      desc: 'מסלול רכישה, שלבים, נטישות',               href: '/admin/funnel' },
+  { title: 'מוצרים',           desc: 'ניהול מוצרים, מחירים, סטטוס',              href: '/admin/products' },
+  { title: 'פגישות',           desc: 'ניהול פגישות אסטרטגיה',                    href: '/admin/bookings' },
+  { title: 'ניהול לידים CRM',  desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',      href: '/admin/leads' },
+  { title: 'אימיילים',         desc: 'רצפי אימייל, open rate, שליחה ידנית',      href: '/admin/emails' },
+  { title: 'וידאו ואנליטיקס',  desc: 'מעקב צפיות, milestones',                   href: '/admin/video' },
+  { title: 'רכישת לקוחות',    desc: 'מקורות תנועה, CAC, ROAS',                   href: '/admin/acquisition' },
+  { title: 'מודל MMM',         desc: 'הקצאת תקציב, רגרסיה, תחזיות',             href: '/admin/mmm' },
+  { title: 'A/B Testing',      desc: 'ניסויים פעילים, תוצאות',                   href: '/admin/ab' },
+  { title: 'כוורת',            desc: 'חברי קהילה, ניהול מנויים',                 href: '/admin/hive' },
+  { title: 'לוגים',            desc: 'שגיאות, אירועים, מעקב מערכת',             href: '/admin/logs' },
 ];
 
 export default async function AdminHubPage() {
   const { revenue, leads, conversionRate, pendingBookings } = await getHubKPIs();
 
   const kpis = [
-    {
-      label: 'הכנסה החודש',
-      value: `${revenue.toLocaleString('he-IL')} ₪`,
-    },
-    {
-      label: 'לידים חדשים',
-      value: leads.toLocaleString('he-IL'),
-    },
-    {
-      label: 'שיעור המרה',
-      value: `${conversionRate}%`,
-    },
-    {
-      label: 'הזמנות ממתינות',
-      value: pendingBookings.toLocaleString('he-IL'),
-    },
+    { label: 'הכנסה החודש',    value: `${revenue.toLocaleString('he-IL')} \u20AA` },
+    { label: 'לידים חדשים',    value: leads.toLocaleString('he-IL') },
+    { label: 'שיעור המרה',     value: `${conversionRate}%` },
+    { label: 'הזמנות ממתינות', value: pendingBookings.toLocaleString('he-IL') },
   ];
 
   return (
-    <div dir="rtl" style={{ fontFamily: "'Assistant', sans-serif", minHeight: '100vh', background: '#080C14', padding: '32px' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: '#EDE9E1', margin: '0 0 28px' }}>
-        סקירה כללית
-      </h1>
-
-      {/* KPI Bar */}
-      <div className="hub-kpi-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: 16,
-        marginBottom: 36,
-      }}>
-        {kpis.map((kpi) => (
-          <div
-            key={kpi.label}
-            style={{
-              background: '#141820',
-              border: '1px solid #2C323E',
-              borderRadius: 12,
-              padding: '20px 24px',
-            }}
-          >
-            <div style={{
-              fontSize: 26,
-              fontWeight: 800,
-              background: 'linear-gradient(135deg, #E8B94A, #9E7C3A)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              lineHeight: 1.2,
-              marginBottom: 6,
-            }}>
-              {kpi.value}
-            </div>
-            <div style={{ fontSize: 12, color: '#9E9990' }}>{kpi.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Navigation Cards */}
-      <div className="hub-cards-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: 16,
-      }}>
-        {NAV_CARDS.map((card) => (
-          <Link key={card.href} href={card.href} className="hub-card">
-            <div className="hub-card-title">{card.title}</div>
-            <div className="hub-card-desc">{card.desc}</div>
-          </Link>
-        ))}
-      </div>
-
+    <>
       <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #080C14; }
+
+        .hub-root {
+          direction: rtl;
+          font-family: 'Assistant', sans-serif;
+          background: #080C14;
+          min-height: 100vh;
+          padding: 40px 48px;
+        }
+
+        .hub-header {
+          font-size: 20px;
+          font-weight: 700;
+          color: #EDE9E1;
+          margin-bottom: 32px;
+          letter-spacing: -0.01em;
+        }
+
+        /* KPI bar */
+        .hub-kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          margin-bottom: 40px;
+        }
+        .hub-kpi-card {
+          background: #141820;
+          border: 1px solid #2C323E;
+          border-radius: 12px;
+          padding: 20px 24px;
+        }
+        .hub-kpi-value {
+          font-size: 28px;
+          font-weight: 900;
+          background: linear-gradient(135deg, #E8B94A, #9E7C3A);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          line-height: 1.2;
+          margin-bottom: 6px;
+        }
+        .hub-kpi-label {
+          font-size: 12px;
+          color: #9E9990;
+        }
+
+        /* Nav cards */
+        .hub-cards-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+        }
         .hub-card {
           display: block;
           text-decoration: none;
           background: #141820;
           border: 1px solid #2C323E;
           border-radius: 12px;
-          padding: 20px 24px;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          padding: 20px;
+          transition: border-color 0.18s;
         }
         .hub-card:hover {
-          border-color: rgba(201,150,74,0.4);
-          box-shadow: 0 0 0 1px rgba(201,150,74,0.15), 0 4px 20px rgba(201,150,74,0.08);
+          border-color: rgba(201, 150, 74, 0.4);
         }
         .hub-card-title {
-          font-size: 16px;
+          font-size: 15px;
           font-weight: 700;
           color: #EDE9E1;
           margin-bottom: 6px;
@@ -178,14 +138,39 @@ export default async function AdminHubPage() {
           color: #9E9990;
           line-height: 1.5;
         }
-        @media (max-width: 900px) {
-          .hub-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+        @media (max-width: 1024px) {
+          .hub-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+          .hub-cards-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 600px) {
-          .hub-kpi-grid { grid-template-columns: 1fr !important; }
-          .hub-cards-grid { grid-template-columns: 1fr !important; }
+          .hub-root { padding: 24px 16px; }
+          .hub-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+          .hub-cards-grid { grid-template-columns: 1fr; }
         }
       `}</style>
-    </div>
+
+      <div className="hub-root">
+        <div className="hub-header">ניהול - הדר דנן</div>
+
+        <div className="hub-kpi-grid">
+          {kpis.map((kpi) => (
+            <div key={kpi.label} className="hub-kpi-card">
+              <div className="hub-kpi-value">{kpi.value}</div>
+              <div className="hub-kpi-label">{kpi.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hub-cards-grid">
+          {NAV_CARDS.map((card) => (
+            <Link key={card.href} href={card.href} className="hub-card">
+              <div className="hub-card-title">{card.title}</div>
+              <div className="hub-card-desc">{card.desc}</div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
