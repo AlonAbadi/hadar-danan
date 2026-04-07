@@ -431,43 +431,6 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
       <div style={S.card}>
         <p style={S.sectionTitle}>התוכן שלי</p>
 
-        {/* Hive membership card */}
-        {isHiveActive && (
-          <div style={{
-            ...S.contentItem,
-            background: `${hiveTierInfo.color}0D`,
-            border: `1px solid ${hiveTierInfo.color}33`,
-            borderRadius: 10,
-            marginBottom: 10,
-            flexDirection: "column",
-            alignItems: "stretch",
-            gap: 10,
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Link href="/hive/members" style={S.enterBtn}>כנס</Link>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", marginBottom: 4 }}>
-                  <span style={{
-                    fontSize: 12, fontWeight: 700,
-                    padding: "2px 10px", borderRadius: 20,
-                    background: `${hiveTierInfo.color}1A`,
-                    border: `1px solid ${hiveTierInfo.color}44`,
-                    color: hiveTierInfo.color,
-                  }}>
-                    {hiveTierInfo.label}
-                  </span>
-                  <span style={{ ...S.contentLabel }}>הכוורת</span>
-                </div>
-                {userData?.hive_next_billing_date && (
-                  <div style={{ fontSize: 12, color: "#9E9990", textAlign: "right" }}>
-                    חידוש: {new Date(userData.hive_next_billing_date).toLocaleDateString("he-IL")}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Regular content items */}
         {contentItems.length > 0 ? (
           contentItems.map((item) => (
@@ -496,6 +459,39 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
             ))}
           </>
         ) : null}
+
+        {/* Hive membership card — shown last */}
+        {isHiveActive && (
+          <div style={{
+            ...S.contentItem,
+            background: `${hiveTierInfo.color}0D`,
+            border: `1px solid ${hiveTierInfo.color}33`,
+            borderRadius: 10,
+            marginBottom: 0,
+          }}>
+            {/* info first in DOM = RIGHT in RTL; button last = LEFT */}
+            <div style={{ textAlign: "right" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", marginBottom: 4 }}>
+                <span style={{
+                  fontSize: 12, fontWeight: 700,
+                  padding: "2px 10px", borderRadius: 20,
+                  background: `${hiveTierInfo.color}1A`,
+                  border: `1px solid ${hiveTierInfo.color}44`,
+                  color: hiveTierInfo.color,
+                }}>
+                  {hiveTierInfo.label}
+                </span>
+                <span style={{ ...S.contentLabel }}>הכוורת</span>
+              </div>
+              {userData?.hive_next_billing_date && (
+                <div style={{ fontSize: 12, color: "#9E9990", textAlign: "right" }}>
+                  חידוש: {new Date(userData.hive_next_billing_date).toLocaleDateString("he-IL")}
+                </div>
+              )}
+            </div>
+            <Link href="/hive/members" style={S.enterBtn}>כנס</Link>
+          </div>
+        )}
       </div>
     </>
   );
