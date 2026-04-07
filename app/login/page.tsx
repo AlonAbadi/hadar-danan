@@ -290,7 +290,6 @@ function LoginPageInner() {
     return (
       <div style={S.page} dir="rtl" lang="he">
         <div style={S.card}>
-          <div style={S.logo}><div style={S.logoText}>הדר דנן</div></div>
           <div style={S.title}>מצאנו אותך</div>
           <div style={S.subtitle}>
             {leadInfo.name ? `שלום ${leadInfo.name},` : ""} אתה אצלנו מ-{joined}.
@@ -361,7 +360,6 @@ function LoginPageInner() {
   return (
     <div style={S.page} dir="rtl" lang="he">
       <div style={S.card}>
-        <div style={S.logo}><div style={S.logoText}>הדר דנן</div></div>
         <div style={S.title}>התחברות</div>
         <div style={S.subtitle}>כניסה לחשבון שלך</div>
 

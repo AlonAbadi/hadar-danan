@@ -263,7 +263,6 @@ function SignupPageInner() {
     return (
       <div style={S.page} dir="rtl" lang="he">
         <div style={S.card}>
-          <div style={S.logo}><div style={S.logoText}>הדר דנן</div></div>
           <div style={S.title}>בדוק את האימייל שלך</div>
           <div style={S.subtitle}>
             שלחנו קישור אימות לכתובת<br />
@@ -320,7 +319,6 @@ function SignupPageInner() {
   return (
     <div style={S.page} dir="rtl" lang="he">
       <div style={S.card}>
-        <div style={S.logo}><div style={S.logoText}>הדר דנן</div></div>
         <div style={S.title}>יצירת חשבון</div>
         <div style={S.subtitle}>הצטרף אלינו בחינם</div>
 
