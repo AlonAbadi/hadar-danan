@@ -419,11 +419,7 @@ export default function ChallengePlayer({
 
       {/* MOBILE HEADER */}
       <div className="ch-mob-hdr">
-        <Link href="/challenge" style={{
-          fontSize: 13, fontWeight: 700, color: "#9E9990", textDecoration: "none",
-        }}>
-          ← חזור לאתגר
-        </Link>
+        <span />
         <span style={{
           fontSize: 12, fontWeight: 700, color: "#C9964A",
           padding: "3px 10px", borderRadius: 20,
