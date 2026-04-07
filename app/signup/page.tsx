@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/browser";
@@ -168,7 +168,7 @@ function getStrength(pw: string): { score: 0 | 1 | 2; label: string; color: stri
 type Phase = "idle" | "loading" | "check_email";
 type ErrorType = "email_taken" | "weak_password" | "invalid_email" | "google_user" | "network" | "generic";
 
-export default function SignupPage() {
+function SignupPageInner() {
   const searchParams = useSearchParams();
   const router       = useRouter();
   const supabase     = createBrowserClient();
@@ -422,5 +422,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupPageInner />
+    </Suspense>
   );
 }
