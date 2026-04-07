@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { renderTemplate, FROM_NAME } from "@/lib/email/templates";
 import type { Database } from "@/lib/supabase/types";
 
-const FROM_ADDRESS = process.env.RESEND_FROM ?? "onboarding@resend.dev";
+const FROM_ADDRESS = process.env.NEXT_PUBLIC_FROM_EMAIL ?? "onboarding@resend.dev";
 
 export interface SendEmailPayload {
   user_id: string;
