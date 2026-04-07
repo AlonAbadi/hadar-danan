@@ -30,20 +30,24 @@ export default async function AccountPage() {
     .eq("auth_id", user.id)
     .maybeSingle();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: rawPurchases } = userData
-    ? await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? await (db as any)
         .from("purchases")
-        .select("id, product, amount, status, created_at")
+        .select("id, product, amount, amount_paid, status, created_at")
         .eq("user_id", userData.id)
         .order("created_at", { ascending: false })
     : { data: [] };
 
-  const purchases = rawPurchases ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const purchases: any[] = rawPurchases ?? [];
 
   const HIVE_PRODUCTS = new Set(["hive_starter_160", "hive_pro_280", "hive_elite_480"]);
-  const credit = purchases
-    .filter((p) => p.status === "completed" && !HIVE_PRODUCTS.has(p.product))
-    .reduce((sum, p) => sum + p.amount, 0);
+  const lastPurchase = purchases.find(
+    (p) => p.status === "completed" && !HIVE_PRODUCTS.has(p.product)
+  );
+  const credit: number = lastPurchase ? (lastPurchase.amount_paid ?? lastPurchase.amount) : 0;
 
   const isGoogleUser =
     user.app_metadata?.provider === "google" ||
