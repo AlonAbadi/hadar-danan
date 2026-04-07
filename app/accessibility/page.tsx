@@ -127,11 +127,11 @@ export default function AccessibilityPage() {
               <dt className="font-semibold flex-shrink-0">אימייל נגישות:</dt>
               <dd>
                 <a
-                  href="mailto:נגישות@hadar-danan.co.il"
+                  href="mailto:נגישות@beegood.online"
                   className="underline hover:opacity-70 transition"
                   style={{ color: "#C9964A" }}
                 >
-                  נגישות@hadar-danan.co.il
+                  נגישות@beegood.online
                 </a>
               </dd>
             </div>
@@ -139,11 +139,11 @@ export default function AccessibilityPage() {
               <dt className="font-semibold flex-shrink-0">אימייל כללי:</dt>
               <dd>
                 <a
-                  href="mailto:hadar@hadar-danan.co.il"
+                  href="mailto:hadar@beegood.online"
                   className="underline hover:opacity-70 transition"
                   style={{ color: "#C9964A" }}
                 >
-                  hadar@hadar-danan.co.il
+                  hadar@beegood.online
                 </a>
               </dd>
             </div>

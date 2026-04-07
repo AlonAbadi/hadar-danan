@@ -109,7 +109,7 @@ export default function TeamPage() {
           שלח/י מייל עם הניסיון שלך.
         </p>
         <a
-          href="mailto:hadar@hadar-danan.co.il"
+          href="mailto:hadar@beegood.online"
           className="inline-block rounded-full px-8 py-4 text-lg font-bold transition hover:opacity-90 active:scale-[0.98]"
           style={{
             background: "linear-gradient(135deg, #E8B94A 0%, #C9964A 50%, #9E7C3A 100%)",
@@ -137,8 +137,8 @@ export default function TeamPage() {
         </div>
         <p className="mt-3 text-xs">
           לביטול הסכמה:{" "}
-          <a href="mailto:hadar@hadar-danan.co.il" className="hover:text-[#EDE9E1] transition">
-            hadar@hadar-danan.co.il
+          <a href="mailto:hadar@beegood.online" className="hover:text-[#EDE9E1] transition">
+            hadar@beegood.online
           </a>
         </p>
       </footer>

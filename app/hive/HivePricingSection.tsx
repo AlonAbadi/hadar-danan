@@ -383,11 +383,11 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
               <p>
                 • לביטול:{" "}
                 <a
-                  href="mailto:hive@hadar-danan.co.il"
+                  href="mailto:hive@beegood.online"
                   className="underline hover:opacity-80"
                   style={{ color: "#C9964A" }}
                 >
-                  hive@hadar-danan.co.il
+                  hive@beegood.online
                 </a>{" "}
                 או לחץ &#39;בטל מנוי&#39; באזור האישי
               </p>

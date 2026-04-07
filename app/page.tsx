@@ -368,7 +368,7 @@ export default async function LandingPage() {
               <p className="font-medium" style={{ color: "rgba(158,153,144,0.6)" }}>אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{unicodeBidi:"embed"}}>TrueSignal©</span></p>
               <p>© {new Date().getFullYear()} הדר דנן בע״מ · כל הזכויות שמורות</p>
               <p className="mt-1">לביטול הסכמה:{" "}
-                <a href="mailto:hadar@hadar-danan.co.il" className="hover:text-white transition">hadar@hadar-danan.co.il</a>
+                <a href="mailto:hadar@beegood.online" className="hover:text-white transition">hadar@beegood.online</a>
               </p>
             </div>
 

@@ -20,7 +20,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-const OG_IMAGE = "https://hadar-danan.vercel.app/og-image.jpg";
+const OG_IMAGE = "https://beegood.online/og-image.jpg";
 
 export const metadata: Metadata = {
   title: {

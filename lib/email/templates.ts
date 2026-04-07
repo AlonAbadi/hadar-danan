@@ -5,7 +5,7 @@
  * Design: dark header (#0a0a0f), white body, blue CTAs (#2563eb).
  */
 
-const APP_URL  = process.env.NEXT_PUBLIC_APP_URL ?? "https://hadar-danan.co.il";
+const APP_URL  = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 const FROM_NAME = "הדר דנן";
 
 // ── Base layout ───────────────────────────────────────────────
@@ -155,7 +155,7 @@ function base(content: string): string {
       ${content}
     </div>
     <div class="footer">
-      <p>קיבלת אימייל זה כי נרשמת ב-<a href="${APP_URL}">hadar-danan.co.il</a></p>
+      <p>קיבלת אימייל זה כי נרשמת ב-<a href="${APP_URL}">beegood.online</a></p>
       <p>הדר דנן בע״מ · ישראל</p>
       <p style="margin-top:8px">
         <a href="${APP_URL}/unsubscribe">הסר אותי מרשימת התפוצה</a>
@@ -965,7 +965,7 @@ function hiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
 
         <hr class="divider"/>
         <p style="font-size:14px;color:#6b7280">
-          לביטול מנוי: <a href="mailto:hive@hadar-danan.co.il" style="color:#6b7280">hive@hadar-danan.co.il</a> או דרך האזור האישי
+          לביטול מנוי: <a href="mailto:hive@beegood.online" style="color:#6b7280">hive@beegood.online</a> או דרך האזור האישי
         </p>
       </div>
     `),
