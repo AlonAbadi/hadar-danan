@@ -26,7 +26,7 @@ export default async function AccountPage() {
 
   const { data: userData } = await db
     .from("users")
-    .select("id, name, email, phone, status, hive_status, hive_tier")
+    .select("id, name, email, phone, status, hive_status, hive_tier, hive_next_billing_date")
     .eq("auth_id", user.id)
     .maybeSingle();
 
@@ -40,8 +40,9 @@ export default async function AccountPage() {
 
   const purchases = rawPurchases ?? [];
 
+  const HIVE_PRODUCTS = new Set(["hive_starter_160", "hive_pro_280", "hive_elite_480"]);
   const credit = purchases
-    .filter((p) => p.status === "completed")
+    .filter((p) => p.status === "completed" && !HIVE_PRODUCTS.has(p.product))
     .reduce((sum, p) => sum + p.amount, 0);
 
   const isGoogleUser =

@@ -22,6 +22,7 @@ interface UserData {
   status: string;
   hive_status: string | null;
   hive_tier: string | null;
+  hive_next_billing_date: string | null;
 }
 
 interface Props {
@@ -34,12 +35,21 @@ interface Props {
 
 // ── Constants ─────────────────────────────────────────────────
 const PRODUCT_LABELS: Record<string, string> = {
-  challenge_197:   "אתגר 7 ימים",
-  workshop_1080:   "סדנה יום אחד",
-  course_1800:     "קורס דיגיטלי",
-  strategy_4000:   "פגישת אסטרטגיה",
-  premium_14000:   "יום צילום פרמיום",
-  test_1:          "תשלום בדיקה",
+  challenge_197:    "אתגר 7 ימים",
+  workshop_1080:    "סדנה יום אחד",
+  course_1800:      "קורס דיגיטלי",
+  strategy_4000:    "אסטרטגיה",
+  premium_14000:    "פרימיום",
+  test_1:           "תשלום בדיקה",
+  hive_starter_160: "כוורת Starter",
+  hive_pro_280:     "כוורת Pro",
+  hive_elite_480:   "כוורת Elite",
+};
+
+const HIVE_TIER_MAP: Record<string, { label: string; color: string }> = {
+  discounted_29: { label: "Starter", color: "#378ADD" },
+  basic_97:      { label: "Pro",     color: "#E8B94A" },
+  elite:         { label: "Elite",   color: "#7F77DD" },
 };
 
 const CONTENT_LINKS: Record<string, string> = {
@@ -340,7 +350,7 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
 
   const displayName = userData?.name || authUser.email;
 
-  // Active content: completed purchases that have a content URL, plus hive
+  // Active content: completed purchases that have a content URL
   const contentItems: { label: string; href: string }[] = [];
   const seen = new Set<string>();
   for (const p of purchases) {
@@ -349,9 +359,9 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
       contentItems.push({ label: PRODUCT_LABELS[p.product] ?? p.product, href: CONTENT_LINKS[p.product] });
     }
   }
-  if (userData?.hive_status === "active") {
-    contentItems.push({ label: "הכוורת", href: "/hive/members" });
-  }
+
+  const isHiveActive = userData?.hive_status === "active";
+  const hiveTierInfo = HIVE_TIER_MAP[userData?.hive_tier ?? ""] ?? { label: "Starter", color: "#378ADD" };
 
   async function handleSaveProfile() {
     setSaving(true);
@@ -420,6 +430,45 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
       {/* Content */}
       <div style={S.card}>
         <p style={S.sectionTitle}>התוכן שלי</p>
+
+        {/* Hive membership card */}
+        {isHiveActive && (
+          <div style={{
+            ...S.contentItem,
+            background: `${hiveTierInfo.color}0D`,
+            border: `1px solid ${hiveTierInfo.color}33`,
+            borderRadius: 10,
+            marginBottom: 10,
+            flexDirection: "column",
+            alignItems: "stretch",
+            gap: 10,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Link href="/hive/members" style={S.enterBtn}>כנס</Link>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", marginBottom: 4 }}>
+                  <span style={{
+                    fontSize: 12, fontWeight: 700,
+                    padding: "2px 10px", borderRadius: 20,
+                    background: `${hiveTierInfo.color}1A`,
+                    border: `1px solid ${hiveTierInfo.color}44`,
+                    color: hiveTierInfo.color,
+                  }}>
+                    {hiveTierInfo.label}
+                  </span>
+                  <span style={{ ...S.contentLabel }}>הכוורת</span>
+                </div>
+                {userData?.hive_next_billing_date && (
+                  <div style={{ fontSize: 12, color: "#9E9990", textAlign: "right" }}>
+                    חידוש: {new Date(userData.hive_next_billing_date).toLocaleDateString("he-IL")}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Regular content items */}
         {contentItems.length > 0 ? (
           contentItems.map((item) => (
             <div key={item.href} style={S.contentItem}>
@@ -432,7 +481,7 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
               <Link href={item.href} style={S.enterBtn}>כנס</Link>
             </div>
           ))
-        ) : (
+        ) : !isHiveActive ? (
           <>
             <p style={{ fontSize: 13, color: "#9E9990", marginTop: 0, marginBottom: 16 }}>
               עדיין אין לך גישה לתוכן. בחר מסלול:
@@ -446,7 +495,7 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
               </div>
             ))}
           </>
-        )}
+        ) : null}
       </div>
     </>
   );
