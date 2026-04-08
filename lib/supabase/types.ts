@@ -129,6 +129,7 @@ export interface Database {
           user_id: string;
           product: ProductType;
           amount: number;
+          amount_paid: number | null;
           currency: string;
           status: PurchaseStatus;
           cardcom_ref: string | null;
@@ -140,6 +141,7 @@ export interface Database {
           user_id: string;
           product: ProductType;
           amount: number;
+          amount_paid?: number | null;
           currency?: string;
           status?: PurchaseStatus;
           cardcom_ref?: string | null;
@@ -151,6 +153,7 @@ export interface Database {
           user_id?: string;
           product?: ProductType;
           amount?: number;
+          amount_paid?: number | null;
           currency?: string;
           status?: PurchaseStatus;
           cardcom_ref?: string | null;

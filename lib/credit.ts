@@ -1,9 +1,16 @@
 /**
  * Server-side credit helper.
  *
- * Credit = SUM of purchases.amount for all completed purchases.
- * This is the actual money paid (not list prices), so every shekel ever
- * paid counts toward the next purchase.
+ * Credit = deposits minus withdrawals, excluding hive products.
+ * - Deposit per purchase = amount_paid (what the user actually paid)
+ * - Withdrawal per purchase = discount used = amount - amount_paid
+ * - Net per purchase = 2 * amount_paid - amount
+ *
+ * Example: paid 197 for challenge (no discount) → earns 197.
+ *          paid 1603 for course (197 discount used) → earns 1603, spent 197.
+ *          Net = 197 + 1603 - 197 = 1603.
+ *
+ * Hive subscriptions do not earn or spend credit.
  */
 import { createServerClient } from "@/lib/supabase/server";
 
@@ -21,9 +28,14 @@ export async function getUserCredit(email: string): Promise<number> {
 
   const { data: purchases } = await supabase
     .from("purchases")
-    .select("amount")
+    .select("amount, amount_paid")
     .eq("user_id", user.id)
-    .eq("status", "completed");
+    .eq("status", "completed")
+    .not("product", "like", "hive_%");
 
-  return (purchases ?? []).reduce((sum, p) => sum + (p.amount ?? 0), 0);
+  return (purchases ?? []).reduce((sum, p) => {
+    const paid = p.amount_paid ?? p.amount ?? 0;
+    const list = p.amount ?? 0;
+    return sum + (2 * paid - list);
+  }, 0);
 }
