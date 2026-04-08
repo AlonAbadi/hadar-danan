@@ -271,25 +271,27 @@ export default async function LandingPage() {
           {/* ══════════════════════════════════════════════════════
               5. BINGE CTA
           ══════════════════════════════════════════════════════ */}
-          <section style={{ background: "#080C14", padding: "48px 24px" }}>
-            <a
-              href="/binge"
+          <section style={{ background: "#080C14", padding: "40px 24px" }}>
+            <div
+              className="rounded-2xl"
               style={{
-                display: "block",
-                maxWidth: 640,
+                maxWidth: 480,
                 margin: "0 auto",
-                background: "linear-gradient(145deg, #141820, #111620)",
+                background: "#141820",
                 border: "1px solid #2C323E",
-                borderRadius: 16,
-                padding: "36px 32px",
+                padding: "32px 28px",
                 textAlign: "center",
-                textDecoration: "none",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 12,
               }}
             >
+              <Image src="/beegood_logo.png" alt="Bee Good" width={36} height={28} />
               <p style={{
-                margin: "0 0 10px",
-                fontSize: "clamp(36px, 8vw, 52px)",
-                fontWeight: 900,
+                margin: 0,
+                fontSize: 30,
+                fontWeight: 700,
                 lineHeight: 1,
                 background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
                 WebkitBackgroundClip: "text",
@@ -299,22 +301,27 @@ export default async function LandingPage() {
               }}>
                 בינג׳
               </p>
-              <p style={{ margin: "0 0 24px", fontSize: 16, color: "#9E9990", fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
+              <p style={{ margin: 0, fontSize: 15, color: "#9E9990", fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
                 כל התכנים של הדר במקום אחד
               </p>
-              <span style={{
-                display: "inline-block",
-                background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
-                color: "#080C14",
-                fontSize: 14,
-                fontWeight: 800,
-                padding: "10px 28px",
-                borderRadius: 24,
-                fontFamily: "var(--font-assistant), Assistant, sans-serif",
-              }}>
+              <a
+                href="/binge"
+                style={{
+                  marginTop: 4,
+                  display: "inline-block",
+                  background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
+                  color: "#080C14",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  padding: "10px 28px",
+                  borderRadius: 24,
+                  textDecoration: "none",
+                  fontFamily: "var(--font-assistant), Assistant, sans-serif",
+                }}
+              >
                 לכל התכנים ←
-              </span>
-            </a>
+              </a>
+            </div>
           </section>
 
           {/* ══════════════════════════════════════════════════════
