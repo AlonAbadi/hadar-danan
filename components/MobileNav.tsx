@@ -27,7 +27,11 @@ const ITEMS_GROUP3 = [
 const ITEMS_GROUP4 = [{ label: "הכוורת 🐝",        href: "/hive" }];
 const ITEMS_GROUP5 = [{ label: "האזור האישי שלי", href: "/my" }];
 
-export function MobileNav() {
+interface MobileNavProps {
+  userInitial?: string | null;
+}
+
+export function MobileNav({ userInitial = null }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -60,23 +64,58 @@ export function MobileNav() {
           borderBottom: "1px solid #2C323E",
         }}
       >
-        {/* RIGHT (visually) - Logo text */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <img src="/beegood_logo.png" alt="Bee Good" style={{ height: 34, width: "auto" }} />
-          <div style={{ color: "#EDE9E1", fontWeight: 700, fontSize: 18, fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
-            הדר דנן
-          </div>
-        </Link>
+        {/* LEFT slot — avatar or login button */}
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
+          {userInitial ? (
+            <a
+              href="/account"
+              style={{
+                width: 26, height: 26, borderRadius: "50%",
+                background: "rgba(127,119,221,0.25)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 11, fontWeight: 700, color: "#9F97DD",
+                textDecoration: "none",
+              }}
+            >
+              {userInitial}
+            </a>
+          ) : (
+            <a
+              href="/login"
+              style={{
+                background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
+                color: "#080C14",
+                fontSize: 12, fontWeight: 700,
+                padding: "5px 14px", borderRadius: 20,
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              התחבר
+            </a>
+          )}
+        </div>
 
-        {/* LEFT (visually) - Hamburger */}
-        <button
-          aria-label="פתח תפריט"
-          aria-expanded={open}
-          onClick={() => setOpen(true)}
-          style={{ lineHeight: 0, padding: 4, background: "none", border: "none" }}
-        >
-          <Menu color="#EDE9E1" size={28} />
-        </button>
+        {/* CENTER — logo */}
+        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+          <Link href="/" style={{ textDecoration: "none" }}>
+            <div style={{ color: "#EDE9E1", fontWeight: 700, fontSize: 18, fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
+              הדר דנן
+            </div>
+          </Link>
+        </div>
+
+        {/* RIGHT slot — hamburger */}
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+          <button
+            aria-label="פתח תפריט"
+            aria-expanded={open}
+            onClick={() => setOpen(true)}
+            style={{ lineHeight: 0, padding: 4, background: "none", border: "none" }}
+          >
+            <Menu color="#EDE9E1" size={28} />
+          </button>
+        </div>
       </nav>
 
       {/* ── Overlay ─────────────────────────────────────────── */}

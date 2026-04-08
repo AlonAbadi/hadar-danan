@@ -3,7 +3,7 @@ import { Assistant } from "next/font/google";
 import "./globals.css";
 import { Pixels }              from "@/components/analytics/Pixels";
 import { AccessibilityWidget } from "@/components/AccessibilityWidget";
-import { MobileNav }           from "@/components/MobileNav";
+import { MobileNavServer }     from "@/components/MobileNavServer";
 import { DesktopNav }          from "@/components/DesktopNav";
 
 const assistant = Assistant({
@@ -77,7 +77,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">דלג לתוכן הראשי</a>
         <Pixels />
         <AccessibilityWidget />
-        <MobileNav />
+        <MobileNavServer />
         <DesktopNav />
         <div id="main-content" tabIndex={-1} style={{ outline: "none" }} />
         <div style={{ paddingTop: 64 }}>
