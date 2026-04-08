@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 
 type Category = "הכל" | "וידאו" | "פודקאסטים" | "טיפים" | "סיפורים";
@@ -197,8 +198,8 @@ function ScrollRow({
           display: "flex",
           gap: 10,
           overflowX: "auto",
-          paddingRight: 20,
-          paddingLeft: 20,
+          paddingInlineStart: 20,
+          paddingInlineEnd: 20,
           paddingBottom: 4,
         }}
       >
@@ -252,7 +253,7 @@ export default function BingePage() {
       {/* ── Page header ──────────────────────────────────────── */}
       <div style={{
         position: "sticky",
-        top: 64,
+        top: 0,
         zIndex: 30,
         display: "flex",
         alignItems: "center",
@@ -263,19 +264,21 @@ export default function BingePage() {
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid #1E2430",
       }}>
-        <h1 style={{
-          margin: 0,
-          fontSize: 26,
-          fontWeight: 900,
-          letterSpacing: "-0.5px",
-          background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
-          fontFamily: "var(--font-assistant), Assistant, sans-serif",
-        }}>
-          בינג׳
-        </h1>
+        <Link href="/" style={{ textDecoration: "none" }}>
+          <h1 style={{
+            margin: 0,
+            fontSize: 26,
+            fontWeight: 900,
+            letterSpacing: "-0.5px",
+            background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            fontFamily: "var(--font-assistant), Assistant, sans-serif",
+          }}>
+            בינג׳
+          </h1>
+        </Link>
         <button
           aria-label="חפש"
           style={{
@@ -372,7 +375,10 @@ export default function BingePage() {
           display: "flex",
           gap: 8,
           overflowX: "auto",
-          padding: "16px 20px",
+          paddingInlineStart: 20,
+          paddingInlineEnd: 20,
+          paddingTop: 16,
+          paddingBottom: 16,
         }}
       >
         {CATEGORIES.map((cat) => (

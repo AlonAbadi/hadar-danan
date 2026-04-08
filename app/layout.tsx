@@ -5,6 +5,7 @@ import { Pixels }              from "@/components/analytics/Pixels";
 import { AccessibilityWidget } from "@/components/AccessibilityWidget";
 import { MobileNavServer }     from "@/components/MobileNavServer";
 import { DesktopNavServer }    from "@/components/DesktopNavServer";
+import { LayoutShell }         from "@/components/LayoutShell";
 
 const assistant = Assistant({
   subsets:  ["hebrew", "latin"],
@@ -77,12 +78,10 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">דלג לתוכן הראשי</a>
         <Pixels />
         <AccessibilityWidget />
-        <MobileNavServer />
-        <DesktopNavServer />
-        <div id="main-content" tabIndex={-1} style={{ outline: "none" }} />
-        <div style={{ paddingTop: 64 }}>
+        <LayoutShell nav={<><MobileNavServer /><DesktopNavServer /></>}>
+          <div id="main-content" tabIndex={-1} style={{ outline: "none" }} />
           {children}
-        </div>
+        </LayoutShell>
       </body>
     </html>
   );
