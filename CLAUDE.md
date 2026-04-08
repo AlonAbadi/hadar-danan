@@ -18,7 +18,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | Styling | Tailwind CSS v4 |
 | Database | Supabase (PostgreSQL + RLS) |
 | Auth | Supabase Auth (email/password + Google OAuth) |
-| Email | Resend (`onboarding@resend.dev` — domain verified, sender updating to beegood.online) |
+| Email | Resend (`noreply@beegood.online` — **LIVE**, domain verified, DNS in Vercel) |
 | Payments | Cardcom LowProfile API (**live** — credentials set in Vercel) |
 | Deployment | Vercel (Hobby plan — GitHub auto-deploy on push) |
 | External cron | cron-job.org → `/api/cron/jobs` every 5 minutes |
@@ -267,6 +267,9 @@ All templates: `lib/email/templates.ts` → `TEMPLATES` map.
 | `/api/hive/status` | GET | Get hive status for email |
 | `/api/video-event` | POST | Record Vimeo video analytics event into `video_events` |
 | `/api/quiz-result` | POST | Save quiz answers + scores + recommendation into `quiz_results` |
+| `/api/quiz-result` | PATCH | Update existing quiz_result row with user_id after lead form submit |
+| `/api/user/update-profile` | POST | Partial-update user profile — only fields present in body are updated (name / phone / marketing_consent + consent_at) |
+| `/api/purchases/[id]/cancel` | POST | Cancel a pending purchase (sets status=failed). Auth-gated — ownership verified against public.users.id |
 | `/api/auth/*` | - | Handled by Supabase Auth (callback at `/auth/callback`) |
 
 ---
@@ -333,11 +336,45 @@ if (!user) redirect("/login");
 
 ---
 
+## CRITICAL: Two distinct user IDs
+
+**This is the most common source of bugs in this codebase.** There are two separate UUIDs for a user:
+
+| ID | Where | How to access | Used for |
+|---|---|---|---|
+| `auth.users.id` | Supabase Auth schema | `user.id` (from `supabase.auth.getUser()`) | Auth/session verification only |
+| `public.users.id` | Public users table | `userData.id` (from DB query on `users` table) | All FK references — `purchases.user_id`, `events.user_id`, `bookings.user_id`, etc. |
+
+**Rule:** Always use `userData.id` (public UUID) for any DB operation. The `authUser.id` is only for verifying who is logged in.
+
+**Example of the bug:** Passing `authUser.id` as `user_id` to `/api/checkout` causes a FK violation because `purchases.user_id` references `public.users.id`, not `auth.users.id`.
+
+**How `auth_id` links them:** The `users` table has an `auth_id` column (FK → `auth.users.id`). To get `userData`, always query: `.from("users").eq("auth_id", user.id)`. The result's `.id` field is the `public.users.id`.
+
+---
+
+## Email sending — beegood.online (April 2026)
+
+Transactional email is sent via Resend from `noreply@beegood.online`. This is a send-only address — no inbox.
+
+**DNS records (configured in Vercel DNS, NOT Hover):**
+- MX record: `feedback-smtp.us-east-1.amazonses.com` (priority 10) — required by Resend
+- SPF TXT: `v=spf1 include:amazonses.com ~all`
+- DKIM CNAME: Resend-provided CNAME records (3 entries)
+- DMARC TXT: `v=DMARC1; p=none; rua=mailto:noreply@beegood.online`
+
+**CRITICAL: Do NOT delete these DNS records** — will break email delivery for all users.
+
+**Resend configuration:** Domain `beegood.online` verified in Resend dashboard. Sender: `הדר דנן <noreply@beegood.online>`. `NEXT_PUBLIC_FROM_EMAIL=noreply@beegood.online` set in Vercel environment variables.
+
+---
+
 ## Credit system
 
 Every completed purchase earns credit equal to the amount paid. Credit is applied to the next purchase.
 
-- **Helper:** `lib/credit.ts` → `getUserCredit(email)` — returns sum of `purchases.amount` for all `status=completed` rows
+- **Formula:** Credit = `amount_paid` (or `amount` if `amount_paid` is null) of the **most recent completed non-hive purchase**. Hive subscription purchases (`hive_starter_160`, `hive_pro_280`, `hive_elite_480`) are excluded from credit calculation.
+- **Helper:** `lib/credit.ts` → `getUserCredit(email)` — returns credit amount
 - **API:** `/api/user/credit?email=...` — used by `/account`
 - **Redemption:** `/account/redeem` — user selects next product, credit is deducted from checkout total
 - **Column:** `purchases.amount_paid` (migration 016) — stores actual amount after credit/discounts (may differ from `amount`)
@@ -401,7 +438,7 @@ SUPABASE_SERVICE_ROLE_KEY=        # all server DB access
 
 # Resend
 RESEND_API_KEY=                   # re_UKo76Jxb_...
-NEXT_PUBLIC_FROM_EMAIL=           # onboarding@resend.dev (updating to beegood.online address)
+NEXT_PUBLIC_FROM_EMAIL=           # noreply@beegood.online (LIVE — set in Vercel, domain verified)
 
 # Cardcom (live — credentials set in Vercel)
 CARDCOM_TERMINAL=                 # 143422
@@ -437,7 +474,7 @@ WHATSAPP_GROUP_URL=
 - **Vercel cron** (`vercel.json`): `0 22 * * *` — daily at 22:00 UTC
 - **External cron:** cron-job.org hits `GET /api/cron/jobs` every 5 min with `Authorization: Bearer <CRON_SECRET>`
 
-**Current status (April 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-016) applied. A/B test `landing_headline` running live. Course content player built. Challenge content player built. Account page + credit system live. Hive members area live.
+**Current status (April 8, 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-016) applied. A/B test `landing_headline` running live. Course content player built. Challenge content player built. Account page + credit system live. Hive members area live. Email sending live from `noreply@beegood.online`. Quiz skip logic for logged-in users live. Account communication preferences section live.
 
 ---
 
@@ -492,6 +529,11 @@ WHATSAPP_GROUP_URL=
 - **CRM user timeline** — `/admin/users/[id]` shows Hebrew event descriptions, notes, reminders.
 - **Favicon** — updated to beegood logo (bee icon)
 - **Domain** — all references updated to beegood.online
+- **Email sending LIVE** — `noreply@beegood.online` via Resend. DNS records (MX, SPF, DKIM, DMARC) configured in Vercel DNS. `NEXT_PUBLIC_FROM_EMAIL` set in Vercel. Send-only domain (no inbox). Do not delete DNS records.
+- **Quiz form skip logic** — logged-in users with name + phone skip step 6 entirely and go straight to results. Partial profile (missing phone) shows mini-form with only missing fields. Soft marketing consent banner shown on result page when `isLoggedIn && !hasConsent`. `app/quiz/page.tsx` is an async server component that fetches `initialUser` and passes to `QuizClient`.
+- **Account page redesign (April 8, 2026)** — tabs: Profile, Purchases, Hive. Completed purchases in dedicated tab. `PendingPaymentCallout` banner shows pending purchases with "השלם תשלום" resume button + "בטל" cancel link. Quiz recommendation shown in Profile tab via `QuizRecommendationCard` from `lib/quiz-config.ts`.
+- **Resume payment + cancel pending purchase** — `PendingPaymentCallout` (`app/account/AccountClient.tsx`) calls `/api/checkout` to resume, or `/api/purchases/[id]/cancel` to cancel. **CRITICAL:** passes `userData.id` (public.users UUID), NOT `authUser.id` (Supabase Auth UUID) — these are different.
+- **Communication preferences in Profile tab** — `/account` Profile tab has separate "העדפות תקשורת" card with phone field + iOS-style marketing consent toggle. Phone was moved OUT of "פרטים אישיים". Save is disabled until dirty. Uses `POST /api/user/update-profile` with partial-update pattern.
 
 ---
 
@@ -499,7 +541,6 @@ WHATSAPP_GROUP_URL=
 
 | Item | Blocker | How to activate |
 |---|---|---|
-| Real email sender domain | Set `NEXT_PUBLIC_FROM_EMAIL` to beegood.online address in Vercel | Configure sending domain in Resend dashboard |
 | Cardcom recurring (Hive) | Need Cardcom recurring setup | Configure recurring billing once standard payments confirmed |
 | WhatsApp group link for Hive | Need group URL | Update placeholder in hive_welcome email template |
 | Hive Zoom link | Content | Update placeholder in hive_welcome email template |
