@@ -50,6 +50,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
       {/* ── Top bar ─────────────────────────────────────────── */}
       <nav
         className="md:hidden"
+        dir="ltr"
         style={{
           position: "fixed",
           top: 0,
@@ -110,12 +111,10 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
         {/* SPACER */}
         <div style={{ flex: 1 }} />
 
-        {/* FAR RIGHT — bee logo + text */}
+        {/* FAR RIGHT — text + bee logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "#E8B94A", fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>הדר דנן</span>
           <Image src="/beegood_logo.png" alt="Bee Good" width={38} height={30} />
-          <div style={{ color: "#EDE9E1", fontWeight: 700, fontSize: 17, fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
-            הדר דנן
-          </div>
         </Link>
       </nav>
 
