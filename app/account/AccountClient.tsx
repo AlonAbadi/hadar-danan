@@ -351,10 +351,10 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
 
   const displayName = userData?.name || authUser.email;
 
-  // Active content: completed purchases that have a content URL
+  // Active content: completed purchases that have a content URL, oldest first
   const contentItems: { label: string; href: string }[] = [];
   const seen = new Set<string>();
-  for (const p of purchases) {
+  for (const p of [...purchases].reverse()) {
     if (p.status === "completed" && CONTENT_LINKS[p.product] && !seen.has(p.product)) {
       seen.add(p.product);
       contentItems.push({ label: PRODUCT_LABELS[p.product] ?? p.product, href: CONTENT_LINKS[p.product] });
