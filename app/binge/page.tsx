@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import Image from "next/image";
 
 type Category = "הכל" | "וידאו" | "פודקאסטים" | "טיפים" | "סיפורים";
 
@@ -257,14 +257,15 @@ export default function BingePage() {
         zIndex: 30,
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent: "center",
         padding: "0 20px",
         height: 52,
         background: "rgba(13,16,24,0.95)",
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid #1E2430",
       }}>
-        <Link href="/" style={{ textDecoration: "none" }}>
+        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
+          <Image src="/beegood_logo.png" alt="Bee Good" width={30} height={24} />
           <h1 style={{
             margin: 0,
             fontSize: 26,
@@ -279,19 +280,6 @@ export default function BingePage() {
             בינג׳
           </h1>
         </Link>
-        <button
-          aria-label="חפש"
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 6,
-            lineHeight: 0,
-            color: "#9E9990",
-          }}
-        >
-          <Search size={20} color="#9E9990" />
-        </button>
       </div>
 
       {/* ── Featured card ────────────────────────────────────── */}
