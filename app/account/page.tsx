@@ -44,10 +44,12 @@ export default async function AccountPage() {
   const purchases: any[] = rawPurchases ?? [];
 
   const HIVE_PRODUCTS = new Set(["hive_starter_160", "hive_pro_280", "hive_elite_480"]);
-  const lastPurchase = purchases.find(
-    (p) => p.status === "completed" && !HIVE_PRODUCTS.has(p.product)
-  );
-  const credit: number = lastPurchase ? (lastPurchase.amount_paid ?? lastPurchase.amount) : 0;
+  const nonHivePurchases = purchases
+    .filter((p) => p.status === "completed" && !HIVE_PRODUCTS.has(p.product))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const credit: number = nonHivePurchases.length > 0
+    ? (nonHivePurchases[0].amount_paid ?? nonHivePurchases[0].amount)
+    : 0;
 
   const isGoogleUser =
     user.app_metadata?.provider === "google" ||

@@ -419,7 +419,7 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
           </div>
           {credit > 0 && (
             <Link
-              href="/course"
+              href="/account/redeem"
               style={{ ...S.enterBtn, fontSize: 12, padding: "7px 14px" }}
             >
               מימש קרדיט
