@@ -43,12 +43,13 @@ export default async function AccountPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const purchases: any[] = rawPurchases ?? [];
 
+  // DB query already returns purchases sorted created_at DESC — trust that order directly.
   const HIVE_PRODUCTS = new Set(["hive_starter_160", "hive_pro_280", "hive_elite_480"]);
-  const nonHivePurchases = purchases
-    .filter((p) => p.status === "completed" && !HIVE_PRODUCTS.has(p.product))
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  const credit: number = nonHivePurchases.length > 0
-    ? (nonHivePurchases[0].amount_paid ?? nonHivePurchases[0].amount)
+  const mostRecentNonHive = purchases.find(
+    (p) => p.status === "completed" && !HIVE_PRODUCTS.has(p.product)
+  );
+  const credit: number = mostRecentNonHive
+    ? (mostRecentNonHive.amount_paid ?? mostRecentNonHive.amount)
     : 0;
 
   const isGoogleUser =
