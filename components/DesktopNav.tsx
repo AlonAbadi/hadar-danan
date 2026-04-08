@@ -77,11 +77,13 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
           <a
             href="/account"
             style={{
-              width: 32, height: 32, borderRadius: "50%",
-              background: "rgba(127,119,221,0.25)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 13, fontWeight: 700, color: "#9F97DD",
-              textDecoration: "none",
+              border: "1px solid rgba(159,151,221,0.5)",
+              background: "rgba(127,119,221,0.08)",
+              borderRadius: 20,
+              padding: "5px 14px",
+              display: "flex", alignItems: "center",
+              fontSize: 13, fontWeight: 600, color: "#9F97DD",
+              textDecoration: "none", whiteSpace: "nowrap",
             }}
           >
             {userInitial}

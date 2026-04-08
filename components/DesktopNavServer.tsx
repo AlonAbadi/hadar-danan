@@ -30,7 +30,7 @@ export async function DesktopNavServer() {
         .maybeSingle();
 
       const displayName = userData?.name || userData?.email || user.email || "?";
-      userInitial = displayName.charAt(0).toUpperCase();
+      userInitial = displayName.split(" ")[0]; // first name (or email prefix)
     }
   } catch {
     // Session read failed — show logged-out state
