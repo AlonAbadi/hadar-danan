@@ -113,7 +113,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
 
         {/* FAR RIGHT — text + bee logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: "#E8B94A", fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>הדר דנן</span>
+          <span style={{ fontSize: 17, fontWeight: 700, color: "#EDE9E1", fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>הדר דנן</span>
           <Image src="/beegood_logo.png" alt="Bee Good" width={38} height={30} />
         </Link>
       </nav>
