@@ -67,8 +67,8 @@ export function SignupForm({ ctaLabel, dark = false }: SignupFormProps) {
     if (!form.email.includes("@") || !form.email.includes("."))
       errs.email = "כתובת אימייל לא תקינה";
     const phone = form.phone.replace(/[\s-]/g, "");
-    if (!/^05\d{8}$/.test(phone))
-      errs.phone = "מספר טלפון לא תקין (לדוגמה: 0501234567)";
+    if (!/^05\d{8}$/.test(phone) && !/^\+9725\d{8}$/.test(phone))
+      errs.phone = "מספר טלפון לא תקין (לדוגמה: 0501234567 או +972501234567)";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
