@@ -4,7 +4,7 @@ import "./globals.css";
 import { Pixels }              from "@/components/analytics/Pixels";
 import { AccessibilityWidget } from "@/components/AccessibilityWidget";
 import { MobileNavServer }     from "@/components/MobileNavServer";
-import { DesktopNav }          from "@/components/DesktopNav";
+import { DesktopNavServer }    from "@/components/DesktopNavServer";
 
 const assistant = Assistant({
   subsets:  ["hebrew", "latin"],
@@ -78,7 +78,7 @@ export default function RootLayout({
         <Pixels />
         <AccessibilityWidget />
         <MobileNavServer />
-        <DesktopNav />
+        <DesktopNavServer />
         <div id="main-content" tabIndex={-1} style={{ outline: "none" }} />
         <div style={{ paddingTop: 64 }}>
           {children}

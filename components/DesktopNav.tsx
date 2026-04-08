@@ -36,7 +36,11 @@ const LINK_STYLE = (active: boolean): React.CSSProperties => ({
   transition: "color 150ms",
 });
 
-export function DesktopNav() {
+interface DesktopNavProps {
+  userInitial?: string | null;
+}
+
+export function DesktopNav({ userInitial = null }: DesktopNavProps) {
   const pathname = usePathname();
   const [dropOpen, setDropOpen] = useState(false);
 
@@ -66,6 +70,38 @@ export function DesktopNav() {
           הדר דנן
         </div>
       </Link>
+
+      {/* LEFT — auth capsule */}
+      <div style={{ flexShrink: 0 }}>
+        {userInitial ? (
+          <a
+            href="/account"
+            style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: "rgba(127,119,221,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 13, fontWeight: 700, color: "#9F97DD",
+              textDecoration: "none",
+            }}
+          >
+            {userInitial}
+          </a>
+        ) : (
+          <a
+            href="/login"
+            style={{
+              background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
+              color: "#080C14",
+              fontSize: 13, fontWeight: 700,
+              padding: "6px 18px", borderRadius: 20,
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            התחבר
+          </a>
+        )}
+      </div>
 
       {/* CENTER - Nav links (RTL order) */}
       <div style={{ display: "flex", alignItems: "center", gap: 24, direction: "rtl", position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
