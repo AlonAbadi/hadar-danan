@@ -399,7 +399,9 @@ function formatHebDate(iso: string): string {
 }
 
 // ── Pending payment callout ───────────────────────────────────
-function PendingPaymentCallout({ pendingPurchases, authUserId }: { pendingPurchases: Purchase[]; authUserId: string }) {
+// userId is public.users.id (NOT auth.users.id)
+// purchases.user_id has a FK to public.users.id, so we must use the public ID
+function PendingPaymentCallout({ pendingPurchases, userId }: { pendingPurchases: Purchase[]; userId: string }) {
   const router = useRouter();
   const [resumeLoading, setResumeLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -417,7 +419,7 @@ function PendingPaymentCallout({ pendingPurchases, authUserId }: { pendingPurcha
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product: latest.product, user_id: authUserId }),
+        body: JSON.stringify({ product: latest.product, user_id: userId }),
       });
       if (res.ok) {
         const { url } = await res.json();
@@ -777,7 +779,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
       </div>
 
       {/* Pending payment callout */}
-      <PendingPaymentCallout pendingPurchases={pendingPurchases} authUserId={authUser.id} />
+      <PendingPaymentCallout pendingPurchases={pendingPurchases} userId={userData?.id ?? ""} />
 
       {/* Credit */}
       <div style={S.card}>
