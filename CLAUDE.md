@@ -2,11 +2,11 @@
 
 ## Project overview
 
-Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free training signup, nurtures them through a value ladder with automated Hebrew email sequences, and converts them to paid products. Includes a monthly membership community ("הכוורת").
+Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free training signup, nurtures them through a value ladder with automated Hebrew email sequences, and converts them to paid products. Includes a monthly membership community ("הכוורת") and a full Supabase Auth system with Google OAuth.
 
-**Live site:** https://hadar-danan.vercel.app
+**Live site:** https://www.beegood.online
 **Supabase project:** `rufzcpwzolitoqqhdmrx`
-**Admin dashboard:** https://hadar-danan.vercel.app/admin (Basic Auth — see env vars)
+**Admin dashboard:** https://www.beegood.online/admin (Basic Auth — see env vars)
 
 ---
 
@@ -17,9 +17,10 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | Framework | Next.js 16 (App Router, TypeScript) |
 | Styling | Tailwind CSS v4 |
 | Database | Supabase (PostgreSQL + RLS) |
-| Email | Resend (`onboarding@resend.dev` currently — pending domain verification) |
+| Auth | Supabase Auth (email/password + Google OAuth) |
+| Email | Resend (`onboarding@resend.dev` — domain verified, sender updating to beegood.online) |
 | Payments | Cardcom LowProfile API (**live** — credentials set in Vercel) |
-| Deployment | Vercel (Hobby plan — one daily cron) |
+| Deployment | Vercel (Hobby plan — GitHub auto-deploy on push) |
 | External cron | cron-job.org → `/api/cron/jobs` every 5 minutes |
 
 ---
@@ -60,7 +61,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 
 **Font:** `Assistant` (Google Fonts) — the only font. Imported in `app/layout.tsx` as `--font-assistant`. Always use `font-assistant` class on page wrappers. No other fonts. The Cormorant Garamond / DM Sans experiment was fully reverted.
 
-**Nav logo:** Text-only "הדר דנן" — no bee image, no external image file. Styled with gold gradient on hover. `DesktopNav` and `MobileNav` components.
+**Nav logo:** Text-only "הדר דנן" — no bee image, no external image file. Styled with gold gradient on hover. `DesktopNavServer` + `DesktopNav` and `MobileNavServer` + `MobileNav` components. Nav shows logged-in user's first name in a hollow gold capsule (server-rendered auth state).
 
 **Stats section (homepage):** Social proof strip between hero and products. Three counters: "250+ עסקים", "4 שנים", "97% ממליצים". Gold animated numbers, muted label text. Background: `#080C14`. Do not add more stats without user approval.
 
@@ -70,7 +71,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 - Symbol: © (not ™)
 - Position: always **suffix** — `TrueSignal©` (never `©TrueSignal`)
 - Use `TrueSignal©` on first mention per page only
-- Appears max 1–2 times per page
+- Appears max 1-2 times per page
 - Always wrap in: `<span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span>` to prevent RTL reversal
 - Added to: homepage hero + philosophy section, strategy hero, premium hero, partnership philosophy, challenge/workshop/course hero descriptions
 - Footer microcopy on all pages: `"אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | TrueSignal©"`
@@ -90,34 +91,45 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | URL | Purpose | Price | Notes |
 |---|---|---|---|
 | `/` | Homepage — value ladder entry | Free signup | Fully dark (`#080C14`), Ladder+Netflix products section |
-| `/about` | About page | — | Static |
-| `/team` | Team page | — | Static |
+| `/about` | About page | - | Static |
+| `/team` | Team page | - | Static |
 | `/training` | Free training | Free | Lead magnet, SignupForm |
+| `/training/watch` | Free training video | Free | Vimeo embed, ProductsSection (excludeTraining) |
 | `/challenge` | 7-day video challenge | ₪197 | WhatsApp CTA (`ChallengeCTA`) |
+| `/challenge/content` | Challenge video content | - | Auth-gated, `ChallengePlayer` |
 | `/workshop` | 1-day workshop | ₪1,080 | WhatsApp CTA (`WorkshopCTA`) |
 | `/course` | Digital course — 16 lessons | ₪1,800 | Cardcom checkout (`CourseCTA`) |
+| `/course/content` | Course video player | - | Auth-gated, `CoursePlayer` — 8 modules, 16 lessons |
 | `/strategy` | Strategy session (90 min) | ₪4,000 | Info page — CTA links to `/strategy/book` |
 | `/strategy/book` | Full booking + payment flow | ₪4,000 | 2-step: BookingForm → Cardcom (`StrategyBookFlow`) |
-| `/strategy/success` | Post-payment confirmation | — | Payment confirmed, Zoom link sent within 24h |
+| `/strategy/success` | Post-payment confirmation | - | Payment confirmed, Zoom link sent within 24h |
 | `/premium` | Premium shoot day — 16 videos | ₪14,000 | 2-step: BookingForm → Cardcom (`PremiumBookingFlow`) |
-| `/premium/success` | Post-premium-payment | — | Shared `SuccessPage` component |
-| `/partnership` | Strategic partnership retainer | ₪10k–30k/mo | 2-step: lead form → BookingForm discovery call (`PartnershipBookingFlow`) |
-| `/hive` | הכוורת — monthly membership community | ₪29–₪97/mo | `HivePricingSection` client component |
-| `/hive/terms` | Hive membership legal terms | — | Static, full Hebrew legal text |
-| `/quiz` | 3-question diagnostic quiz | — | Routes user to right product |
-| `/my` | Personal area | — | Credit checker + hive cancel button |
-| `/thank-you` | Post-signup page | — | Upsell to `/challenge` |
-| `/challenge/success` | Post-challenge-purchase | — | Upsell to `/workshop` |
-| `/workshop/success` | Post-workshop-purchase | — | Upsell to `/course` |
-| `/course/success` | Post-course-purchase | — | — |
-| `/course/content` | Members-only course content | — | Placeholder — needs real links |
-| `/members` | Members area | — | Secret token gate (`?t=` or cookie) |
-| `/admin` | CRM dashboard | — | Basic Auth, full analytics + hive section |
-| `/admin/users/[id]` | Individual user profile | — | — |
-| `/accessibility` | Accessibility statement | — | Static, Hebrew WCAG 2.1 AA |
-| `/privacy` | Privacy policy | — | Static |
-| `/terms` | General terms of service | — | Static |
-| `/call` | Strategy call redirect | — | Redirects to `/strategy` |
+| `/premium/success` | Post-premium-payment | - | Shared `SuccessPage` component |
+| `/partnership` | Strategic partnership retainer | ₪10k-30k/mo | 2-step: lead form → BookingForm discovery call (`PartnershipBookingFlow`) |
+| `/hive` | הכוורת — monthly membership community | ₪29-₪97/mo | `HivePricingSection` client component |
+| `/hive/members` | Hive members area | - | Auth + hive_status=active gated, `HiveMembersClient` |
+| `/hive/terms` | Hive membership legal terms | - | Static, full Hebrew legal text |
+| `/quiz` | 3-question diagnostic quiz | - | Routes user to right product, saves to `quiz_results` |
+| `/account` | Personal area | - | Auth-gated — purchases, hive status, credit balance |
+| `/account/redeem` | Credit redemption | - | Apply accumulated credit to next purchase |
+| `/my` | Legacy personal area redirect | - | Redirects to `/account` |
+| `/login` | Login page | - | Email/password + Google OAuth |
+| `/signup` | Signup page | - | Email/password + Google OAuth |
+| `/forgot-password` | Password reset request | - | Sends reset email via Supabase Auth |
+| `/reset-password` | New password entry | - | Handles Supabase Auth reset token |
+| `/auth/callback` | OAuth callback | - | Supabase Auth callback handler |
+| `/thank-you` | Post-signup page | - | Upsell to `/challenge` |
+| `/challenge/success` | Post-challenge-purchase | - | Upsell to `/workshop` |
+| `/workshop/success` | Post-workshop-purchase | - | Upsell to `/course` |
+| `/course/success` | Post-course-purchase | - | - |
+| `/members` | Legacy members area | - | Secret token gate (`?t=` or cookie) — kept for backward compat |
+| `/admin` | CRM dashboard | - | Basic Auth, full analytics + hive section |
+| `/admin/users/[id]` | Individual user profile | - | Notes, reminders, event timeline |
+| `/test` | ₪1 test product | ₪1 | Cardcom testing; subtle footer link from /challenge |
+| `/accessibility` | Accessibility statement | - | Static, Hebrew WCAG 2.1 AA |
+| `/privacy` | Privacy policy | - | Updated April 2026 — full content |
+| `/terms` | General terms of service | - | Updated April 2026 — full content |
+| `/call` | Strategy call redirect | - | Redirects to `/strategy` |
 
 ---
 
@@ -125,32 +137,48 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 
 | Migration | File | Status |
 |---|---|---|
-| 001 | `schema.sql` | ✅ Applied — core tables |
-| 002 | `002_email_sequences.sql` | ✅ Applied — email automation |
-| 003 | `003_bookings.sql` | ✅ Applied — strategy booking |
-| 004 | `004_course.sql` | ✅ Applied — course product |
-| 005 | `005_partnership.sql` | ✅ Applied — partnership leads |
-| 006 | `006_consent.sql` | ✅ Applied — marketing consent |
-| 007 | `007_hive.sql` | ✅ Applied — hive columns live |
+| 001 | `schema.sql` | Applied — core tables |
+| 002 | `002_email_sequences.sql` | Applied — email automation |
+| 003 | `003_bookings.sql` | Applied — strategy booking |
+| 004 | `004_course.sql` | Applied — course product |
+| 005 | `005_partnership.sql` | Applied — partnership leads |
+| 006 | `006_consent.sql` | Applied — marketing consent |
+| 007 | `007_hive.sql` | Applied — hive columns on users |
+| 008 | `008_product_enum.sql` | Applied — course_1800, premium_14000, test_1 added to enum |
+| 009 | `009_video_analytics.sql` | Applied — video_events table |
+| 010 | `010_ab_proposals.sql` | Applied — ab_proposals table + seed data |
+| 011 | `011_video_events.sql` | Applied — video_events safe re-create with full indexes |
+| 012 | `012_quiz_results.sql` | Applied — quiz_results table |
+| 013 | `013_crm.sql` | Applied — notes, reminders tables; last_activity_at on users |
+| 014 | `014_auth.sql` | Applied — auth_id + email_verified on users; RLS policies |
+| 015 | `015_hive_content.sql` | Applied — hive_content table (tier-gated curated content) |
+| 016 | `016_amount_paid.sql` | Applied — amount_paid column on purchases |
 
-### Tables (9 core)
+### Tables (16 total)
 
 | Table | Purpose |
 |---|---|
-| `users` | Core CRM. `status` state machine, UTM params, A/B variant, hive fields (tier/status/started_at/cancelled_at/next_billing_date) |
+| `users` | Core CRM. `status` state machine, UTM params, A/B variant, hive fields, `auth_id` (FK to auth.users), `email_verified`, `last_activity_at` |
 | `identities` | Links anonymous `anon_id` cookies to identified users |
-| `purchases` | One row per payment attempt. `cardcom_ref` UNIQUE. `is_recurring` for hive. Status: `pending → completed / failed / refunded` |
+| `purchases` | One row per payment attempt. `cardcom_ref` UNIQUE. `is_recurring` for hive. `amount_paid` for actual amount after discounts. Status: `pending → completed / failed / refunded` |
 | `events` | Immutable event log — drives state machine + A/B counters |
 | `experiments` | A/B test registry — atomic visitor/conversion counters |
 | `jobs` | Outbox/job queue — processed by cron every 5 min |
 | `email_sequences` | Drip email definitions — trigger_event, delay_hours, template_key |
 | `email_logs` | One per sent email. UNIQUE `(user_id, sequence_id)` prevents doubles |
 | `error_logs` | Server error log — visible in `/admin` |
+| `video_events` | Vimeo video analytics — watch_progress, drop_off, completed events per video_id |
+| `ab_proposals` | AI-generated A/B test proposals — category, hypothesis, variants, status, live counters |
+| `quiz_results` | Quiz answers + scores + recommended product per session/user |
+| `notes` | CRM admin notes on users — author, content, created_at |
+| `reminders` | CRM task reminders — assigned_to, due_at, completed_at |
+| `hive_content` | Curated content for hive members — tier_required (starter/pro/elite), content_type (article/pdf/video) |
 
 **Key DB patterns:**
 - All server-side DB access: `createServerClient()` from `lib/supabase/server.ts` (service-role key, bypasses RLS)
-- Anon key never used — no client-side DB access
+- Auth pages only (`/login`, `/signup`, `/forgot-password`, `/reset-password`): use `createBrowserClient()` from `lib/supabase/browser.ts` for session management — this is the only exception
 - Optimistic locking on jobs: `UPDATE WHERE status='pending'`
+- RLS enabled on `users` and `purchases` tables (migration 014) — users can read/update their own rows via `auth_id = auth.uid()`
 
 ---
 
@@ -227,34 +255,93 @@ All templates: `lib/email/templates.ts` → `TEMPLATES` map.
 | `/api/signup` | POST | Upsert user, fire `USER_SIGNED_UP`, enqueue welcome |
 | `/api/events` | POST | Log event, run state machine, trigger sequences |
 | `/api/cron/jobs` | GET | Process pending jobs (`CRON_SECRET` bearer) |
-| `/api/checkout` | POST | Create Cardcom payment page (503 until credentials) |
+| `/api/checkout` | POST | Create Cardcom payment page |
 | `/api/cardcom/webhook` | POST | Idempotent payment confirmation |
 | `/api/book` | POST | Book session slot (strategy / premium / partnership). Returns `{ booking_id, user_id }` |
-| `/api/premium-lead` | POST | Save premium lead (still used by `PartnershipBookingFlow` step 1 equivalent) |
+| `/api/premium-lead` | POST | Save premium lead |
 | `/api/partnership-lead` | POST | Save partnership lead (step 1 of `PartnershipBookingFlow`) |
 | `/api/user/credit` | GET | Fetch accumulated credit for email |
 | `/api/hive/check` | POST | Check ₪29 tier eligibility (has completed purchase?) |
 | `/api/hive/join` | POST | Join hive — sets hive fields, enqueues emails, stubs Cardcom recurring |
 | `/api/hive/cancel` | POST | Cancel hive — sets cancelled_at, detects 14-day refund window |
-| `/api/hive/status` | GET | Get hive status for email (used by /my) |
+| `/api/hive/status` | GET | Get hive status for email |
+| `/api/video-event` | POST | Record Vimeo video analytics event into `video_events` |
+| `/api/quiz-result` | POST | Save quiz answers + scores + recommendation into `quiz_results` |
+| `/api/auth/*` | - | Handled by Supabase Auth (callback at `/auth/callback`) |
 
 ---
 
 ## Hive (הכוורת) — membership system
 
-Two tiers:
-- **₪97/month** — open to everyone (`basic_97`)
-- **₪29/month** — existing customers only (`discounted_29`) — verified server-side via completed purchases
+Three tiers (stored in `hive_tier` column):
+- **`discounted_29`** — ₪29/mo — existing customers only (Starter label)
+- **`basic_97`** — ₪97/mo — open to everyone (Pro label)
+- **`elite`** — ₪197/mo — premium tier (Elite label)
+
+Public-facing pricing page (`/hive`) shows two price options: ₪29 (for existing customers) and ₪97 (everyone).
 
 Join flow: click CTA → email check (₪29 only) → legal disclosure modal → consent checkbox (required) → submit → Cardcom recurring (stubbed until credentials)
 
-**Cancellation:** Via `/my` page → "בטל מנוי כוורת" button → confirmation modal → `POST /api/hive/cancel`
+**Members area:** `/hive/members` — gated by Supabase Auth session + `hive_status=active`. Shows tier-appropriate content from `hive_content` table. `HiveMembersClient` handles tier display and upgrade prompts.
+
+**Cancellation:** Via `/account` page → "בטל מנוי כוורת" button → confirmation modal → `POST /api/hive/cancel`
 
 **14-day refund window:** Auto-detected on cancellation. `refund_eligible: true` in cancellation email payload.
 
-**Admin section:** "כוורת 🐝" section in `/admin` shows total active, tier breakdown, MRR, new this month, cancellations, early-cancel refund alerts, upcoming billing dates.
+**Admin section:** "כוורת" section in `/admin` shows total active, tier breakdown, MRR, new this month, cancellations, early-cancel refund alerts, upcoming billing dates.
 
-**DB migration 007:** Applied — hive columns live on `users` table.
+**Hive content:** Curated articles/PDFs/videos in `hive_content` table — `tier_required` field controls access (starter = all tiers, pro = pro+elite, elite = elite only).
+
+---
+
+## Auth system — Supabase Auth (April 2026)
+
+Full authentication system using Supabase Auth with email/password and Google OAuth.
+
+**Pages:** `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback`
+
+**Flow:**
+1. User signs in via `/login` or `/signup` (email/password or Google)
+2. Supabase creates an `auth.users` record
+3. `lib/auth/link-user.ts` links the auth user to the `public.users` row via `auth_id`
+4. Session stored in cookies via `@supabase/ssr`
+5. Nav (DesktopNavServer/MobileNavServer) reads session server-side and shows user first name in a hollow gold capsule
+
+**Server components reading auth state:**
+- `DesktopNavServer` (`components/DesktopNavServer.tsx`) — reads session, passes `userInitial` to client `DesktopNav`
+- `MobileNavServer` (`components/MobileNavServer.tsx`) — same pattern
+
+**Auth-gated pages** use this pattern:
+```ts
+const supabase = createSSRClient(URL, ANON_KEY, { cookies: { getAll, setAll } });
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) redirect("/login");
+```
+
+**IMPORTANT:** Auth pages use `createBrowserClient()` from `lib/supabase/browser.ts` (anon key) — this is the ONLY exception to the "no client-side DB" rule. All data queries still use `createServerClient()` (service-role).
+
+**Google OAuth & Domain Verification:**
+- Domain `beegood.online` verified in Google Search Console via TXT record in Vercel DNS
+- TXT value: `google-site-verification=HSet3dAP698p3AYskyPH__2yb1H3zNNKqlcczjn8dqI`
+- CRITICAL: DO NOT delete this TXT record — breaks both Search Console and Google OAuth
+- DNS is managed in Vercel, NOT in Hover (Hover shows third-party nameservers warning — expected)
+- OAuth app name: `הדר דנן` (matches site title / og:site_name)
+- OAuth logo: clean bee icon, no text
+- Authorized domains: `beegood.online` + Supabase project URL
+- After domain verification passes, MUST publish app to production (OAuth consent screen > Publish App) or only test users can sign in
+- Known issue: automated branding check may false-positive on "app name mismatch" even when name matches — wait or request manual review
+
+---
+
+## Credit system
+
+Every completed purchase earns credit equal to the amount paid. Credit is applied to the next purchase.
+
+- **Helper:** `lib/credit.ts` → `getUserCredit(email)` — returns sum of `purchases.amount` for all `status=completed` rows
+- **API:** `/api/user/credit?email=...` — used by `/account`
+- **Redemption:** `/account/redeem` — user selects next product, credit is deducted from checkout total
+- **Column:** `purchases.amount_paid` (migration 016) — stores actual amount after credit/discounts (may differ from `amount`)
+- Credit is NOT transferable and does NOT expire
 
 ---
 
@@ -271,22 +358,36 @@ Max 3 attempts. After 3 failures → `failed_permanently = true` + admin alert.
 
 ---
 
+## Video analytics
+
+Vimeo player fires events to `/api/video-event` → stored in `video_events` table.
+
+Event types: `watch_progress` (with `percent_watched`), `drop_off` (with `drop_off_second`), `completed`
+
+Used on: `/training/watch`, `/course/content` (CoursePlayer), `/challenge/content` (ChallengePlayer)
+
+Admin can view per-video completion rates and drop-off points in user profile timeline.
+
+---
+
 ## A/B testing
 
 - Variant assigned in `proxy.ts` (middleware) on first visit — stored in `ab_variant` cookie
 - Current experiment: `landing_headline` (variants A and B)
 - Content per variant: `lib/ab.ts` (`AB_CONTENT`)
 - Visitor/conversion counts: `experiments` table via `increment_experiment` RPC
+- AI proposals stored in `ab_proposals` table (seeded in migration 010)
 
 ---
 
 ## Authentication & security
 
+- **User auth:** Supabase Auth (session cookies via `@supabase/ssr`) — see Auth system section above
 - **Admin:** Basic Auth in `proxy.ts` for `/admin/*`. `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars.
-- **Members area:** Secret token `?t=` or `members_access` cookie vs `MEMBERS_SECRET` env var.
+- **Members area (legacy):** Secret token `?t=` or `members_access` cookie vs `MEMBERS_SECRET` env var.
 - **Cron:** `Authorization: Bearer <CRON_SECRET>`
 - **Rate limiting:** In-memory sliding window (`lib/rate-limit.ts`). Signup: 5/min per IP. Events: 20/min per anon_id.
-- **No client-side DB access** — anon Supabase key not exposed to browser.
+- **No client-side DB access** — service-role key only server-side. Exception: auth pages use anon key for session management only (no DB queries).
 
 ---
 
@@ -295,19 +396,19 @@ Max 3 attempts. After 3 failures → `failed_permanently = true` + admin alert.
 ```
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=    # not used client-side — kept for SDK compat
+NEXT_PUBLIC_SUPABASE_ANON_KEY=    # used by auth pages (@supabase/ssr session management)
 SUPABASE_SERVICE_ROLE_KEY=        # all server DB access
 
 # Resend
 RESEND_API_KEY=                   # re_UKo76Jxb_...
-RESEND_FROM=                      # onboarding@resend.dev (temporary)
+NEXT_PUBLIC_FROM_EMAIL=           # onboarding@resend.dev (updating to beegood.online address)
 
 # Cardcom (live — credentials set in Vercel)
 CARDCOM_TERMINAL=                 # 143422
 CARDCOM_API_NAME=                 # set in Vercel
 
 # App
-NEXT_PUBLIC_APP_URL=https://hadar-danan.vercel.app
+NEXT_PUBLIC_APP_URL=https://www.beegood.online
 NEXT_PUBLIC_PRICE_CHALLENGE=197
 NEXT_PUBLIC_PRICE_WORKSHOP=1080
 NEXT_PUBLIC_PRICE_CALL=4000
@@ -329,37 +430,37 @@ WHATSAPP_GROUP_URL=
 ## Deployment
 
 - **Platform:** Vercel (Hobby plan)
-- **Deploy command:** `npx vercel --prod` from project root
-- **Always run:** `npx tsc --noEmit` before deploying
+- **Trigger:** GitHub push to `main` auto-deploys (AlonAbadi/hadar-danan repo connected to Vercel)
+- **No manual deploy needed** — `npx vercel --prod` is no longer used
+- **Before committing:** `npx tsc --noEmit 2>&1 | grep "error TS" | grep -v ".next"`
+- **Commit + push:** `git add . && git commit -m "message" && git push` from `~/hadar-danan`
 - **Vercel cron** (`vercel.json`): `0 22 * * *` — daily at 22:00 UTC
 - **External cron:** cron-job.org hits `GET /api/cron/jobs` every 5 min with `Authorization: Bearer <CRON_SECRET>`
 
-**Last deployed:** April 2026 — A/B testing activated with real variant content; UTM tracking fixed for quiz path; OG meta tags fixed; CRM user timeline humanized in Hebrew; admin abtesting page shows live experiments.
-
-**Current status (April 2026):** Site fully live. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001–008) applied. A/B test `landing_headline` running live with real variant content. Blockers remaining: real Resend domain, WhatsApp group URL for Hive welcome email, Hive Zoom link, course content page, WhatsApp API for cart abandonment.
+**Current status (April 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-016) applied. A/B test `landing_headline` running live. Course content player built. Challenge content player built. Account page + credit system live. Hive members area live.
 
 ---
 
-## What's done ✅
+## What's done
 
 - All landing pages fully designed and deployed: /, /about, /team, /challenge, /workshop, /course, /strategy, /premium, /partnership, /hive, /hive/terms
 - Full Santosha dark palette applied site-wide — gold tokens: #E8B94A / #C9964A / #9E7C3A
 - Homepage: fully dark (#080C14), Ladder+Netflix products section with per-card thumbnail images
-- Hero: full-screen image overlay (hadar.png), CSS mask right fade, text floats right (desktop) / pinned at 52svh (mobile)
+- Hero: full-screen image (`/hadar1.png`), CSS mask right fade, text floats right (desktop) / pinned at 52svh (mobile)
 - Products section: 5-step zigzag ladder + premium 2-col grid + hive card; each card 420px, image fills card, text overlay at bottom
-- Nav: logo-only (no bee image), DesktopNav dropdown for מסלולים, MobileNav drawer
+- Nav: server-rendered auth state (DesktopNavServer / MobileNavServer), logged-in user shown as hollow gold capsule with first name
 - Font: Assistant only (Cormorant/DM Sans experiment fully reverted)
 - TrueSignal© branding integrated site-wide (hero sections + all footers); always wrapped in `<span dir="ltr">`
 - Complete backend: signup, events, job queue, 16 email sequences, admin dashboard
 - **Cardcom payments LIVE** — LowProfile API, `POST` to `https://secure.cardcom.solutions/Interface/LowProfile.aspx` with URLSearchParams (not JSON). Fields: `TerminalNumber`, `UserName` (not ApiName), `SumToBill`, `SuccessRedirectUrl`, `ErrorRedirectUrl`, `IndicatorUrl`. Response is text/URLSearchParams — parse `ResponseCode` ("0"=success) + `LowProfileCode`
-- A/B testing infrastructure
+- **Supabase Auth LIVE** — email/password + Google OAuth. Pages: /login, /signup, /forgot-password, /reset-password. Session via `@supabase/ssr` cookies. `lib/auth/link-user.ts` links auth.users to public.users
+- A/B testing infrastructure + AI proposals in `ab_proposals` table
 - Anonymous identity tracking
-- Members gated area
-- Privacy policy + Terms of service + Hive terms (/hive/terms)
+- Members gated area (legacy token-based)
+- Privacy policy + Terms of service updated April 2026 + Hive terms (/hive/terms)
 - /thank-you page with challenge upsell
 - External cron via cron-job.org (5 min)
-- /course digital product with full checkout flow
-- /quiz diagnostic flow — scoring via SCORES matrix (not RESULT_MAP)
+- /quiz diagnostic flow — scoring via SCORES matrix (not RESULT_MAP), results saved to `quiz_results` table
 - **Quiz/session persistence** — `lib/quiz-session.ts` exports `getSessionUser()` + `saveUserDetails()`. Any product page reads from localStorage (quiz session or direct signup). All CTAs pre-fill forms and bypass re-registration if user is known.
 - **`lib/products.ts`** — single source of truth for product config, prices, and scheduled dates (`CHALLENGE_DATES`, `WORKSHOP_DATES`, `PRODUCT_MAP`). Import from here — never hardcode prices.
 - **Booking + payment flow — fully integrated (no Calendly):**
@@ -371,44 +472,40 @@ WHATSAPP_GROUP_URL=
 - **`BookingForm` (`app/strategy/book/BookingForm.tsx`)** — supports `onSuccess` callback (returns `{ bookingId, userId, date, time }`) and `initialForm` prop for pre-fill. Used by strategy, premium, and partnership flows.
 - **`/api/book`** — returns `user_id` in response (needed for downstream Cardcom checkout)
 - **Calendly** — fully removed from all user-facing pages. Legacy code remains in `app/admin/bookings/` and `lib/admin/queries.ts` (dead code, harmless, keep for now).
-- /strategy/book calendar booking
 - Israeli accessibility compliance: floating widget (bottom-left, blue #2F80ED, 56×56px, borderRadius 14px), WCAG 2.1 AA, skip link, /accessibility page
-- הכוורת (Hive) monthly membership: full join flow, 2-tier pricing, eligibility check, legal disclosure, cancellation via /my, admin section
+- הכוורת (Hive) monthly membership: full join flow, 3-tier pricing (₪29/₪97/₪197), eligibility check, legal disclosure, cancellation via /account, admin section, members area
 - All footers include: TrueSignal© microcopy + תנאי מנוי הכוורת link
 - **Shared SuccessPage component** (`components/SuccessPage.tsx`) — used by /challenge/success, /workshop/success, /course/success, /strategy/success, /test/success
 - **ProductsSection component** (`components/ProductsSection.tsx`) — used by homepage + /training/watch (with `excludeTraining` prop)
-- **/training/watch** — free training watch page, Vimeo embed (VIMEO_ID_PLACEHOLDER), PageViewTracker, ProductsSection without step 1
-- **/test** — ₪1 test product for Cardcom testing; subtle footer link from /challenge; product_type `test_1` in DB
-- **DB migration 008** — added `course_1800`, `premium_14000`, `test_1` to `product_type` enum
-- **Stats section** — homepage social proof strip ("250+ עסקים", "4 שנים", "97% ממליצים") with gold animated counters, positioned between hero and products
-- **Quiz spacing** — improved padding and visual hierarchy in `/quiz` flow; result card layout fixed
-- **Hero brightness** — homepage hero image overlay opacity tuned; text legibility improved on mobile
-- **Bee Good logo** — nav logo is text-based "הדר דנן" (no bee image). Nav: `DesktopNav` + `MobileNav`, logo-only, no external image dependency
-- **Vimeo CC** — training watch page (`/training/watch`) embeds Vimeo with `?cc=1` param for closed captions
 - **/training/watch** — free training watch page with Vimeo embed, PageViewTracker, ProductsSection (excludeTraining=true)
-- **Product card contrast** — gradient overlay on product cards deepened for better text readability over images
-- **Section headers** — "המסלולים שלנו" and premium section headers styled with gold accent + consistent spacing
-- **PREMIUM badge** — gold "PREMIUM" label on premium product cards in ProductsSection
-- **Accessibility button restyle** — floating widget bottom-left, blue `#2F80ED`, `56×56px`, `borderRadius: 14px`, "נגישות" label; replaced old style
-- **OG image** — static `/public/og-image.jpg` (1200×630) used as the OG image. No dynamic route.
-- **OG meta tags fixed** — removed page-level `openGraph` block from `app/page.tsx` that was silently overriding (and dropping) the layout-level `og:image`. Now `app/layout.tsx` is the single source of OG metadata for homepage.
-- **A/B testing activated** — `app/page.tsx` hero now renders `AB_CONTENT[variant]` for headline, description, and CTA. Both mobile and desktop sections use variant content. `lib/ab.ts` has meaningful content differences (variant A: "השיווק שלך לא נכשל בגלל הסרטונים"; variant B: "תוכן שמוכר מגיע מבהירות").
-- **Admin A/B page shows live tests** — `/admin/abtesting` fetches both `experiments` table (live counters) and `ab_proposals` (AI proposals). `LiveTestCard` shows actual variant text, CVR, uplift, and Bayesian confidence.
-- **UTM tracking fixed** — `QuizClient.handleLeadSubmit` now reads UTM cookies (`utm_source`, `utm_campaign`, `utm_adset`, `utm_ad`, `fbclid`, `gclid`) and includes them in the signup POST. Previously the quiz path (primary paid traffic flow) silently dropped all UTM data.
-- **CRM user timeline humanized** — `/admin/users/[id]` event timeline shows Hebrew icons + readable descriptions instead of raw event type codes and JSON metadata. Event types map to Hebrew titles with context-aware detail lines.
+- **/test** — ₪1 test product for Cardcom testing; subtle footer link from /challenge; product_type `test_1` in DB
+- **Course content page** — `/course/content` fully implemented with `CoursePlayer` — 8 modules, 16 lessons, Vimeo embed, video event tracking, auth-gated
+- **Challenge content page** — `/challenge/content` implemented with `ChallengePlayer` — 7-day Reels content, auth-gated
+- **Account page** — `/account` replaces `/my` (which now redirects). Shows purchases, hive status, credit balance. Auth-gated via Supabase session.
+- **Credit redemption** — `/account/redeem` — select next product, credit applied at checkout. `purchases.amount_paid` stores actual amount after discount.
+- **Hive members area** — `/hive/members` gated by auth + `hive_status=active`. Tier-appropriate content from `hive_content` table. Upgrade prompts for lower tiers.
+- **Stats section** — homepage social proof strip ("250+ עסקים", "4 שנים", "97% ממליצים") with gold animated counters
+- **OG image** — static `/public/og-image.jpg` (1200×630). OG metadata lives exclusively in `app/layout.tsx`.
+- **A/B testing activated** — variant A: "השיווק שלך לא נכשל בגלל הסרטונים"; variant B: "תוכן שמוכר מגיע מבהירות - לא מעוד סרטונים"
+- **Admin A/B page** — `/admin/abtesting` shows live tests + AI proposals. `LiveTestCard` shows variant text, CVR, uplift, Bayesian confidence.
+- **UTM tracking** — `QuizClient.handleLeadSubmit` reads UTM cookies and includes in signup POST.
+- **CRM user timeline** — `/admin/users/[id]` shows Hebrew event descriptions, notes, reminders.
+- **Favicon** — updated to beegood logo (bee icon)
+- **Domain** — all references updated to beegood.online
 
-## What's pending ⏳
+---
+
+## What's pending
 
 | Item | Blocker | How to activate |
 |---|---|---|
-| ~~DB migration 007~~ | ✅ Done | Applied March 2026 |
-| ~~WhatsApp CTAs~~ | ✅ Done | `WHATSAPP_PHONE=972539566961` set in Vercel |
-| Real email domain | DNS verification on Resend | Add DNS TXT/MX records, update `RESEND_FROM` |
-| ~~Cardcom payments~~ | ✅ Done | `CARDCOM_TERMINAL=143422` + `CARDCOM_API_NAME` set in Vercel |
+| Real email sender domain | Set `NEXT_PUBLIC_FROM_EMAIL` to beegood.online address in Vercel | Configure sending domain in Resend dashboard |
 | Cardcom recurring (Hive) | Need Cardcom recurring setup | Configure recurring billing once standard payments confirmed |
 | WhatsApp group link for Hive | Need group URL | Update placeholder in hive_welcome email template |
 | Hive Zoom link | Content | Update placeholder in hive_welcome email template |
-| Course content page | Content production | Replace `app/course/content/page.tsx` placeholder with real lesson links |
+| Real course video links | Content production | Replace Vimeo placeholders in `CoursePlayer` with real lesson IDs |
+| Real challenge video links | Content production | Replace Vimeo placeholders in `ChallengePlayer` with real video IDs |
+| Real hive_content rows | Content | Insert rows into `hive_content` table via Supabase dashboard |
 | Hive AI matching system | Future feature | Designed as "בקרוב" placeholder on /hive page |
 | WhatsApp API for cart abandonment | Provider selection needed | Choose from: Twilio, Green API, Infobip, or Meta direct. Connect to `CHECKOUT_STARTED` event sequence. |
 
@@ -428,14 +525,16 @@ Admin dashboard at `/admin` and individual user profiles at `/admin/users/[id]`.
 **User profile (`/admin/users/[id]`):**
 - Header: name, email, status badge, UTM source, A/B variant, signup date
 - Purchase history table with amounts and status
-- Event timeline — **human-readable Hebrew** with icons, translated page names, contextual details
-  - `PAGE_VIEW` → "👁️ צפה/ת בעמוד: [שם עמוד בעברית]"
-  - `USER_SIGNED_UP` → "🎉 נרשם/ה לאתר"
-  - `PURCHASE_COMPLETED` → "✅ רכישה הושלמה" (green highlight)
-  - `CALL_BOOKED` → "📅 שיחה נקבעה" (gold highlight)
-  - `CHECKOUT_STARTED` → "🛒 התחיל/ה תהליך רכישה"
+- Event timeline — human-readable Hebrew with icons, translated page names, contextual details
+  - `PAGE_VIEW` → "צפה/ת בעמוד: [שם עמוד בעברית]"
+  - `USER_SIGNED_UP` → "נרשם/ה לאתר"
+  - `PURCHASE_COMPLETED` → "רכישה הושלמה" (green highlight)
+  - `CALL_BOOKED` → "שיחה נקבעה" (gold highlight)
+  - `CHECKOUT_STARTED` → "התחיל/ה תהליך רכישה"
   - `EMAIL_OPENED` / `LINK_CLICKED` → engagement events with subject/URL detail
-- `PAGE_LABELS` map in `app/admin/users/[id]/page.tsx` translates URL paths to Hebrew names
+- Admin notes (from `notes` table) — add/view notes per user
+- Reminders (from `reminders` table) — task reminders with due dates
+- `PAGE_LABELS` map translates URL paths to Hebrew names
 - `relativeTime()` returns "עכשיו", "לפני X דקות", "אתמול", or absolute date
 
 **Key queries:** `lib/admin/queries.ts` — `getUser()`, `getUserEvents()`, `getUserPurchases()`, `getABTests()`
@@ -470,25 +569,41 @@ UPDATE experiments SET visitors_a=0, visitors_b=0, conversions_a=0, conversions_
 
 ---
 
+## Mockups status (April 2026)
+
+Approved screens pending implementation. Location: `/mnt/user-data/outputs/` (in Claude chat, not in repo).
+
+| Area | Screens | Status |
+|---|---|---|
+| Auth | 28 screens + 19 edge cases | Approved — implemented April 2026 |
+| Course content | 14 screens + 8 edge cases | Approved — implemented April 2026 |
+| Challenge content | 16 screens + 8 edge cases | Approved — implemented April 2026 |
+| Account page | - | Approved — implemented April 2026 |
+| Hive members area | - | Approved — implemented April 2026 |
+
+**Implementation order (completed):** Auth > Course > Challenge > Account > Hive Members > Cardcom integration (pending)
+
+---
+
 ## Homepage — key sections
 
 ### Hero
 - **Mobile:** `height: 100svh`, content `position: absolute, top: 52svh`, full-width CTA button
-- **Desktop:** plain `<img src="/hadar.png">` positioned left with CSS mask (`-webkit-mask-image: linear-gradient(to right, black 55%, transparent 100%)`); text panel `position: absolute, right: 0, top: 50%, width: 45%`; top gradient overlay blends into navbar
+- **Desktop:** `<img src="/hadar1.png">` positioned left with CSS mask (`-webkit-mask-image: linear-gradient(to right, black 55%, transparent 100%)`); text panel `position: absolute, right: 0, top: 50%, width: 45%`; top gradient overlay blends into navbar
 
 ### Products — Ladder+Netflix
-Vertical zigzag layout, cards alternate right/left. All cards: `height: 420px`, `position: relative`, `overflow: hidden`. Image fills card (`position: absolute, inset: 0`), gradient overlay from bottom (`linear-gradient(to top, rgba(10,14,24,1) 0%, … transparent 78%)`), text body `position: absolute, bottom: 0`.
+Vertical zigzag layout, cards alternate right/left. All cards: `height: 420px`, `position: relative`, `overflow: hidden`. Image fills card (`position: absolute, inset: 0`), gradient overlay from bottom (`linear-gradient(to top, rgba(10,14,24,1) 0%, ... transparent 78%)`), text body `position: absolute, bottom: 0`.
 
 | Step | Product | Image | Card side |
 |---|---|---|---|
 | 1 | הדרכה חינמית | `/hadarlesson.png` | RIGHT |
 | 2 | אתגר 7 ימים | `/etgar.png` | LEFT |
 | 3 | סדנה יום אחד | `/sadna.png` | RIGHT |
-| 4 | קורס דיגיטלי | `/course.png` | LEFT |
-| 5 | פגישת אסטרטגיה | `/strategy.png` | RIGHT |
+| 4 | קורס דיגיטלי | `/coursehadar.png` | LEFT |
+| 5 | פגישת אסטרטגיה | `/strategymeeting.png` | RIGHT |
 | P1 | יום צילום פרמיום | `/shooting.png` | 2-col grid |
-| P2 | שותפות אסטרטגית | `/hadar.png` | 2-col grid |
-| H | הכוורת | `/hadar.png` | Wide centered |
+| P2 | שותפות אסטרטגית | `/partnership.png` | 2-col grid |
+| H | הכוורת | `/hive.png` | Wide centered |
 
 CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-connector`, `.nf-empty`, `.nf-premium-grid` — all defined in inline `<style>` block at bottom of homepage section.
 
@@ -503,16 +618,17 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Apply Santosha palette (dark bg, gold CTAs) — no new color schemes
 - Fire the relevant event to `/api/events` whenever a user takes an action
 - Log errors to `error_logs` table in every `catch` block in API routes
-- Use `createServerClient()` for all DB access — never the anon client
+- Use `createServerClient()` for all DB access — never the anon client (exception: auth pages use `createBrowserClient()` from `lib/supabase/browser.ts` for session handling only)
 
 **Never:**
 - Use English text in the UI
-- Access Supabase from client-side components (no `createBrowserClient`)
+- Access the database from client-side components (auth session management is the only exception)
 - Skip error logging in API routes
 - Use `--no-verify` or bypass TypeScript checks before deploying
 - Commit `.env.local` or any file with secrets
 - Introduce new fonts (Assistant only)
 - Introduce new color palettes (Santosha only)
+- Delete the Google Search Console TXT record from Vercel DNS
 
 **Email templates:**
 - Add new templates to `lib/email/templates.ts` and register in `TEMPLATES` map
@@ -523,11 +639,12 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
+- Next migration number: 017
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes
 - OG metadata lives exclusively in `app/layout.tsx` — do NOT add `openGraph` blocks to individual `page.tsx` files unless you also include the `images` field, or `og:image` will be silently dropped (Next.js page-level openGraph replaces, not merges, the layout-level one)
-- Current OG image: `https://hadar-danan.vercel.app/og-image.jpg` (1200×630, static in `/public/og-image.jpg`)
+- Current OG image: `https://www.beegood.online/og-image.jpg` (1200×630, static in `/public/og-image.jpg`)
 
 **UTM tracking:**
 - Every signup path must read UTM cookies and include them in the POST body to `/api/signup`
