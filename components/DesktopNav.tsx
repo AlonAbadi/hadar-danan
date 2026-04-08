@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -60,7 +61,7 @@ export function DesktopNav() {
     >
       {/* RIGHT (visually in RTL) - Logo image + text */}
       <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, textDecoration: "none" }}>
-        <img src="/beegood_logo.png" alt="Bee Good" style={{ height: 30, width: "auto" }} />
+        <Image src="/beegood_logo.png" alt="Bee Good" width={38} height={30} />
         <div style={{ color: "#EDE9E1", fontWeight: 700, fontSize: 17, fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
           הדר דנן
         </div>

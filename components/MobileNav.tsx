@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
@@ -111,7 +112,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
 
         {/* FAR RIGHT — bee logo + text */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
-          <img src="/beegood_logo.png" alt="Bee Good" style={{ height: 30, width: "auto" }} />
+          <Image src="/beegood_logo.png" alt="Bee Good" width={38} height={30} />
           <div style={{ color: "#EDE9E1", fontWeight: 700, fontSize: 17, fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
             הדר דנן
           </div>
