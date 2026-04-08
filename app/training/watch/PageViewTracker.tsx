@@ -8,7 +8,7 @@ export function PageViewTracker() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        event_type: "PAGE_VIEW",
+        type: "PAGE_VIEW",
         metadata: { page: "training_watch" },
       }),
     });
