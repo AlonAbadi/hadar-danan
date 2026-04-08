@@ -4,8 +4,11 @@ import { z } from "zod";
 const israeliPhone = z
   .string()
   .refine(
-    (v) => /^05\d{8}$/.test(v.replace(/[\s-]/g, "")),
-    { message: "מספר טלפון ישראלי לא תקין (לדוגמה: 0501234567)" }
+    (v) => {
+      const n = v.replace(/[\s-]/g, "");
+      return /^05\d{8}$/.test(n) || /^\+9725\d{8}$/.test(n);
+    },
+    { message: "מספר טלפון ישראלי לא תקין (לדוגמה: 0501234567 או +972501234567)" }
   )
   .transform((v) => v.replace(/[\s-]/g, ""));
 
