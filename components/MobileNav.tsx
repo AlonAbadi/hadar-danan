@@ -64,8 +64,18 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
           borderBottom: "1px solid #2C323E",
         }}
       >
-        {/* LEFT slot — avatar or login button */}
-        <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
+        {/* FAR LEFT — hamburger */}
+        <button
+          aria-label="פתח תפריט"
+          aria-expanded={open}
+          onClick={() => setOpen(true)}
+          style={{ lineHeight: 0, padding: 4, background: "none", border: "none", flexShrink: 0 }}
+        >
+          <Menu color="#EDE9E1" size={28} />
+        </button>
+
+        {/* IMMEDIATELY RIGHT of hamburger — auth capsule */}
+        <div style={{ marginRight: 8, flexShrink: 0 }}>
           {userInitial ? (
             <a
               href="/account"
@@ -96,26 +106,16 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
           )}
         </div>
 
-        {/* CENTER — logo */}
-        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
-          <Link href="/" style={{ textDecoration: "none" }}>
-            <div style={{ color: "#EDE9E1", fontWeight: 700, fontSize: 18, fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
-              הדר דנן
-            </div>
-          </Link>
-        </div>
+        {/* SPACER */}
+        <div style={{ flex: 1 }} />
 
-        {/* RIGHT slot — hamburger */}
-        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
-          <button
-            aria-label="פתח תפריט"
-            aria-expanded={open}
-            onClick={() => setOpen(true)}
-            style={{ lineHeight: 0, padding: 4, background: "none", border: "none" }}
-          >
-            <Menu color="#EDE9E1" size={28} />
-          </button>
-        </div>
+        {/* FAR RIGHT — bee logo + text */}
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
+          <img src="/beegood_logo.png" alt="Bee Good" style={{ height: 30, width: "auto" }} />
+          <div style={{ color: "#EDE9E1", fontWeight: 700, fontSize: 17, fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
+            הדר דנן
+          </div>
+        </Link>
       </nav>
 
       {/* ── Overlay ─────────────────────────────────────────── */}
