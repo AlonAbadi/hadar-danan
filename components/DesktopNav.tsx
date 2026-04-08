@@ -7,6 +7,7 @@ import { useState } from "react";
 
 const NAV_LINKS = [
   { label: "אודות",         href: "/about" },
+  { label: "בינג׳",         href: "/binge" },
   { label: "הצוות",        href: "/team" },
   { label: "הדרכה חינמית", href: "/training" },
   { label: "קוויז",        href: "/quiz" },

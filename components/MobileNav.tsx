@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 
 const ITEMS_GROUP1 = [
   { label: "אודות",  href: "/about" },
+  { label: "בינג׳",  href: "/binge" },
   { label: "הצוות", href: "/team" },
 ];
 

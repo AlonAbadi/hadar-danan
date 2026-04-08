@@ -269,7 +269,56 @@ export default async function LandingPage() {
           <ProductsSection />
 
           {/* ══════════════════════════════════════════════════════
-              5. SOCIAL PROOF
+              5. BINGE CTA
+          ══════════════════════════════════════════════════════ */}
+          <section style={{ background: "#080C14", padding: "48px 24px" }}>
+            <a
+              href="/binge"
+              style={{
+                display: "block",
+                maxWidth: 640,
+                margin: "0 auto",
+                background: "linear-gradient(145deg, #141820, #111620)",
+                border: "1px solid #2C323E",
+                borderRadius: 16,
+                padding: "36px 32px",
+                textAlign: "center",
+                textDecoration: "none",
+              }}
+            >
+              <p style={{
+                margin: "0 0 10px",
+                fontSize: "clamp(36px, 8vw, 52px)",
+                fontWeight: 900,
+                lineHeight: 1,
+                background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                fontFamily: "var(--font-assistant), Assistant, sans-serif",
+              }}>
+                בינג׳
+              </p>
+              <p style={{ margin: "0 0 24px", fontSize: 16, color: "#9E9990", fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
+                כל התכנים של הדר במקום אחד
+              </p>
+              <span style={{
+                display: "inline-block",
+                background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
+                color: "#080C14",
+                fontSize: 14,
+                fontWeight: 800,
+                padding: "10px 28px",
+                borderRadius: 24,
+                fontFamily: "var(--font-assistant), Assistant, sans-serif",
+              }}>
+                לכל התכנים ←
+              </span>
+            </a>
+          </section>
+
+          {/* ══════════════════════════════════════════════════════
+              6. SOCIAL PROOF
           ══════════════════════════════════════════════════════ */}
           <section className="px-6 py-20 md:py-28" style={{ background: "#080C14" }}>
             <div className="max-w-4xl mx-auto flex flex-col gap-12">
@@ -322,7 +371,7 @@ export default async function LandingPage() {
         </main>
 
         {/* ══════════════════════════════════════════════════════
-            6. FOOTER
+            7. FOOTER
         ══════════════════════════════════════════════════════ */}
         <footer className="px-6 py-12" style={{ background: "#101520" }}>
           <div className="max-w-5xl mx-auto flex flex-col gap-8">
