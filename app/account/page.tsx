@@ -37,16 +37,21 @@ export default async function AccountPage() {
         .from("purchases")
         .select("id, product, amount, amount_paid, status, created_at")
         .eq("user_id", userData.id)
+        .in("status", ["completed", "pending"])
         .order("created_at", { ascending: false })
     : { data: [] };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const purchases: any[] = rawPurchases ?? [];
+  const allPurchases: any[] = rawPurchases ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const completedPurchases: any[] = allPurchases.filter((p: any) => p.status === "completed");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pendingPurchases: any[]  = allPurchases.filter((p: any) => p.status === "pending");
 
-  // DB query already returns purchases sorted created_at DESC — trust that order directly.
+  // Credit = amount paid on most recent completed non-hive purchase.
   const HIVE_PRODUCTS = new Set(["hive_starter_160", "hive_pro_280", "hive_elite_480"]);
-  const mostRecentNonHive = purchases.find(
-    (p) => p.status === "completed" && !HIVE_PRODUCTS.has(p.product)
+  const mostRecentNonHive = completedPurchases.find(
+    (p) => !HIVE_PRODUCTS.has(p.product)
   );
   const credit: number = mostRecentNonHive
     ? (mostRecentNonHive.amount_paid ?? mostRecentNonHive.amount)
@@ -70,7 +75,8 @@ export default async function AccountPage() {
     <AccountClient
       authUser={{ id: user.id, email: user.email ?? "" }}
       userData={userData ?? null}
-      purchases={purchases}
+      completedPurchases={completedPurchases}
+      pendingPurchases={pendingPurchases}
       credit={credit}
       isGoogleUser={isGoogleUser}
       quizResult={quizResult ?? null}

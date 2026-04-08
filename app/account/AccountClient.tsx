@@ -45,7 +45,8 @@ interface UserData {
 interface Props {
   authUser: { id: string; email: string };
   userData: UserData | null;
-  purchases: Purchase[];
+  completedPurchases: Purchase[];
+  pendingPurchases: Purchase[];
   credit: number;
   isGoogleUser: boolean;
   quizResult: QuizResult | null;
@@ -74,6 +75,25 @@ const CONTENT_LINKS: Record<string, string> = {
   challenge_197: "/challenge/content",
   course_1800:   "/course/content",
 };
+
+// Maps completed purchase product → content route (null = no content, show badge instead)
+function getContentRoute(product: string): string | null {
+  const map: Record<string, string> = {
+    challenge_197:    "/challenge/content",
+    course_1800:      "/course/content",
+    hive_starter_160: "/hive/members",
+    hive_pro_280:     "/hive/members",
+    hive_elite_480:   "/hive/members",
+  };
+  return map[product] ?? null;
+}
+
+// Badge label for completed purchases that have no content URL
+function getCompletedBadge(product: string): string {
+  if (product === "test_1") return "רכישת בדיקה";
+  // workshop, strategy, premium — one-time events
+  return "בוצעה";
+}
 
 const QUIZ_PRODUCT_NAMES: Record<string, string> = {
   free_training: "הדרכה חינמית",
@@ -378,6 +398,102 @@ function formatHebDate(iso: string): string {
   return new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
 }
 
+// ── Pending payment callout ───────────────────────────────────
+function PendingPaymentCallout({ pendingPurchases }: { pendingPurchases: Purchase[] }) {
+  if (pendingPurchases.length === 0) return null;
+
+  // Show only the most recent pending purchase
+  const latest = pendingPurchases[0];
+  const extra  = pendingPurchases.length - 1;
+  const productName = PRODUCT_LABELS[latest.product] ?? latest.product;
+
+  return (
+    <div style={{
+      background: "rgba(232,185,74,0.08)",
+      border: "1px solid rgba(232,185,74,0.4)",
+      borderRadius: 12,
+      padding: 20,
+      marginBottom: 16,
+    }}>
+      {/* Top row: icon + title + subtitle */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
+        <span style={{
+          width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+          background: "rgba(232,185,74,0.15)", border: "1px solid rgba(232,185,74,0.4)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="7" r="6" stroke="#E8B94A" strokeWidth="1.5"/>
+            <path d="M7 4v3.5" stroke="#E8B94A" strokeWidth="1.5" strokeLinecap="round"/>
+            <circle cx="7" cy="10" r="0.75" fill="#E8B94A"/>
+          </svg>
+        </span>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: "#EDE9E1", marginBottom: 4 }}>
+            יש לך רכישה שממתינה לתשלום
+          </div>
+          <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.5 }}>
+            התחלת לרכוש את {productName} אבל לא השלמת את התשלום. ההזמנה ממתינה לך.
+          </div>
+        </div>
+      </div>
+
+      {/* Middle row: amount + date */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        paddingTop: 14, borderTop: "1px solid rgba(232,185,74,0.2)", marginBottom: 16,
+      }}>
+        <div>
+          <div style={{ fontSize: 11, color: "#9E9990", marginBottom: 3 }}>סכום לתשלום</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#E8B94A" }}>
+            ₪{latest.amount.toLocaleString("he-IL")}
+          </div>
+        </div>
+        <div style={{ textAlign: "left" }}>
+          <div style={{ fontSize: 11, color: "#9E9990", marginBottom: 3 }}>נפתח</div>
+          <div style={{ fontSize: 13, color: "#EDE9E1" }}>{formatDate(latest.created_at)}</div>
+        </div>
+      </div>
+
+      {/* Bottom row: buttons */}
+      <div style={{ display: "flex", gap: 10 }}>
+        {/* TODO: replace '#' with the actual resume-payment route once available */}
+        <a
+          href="#"
+          style={{
+            flex: 1, textAlign: "center", textDecoration: "none",
+            padding: "11px 0", borderRadius: 8,
+            background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
+            color: "#080C14", fontSize: 14, fontWeight: 800,
+            fontFamily: "Assistant, sans-serif", display: "block",
+          }}
+        >
+          השלם תשלום
+        </a>
+        {/* TODO: wire to cancel/dismiss endpoint */}
+        <a
+          href="#"
+          style={{
+            padding: "11px 20px", borderRadius: 8, textDecoration: "none",
+            border: "1px solid #2C323E", background: "transparent",
+            color: "#9E9990", fontSize: 14, fontWeight: 700,
+            fontFamily: "Assistant, sans-serif", display: "block",
+          }}
+        >
+          בטל
+        </a>
+      </div>
+
+      {/* Extra pending items note */}
+      {extra > 0 && (
+        <div style={{ marginTop: 12, fontSize: 12, color: "#9E9990", textAlign: "center" }}>
+          ויש עוד {extra} פעולות פתוחות
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Quiz recommendation card (has result) ─────────────────────
 function QuizRecommendationCard({ quizResult }: { quizResult: QuizResult }) {
   const { recommended_product: productId, match_percent, created_at, answers } = quizResult;
@@ -515,7 +631,7 @@ function QuizCTACard() {
 // ── Component ─────────────────────────────────────────────────
 type Tab = "main" | "purchases" | "profile";
 
-export default function AccountClient({ authUser, userData, purchases, credit, isGoogleUser, quizResult }: Props) {
+export default function AccountClient({ authUser, userData, completedPurchases, pendingPurchases, credit, isGoogleUser, quizResult }: Props) {
   const router  = useRouter();
   const supabase = createBrowserClient();
 
@@ -564,8 +680,8 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
   // Active content: completed purchases that have a content URL, oldest first
   const contentItems: { label: string; href: string }[] = [];
   const seen = new Set<string>();
-  for (const p of [...purchases].reverse()) {
-    if (p.status === "completed" && CONTENT_LINKS[p.product] && !seen.has(p.product)) {
+  for (const p of [...completedPurchases].reverse()) {
+    if (CONTENT_LINKS[p.product] && !seen.has(p.product)) {
       seen.add(p.product);
       contentItems.push({ label: PRODUCT_LABELS[p.product] ?? p.product, href: CONTENT_LINKS[p.product] });
     }
@@ -617,6 +733,9 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
           <p style={S.email}>{authUser.email}</p>
         </div>
       </div>
+
+      {/* Pending payment callout */}
+      <PendingPaymentCallout pendingPurchases={pendingPurchases} />
 
       {/* Credit */}
       <div style={S.card}>
@@ -717,44 +836,122 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
   // ── רכישות ────────────────────────────────────────────────
   const PurchasesTab = (
     <div style={S.card}>
-      <p style={S.sectionTitle}>היסטוריית רכישות</p>
-      {purchases.length === 0 ? (
-        <p style={{ fontSize: 13, color: "#9E9990", margin: 0 }}>לא נמצאו רכישות.</p>
+      <p style={{ ...S.sectionTitle, marginBottom: 4 }}>הרכישות שלי</p>
+      <p style={{ fontSize: 12, color: "#9E9990", marginTop: 0, marginBottom: 20 }}>המוצרים שרכשת בהצלחה</p>
+
+      {completedPurchases.length === 0 ? (
+        /* ── Empty state ── */
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 0 8px", textAlign: "center" }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: "50%", marginBottom: 16,
+            background: "rgba(232,185,74,0.08)", border: "1px solid rgba(232,185,74,0.2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <path d="M5 7h18l-2 12H7L5 7z" stroke="#E8B94A" strokeWidth="1.5" strokeLinejoin="round"/>
+              <path d="M2 4h3.5l.5 3" stroke="#E8B94A" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="10" cy="23" r="1.5" fill="#E8B94A"/>
+              <circle cx="18" cy="23" r="1.5" fill="#E8B94A"/>
+            </svg>
+          </div>
+          <p style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1", margin: "0 0 8px" }}>
+            עדיין לא רכשת כלום
+          </p>
+          <p style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.6, maxWidth: 280, margin: "0 0 24px" }}>
+            כשתרכשי מסלול - אתגר, סדנה, קורס או הכוורת - הוא יופיע כאן ותקבלי גישה לתוכן.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}>
+            <Link
+              href="/"
+              style={{
+                display: "block", textAlign: "center", textDecoration: "none",
+                padding: "11px 0", borderRadius: 8,
+                background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
+                color: "#080C14", fontSize: 14, fontWeight: 800,
+                fontFamily: "Assistant, sans-serif",
+              }}
+            >
+              גלה את המסלולים שלי
+            </Link>
+            <Link
+              href="/quiz"
+              style={{
+                display: "block", textAlign: "center", textDecoration: "none",
+                padding: "11px 0", borderRadius: 8,
+                border: "1px solid #2C323E", background: "transparent",
+                color: "#E8B94A", fontSize: 14, fontWeight: 700,
+                fontFamily: "Assistant, sans-serif",
+              }}
+            >
+              עשה את הקוויז שלנו
+            </Link>
+          </div>
+        </div>
       ) : (
-        <>
-          <table style={S.table}>
-            <thead>
-              <tr>
-                <th style={S.th}>מוצר</th>
-                <th style={{ ...S.th, textAlign: "center" }}>סכום</th>
-                <th style={{ ...S.th, textAlign: "center" }}>סטטוס</th>
-                <th style={{ ...S.th, textAlign: "left" }}>תאריך</th>
-              </tr>
-            </thead>
-            <tbody>
-              {purchases.map((p) => (
-                <tr key={p.id}>
-                  <td style={S.td}>{PRODUCT_LABELS[p.product] ?? p.product}</td>
-                  <td style={{ ...S.td, textAlign: "center" }}>
-                    ₪{p.amount.toLocaleString("he-IL")}
-                  </td>
-                  <td style={{ ...S.td, textAlign: "center" }}>
-                    <span style={S.badge(p.status)}>{S.badgeLabel(p.status)}</span>
-                  </td>
-                  <td style={{ ...S.td, textAlign: "left", color: "#9E9990", fontSize: 13 }}>
-                    {formatDate(p.created_at)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        /* ── Purchase cards ── */
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {completedPurchases.map((p) => {
+            const contentRoute = getContentRoute(p.product);
+            return (
+              <div
+                key={p.id}
+                style={{
+                  background: "rgba(232,185,74,0.04)",
+                  border: "1px solid rgba(232,185,74,0.15)",
+                  borderRadius: 8,
+                  padding: 14,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
+                {/* Info - right side in RTL */}
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1", marginBottom: 4 }}>
+                    {PRODUCT_LABELS[p.product] ?? p.product}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#9E9990" }}>
+                    {formatDate(p.created_at)} · ₪{p.amount.toLocaleString("he-IL")}
+                  </div>
+                </div>
+
+                {/* Action - left side */}
+                {contentRoute ? (
+                  <Link
+                    href={contentRoute}
+                    style={{
+                      flexShrink: 0, textDecoration: "none",
+                      padding: "7px 14px", borderRadius: 7,
+                      background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
+                      color: "#080C14", fontSize: 13, fontWeight: 800,
+                      fontFamily: "Assistant, sans-serif", whiteSpace: "nowrap",
+                    }}
+                  >
+                    גש לתוכן ←
+                  </Link>
+                ) : (
+                  <span style={{
+                    flexShrink: 0,
+                    padding: "5px 12px", borderRadius: 20,
+                    background: "rgba(158,153,144,0.1)", border: "1px solid rgba(158,153,144,0.2)",
+                    color: "#9E9990", fontSize: 12, fontWeight: 600,
+                    whiteSpace: "nowrap",
+                  }}>
+                    {getCompletedBadge(p.product)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+
           {credit > 0 && (
-            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #2C323E", fontSize: 13 }}>
+            <div style={{ marginTop: 8, paddingTop: 16, borderTop: "1px solid #2C323E", fontSize: 13 }}>
               <span style={{ color: "#9E9990" }}>סה"כ קרדיט זמין: </span>
               <span style={{ fontWeight: 800, color: "#E8B94A" }}>₪{credit.toLocaleString("he-IL")}</span>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
