@@ -264,10 +264,9 @@ export default function BingePage() {
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid #1E2430",
       }}>
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
+        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
           <Image src="/beegood_logo.png" alt="Bee Good" width={30} height={24} />
-          <h1 style={{
-            margin: 0,
+          <span style={{
             fontSize: 26,
             fontWeight: 900,
             letterSpacing: "-0.5px",
@@ -276,9 +275,10 @@ export default function BingePage() {
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
             fontFamily: "var(--font-assistant), Assistant, sans-serif",
+            lineHeight: 1,
           }}>
             בינג׳
-          </h1>
+          </span>
         </Link>
       </div>
 
