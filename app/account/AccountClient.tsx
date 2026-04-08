@@ -61,6 +61,7 @@ const RECOMMENDED = [
   { label: "אתגר 7 ימים - ₪197",          href: "/challenge" },
   { label: "סדנה יום אחד - ₪1,080",        href: "/workshop" },
   { label: "קורס דיגיטלי - ₪1,800",       href: "/course" },
+  { label: "הכוורת - 160₪ לחודש",          href: "/hive" }, // TODO: read from PRODUCT_MAP once hive_starter_160 is added there
 ];
 
 // ── Styles ────────────────────────────────────────────────────
