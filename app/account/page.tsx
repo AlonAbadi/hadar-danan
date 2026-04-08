@@ -26,7 +26,7 @@ export default async function AccountPage() {
 
   const { data: userData } = await db
     .from("users")
-    .select("id, name, email, phone, status, hive_status, hive_tier, hive_next_billing_date")
+    .select("id, name, email, phone, status, hive_status, hive_tier, hive_next_billing_date, marketing_consent")
     .eq("auth_id", user.id)
     .maybeSingle();
 

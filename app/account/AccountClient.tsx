@@ -40,6 +40,7 @@ interface UserData {
   hive_status: string | null;
   hive_tier: string | null;
   hive_next_billing_date: string | null;
+  marketing_consent: boolean;
 }
 
 interface Props {
@@ -686,6 +687,17 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
   const [saveMsg, setSaveMsg]   = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [pwSent, setPwSent]     = useState(false);
 
+  // Communication preferences section state
+  const [profMarketingConsent, setProfMarketingConsent] = useState(userData?.marketing_consent ?? false);
+  const [commSaving,    setCommSaving]    = useState(false);
+  const [commSaved,     setCommSaved]     = useState(false);
+  const [commErrMsg,    setCommErrMsg]    = useState<string | null>(null);
+  const [commPhoneErr,  setCommPhoneErr]  = useState<string | null>(null);
+
+  const commIsDirty =
+    profPhone            !== (userData?.phone             ?? "") ||
+    profMarketingConsent !== (userData?.marketing_consent ?? false);
+
   const displayName = userData?.name || authUser.email;
 
   // ── Link anonymous quiz results to this user (runs once per session) ──────
@@ -741,7 +753,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
       const res = await fetch("/api/user/update-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: profName, phone: profPhone }),
+        body: JSON.stringify({ name: profName }),
       });
       if (res.ok) {
         setSaveMsg({ type: "ok", text: "הפרופיל עודכן בהצלחה" });
@@ -752,6 +764,37 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
       setSaveMsg({ type: "err", text: "שגיאת רשת. נסה שוב." });
     }
     setSaving(false);
+  }
+
+  async function handleSaveCommPrefs() {
+    // Validate phone format if provided
+    if (profPhone) {
+      const normalized = profPhone.replace(/[\s-]/g, "");
+      if (!/^05\d{8}$/.test(normalized)) {
+        setCommPhoneErr("מספר טלפון לא תקין");
+        return;
+      }
+    }
+    setCommPhoneErr(null);
+    setCommSaving(true);
+    setCommErrMsg(null);
+    try {
+      const res = await fetch("/api/user/update-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: profPhone, marketing_consent: profMarketingConsent }),
+      });
+      if (res.ok) {
+        setCommSaved(true);
+        router.refresh();
+        setTimeout(() => setCommSaved(false), 2000);
+      } else {
+        setCommErrMsg("אירעה שגיאה. אנא נסה שוב או צור קשר בוואטסאפ");
+      }
+    } catch {
+      setCommErrMsg("אירעה שגיאה. אנא נסה שוב או צור קשר בוואטסאפ");
+    }
+    setCommSaving(false);
   }
 
   async function handleSendPasswordReset() {
@@ -1022,19 +1065,6 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
             <input type="email" value={authUser.email} readOnly style={S.inputReadOnly} />
             <p style={S.infoMsg}>לשינוי אימייל פנה לתמיכה.</p>
           </div>
-          <div>
-            <label style={S.label}>טלפון</label>
-            <input
-              type="tel"
-              value={profPhone}
-              onChange={(e) => setProfPhone(e.target.value)}
-              placeholder="05X-XXXXXXX"
-              dir="ltr"
-              style={S.input}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(201,150,74,0.6)"; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = "#2C323E"; }}
-            />
-          </div>
         </div>
         <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 12 }}>
           <button
@@ -1048,6 +1078,107 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
             <span style={saveMsg.type === "ok" ? S.successMsg : S.errorMsg}>
               {saveMsg.text}
             </span>
+          )}
+        </div>
+      </div>
+
+      {/* Communication Preferences */}
+      <div style={S.card}>
+        {/* Section header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+          <span style={{ fontSize: 14, color: "#9E9990", letterSpacing: "0.05em", fontWeight: 600, whiteSpace: "nowrap" }}>
+            העדפות תקשורת
+          </span>
+          <div style={{ flex: 1, height: 1, background: "rgba(201,150,74,0.2)" }} />
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Phone field */}
+          <div>
+            <label style={S.label}>טלפון נייד</label>
+            <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 6px", lineHeight: 1.4 }}>
+              נשתמש בו לעדכונים בוואטסאפ ותזכורות
+            </p>
+            <input
+              type="tel"
+              value={profPhone}
+              onChange={(e) => { setProfPhone(e.target.value); setCommPhoneErr(null); }}
+              placeholder="0501234567"
+              dir="ltr"
+              style={S.input}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(201,150,74,0.6)"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "#2C323E"; }}
+            />
+            {commPhoneErr && (
+              <p style={{ fontSize: 12, color: "#E05555", marginTop: 4 }}>{commPhoneErr}</p>
+            )}
+          </div>
+
+          {/* Marketing consent toggle */}
+          <div>
+            <div
+              onClick={() => setProfMarketingConsent((v) => !v)}
+              style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}
+            >
+              {/* Toggle track */}
+              <div
+                role="switch"
+                aria-checked={profMarketingConsent}
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); setProfMarketingConsent((v) => !v); } }}
+                style={{
+                  width: 44, height: 24, borderRadius: 12, flexShrink: 0, marginTop: 1,
+                  background: profMarketingConsent
+                    ? "linear-gradient(135deg, #E8B94A, #9E7C3A)"
+                    : "#2C323E",
+                  position: "relative",
+                  cursor: "pointer",
+                  transition: "background 0.2s",
+                  outline: "none",
+                }}
+              >
+                <span style={{
+                  position: "absolute",
+                  top: 3,
+                  left: profMarketingConsent ? 23 : 3,
+                  width: 18, height: 18, borderRadius: "50%",
+                  background: "#fff",
+                  transition: "left 0.2s",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                }} />
+              </div>
+              {/* Label */}
+              <div>
+                <div style={{ fontSize: 14, color: "#EDE9E1", fontWeight: 600, lineHeight: 1.4 }}>
+                  קבלת עדכונים שיווקיים
+                </div>
+                <div style={{ fontSize: 12, color: "#9E9990", marginTop: 4, lineHeight: 1.5 }}>
+                  מבצעים, תכנים חדשים, וטיפים שיווקיים. ניתן לבטל בכל עת.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Save button */}
+        <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 12 }}>
+          {commSaved ? (
+            <span style={{ fontSize: 14, color: "#34A853", fontWeight: 700 }}>נשמר ✓</span>
+          ) : (
+            <button
+              onClick={handleSaveCommPrefs}
+              disabled={!commIsDirty || commSaving}
+              style={{
+                ...S.saveBtn,
+                opacity: (!commIsDirty || commSaving) ? 0.4 : 1,
+                cursor: (!commIsDirty || commSaving) ? "not-allowed" : "pointer",
+              }}
+            >
+              {commSaving ? "שומר..." : "שמור שינויים"}
+            </button>
+          )}
+          {commErrMsg && (
+            <span style={S.errorMsg}>{commErrMsg}</span>
           )}
         </div>
       </div>

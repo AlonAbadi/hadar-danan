@@ -28,13 +28,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const name  = typeof (body as Record<string, unknown>).name  === "string" ? ((body as Record<string, unknown>).name  as string).trim() : null;
-  const phone = typeof (body as Record<string, unknown>).phone === "string" ? ((body as Record<string, unknown>).phone as string).trim() : null;
+  // Only update fields that are explicitly present in the body - never wipe fields that aren't sent
+  const rawBody = body as Record<string, unknown>;
+  const updates: Record<string, unknown> = {};
+
+  if ("name" in rawBody) {
+    const name = typeof rawBody.name === "string" ? rawBody.name.trim() : null;
+    updates.name = name || null;
+  }
+  if ("phone" in rawBody) {
+    const phone = typeof rawBody.phone === "string" ? rawBody.phone.trim() : null;
+    updates.phone = phone || null;
+  }
+  if ("marketing_consent" in rawBody && typeof rawBody.marketing_consent === "boolean") {
+    updates.marketing_consent = rawBody.marketing_consent;
+    // Record the timestamp when consent is granted
+    if (rawBody.marketing_consent) {
+      updates.consent_at = new Date().toISOString();
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ ok: true });
+  }
 
   const db = createServerClient();
   const { error } = await db
     .from("users")
-    .update({ name: name || null, phone: phone || null })
+    .update(updates)
     .eq("auth_id", user.id);
 
   if (error) {
