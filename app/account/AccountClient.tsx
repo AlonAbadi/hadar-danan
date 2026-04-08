@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/browser";
@@ -351,6 +351,39 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
   const [pwSent, setPwSent]     = useState(false);
 
   const displayName = userData?.name || authUser.email;
+
+  // ── Link anonymous quiz results to this user (runs once per session) ──────
+  // After login, any quiz results taken anonymously (identified by the anon_id
+  // cookie set by middleware.ts) are linked to the now-known user_id.
+  // Uses sessionStorage flag to avoid duplicate calls on re-renders / tab switches.
+  // The anon_id cookie is httpOnly: false so it's readable from document.cookie.
+  useEffect(() => {
+    if (!userData?.id) return;
+    if (sessionStorage.getItem("quiz_link_attempted")) return;
+
+    const anonId = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith("anon_id="))
+      ?.split("=")[1];
+
+    if (!anonId) return;
+
+    sessionStorage.setItem("quiz_link_attempted", "1");
+
+    const controller = new AbortController();
+
+    fetch("/api/quiz-result", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ anonymous_id: anonId, user_id: userData.id }),
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((data) => { console.log("Quiz linked:", data.updated_count); })
+      .catch((err) => { if (err.name !== "AbortError") console.warn("Quiz link failed:", err); });
+
+    return () => controller.abort();
+  }, [userData?.id]);
 
   // Active content: completed purchases that have a content URL, oldest first
   const contentItems: { label: string; href: string }[] = [];
