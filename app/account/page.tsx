@@ -52,6 +52,16 @@ export default async function AccountPage() {
     ? (mostRecentNonHive.amount_paid ?? mostRecentNonHive.amount)
     : 0;
 
+  const { data: quizResult } = userData
+    ? await db
+        .from("quiz_results")
+        .select("answers, scores, recommended_product, second_product, match_percent, created_at")
+        .eq("user_id", userData.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+
   const isGoogleUser =
     user.app_metadata?.provider === "google" ||
     (user.identities ?? []).some((id) => id.provider === "google");
@@ -63,6 +73,7 @@ export default async function AccountPage() {
       purchases={purchases}
       credit={credit}
       isGoogleUser={isGoogleUser}
+      quizResult={quizResult ?? null}
     />
   );
 }

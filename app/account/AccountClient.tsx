@@ -4,8 +4,25 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/browser";
+import {
+  type Answer,
+  PRODUCT_IMAGE,
+  PRODUCT_META,
+  PRODUCT_DESC,
+  CTA_TEXT,
+  getPersonalizedReasons,
+} from "@/lib/quiz-config";
 
 // ── Types ─────────────────────────────────────────────────────
+interface QuizResult {
+  answers: Record<string, string>;
+  scores: Record<string, number>;
+  recommended_product: string;
+  second_product: string | null;
+  match_percent: number | null;
+  created_at: string;
+}
+
 interface Purchase {
   id: string;
   product: string;
@@ -31,6 +48,7 @@ interface Props {
   purchases: Purchase[];
   credit: number;
   isGoogleUser: boolean;
+  quizResult: QuizResult | null;
 }
 
 // ── Constants ─────────────────────────────────────────────────
@@ -55,6 +73,26 @@ const HIVE_TIER_MAP: Record<string, { label: string; color: string }> = {
 const CONTENT_LINKS: Record<string, string> = {
   challenge_197: "/challenge/content",
   course_1800:   "/course/content",
+};
+
+const QUIZ_PRODUCT_NAMES: Record<string, string> = {
+  free_training: "הדרכה חינמית",
+  challenge:     "אתגר 7 הימים",
+  workshop:      "סדנה יום אחד",
+  course:        "קורס דיגיטלי",
+  strategy:      "פגישת אסטרטגיה",
+  premium:       "יום צילום פרמיום",
+  partnership:   "שותפות אסטרטגית",
+};
+
+const QUIZ_PRODUCT_HREF: Record<string, string> = {
+  free_training: "/training",
+  challenge:     "/challenge",
+  workshop:      "/workshop",
+  course:        "/course",
+  strategy:      "/strategy",
+  premium:       "/premium",
+  partnership:   "/partnership",
 };
 
 const RECOMMENDED = [
@@ -336,10 +374,148 @@ function formatDate(iso: string): string {
   return `${d.getUTCDate()}.${d.getUTCMonth() + 1}.${d.getUTCFullYear()}`;
 }
 
+function formatHebDate(iso: string): string {
+  return new Intl.DateTimeFormat("he-IL", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
+}
+
+// ── Quiz recommendation card (has result) ─────────────────────
+function QuizRecommendationCard({ quizResult }: { quizResult: QuizResult }) {
+  const { recommended_product: productId, match_percent, created_at, answers } = quizResult;
+  const image   = PRODUCT_IMAGE[productId];
+  const name    = QUIZ_PRODUCT_NAMES[productId] ?? productId;
+  const href    = QUIZ_PRODUCT_HREF[productId] ?? "/quiz";
+  const desc    = PRODUCT_DESC[productId];
+  const meta    = PRODUCT_META[productId];
+  const cta     = CTA_TEXT[productId] ?? "להתחיל עכשיו";
+
+  // Convert DB answers map {q1:"A",...} to ordered Answer[] for getPersonalizedReasons
+  const answersArray: Answer[] = ["q1","q2","q3","q4","q5","q6"].map(
+    (k) => (answers[k] ?? "A") as Answer
+  );
+  const reasons = getPersonalizedReasons(answersArray, productId);
+
+  return (
+    <div style={S.card}>
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <p style={{ ...S.sectionTitle, marginBottom: 0 }}>
+          <span style={{ background: "linear-gradient(135deg,#E8B94A,#9E7C3A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            ההמלצה האישית שלך
+          </span>
+        </p>
+        {match_percent != null && (
+          <span style={{
+            fontSize: 13, fontWeight: 700,
+            background: "rgba(232,185,74,0.12)",
+            color: "#E8B94A",
+            border: "1px solid rgba(232,185,74,0.3)",
+            borderRadius: 999,
+            padding: "4px 12px",
+          }}>
+            {match_percent}% התאמה
+          </span>
+        )}
+      </div>
+
+      {/* Subtitle - date */}
+      <p style={{ fontSize: 12, color: "#9E9990", marginTop: -8, marginBottom: 16 }}>
+        לפי הקוויז שעשית - {formatHebDate(created_at)}
+      </p>
+
+      {/* Product image */}
+      {image && (
+        <div style={{ borderRadius: 10, overflow: "hidden", position: "relative", height: 160, marginBottom: 16 }}>
+          <img
+            src={image}
+            alt={name}
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }}
+          />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(13,18,25,0.92) 0%, rgba(13,18,25,0.3) 50%, transparent 100%)" }} />
+          <div style={{ position: "absolute", bottom: 0, right: 0, left: 0, padding: "12px 14px" }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#EDE9E1", lineHeight: 1.2, marginBottom: 4 }}>{name}</div>
+            {meta && <div style={{ fontSize: 12, color: "#9E9990" }}>{meta}</div>}
+          </div>
+        </div>
+      )}
+
+      {/* Description */}
+      {desc && (
+        <p style={{ fontSize: 14, color: "#9E9990", lineHeight: 1.6, marginBottom: 14, marginTop: 0 }}>{desc}</p>
+      )}
+
+      {/* Personalized reasons */}
+      {reasons.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+          {reasons.map((reason, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <span style={{
+                width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+                background: "rgba(232,185,74,0.12)", border: "1px solid rgba(232,185,74,0.3)",
+                display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1,
+              }}>
+                <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                  <path d="M1 3.5L3.5 6L8 1" stroke="#E8B94A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+              <span style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.6 }}>{reason}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* CTA */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Link
+          href={href}
+          style={{
+            padding: "11px 24px", borderRadius: 8, border: "none",
+            background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
+            color: "#080C14", fontSize: 14, fontWeight: 800,
+            cursor: "pointer", fontFamily: "Assistant, sans-serif",
+            textDecoration: "none", display: "inline-block",
+          }}
+        >
+          {cta}
+        </Link>
+        <Link
+          href="/quiz"
+          style={{ fontSize: 12, color: "#9E9990", textDecoration: "none" }}
+        >
+          עשה את הקוויז שוב
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ── Quiz CTA card (no result yet) ─────────────────────────────
+function QuizCTACard() {
+  return (
+    <div style={S.card}>
+      <p style={{ ...S.sectionTitle, marginBottom: 8 }}>עוד לא עשית את הקוויז שלנו</p>
+      <p style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.6, marginTop: 0, marginBottom: 20 }}>
+        3 דקות שיעזרו לנו להבין מה הכי מתאים לך - בלי התחייבות
+      </p>
+      <Link
+        href="/quiz"
+        style={{
+          padding: "11px 24px", borderRadius: 8, border: "none",
+          background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
+          color: "#080C14", fontSize: 14, fontWeight: 800,
+          cursor: "pointer", fontFamily: "Assistant, sans-serif",
+          textDecoration: "none", display: "inline-block",
+        }}
+      >
+        עשה את הקוויז
+      </Link>
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────
 type Tab = "main" | "purchases" | "profile";
 
-export default function AccountClient({ authUser, userData, purchases, credit, isGoogleUser }: Props) {
+export default function AccountClient({ authUser, userData, purchases, credit, isGoogleUser, quizResult }: Props) {
   const router  = useRouter();
   const supabase = createBrowserClient();
 
@@ -461,6 +637,13 @@ export default function AccountClient({ authUser, userData, purchases, credit, i
           )}
         </div>
       </div>
+
+      {/* Quiz recommendation */}
+      {quizResult ? (
+        <QuizRecommendationCard quizResult={quizResult} />
+      ) : (
+        <QuizCTACard />
+      )}
 
       {/* Content */}
       <div style={S.card}>
