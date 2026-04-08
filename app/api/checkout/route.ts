@@ -55,6 +55,16 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServerClient();
 
+  // Cancel any existing pending purchases for this user+product combo
+  // before creating a new one. This prevents duplicate pending rows when
+  // a user clicks "complete payment" multiple times.
+  await supabase
+    .from("purchases")
+    .update({ status: "failed" })
+    .eq("user_id", user_id)
+    .eq("product", product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000")
+    .eq("status", "pending");
+
   // Credit = SUM of actual amounts paid across all completed purchases
   const { data: completedPurchases } = await supabase
     .from("purchases")

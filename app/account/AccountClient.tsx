@@ -399,13 +399,52 @@ function formatHebDate(iso: string): string {
 }
 
 // ── Pending payment callout ───────────────────────────────────
-function PendingPaymentCallout({ pendingPurchases }: { pendingPurchases: Purchase[] }) {
+function PendingPaymentCallout({ pendingPurchases, authUserId }: { pendingPurchases: Purchase[]; authUserId: string }) {
+  const router = useRouter();
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
   if (pendingPurchases.length === 0) return null;
 
   // Show only the most recent pending purchase
   const latest = pendingPurchases[0];
   const extra  = pendingPurchases.length - 1;
   const productName = PRODUCT_LABELS[latest.product] ?? latest.product;
+
+  async function handleResume() {
+    setResumeLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product: latest.product, user_id: authUserId }),
+      });
+      if (res.ok) {
+        const { url } = await res.json();
+        if (url) { window.location.href = url; return; }
+      }
+      alert("אירעה שגיאה. אנא נסה שוב או צור קשר בוואטסאפ");
+    } catch {
+      alert("אירעה שגיאה. אנא נסה שוב או צור קשר בוואטסאפ");
+    }
+    setResumeLoading(false);
+  }
+
+  async function handleCancel() {
+    if (!window.confirm("לבטל את הרכישה? זה לא ניתן לביטול")) return;
+    setCancelLoading(true);
+    try {
+      const res = await fetch(`/api/purchases/${latest.id}/cancel`, { method: "POST" });
+      if (res.ok) {
+        router.refresh();
+        return;
+      }
+      alert("אירעה שגיאה בביטול. אנא צור קשר בוואטסאפ");
+    } catch {
+      alert("אירעה שגיאה בביטול. אנא צור קשר בוואטסאפ");
+    }
+    setCancelLoading(false);
+  }
 
   return (
     <div style={{
@@ -457,31 +496,34 @@ function PendingPaymentCallout({ pendingPurchases }: { pendingPurchases: Purchas
 
       {/* Bottom row: buttons */}
       <div style={{ display: "flex", gap: 10 }}>
-        {/* TODO: replace '#' with the actual resume-payment route once available */}
-        <a
-          href="#"
+        <button
+          onClick={handleResume}
+          disabled={resumeLoading || cancelLoading}
           style={{
-            flex: 1, textAlign: "center", textDecoration: "none",
-            padding: "11px 0", borderRadius: 8,
-            background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
+            flex: 1, textAlign: "center",
+            padding: "11px 0", borderRadius: 8, border: "none",
+            background: resumeLoading ? "rgba(232,185,74,0.4)" : "linear-gradient(135deg,#E8B94A,#9E7C3A)",
             color: "#080C14", fontSize: 14, fontWeight: 800,
-            fontFamily: "Assistant, sans-serif", display: "block",
+            fontFamily: "Assistant, sans-serif", cursor: resumeLoading ? "not-allowed" : "pointer",
+            opacity: cancelLoading ? 0.5 : 1,
           }}
         >
-          השלם תשלום
-        </a>
-        {/* TODO: wire to cancel/dismiss endpoint */}
-        <a
-          href="#"
+          {resumeLoading ? "ממתין..." : "השלם תשלום"}
+        </button>
+        <button
+          onClick={handleCancel}
+          disabled={cancelLoading || resumeLoading}
           style={{
-            padding: "11px 20px", borderRadius: 8, textDecoration: "none",
+            padding: "11px 20px", borderRadius: 8,
             border: "1px solid #2C323E", background: "transparent",
             color: "#9E9990", fontSize: 14, fontWeight: 700,
-            fontFamily: "Assistant, sans-serif", display: "block",
+            fontFamily: "Assistant, sans-serif",
+            cursor: cancelLoading ? "not-allowed" : "pointer",
+            opacity: resumeLoading ? 0.5 : 1,
           }}
         >
-          בטל
-        </a>
+          {cancelLoading ? "מבטל..." : "בטל"}
+        </button>
       </div>
 
       {/* Extra pending items note */}
@@ -735,7 +777,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
       </div>
 
       {/* Pending payment callout */}
-      <PendingPaymentCallout pendingPurchases={pendingPurchases} />
+      <PendingPaymentCallout pendingPurchases={pendingPurchases} authUserId={authUser.id} />
 
       {/* Credit */}
       <div style={S.card}>
