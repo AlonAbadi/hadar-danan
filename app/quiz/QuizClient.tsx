@@ -202,22 +202,48 @@ const C = {
   quizMuted: "#9E9990",
 };
 
+// ── Types ─────────────────────────────────────────────────────────
+
+type InitialUser = {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  email: string;
+  marketing_consent: boolean;
+} | null;
+
 // ── Component ─────────────────────────────────────────────────────
 // Steps: 0-5 = questions, 6 = lead gate, 7 = result
 
-export function QuizClient() {
+export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [animPhase, setAnimPhase] = useState<AnimPhase>("idle");
   const [slideDir, setSlideDir] = useState<SlideDir>("forward");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // Logged-in user flags (computed from prop, stable for lifetime of component)
+  const isLoggedIn  = !!initialUser;
+  const hasName     = !!(initialUser?.name?.trim());
+  const hasPhone    = !!(initialUser?.phone?.trim());
+  const hasConsent  = !!initialUser?.marketing_consent;
+  const canSkipForm = isLoggedIn && hasName && hasPhone;
+
   // Lead gate
-  const [leadForm, setLeadForm] = useState({ name: "", email: "", phone: "" });
+  const [leadForm, setLeadForm] = useState({
+    name:  initialUser?.name  ?? "",
+    email: initialUser?.email ?? "",
+    phone: initialUser?.phone ?? "",
+  });
   const [leadState, setLeadState] = useState<"idle" | "loading" | "error">("idle");
   const [leadError, setLeadError] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [consentErr, setConsentErr] = useState(false);
+
+  // Soft consent banner (result page, logged-in users who haven't consented)
+  const [consentDismissed,  setConsentDismissed]  = useState(false);
+  const [consentSubmitting, setConsentSubmitting] = useState(false);
+  const [consentDone,       setConsentDone]       = useState(false);
 
   // Result state
   const [resultReady, setResultReady] = useState(false);
@@ -305,7 +331,40 @@ export function QuizClient() {
         const newAnswers = [...answers, id];
         setAnswers(newAnswers);
         setSelectedId(null);
-        setStep(newAnswers.length === QUESTIONS.length ? 6 : newAnswers.length);
+        if (newAnswers.length === QUESTIONS.length && canSkipForm) {
+          // Logged-in user with complete profile - skip lead gate, go straight to result
+          const scoresNow  = computeScores(newAnswers);
+          const winIdx     = getWinnerIndex(scoresNow);
+          const secondProd = PRODUCTS.find((_, i) => i !== winIdx && scoresNow[i] >= ALSO_CONSIDER_THRESHOLD);
+          const pct        = scalePrimary(scoresNow[winIdx]);
+          saveQuizSession({
+            name:               initialUser!.name  ?? "",
+            email:              initialUser!.email,
+            phone:              initialUser!.phone ?? "",
+            userId:             initialUser!.id,
+            recommendedProduct: PRODUCTS[winIdx].id,
+            secondProduct:      secondProd?.id,
+            matchPercent:       pct,
+            answers:            newAnswers.reduce<Record<string, string>>((acc, a, i) => { acc[`q${i+1}`] = a; return acc; }, {}),
+            completedAt:        new Date().toISOString(),
+          });
+          fetch("/api/quiz-result", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id:             initialUser!.id,
+              anonymous_id:        getCookie("anon_id"),
+              answers:             newAnswers.reduce<Record<string,string>>((acc, a, i) => { acc[`q${i+1}`] = a; return acc; }, {}),
+              scores:              scoresNow.reduce<Record<string,number>>((acc, s, i) => { acc[PRODUCTS[i].id] = s; return acc; }, {}),
+              recommended_product: PRODUCTS[winIdx].id,
+              second_product:      secondProd?.id ?? null,
+              match_percent:       pct,
+            }),
+          }).catch(() => {});
+          setStep(7);
+        } else {
+          setStep(newAnswers.length === QUESTIONS.length ? 6 : newAnswers.length);
+        }
       });
     }, 150);
   }
@@ -324,7 +383,8 @@ export function QuizClient() {
 
   async function handleLeadSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!consent) { setConsentErr(true); return; }
+    // Consent required for anonymous users only; logged-in users get the soft ask on the result page
+    if (!isLoggedIn && !consent) { setConsentErr(true); return; }
     if (!leadForm.name.trim() || !leadForm.email.trim() || !leadForm.phone.trim()) return;
     setLeadState("loading");
     setLeadError(null);
@@ -347,7 +407,7 @@ export function QuizClient() {
           phone:             leadForm.phone.trim(),
           anonymous_id:      getCookie("anon_id"),
           ab_variant:        getCookie("ab_variant"),
-          marketing_consent: consent,
+          marketing_consent: isLoggedIn ? (initialUser?.marketing_consent ?? false) : consent,
           ...utmData,
         }),
       });
@@ -418,15 +478,42 @@ export function QuizClient() {
       setStep(0);
       setAnswers([]);
       setSelectedId(null);
-      setLeadForm({ name: "", email: "", phone: "" });
+      setLeadForm({ name: initialUser?.name ?? "", email: initialUser?.email ?? "", phone: initialUser?.phone ?? "" });
       setLeadState("idle");
       setLeadError(null);
       setConsent(false);
       setConsentErr(false);
+      setConsentDismissed(false);
+      setConsentDone(false);
       completedRef.current = false;
       setResultReady(false);
       setDisplayPct(0);
     });
+  }
+
+  async function handleConsentYes() {
+    if (!initialUser) return;
+    setConsentSubmitting(true);
+    try {
+      const name  = initialUser.name?.trim()  || leadForm.name.trim();
+      const phone = initialUser.phone?.trim() || leadForm.phone.trim();
+      if (name && phone) {
+        await fetch("/api/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email:             initialUser.email,
+            phone,
+            marketing_consent: true,
+          }),
+        });
+      }
+      setConsentDone(true);
+    } catch {
+      setConsentDone(true); // dismiss on error - don't disrupt UX
+    }
+    setConsentSubmitting(false);
   }
 
   const progress = step >= 6 ? 100 : (step / QUESTIONS.length) * 100;
@@ -550,16 +637,18 @@ export function QuizClient() {
                 <div className="flex flex-col items-center gap-3">
                   <h1 className="font-black" style={{ fontSize: "22px" }}>התוצאה שלך מוכנה!</h1>
                   <p style={{ fontSize: "13px", color: C.quizMuted, lineHeight: 1.6 }}>
-                    מלא פרטים כדי לקבל את ההמלצה האישית שלך
+                    {isLoggedIn
+                      ? "כדי לקבל גישה לקבוצת הוואטסאפ והעדכונים, נשאר רק לשתף עוד פרט אחד"
+                      : "מלא פרטים כדי לקבל את ההמלצה האישית שלך"}
                   </p>
                 </div>
 
                 <form onSubmit={handleLeadSubmit} className="flex flex-col gap-3 text-right">
                   {[
-                    { id: "name",  label: "שם פרטי",    type: "text",  placeholder: "ישראל",              dir: "rtl" },
-                    { id: "email", label: "אימייל",      type: "email", placeholder: "israel@example.com", dir: "ltr" },
-                    { id: "phone", label: "טלפון נייד",  type: "tel",   placeholder: "0501234567",         dir: "ltr" },
-                  ].map(({ id, label, type, placeholder, dir }) => (
+                    { id: "name",  show: !isLoggedIn || !hasName,  label: "שם פרטי",    type: "text",  placeholder: "ישראל",              dir: "rtl" },
+                    { id: "email", show: !isLoggedIn,               label: "אימייל",      type: "email", placeholder: "israel@example.com", dir: "ltr" },
+                    { id: "phone", show: !isLoggedIn || !hasPhone,  label: "טלפון נייד",  type: "tel",   placeholder: "0501234567",         dir: "ltr" },
+                  ].filter((f) => f.show).map(({ id, label, type, placeholder, dir }) => (
                     <div key={id} className="flex flex-col gap-1">
                       <label htmlFor={`lead-${id}`} className="text-sm font-semibold" style={{ color: C.quizMuted }}>
                         {label} <span style={{ color: C.gold }}>*</span>
@@ -579,12 +668,15 @@ export function QuizClient() {
                     </div>
                   ))}
 
-                  <ConsentCheckbox
-                    checked={consent}
-                    onChange={(v) => { setConsent(v); if (v) setConsentErr(false); }}
-                    error={consentErr}
-                    dark
-                  />
+                  {/* Consent checkbox only for anonymous users - logged-in users get soft ask on result page */}
+                  {!isLoggedIn && (
+                    <ConsentCheckbox
+                      checked={consent}
+                      onChange={(v) => { setConsent(v); if (v) setConsentErr(false); }}
+                      error={consentErr}
+                      dark
+                    />
+                  )}
 
                   {leadError && <p className="text-sm text-red-400 text-center">{leadError}</p>}
 
@@ -764,6 +856,61 @@ export function QuizClient() {
             פרטים
           </button>
         </div>
+
+        {/* Soft consent ask - shown on result page for logged-in users who haven't consented */}
+        {isLoggedIn && !hasConsent && !consentDismissed && (
+          <div
+            style={{
+              margin: "12px 16px 0",
+              background: "rgba(232,185,74,0.06)",
+              border: "1px solid rgba(232,185,74,0.2)",
+              borderRadius: 8,
+              padding: 14,
+              ...fadeIn(0.85, resultReady),
+            }}
+          >
+            {consentDone ? (
+              <p style={{ fontSize: 13, color: C.gold, textAlign: "center" }}>תודה! ניצור איתך קשר בקרוב</p>
+            ) : (
+              <>
+                <p style={{ fontSize: 13, color: C.textSec, marginBottom: 10, lineHeight: 1.5 }}>
+                  רוצה לקבל עדכונים על תכנים חדשים, מבצעים, וטיפים שיווקיים?
+                </p>
+                <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                  <button
+                    onClick={handleConsentYes}
+                    disabled={consentSubmitting}
+                    style={{
+                      background: C.gold,
+                      color: "#0a0a0a",
+                      border: "none",
+                      borderRadius: 6,
+                      padding: "8px 16px",
+                      fontSize: 13, fontWeight: 700,
+                      cursor: "pointer",
+                      opacity: consentSubmitting ? 0.6 : 1,
+                    }}
+                  >
+                    {consentSubmitting ? "..." : "כן, אשמח"}
+                  </button>
+                  <button
+                    onClick={() => setConsentDismissed(true)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: C.textMuted,
+                      fontSize: 13,
+                      cursor: "pointer",
+                      padding: "8px 12px",
+                    }}
+                  >
+                    אולי בפעם אחרת
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* 4. Why it fits */}
         <div style={{ padding: "24px 16px 0" }}>
