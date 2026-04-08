@@ -80,15 +80,13 @@ const STORIES: Item[] = [
 
 function PosterCard({ item, square = false }: { item: Item; square?: boolean }) {
   const badge = SOURCE_BADGE[item.source];
-  const h = square ? 160 : 240;
   return (
-    <div style={{ flexShrink: 0, width: 160, display: "flex", flexDirection: "column" }}>
+    <div className="flex-shrink-0 w-40 lg:w-auto" style={{ display: "flex", flexDirection: "column" }}>
       <div style={{
         position: "relative",
         borderRadius: 8,
         overflow: "hidden",
-        width: 160,
-        height: h,
+        aspectRatio: square ? "1/1" : "2/3",
         background: "#1D2430",
         cursor: "pointer",
       }}>
@@ -181,27 +179,20 @@ function ScrollRow({
   if (items.length === 0) return null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <h2 style={{
-        color: "#EDE9E1",
-        fontSize: 16,
-        fontWeight: 700,
-        margin: 0,
-        paddingRight: 20,
-        paddingLeft: 20,
-        fontFamily: "var(--font-assistant), Assistant, sans-serif",
-      }}>
+      <h2
+        className="px-5 lg:px-0"
+        style={{
+          color: "#EDE9E1",
+          fontSize: 16,
+          fontWeight: 700,
+          margin: 0,
+          fontFamily: "var(--font-assistant), Assistant, sans-serif",
+        }}
+      >
         {title}
       </h2>
       <div
-        className="binge-scroll-row"
-        style={{
-          display: "flex",
-          gap: 10,
-          overflowX: "auto",
-          paddingInlineStart: 20,
-          paddingInlineEnd: 20,
-          paddingBottom: 4,
-        }}
+        className="binge-scroll-row flex lg:grid lg:grid-cols-4 xl:grid-cols-5 gap-[10px] lg:gap-4 overflow-x-auto lg:overflow-visible pr-5 lg:pr-0 pl-5 lg:pl-0 pb-1 lg:pb-0"
       >
         {items.map((item) => (
           <PosterCard key={item.id} item={item} square={square} />
@@ -395,7 +386,7 @@ export default function BingePage() {
       </div>
 
       {/* ── Content rows ─────────────────────────────────────── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 28, paddingBottom: 48 }}>
+      <div className="lg:px-5" style={{ display: "flex", flexDirection: "column", gap: 28, paddingBottom: 48 }}>
 
         {allEmpty ? (
           <div style={{
