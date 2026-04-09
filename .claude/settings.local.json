@@ -56,7 +56,15 @@
       "Bash(echo \"=== $f ===\")",
       "Read(//Users/work/hadar-danan/**)",
       "Bash(find /mnt -name \"course-landing-v4.html\")",
-      "Bash(ls /mnt/)"
+      "Bash(ls /mnt/)",
+      "Bash(curl -s \"https://rufzcpwzolitoqqhdmrx.supabase.co/rest/v1/purchases?select=id,product,amount,status,cardcom_ref,created_at&status=eq.pending&order=created_at.desc&limit=5\" -H 'apikey: $SUPABASE_SERVICE_ROLE_KEY' -H 'Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY')",
+      "Bash(grep -n updated_at /Users/work/hadar-danan/supabase/schema.sql /Users/work/hadar-danan/supabase/migrations/*.sql)",
+      "Bash(cat app/api/purchases/[id]/cancel/route.ts)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(curl -s \"https://rufzcpwzolitoqqhdmrx.supabase.co/rest/v1/users?email=eq.yaya%40weareyaya.com&select=id,auth_id,email,name,phone,marketing_consent,consent_at,created_at\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1ZnpjcHd6b2xpdG9xcWhkbXJ4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDYxNTMzMCwiZXhwIjoyMDkwMTkxMzMwfQ.xoaUVnI0UK_d0YuPhjL_tIVBaDcCl49hjblHDy5n5Co\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1ZnpjcHd6b2xpdG9xcWhkbXJ4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDYxNTMzMCwiZXhwIjoyMDkwMTkxMzMwfQ.xoaUVnI0UK_d0YuPhjL_tIVBaDcCl49hjblHDy5n5Co\")",
+      "Bash(python3 -m json.tool)"
     ]
   }
 }
