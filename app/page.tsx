@@ -134,9 +134,6 @@ export default async function LandingPage() {
                 }}>
                   {content.cta}
                 </a>
-                <p style={{ textAlign: "center", color: "#4A4540", fontSize: "0.8rem" }}>
-                  +3,500 עסקים כבר מצאו את הבהירות שלהם
-                </p>
               </div>
             </div>
 
@@ -221,10 +218,6 @@ export default async function LandingPage() {
                   {content.cta}
                 </a>
 
-                {/* Social proof */}
-                <p style={{ color: "#4A4540", fontSize: "0.82rem" }}>
-                  +3,500 עסקים כבר מצאו את הבהירות שלהם
-                </p>
 
               </div>
             </div>
