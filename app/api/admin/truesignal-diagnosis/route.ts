@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 import { mapQuizAnswersToText } from "@/lib/quiz/labels";
 
+export const maxDuration = 60;
+
 // ── Admin auth ────────────────────────────────────────────────────────────────
 
 function isAdminAuthorized(req: NextRequest): boolean {
@@ -87,8 +89,8 @@ const SYSTEM_PROMPT = `אתה אנליסט לידים של הדר דנן - מו�
       "title": "מה לעשות",
       "description": "2-3 שורות שמסבירות את הצעד הקונקרטי.",
       "branches": {
-        "success": "אם הוא מגיב חיובית - מה הצעד הבא",
-        "fail": "אם הוא לא מגיב או מגיב שלילי - מה הצעד הבא"
+        "if_yes": "אם הוא מגיב חיובית - מה הצעד הבא",
+        "if_no": "אם הוא לא מגיב או מגיב שלילי - מה הצעד הבא"
       }
     }
   ],
@@ -133,7 +135,7 @@ type DiagnosisResponse = {
     timing: string;
     title: string;
     description: string;
-    branches?: { success: string; fail: string };
+    branches?: { if_yes: string; if_no: string };
   }>;
   suggested_whatsapp: string;
 };
@@ -143,6 +145,32 @@ const VALID_URGENCIES     = new Set(["high", "medium", "low"]);
 const VALID_PRODUCT_KEYS  = new Set(["challenge_197", "workshop_1080", "course_1800", "strategy_4000", "premium_14000"]);
 const VALID_RECS          = new Set(["yes", "maybe_later", "no"]);
 const VALID_SEVERITIES    = new Set(["high", "medium", "info"]);
+
+// Extracts a JSON object from Claude's response even if there is surrounding
+// text or markdown code fences (```json ... ```) around it.
+function extractJsonFromText(text: string): string {
+  let cleaned = text.trim();
+
+  // Strip markdown code fences: ```json ... ``` or ``` ... ```
+  const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (fenceMatch) {
+    cleaned = fenceMatch[1].trim();
+  }
+
+  // Find the first { and last } to isolate the JSON object
+  if (!cleaned.startsWith("{")) {
+    const firstBrace = cleaned.indexOf("{");
+    if (firstBrace === -1) throw new Error("No JSON object found in response");
+    cleaned = cleaned.substring(firstBrace);
+  }
+  if (!cleaned.endsWith("}")) {
+    const lastBrace = cleaned.lastIndexOf("}");
+    if (lastBrace === -1) throw new Error("No closing brace found in response");
+    cleaned = cleaned.substring(0, lastBrace + 1);
+  }
+
+  return cleaned;
+}
 
 function validateDiagnosis(obj: unknown): obj is DiagnosisResponse {
   if (!obj || typeof obj !== "object") return false;
@@ -430,12 +458,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "תגובה לא תקינה מהמודל" }, { status: 500 });
     }
 
+    const responseText = firstBlock.text;
+    console.log("[truesignal] raw Claude response length:", responseText.length);
+    console.log("[truesignal] first 200 chars:", responseText.substring(0, 200));
+    console.log("[truesignal] last 200 chars:", responseText.substring(Math.max(0, responseText.length - 200)));
+
     let parsed: unknown;
     try {
-      parsed = JSON.parse(firstBlock.text);
-    } catch {
+      const jsonText = extractJsonFromText(responseText);
+      parsed = JSON.parse(jsonText);
+    } catch (parseError) {
+      console.error("[truesignal] JSON parse failed:", parseError);
+      console.error("[truesignal] raw text that failed:", responseText);
       return NextResponse.json(
-        { error: "שגיאת פענוח JSON מהמודל", raw: firstBlock.text },
+        {
+          error: "שגיאת פענוח JSON מהמודל",
+          debug_raw_response: responseText.substring(0, 500),
+          debug_parse_error:  (parseError as Error).message,
+        },
         { status: 500 },
       );
     }
