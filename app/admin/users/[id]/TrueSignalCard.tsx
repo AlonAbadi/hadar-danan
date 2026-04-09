@@ -6,42 +6,19 @@ import { useState, useEffect } from "react";
 
 type ProductKey = "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000";
 type Recommendation = "yes" | "maybe_later" | "no";
-type CallDecision  = "call_now" | "prepare_more" | "nurture" | "not_fit";
-type FlagSeverity  = "high" | "medium" | "low";
 
 type ProductMatch = {
-  product_key:    ProductKey;
-  match_pct:      number;
+  product_key: ProductKey;
+  match_pct: number;
   recommendation: Recommendation;
-  reason:         string;
-};
-
-type Flag = {
-  severity: FlagSeverity;
-  title:    string;
-  detail:   string;
-};
-
-type ActionStep = {
-  step:         number;
-  timing:       string;
-  title:        string;
-  description:  string;
-  branches?:    { if_yes: string; if_no: string };
+  reason: string;
 };
 
 type DiagnosisResult = {
-  call_recommendation: { decision: CallDecision; reason: string; urgency: string };
-  synthesis:           string;
-  strongest_signal:    { headline: string; evidence: string };
-  readiness:           { score: number; label: string; explanation: string };
-  product_matches:     ProductMatch[];
-  flags:               Flag[];
-  action_plan:         ActionStep[];
-  suggested_whatsapp:  string;
+  synthesis: string;
+  product_matches: ProductMatch[];
+  suggested_whatsapp: string;
 };
-
-// ── Constants ─────────────────────────────────────────────────────────────────
 
 const PRODUCT_NAMES: Record<ProductKey, string> = {
   challenge_197:  "צ׳אלנג׳ 7 הימים",
@@ -51,33 +28,10 @@ const PRODUCT_NAMES: Record<ProductKey, string> = {
   premium_14000:  "יום צילום פרמיום",
 };
 
-const PRODUCT_PRICES: Record<ProductKey, string> = {
-  challenge_197:  "₪197",
-  workshop_1080:  "₪1,080",
-  course_1800:    "₪1,800",
-  strategy_4000:  "₪4,000",
-  premium_14000:  "₪14,000",
-};
-
-const CALL_DECISION_STYLE: Record<CallDecision, {
-  bg: string; border: string; color: string; badge: string; badgeBg: string; label: string;
-}> = {
-  call_now:     { bg: "rgba(74,222,128,0.06)",  border: "rgba(74,222,128,0.35)",  color: "#4ade80", badge: "#4ade80",  badgeBg: "rgba(74,222,128,0.12)",  label: "התקשר עכשיו"   },
-  prepare_more: { bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.35)",  color: "#fbbf24", badge: "#fbbf24",  badgeBg: "rgba(251,191,36,0.12)",  label: "הכן לפני שיחה" },
-  nurture:      { bg: "rgba(147,197,253,0.05)", border: "rgba(147,197,253,0.25)", color: "#93c5fd", badge: "#93c5fd",  badgeBg: "rgba(147,197,253,0.10)", label: "טפח עוד"        },
-  not_fit:      { bg: "rgba(156,163,175,0.04)", border: "rgba(156,163,175,0.18)", color: "#9ca3af", badge: "#9ca3af",  badgeBg: "rgba(156,163,175,0.08)", label: "לא מתאים כרגע"  },
-};
-
 const REC_STYLE: Record<Recommendation, { color: string; bg: string; border: string; icon: string; rgba: string }> = {
-  yes:         { color: "#4ade80", bg: "linear-gradient(90deg, rgba(74,222,128,0.05), transparent)", border: "rgba(74,222,128,0.3)",  icon: "✓", rgba: "74,222,128"  },
-  maybe_later: { color: "#fbbf24", bg: "transparent",                                               border: "transparent",            icon: "~", rgba: "251,191,36" },
-  no:          { color: "#f87171", bg: "transparent",                                               border: "transparent",            icon: "✗", rgba: "248,113,113" },
-};
-
-const FLAG_STYLE: Record<FlagSeverity, { color: string; bg: string; border: string; icon: string }> = {
-  high:   { color: "#f87171", bg: "rgba(248,113,113,0.07)", border: "rgba(248,113,113,0.25)", icon: "▲" },
-  medium: { color: "#fbbf24", bg: "rgba(251,191,36,0.07)",  border: "rgba(251,191,36,0.25)",  icon: "◆" },
-  low:    { color: "#9E9990", bg: "rgba(158,153,144,0.06)", border: "rgba(158,153,144,0.2)",  icon: "●" },
+  yes:        { color: "#4ade80", bg: "linear-gradient(90deg, rgba(74,222,128,0.05), transparent)", border: "rgba(74,222,128,0.3)", icon: "✓", rgba: "74,222,128" },
+  maybe_later:{ color: "#fbbf24", bg: "transparent", border: "transparent",             icon: "~", rgba: "251,191,36" },
+  no:         { color: "#f87171", bg: "transparent", border: "transparent",             icon: "✗", rgba: "248,113,113" },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -87,6 +41,7 @@ function formatRelativeTime(iso: string): string {
   const diffMin   = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays  = Math.floor(diffMs / 86400000);
+
   if (diffMin  < 1)  return "נותח ברגע זה";
   if (diffMin  < 60) return `נותח לפני ${diffMin} דקות`;
   if (diffHours < 24) return `נותח לפני ${diffHours} שעות`;
@@ -115,14 +70,9 @@ export function TrueSignalCard({ userId }: { userId: string }) {
         if (cancelled) return;
         if (data.cached) {
           setDiagnosis({
-            call_recommendation: data.call_recommendation,
-            synthesis:           data.synthesis,
-            strongest_signal:    data.strongest_signal,
-            readiness:           data.readiness,
-            product_matches:     data.product_matches,
-            flags:               data.flags        ?? [],
-            action_plan:         data.action_plan  ?? [],
-            suggested_whatsapp:  data.suggested_whatsapp,
+            synthesis:          data.synthesis,
+            product_matches:    data.product_matches,
+            suggested_whatsapp: data.suggested_whatsapp,
           });
           setGeneratedAt(data.generated_at);
         }
@@ -148,18 +98,14 @@ export function TrueSignalCard({ userId }: { userId: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "הניתוח נכשל");
       setDiagnosis({
-        call_recommendation: data.call_recommendation,
-        synthesis:           data.synthesis,
-        strongest_signal:    data.strongest_signal,
-        readiness:           data.readiness,
-        product_matches:     data.product_matches,
-        flags:               data.flags       ?? [],
-        action_plan:         data.action_plan ?? [],
-        suggested_whatsapp:  data.suggested_whatsapp,
+        synthesis:          data.synthesis,
+        product_matches:    data.product_matches,
+        suggested_whatsapp: data.suggested_whatsapp,
       });
       setGeneratedAt(data.generated_at);
     } catch (e) {
       setError(e instanceof Error ? e.message : "שגיאה לא ידועה");
+      // Keep old diagnosis visible on refresh failure
     } finally {
       setLoading(false);
     }
@@ -198,9 +144,6 @@ export function TrueSignalCard({ userId }: { userId: string }) {
           <div className="ts-shimmer" style={{ width: 160, height: 16 }} />
         </div>
 
-        {/* Banner skeleton */}
-        <div className="ts-shimmer" style={{ height: 68, borderRadius: 10, marginBottom: 20 }} />
-
         {/* Synthesis skeleton */}
         <div style={{ marginBottom: 20 }}>
           <div className="ts-shimmer" style={{ width: 80, height: 11, marginBottom: 12 }} />
@@ -209,12 +152,6 @@ export function TrueSignalCard({ userId }: { userId: string }) {
               <div key={i} className="ts-shimmer" style={{ width: `${w}%`, height: 13 }} />
             ))}
           </div>
-        </div>
-
-        {/* Readiness bar skeleton */}
-        <div style={{ marginBottom: 20 }}>
-          <div className="ts-shimmer" style={{ width: 100, height: 11, marginBottom: 12 }} />
-          <div className="ts-shimmer" style={{ height: 8, borderRadius: 999 }} />
         </div>
 
         {/* Product rows skeleton */}
@@ -252,7 +189,7 @@ export function TrueSignalCard({ userId }: { userId: string }) {
                 תיק אבחון <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
               </div>
               <div style={{ fontSize: 12, color: "#9E9990", marginTop: 2 }}>
-                ניתוח AI של הליד — המלצת שיחה, דחיפות, התאמת מוצר, תכנית פעולה
+                ניתוח AI של הליד - synthesis, התאמת מוצר, פתיחת שיחה
               </div>
             </div>
           </div>
@@ -271,6 +208,7 @@ export function TrueSignalCard({ userId }: { userId: string }) {
           </button>
         </div>
 
+        {/* Error banner below button (first-run failure) */}
         {error && (
           <div style={{
             marginTop: 14, padding: "10px 14px", borderRadius: 8,
@@ -285,8 +223,6 @@ export function TrueSignalCard({ userId }: { userId: string }) {
   }
 
   // ── 3 & 4. Results (with optional refresh overlay) ───────────────────────
-  const callStyle = CALL_DECISION_STYLE[diagnosis.call_recommendation?.decision ?? "nurture"];
-
   return (
     <div dir="rtl" style={{
       background: "#141820", border: "1px solid #252b38",
@@ -307,11 +243,9 @@ export function TrueSignalCard({ userId }: { userId: string }) {
           border-radius: 4px;
         }
         .ts-refresh-btn:hover { border-color: rgba(232,185,74,0.5) !important; color: #E8B94A !important; }
-        .ts-action-branch { display: flex; flex-direction: column; gap: 6px; }
-        .ts-copy-btn:hover { background: rgba(44,50,62,1) !important; color: #EDE9E1 !important; }
       `}</style>
 
-      {/* Refresh overlay */}
+      {/* Refresh overlay — shown while re-running with existing result */}
       {loading && (
         <div style={{
           position: "absolute", inset: 0, borderRadius: 14,
@@ -345,7 +279,9 @@ export function TrueSignalCard({ userId }: { userId: string }) {
               תיק אבחון <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
             </div>
           </div>
+
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Cached timestamp badge */}
             {generatedAt && (
               <div style={{
                 display: "flex", alignItems: "center", gap: 5,
@@ -353,10 +289,13 @@ export function TrueSignalCard({ userId }: { userId: string }) {
                 background: "rgba(255,255,255,0.02)", border: "1px solid #1c212c",
                 fontSize: 11, color: "#6B7280",
               }}>
-                <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#4ade80", flexShrink: 0 }} />
+                <div style={{
+                  width: 5, height: 5, borderRadius: "50%", background: "#4ade80", flexShrink: 0,
+                }} />
                 {formatRelativeTime(generatedAt)}
               </div>
             )}
+            {/* Refresh button */}
             <button
               className="ts-refresh-btn"
               onClick={runDiagnosis}
@@ -372,7 +311,7 @@ export function TrueSignalCard({ userId }: { userId: string }) {
           </div>
         </div>
 
-        {/* Error banner on refresh failure */}
+        {/* Error banner on refresh failure (old result still visible) */}
         {error && (
           <div style={{
             padding: "8px 12px", borderRadius: 8,
@@ -380,45 +319,6 @@ export function TrueSignalCard({ userId }: { userId: string }) {
             fontSize: 12, color: "#f87171",
           }}>
             רענון נכשל: {error}
-          </div>
-        )}
-
-        {/* ── BANNER: Call Recommendation ─────────────────────────────────── */}
-        {diagnosis.call_recommendation && (
-          <div style={{
-            background: callStyle.bg,
-            border: `1px solid ${callStyle.border}`,
-            borderRadius: 12, padding: "16px 18px",
-            display: "flex", flexDirection: "column", gap: 8,
-          }}>
-            {/* Top row: badge + urgency */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{
-                  background: callStyle.badgeBg,
-                  color: callStyle.color,
-                  border: `1px solid ${callStyle.border}`,
-                  borderRadius: 6, padding: "3px 10px",
-                  fontSize: 12, fontWeight: 800, letterSpacing: "0.03em",
-                }}>
-                  {callStyle.label}
-                </div>
-                <span style={{ fontSize: 11, color: "#9E9990" }}>המלצת שיחה</span>
-              </div>
-              {diagnosis.call_recommendation.urgency && (
-                <span style={{
-                  fontSize: 11, color: callStyle.color, opacity: 0.8,
-                  background: "rgba(255,255,255,0.03)", padding: "2px 8px",
-                  borderRadius: 4, border: `1px solid ${callStyle.border}`,
-                }}>
-                  {diagnosis.call_recommendation.urgency}
-                </span>
-              )}
-            </div>
-            {/* Reason */}
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "#EDE9E1" }}>
-              {diagnosis.call_recommendation.reason}
-            </p>
           </div>
         )}
 
@@ -435,74 +335,9 @@ export function TrueSignalCard({ userId }: { userId: string }) {
           </p>
         </div>
 
-        {/* Block 2 — Strongest Signal */}
-        {diagnosis.strongest_signal && (
-          <div>
-            <SectionLabel index={2} label="האות החזק ביותר" />
-            <div style={{
-              marginTop: 10, borderRadius: 10,
-              background: "rgba(232,185,74,0.04)",
-              border: "1px solid rgba(232,185,74,0.15)",
-              padding: "14px 16px",
-            }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#E8B94A", marginBottom: 6 }}>
-                {diagnosis.strongest_signal.headline}
-              </div>
-              <p style={{ margin: 0, fontSize: 13, color: "#9E9990", lineHeight: 1.5 }}>
-                {diagnosis.strongest_signal.evidence}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Block 3 — Readiness */}
-        {diagnosis.readiness && (
-          <div>
-            <SectionLabel index={3} label="מוכנות לרכישה" />
-            <div style={{ marginTop: 10 }}>
-              {/* Score row */}
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                  <span style={{ fontSize: 28, fontWeight: 900, color: "#E8B94A", lineHeight: 1 }}>
-                    {diagnosis.readiness.score}
-                  </span>
-                  <span style={{ fontSize: 12, color: "#9E7C3A" }}>/100</span>
-                </div>
-                <span style={{
-                  fontSize: 12, fontWeight: 700, color: "#EDE9E1",
-                  background: "rgba(232,185,74,0.1)", border: "1px solid rgba(232,185,74,0.2)",
-                  borderRadius: 4, padding: "2px 8px",
-                }}>
-                  {diagnosis.readiness.label}
-                </span>
-              </div>
-              {/* Progress bar */}
-              <div style={{
-                height: 7, borderRadius: 999,
-                background: "rgba(255,255,255,0.05)",
-                overflow: "hidden", marginBottom: 10,
-              }}>
-                <div style={{
-                  height: "100%", borderRadius: 999,
-                  width: `${Math.min(100, Math.max(0, diagnosis.readiness.score))}%`,
-                  background: diagnosis.readiness.score >= 70
-                    ? "linear-gradient(90deg, #9E7C3A, #E8B94A)"
-                    : diagnosis.readiness.score >= 40
-                    ? "linear-gradient(90deg, #9E7C3A, #C9964A)"
-                    : "rgba(158,153,144,0.5)",
-                  transition: "width 0.6s ease",
-                }} />
-              </div>
-              <p style={{ margin: 0, fontSize: 12, color: "#9E9990", lineHeight: 1.5 }}>
-                {diagnosis.readiness.explanation}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Block 4 — Product matches */}
+        {/* Block 2 — Product matches */}
         <div>
-          <SectionLabel index={4} label="התאמת מוצר" />
+          <SectionLabel index={2} label="התאמת מוצר" />
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
             {diagnosis.product_matches.map((pm) => {
               const s = REC_STYLE[pm.recommendation];
@@ -520,13 +355,8 @@ export function TrueSignalCard({ userId }: { userId: string }) {
                     {pm.match_pct}%
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#EDE9E1" }}>
-                        {PRODUCT_NAMES[pm.product_key]}
-                      </span>
-                      <span style={{ fontSize: 11, color: "#9E7C3A", fontWeight: 600 }}>
-                        {PRODUCT_PRICES[pm.product_key]}
-                      </span>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#EDE9E1" }}>
+                      {PRODUCT_NAMES[pm.product_key]}
                     </div>
                     <div style={{ fontSize: 12, color: "#9E9990", marginTop: 2, lineHeight: 1.4 }}>
                       {pm.reason}
@@ -547,108 +377,15 @@ export function TrueSignalCard({ userId }: { userId: string }) {
           </div>
         </div>
 
-        {/* Block 5 — Flags */}
-        {diagnosis.flags && diagnosis.flags.length > 0 && (
-          <div>
-            <SectionLabel index={5} label="דגלים לצוות המכירות" />
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
-              {diagnosis.flags.map((flag, i) => {
-                const fs = FLAG_STYLE[flag.severity];
-                return (
-                  <div key={i} style={{
-                    display: "flex", alignItems: "flex-start", gap: 10,
-                    background: fs.bg, border: `1px solid ${fs.border}`,
-                    borderRadius: 9, padding: "10px 14px",
-                  }}>
-                    <div style={{ fontSize: 11, color: fs.color, marginTop: 2, flexShrink: 0 }}>
-                      {fs.icon}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: fs.color, marginBottom: 3 }}>
-                        {flag.title}
-                      </div>
-                      <div style={{ fontSize: 12, color: "#9E9990", lineHeight: 1.4 }}>
-                        {flag.detail}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Block 6 — Action Plan */}
-        {diagnosis.action_plan && diagnosis.action_plan.length > 0 && (
-          <div>
-            <SectionLabel index={6} label="תכנית פעולה" />
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
-              {diagnosis.action_plan.map((step, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  {/* Step connector */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                    <div style={{
-                      width: 26, height: 26, borderRadius: "50%",
-                      background: "rgba(232,185,74,0.12)",
-                      border: "1px solid rgba(232,185,74,0.3)",
-                      color: "#E8B94A", fontSize: 12, fontWeight: 800,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      {step.step}
-                    </div>
-                    {i < diagnosis.action_plan.length - 1 && (
-                      <div style={{ width: 1, flex: 1, background: "rgba(232,185,74,0.1)", minHeight: 12, marginTop: 4 }} />
-                    )}
-                  </div>
-                  {/* Step content */}
-                  <div style={{ flex: 1, paddingBottom: i < diagnosis.action_plan.length - 1 ? 8 : 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#EDE9E1" }}>
-                        {step.title}
-                      </span>
-                      <span style={{
-                        fontSize: 11, color: "#9E7C3A",
-                        background: "rgba(158,124,58,0.1)", border: "1px solid rgba(158,124,58,0.2)",
-                        borderRadius: 4, padding: "1px 7px",
-                      }}>
-                        {step.timing}
-                      </span>
-                    </div>
-                    <p style={{ margin: 0, fontSize: 12, color: "#9E9990", lineHeight: 1.5 }}>
-                      {step.description}
-                    </p>
-                    {step.branches && (
-                      <div className="ts-action-branch" style={{
-                        marginTop: 8, padding: "10px 12px", borderRadius: 7,
-                        background: "rgba(0,0,0,0.2)", border: "1px solid #1c212c",
-                      }}>
-                        <div style={{ fontSize: 11, color: "#4ade80" }}>
-                          <span style={{ fontWeight: 700 }}>✓ אם כן: </span>
-                          {step.branches.if_yes}
-                        </div>
-                        <div style={{ fontSize: 11, color: "#f87171" }}>
-                          <span style={{ fontWeight: 700 }}>✗ אם לא: </span>
-                          {step.branches.if_no}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Block 7 — WhatsApp opener */}
+        {/* Block 3 — WhatsApp opener */}
         <div>
-          <SectionLabel index={7} label="פתיחת שיחה בוואטסאפ" />
+          <SectionLabel index={3} label="פתיחת שיחה בוואטסאפ" />
           <div style={{
             background: "rgba(0,0,0,0.3)", borderRadius: 10,
             border: "1px solid #2C323E", padding: "14px 16px",
             marginTop: 10, position: "relative",
           }}>
             <button
-              className="ts-copy-btn"
               onClick={copyWhatsApp}
               style={{
                 position: "absolute", top: 10, left: 12,
@@ -669,19 +406,6 @@ export function TrueSignalCard({ userId }: { userId: string }) {
               {diagnosis.suggested_whatsapp}
             </p>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          gap: 8, paddingTop: 4,
-          borderTop: "1px solid rgba(44,50,62,0.5)",
-        }}>
-          <span style={{ fontSize: 10, color: "#3D434F" }}>Claude Sonnet 4.6</span>
-          <span style={{ fontSize: 10, color: "#2C323E" }}>·</span>
-          <span dir="ltr" style={{ fontSize: 10, color: "#3D434F", unicodeBidi: "embed" }}>TrueSignal© v2</span>
-          <span style={{ fontSize: 10, color: "#2C323E" }}>·</span>
-          <span style={{ fontSize: 10, color: "#3D434F" }}>תוקף 6 שעות</span>
         </div>
 
       </div>{/* end dimmed body */}
