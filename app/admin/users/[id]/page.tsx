@@ -599,14 +599,15 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                 )}
               </Card>
 
+              {/* ── Completed purchases ───────────────────────────── */}
               <Card title="רכישות">
-                {purchases.length === 0 ? (
+                {purchases.filter((p) => p.status === "completed").length === 0 ? (
                   <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
                     אין רכישות עדיין
                   </p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column" }}>
-                    {purchases.map((p) => (
+                    {purchases.filter((p) => p.status === "completed").map((p) => (
                       <div key={p.id} style={{
                         display: "flex", alignItems: "center", gap: 8,
                         padding: "9px 0", borderBottom: "1px solid rgba(44,50,62,0.5)",
@@ -623,16 +624,8 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                         }}>
                           {"\u20AA"}{Number(p.amount).toLocaleString("he-IL")}
                         </span>
-                        <span style={{
-                          fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 5, flexShrink: 0,
-                          background: p.status === "completed" ? "rgba(76,175,130,0.15)"
-                            : p.status === "pending"           ? "rgba(239,159,39,0.15)"
-                            : "rgba(224,85,85,0.15)",
-                          color: p.status === "completed" ? "#4CAF82"
-                            : p.status === "pending"      ? "#EF9F27"
-                            : "#E05555",
-                        }}>
-                          {p.status === "completed" ? "הושלם" : p.status === "pending" ? "ממתין" : "נכשל"}
+                        <span style={{ fontSize: 11, color: "#4CAF82", fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "rgba(76,175,130,0.15)", flexShrink: 0 }}>
+                          הושלם
                         </span>
                         <span style={{ fontSize: 11, color: "#9E9990", flexShrink: 0 }}>
                           {fmtDateTime(p.created_at)}
@@ -642,6 +635,47 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                   </div>
                 )}
               </Card>
+
+              {/* ── Abandoned checkouts (pending / failed) ────────── */}
+              {purchases.filter((p) => p.status === "pending" || p.status === "failed").length > 0 && (
+                <Card>
+                  <div style={{ marginBottom: 12 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      עגלות נטושות
+                    </span>
+                    <span style={{ fontSize: 11, color: "#6B7280", marginRight: 6 }}>
+                      · ניסיונות רכישה שלא הושלמו
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    {purchases.filter((p) => p.status === "pending" || p.status === "failed").map((p) => (
+                      <div key={p.id} style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "9px 0", borderBottom: "1px solid rgba(44,50,62,0.3)",
+                        flexWrap: "wrap",
+                        opacity: 0.8,
+                      }}>
+                        <span style={{ fontSize: 13, color: "#9E9990", flex: 1, minWidth: 90 }}>
+                          {PRODUCT_LABELS[p.product as string] ?? p.product}
+                        </span>
+                        <span style={{ fontSize: 13, color: "#6B7280", flexShrink: 0 }}>
+                          {"\u20AA"}{Number(p.amount).toLocaleString("he-IL")}
+                        </span>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 5, flexShrink: 0,
+                          background: p.status === "pending" ? "rgba(239,159,39,0.12)" : "rgba(224,85,85,0.12)",
+                          color:      p.status === "pending" ? "#EF9F27"               : "#E05555",
+                        }}>
+                          {p.status === "pending" ? "ממתין" : "נכשל"}
+                        </span>
+                        <span style={{ fontSize: 11, color: "#6B7280", flexShrink: 0 }}>
+                          {fmtDateTime(p.created_at)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
 
               {/* Video summary card */}
               <Card title="צפיות בסרטונים">

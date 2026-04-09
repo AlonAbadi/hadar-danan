@@ -200,13 +200,22 @@ export async function POST(req: NextRequest) {
             completed_at:        quizResult.created_at,
           }
         : null,
-      purchases: (purchasesRes.data ?? []).map((p: { product: string; amount: number; amount_paid: number | null; status: string; created_at: string }) => ({
-        product:     p.product,
-        amount:      p.amount,
-        amount_paid: p.amount_paid,
-        status:      p.status,
-        created_at:  p.created_at,
-      })),
+      completed_purchases: (purchasesRes.data ?? [])
+        .filter((p: { status: string }) => p.status === "completed")
+        .map((p: { product: string; amount: number; amount_paid: number | null; status: string; created_at: string }) => ({
+          product:     p.product,
+          amount:      p.amount,
+          amount_paid: p.amount_paid,
+          created_at:  p.created_at,
+        })),
+      abandoned_checkouts: (purchasesRes.data ?? [])
+        .filter((p: { status: string }) => p.status === "pending" || p.status === "failed")
+        .map((p: { product: string; amount: number; status: string; created_at: string }) => ({
+          product:    p.product,
+          amount:     p.amount,
+          status:     p.status,
+          created_at: p.created_at,
+        })),
       events: (eventsRes.data ?? []).map((e: { type: unknown; metadata: unknown; created_at: string }) => ({
         type:       e.type,
         metadata:   e.metadata,
@@ -231,7 +240,7 @@ export async function POST(req: NextRequest) {
       system:     SYSTEM_PROMPT,
       messages: [{
         role:    "user",
-        content: "להלן נתוני הליד. החזר תיק אבחון לפי ההוראות:\n\n" + JSON.stringify(userContext, null, 2),
+        content: "שים לב: abandoned_checkouts הם לא רכישות אמיתיות - אלה ניסיונות שלא הושלמו. אל תתייחס אליהם כאל לקוחות משלמים. completed_purchases הן הרכישות שהושלמו בפועל.\n\nלהלן נתוני הליד. החזר תיק אבחון לפי ההוראות:\n\n" + JSON.stringify(userContext, null, 2),
       }],
     });
 
