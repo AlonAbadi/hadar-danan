@@ -727,8 +727,8 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
       signal: controller.signal,
     })
       .then((res) => res.json())
-      .then((data) => { console.log("Quiz linked:", data.updated_count); })
-      .catch((err) => { if (err.name !== "AbortError") console.warn("Quiz link failed:", err); });
+      .then(() => {})
+      .catch((err) => { if (err.name !== "AbortError" && process.env.NODE_ENV === "development") console.warn("Quiz link failed:", err); });
 
     return () => controller.abort();
   }, [userData?.id]);
