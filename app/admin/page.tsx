@@ -44,7 +44,7 @@ const NAV_CARDS = [
   { title: 'וידאו ואנליטיקס',  desc: 'מעקב צפיות, milestones',                   href: '/admin/video' },
   { title: 'רכישת לקוחות',    desc: 'מקורות תנועה, CAC, ROAS',                   href: '/admin/acquisition' },
   { title: 'מודל MMM',         desc: 'הקצאת תקציב, רגרסיה, תחזיות',             href: '/admin/mmm' },
-  { title: 'A/B Testing',      desc: 'ניסויים פעילים, תוצאות',                   href: '/admin/ab' },
+  { title: 'A/B Testing',      desc: 'ניסויים פעילים, תוצאות',                   href: '/admin/abtesting' },
   { title: 'כוורת',            desc: 'חברי קהילה, ניהול מנויים',                 href: '/admin/hive' },
   { title: 'לוגים',            desc: 'שגיאות, אירועים, מעקב מערכת',             href: '/admin/logs' },
 ];
