@@ -150,9 +150,13 @@ export default async function LandingPage() {
                 width: "auto",
                 display: "inline-block",
               }}>
-                <img
+                <Image
                   src="/hadar1.png"
                   alt="הדר דנן"
+                  width={842}
+                  height={1264}
+                  priority
+                  quality={90}
                   style={{
                     height: "100%",
                     width: "auto",
