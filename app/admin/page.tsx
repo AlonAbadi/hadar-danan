@@ -40,7 +40,7 @@ const NAV_CARDS = [
   { title: 'מוצרים',           desc: 'ניהול מוצרים, מחירים, סטטוס',              href: '/admin/products' },
   { title: 'פגישות',           desc: 'ניהול פגישות אסטרטגיה',                    href: '/admin/bookings' },
   { title: 'ניהול לידים CRM',  desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',      href: '/admin/crm' },
-  { title: 'אימיילים',         desc: 'רצפי אימייל, open rate, שליחה ידנית',      href: '/admin/emails' },
+  { title: 'אימיילים',         desc: 'רצפי אימייל, open rate, שליחה ידנית',      href: '/admin/email' },
   { title: 'וידאו ואנליטיקס',  desc: 'מעקב צפיות, milestones',                   href: '/admin/video' },
   { title: 'רכישת לקוחות',    desc: 'מקורות תנועה, CAC, ROAS',                   href: '/admin/acquisition' },
   { title: 'מודל MMM',         desc: 'הקצאת תקציב, רגרסיה, תחזיות',             href: '/admin/mmm' },
