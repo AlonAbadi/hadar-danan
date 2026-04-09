@@ -34,23 +34,6 @@ const REC_STYLE: Record<Recommendation, { color: string; bg: string; border: str
   no:         { color: "#f87171", bg: "transparent", border: "transparent", icon: "✗" },
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function getBasicAuth(): string {
-  // Read from meta tags injected by the admin middleware, or fall back to
-  // prompting the browser. The admin pages are already behind Basic Auth so
-  // the browser will have sent the credentials — we just forward them.
-  // In practice, the browser stores the credentials and re-sends them, but
-  // we need to pass them explicitly from JS. We stash them on window if the
-  // admin layout provides them; otherwise we rely on the cookie-less approach
-  // of asking the user once via sessionStorage.
-  const stored =
-    typeof window !== "undefined"
-      ? (window as typeof window & { __adminAuth?: string }).__adminAuth
-      : undefined;
-  return stored ?? "";
-}
-
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function TrueSignalCard({ userId }: { userId: string }) {
@@ -66,29 +49,9 @@ export function TrueSignalCard({ userId }: { userId: string }) {
     try {
       const res = await fetch("/api/admin/truesignal-diagnosis", {
         method:  "POST",
-        headers: {
-          "Content-Type":  "application/json",
-          "Authorization": getBasicAuth(),
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId }),
-        credentials: "include",
       });
-
-      if (res.status === 401) {
-        // Prompt for credentials if the browser didn't forward them
-        const user = prompt("שם משתמש:");
-        const pass = prompt("סיסמה:");
-        if (user && pass) {
-          const auth = "Basic " + btoa(`${user}:${pass}`);
-          if (typeof window !== "undefined") {
-            (window as typeof window & { __adminAuth?: string }).__adminAuth = auth;
-          }
-          setLoading(false);
-          run();
-          return;
-        }
-        throw new Error("נדרשת הרשאת מנהל");
-      }
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "שגיאה לא ידועה");
