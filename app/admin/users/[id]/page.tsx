@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { createServerClient } from "@/lib/supabase/server";
 import { AdminUserActions } from "./AdminUserActions";
 import { NotesSection } from "./NotesSection";
+import { TrueSignalCard } from "./TrueSignalCard";
 
 export const dynamic = "force-dynamic";
 
@@ -479,6 +480,9 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
         <AdminUserActions userId={id} currentStatus={user.status} phone={waPhone} />
 
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* ── TrueSignal diagnosis ──────────────────────────────────── */}
+          <TrueSignalCard userId={user.id} />
 
           {/* ── Alerts ────────────────────────────────────────────────── */}
           {hasCart && (
