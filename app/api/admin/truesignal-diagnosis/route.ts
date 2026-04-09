@@ -15,6 +15,13 @@ function isAdminAuthorized(req: NextRequest): boolean {
   }
 }
 
+// Typed wrapper for tables not in the generated types (same pattern as page.tsx safeFrom)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (supabase as any).from(table);
+}
+
 // ── System prompt ────────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT = `אתה האנליסט של הדר דנן - מומחית שיווק שבונה קשרים אמיתיים ולא רודפת אחרי לידים. אתה מקבל נתונים גולמיים על ליד ומחזיר תיק אבחון שיעזור להדר להחליט מה לעשות איתו.
@@ -91,7 +98,52 @@ function validateDiagnosis(obj: unknown): obj is DiagnosisResponse {
   return true;
 }
 
-// ── POST handler ─────────────────────────────────────────────────────────────
+// ── GET handler — return cached diagnosis ─────────────────────────────────────
+
+export async function GET(req: NextRequest) {
+  if (!isAdminAuthorized(req)) {
+    return NextResponse.json({ error: "אין הרשאה" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get("userId");
+  if (!userId) {
+    return NextResponse.json({ error: "חסר userId" }, { status: 400 });
+  }
+
+  const supabase = createServerClient();
+
+  try {
+    const { data, error } = await safeFrom(supabase, "user_insights")
+      .select("synthesis, product_matches, suggested_whatsapp, generated_at")
+      .eq("user_id", userId)
+      .order("generated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[truesignal GET] fetch error:", error);
+      return NextResponse.json({ cached: false }, { status: 200 });
+    }
+
+    if (!data) {
+      return NextResponse.json({ cached: false }, { status: 200 });
+    }
+
+    return NextResponse.json({
+      cached:             true,
+      generated_at:       data.generated_at,
+      synthesis:          data.synthesis,
+      product_matches:    data.product_matches,
+      suggested_whatsapp: data.suggested_whatsapp,
+    });
+  } catch (e) {
+    console.error("[truesignal GET] unexpected error:", e);
+    return NextResponse.json({ cached: false }, { status: 200 });
+  }
+}
+
+// ── POST handler — run diagnosis and cache result ─────────────────────────────
 
 export async function POST(req: NextRequest) {
   if (!isAdminAuthorized(req)) {
@@ -134,9 +186,7 @@ export async function POST(req: NextRequest) {
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(1),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase as any)
-        .from("email_logs")
+      safeFrom(supabase, "email_logs")
         .select("subject, opened_at, clicked_at, created_at")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
@@ -149,9 +199,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch video events by email
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const videoEventsRes = await (supabase as any)
-      .from("video_events")
+    const videoEventsRes = await safeFrom(supabase, "video_events")
       .select("video_id, event_type, percent_watched, created_at")
       .eq("user_email", user.email)
       .order("created_at", { ascending: false })
@@ -202,7 +250,7 @@ export async function POST(req: NextRequest) {
         : null,
       completed_purchases: (purchasesRes.data ?? [])
         .filter((p: { status: string }) => p.status === "completed")
-        .map((p: { product: string; amount: number; amount_paid: number | null; status: string; created_at: string }) => ({
+        .map((p: { product: string; amount: number; amount_paid: number | null; created_at: string }) => ({
           product:     p.product,
           amount:      p.amount,
           amount_paid: p.amount_paid,
@@ -223,10 +271,10 @@ export async function POST(req: NextRequest) {
       })),
       video_progress: videoSummary,
       email_engagement: emailLogs.map((e: { subject: string | null; opened_at: string | null; clicked_at: string | null; created_at: string }) => ({
-        subject:    e.subject,
-        opened:     !!e.opened_at,
-        clicked:    !!e.clicked_at,
-        sent_at:    e.created_at,
+        subject: e.subject,
+        opened:  !!e.opened_at,
+        clicked: !!e.clicked_at,
+        sent_at: e.created_at,
       })),
       data_gaps,
     };
@@ -266,7 +314,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(parsed);
+    // ── Save to cache — do NOT fail the request if save fails ───────────────
+    const generatedAt = new Date().toISOString();
+    try {
+      const { error: saveError } = await safeFrom(supabase, "user_insights").insert({
+        user_id:            userId,
+        model_used:         "claude-sonnet-4-6",
+        synthesis:          parsed.synthesis,
+        product_matches:    parsed.product_matches,
+        suggested_whatsapp: parsed.suggested_whatsapp,
+        raw_response:       parsed,
+        generated_at:       generatedAt,
+      });
+      if (saveError) {
+        console.warn("[truesignal POST] cache save failed:", saveError);
+      }
+    } catch (e) {
+      console.warn("[truesignal POST] cache save threw:", e);
+    }
+
+    return NextResponse.json({
+      cached:       false,
+      generated_at: generatedAt,
+      ...parsed,
+    });
   } catch (error) {
     await supabase.from("error_logs").insert({
       context: "api/admin/truesignal-diagnosis POST",
