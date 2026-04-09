@@ -81,7 +81,7 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
               border: "1px solid rgba(159,151,221,0.5)",
               background: "rgba(127,119,221,0.08)",
               borderRadius: 20,
-              padding: "5px 14px",
+              padding: "5px 24px",
               display: "flex", alignItems: "center",
               fontSize: 13, fontWeight: 600, color: "#9F97DD",
               textDecoration: "none", whiteSpace: "nowrap",

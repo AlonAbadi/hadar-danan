@@ -86,9 +86,9 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
                 border: "1px solid rgba(159,151,221,0.5)",
                 background: "rgba(127,119,221,0.08)",
                 borderRadius: 20,
-                padding: "4px 12px",
+                padding: "5px 24px",
                 display: "flex", alignItems: "center",
-                fontSize: 12, fontWeight: 600, color: "#9F97DD",
+                fontSize: 13, fontWeight: 600, color: "#9F97DD",
                 textDecoration: "none", whiteSpace: "nowrap",
               }}
             >
