@@ -286,11 +286,10 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
           {ITEMS_GROUP5.map((item) => (
             <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
           ))}
-        </div>
 
-        {/* ── Sign-out capsule (logged-in only) ──────────────── */}
-        {userInitial && (
-          <div style={{ padding: "16px 20px", borderTop: "1px solid #2C323E", flexShrink: 0 }}>
+          {/* ── Sign-out capsule (logged-in only) ────────────── */}
+          {userInitial && (
+          <div style={{ padding: "16px 20px" }}>
             <div
               style={{
                 display: "flex",
@@ -347,7 +346,8 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
               </button>
             </div>
           </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );
