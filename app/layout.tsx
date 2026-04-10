@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Assistant } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Pixels }              from "@/components/analytics/Pixels";
 import { AccessibilityWidget } from "@/components/AccessibilityWidget";
@@ -64,6 +65,13 @@ export default function RootLayout({
       className={`${assistant.variable} h-full`}
     >
       <body className="min-h-full flex flex-col font-assistant antialiased" style={{ background: "#101520", color: "#EDE9E1" }}>
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-L76SZ1SCS1" strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-L76SZ1SCS1');
+        `}</Script>
         <SchemaMarkup />
         <a href="#main-content" className="skip-link">דלג לתוכן הראשי</a>
         <Pixels />
