@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
@@ -35,7 +34,7 @@ const ARTICLES = [
     color: "#E8001D",
     title: "המשרדים החדשים והפוטוגניים של מלכת הסרטונים",
     date: "נובמבר 2024",
-    href: null,
+    href: null as string | null,
   },
   {
     outlet: "N12",
@@ -43,7 +42,7 @@ const ARTICLES = [
     color: "#0057A8",
     title: "היזמים הצעירים שפיצחו את הרשת",
     date: "נובמבר 2024",
-    href: null,
+    href: null as string | null,
   },
   {
     outlet: "וואלה",
@@ -51,7 +50,7 @@ const ARTICLES = [
     color: "#FF6600",
     title: "איך להתגבר על הפחד ולעשות סרטונים",
     date: "מאי 2024",
-    href: null,
+    href: null as string | null,
   },
 ];
 
@@ -68,16 +67,16 @@ const PODCASTS = [
     title: "גבולות הגיון עם עידן שלי",
     role: "אורחת",
     note: "פרק 51",
-    spotifyHref: null,
-    appleHref: null,
+    spotifyHref: null as string | null,
+    appleHref: null as string | null,
     icon: "🎧",
   },
   {
     title: "תעביר לדרייב",
     role: "אורחת",
-    note: null,
-    spotifyHref: null,
-    appleHref: null,
+    note: null as string | null,
+    spotifyHref: null as string | null,
+    appleHref: null as string | null,
     icon: "🎧",
   },
 ];
@@ -88,7 +87,6 @@ const SOCIAL = [
     handle: "@hadar_danan",
     href: "https://www.instagram.com/hadar_danan",
     icon: "📸",
-    color: "#E1306C",
     desc: "תוכן יומי, עדכונים ומאחורי הקלעים",
   },
   {
@@ -96,7 +94,6 @@ const SOCIAL = [
     handle: "@hadardanann",
     href: "https://www.tiktok.com/@hadardanann",
     icon: "🎵",
-    color: "#EDE9E1",
     desc: "טיפים קצרים על שיווק אותנטי",
   },
 ];
@@ -147,12 +144,26 @@ export default function PressPage() {
         {/* ── כתבות ────────────────────────────────────────────── */}
         <section style={{ padding: "64px 24px" }}>
           <div style={{ maxWidth: 860, margin: "0 auto" }}>
-            <SectionLabel>כתבות</SectionLabel>
-            <h2 style={h2Style}>כתבו עלינו</h2>
-
+            <p className="press-label">כתבות</p>
+            <h2 className="press-h2">כתבו עלינו</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {ARTICLES.map((a, i) => (
-                <ArticleCard key={i} article={a} />
+                <div key={i}>
+                  {a.href ? (
+                    <a
+                      href={a.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="press-card press-card-link"
+                    >
+                      <ArticleInner article={a} />
+                    </a>
+                  ) : (
+                    <div className="press-card">
+                      <ArticleInner article={a} />
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -161,12 +172,52 @@ export default function PressPage() {
         {/* ── פודקאסטים ────────────────────────────────────────── */}
         <section style={{ background: "#141820", padding: "64px 24px" }}>
           <div style={{ maxWidth: 860, margin: "0 auto" }}>
-            <SectionLabel>פודקאסטים</SectionLabel>
-            <h2 style={h2Style}>שמעו אותנו</h2>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
+            <p className="press-label">פודקאסטים</p>
+            <h2 className="press-h2">שמעו אותנו</h2>
+            <div className="press-pod-grid">
               {PODCASTS.map((p, i) => (
-                <PodcastCard key={i} podcast={p} />
+                <div key={i} className="press-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <span style={{ fontSize: 28, flexShrink: 0 }}>{p.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: 700, color: "#EDE9E1", fontSize: "0.95rem", margin: 0, lineHeight: 1.4 }}>
+                        {p.title}
+                      </p>
+                      <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 600,
+                          color: p.role === "המארחת" ? "#C9964A" : "#9E9990",
+                          background: p.role === "המארחת" ? "rgba(201,150,74,0.12)" : "rgba(158,153,144,0.1)",
+                          borderRadius: 20, padding: "2px 10px",
+                        }}>
+                          {p.role}
+                        </span>
+                        {p.note && (
+                          <span style={{
+                            fontSize: 11, color: "#9E9990",
+                            background: "rgba(44,50,62,0.6)", borderRadius: 20, padding: "2px 10px",
+                          }}>
+                            {p.note}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {(p.spotifyHref || p.appleHref) && (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {p.spotifyHref && (
+                        <a href={p.spotifyHref} target="_blank" rel="noopener noreferrer" className="press-spotify-btn">
+                          🎵 Spotify
+                        </a>
+                      )}
+                      {p.appleHref && (
+                        <a href={p.appleHref} target="_blank" rel="noopener noreferrer" className="press-apple-btn">
+                          🎧 Apple Podcasts
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -175,27 +226,16 @@ export default function PressPage() {
         {/* ── רשתות חברתיות ────────────────────────────────────── */}
         <section style={{ padding: "64px 24px" }}>
           <div style={{ maxWidth: 860, margin: "0 auto" }}>
-            <SectionLabel>רשתות חברתיות</SectionLabel>
-            <h2 style={h2Style}>עקבו אחרינו</h2>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            <p className="press-label">רשתות חברתיות</p>
+            <h2 className="press-h2">עקבו אחרינו</h2>
+            <div className="press-social-grid">
               {SOCIAL.map((s, i) => (
                 <a
                   key={i}
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    display: "block",
-                    background: "linear-gradient(145deg, #1D2430, #111620)",
-                    border: "1px solid #2C323E",
-                    borderRadius: 16,
-                    padding: "24px 24px",
-                    textDecoration: "none",
-                    transition: "border-color 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,150,74,0.4)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#2C323E"; }}
+                  className="press-card press-card-link"
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12 }}>
                     <span style={{ fontSize: 28 }}>{s.icon}</span>
@@ -226,75 +266,77 @@ export default function PressPage() {
             href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_PHONE ?? "972539566961"}`}
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              display: "inline-block",
-              background: "#0D1018",
-              color: "#C9964A",
-              fontWeight: 700,
-              borderRadius: 9999,
-              padding: "13px 32px",
-              fontSize: "0.95rem",
-              textDecoration: "none",
-            }}
+            className="press-cta-btn"
           >
             צרו קשר בוואטסאפ ←
           </a>
         </section>
 
       </div>
+
+      <style>{`
+        .press-label {
+          color: #C9964A; font-size: 11px; letter-spacing: 0.18em;
+          font-weight: 600; text-transform: uppercase; margin-bottom: 10px;
+        }
+        .press-h2 {
+          font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+          font-weight: 800; color: #EDE9E1; margin-bottom: 32px; line-height: 1.2;
+        }
+        .press-card {
+          background: linear-gradient(145deg, #1D2430, #111620);
+          border: 1px solid #2C323E;
+          border-radius: 14px;
+          padding: 20px 24px;
+          text-decoration: none;
+          display: block;
+          transition: border-color 0.2s ease;
+        }
+        .press-card-link:hover { border-color: rgba(201,150,74,0.45); }
+        .press-pod-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 16px;
+        }
+        .press-social-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 16px;
+        }
+        .press-spotify-btn {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: #1DB954; color: #000;
+          font-size: 12px; font-weight: 700; border-radius: 20px;
+          padding: 6px 14px; text-decoration: none;
+        }
+        .press-apple-btn {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: #FC3C44; color: #fff;
+          font-size: 12px; font-weight: 700; border-radius: 20px;
+          padding: 6px 14px; text-decoration: none;
+        }
+        .press-cta-btn {
+          display: inline-block;
+          background: #0D1018; color: #C9964A;
+          font-weight: 700; border-radius: 9999px;
+          padding: 13px 32px; font-size: 0.95rem; text-decoration: none;
+        }
+        .press-cta-btn:hover { opacity: 0.88; }
+      `}</style>
     </>
   );
 }
 
-/* ── Sub-components ─────────────────────────────────────────── */
-
-const h2Style: CSSProperties = {
-  fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)",
-  fontWeight: 800,
-  color: "#EDE9E1",
-  marginBottom: 32,
-  lineHeight: 1.2,
-};
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function ArticleInner({ article }: { article: typeof ARTICLES[0] }) {
   return (
-    <p style={{
-      color: "#C9964A", fontSize: 11, letterSpacing: "0.18em",
-      fontWeight: 600, textTransform: "uppercase", marginBottom: 10,
-    }}>
-      {children}
-    </p>
-  );
-}
-
-function ArticleCard({ article }: { article: typeof ARTICLES[0] }) {
-  const inner = (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 20,
-      background: "linear-gradient(145deg, #1D2430, #111620)",
-      border: "1px solid #2C323E",
-      borderRadius: 14,
-      padding: "20px 24px",
-      transition: "border-color 0.2s ease",
-      textDecoration: "none",
-    }}>
-      {/* Outlet badge */}
+    <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
       <div style={{
-        flexShrink: 0,
-        width: 52, height: 52,
-        borderRadius: 12,
-        background: "#0D1018",
-        border: "1px solid #2C323E",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 22,
+        flexShrink: 0, width: 52, height: 52, borderRadius: 12,
+        background: "#0D1018", border: "1px solid #2C323E",
+        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
       }}>
         {article.icon}
       </div>
-
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
           <span style={{
@@ -310,102 +352,7 @@ function ArticleCard({ article }: { article: typeof ARTICLES[0] }) {
           {article.title}
         </p>
       </div>
-
-      {article.href && (
-        <span style={{ color: "#C9964A", fontSize: 18, flexShrink: 0 }}>←</span>
-      )}
-    </div>
-  );
-
-  if (article.href) {
-    return (
-      <a
-        href={article.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ textDecoration: "none", display: "block" }}
-        onMouseEnter={(e) => { (e.currentTarget.firstElementChild as HTMLElement).style.borderColor = "rgba(201,150,74,0.4)"; }}
-        onMouseLeave={(e) => { (e.currentTarget.firstElementChild as HTMLElement).style.borderColor = "#2C323E"; }}
-      >
-        {inner}
-      </a>
-    );
-  }
-  return <div>{inner}</div>;
-}
-
-function PodcastCard({ podcast }: { podcast: typeof PODCASTS[0] }) {
-  return (
-    <div style={{
-      background: "linear-gradient(145deg, #1D2430, #111620)",
-      border: "1px solid #2C323E",
-      borderRadius: 16,
-      padding: "24px 20px",
-      display: "flex",
-      flexDirection: "column",
-      gap: 12,
-    }}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-        <span style={{ fontSize: 28, flexShrink: 0 }}>{podcast.icon}</span>
-        <div style={{ flex: 1 }}>
-          <p style={{ fontWeight: 700, color: "#EDE9E1", fontSize: "0.95rem", margin: 0, lineHeight: 1.4 }}>
-            {podcast.title}
-          </p>
-          <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-            <span style={{
-              fontSize: 11, fontWeight: 600,
-              color: podcast.role === "המארחת" ? "#C9964A" : "#9E9990",
-              background: podcast.role === "המארחת" ? "rgba(201,150,74,0.12)" : "rgba(158,153,144,0.1)",
-              borderRadius: 20, padding: "2px 10px",
-            }}>
-              {podcast.role}
-            </span>
-            {podcast.note && (
-              <span style={{
-                fontSize: 11, color: "#9E9990",
-                background: "rgba(44,50,62,0.6)", borderRadius: 20, padding: "2px 10px",
-              }}>
-                {podcast.note}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {(podcast.spotifyHref || podcast.appleHref) && (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {podcast.spotifyHref && (
-            <a
-              href={podcast.spotifyHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 5,
-                background: "#1DB954", color: "#000",
-                fontSize: 12, fontWeight: 700, borderRadius: 20,
-                padding: "6px 14px", textDecoration: "none",
-              }}
-            >
-              🎵 Spotify
-            </a>
-          )}
-          {podcast.appleHref && (
-            <a
-              href={podcast.appleHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 5,
-                background: "#FC3C44", color: "#fff",
-                fontSize: 12, fontWeight: 700, borderRadius: 20,
-                padding: "6px 14px", textDecoration: "none",
-              }}
-            >
-              🎧 Apple Podcasts
-            </a>
-          )}
-        </div>
-      )}
+      {article.href && <span style={{ color: "#C9964A", fontSize: 18, flexShrink: 0 }}>←</span>}
     </div>
   );
 }
