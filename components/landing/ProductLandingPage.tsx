@@ -60,7 +60,10 @@ export interface ProductLandingPageProps {
 
   creditNote?: string;
 
+  definitionBlock?: string;
+
   faqs: { q: string; a: string }[];
+  faqSectionTitle?: string;
 
   finalTitle: React.ReactNode;
   finalSub?:  string;
@@ -514,7 +517,9 @@ export default function ProductLandingPage({
   anchorItems, anchorTotal,
   questions = [], resultMessages = {}, hideMicroCommitment,
   creditNote,
+  definitionBlock,
   faqs,
+  faqSectionTitle,
   finalTitle, finalSub,
   whatsappNumber,
   ctaSlot, priceSectionSlot, bottomSlot,
@@ -611,6 +616,15 @@ export default function ProductLandingPage({
           </div>
         )}
       </div>
+
+      {/* ── Definition block (AI-extractable) ──────────────────── */}
+      {definitionBlock && (
+        <div style={{ background: CARD, borderTop: `1px solid ${BORDER}`, padding: '28px 20px' }}>
+          <p style={{ maxWidth: 680, margin: '0 auto', color: FG_M, fontSize: 16, lineHeight: 1.8, textAlign: 'center' }}>
+            {definitionBlock}
+          </p>
+        </div>
+      )}
 
       {/* ── Problem ─────────────────────────────────────────────── */}
       {problemItems.length > 0 && (
@@ -846,7 +860,7 @@ export default function ProductLandingPage({
           <div className="lp-divider" />
           <div className="lp-section">
             <div className="lp-eyebrow">שאלות ותשובות</div>
-            <h2 className="lp-section-title">מה שרצית לשאול</h2>
+            <h2 className="lp-section-title">{faqSectionTitle ?? 'שאלות נפוצות'}</h2>
             <div className="faq-items">
               {faqs.map((faq, i) => (
                 <div key={i} className={`faq-item${openFaq === i ? ' open' : ''}`}>

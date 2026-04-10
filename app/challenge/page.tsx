@@ -7,7 +7,16 @@ import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
+import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
+
+const CHALLENGE_FAQS = [
+  { question: "מה זה אתגר 7 הימים?", answer: "אתגר 7 הימים הוא תוכנית אינטנסיבית של שיטת TrueSignal שמלמדת בעלי עסקים לדייק את ה-Signal שלהם תוך שבוע. בכל יום משימה ממוקדת (20-30 דקות), פידבק אישי בקבוצת ווטסאפ, ובסוף 7 הימים יוצאים עם מערכת שמביאה לקוחות." },
+  { question: "למי מתאים אתגר 7 הימים?", answer: "מתאים לבעלי עסקים שרוצים להתחיל לשווק נכון, למי שיש לו ניסיון ולא יודע איך לספר את זה, ולמי שעסוק מדי לתוכן ארוך — 20 דקות ביום מספיקות." },
+  { question: "מה ההבדל בין אתגר 7 הימים לסדנה?", answer: "האתגר הוא ה-entry point של שיטת TrueSignal — שבוע ממוקד בבניית ה-Signal הבסיסי. הסדנה (יום אחד) היא השלב הבא: בניית מערכת שיווק שלמה כולל אוטומציה, פרסום ממומן ולוח שנה לשנה." },
+  { question: "כמה זמן ביום זה לוקח?", answer: "20-30 דקות ביום. המשימות קצרות, ממוקדות, וניתנות לביצוע בין פגישה לפגישה." },
+  { question: "מה אם האתגר לא מתאים לי?", answer: "תוך 48 שעות מהצטרפות — אם לא מרוצה, מחזיר לך הכל. בלי שאלות." },
+];
 
 export const metadata = {
   title: "אתגר 7 הימים | הדר דנן",
@@ -33,6 +42,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         price={197}
         imageUrl={`${APP_URL}/etgar.png`}
       />
+      <FAQSchema items={CHALLENGE_FAQS} />
       <BreadcrumbSchema crumbs={[
         { name: "דף הבית", url: APP_URL },
         { name: "אתגר 7 הימים", url: `${APP_URL}/challenge` },
@@ -46,6 +56,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
 
         headline={<>7 ימים. מסר אחד.<br /><em>תוצאות שאתה רואה.</em></>}
         heroSub="7 ימים - מסר אחד ביום - תהליך שמשנה את הדרך שאתה מציג את עצמך"
+        definitionBlock="אתגר 7 הימים הוא תוכנית אינטנסיבית של שיטת TrueSignal שמלמדת בעלי עסקים לדייק את ה-Signal שלהם תוך שבוע. בכל יום משימה ממוקדת אחת (20-30 דקות), פידבק אישי בקהילה, ובסוף יוצאים עם מסר ברור, מערכת תוכן ושיחת מכירה שעובדת."
         stats={[
           { val: "7",    label: "ימי אתגר" },
           { val: "127",  label: "ביקורות" },
@@ -130,13 +141,8 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
 
         creditNote={credit > 0 ? `יש לך זיכוי של ${credit} שקל מרכישות קודמות - מקוזז אוטומטית` : undefined}
 
-        faqs={[
-          { q: "כמה זמן ביום זה לוקח?",       a: "20-30 דקות ביום. המשימות קצרות, ממוקדות, וניתנות לביצוע בין פגישה לפגישה." },
-          { q: "מה אם אני ממש לא טכנולוגי?",  a: "זה בדיוק בשבילך. אין כאן טכנולוגיה - רק תוכן, שיחות ואנשים." },
-          { q: "האם יש ליווי אישי?",           a: "יש קבוצת וואטסאפ פעילה עם כל המשתתפים. הדר שם כל יום לשאלות ופידבק." },
-          { q: "מה אם לא מתאים לי?",           a: "תוך 48 שעות מהצטרפות - אם לא מרוצה, מחזיר לך הכל. בלי שאלות." },
-          { q: "מתי מתחיל האתגר?",             a: "מיד לאחר ההצטרפות. אתה מקבל גישה מיידית לכל 7 הימים." },
-        ]}
+        faqSectionTitle="שאלות נפוצות על אתגר 7 הימים"
+        faqs={CHALLENGE_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
         finalTitle="עכשיו תורך"
         finalSub="7 ימים. 7 משימות. לקוח אמיתי - או כסף חזרה."

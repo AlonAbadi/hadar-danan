@@ -6,7 +6,16 @@ import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
+import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
+
+const WORKSHOP_FAQS = [
+  { question: "מה זה סדנת יום אחד?", answer: "סדנת יום אחד היא וורקשופ אינטנסיבי של 6 שעות מבוסס שיטת TrueSignal. בסדנה בונים ביחד את תשתית השיווק של העסק — מאסטרטגיית תוכן שנתית, מיתוג אישי, משפך מכירות אוטומטי ועד מדידה ואופטימיזציה. יוצאים עם מערכת שיווק שעובדת." },
+  { question: "למי מתאימה סדנת יום אחד?", answer: "מתאימה לבעלי עסקים שרוצים מערכת שיווק שרצה לבד, למי שסיים את האתגר 7 הימים ורוצה לבנות יותר, ולמי שמרגיש שהשיווק שלו לא עקבי." },
+  { question: "מה ההבדל בין הסדנה לאתגר 7 הימים?", answer: "האתגר הוא שבוע להנחת יסודות ה-Signal. הסדנה (יום אחד) היא השלב המתקדם: 6 מודולים שבונים מערכת שיווק מלאה — כולל אוטומציה, פרסום ממומן ולוח שנה שלם לשנה." },
+  { question: "מתי מתקיימת הסדנה?", answer: "תאריכים קרובים מופיעים בבאג 'הסדנה הקרובה' למעלה. ניתן לרשום מקום עכשיו." },
+  { question: "האם זה וירטואלי או פיזי?", answer: "זום — כדי לאפשר השתתפות מכל הארץ. ההקלטה נשמרת ל-12 חודשים." },
+];
 
 export const metadata = {
   title: "סדנה יום אחד | הדר דנן",
@@ -32,6 +41,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         price={1080}
         imageUrl={`${APP_URL}/sadna.png`}
       />
+      <FAQSchema items={WORKSHOP_FAQS} />
       <BreadcrumbSchema crumbs={[
         { name: "דף הבית", url: APP_URL },
         { name: "סדנה יום אחד", url: `${APP_URL}/workshop` },
@@ -45,6 +55,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
 
         headline={<>יום אחד. <em>בידול שמשנה</em> את כל השאר.</>}
         heroSub="וורקשופ אינטנסיבי של 6 שעות שבונה את תשתית השיווק של העסק שלך - מאסטרטגיה ועד אוטומציה. יוצאים עם מערכת שעובדת."
+        definitionBlock="סדנת יום אחד היא וורקשופ אינטנסיבי של 6 שעות מבוסס שיטת TrueSignal. 6 מודולים שבונים ביחד את מערכת השיווק של העסק — אסטרטגיית תוכן לשנה, מיתוג אישי, משפך מכירות אוטומטי ופרסום ממומן. 250+ עסקים כבר יישמו את השיטה עם 40% גידול ממוצע בהכנסה."
         stats={[
           { val: "6",     label: "שעות אינטנסיביות" },
           { val: "641",   label: "ערך בונוסים" },
@@ -128,13 +139,8 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
 
         creditNote={credit > 0 ? `יש לך זיכוי של ${credit} שקל - מקוזז אוטומטית` : undefined}
 
-        faqs={[
-          { q: "מתי מתקיימת הסדנה?",              a: "תאריכים קרובים מופיעים בבאג 'הסדנה הקרובה' למעלה. ניתן לרשום מקום עכשיו." },
-          { q: "האם זה וירטואלי או פיזי?",         a: "זום - כדי לאפשר השתתפות מכל הארץ. ההקלטה נשמרת ל-12 חודשים." },
-          { q: "כמה משתתפים בכל סדנה?",            a: "קבוצה קטנה עד 15 איש - כדי שכל אחד מקבל תשומת לב אישית." },
-          { q: "מה כולל כל בונוס?",                a: "50 תבניות תוכן, מאגר פרומפטים ל-AI, וגישה להקלטה ל-12 חודשים - הכל נשלח לאחר הסדנה." },
-          { q: "מה מדיניות ביטול?",                a: "ניתן לבטל עד 48 שעות לפני הסדנה - החזר מלא. ביטול מאוחר יותר - זיכוי לסדנה עתידית." },
-        ]}
+        faqSectionTitle="שאלות נפוצות על הסדנה"
+        faqs={WORKSHOP_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
         finalTitle="מוכן/ת לבנות מערכת שיווק שעובדת?"
         finalSub="6 שעות שבונות לך את תשתית השיווק לשנה הקרובה."

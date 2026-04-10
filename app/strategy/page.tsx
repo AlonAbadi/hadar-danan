@@ -6,7 +6,16 @@ import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
+import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
+
+const STRATEGY_FAQS = [
+  { question: "מה זו פגישת אסטרטגיה עם הדר דנן?", answer: "פגישת אסטרטגיה היא שיחת זום אינטנסיבית של 90 דקות אחד-על-אחד עם הדר דנן. בפגישה בונים ביחד את מפת הדרכים השיווקית של העסק — ניתוח מצב קיים, מיפוי קהל יעד, בניית משפך מכירות ולוח תוכן ל-90 יום. יוצאים עם מסמך מסודר לביצוע מיידי." },
+  { question: "למי מתאימה פגישת האסטרטגיה?", answer: "מתאימה לבעלי עסקים שרוצים תוכנית שנה קדימה, למי שעשה הכל נכון ועדיין לא צומח, ולמי שרוצה עיניים מבחוץ שמבינות עסקים. לא מתאימה לעסקים שרק התחילו — עדיף להתחיל מהאתגר." },
+  { question: "מה ההבדל בין פגישת האסטרטגיה לאתגר 7 הימים?", answer: "האתגר מלמד שיטה לבד בקצב שלך. פגישת האסטרטגיה היא עבודה אישית ישירה עם הדר — 90 דקות שמרכזות את כל הניסיון שלה עם 250+ עסקים, מותאמות בדיוק לעסק שלך. כוללת ערבות תוצאה מלאה." },
+  { question: "איך מתקיימת הפגישה?", answer: "זום — 90 דקות אינטנסיביות. תיאום המועד תוך 24 שעות מהאישור." },
+  { question: "מה ערבות התוצאה?", answer: "אם בסוף השיחה לא קיבלת לפחות 3 אינסייטים שאפשר ליישם — החזר מלא, ללא שאלות." },
+];
 
 export const metadata = {
   title: "פגישת אסטרטגיה | הדר דנן",
@@ -35,6 +44,7 @@ export default async function StrategyPage({ searchParams }: { searchParams: Pro
         { name: "דף הבית", url: APP_URL },
         { name: "פגישת אסטרטגיה", url: `${APP_URL}/strategy` },
       ]} />
+      <FAQSchema items={STRATEGY_FAQS} />
       <AbandonCheckoutPopup product="strategy" />
       <ProductLandingPage
         productName="פגישת אסטרטגיה"
@@ -43,6 +53,7 @@ export default async function StrategyPage({ searchParams }: { searchParams: Pro
 
         headline={<>שעתיים עם הדר. <em>תוכנית שעובדת</em> עבורך.</>}
         heroSub="שיחת אסטרטגיה אחד-על-אחד שבה בונים ביחד את מפת הדרכים השיווקית של העסק שלך - מותאמת בדיוק לך, לא תבנית גנרית."
+        definitionBlock="פגישת אסטרטגיה עם הדר דנן היא שיחת זום אינטנסיבית של 90 דקות שבונה את מפת הדרכים השיווקית של העסק. ניתוח מצב קיים, מיפוי קהל יעד, בניית משפך מכירות ולוח תוכן ל-90 יום — יוצאים עם מסמך מוכן לביצוע. ערבות תוצאה מלאה: 3 אינסייטים מיישמים — או החזר."
         stats={[
           { val: "90",    label: "דקות ריכוז" },
           { val: "4",     label: "מקומות בחודש" },
@@ -125,13 +136,8 @@ export default async function StrategyPage({ searchParams }: { searchParams: Pro
 
         creditNote={credit > 0 ? `יש לך זיכוי של ${credit} שקל - מקוזז אוטומטית` : undefined}
 
-        faqs={[
-          { q: "איך מתקיימת הפגישה?",              a: "זום - 90 דקות אינטנסיביות. תיאום המועד תוך 24 שעות מהאישור." },
-          { q: "מה מקבלים אחרי?",                   a: "סיכום כתוב עם תוכנית פעולה מפורטת - נשלח תוך 48 שעות מסיום הפגישה." },
-          { q: "מה ערבות התוצאה?",                  a: "אם בסוף השיחה לא קיבלת לפחות 3 אינסייטים שאפשר ליישם - החזר מלא, ללא שאלות." },
-          { q: "האם יש המשך מעבר לפגישה?",          a: "הפגישה עצמאית. אם תרצה ליווי שוטף - יש אפשרות לשותפות אסטרטגית." },
-          { q: "כמה זמן מראש צריך להזמין?",         a: "יש 4 מקומות בחודש בלבד. מומלץ לשריין מקום 2-3 שבועות מראש." },
-        ]}
+        faqSectionTitle="שאלות נפוצות על פגישת האסטרטגיה"
+        faqs={STRATEGY_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
         finalTitle="שמור/י את המקום שלך"
         finalSub="4 מקומות בחודש. מי שפועל ראשון - מקבל מועד."

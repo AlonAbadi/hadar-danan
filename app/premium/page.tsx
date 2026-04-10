@@ -6,7 +6,16 @@ import { getUserCredit } from "@/lib/credit";
 import { createServerClient } from "@/lib/supabase/server";
 import { PRODUCT_MAP } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
+import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
+
+const PREMIUM_FAQS = [
+  { question: "מה כולל יום צילום פרמיום?", answer: "יום צילום פרמיום כולל: אסטרטגיית תוכן מותאמת (לפני הצילום), יום צילום מלא עם צוות של שלושה אנשי מקצוע (צלם, במאי תוכן ומפיקה), 16 סרטונים ערוכים מוכנים לפרסום תוך שבועיים, ו-3 חודשי ליווי אחרי." },
+  { question: "למי מתאים יום צילום פרמיום?", answer: "מתאים לבעלי עסקים שרוצים נוכחות וידאו חזקה, למי שיודע שוידאו עובד ורוצה לעשות את זה נכון, ולמי שרוצה 3 חודשי תוכן בפחות מיום אחד." },
+  { question: "מה ההבדל בין יום צילום פרמיום לסדנה?", answer: "הסדנה בונה את האסטרטגיה והמערכת — אתה יוצר את התוכן בעצמך. יום הצילום הפרמיום הוא ביצוע מלא: הצוות מגיע אליך, מצלם 16 סרטונים מקצועיים ועורך אותם — אתה רק מופיע בפריים." },
+  { question: "כמה זמן לוקחת ההפקה?", answer: "הסרטונים מוכנים תוך שבועיים מיום הצילום. האסטרטגיה מוכנה שבוע לפני." },
+  { question: "מה מדיניות ביטול?", answer: "ביטול עד 7 ימים לפני הצילום — החזר מלא. לאחר מכן — זיכוי לתאריך חדש." },
+];
 
 export const metadata: Metadata = {
   title: "יום צילום פרמיום - 16 סרטונים שמוכרים | הדר דנן",
@@ -38,6 +47,7 @@ export default async function PremiumPage({ searchParams }: { searchParams: Prom
         price={14000}
         imageUrl={`${APP_URL}/shooting.png`}
       />
+      <FAQSchema items={PREMIUM_FAQS} />
       <BreadcrumbSchema crumbs={[
         { name: "דף הבית", url: APP_URL },
         { name: "יום צילום פרמיום", url: `${APP_URL}/premium` },
@@ -49,6 +59,7 @@ export default async function PremiumPage({ searchParams }: { searchParams: Prom
 
       headline={<>יום צילום אחד. <em>תוכן לשנה</em> שלמה.</>}
       heroSub="יום אחד של צילום מקצועי עם הצוות שלנו - ותצא עם 16 סרטונים ערוכים, מוכנים לפרסום, שמייצרים פניות ולקוחות."
+      definitionBlock="יום צילום פרמיום הוא שירות הפקת תוכן וידאו מלא לעסקים. הצוות של BeeGood (צלם, במאי ומפיקה) מגיע אליך ליום שלם, מצלם 16 סרטונים קצרים מקצועיים על בסיס אסטרטגיית תוכן שנבנית מראש — ומספק אותם ערוכים עם כתוביות תוך שבועיים, כולל 3 חודשי ליווי."
       stats={[
         { val: "3,500+", label: "עסקים עם השיטה" },
         { val: "16",     label: "סרטונים ביום" },
@@ -130,13 +141,8 @@ export default async function PremiumPage({ searchParams }: { searchParams: Prom
 
       creditNote={credit > 0 ? `יש לך זיכוי של ${credit} שקל - מקוזז אוטומטית` : undefined}
 
-      faqs={[
-        { q: "כמה זמן לוקחת ההפקה?",             a: "הסרטונים מוכנים תוך שבועיים מיום הצילום. האסטרטגיה מוכנה שבוע לפני." },
-        { q: "מה כולל הליווי ל-3 חודשים?",       a: "3 שיחות וידאו חודשיות, ניתוח ביצועי הסרטונים, ועדכון אסטרטגיה לפי תוצאות." },
-        { q: "מה קורה עם הלוקיישן?",             a: "אנחנו מגיעים אליך - לעסק, לבית, או לכל לוקיישן שמתאים לסיפור שלך." },
-        { q: "כמה סרטונים אפשר לעשות ביום?",     a: "16 סרטונים קצרים (30-90 שניות) - מחולקים לנושאים ושמירת אנרגיה לאורך היום." },
-        { q: "מה מדיניות ביטול?",                 a: "ביטול עד 7 ימים לפני הצילום - החזר מלא. לאחר מכן - זיכוי לתאריך חדש." },
-      ]}
+      faqSectionTitle="שאלות נפוצות על יום הצילום הפרמיום"
+      faqs={PREMIUM_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
       finalTitle="מוכן/ת ל-16 סרטונים שמשנים את העסק?"
       finalSub="מקומות מוגבלים - יום צילום אחד בשבוע בלבד."
