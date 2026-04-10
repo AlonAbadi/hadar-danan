@@ -54,32 +54,6 @@ const ARTICLES = [
   },
 ];
 
-const PODCASTS = [
-  {
-    title: "הדר דנן - הכל על במה אחת",
-    role: "המארחת",
-    note: "הפודקאסט הרשמי",
-    spotifyHref: "https://open.spotify.com/show/12EPZoAiHLq63tiq6GjreC",
-    appleHref: "https://podcasts.apple.com/il/podcast/id1829722848",
-    icon: "🎙️",
-  },
-  {
-    title: "גבולות הגיון עם עידן שלי",
-    role: "אורחת",
-    note: "פרק 51",
-    spotifyHref: null as string | null,
-    appleHref: null as string | null,
-    icon: "🎧",
-  },
-  {
-    title: "תעביר לדרייב",
-    role: "אורחת",
-    note: null as string | null,
-    spotifyHref: null as string | null,
-    appleHref: null as string | null,
-    icon: "🎧",
-  },
-];
 
 const SOCIAL = [
   {
@@ -169,56 +143,38 @@ export default function PressPage() {
           </div>
         </section>
 
-        {/* ── פודקאסטים ────────────────────────────────────────── */}
+        {/* ── פודקאסט ──────────────────────────────────────────── */}
         <section style={{ background: "#141820", padding: "64px 24px" }}>
           <div style={{ maxWidth: 860, margin: "0 auto" }}>
-            <p className="press-label">פודקאסטים</p>
-            <h2 className="press-h2">שמעו אותנו</h2>
-            <div className="press-pod-grid">
-              {PODCASTS.map((p, i) => (
-                <div key={i} className="press-card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                    <span style={{ fontSize: 28, flexShrink: 0 }}>{p.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontWeight: 700, color: "#EDE9E1", fontSize: "0.95rem", margin: 0, lineHeight: 1.4 }}>
-                        {p.title}
-                      </p>
-                      <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                        <span style={{
-                          fontSize: 11, fontWeight: 600,
-                          color: p.role === "המארחת" ? "#C9964A" : "#9E9990",
-                          background: p.role === "המארחת" ? "rgba(201,150,74,0.12)" : "rgba(158,153,144,0.1)",
-                          borderRadius: 20, padding: "2px 10px",
-                        }}>
-                          {p.role}
-                        </span>
-                        {p.note && (
-                          <span style={{
-                            fontSize: 11, color: "#9E9990",
-                            background: "rgba(44,50,62,0.6)", borderRadius: 20, padding: "2px 10px",
-                          }}>
-                            {p.note}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {(p.spotifyHref || p.appleHref) && (
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {p.spotifyHref && (
-                        <a href={p.spotifyHref} target="_blank" rel="noopener noreferrer" className="press-spotify-btn">
-                          🎵 Spotify
-                        </a>
-                      )}
-                      {p.appleHref && (
-                        <a href={p.appleHref} target="_blank" rel="noopener noreferrer" className="press-apple-btn">
-                          🎧 Apple Podcasts
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <p className="press-label">פודקאסט</p>
+            <h2 className="press-h2">הפודקאסט של הדר דנן — הכל על במה אחת</h2>
+            <p style={{ color: "#9E9990", fontSize: "0.95rem", marginBottom: 36, lineHeight: 1.7 }}>
+              שיווק, השפעה ועסקים נפגשים על במה אחת
+            </p>
+            <div className="press-embed-grid">
+              <div>
+                <p style={{ color: "#C9964A", fontSize: 12, fontWeight: 700, marginBottom: 12 }}>🎵 Spotify</p>
+                <iframe
+                  style={{ borderRadius: 12 }}
+                  src="https://open.spotify.com/embed/show/12EPZoAiHLq63tiq6GjreC"
+                  width="100%"
+                  height="352"
+                  frameBorder={0}
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                />
+              </div>
+              <div>
+                <p style={{ color: "#C9964A", fontSize: 12, fontWeight: 700, marginBottom: 12 }}>🎧 Apple Podcasts</p>
+                <iframe
+                  allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
+                  frameBorder={0}
+                  height="450"
+                  style={{ width: "100%", maxWidth: 660, overflow: "hidden", borderRadius: 10 }}
+                  sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                  src="https://embed.podcasts.apple.com/il/podcast/%D7%94%D7%93%D7%A8-%D7%93%D7%A0%D7%9F-%D7%94%D7%9B%D7%9C-%D7%A2%D7%9C-%D7%91%D7%9E%D7%94-%D7%90%D7%97%D7%AA/id1829722848"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -293,27 +249,19 @@ export default function PressPage() {
           transition: border-color 0.2s ease;
         }
         .press-card-link:hover { border-color: rgba(201,150,74,0.45); }
-        .press-pod-grid {
+        .press-embed-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 16px;
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+          align-items: start;
+        }
+        @media (max-width: 680px) {
+          .press-embed-grid { grid-template-columns: 1fr; }
         }
         .press-social-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
           gap: 16px;
-        }
-        .press-spotify-btn {
-          display: inline-flex; align-items: center; gap: 5px;
-          background: #1DB954; color: #000;
-          font-size: 12px; font-weight: 700; border-radius: 20px;
-          padding: 6px 14px; text-decoration: none;
-        }
-        .press-apple-btn {
-          display: inline-flex; align-items: center; gap: 5px;
-          background: #FC3C44; color: #fff;
-          font-size: 12px; font-weight: 700; border-radius: 20px;
-          padding: 6px 14px; text-decoration: none;
         }
         .press-cta-btn {
           display: inline-block;
