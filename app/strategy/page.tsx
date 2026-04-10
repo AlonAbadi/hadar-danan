@@ -5,6 +5,8 @@ import { AbandonCheckoutPopup } from "@/components/landing/AbandonCheckoutPopup"
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
+import { ProductSchema } from "@/components/ProductSchema";
+import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
 export const metadata = {
   title: "פגישת אסטרטגיה | הדר דנן",
@@ -17,8 +19,22 @@ export default async function StrategyPage({ searchParams }: { searchParams: Pro
   const price          = String(PRODUCT_MAP.strategy_4000.price);
   const credit         = email ? await getUserCredit(email) : 0;
 
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+
   return (
     <>
+      <ProductSchema
+        type="Service"
+        name="פגישת אסטרטגיה שיווקית - הדר דנן"
+        description="90 דקות אחד-על-אחד שבונות את האסטרטגיה השיווקית של העסק שלך לשנה הקרובה."
+        url={`${APP_URL}/strategy`}
+        price={4000}
+        imageUrl={`${APP_URL}/strategymeeting.png`}
+      />
+      <BreadcrumbSchema crumbs={[
+        { name: "דף הבית", url: APP_URL },
+        { name: "פגישת אסטרטגיה", url: `${APP_URL}/strategy` },
+      ]} />
       <AbandonCheckoutPopup product="strategy" />
       <ProductLandingPage
         productName="פגישת אסטרטגיה"

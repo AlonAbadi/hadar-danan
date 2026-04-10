@@ -1,5 +1,13 @@
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
+const website = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "BeeGood - הדר דנן",
+  "url": APP_URL,
+  "inLanguage": "he",
+};
+
 const person = {
   "@context": "https://schema.org",
   "@type": "Person",
@@ -37,14 +45,9 @@ const organization = {
 export function SchemaMarkup() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(person) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(person) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }} />
     </>
   );
 }

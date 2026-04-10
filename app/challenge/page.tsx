@@ -6,6 +6,8 @@ import { AbandonCheckoutPopup } from "@/components/landing/AbandonCheckoutPopup"
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
+import { ProductSchema } from "@/components/ProductSchema";
+import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
 export const metadata = {
   title: "אתגר 7 הימים | הדר דנן",
@@ -19,8 +21,22 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const credit        = email ? await getUserCredit(email) : 0;
 
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+
   return (
     <>
+      <ProductSchema
+        type="Course"
+        name="אתגר 7 הימים - שיטת TrueSignal"
+        description="7 ימים. מסר אחד ביום. תהליך שמשנה את הדרך שאתה מציג את עצמך. שיטת TrueSignal של הדר דנן."
+        url={`${APP_URL}/challenge`}
+        price={197}
+        imageUrl={`${APP_URL}/etgar.png`}
+      />
+      <BreadcrumbSchema crumbs={[
+        { name: "דף הבית", url: APP_URL },
+        { name: "אתגר 7 הימים", url: `${APP_URL}/challenge` },
+      ]} />
       <AbandonCheckoutPopup product="challenge" />
       <ProductLandingPage
         productName="אתגר 7 הימים"

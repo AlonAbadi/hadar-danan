@@ -5,6 +5,8 @@ import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { createServerClient } from "@/lib/supabase/server";
 import { PRODUCT_MAP } from "@/lib/products";
+import { ProductSchema } from "@/components/ProductSchema";
+import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
 export const metadata: Metadata = {
   title: "יום צילום פרמיום - 16 סרטונים שמוכרים | הדר דנן",
@@ -24,7 +26,22 @@ export default async function PremiumPage({ searchParams }: { searchParams: Prom
     .select("slot_date, slot_time")
     .eq("status", "confirmed");
 
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+
   return (
+    <>
+      <ProductSchema
+        type="Service"
+        name="יום צילום פרמיום - 16 סרטונים שמוכרים"
+        description="יום צילום מקצועי עם הצוות של BeeGood. יוצאים עם 16 סרטונים ערוכים ואסטרטגיית תוכן לשנה שלמה."
+        url={`${APP_URL}/premium`}
+        price={14000}
+        imageUrl={`${APP_URL}/shooting.png`}
+      />
+      <BreadcrumbSchema crumbs={[
+        { name: "דף הבית", url: APP_URL },
+        { name: "יום צילום פרמיום", url: `${APP_URL}/premium` },
+      ]} />
     <ProductLandingPage
       productName="יום צילום פרמיום"
       price={PRODUCT_MAP.premium_14000.price}
@@ -144,5 +161,6 @@ export default async function PremiumPage({ searchParams }: { searchParams: Prom
         </section>
       }
     />
+    </>
   );
 }

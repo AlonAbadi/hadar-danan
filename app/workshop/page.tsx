@@ -5,6 +5,8 @@ import { AbandonCheckoutPopup } from "@/components/landing/AbandonCheckoutPopup"
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
+import { ProductSchema } from "@/components/ProductSchema";
+import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
 export const metadata = {
   title: "סדנה יום אחד | הדר דנן",
@@ -18,8 +20,22 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const credit        = email ? await getUserCredit(email) : 0;
 
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+
   return (
     <>
+      <ProductSchema
+        type="Course"
+        name="סדנה יום אחד - שיטת TrueSignal"
+        description="יום אחד אינטנסיבי שבונה מערכת שיווק שרצה לבד. מתודולוגיה קונקרטית עם הדר דנן."
+        url={`${APP_URL}/workshop`}
+        price={1080}
+        imageUrl={`${APP_URL}/sadna.png`}
+      />
+      <BreadcrumbSchema crumbs={[
+        { name: "דף הבית", url: APP_URL },
+        { name: "סדנה יום אחד", url: `${APP_URL}/workshop` },
+      ]} />
       <AbandonCheckoutPopup product="workshop" />
       <ProductLandingPage
         productName="סדנה יום אחד"
