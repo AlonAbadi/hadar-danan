@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
@@ -247,7 +248,7 @@ export default function PressPage() {
 
 /* ── Sub-components ─────────────────────────────────────────── */
 
-const h2Style: React.CSSProperties = {
+const h2Style: CSSProperties = {
   fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)",
   fontWeight: 800,
   color: "#EDE9E1",
