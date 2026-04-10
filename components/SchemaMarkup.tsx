@@ -16,7 +16,12 @@ const person = {
   "jobTitle": "מומחית שיווק, יוצרת שיטת TrueSignal",
   "description": "הדר דנן, מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal by BeeGood. קורסים, סדנאות וליווי אישי לבעלי עסקים.",
   "knowsAbout": ["שיווק דיגיטלי", "אסטרטגיה עסקית", "יצירת תוכן", "מיתוג אישי", "TrueSignal"],
-  "sameAs": ["https://www.instagram.com/hadar_danan"],
+  "sameAs": [
+    "https://www.instagram.com/hadar_danan",
+    "https://www.tiktok.com/@hadardanann",
+    "https://open.spotify.com/show/12EPZoAiHLq63tiq6GjreC",
+    "https://podcasts.apple.com/il/podcast/id1829722848",
+  ],
   "worksFor": {
     "@type": "Organization",
     "name": "BeeGood",
