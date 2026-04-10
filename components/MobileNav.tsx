@@ -50,7 +50,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
   async function handleSignOut() {
     setSigningOut(true);
     await supabase.auth.signOut();
-    router.push("/login");
+    window.location.href = "/";
   }
 
   useEffect(() => { setOpen(false); }, [pathname]);
