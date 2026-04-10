@@ -96,12 +96,12 @@ export function AccessibilityWidget() {
         className="flex items-center justify-center focus-visible:outline-none"
         style={{
           position: "fixed",
-          bottom: "144px",
-          left: "0",
-          width: "48px",
-          height: "48px",
+          bottom: "24px",
+          left: "24px",
+          width: "64px",
+          height: "64px",
           background: "rgba(201,150,74,0.15)",
-          borderRadius: "0 14px 14px 0",
+          borderRadius: "14px",
           border: "none",
           display: "flex",
           alignItems: "center",
@@ -112,7 +112,7 @@ export function AccessibilityWidget() {
           padding: 0,
         }}
       >
-        <img src="/access.png" alt="" aria-hidden="true" width={34} height={34} style={{ display: "block", flexShrink: 0 }} />
+        <img src="/access.png" alt="" aria-hidden="true" width={48} height={48} style={{ display: "block", flexShrink: 0 }} />
       </button>
 
       {/* ── Panel ── */}
@@ -122,7 +122,7 @@ export function AccessibilityWidget() {
           role="dialog"
           aria-label="הגדרות נגישות"
           aria-modal="false"
-          className="fixed bottom-20 left-2 w-72 rounded-2xl shadow-2xl flex flex-col gap-3 p-4"
+          className="fixed bottom-24 left-6 w-72 rounded-2xl shadow-2xl flex flex-col gap-3 p-4"
           style={{ background: "#fff", border: "2px solid #C9964A", color: "#111827", zIndex: 9999 }}
         >
           {/* Header */}
