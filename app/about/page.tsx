@@ -55,10 +55,10 @@ const CARDS = [
 ];
 
 const STATS = [
-  { val: "50,000+", label: "עוקבים" },
-  { val: "מאות",   label: "לקוחות" },
-  { val: "4+",      label: "שנות ניסיון" },
-  { val: "97%",     label: "ממליצים" },
+  { val: "70,000+", label: "עוקבים" },
+  { val: "3,500+",  label: "לקוחות" },
+  { val: "50,000+", label: "סרטונים" },
+  { val: "80+",     label: "תחומים" },
 ];
 
 const JOURNEY = [
