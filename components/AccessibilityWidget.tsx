@@ -112,7 +112,7 @@ export function AccessibilityWidget() {
           padding: 0,
         }}
       >
-        <img src="/access.png?v=2" alt="" aria-hidden="true" width={34} height={34} style={{ display: "block", flexShrink: 0 }} />
+        <img src="/access.png?v=3" alt="" aria-hidden="true" width={34} height={34} style={{ display: "block", flexShrink: 0 }} />
       </button>
 
       {/* ── Panel ── */}
