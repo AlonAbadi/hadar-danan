@@ -182,7 +182,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
           background: "#141820",
           borderLeft: "1px solid #2C323E",
           zIndex: 50,
-          overflowY: "auto",
+          overflow: "hidden",
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 300ms ease",
           display: "flex",
