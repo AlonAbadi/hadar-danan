@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 
-const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://hadar-danan.vercel.app";
+const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/team`,          lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE}/quiz`,          lastModified: new Date(), changeFrequency: "monthly", priority: 0.95 },
     { url: `${BASE}/training`,      lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/binge`,         lastModified: new Date(), changeFrequency: "weekly",  priority: 0.7 },
     { url: `${BASE}/challenge`,     lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE}/workshop`,      lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/course`,        lastModified: new Date(), changeFrequency: "monthly", priority: 0.85 },

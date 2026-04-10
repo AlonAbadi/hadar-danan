@@ -6,6 +6,7 @@ import { AccessibilityWidget } from "@/components/AccessibilityWidget";
 import { MobileNavServer }     from "@/components/MobileNavServer";
 import { DesktopNavServer }    from "@/components/DesktopNavServer";
 import { LayoutShell }         from "@/components/LayoutShell";
+import { SchemaMarkup }        from "@/components/SchemaMarkup";
 
 const assistant = Assistant({
   subsets:  ["hebrew", "latin"],
@@ -13,7 +14,7 @@ const assistant = Assistant({
   display:  "swap",
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://hadar-danan.vercel.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -23,26 +24,32 @@ export const viewport: Viewport = {
 
 const OG_IMAGE = "https://beegood.online/og-image.jpg";
 
+const TITLE       = "הדר דנן | שיטת TrueSignal by BeeGood - שיווק אותנטי לעסקים";
+const DESCRIPTION = "הדר דנן, מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal by BeeGood. קורסים, סדנאות וליווי אישי לבעלי עסקים שרוצים לשווק בלי לאבד את עצמם.";
+
 export const metadata: Metadata = {
   title: {
-    default:  "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
+    default:  TITLE,
     template: "%s | הדר דנן",
   },
-  description: "אנחנו עוזרים לעסקים לאתר איפה הם חזקים באמת - ולבנות שיווק שמרגיש טבעי ומביא תוצאות",
+  description: DESCRIPTION,
   metadataBase: new URL(APP_URL),
+  alternates: {
+    canonical: APP_URL,
+  },
   openGraph: {
     type:        "website",
     locale:      "he_IL",
-    siteName:    "הדר דנן",
-    title:       "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
-    description: "אנחנו עוזרים לעסקים לאתר איפה הם חזקים באמת - ולבנות שיווק שמרגיש טבעי ומביא תוצאות",
+    siteName:    "הדר דנן | BeeGood",
+    title:       TITLE,
+    description: DESCRIPTION,
     url:         APP_URL,
-    images:      [{ url: OG_IMAGE, width: 1200, height: 630, alt: "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות" }],
+    images:      [{ url: OG_IMAGE, width: 1200, height: 630, alt: TITLE }],
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
-    description: "אנחנו עוזרים לעסקים לאתר איפה הם חזקים באמת - ולבנות שיווק שמרגיש טבעי ומביא תוצאות",
+    title:       TITLE,
+    description: DESCRIPTION,
     images:      [OG_IMAGE],
   },
 };
@@ -57,24 +64,7 @@ export default function RootLayout({
       className={`${assistant.variable} h-full`}
     >
       <body className="min-h-full flex flex-col font-assistant antialiased" style={{ background: "#101520", color: "#EDE9E1" }}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Person",
-            "name": "הדר דנן",
-            "url": APP_URL,
-            "jobTitle": "אסטרטגית שיווק ותוכן",
-            "description": "מייסדת שיטת TrueSignal© - אסטרטגיה שיווקית שמביאה לקוחות אמיתיים.",
-            "knowsAbout": ["שיווק דיגיטלי", "אסטרטגיה עסקית", "יצירת תוכן", "מיתוג אישי"],
-            "offers": [
-              { "@type": "Offer", "name": "אתגר 7 ימים", "price": "197", "priceCurrency": "ILS", "url": `${APP_URL}/challenge` },
-              { "@type": "Offer", "name": "סדנה יום אחד", "price": "1080", "priceCurrency": "ILS", "url": `${APP_URL}/workshop` },
-              { "@type": "Offer", "name": "קורס דיגיטלי", "price": "1800", "priceCurrency": "ILS", "url": `${APP_URL}/course` },
-              { "@type": "Offer", "name": "פגישת אסטרטגיה", "price": "4000", "priceCurrency": "ILS", "url": `${APP_URL}/strategy` },
-            ],
-          })}}
-        />
+        <SchemaMarkup />
         <a href="#main-content" className="skip-link">דלג לתוכן הראשי</a>
         <Pixels />
         <AccessibilityWidget />
