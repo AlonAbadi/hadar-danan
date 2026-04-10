@@ -22,13 +22,6 @@ const person = {
     "name": "BeeGood",
     "url": APP_URL,
   },
-  "offers": [
-    { "@type": "Offer", "name": "אתגר 7 ימים",      "price": "197",   "priceCurrency": "ILS", "url": `${APP_URL}/challenge` },
-    { "@type": "Offer", "name": "סדנה יום אחד",      "price": "1080",  "priceCurrency": "ILS", "url": `${APP_URL}/workshop` },
-    { "@type": "Offer", "name": "קורס דיגיטלי",      "price": "1800",  "priceCurrency": "ILS", "url": `${APP_URL}/course` },
-    { "@type": "Offer", "name": "פגישת אסטרטגיה",    "price": "4000",  "priceCurrency": "ILS", "url": `${APP_URL}/strategy` },
-    { "@type": "Offer", "name": "יום צילום פרמיום",  "price": "14000", "priceCurrency": "ILS", "url": `${APP_URL}/premium` },
-  ],
 };
 
 const organization = {
