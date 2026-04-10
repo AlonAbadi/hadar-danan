@@ -16,270 +16,214 @@ const personSchema = {
   "url": APP_URL,
   "jobTitle": "מומחית שיווק אותנטי ויוצרת שיטת TrueSignal",
   "description": "הדר דנן היא מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal. עבדה עם מאות בעלי עסקים ובנתה קהילה של מעל 70,000 עוקבים.",
-  "alumniOf": {
-    "@type": "EducationalOrganization",
-    "name": "בית הספר למשחק גודמן",
-  },
-  "knowsAbout": [
-    "שיווק אותנטי",
-    "עמידה מול מצלמה",
-    "יצירת תוכן וידאו",
-    "בניית מערכות Signal",
-    "בניית מותג אישי",
-    "אסטרטגיה עסקית",
-    "TrueSignal",
-  ],
+  "alumniOf": { "@type": "EducationalOrganization", "name": "בית הספר למשחק גודמן" },
+  "knowsAbout": ["שיווק אותנטי", "עמידה מול מצלמה", "יצירת תוכן וידאו", "בניית מערכות Signal", "בניית מותג אישי", "אסטרטגיה עסקית", "TrueSignal"],
   "sameAs": [
     "https://www.instagram.com/hadar_danan",
     "https://www.tiktok.com/@hadardanann",
     "https://open.spotify.com/show/12EPZoAiHLq63tiq6GjreC",
     "https://podcasts.apple.com/il/podcast/id1829722848",
   ],
-  "worksFor": {
-    "@type": "Organization",
-    "name": "הדר דנן בע״מ",
-    "url": APP_URL,
-  },
+  "worksFor": { "@type": "Organization", "name": "הדר דנן בע״מ", "url": APP_URL },
 };
 
 const PRINCIPLES = [
   {
-    n: "01",
-    q: "מה באמת מייחד אותי?",
-    body: "לא מה שאתה רוצה למכור - אלא מה שהלקוחות שלך קונים ממך שוב ושוב. ה-Signal שלך חי שם, לא בבריף.",
+    n: "1",
+    q: '"מה את באמת משדרת?"',
+    body: "לפני שמשנים משהו, מקשיבים. לא למה שאת אומרת - למה שמרגישים כשאת אומרת.",
   },
   {
-    n: "02",
-    q: "מה אני יכול/ה להחזיק בלי להתאמץ?",
-    body: "כשיש פער בין מה שאתה מציג לבין מה שאתה מחזיק - הקהל מרגיש את זה לפני שהוא מבין למה. אותנטיות היא מבנה, לא מצב רוח.",
+    n: "2",
+    q: '"מה הליבה שלא מתפשרת?"',
+    body: "בכל יוצר יש משהו אחד שלא ניתן לדלל. השאלה היא לא מה הוא - אלא האם את מוכנה לעמוד מאחוריו.",
   },
   {
-    n: "03",
-    q: "מה הלקוח הנכון שלי מחפש באמת?",
-    body: "לא כל לקוח הוא הלקוח שלך. כשמדייקים את ה-Signal - הלקוחות הנכונים מגיעים, ואת הלא-נכונים לא צריך לשכנע.",
+    n: "3",
+    q: '"איך זה נשמע במילים שלך?"',
+    body: "תרגום הוא לא ניסוח מחדש. הוא מציאת השפה היחידה שמרגישה כמוך גם כשאת לא בחדר.",
   },
   {
-    n: "04",
-    q: "מה הפעולה שתייצר תנועה אמיתית?",
-    body: "טריק שיווקי עובד פעם אחת. Signal אמיתי בונה מומנטום שמתחזק עם הזמן - כי הוא נשען על מה שקיים, לא על מה שאפשר לבים.",
+    n: "4",
+    q: '"מי צריך לשמוע את זה?"',
+    body: "קהל לא בונים - קוראים בשמו. הנכונים מגיעים כשהאות מספיק חד.",
   },
 ];
 
 export default function AboutPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} />
       <BreadcrumbSchema crumbs={[
         { name: "דף הבית", url: APP_URL },
         { name: "אודות", url: `${APP_URL}/about` },
       ]} />
 
-      <div
-        dir="rtl"
-        className="font-assistant min-h-screen"
-        style={{ background: "#080C14", color: "#EDE9E1", paddingTop: 64 }}
-      >
-        <div className="relative max-w-[1200px] mx-auto px-6 py-16 lg:px-20 lg:py-28">
+      <div dir="rtl" className="font-assistant min-h-screen about-page" style={{ background: "#080C14", color: "#EDE9E1", lineHeight: 1.7 }}>
+        <div className="about-wrap" style={{ maxWidth: 1200, margin: "0 auto", padding: "120px 80px 100px", position: "relative" }}>
 
-          {/* Ambient honeycomb background */}
+          {/* Ambient honeycomb bg */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0"
             style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 0 L56 16 L56 50 L28 66 L0 50 L0 16Z' fill='none' stroke='%23E8B94A' stroke-width='0.6'/%3E%3Cpath d='M28 66 L56 82 L56 100' fill='none' stroke='%23E8B94A' stroke-width='0.6'/%3E%3Cpath d='M28 66 L0 82 L0 100' fill='none' stroke='%23E8B94A' stroke-width='0.6'/%3E%3C/svg%3E")`,
-              opacity: 0.07,
+              position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='184' viewBox='0 0 160 184'%3E%3Cg fill='none' stroke='%23E8B94A' stroke-width='1' opacity='0.07'%3E%3Cpolygon points='80%2C8 148%2C48 148%2C136 80%2C176 12%2C136 12%2C48'/%3E%3C/g%3E%3C/svg%3E")`,
+              backgroundSize: "160px 184px",
             }}
           />
 
-          {/* All content above bg */}
-          <div className="relative">
+          {/* Content */}
+          <div style={{ position: "relative" }}>
 
-            {/* ── 1. HERO ─────────────────────────────────────────── */}
-            <section>
-              <p className="text-[#E8B94A] text-xs tracking-[0.4em] mb-8 lg:mb-12">
-                א · ו · ד · ו · ת
-              </p>
-              <h1
-                className="font-extrabold leading-[0.95] tracking-tight"
-                style={{ fontSize: "clamp(46px, 8vw, 88px)" }}
-              >
-                יש שיווק שמוכר.
-                <br />
-                ויש שיווק{" "}
-                <span className="text-[#E8B94A]">שמדהד.</span>
-              </h1>
-              <p className="text-[#9E9990] mt-8 text-base lg:text-lg">
-                שיטת <strong className="text-[#EDE9E1]">TrueSignal</strong>{" "}
-                · נבנתה ע״י הדר דנן
-              </p>
-            </section>
+            {/* ── HERO ─────────────────────────────────────────── */}
+            <p className="about-tag" style={{ color: "#E8B94A", fontSize: 12, letterSpacing: 5, marginBottom: 48 }}>
+              א · ו · ד · ו · ת
+            </p>
+            <h1 className="about-h1" style={{ fontSize: 88, fontWeight: 800, lineHeight: 0.95, marginBottom: 20, letterSpacing: -1 }}>
+              יש שיווק שמוכר.
+              <br />
+              ויש שיווק <span style={{ color: "#E8B94A" }}>שמדהד.</span>
+            </h1>
+            <p className="about-byline" style={{ color: "#9E9990", fontSize: 18, marginTop: 32 }}>
+              שיטת <strong style={{ color: "#EDE9E1", fontWeight: 600 }}>TrueSignal</strong> · נבנתה ע״י הדר דנן
+            </p>
 
-            {/* ── 2. מי אני ──────────────────────────────────────── */}
-            <section className="mt-12 lg:mt-20 pt-10 lg:pt-14 border-t border-[#1f2530]">
-              <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-5 lg:gap-16">
-                <p className="text-[#E8B94A] text-xs tracking-[0.2em] uppercase pt-1">
-                  מי אני
+            {/* ── מי אני ─────────────────────────────────────── */}
+            <section className="about-intro" style={{ marginTop: 80, paddingTop: 60, borderTop: "1px solid #1f2530", display: "grid", gridTemplateColumns: "180px 1fr", gap: 60 }}>
+              <p style={{ color: "#E8B94A", fontSize: 12, letterSpacing: 3, textTransform: "uppercase", paddingTop: 6 }}>
+                מי אני
+              </p>
+              <div>
+                <p className="about-intro-p" style={{ fontSize: 19, marginBottom: 22 }}>
+                  הדר דנן. בניתי את שיטת TrueSignal אחרי שנים של עבודה עם עסקים שידעו להחזיק הרבה יותר ממה שהצליחו להעביר.
                 </p>
-                <div className="flex flex-col gap-5 text-base lg:text-lg leading-relaxed">
-                  <p>
-                    הייתי בייביסיטר בזמן קורונה, בוגרת בית הספר למשחק גודמן, ועסק שידע מה הוא מחזיק - אבל לא ידע איך לגרום לעולם לראות את זה. לא חיפשתי להיות ״אינפלואנסרית״. חיפשתי שיטה שתגרום לאנשים לראות את מה שאני באמת.
-                  </p>
-                  <p className="text-[#9E9990]">
-                    מתוך הצורך הזה נולדה שיטת TrueSignal - לא כמוצר, אלא כדרך עבודה. היום אני עובדת עם בעלי עסקים, יוצרים ומקצוענים שמרגישים שמה שהם מציגים לעולם לא משקף את מי שהם באמת. המטרה שלי היא תמיד אחת: לעזור לך למצוא את ה-Signal שלך ולבנות ממנו שיווק שמחזיק לאורך זמן.
-                  </p>
-                </div>
+                <p className="about-intro-p" style={{ color: "#9E9990", fontSize: 17 }}>
+                  לא התחלתי משיטה - התחלתי מפער. הפער בין מי שאני בפנים לבין מה שהשיווק שלי שידר החוצה. ידעתי שאני לא לבד בזה. המטרה שלי היום היא לא להגדיל קהל - היא לחדד אות.
+                </p>
               </div>
             </section>
 
-            {/* ── 3. MANIFESTO + HIVE ────────────────────────────── */}
-            <section className="mt-12 lg:mt-20 pt-10 lg:pt-14 border-t border-[#1f2530]">
-
-              {/* Section label + H2 */}
-              <p className="text-[#E8B94A] text-xs tracking-[0.2em] uppercase mb-5">
+            {/* ── MANIFESTO + HIVE ──────────────────────────── */}
+            <section className="about-manifesto" style={{ marginTop: 100, paddingTop: 60, borderTop: "1px solid #1f2530" }}>
+              <p style={{ color: "#E8B94A", fontSize: 12, letterSpacing: 3, textTransform: "uppercase", marginBottom: 16 }}>
                 העקרונות
               </p>
-              <h2
-                className="font-extrabold leading-tight tracking-tight mb-10 lg:mb-14"
-                style={{ fontSize: "clamp(1.6rem, 4vw, 2.6rem)" }}
-              >
+              <h2 className="about-manifesto-h2" style={{ fontSize: 44, fontWeight: 800, lineHeight: 1.1, marginBottom: 60, maxWidth: 720 }}>
                 שיטת TrueSignal לא נשענת על טריקים.
                 <br />
-                היא נשענת על{" "}
-                <em className="not-italic text-[#E8B94A]">ארבע שאלות.</em>
+                היא נשענת על <em style={{ fontStyle: "normal", color: "#E8B94A" }}>ארבע שאלות.</em>
               </h2>
 
-              <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-10 lg:gap-20 items-center">
+              <div className="about-hive-grid" style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 80, alignItems: "center" }}>
 
                 {/* Hive SVG */}
-                <div className="max-w-[240px] mx-auto lg:max-w-none">
+                <div className="about-hive-svg" style={{ aspectRatio: "1" }}>
                   <svg
-                    viewBox="0 0 220 240"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-full"
+                    viewBox="0 0 400 400"
+                    style={{ width: "100%", height: "100%", filter: "drop-shadow(0 0 40px rgba(232,185,74,0.15))" }}
                     aria-hidden="true"
                   >
                     <defs>
-                      <linearGradient id="hexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#E8B94A" />
-                        <stop offset="100%" stopColor="#9E7C3A" />
+                      <linearGradient id="hg" x1="0" x2="1" y1="0" y2="1">
+                        <stop offset="0" stopColor="#E8B94A" />
+                        <stop offset="1" stopColor="#9E7C3A" />
                       </linearGradient>
-                      <filter id="hexGlow">
-                        <feGaussianBlur stdDeviation="4" result="blur" />
-                        <feMerge>
-                          <feMergeNode in="blur" />
-                          <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                      </filter>
                     </defs>
-                    {/* Top center hex */}
-                    <polygon
-                      points="110,10 148,32 148,76 110,98 72,76 72,32"
-                      fill="rgba(232,185,74,0.08)"
-                      stroke="url(#hexGrad)"
-                      strokeWidth="1.5"
-                      filter="url(#hexGlow)"
-                    />
-                    {/* Middle left hex */}
-                    <polygon
-                      points="72,98 110,120 110,164 72,186 34,164 34,120"
-                      fill="rgba(232,185,74,0.06)"
-                      stroke="url(#hexGrad)"
-                      strokeWidth="1.5"
-                      filter="url(#hexGlow)"
-                    />
-                    {/* Middle right hex */}
-                    <polygon
-                      points="148,98 186,120 186,164 148,186 110,164 110,120"
-                      fill="rgba(232,185,74,0.06)"
-                      stroke="url(#hexGrad)"
-                      strokeWidth="1.5"
-                      filter="url(#hexGlow)"
-                    />
-                    {/* Bottom center hex */}
-                    <polygon
-                      points="110,164 148,186 148,230 110,252 72,230 72,186"
-                      fill="rgba(232,185,74,0.04)"
-                      stroke="rgba(232,185,74,0.35)"
-                      strokeWidth="1"
-                    />
-                    {/* Center dot */}
-                    <circle cx="110" cy="120" r="4" fill="#E8B94A" opacity="0.8" />
-                    <circle cx="72"  cy="76"  r="3" fill="#E8B94A" opacity="0.5" />
-                    <circle cx="148" cy="76"  r="3" fill="#E8B94A" opacity="0.5" />
+                    <g fill="none" stroke="url(#hg)" strokeWidth="2">
+                      <polygon points="200,60 280,106 280,198 200,244 120,198 120,106" />
+                      <polygon points="280,106 360,152 360,244 280,290 200,244 200,152" opacity="0.7" />
+                      <polygon points="120,106 200,152 200,244 120,290 40,244 40,152" opacity="0.7" />
+                      <polygon points="200,244 280,290 280,382 200,428 120,382 120,290" opacity="0.5" />
+                    </g>
+                    <circle cx="200" cy="152" r="4" fill="#E8B94A" />
+                    <circle cx="280" cy="198" r="4" fill="#E8B94A" />
+                    <circle cx="120" cy="198" r="4" fill="#E8B94A" />
+                    <circle cx="200" cy="290" r="4" fill="#E8B94A" />
                   </svg>
                 </div>
 
-                {/* 4 Principles */}
-                <ol className="flex flex-col gap-7 lg:gap-9 list-none">
+                {/* Principles */}
+                <div className="about-principles" style={{ display: "flex", flexDirection: "column", gap: 36 }}>
                   {PRINCIPLES.map((p) => (
-                    <li key={p.n} className="flex gap-5 items-start">
-                      <div
-                        className="flex-shrink-0 flex items-center justify-center rounded-full text-[#E8B94A] text-xs font-bold"
-                        style={{
-                          width: 38, height: 38,
-                          border: "1px solid #E8B94A",
-                          background: "rgba(232,185,74,0.05)",
-                        }}
-                      >
+                    <div key={p.n} style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+                      <div style={{
+                        flexShrink: 0, width: 38, height: 38, borderRadius: "50%",
+                        border: "1.5px solid #E8B94A", color: "#E8B94A",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontWeight: 700, fontSize: 14, background: "rgba(232,185,74,0.04)",
+                      }}>
                         {p.n}
                       </div>
                       <div>
-                        <h3 className="italic text-[#E8B94A] font-semibold mb-1.5 leading-snug">
+                        <h3 className="about-principle-q" style={{ color: "#E8B94A", fontSize: 21, fontWeight: 600, marginBottom: 6, fontStyle: "italic" }}>
                           {p.q}
                         </h3>
-                        <p className="text-[#9E9990] text-sm leading-relaxed">
+                        <p className="about-principle-body" style={{ fontSize: 17, lineHeight: 1.6 }}>
                           {p.body}
                         </p>
                       </div>
-                    </li>
+                    </div>
                   ))}
-                </ol>
+                </div>
 
               </div>
             </section>
 
-            {/* ── 4. STATS ───────────────────────────────────────── */}
-            <section className="mt-12 lg:mt-20 pt-10 lg:pt-14 border-t border-[#1f2530]">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {[
-                  { val: "7+",  label: "שנות ניסיון בשיווק וידאו" },
-                  { val: "∞",   label: "עסקים שמצאו את ה-Signal שלהם" },
-                  { val: "1",   label: "שיטה. TrueSignal" },
-                ].map((s) => (
-                  <div key={s.label} className="flex flex-col gap-2">
-                    <span
-                      className="font-extrabold text-[#E8B94A] leading-none"
-                      style={{ fontSize: "clamp(42px, 6vw, 56px)" }}
-                    >
-                      {s.val}
-                    </span>
-                    <span className="text-[#9E9990] text-sm">{s.label}</span>
+            {/* ── STATS ──────────────────────────────────────── */}
+            <section className="about-stats" style={{ marginTop: 100, paddingTop: 60, borderTop: "1px solid #1f2530", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 40 }}>
+              {[
+                { n: "7+", t: "שנים בשיווק דיגיטלי" },
+                { n: "∞",  t: "שיחות אמת עם יוצרים" },
+                { n: "1",  t: "שיטה - TrueSignal" },
+              ].map((s) => (
+                <div key={s.t}>
+                  <div className="about-stat-n" style={{ fontSize: 56, fontWeight: 800, color: "#E8B94A", lineHeight: 1 }}>
+                    {s.n}
                   </div>
-                ))}
-              </div>
+                  <div style={{ color: "#9E9990", fontSize: 14, marginTop: 10, letterSpacing: "0.5px" }}>
+                    {s.t}
+                  </div>
+                </div>
+              ))}
             </section>
 
-            {/* ── 5. SIGN-OFF ────────────────────────────────────── */}
-            <section className="mt-12 lg:mt-20 pt-10 lg:pt-14 border-t border-[#1f2530] text-center">
-              <p
-                className="italic leading-relaxed mx-auto"
-                style={{ fontSize: "clamp(1.1rem, 3vw, 1.5rem)", maxWidth: 680 }}
-              >
-                הבעיה אף פעם לא הייתה התוכן.{" "}
-                <span className="text-[#E8B94A]">היא הייתה ה-Signal.</span>
+            {/* ── SIGN-OFF ───────────────────────────────────── */}
+            <section className="about-sign" style={{ marginTop: 80, paddingTop: 50, borderTop: "1px solid #1f2530", textAlign: "center" }}>
+              <p className="about-sign-p" style={{ fontSize: 24, fontStyle: "italic", maxWidth: 600, margin: "0 auto" }}>
+                &quot;הבעיה אף פעם לא הייתה התוכן.
+                <br />
+                <span style={{ color: "#E8B94A" }}>היא הייתה ה-Signal.&quot;</span>
               </p>
-              <p className="text-[#9E9990] mt-5 text-xs tracking-[0.2em] uppercase">
+              <div style={{ color: "#9E9990", fontSize: 14, letterSpacing: 3, marginTop: 24, textTransform: "uppercase" }}>
                 - הדר דנן
-              </p>
+              </div>
             </section>
 
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .about-wrap              { padding: 80px 24px 60px !important; }
+          .about-tag               { margin-bottom: 32px !important; }
+          .about-h1                { font-size: 46px !important; }
+          .about-byline            { font-size: 16px !important; }
+          .about-intro             { grid-template-columns: 1fr !important; gap: 20px !important; margin-top: 50px !important; padding-top: 40px !important; }
+          .about-intro-p           { font-size: 17px !important; }
+          .about-manifesto         { margin-top: 60px !important; padding-top: 40px !important; }
+          .about-manifesto-h2      { font-size: 30px !important; margin-bottom: 40px !important; }
+          .about-hive-grid         { grid-template-columns: 1fr !important; gap: 40px !important; }
+          .about-hive-svg          { max-width: 240px !important; margin: 0 auto !important; aspect-ratio: 1 !important; }
+          .about-principles        { gap: 28px !important; }
+          .about-principle-q       { font-size: 18px !important; }
+          .about-principle-body    { font-size: 16px !important; }
+          .about-stats             { grid-template-columns: 1fr !important; gap: 30px !important; margin-top: 60px !important; padding-top: 40px !important; }
+          .about-stat-n            { font-size: 42px !important; }
+          .about-sign              { margin-top: 60px !important; padding-top: 40px !important; }
+          .about-sign-p            { font-size: 19px !important; }
+        }
+      `}</style>
     </>
   );
 }
