@@ -351,6 +351,7 @@ html.a11y-reading-mode img { max-width: 100% !important; }
 .micro-step { display: none; }
 .micro-step.active { display: block; animation: stepIn 0.35s ease both; }
 @keyframes stepIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 .micro-card { background: var(--card-soft); border: 1px solid var(--border); border-radius: 14px; padding: 22px; text-align: center; }
 .micro-step-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
 .micro-question { font-size: 16px; font-weight: 800; color: var(--fg); margin-bottom: 18px; line-height: 1.3; }

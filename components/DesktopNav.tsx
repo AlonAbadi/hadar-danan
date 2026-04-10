@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 const NAV_LINKS = [
   { label: "אודות",         href: "/about" },
@@ -43,7 +43,13 @@ interface DesktopNavProps {
 
 export function DesktopNav({ userInitial = null }: DesktopNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [dropOpen, setDropOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const handleCapsuleClick = () => {
+    startTransition(() => { router.push("/account"); });
+  };
 
   const dropActive = DROPDOWN_ITEMS.some((i) => pathname === i.href);
 
@@ -75,20 +81,35 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
       {/* LEFT — auth capsule */}
       <div style={{ flexShrink: 0 }}>
         {userInitial ? (
-          <a
-            href="/account"
+          <button
+            onClick={handleCapsuleClick}
+            disabled={isPending}
             style={{
-              border: "1px solid rgba(159,151,221,0.5)",
-              background: "rgba(127,119,221,0.08)",
-              borderRadius: 20,
+              border: "1px solid rgba(232,185,74,0.35)",
+              background: isPending ? "rgba(232,185,74,0.18)" : "rgba(232,185,74,0.08)",
+              borderRadius: 999,
               padding: "5px 24px",
-              display: "flex", alignItems: "center",
-              fontSize: 13, fontWeight: 600, color: "#9F97DD",
-              textDecoration: "none", whiteSpace: "nowrap",
+              display: "inline-flex", alignItems: "center", gap: 8,
+              fontSize: 13, fontWeight: 600, color: "#E8B94A",
+              fontFamily: "inherit",
+              cursor: isPending ? "default" : "pointer",
+              pointerEvents: isPending ? "none" : "auto",
+              whiteSpace: "nowrap",
+              transition: "all 0.15s ease",
             }}
           >
+            {isPending && (
+              <span style={{
+                width: 11, height: 11,
+                border: "1.5px solid rgba(232,185,74,0.3)",
+                borderTopColor: "#E8B94A",
+                borderRadius: "50%",
+                animation: "spin 0.7s linear infinite",
+                display: "inline-block", flexShrink: 0,
+              }} />
+            )}
             {userInitial}
-          </a>
+          </button>
         ) : (
           <a
             href="/login"
