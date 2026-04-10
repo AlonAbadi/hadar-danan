@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import Image from "next/image";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
@@ -17,7 +15,7 @@ const personSchema = {
   "name": "הדר דנן",
   "url": APP_URL,
   "jobTitle": "מומחית שיווק אותנטי ויוצרת שיטת TrueSignal",
-  "description": "הדר דנן היא מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal. עבדה עם מאות בעלי עסקים ובנתה קהילה של מעל 50,000 עוקבים.",
+  "description": "הדר דנן היא מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal. עבדה עם מאות בעלי עסקים ובנתה קהילה של מעל 70,000 עוקבים.",
   "alumniOf": {
     "@type": "EducationalOrganization",
     "name": "בית הספר למשחק גודמן",
@@ -31,56 +29,39 @@ const personSchema = {
     "אסטרטגיה עסקית",
     "TrueSignal",
   ],
-  "sameAs": ["https://www.instagram.com/hadar_danan"],
+  "sameAs": [
+    "https://www.instagram.com/hadar_danan",
+    "https://www.tiktok.com/@hadardanann",
+    "https://open.spotify.com/show/12EPZoAiHLq63tiq6GjreC",
+    "https://podcasts.apple.com/il/podcast/id1829722848",
+  ],
   "worksFor": {
     "@type": "Organization",
-    "name": "BeeGood",
+    "name": "הדר דנן בע״מ",
     "url": APP_URL,
   },
 };
 
-const CARDS = [
+const PRINCIPLES = [
   {
-    title: "Signal",
-    text: "ה־Signal שלך הוא לא מה שאתה אומר. זה מה שאנשים מרגישים ברגע שהם נוגעים בעסק שלך.",
+    n: "01",
+    q: "מה באמת מייחד אותי?",
+    body: "לא מה שאתה רוצה למכור - אלא מה שהלקוחות שלך קונים ממך שוב ושוב. ה-Signal שלך חי שם, לא בבריף.",
   },
   {
-    title: "יכולת",
-    text: "אפשר למכור רק את מה שאתה באמת מסוגל להחזיק. כשיש פער - הקהל מרגיש את זה לפני שהוא מבין למה.",
+    n: "02",
+    q: "מה אני יכול/ה להחזיק בלי להתאמץ?",
+    body: "כשיש פער בין מה שאתה מציג לבין מה שאתה מחזיק - הקהל מרגיש את זה לפני שהוא מבין למה. אותנטיות היא מבנה, לא מצב רוח.",
   },
   {
-    title: "דיוק",
-    text: "אנחנו לא בונים תוכן. אנחנו מדייקים את ה־Signal עד שהלקוחות הנכונים מזהים אותך מיד.",
-  },
-];
-
-const STATS = [
-  { val: "70,000+", label: "עוקבים" },
-  { val: "3,500+",  label: "לקוחות" },
-  { val: "50,000+", label: "סרטונים" },
-  { val: "80+",     label: "תחומים" },
-];
-
-const JOURNEY = [
-  {
-    year: "לפני",
-    title: "בוגרת בית הספר למשחק גודמן",
-    text: "ההכשרה שהכניסה אותי לעולם הבמה ולימדה אותי דבר אחד קריטי: האותנטיות על הבמה היא אותה אותנטיות שמוכרת עסק.",
+    n: "03",
+    q: "מה הלקוח הנכון שלי מחפש באמת?",
+    body: "לא כל לקוח הוא הלקוח שלך. כשמדייקים את ה-Signal - הלקוחות הנכונים מגיעים, ואת הלא-נכונים לא צריך לשכנע.",
   },
   {
-    year: "2020",
-    title: "נקודת המפנה — קורונה",
-    text: "בתקופת הקורונה, בזמן שעבדתי כבייביסיטר, הבנתי שאני יכולה לעזור לעסקים לשווק את עצמם נכון. בנתי מה שרציתי לראות.",
-  },
-  {
-    year: "4 חודשים",
-    title: "מחברה בע״מ למותג מוביל",
-    text: "תוך 4 חודשים מהפריצה הראשונה הפכתי לאחת מהקולות המרכזיים בשיווק אותנטי לעסקים קטנים בישראל.",
-  },
-  {
-    year: "היום",
-    title: "מומחית ויוצרת שיטת TrueSignal",
-    text: "מאות עסקים, 50,000+ עוקבים, פודקאסט פעיל וקהילה גדלה — כולם בנויים על עיקרון אחד: Signal אמיתי מנצח תוכן מלאכותי.",
+    n: "04",
+    q: "מה הפעולה שתייצר תנועה אמיתית?",
+    body: "טריק שיווקי עובד פעם אחת. Signal אמיתי בונה מומנטום שמתחזק עם הזמן - כי הוא נשען על מה שקיים, לא על מה שאפשר לבים.",
   },
 ];
 
@@ -99,520 +80,205 @@ export default function AboutPage() {
       <div
         dir="rtl"
         className="font-assistant min-h-screen"
-        style={{ background: "#0D1018", color: "#EDE9E1", paddingTop: 64 }}
+        style={{ background: "#080C14", color: "#EDE9E1", paddingTop: 64 }}
       >
+        <div className="relative max-w-[1200px] mx-auto px-6 py-16 lg:px-20 lg:py-28">
 
-        {/* ══ SECTION 1 - HERO WITH OVERLAY ════════════════════════ */}
-        <section
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "100vh",
-            maxHeight: 700,
-            overflow: "hidden",
-          }}
-        >
-          <Image
-            src="/hadarimage.jpg"
-            alt="הדר דנן — מומחית שיווק אותנטי ויוצרת שיטת TrueSignal"
-            fill
-            priority
-            style={{ objectFit: "cover", objectPosition: "center top" }}
-          />
-
+          {/* Ambient honeycomb background */}
           <div
-            className="hero-overlay-desktop"
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
             style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to left, rgba(13,16,24,0.15) 0%, rgba(13,16,24,0.85) 55%, rgba(13,16,24,0.97) 100%)",
-            }}
-          />
-          <div
-            className="hero-overlay-mobile"
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to top, rgba(13,16,24,0.97) 0%, rgba(13,16,24,0.75) 40%, rgba(13,16,24,0.35) 70%, rgba(13,16,24,0.15) 100%)",
-            }}
-          />
-          <div
-            className="hero-overlay-mobile"
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(ellipse at center, transparent 40%, rgba(13,16,24,0.4) 100%)",
-              pointerEvents: "none",
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 0 L56 16 L56 50 L28 66 L0 50 L0 16Z' fill='none' stroke='%23E8B94A' stroke-width='0.6'/%3E%3Cpath d='M28 66 L56 82 L56 100' fill='none' stroke='%23E8B94A' stroke-width='0.6'/%3E%3Cpath d='M28 66 L0 82 L0 100' fill='none' stroke='%23E8B94A' stroke-width='0.6'/%3E%3C/svg%3E")`,
+              opacity: 0.07,
             }}
           />
 
-          <div
-            dir="rtl"
-            className="hero-text"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              bottom: 0,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              padding: "64px 48px",
-              maxWidth: 520,
-              textAlign: "right",
-            }}
-          >
-            <p
-              style={{
-                color: "#C9964A",
-                fontSize: 11,
-                letterSpacing: "0.2em",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                marginBottom: 16,
-              }}
-            >
-              אודות
-            </p>
+          {/* All content above bg */}
+          <div className="relative">
 
-            <h1
-              style={{
-                fontSize: "clamp(2.5rem, 6vw, 3.8rem)",
-                fontWeight: 800,
-                color: "#EDE9E1",
-                lineHeight: 1.1,
-                marginBottom: 8,
-              }}
-            >
-              הדר דנן
-            </h1>
-
-            <p
-              style={{
-                fontSize: "clamp(0.95rem, 2vw, 1.2rem)",
-                fontWeight: 600,
-                color: "#C9964A",
-                lineHeight: 1.4,
-                marginBottom: 24,
-              }}
-            >
-              מומחית שיווק אותנטי, יוצרת שיטת TrueSignal
-            </p>
-
-            <div
-              className="hidden sm:block"
-              style={{
-                fontSize: "clamp(0.9rem, 1.8vw, 1rem)",
-                lineHeight: 1.75,
-                color: "#EDE9E1",
-                opacity: 0.9,
-                marginBottom: 32,
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <p>לפני שבניתי שיטה, הייתי עסק שמרגיש את הפער בעצמי.</p>
-              <p>ידעתי מה אני מסוגלת להחזיק - אבל מה שיצא החוצה לא שיקף את זה.</p>
-              <p>הבנתי שהבעיה אף פעם לא הייתה התוכן - היא הייתה ה־Signal.</p>
-            </div>
-
-            <div className="block sm:hidden" style={{ marginBottom: 24 }} />
-
-            <Link
-              href="/quiz"
-              className="about-cta-primary"
-              style={{
-                display: "inline-block",
-                alignSelf: "flex-start",
-                background: "linear-gradient(135deg, #E8B94A 0%, #C9964A 50%, #9E7C3A 100%)",
-                color: "#1A1206",
-                fontWeight: 700,
-                borderRadius: 9999,
-                padding: "14px 32px",
-                fontSize: "1rem",
-                textDecoration: "none",
-                transition: "opacity 0.15s",
-              }}
-            >
-              גלי את הצעד הנכון ←
-            </Link>
-          </div>
-        </section>
-
-        {/* ══ SECTION 2 - STATS ══════════════════════════════════════ */}
-        <section style={{ background: "#080C14", padding: "56px 24px" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto" }}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: 16,
-                textAlign: "center",
-              }}
-              className="stats-grid"
-            >
-              {STATS.map((s) => (
-                <div key={s.label}>
-                  <p
-                    style={{
-                      fontSize: "clamp(2rem, 5vw, 2.8rem)",
-                      fontWeight: 900,
-                      background: "linear-gradient(135deg, #E8B94A, #C9964A)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      margin: 0,
-                    }}
-                  >
-                    {s.val}
-                  </p>
-                  <p style={{ color: "#9E9990", fontSize: 13, marginTop: 4 }}>{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ══ SECTION 3 - THE JOURNEY ════════════════════════════════ */}
-        <section style={{ background: "#0D1018", padding: "80px 24px" }}>
-          <div style={{ maxWidth: 860, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <p
-                style={{
-                  color: "#C9964A",
-                  fontSize: 12,
-                  letterSpacing: "0.15em",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  marginBottom: 12,
-                }}
+            {/* ── 1. HERO ─────────────────────────────────────────── */}
+            <section>
+              <p className="text-[#E8B94A] text-xs tracking-[0.4em] mb-8 lg:mb-12">
+                א · ו · ד · ו · ת
+              </p>
+              <h1
+                className="font-extrabold leading-[0.95] tracking-tight"
+                style={{ fontSize: "clamp(46px, 8vw, 88px)" }}
               >
-                המסע שלי
+                יש שיווק שמוכר.
+                <br />
+                ויש שיווק{" "}
+                <span className="text-[#E8B94A]">שמדהד.</span>
+              </h1>
+              <p className="text-[#9E9990] mt-8 text-base lg:text-lg">
+                שיטת <strong className="text-[#EDE9E1]">TrueSignal</strong>{" "}
+                · נבנתה ע״י הדר דנן
+              </p>
+            </section>
+
+            {/* ── 2. מי אני ──────────────────────────────────────── */}
+            <section className="mt-12 lg:mt-20 pt-10 lg:pt-14 border-t border-[#1f2530]">
+              <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-5 lg:gap-16">
+                <p className="text-[#E8B94A] text-xs tracking-[0.2em] uppercase pt-1">
+                  מי אני
+                </p>
+                <div className="flex flex-col gap-5 text-base lg:text-lg leading-relaxed">
+                  <p>
+                    הייתי בייביסיטר בזמן קורונה, בוגרת בית הספר למשחק גודמן, ועסק שידע מה הוא מחזיק - אבל לא ידע איך לגרום לעולם לראות את זה. לא חיפשתי להיות ״אינפלואנסרית״. חיפשתי שיטה שתגרום לאנשים לראות את מה שאני באמת.
+                  </p>
+                  <p className="text-[#9E9990]">
+                    מתוך הצורך הזה נולדה שיטת TrueSignal - לא כמוצר, אלא כדרך עבודה. היום אני עובדת עם בעלי עסקים, יוצרים ומקצוענים שמרגישים שמה שהם מציגים לעולם לא משקף את מי שהם באמת. המטרה שלי היא תמיד אחת: לעזור לך למצוא את ה-Signal שלך ולבנות ממנו שיווק שמחזיק לאורך זמן.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* ── 3. MANIFESTO + HIVE ────────────────────────────── */}
+            <section className="mt-12 lg:mt-20 pt-10 lg:pt-14 border-t border-[#1f2530]">
+
+              {/* Section label + H2 */}
+              <p className="text-[#E8B94A] text-xs tracking-[0.2em] uppercase mb-5">
+                העקרונות
               </p>
               <h2
-                style={{
-                  fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
-                  fontWeight: 800,
-                  color: "#EDE9E1",
-                  lineHeight: 1.2,
-                }}
+                className="font-extrabold leading-tight tracking-tight mb-10 lg:mb-14"
+                style={{ fontSize: "clamp(1.6rem, 4vw, 2.6rem)" }}
               >
-                מבמה לבמה אחרת
+                שיטת TrueSignal לא נשענת על טריקים.
+                <br />
+                היא נשענת על{" "}
+                <em className="not-italic text-[#E8B94A]">ארבע שאלות.</em>
               </h2>
-            </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {JOURNEY.map((step, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "80px 1fr",
-                    gap: 24,
-                    paddingBottom: 40,
-                    position: "relative",
-                  }}
-                  className="journey-row"
-                >
-                  {/* Timeline line */}
-                  {i < JOURNEY.length - 1 && (
-                    <div
-                      className="journey-line"
-                      style={{
-                        position: "absolute",
-                        right: "calc(100% - 40px)",
-                        top: 28,
-                        bottom: 0,
-                        width: 1,
-                        background: "rgba(201,150,74,0.2)",
-                      }}
+              <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-10 lg:gap-20 items-center">
+
+                {/* Hive SVG */}
+                <div className="max-w-[240px] mx-auto lg:max-w-none">
+                  <svg
+                    viewBox="0 0 220 240"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-full"
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <linearGradient id="hexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#E8B94A" />
+                        <stop offset="100%" stopColor="#9E7C3A" />
+                      </linearGradient>
+                      <filter id="hexGlow">
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    {/* Top center hex */}
+                    <polygon
+                      points="110,10 148,32 148,76 110,98 72,76 72,32"
+                      fill="rgba(232,185,74,0.08)"
+                      stroke="url(#hexGrad)"
+                      strokeWidth="1.5"
+                      filter="url(#hexGlow)"
                     />
-                  )}
+                    {/* Middle left hex */}
+                    <polygon
+                      points="72,98 110,120 110,164 72,186 34,164 34,120"
+                      fill="rgba(232,185,74,0.06)"
+                      stroke="url(#hexGrad)"
+                      strokeWidth="1.5"
+                      filter="url(#hexGlow)"
+                    />
+                    {/* Middle right hex */}
+                    <polygon
+                      points="148,98 186,120 186,164 148,186 110,164 110,120"
+                      fill="rgba(232,185,74,0.06)"
+                      stroke="url(#hexGrad)"
+                      strokeWidth="1.5"
+                      filter="url(#hexGlow)"
+                    />
+                    {/* Bottom center hex */}
+                    <polygon
+                      points="110,164 148,186 148,230 110,252 72,230 72,186"
+                      fill="rgba(232,185,74,0.04)"
+                      stroke="rgba(232,185,74,0.35)"
+                      strokeWidth="1"
+                    />
+                    {/* Center dot */}
+                    <circle cx="110" cy="120" r="4" fill="#E8B94A" opacity="0.8" />
+                    <circle cx="72"  cy="76"  r="3" fill="#E8B94A" opacity="0.5" />
+                    <circle cx="148" cy="76"  r="3" fill="#E8B94A" opacity="0.5" />
+                  </svg>
+                </div>
 
-                  {/* Year badge */}
-                  <div style={{ textAlign: "center" }}>
-                    <div
-                      style={{
-                        display: "inline-block",
-                        background: "rgba(201,150,74,0.12)",
-                        border: "1px solid rgba(201,150,74,0.3)",
-                        borderRadius: 8,
-                        padding: "6px 10px",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: "#C9964A",
-                        letterSpacing: "0.05em",
-                      }}
+                {/* 4 Principles */}
+                <ol className="flex flex-col gap-7 lg:gap-9 list-none">
+                  {PRINCIPLES.map((p) => (
+                    <li key={p.n} className="flex gap-5 items-start">
+                      <div
+                        className="flex-shrink-0 flex items-center justify-center rounded-full text-[#E8B94A] text-xs font-bold"
+                        style={{
+                          width: 38, height: 38,
+                          border: "1px solid #E8B94A",
+                          background: "rgba(232,185,74,0.05)",
+                        }}
+                      >
+                        {p.n}
+                      </div>
+                      <div>
+                        <h3 className="italic text-[#E8B94A] font-semibold mb-1.5 leading-snug">
+                          {p.q}
+                        </h3>
+                        <p className="text-[#9E9990] text-sm leading-relaxed">
+                          {p.body}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+
+              </div>
+            </section>
+
+            {/* ── 4. STATS ───────────────────────────────────────── */}
+            <section className="mt-12 lg:mt-20 pt-10 lg:pt-14 border-t border-[#1f2530]">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {[
+                  { val: "7+",  label: "שנות ניסיון בשיווק וידאו" },
+                  { val: "∞",   label: "עסקים שמצאו את ה-Signal שלהם" },
+                  { val: "1",   label: "שיטה. TrueSignal" },
+                ].map((s) => (
+                  <div key={s.label} className="flex flex-col gap-2">
+                    <span
+                      className="font-extrabold text-[#E8B94A] leading-none"
+                      style={{ fontSize: "clamp(42px, 6vw, 56px)" }}
                     >
-                      {step.year}
-                    </div>
+                      {s.val}
+                    </span>
+                    <span className="text-[#9E9990] text-sm">{s.label}</span>
                   </div>
+                ))}
+              </div>
+            </section>
 
-                  {/* Content */}
-                  <div>
-                    <h3
-                      style={{
-                        fontSize: "1.1rem",
-                        fontWeight: 700,
-                        color: "#EDE9E1",
-                        marginBottom: 8,
-                        marginTop: 6,
-                      }}
-                    >
-                      {step.title}
-                    </h3>
-                    <p style={{ color: "#9E9990", lineHeight: 1.7, fontSize: "0.95rem" }}>
-                      {step.text}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ══ SECTION 4 - THE METHOD ════════════════════════════════ */}
-        <section style={{ background: "#141820", padding: "80px 24px" }}>
-          <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 48 }}>
+            {/* ── 5. SIGN-OFF ────────────────────────────────────── */}
+            <section className="mt-12 lg:mt-20 pt-10 lg:pt-14 border-t border-[#1f2530] text-center">
               <p
-                style={{
-                  color: "#C9964A",
-                  fontSize: 12,
-                  letterSpacing: "0.15em",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  marginBottom: 12,
-                }}
+                className="italic leading-relaxed mx-auto"
+                style={{ fontSize: "clamp(1.1rem, 3vw, 1.5rem)", maxWidth: 680 }}
               >
-                השיטה
+                הבעיה אף פעם לא הייתה התוכן.{" "}
+                <span className="text-[#E8B94A]">היא הייתה ה-Signal.</span>
               </p>
-              <h2
-                style={{
-                  fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-                  fontWeight: 800,
-                  color: "#EDE9E1",
-                  lineHeight: 1.2,
-                }}
-              >
-                למה{" "}
-                <span dir="ltr" style={{ unicodeBidi: "embed", color: "#E8B94A", fontWeight: 700 }}>
-                  TrueSignal©
-                </span>
-              </h2>
-              <p style={{ color: "#9E9990", marginTop: 12, fontSize: "0.95rem" }}>
-                <Link href="/method" style={{ color: "#C9964A", textDecoration: "none" }}>
-                  קרא/י עוד על שיטת TrueSignal ←
-                </Link>
+              <p className="text-[#9E9990] mt-5 text-xs tracking-[0.2em] uppercase">
+                - הדר דנן
               </p>
-            </div>
+            </section>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: 24,
-              }}
-              className="method-grid"
-            >
-              {CARDS.map((card) => (
-                <div
-                  key={card.title}
-                  style={{
-                    background: "linear-gradient(145deg, #1D2430, #111620)",
-                    border: "1px solid rgba(201,150,74,0.16)",
-                    borderRadius: 16,
-                    padding: 32,
-                  }}
-                >
-                  <p
-                    style={{
-                      color: "#C9964A",
-                      fontWeight: 700,
-                      fontSize: "1.1rem",
-                      marginBottom: 12,
-                    }}
-                  >
-                    {card.title}
-                  </p>
-                  <p
-                    style={{
-                      color: "#9E9990",
-                      fontSize: "0.95rem",
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    {card.text}
-                  </p>
-                </div>
-              ))}
-            </div>
           </div>
-        </section>
-
-        {/* ══ SECTION 5 - EXPERTISE ════════════════════════════════ */}
-        <section style={{ background: "#0D1018", padding: "72px 24px" }}>
-          <div style={{ maxWidth: 860, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <p
-                style={{
-                  color: "#C9964A",
-                  fontSize: 12,
-                  letterSpacing: "0.15em",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  marginBottom: 12,
-                }}
-              >
-                מומחיות
-              </p>
-              <h2
-                style={{
-                  fontSize: "clamp(1.6rem, 3.5vw, 2.4rem)",
-                  fontWeight: 800,
-                  color: "#EDE9E1",
-                  lineHeight: 1.2,
-                }}
-              >
-                תחומי המומחיות שלי
-              </h2>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: 16,
-              }}
-              className="expertise-grid"
-            >
-              {[
-                { icon: "📡", title: "שיווק אותנטי", desc: "בניית מסר שמשקף את הערך האמיתי של העסק — לא מה שנראה טוב, מה שאמיתי." },
-                { icon: "🎥", title: "עמידה מול מצלמה", desc: "ממשחק לתוכן: הפיכת בעלי עסקים לנוכחות וידאו שמושכת לקוחות נכונים." },
-                { icon: "⚡", title: "יצירת תוכן וידאו", desc: "שיטות לייצר תוכן מהיר, אמיתי ואפקטיבי — בלי ציוד יקר ובלי לאבד את הקול." },
-                { icon: "🔧", title: "בניית מערכות Signal", desc: "מערכות שמביאות לקוחות נכונים בצורה עקבית — לא פוסטים מקריים, מנגנון שרץ." },
-              ].map((ex) => (
-                <div
-                  key={ex.title}
-                  style={{
-                    background: "#141820",
-                    border: "1px solid #2C323E",
-                    borderRadius: 14,
-                    padding: "24px 28px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10,
-                  }}
-                >
-                  <span style={{ fontSize: 28 }}>{ex.icon}</span>
-                  <p style={{ fontWeight: 700, color: "#EDE9E1", fontSize: "1rem", margin: 0 }}>
-                    {ex.title}
-                  </p>
-                  <p style={{ color: "#9E9990", fontSize: "0.9rem", lineHeight: 1.65, margin: 0 }}>
-                    {ex.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ══ SECTION 6 - CTA BANNER ════════════════════════════════ */}
-        <section
-          style={{
-            background: "linear-gradient(135deg, #E8B94A 0%, #C9964A 50%, #9E7C3A 100%)",
-            padding: "64px 24px",
-            textAlign: "center",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "clamp(1.5rem, 4vw, 2.2rem)",
-              fontWeight: 800,
-              color: "#1A1206",
-              marginBottom: 32,
-              lineHeight: 1.25,
-            }}
-          >
-            רוצה לדעת איפה ה־Signal שלך נשבר?
-          </h2>
-          <Link
-            href="/quiz"
-            className="about-cta-secondary"
-            style={{
-              display: "inline-block",
-              background: "#0D1018",
-              color: "#C9964A",
-              fontWeight: 700,
-              borderRadius: 9999,
-              padding: "14px 32px",
-              fontSize: "1rem",
-              textDecoration: "none",
-              transition: "opacity 0.15s",
-            }}
-          >
-            התחל כאן - 3 שאלות בלבד ←
-          </Link>
-        </section>
-
-        {/* ══ RESPONSIVE STYLES ════════════════════════════════════ */}
-        <style>{`
-          .hero-overlay-desktop { display: block; }
-          .hero-overlay-mobile  { display: none; }
-
-          .hero-text {
-            top: 0; left: 0; bottom: 0; right: auto;
-            padding: 64px 48px;
-            max-width: 520px;
-            justify-content: center;
-          }
-
-          @media (max-width: 640px) {
-            .hero-overlay-desktop { display: none; }
-            .hero-overlay-mobile  { display: block; }
-            .hero-text {
-              top: auto !important;
-              bottom: 0 !important;
-              left: 0 !important;
-              right: 0 !important;
-              max-width: 100% !important;
-              padding: 32px 24px !important;
-              justify-content: flex-end !important;
-            }
-          }
-
-          .stats-grid {
-            grid-template-columns: repeat(4, 1fr) !important;
-          }
-          @media (max-width: 640px) {
-            .stats-grid {
-              grid-template-columns: repeat(2, 1fr) !important;
-            }
-          }
-
-          .method-grid { }
-          @media (max-width: 768px) {
-            .method-grid { grid-template-columns: 1fr !important; }
-          }
-
-          .expertise-grid { }
-          @media (max-width: 640px) {
-            .expertise-grid { grid-template-columns: 1fr !important; }
-          }
-
-          .journey-row { grid-template-columns: 80px 1fr !important; }
-          @media (max-width: 480px) {
-            .journey-row { grid-template-columns: 60px 1fr !important; }
-          }
-          .journey-line { display: none !important; }
-
-          .about-cta-primary:hover  { opacity: 0.9; }
-          .about-cta-secondary:hover { opacity: 0.85; }
-        `}</style>
-
+        </div>
       </div>
     </>
   );
