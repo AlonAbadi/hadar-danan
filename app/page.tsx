@@ -421,8 +421,8 @@ export default async function LandingPage() {
               <p className="font-medium" style={{ color: "rgba(158,153,144,0.6)" }}>אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{unicodeBidi:"embed"}}>TrueSignal©</span></p>
               <p>© 2026 הדר דנן בע״מ | ח.פ. 516791555 · כל הזכויות שמורות</p>
               <p>החילזון 5, רמת גן | 053-9566961</p>
-              <p className="mt-1">לביטול הסכמה:{" "}
-                <a href="mailto:hadar@beegood.online" className="hover:text-white transition">hadar@beegood.online</a>
+              <p className="mt-1">
+                <a href="/unsubscribe" className="hover:text-white transition">לביטול הסכמה לדיוור</a>
               </p>
             </div>
 
