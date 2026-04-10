@@ -904,6 +904,12 @@ export default function ProductLandingPage({
           <a href="/hive/terms">תנאי מנוי הכוורת</a>
           <a href="/accessibility">נגישות</a>
         </div>
+        <div className="lp-footer-company">
+          © 2026 הדר דנן בע״מ | ח.פ. 516791555
+        </div>
+        <div className="lp-footer-company">
+          החילזון 5, רמת גן | 053-9566961
+        </div>
       </div>
     </div>
   );

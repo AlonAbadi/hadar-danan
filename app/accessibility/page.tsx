@@ -148,6 +148,18 @@ export default function AccessibilityPage() {
               </dd>
             </div>
             <div className="flex gap-3">
+              <dt className="font-semibold flex-shrink-0">טלפון:</dt>
+              <dd>
+                <a
+                  href="tel:+972539566961"
+                  className="underline hover:opacity-70 transition"
+                  style={{ color: "#C9964A" }}
+                >
+                  053-9566961
+                </a>
+              </dd>
+            </div>
+            <div className="flex gap-3">
               <dt className="font-semibold flex-shrink-0">זמן מענה:</dt>
               <dd>עד 5 ימי עסקים</dd>
             </div>

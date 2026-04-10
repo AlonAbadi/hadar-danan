@@ -387,6 +387,7 @@ html.a11y-reading-mode img { max-width: 100% !important; }
 .lp-footer-signal span { color: var(--gold); }
 .lp-footer-links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
 .lp-footer-links a { color: var(--fg-muted); font-size: 12px; text-decoration: none; }
+.lp-footer-company { font-size: 11px; color: rgba(158,153,144,0.4); margin-top: 4px; }
 
 @media (max-width: 580px) {
   .proof-grid { grid-template-columns: 1fr 1fr; }

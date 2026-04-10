@@ -149,7 +149,9 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="11. יצירת קשר">
-          <p>הדר דנן בע״מ</p>
+          <p>הדר דנן בע״מ | ח.פ. 516791555</p>
+          <p>כתובת: החילזון 5, רמת גן</p>
+          <p>טלפון: 053-9566961</p>
           <p>אימייל: billing@hadardanan.co.il</p>
           <p>אתר: beegood.online</p>
         </Section>
