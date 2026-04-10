@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useTransition } from "react";
 import { Menu, X } from "lucide-react";
+import { createBrowserClient } from "@/lib/supabase/browser";
 
 const ITEMS_GROUP1 = [
   { label: "אודות",  href: "/about" },
@@ -23,25 +24,34 @@ const ITEMS_GROUP3 = [
   { label: "קורס דיגיטלי",     price: "₪1,800",  href: "/course" },
   { label: "פגישת אסטרטגיה",   price: "₪4,000",  href: "/strategy" },
   { label: "יום צילום פרמיום", price: "₪14,000", href: "/premium" },
-  { label: "שותפות",           price: "₪10k+",   href: "/partnership" },
+  { label: "שותפות",           price: "+₪10k",   href: "/partnership" },
 ];
 
 const ITEMS_GROUP4 = [{ label: "הכוורת 🐝",        href: "/hive" }];
-const ITEMS_GROUP5 = [{ label: "האזור האישי שלי", href: "/my" }];
+const ITEMS_GROUP5 = [{ label: "האזור האישי שלי", href: "/account" }];
 
 interface MobileNavProps {
   userInitial?: string | null;
 }
 
 export function MobileNav({ userInitial = null }: MobileNavProps) {
-  const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [open, setOpen]               = useState(false);
+  const [accordionOpen, setAccordion] = useState(false);
+  const [signingOut, setSigningOut]   = useState(false);
+  const pathname                      = usePathname();
+  const router                        = useRouter();
+  const [isPending, startTransition]  = useTransition();
+  const supabase                      = createBrowserClient();
 
   const handleCapsuleClick = () => {
     startTransition(() => { router.push("/account"); });
   };
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -175,6 +185,8 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
           overflowY: "auto",
           transform: open ? "translateX(0)" : "translateX(100%)",
           transition: "transform 300ms ease",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {/* Drawer header */}
@@ -186,6 +198,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
             padding: "0 24px",
             height: 64,
             borderBottom: "1px solid #2C323E",
+            flexShrink: 0,
           }}
         >
           <button
@@ -198,41 +211,143 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
           <span style={{ color: "#EDE9E1", fontWeight: 700, fontSize: 15, textAlign: "right", paddingRight: 8 }}>תפריט</span>
         </div>
 
-        {/* Group 1 */}
-        {ITEMS_GROUP1.map((item) => (
-          <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
-        ))}
+        {/* Scrollable content */}
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {/* Group 1 */}
+          {ITEMS_GROUP1.map((item) => (
+            <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
+          ))}
 
-        <Divider />
+          <Divider />
 
-        {/* Group 2 */}
-        {ITEMS_GROUP2.map((item) => (
-          <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
-        ))}
+          {/* Group 2 */}
+          {ITEMS_GROUP2.map((item) => (
+            <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
+          ))}
 
-        <Divider />
+          <Divider />
 
-        {/* Group 3 - מסלולים */}
-        <div style={{ color: "#C9964A", fontSize: 11, fontWeight: 700, padding: "16px 24px 4px", textAlign: "right", paddingRight: 24 }}>
-          מסלולים
+          {/* Group 3 — מסלולים accordion */}
+          <button
+            onClick={() => setAccordion(o => !o)}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              direction: "rtl",
+              padding: "14px 24px",
+              background: "none",
+              border: "none",
+              borderBottom: "1px solid #2C323E",
+              cursor: "pointer",
+            }}
+          >
+            <span style={{ color: "#C9964A", fontSize: 13, fontWeight: 700, letterSpacing: "0.04em" }}>
+              מסלולים
+            </span>
+            <span
+              style={{
+                color: "#C9964A",
+                fontSize: 12,
+                display: "inline-block",
+                transform: accordionOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.3s ease",
+              }}
+            >
+              ▼
+            </span>
+          </button>
+
+          {/* Accordion body */}
+          <div
+            style={{
+              maxHeight: accordionOpen ? ITEMS_GROUP3.length * 56 : 0,
+              overflow: "hidden",
+              transition: "max-height 0.3s ease",
+              background: "rgba(0,0,0,0.2)",
+            }}
+          >
+            {ITEMS_GROUP3.map((item) => (
+              <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
+            ))}
+          </div>
+
+          <Divider />
+
+          {/* Group 4 */}
+          {ITEMS_GROUP4.map((item) => (
+            <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
+          ))}
+
+          <Divider />
+
+          {/* Group 5 */}
+          {ITEMS_GROUP5.map((item) => (
+            <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
+          ))}
         </div>
-        {ITEMS_GROUP3.map((item) => (
-          <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
-        ))}
 
-        <Divider />
-
-        {/* Group 4 */}
-        {ITEMS_GROUP4.map((item) => (
-          <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
-        ))}
-
-        <Divider />
-
-        {/* Group 5 */}
-        {ITEMS_GROUP5.map((item) => (
-          <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
-        ))}
+        {/* ── Sign-out capsule (logged-in only) ──────────────── */}
+        {userInitial && (
+          <div style={{ padding: "16px 20px", borderTop: "1px solid #2C323E", flexShrink: 0 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                direction: "rtl",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 100,
+                padding: "10px 18px",
+                background: "rgba(0,0,0,0.3)",
+                transition: "background 0.15s ease, border-color 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(239,68,68,0.3)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.3)";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)";
+              }}
+            >
+              <span style={{ color: "#9E9990", fontSize: 13, fontWeight: 500 }}>
+                {userInitial}
+              </span>
+              <button
+                onClick={handleSignOut}
+                disabled={signingOut}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: signingOut ? "default" : "pointer",
+                  color: "#ef4444",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                  padding: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  opacity: signingOut ? 0.6 : 1,
+                }}
+              >
+                {signingOut && (
+                  <span style={{
+                    width: 10, height: 10,
+                    border: "1.5px solid rgba(239,68,68,0.3)",
+                    borderTopColor: "#ef4444",
+                    borderRadius: "50%",
+                    animation: "spin 0.7s linear infinite",
+                    display: "inline-block",
+                  }} />
+                )}
+                התנתק
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
