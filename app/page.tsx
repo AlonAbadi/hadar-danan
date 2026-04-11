@@ -9,6 +9,7 @@ import { PhilosophySection } from "@/components/landing/PhilosophySection";
 import { StatsSection } from "@/components/landing/StatsSection";
 import { ProductsSection } from "@/components/ProductsSection";
 import HomeStickyBar from "@/components/home/HomeStickyBar";
+import SocialProofStrip from "@/components/SocialProofStrip";
 import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Star } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -224,6 +225,8 @@ export default async function LandingPage() {
             </div>
 
           </section>
+
+          <SocialProofStrip />
 
           {/* ══════════════════════════════════════════════════════
               2. STATS
