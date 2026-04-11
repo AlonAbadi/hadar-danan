@@ -124,7 +124,7 @@ export default async function LandingPage() {
                     <span style={{ direction: "rtl" }}>שיטת <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
                   </span>
                 </div>
-                <h1 style={{ color: "#EDE9E1", fontWeight: 800, fontSize: "clamp(1.7rem, 4.5vw, 2rem)", lineHeight: 1.18, marginBottom: 12 }}>
+                <h1 style={{ color: "#EDE9E1", fontWeight: 800, fontSize: "clamp(1.7rem, 4.5vw, 2rem)", lineHeight: 1.18, marginBottom: 12, whiteSpace: "pre-line" }}>
                   {content.headline}
                 </h1>
                 <p style={{ color: "#9E9990", fontSize: "clamp(0.9rem, 2vw, 1rem)", lineHeight: 1.72, marginBottom: 16 }}>
@@ -198,7 +198,7 @@ export default async function LandingPage() {
                 <h1 style={{
                   color: "#EDE9E1", fontWeight: 800,
                   fontSize: "clamp(2rem, 2.6vw, 3rem)",
-                  lineHeight: 1.2, marginBottom: 18,
+                  lineHeight: 1.2, marginBottom: 18, whiteSpace: "pre-line",
                 }}>
                   {content.headline}
                 </h1>
