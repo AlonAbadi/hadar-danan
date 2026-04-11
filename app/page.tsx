@@ -331,45 +331,87 @@ export default async function LandingPage() {
           {/* ══════════════════════════════════════════════════════
               6. SOCIAL PROOF
           ══════════════════════════════════════════════════════ */}
-          <section className="px-6 py-20 md:py-28" style={{ background: "#080C14" }}>
-            <div className="max-w-4xl mx-auto flex flex-col gap-12">
+          <section className="px-6 py-24 md:py-36" style={{ background: "#080C14" }}>
+            <div className="max-w-5xl mx-auto flex flex-col gap-16">
 
-              <div className="text-center flex flex-col gap-3">
-                <div className="flex justify-center gap-1 mb-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <svg key={i} className="w-5 h-5" fill="#C9964A" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
+              {/* Header */}
+              <div className="text-center flex flex-col items-center gap-5">
+                {/* Google badge */}
+                <div
+                  className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-label="Google">
+                    <path fill="#4285F4" d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.3 5.5-4.8 7.2v6h7.8c4.5-4.2 7.3-10.4 7.3-17.3z" />
+                    <path fill="#34A853" d="M24 48c6.5 0 12-2.1 16-5.8l-7.8-6c-2.2 1.5-5 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-9.9H2.4v6.2C6.4 42.6 14.6 48 24 48z" />
+                    <path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.2.8-4.6v-6.2H2.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.4 10.8l8.1-6.2z" />
+                    <path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.8-6.8C35.9 2.1 30.4 0 24 0 14.6 0 6.4 5.4 2.4 13.2l8.1 6.2C12.4 13.7 17.7 9.5 24 9.5z" />
+                  </svg>
+                  <span className="text-sm font-semibold" style={{ color: "#9E9990" }}>ביקורות Google</span>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <svg key={i} className="w-4 h-4" fill="#E8B94A" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-sm font-bold" style={{ color: "#EDE9E1" }}>5.0</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black" style={{ color: "#EDE9E1" }}>
+
+                <h2 className="text-3xl md:text-5xl font-black leading-tight" style={{ color: "#EDE9E1" }}>
                   מעל {displayCount.toLocaleString("he-IL")} עסקים כבר מצאו<br className="hidden md:block" /> את הבהירות שלהם עם הדר
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {/* Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {TESTIMONIALS.map((t) => (
                   <div
                     key={t.name}
-                    className="rounded-2xl p-7 flex flex-col gap-5"
-                    style={{ background: "linear-gradient(145deg,#111928,#0D1520)", border: "1px solid #1E2838" }}
+                    className="rounded-3xl p-8 flex flex-col gap-6"
+                    style={{
+                      background: "linear-gradient(145deg,#131c2e,#0d1520)",
+                      border: "1px solid rgba(201,150,74,0.15)",
+                      boxShadow: "0 4px 32px rgba(0,0,0,0.4)",
+                    }}
                   >
-                    <p
-                      className="text-base leading-relaxed flex-1 font-medium"
-                      style={{ color: "#EDE9E1" }}
-                    >
-                      ״{t.text}״
+                    {/* Stars + Google logo */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <svg key={i} className="w-4 h-4" fill="#E8B94A" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-label="Google" style={{ opacity: 0.7 }}>
+                        <path fill="#4285F4" d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.3 5.5-4.8 7.2v6h7.8c4.5-4.2 7.3-10.4 7.3-17.3z" />
+                        <path fill="#34A853" d="M24 48c6.5 0 12-2.1 16-5.8l-7.8-6c-2.2 1.5-5 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-9.9H2.4v6.2C6.4 42.6 14.6 48 24 48z" />
+                        <path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.2.8-4.6v-6.2H2.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.4 10.8l8.1-6.2z" />
+                        <path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.8-6.8C35.9 2.1 30.4 0 24 0 14.6 0 6.4 5.4 2.4 13.2l8.1 6.2C12.4 13.7 17.7 9.5 24 9.5z" />
+                      </svg>
+                    </div>
+
+                    {/* Quote */}
+                    <p className="text-base md:text-lg leading-relaxed flex-1" style={{ color: "#D8D4CC" }}>
+                      &ldquo;{t.text}&rdquo;
                     </p>
-                    <div className="flex items-center gap-3 pt-4" style={{ borderTop: "1px solid #1E2838" }}>
+
+                    {/* Author */}
+                    <div className="flex items-center gap-3 pt-5" style={{ borderTop: "1px solid rgba(201,150,74,0.12)" }}>
                       <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
-                        style={{ background: "rgba(201,150,74,0.12)", color: "#C9964A", border: "1px solid rgba(201,150,74,0.25)" }}
+                        className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
+                        style={{
+                          background: "linear-gradient(135deg, rgba(232,185,74,0.2), rgba(158,124,58,0.2))",
+                          color: "#C9964A",
+                          border: "1px solid rgba(201,150,74,0.3)",
+                        }}
                       >
                         {t.initial}
                       </div>
                       <div>
                         <p className="font-bold text-sm" style={{ color: "#EDE9E1" }}>{t.name}</p>
-                        <p className="text-xs" style={{ color: "#6B7080" }}>{t.date}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "#6B7080" }}>{t.date}</p>
                       </div>
                     </div>
                   </div>
