@@ -83,7 +83,7 @@ export default async function LandingPage() {
           <section style={{ overflow: "hidden", background: "#0B1220" }}>
 
             {/* ── MOBILE: full-bleed overlay, thumb-zone optimized ── */}
-            <div className="md:hidden" style={{ position: "relative", height: "100svh" }}>
+            <div className="md:hidden" style={{ position: "relative", height: "74svh" }}>
               <Image
                 src="/hadar1.png"
                 alt="הדר דנן"
