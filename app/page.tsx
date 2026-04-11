@@ -106,9 +106,9 @@ export default async function LandingPage() {
                 position: "absolute", inset: 0,
                 background: "linear-gradient(to right, #080C14 0%, rgba(8,12,20,0.6) 25%, transparent 55%)",
               }} />
-              {/* Content anchored from 52svh */}
+              {/* Content anchored from bottom */}
               <div style={{
-                position: "absolute", top: "52svh", left: 0, right: 0,
+                position: "absolute", bottom: "32px", left: 0, right: 0,
                 padding: "0 24px", direction: "rtl", textAlign: "right",
               }}>
                 <div style={{
