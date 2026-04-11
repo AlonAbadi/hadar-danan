@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Image from 'next/image';
 
 // ── Design tokens ──────────────────────────────────────────────
 const BG         = '#080C14';
@@ -717,7 +718,7 @@ export default function ProductLandingPage({
           <div className="hadar-photo-wrap">
             {whoPhotoSrc
               ? <img src={whoPhotoSrc} alt={whoName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <PhotoPlaceholder size={60} />
+              : <Image src="/hadarprotrait.png" alt="הדר דנן" width={120} height={120} style={{ width: 60, height: 60, objectFit: 'contain', flexShrink: 0 }} />
             }
           </div>
           <div style={{ flex: 1 }}>
