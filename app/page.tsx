@@ -8,6 +8,7 @@ import { CarouselWithDots } from "@/components/landing/CarouselWithDots";
 import { PhilosophySection } from "@/components/landing/PhilosophySection";
 import { StatsSection } from "@/components/landing/StatsSection";
 import { ProductsSection } from "@/components/ProductsSection";
+import HomeStickyBar from "@/components/home/HomeStickyBar";
 import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Star } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -125,7 +126,7 @@ export default async function LandingPage() {
                 <p style={{ color: "#9E9990", fontSize: "clamp(0.9rem, 2vw, 1rem)", lineHeight: 1.72, marginBottom: 16 }}>
                   {content.description}
                 </p>
-                <a href="/quiz" style={{
+                <a href="/quiz" data-home-hero-cta="" style={{
                   display: "block", textAlign: "center",
                   background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
                   color: "#1A1206", fontWeight: 800, fontSize: "clamp(0.95rem, 2vw, 1.05rem)",
@@ -207,7 +208,7 @@ export default async function LandingPage() {
                 </p>
 
                 {/* CTA */}
-                <a href="/quiz" style={{
+                <a href="/quiz" data-home-hero-cta="" style={{
                   display: "inline-block",
                   background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
                   color: "#1A1206", fontWeight: 800, fontSize: "1.05rem",
@@ -430,6 +431,7 @@ export default async function LandingPage() {
         </footer>
 
       </div>
+      <HomeStickyBar ctaText={content.cta} />
     </>
   );
 }
