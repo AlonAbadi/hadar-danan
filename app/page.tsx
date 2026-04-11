@@ -226,12 +226,12 @@ export default async function LandingPage() {
 
           </section>
 
-          <SocialProofStrip />
-
           {/* ══════════════════════════════════════════════════════
               2. STATS
           ══════════════════════════════════════════════════════ */}
           <StatsSection />
+
+          <SocialProofStrip />
 
           {/* ══════════════════════════════════════════════════════
               3. PHILOSOPHY
