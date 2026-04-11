@@ -44,19 +44,22 @@ const ROW2_PRODUCTS = [
 
 const TESTIMONIALS = [
   {
-    text: "הבנתי לראשונה למה הלקוחות שלי לא מבינים מה אני מוכר",
-    name: "מיכל ל.",
-    role: "מאמנת כושר",
+    text: "מי שרוצה שירות פרימיום יחס מעולה ושיוציאו אותך הכי אותנטי זה המקום!!",
+    name: "ניסן אלנקווה",
+    date: "לפני 11 חודשים",
+    initial: "נ",
   },
   {
-    text: "אחרי פגישה אחת ידעתי בדיוק מה לומר ואיך",
-    name: "רון ש.",
-    role: "יועץ עסקי",
+    text: "שירות מעולה, הבנה מאוד רצינית ומעמיקה על איך לשווק נכון עסק ואיזה סרטונים טובים לו. מומלץ בחום.",
+    name: "נטע מרום",
+    date: "לפני שנה",
+    initial: "נ",
   },
   {
-    text: "זה לא היה עוד יום צילום. זה היה שינוי בדרך שאני מסתכל על העסק שלי",
-    name: "ענת מ.",
-    role: "מעצבת גרפית",
+    text: "הגעתי לצילומים אצל הדר דנן עם קצת חשש ופרפרים אבל תוך רגע כל הלחץ הסתיים. הצוות שם פשוט תותחים מהרגע שנכנסתי, הייתה אווירה כיפית, נעימה ומקצועית בטירוף.",
+    name: "נטלי גדקר",
+    date: "לפני שנה",
+    initial: "נ",
   },
 ];
 
@@ -362,11 +365,11 @@ export default async function LandingPage() {
                         className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
                         style={{ background: "rgba(201,150,74,0.12)", color: "#C9964A", border: "1px solid rgba(201,150,74,0.25)" }}
                       >
-                        {t.name[0]}
+                        {t.initial}
                       </div>
                       <div>
                         <p className="font-bold text-sm" style={{ color: "#EDE9E1" }}>{t.name}</p>
-                        <p className="text-xs" style={{ color: "#6B7080" }}>{t.role}</p>
+                        <p className="text-xs" style={{ color: "#6B7080" }}>{t.date}</p>
                       </div>
                     </div>
                   </div>
