@@ -718,7 +718,7 @@ export default function ProductLandingPage({
           <div className="hadar-photo-wrap">
             {whoPhotoSrc
               ? <img src={whoPhotoSrc} alt={whoName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <Image src="/hadarprotrait.png" alt="הדר דנן" width={120} height={120} style={{ width: 60, height: 60, objectFit: 'contain', flexShrink: 0 }} />
+              : <Image src="/hadarprotrait.png" alt="הדר דנן" width={200} height={200} style={{ width: 110, height: 110, objectFit: 'contain', display: 'block', flexShrink: 0 }} />
             }
           </div>
           <div style={{ flex: 1 }}>
