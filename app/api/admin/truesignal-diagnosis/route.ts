@@ -299,7 +299,11 @@ export async function POST(req: NextRequest) {
 
     let parsed: unknown;
     try {
-      parsed = JSON.parse(firstBlock.text);
+      const cleanText = firstBlock.text
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```\s*$/, "")
+        .trim();
+      parsed = JSON.parse(cleanText);
     } catch {
       return NextResponse.json(
         { error: "שגיאת פענוח JSON מהמודל", raw: firstBlock.text },
