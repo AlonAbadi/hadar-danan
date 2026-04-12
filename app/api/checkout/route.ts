@@ -148,7 +148,9 @@ export async function POST(req: NextRequest) {
     Language: "he",
     ProductName: NAMES[product],
     ReturnValue: purchase.id,
-    SuccessRedirectUrl: `${appUrl}/${product.split("_")[0]}/success`,
+    SuccessRedirectUrl: product === "challenge_197"
+      ? `${appUrl}/challenge/thank-you`
+      : `${appUrl}/${product.split("_")[0]}/success`,
     ErrorRedirectUrl: `${appUrl}/checkout-error`,
     IndicatorUrl: `${appUrl}/api/cardcom/webhook`,
     Codepage: "65001",
