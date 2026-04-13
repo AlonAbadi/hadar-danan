@@ -73,7 +73,23 @@ export default function TrainingPage() {
       hideMicroCommitment
 
       priceSectionSlot={
-        <section style={{ padding: "48px 20px", maxWidth: 480, margin: "0 auto" }}>
+        <section style={{ padding: "48px 20px", maxWidth: 640, margin: "0 auto" }}>
+
+          {/* Video embed */}
+          <div style={{
+            position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden",
+            borderRadius: 16, marginBottom: 36,
+            boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
+          }}>
+            <iframe
+              src="https://player.vimeo.com/video/1182619874?badge=0&autopause=0&player_id=0&app_id=58479"
+              allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+              title="השיעור במתנה - הדר דנן"
+            />
+          </div>
+
+          <div style={{ maxWidth: 480, margin: "0 auto" }}>
           <div style={{
             background: "#191F2B", border: "1px solid #2C323E",
             borderRadius: 20, padding: "32px 28px",
@@ -92,6 +108,7 @@ export default function TrainingPage() {
             }}>
               כל שקל שתשקיע בהמשך נחשב לשלב הבא - גישה מלאה למסלול השלם.
             </div>
+          </div>
           </div>
         </section>
       }
