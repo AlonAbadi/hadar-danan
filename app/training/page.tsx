@@ -15,7 +15,7 @@ export default function TrainingPage() {
       price={0}
       checkoutHref="#cta"
 
-      vslVideoId="1182619874"
+      vslVideoId="1182619417"
       headline={<>הדרכה חינמית. <em>הצעד הראשון</em> לבידול שלך.</>}
       heroSub="הדרכה של 20 דקות. בלי ציוד, בלי ניסיון, בלי תקציב. רק בהירות אמיתית על הפער בין מי שאתה לבין מה שהעסק שלך משדר."
       stats={[
