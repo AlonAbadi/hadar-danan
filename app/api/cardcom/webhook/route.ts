@@ -155,8 +155,13 @@ export async function GET(req: NextRequest) {
   const orderId = searchParams.get("order");
 
   if (!lowProfileCode) {
-    // Return 400 so we know something is wrong, but Cardcom ignores non-200 content
-    return new Response("missing lowprofilecode", { status: 400 });
+    // Must return 200 — Cardcom retries on non-200. Log to error_logs instead.
+    await createServerClient().from("error_logs").insert({
+      context: "api/cardcom/webhook GET",
+      error:   "missing lowprofilecode",
+      payload: { orderId, url: req.url },
+    });
+    return new Response("OK", { status: 200 });
   }
 
   const terminal = process.env.CARDCOM_TERMINAL;
