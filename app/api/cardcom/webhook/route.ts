@@ -28,6 +28,7 @@ async function fulfillPurchase(
   purchaseId:          string,
   internalDealNumber:  string | undefined,
   invoiceNumber:       string | null,
+  invoiceLink:         string | null,
 ): Promise<{ ok: boolean; alreadyProcessed?: boolean }> {
   // Idempotency: skip if InternalDealNumber already recorded
   if (internalDealNumber) {
@@ -41,9 +42,10 @@ async function fulfillPurchase(
   }
 
   console.log("InvoiceNumber from Cardcom:", invoiceNumber);
+  console.log("InvoiceLink from Cardcom:", invoiceLink);
 
-  // Mark purchase as completed — include invoice_number in same update
-  // (invoice_number column added in migration 018, cast as any for TS)
+  // Mark purchase as completed — include invoice fields in same update
+  // (invoice_number/invoice_link columns added in migrations 018/019, cast as any for TS)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: purchase, error: purchaseErr } = await (supabase as any)
     .from("purchases")
@@ -51,6 +53,7 @@ async function fulfillPurchase(
       status:         "completed",
       cardcom_ref:    internalDealNumber ?? null,
       invoice_number: invoiceNumber ?? null,
+      invoice_link:   invoiceLink   ?? null,
     })
     .eq("id", purchaseId)
     .eq("status", "pending")   // only update pending — prevents overwriting refunds
@@ -208,8 +211,13 @@ export async function GET(req: NextRequest) {
     return new Response("OK", { status: 200 });
   }
 
-  const internalDealNumber = data.InternalDealNumber;
-  const invoiceNumber      = data.InvoiceNumber      ?? null;
+  console.log("Cardcom webhook data keys:", Object.keys(data));
+  console.log("Cardcom InvoiceLink:", data.InvoiceLink);
+  console.log("Cardcom Link:", data.Link);
+
+  const internalDealNumber  = data.InternalDealNumber;
+  const invoiceNumber       = data.InvoiceNumber ?? null;
+  const invoiceLink         = data.InvoiceLink ?? data.Link ?? null;
   const invoiceResponseCode = data.InvoiceResponseCode;
   // ReturnValue is our purchase.id echoed back by Cardcom
   const returnValue = data.ReturnValue || orderId;
@@ -238,6 +246,7 @@ export async function GET(req: NextRequest) {
     returnValue,
     internalDealNumber,
     invoiceNumber,
+    invoiceLink,
   );
 
   return new Response("OK", { status: 200 });
@@ -285,7 +294,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  await fulfillPurchase(supabase, ReturnValue, InternalDealNumber, null);
+  await fulfillPurchase(supabase, ReturnValue, InternalDealNumber, null, null);
 
   return NextResponse.json({ ok: true });
 }

@@ -30,6 +30,7 @@ interface Purchase {
   status: string;
   created_at: string;
   invoice_number?: string | null;
+  invoice_link?: string | null;
 }
 
 interface UserData {
@@ -1027,9 +1028,9 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
                   <div style={{ fontSize: 12, color: "#9E9990" }}>
                     {formatDate(p.created_at)} · ₪{p.amount.toLocaleString("he-IL")}
                   </div>
-                  {p.invoice_number && cardcomTerminal && (
+                  {p.invoice_link && (
                     <a
-                      href={`https://secure.cardcom.solutions/InvoiceAsp/Invoice.aspx?invoicenum=${p.invoice_number}&terminalnum=${cardcomTerminal}`}
+                      href={p.invoice_link}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ fontSize: 12, color: "#C9964A", textDecoration: "underline" }}

@@ -35,7 +35,7 @@ export default async function AccountPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ? await (db as any)
         .from("purchases")
-        .select("id, product, amount, amount_paid, status, created_at, invoice_number")
+        .select("id, product, amount, amount_paid, status, created_at, invoice_number, invoice_link")
         .eq("user_id", userData.id)
         .in("status", ["completed", "pending"])
         .order("created_at", { ascending: false })
