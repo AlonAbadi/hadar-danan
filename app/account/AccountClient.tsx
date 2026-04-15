@@ -838,7 +838,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
               href="/account/redeem"
               style={{ ...S.enterBtn, fontSize: 12, padding: "7px 14px" }}
             >
-              מימש קרדיט
+              מימוש קרדיט
             </Link>
           )}
         </div>
