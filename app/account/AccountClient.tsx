@@ -75,20 +75,6 @@ const HIVE_TIER_MAP: Record<string, { label: string; color: string }> = {
 const CONTENT_LINKS: Record<string, string> = {
   challenge_197: "/challenge/content",
   course_1800:   "/course/content",
-  workshop_1080: "",
-  strategy_4000: "",
-  premium_14000: "",
-};
-
-const WA = "https://wa.me/972539566961";
-
-type ContentCTA = { ctaType: "enter" | "whatsapp" | "book"; badge: string; ctaHref: string; ctaLabel: string };
-const PRODUCT_CTA: Record<string, ContentCTA> = {
-  challenge_197: { ctaType: "enter",    badge: "",                   ctaHref: "/challenge/content",  ctaLabel: "כנס" },
-  course_1800:   { ctaType: "enter",    badge: "",                   ctaHref: "/course/content",     ctaLabel: "כנס" },
-  workshop_1080: { ctaType: "whatsapp", badge: "פרטים נשלחו במייל", ctaHref: WA,                    ctaLabel: "וואטסאפ" },
-  strategy_4000: { ctaType: "book",     badge: "תואם בוואטסאפ",     ctaHref: "/strategy/book",      ctaLabel: "לוח זמנים" },
-  premium_14000: { ctaType: "whatsapp", badge: "נקבע בנפרד",        ctaHref: WA,                    ctaLabel: "וואטסאפ" },
 };
 
 // Maps completed purchase product → content route (null = no content, show badge instead)
@@ -747,15 +733,13 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
     return () => controller.abort();
   }, [userData?.id]);
 
-  // Active content: all completed purchases that have a known CTA, oldest first
-  type ContentItem = { label: string } & ContentCTA;
-  const contentItems: ContentItem[] = [];
+  // Active content: completed purchases that have a content URL, oldest first
+  const contentItems: { label: string; href: string }[] = [];
   const seen = new Set<string>();
   for (const p of [...completedPurchases].reverse()) {
-    const cta = PRODUCT_CTA[p.product];
-    if (cta && !seen.has(p.product)) {
+    if (CONTENT_LINKS[p.product] && !seen.has(p.product)) {
       seen.add(p.product);
-      contentItems.push({ label: PRODUCT_LABELS[p.product] ?? p.product, ...cta });
+      contentItems.push({ label: PRODUCT_LABELS[p.product] ?? p.product, href: CONTENT_LINKS[p.product] });
     }
   }
 
@@ -874,37 +858,14 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
         {/* Regular content items */}
         {contentItems.length > 0 ? (
           contentItems.map((item) => (
-            <div key={item.label} style={S.contentItem}>
+            <div key={item.href} style={S.contentItem}>
               <div>
                 <div style={S.contentLabel}>{item.label}</div>
-                {item.ctaType === "enter" && (
-                  <div style={S.progressWrap}><div style={S.progressBar} /></div>
-                )}
-              </div>
-              {item.ctaType === "enter" ? (
-                <Link href={item.ctaHref} style={S.enterBtn}>כנס</Link>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700,
-                    padding: "3px 10px", borderRadius: 20,
-                    background: "rgba(201,150,74,0.12)",
-                    border: "1px solid rgba(201,150,74,0.25)",
-                    color: "#C9964A",
-                    whiteSpace: "nowrap",
-                  }}>
-                    {item.badge}
-                  </span>
-                  <Link
-                    href={item.ctaHref}
-                    target={item.ctaType === "whatsapp" ? "_blank" : undefined}
-                    rel={item.ctaType === "whatsapp" ? "noopener noreferrer" : undefined}
-                    style={{ ...S.enterBtn, background: "transparent", border: "1px solid #2C323E", color: "#E8B94A", fontSize: 12 }}
-                  >
-                    {item.ctaLabel}
-                  </Link>
+                <div style={S.progressWrap}>
+                  <div style={S.progressBar} />
                 </div>
-              )}
+              </div>
+              <Link href={item.href} style={S.enterBtn}>כנס</Link>
             </div>
           ))
         ) : !isHiveActive ? (
