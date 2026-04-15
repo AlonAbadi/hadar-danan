@@ -11,24 +11,39 @@ function getCookie(name: string): string | undefined {
 }
 
 export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { whatsappPhone: string; credit?: number; initialEmail?: string }) {
-  const [phase, setPhase]       = useState<"idle" | "form" | "loading" | "error">("idle");
+  const [phase, setPhase]       = useState<"idle" | "phone" | "form" | "loading" | "error">("idle");
   const [form, setForm]         = useState({ name: "", email: initialEmail, phone: "" });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [consent, setConsent]   = useState(false);
   const [consentErr, setConsentErr] = useState(false);
   const [quizUserId, setQuizUserId] = useState<string | null>(null);
   const [quizName, setQuizName]     = useState<string | null>(null);
+  const [hasPhone, setHasPhone]     = useState(true);
+  const [phoneInput, setPhoneInput] = useState("");
 
   const LIST_PRICE = 1800;
   const toPay      = Math.max(0, LIST_PRICE - credit);
 
   useEffect(() => {
-    const user = getSessionUser();
-    if (user?.userId) {
-      setQuizUserId(user.userId);
-      setQuizName(user.name.split(" ")[0]);
-      setForm((f) => ({ ...f, name: user.name, email: user.email, phone: user.phone }));
+    const sessionUser = getSessionUser();
+    if (sessionUser?.userId) {
+      setQuizUserId(sessionUser.userId);
+      setQuizName(sessionUser.name.split(" ")[0]);
+      setHasPhone(!!sessionUser.phone);
+      setForm((f) => ({ ...f, name: sessionUser.name, email: sessionUser.email, phone: sessionUser.phone }));
+      return;
     }
+    fetch("/api/user/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.id) {
+          setQuizUserId(data.id);
+          setQuizName(data.name?.split(" ")[0] ?? null);
+          setHasPhone(!!data.phone);
+          setForm((f) => ({ ...f, name: data.name ?? "", email: data.email ?? "", phone: data.phone ?? "" }));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   async function doCheckout(userId: string) {
@@ -138,6 +153,23 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
     }
   }
 
+  async function handlePhoneSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!phoneInput.trim() || !quizUserId) return;
+    setPhase("loading");
+    try {
+      await fetch("/api/user/update-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneInput.trim() }),
+      });
+      await doCheckout(quizUserId);
+    } catch {
+      setErrorMsg("שגיאת רשת, נסה שוב");
+      setPhase("error");
+    }
+  }
+
   function fallbackWhatsapp() {
     if (whatsappPhone) {
       const msg = encodeURIComponent(`היי הדר! אני רוצה להירשם לקורס הדיגיטלי ב-₪1,800. מה הצעד הבא?`);
@@ -146,11 +178,37 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
     setPhase("idle");
   }
 
+  if (phase === "phone") {
+    return (
+      <form onSubmit={handlePhoneSubmit} className="flex flex-col gap-4" dir="rtl">
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-[#9E9990]">מספר טלפון לחשבונית</label>
+          <input
+            type="tel"
+            placeholder="0501234567"
+            required
+            value={phoneInput}
+            onChange={(e) => setPhoneInput(e.target.value)}
+            dir="ltr"
+            className="w-full rounded-xl border px-4 py-3 text-base outline-none transition"
+            style={{ background: "#1D2430", borderColor: "#2C323E", color: "#EDE9E1" }}
+          />
+        </div>
+        <button type="submit" className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold">
+          המשך לתשלום ←
+        </button>
+        <button type="button" onClick={() => setPhase("idle")} className="text-sm text-[#9E9990] hover:text-[#EDE9E1] transition text-center">
+          ביטול
+        </button>
+      </form>
+    );
+  }
+
   if (phase === "idle") {
     if (quizUserId) {
       return (
         <button
-          onClick={() => doCheckout(quizUserId)}
+          onClick={() => hasPhone ? doCheckout(quizUserId) : setPhase("phone")}
           className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold"
         >
           {quizName ? `${quizName}, ` : ""}

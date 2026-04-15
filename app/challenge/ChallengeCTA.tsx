@@ -23,24 +23,41 @@ interface ChallengeCTAProps {
 }
 
 export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAProps) {
-  const [phase, setPhase]       = useState<"idle" | "form" | "loading" | "error">("idle");
+  const [phase, setPhase]       = useState<"idle" | "phone" | "form" | "loading" | "error">("idle");
   const [form, setForm]         = useState({ name: "", email: "", phone: "" });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [consent, setConsent]   = useState(false);
   const [consentErr, setConsentErr] = useState(false);
   const [quizUserId, setQuizUserId] = useState<string | null>(null);
   const [quizName, setQuizName]     = useState<string | null>(null);
+  const [hasPhone, setHasPhone]     = useState(true);
+  const [phoneInput, setPhoneInput] = useState("");
 
   const listPrice = Number(price);
   const toPay     = Math.max(0, listPrice - credit);
 
   useEffect(() => {
-    const user = getSessionUser();
-    if (user?.userId) {
-      setQuizUserId(user.userId);
-      setQuizName(user.name.split(" ")[0]);
-      setForm({ name: user.name, email: user.email, phone: user.phone });
+    // 1. Quiz session (users who came through the quiz)
+    const sessionUser = getSessionUser();
+    if (sessionUser?.userId) {
+      setQuizUserId(sessionUser.userId);
+      setQuizName(sessionUser.name.split(" ")[0]);
+      setHasPhone(!!sessionUser.phone);
+      setForm({ name: sessionUser.name, email: sessionUser.email, phone: sessionUser.phone });
+      return;
     }
+    // 2. Auth session (logged-in users via Google OAuth or email)
+    fetch("/api/user/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.id) {
+          setQuizUserId(data.id);
+          setQuizName(data.name?.split(" ")[0] ?? null);
+          setHasPhone(!!data.phone);
+          setForm((f) => ({ ...f, name: data.name ?? "", email: data.email ?? "", phone: data.phone ?? "" }));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   async function doCheckout(userId: string) {
@@ -145,6 +162,23 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
     }
   }
 
+  async function handlePhoneSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!phoneInput.trim() || !quizUserId) return;
+    setPhase("loading");
+    try {
+      await fetch("/api/user/update-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneInput.trim() }),
+      });
+      await doCheckout(quizUserId);
+    } catch {
+      setErrorMsg("שגיאת רשת, נסה שוב");
+      setPhase("error");
+    }
+  }
+
   function fallbackWhatsapp() {
     if (whatsappPhone) {
       const msg = credit > 0
@@ -159,12 +193,40 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
     ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent("היי הדר! יש לי שאלה לגבי הצ׳אלנג׳ 7 הימים")}`
     : null;
 
+  if (phase === "phone") {
+    return (
+      <form onSubmit={handlePhoneSubmit} className="flex flex-col gap-4" dir="rtl">
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium" style={{ color: "#9E9990" }}>מספר טלפון לחשבונית</label>
+          <input
+            type="tel"
+            placeholder="0501234567"
+            required
+            value={phoneInput}
+            onChange={(e) => setPhoneInput(e.target.value)}
+            dir="ltr"
+            className="w-full rounded-xl border px-4 py-3 text-base outline-none transition"
+            style={{ background: "#1D2430", borderColor: "#2C323E", color: "#EDE9E1" }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(201,150,74,0.6)"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "#2C323E"; }}
+          />
+        </div>
+        <button type="submit" className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold">
+          המשך לתשלום ←
+        </button>
+        <button type="button" onClick={() => setPhase("idle")} className="text-sm text-center transition" style={{ color: "#9E9990" }}>
+          ביטול
+        </button>
+      </form>
+    );
+  }
+
   if (phase === "idle") {
     if (quizUserId) {
       return (
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => doCheckout(quizUserId)}
+            onClick={() => hasPhone ? doCheckout(quizUserId) : setPhase("phone")}
             className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold"
           >
             {quizName ? `${quizName}, ` : ""}
