@@ -102,7 +102,11 @@ export async function POST(req: NextRequest) {
     .eq("status", "completed");
 
   const credit = (completedPurchases ?? []).reduce((sum, p) => sum + (p.amount ?? 0), 0);
-  const amount = Math.max(0, effectivePrice - credit);
+  // When a personal discount is active, credit is not applied —
+  // the user always pays the discounted price (minimum ₪1).
+  const amount = discountRate > 0
+    ? effectivePrice
+    : Math.max(0, effectivePrice - credit);
 
   // If fully covered by credit, no payment needed — complete directly
   if (amount === 0) {
