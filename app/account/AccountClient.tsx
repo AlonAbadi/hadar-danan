@@ -29,6 +29,7 @@ interface Purchase {
   amount: number;
   status: string;
   created_at: string;
+  invoice_number?: string | null;
 }
 
 interface UserData {
@@ -51,6 +52,7 @@ interface Props {
   credit: number;
   isGoogleUser: boolean;
   quizResult: QuizResult | null;
+  cardcomTerminal: string;
 }
 
 // ── Constants ─────────────────────────────────────────────────
@@ -676,7 +678,7 @@ function QuizCTACard() {
 // ── Component ─────────────────────────────────────────────────
 type Tab = "main" | "purchases" | "profile";
 
-export default function AccountClient({ authUser, userData, completedPurchases, pendingPurchases, credit, isGoogleUser, quizResult }: Props) {
+export default function AccountClient({ authUser, userData, completedPurchases, pendingPurchases, credit, isGoogleUser, quizResult, cardcomTerminal }: Props) {
   const router  = useRouter();
   const supabase = createBrowserClient();
 
@@ -1025,6 +1027,16 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
                   <div style={{ fontSize: 12, color: "#9E9990" }}>
                     {formatDate(p.created_at)} · ₪{p.amount.toLocaleString("he-IL")}
                   </div>
+                  {p.invoice_number && cardcomTerminal && (
+                    <a
+                      href={`https://secure.cardcom.solutions/InvoiceAsp/Invoice.aspx?invoicenum=${p.invoice_number}&terminalnum=${cardcomTerminal}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 12, color: "#C9964A", textDecoration: "underline" }}
+                    >
+                      חשבונית מס קבלה
+                    </a>
+                  )}
                 </div>
 
                 {/* Action - left side */}
