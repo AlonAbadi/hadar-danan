@@ -204,10 +204,13 @@ export async function POST(req: NextRequest) {
     // Customer details — pre-fills the Cardcom payment form
     CardOwnerName:       customerName,
     CardOwnerEmail:      customerEmail,
-    ShowCardOwnerEmail:  "true",
-    ReqCardOwnerEmail:   "true",
-    ShowCardOwnerPhone:  "true",
-    CardOwnerPhone:      customerPhone,
+    ShowCardOwnerEmail:   "true",
+    ReqCardOwnerEmail:    "true",
+    ShowCardOwnerPhone:   "true",
+    ReqCardOwnerPhone:    "true",
+    CardOwnerPhone:       customerPhone,
+    ShowInvoiceHead:      "true",
+    HideCreditCardUserId: "false",
 
     // Invoice generation
     // InvoiceHeadOperation=1: generate invoice alongside the charge
