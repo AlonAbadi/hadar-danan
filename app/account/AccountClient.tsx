@@ -117,10 +117,10 @@ const QUIZ_PRODUCT_HREF: Record<string, string> = {
 };
 
 const RECOMMENDED = [
-  { label: "אתגר 7 ימים - ₪197",          href: "/challenge" },
-  { label: "סדנה יום אחד - ₪1,080",        href: "/workshop" },
-  { label: "קורס דיגיטלי - ₪1,800",       href: "/course" },
-  { label: "הכוורת - 160₪ לחודש",          href: "/hive" }, // TODO: read from PRODUCT_MAP once hive_starter_160 is added there
+  { label: "אתגר 7 ימים - ₪197",    href: "/challenge", product: "challenge_197"  },
+  { label: "סדנה יום אחד - ₪1,080", href: "/workshop",  product: "workshop_1080"  },
+  { label: "קורס דיגיטלי - ₪1,800", href: "/course",    product: "course_1800"    },
+  { label: "הכוורת - ₪97 לחודש",    href: "/hive",      product: null             },
 ];
 
 // ── Styles ────────────────────────────────────────────────────
@@ -857,17 +857,41 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
 
         {/* Regular content items */}
         {contentItems.length > 0 ? (
-          contentItems.map((item) => (
-            <div key={item.href} style={S.contentItem}>
-              <div>
-                <div style={S.contentLabel}>{item.label}</div>
-                <div style={S.progressWrap}>
-                  <div style={S.progressBar} />
+          <>
+            {contentItems.map((item) => (
+              <div key={item.href} style={S.contentItem}>
+                <div>
+                  <div style={S.contentLabel}>{item.label}</div>
+                  <div style={S.progressWrap}>
+                    <div style={S.progressBar} />
+                  </div>
                 </div>
+                <Link href={item.href} style={S.enterBtn}>כנס</Link>
               </div>
-              <Link href={item.href} style={S.enterBtn}>כנס</Link>
-            </div>
-          ))
+            ))}
+
+            {/* Products not yet purchased */}
+            {(() => {
+              const purchased = new Set(completedPurchases.map((p: { product: string }) => p.product));
+              const upsell = RECOMMENDED.filter(
+                (r) => !r.product || !purchased.has(r.product)
+              );
+              if (upsell.length === 0) return null;
+              return (
+                <>
+                  <p style={{ fontSize: 12, color: "#9E9990", margin: "12px 0 8px" }}>המשך המסלול:</p>
+                  {upsell.map((r) => (
+                    <div key={r.href} style={{ ...S.contentItem, justifyContent: "space-between" }}>
+                      <span style={S.contentLabel}>{r.label}</span>
+                      <Link href={r.href} style={{ ...S.enterBtn, background: "transparent", border: "1px solid #2C323E", color: "#E8B94A" }}>
+                        פרטים
+                      </Link>
+                    </div>
+                  ))}
+                </>
+              );
+            })()}
+          </>
         ) : !isHiveActive ? (
           <>
             <p style={{ fontSize: 13, color: "#9E9990", marginTop: 0, marginBottom: 16 }}>
