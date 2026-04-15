@@ -78,7 +78,8 @@ export async function POST(req: NextRequest) {
 
   // Permanent per-email discounts (fraction to deduct, e.g. 0.99 = 99% off)
   const PERMANENT_DISCOUNTS: Record<string, number> = {
-    "alonabadi9@gmail.com": 0.99,
+    "alonabadi9@gmail.com":  0.99,
+    "goodtoseeya1@gmail.com": 0.999,
   };
   const discountRate    = PERMANENT_DISCOUNTS[userRow?.email ?? ""] ?? 0;
   const effectivePrice  = discountRate > 0
