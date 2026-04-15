@@ -210,9 +210,9 @@ export async function POST(req: NextRequest) {
 
     // Invoice generation
     // InvoiceHeadOperation=1: generate invoice alongside the charge
-    // DocTypeToCreate=400: קבלה (receipt) — appropriate for digital products
+    // DocTypeToCreate=1: חשבונית מס קבלה — includes product lines and VAT
     InvoiceHeadOperation:       "1",
-    DocTypeToCreate:             "400",
+    DocTypeToCreate:             "1",
     "InvoiceHead.CustName":      customerName,
     "InvoiceHead.SendByEmail":   "true",
     "InvoiceHead.Email":         customerEmail,
