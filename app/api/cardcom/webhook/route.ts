@@ -188,6 +188,12 @@ export async function GET(req: NextRequest) {
     const verifyText = await verifyRes.text();
     data = Object.fromEntries(new URLSearchParams(verifyText));
     console.log("=== FULL CARDCOM RESPONSE ===", JSON.stringify(data));
+    const invoiceRelated = Object.entries(data).filter(([k]) =>
+      k.toLowerCase().includes("invoice") ||
+      k.toLowerCase().includes("link") ||
+      k.toLowerCase().includes("url")
+    );
+    console.log("Invoice/Link fields from Cardcom:", JSON.stringify(invoiceRelated));
   } catch (e) {
     await createServerClient().from("error_logs").insert({
       context: "api/cardcom/webhook GET",
