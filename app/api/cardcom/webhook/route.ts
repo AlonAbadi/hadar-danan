@@ -187,6 +187,7 @@ export async function GET(req: NextRequest) {
     );
     const verifyText = await verifyRes.text();
     data = Object.fromEntries(new URLSearchParams(verifyText));
+    console.log("=== FULL CARDCOM RESPONSE ===", JSON.stringify(data));
   } catch (e) {
     await createServerClient().from("error_logs").insert({
       context: "api/cardcom/webhook GET",
