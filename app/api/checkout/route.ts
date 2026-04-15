@@ -76,6 +76,15 @@ export async function POST(req: NextRequest) {
     .eq("id", user_id)
     .single();
 
+  // Permanent per-email discounts (fraction to deduct, e.g. 0.99 = 99% off)
+  const PERMANENT_DISCOUNTS: Record<string, number> = {
+    "alonabadi9@gmail.com": 0.99,
+  };
+  const discountRate    = PERMANENT_DISCOUNTS[userRow?.email ?? ""] ?? 0;
+  const effectivePrice  = discountRate > 0
+    ? Math.max(1, Math.round(listPrice * (1 - discountRate)))
+    : listPrice;
+
   // Cancel any existing pending purchases for this user+product combo
   // before creating a new one (prevents duplicate pending rows on retry)
   await supabase
@@ -93,7 +102,7 @@ export async function POST(req: NextRequest) {
     .eq("status", "completed");
 
   const credit = (completedPurchases ?? []).reduce((sum, p) => sum + (p.amount ?? 0), 0);
-  const amount = Math.max(0, listPrice - credit);
+  const amount = Math.max(0, effectivePrice - credit);
 
   // If fully covered by credit, no payment needed — complete directly
   if (amount === 0) {
