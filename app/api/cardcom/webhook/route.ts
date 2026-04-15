@@ -40,12 +40,17 @@ async function fulfillPurchase(
     if (existing) return { ok: true, alreadyProcessed: true };
   }
 
-  // Mark purchase as completed
-  const { data: purchase, error: purchaseErr } = await supabase
+  console.log("InvoiceNumber from Cardcom:", invoiceNumber);
+
+  // Mark purchase as completed — include invoice_number in same update
+  // (invoice_number column added in migration 018, cast as any for TS)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: purchase, error: purchaseErr } = await (supabase as any)
     .from("purchases")
     .update({
-      status:      "completed",
-      cardcom_ref: internalDealNumber ?? null,
+      status:         "completed",
+      cardcom_ref:    internalDealNumber ?? null,
+      invoice_number: invoiceNumber ?? null,
     })
     .eq("id", purchaseId)
     .eq("status", "pending")   // only update pending — prevents overwriting refunds
@@ -56,19 +61,9 @@ async function fulfillPurchase(
     await supabase.from("error_logs").insert({
       context: "api/cardcom/webhook fulfillPurchase",
       error:   purchaseErr?.message ?? "Purchase not found or not pending",
-      payload: { purchaseId, internalDealNumber },
+      payload: { purchaseId, internalDealNumber, invoiceNumber },
     });
     return { ok: false };
-  }
-
-  // Save invoice number separately (column added in migration 018,
-  // not yet in generated types — cast as any)
-  if (invoiceNumber) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
-      .from("purchases")
-      .update({ invoice_number: invoiceNumber })
-      .eq("id", purchase.id);
   }
 
   // Fire PURCHASE_COMPLETED — drives state machine + downstream sequences
