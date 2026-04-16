@@ -56,6 +56,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
 
         headline={<>7 ימים. מסר אחד.<br /><em>תוצאות שאתה רואה.</em></>}
         heroSub="7 ימים - מסר אחד ביום - תהליך שמשנה את הדרך שאתה מציג את עצמך"
+        vimeoId="1183365127"
         definitionBlock="אתגר 7 הימים הוא תוכנית אינטנסיבית של שיטת TrueSignal שמלמדת בעלי עסקים לדייק את ה-Signal שלהם תוך שבוע. בכל יום משימה ממוקדת אחת (20-30 דקות), פידבק אישי בקהילה, ובסוף יוצאים עם מסר ברור, מערכת תוכן ושיחת מכירה שעובדת."
         stats={[
           { val: "7",    label: "ימי אתגר" },
