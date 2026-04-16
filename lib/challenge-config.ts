@@ -26,7 +26,7 @@ export const CHALLENGE_DAYS: ChallengeDay[] = [
   },
   {
     day: 2,
-    videoId: "1149821176",
+    videoId: "1146553292",
     title: "הלקוח האידיאלי שלך",
     duration: 6,
     aspectRatio: "9:16",
