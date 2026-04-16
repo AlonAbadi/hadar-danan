@@ -246,69 +246,77 @@ export default function ChallengePlayer({
 
   // ── Video area ───────────────────────────────────────────
   const VideoArea = () => {
-    // 16:9 → paddingTop 56.25%, 9:16 → paddingTop 177.78%
-    const paddingTop = is916 ? "177.78%" : "56.25%";
+    // Portrait (9:16) reels are capped at 340px wide so they don't fill the whole viewport.
+    // Landscape (16:9) session videos fill the full content column.
+    const paddingTop  = is916 ? "177.78%" : "56.25%";
+    const outerStyle: React.CSSProperties = is916
+      ? { maxWidth: 340, margin: "0 auto", width: "100%" }
+      : {};
 
     if (isLocked || day8Locked) {
       return (
-        <div style={{
-          borderRadius: 12, overflow: "hidden",
-          border: "1px solid #2C323E", background: "#0D1219",
-          position: "relative", paddingTop,
-        }}>
+        <div style={outerStyle}>
           <div style={{
-            position: "absolute", inset: 0,
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", gap: 12,
+            borderRadius: 12, overflow: "hidden",
+            border: "1px solid #2C323E", background: "#0D1219",
+            position: "relative", paddingTop,
           }}>
-            <span style={{ fontSize: 28 }}>🔒</span>
-            {day8Locked ? (
-              <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700, textAlign: "center", padding: "0 16px" }}>
-                מפגש הסיום יפתח לאחר שתסיים את יום 7
-              </div>
-            ) : countdown ? (
-              <>
-                <div style={{ fontSize: 13, color: "#9E9990", fontWeight: 700 }}>נפתח בעוד</div>
-                <div style={{
-                  fontSize: 24, fontWeight: 800, color: "#E8B94A",
-                  fontVariantNumeric: "tabular-nums", direction: "ltr",
-                }}>
-                  {countdown}
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center", gap: 12,
+            }}>
+              <span style={{ fontSize: 28 }}>🔒</span>
+              {day8Locked ? (
+                <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700, textAlign: "center", padding: "0 16px" }}>
+                  מפגש הסיום יפתח לאחר שתסיים את יום 7
                 </div>
-              </>
-            ) : (
-              <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>היום נעול</div>
-            )}
+              ) : countdown ? (
+                <>
+                  <div style={{ fontSize: 13, color: "#9E9990", fontWeight: 700 }}>נפתח בעוד</div>
+                  <div style={{
+                    fontSize: 24, fontWeight: 800, color: "#E8B94A",
+                    fontVariantNumeric: "tabular-nums", direction: "ltr",
+                  }}>
+                    {countdown}
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>היום נעול</div>
+              )}
+            </div>
           </div>
         </div>
       );
     }
 
     return (
-      <div style={{
-        borderRadius: 12, overflow: "hidden",
-        border: "1px solid #2C323E", background: "#000",
-        position: "relative", paddingTop,
-      }}>
-        {isPlaceholder ? (
-          <div style={{
-            position: "absolute", inset: 0,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: "#0D1219",
-          }}>
-            <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>הסרטון יעלה בקרוב</div>
-          </div>
-        ) : (
-          <iframe
-            ref={iframeRef}
-            key={activeDay}
-            src={`https://player.vimeo.com/video/${dayData.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
-            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-            referrerPolicy="strict-origin-when-cross-origin"
-            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-            title={dayData.title}
-          />
-        )}
+      <div style={outerStyle}>
+        <div style={{
+          borderRadius: 12, overflow: "hidden",
+          border: "1px solid #2C323E", background: "#000",
+          position: "relative", paddingTop,
+        }}>
+          {isPlaceholder ? (
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "#0D1219",
+            }}>
+              <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>הסרטון יעלה בקרוב</div>
+            </div>
+          ) : (
+            <iframe
+              ref={iframeRef}
+              key={activeDay}
+              src={`https://player.vimeo.com/video/${dayData.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+              allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+              referrerPolicy="strict-origin-when-cross-origin"
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+              title={dayData.title}
+            />
+          )}
+        </div>
       </div>
     );
   };
