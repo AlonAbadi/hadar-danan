@@ -224,7 +224,7 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
   if (phase === "idle") {
     if (quizUserId) {
       return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3" style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
           <button
             onClick={() => hasPhone ? doCheckout(quizUserId) : setPhase("phone")}
             className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold"
