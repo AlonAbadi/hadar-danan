@@ -110,8 +110,8 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | `/hive/members` | Hive members area | - | Auth + hive_status=active gated, `HiveMembersClient` |
 | `/hive/terms` | Hive membership legal terms | - | Static, full Hebrew legal text |
 | `/quiz` | 3-question diagnostic quiz | - | Routes user to right product, saves to `quiz_results` |
-| `/account` | Personal area | - | Auth-gated — purchases, hive status, credit balance |
-| `/account/redeem` | Credit redemption | - | Apply accumulated credit to next purchase |
+| `/account` | Personal area | - | Auth-gated — purchases, hive status |
+| `/account/redeem` | Credit redemption | - | ~~Credit system removed — page unused~~ |
 | `/my` | Legacy personal area redirect | - | Redirects to `/account` |
 | `/login` | Login page | - | Email/password + Google OAuth |
 | `/signup` | Signup page | - | Email/password + Google OAuth |
@@ -260,7 +260,7 @@ All templates: `lib/email/templates.ts` → `TEMPLATES` map.
 | `/api/book` | POST | Book session slot (strategy / premium / partnership). Returns `{ booking_id, user_id }` |
 | `/api/premium-lead` | POST | Save premium lead |
 | `/api/partnership-lead` | POST | Save partnership lead (step 1 of `PartnershipBookingFlow`) |
-| `/api/user/credit` | GET | Fetch accumulated credit for email |
+| `/api/user/credit` | GET | ~~Fetch accumulated credit for email~~ — credit system removed, endpoint unused |
 | `/api/hive/check` | POST | Check ₪29 tier eligibility (has completed purchase?) |
 | `/api/hive/join` | POST | Join hive — sets hive fields, enqueues emails, stubs Cardcom recurring |
 | `/api/hive/cancel` | POST | Cancel hive — sets cancelled_at, detects 14-day refund window |
@@ -371,14 +371,7 @@ Transactional email is sent via Resend from `noreply@beegood.online`. This is a 
 
 ## Credit system
 
-Every completed purchase earns credit equal to the amount paid. Credit is applied to the next purchase.
-
-- **Formula:** Credit = `amount_paid` (or `amount` if `amount_paid` is null) of the **most recent completed non-hive purchase**. Hive subscription purchases (`hive_starter_160`, `hive_pro_280`, `hive_elite_480`) are excluded from credit calculation.
-- **Helper:** `lib/credit.ts` → `getUserCredit(email)` — returns credit amount
-- **API:** `/api/user/credit?email=...` — used by `/account`
-- **Redemption:** `/account/redeem` — user selects next product, credit is deducted from checkout total
-- **Column:** `purchases.amount_paid` (migration 016) — stores actual amount after credit/discounts (may differ from `amount`)
-- Credit is NOT transferable and does NOT expire
+**REMOVED (April 2026).** The credit system has been fully disabled. Customers are always charged the full list price. `lib/credit.ts` and `/api/user/credit` still exist in the codebase but are no longer called from any product page or checkout route. `PERMANENT_DISCOUNTS` map removed from `/api/checkout`. `AbandonCheckoutPopup` removed from all product pages. Do not re-introduce discounts without explicit instruction.
 
 ---
 
@@ -517,9 +510,8 @@ WHATSAPP_GROUP_URL=
 - **/training/watch** — free training watch page with Vimeo embed, PageViewTracker, ProductsSection (excludeTraining=true)
 - **/test** — ₪1 test product for Cardcom testing; subtle footer link from /challenge; product_type `test_1` in DB
 - **Course content page** — `/course/content` fully implemented with `CoursePlayer` — 8 modules, 16 lessons, Vimeo embed, video event tracking, auth-gated
-- **Challenge content page** — `/challenge/content` implemented with `ChallengePlayer` — 7-day Reels content, auth-gated
-- **Account page** — `/account` replaces `/my` (which now redirects). Shows purchases, hive status, credit balance. Auth-gated via Supabase session.
-- **Credit redemption** — `/account/redeem` — select next product, credit applied at checkout. `purchases.amount_paid` stores actual amount after discount.
+- **Challenge content page** — `/challenge/content` implemented with `ChallengePlayer` — 7-day Reels content, auth-gated. Days 1–7 have real Vimeo IDs in `lib/challenge-config.ts`; day 0 (opening) and day 8 (closing) are still PLACEHOLDER.
+- **Account page** — `/account` replaces `/my` (which now redirects). Shows purchases, hive status. Auth-gated via Supabase session.
 - **Hive members area** — `/hive/members` gated by auth + `hive_status=active`. Tier-appropriate content from `hive_content` table. Upgrade prompts for lower tiers.
 - **Stats section** — homepage social proof strip ("250+ עסקים", "4 שנים", "97% ממליצים") with gold animated counters
 - **OG image** — static `/public/og-image.jpg` (1200×630). OG metadata lives exclusively in `app/layout.tsx`.
@@ -534,6 +526,10 @@ WHATSAPP_GROUP_URL=
 - **Account page redesign (April 8, 2026)** — tabs: Profile, Purchases, Hive. Completed purchases in dedicated tab. `PendingPaymentCallout` banner shows pending purchases with "השלם תשלום" resume button + "בטל" cancel link. Quiz recommendation shown in Profile tab via `QuizRecommendationCard` from `lib/quiz-config.ts`.
 - **Resume payment + cancel pending purchase** — `PendingPaymentCallout` (`app/account/AccountClient.tsx`) calls `/api/checkout` to resume, or `/api/purchases/[id]/cancel` to cancel. **CRITICAL:** passes `userData.id` (public.users UUID), NOT `authUser.id` (Supabase Auth UUID) — these are different.
 - **Communication preferences in Profile tab** — `/account` Profile tab has separate "העדפות תקשורת" card with phone field + iOS-style marketing consent toggle. Phone was moved OUT of "פרטים אישיים". Save is disabled until dirty. Uses `POST /api/user/update-profile` with partial-update pattern.
+- **Discounts + popups fully removed (April 2026)** — `AbandonCheckoutPopup` removed from all product pages (/challenge, /workshop, /course, /strategy). `PERMANENT_DISCOUNTS` map removed from `/api/checkout`. Credit system disabled sitewide — all checkouts charge full list price. `lib/credit.ts` still exists but is unused.
+- **`vimeoId` prop on `ProductLandingPage`** — optional `vimeoId?: string` prop renders a 9:16 portrait Vimeo embed (maxWidth: 260px) in the VSL slot. Used on: /strategy (`1183710499`), /challenge (`1183365127`), /training (`1182657741`).
+- **Mobile navbar logo** — `beegoodtxt.png` centered in mobile top bar (`MobileNav.tsx`) with gold glow filter. Desktop nav has no logo image.
+- **Challenge day videos (1–7) live** — all 7 daily Reels videos populated in `lib/challenge-config.ts` with real Vimeo IDs. Portrait 9:16 sizing fixed in `ChallengePlayer` with `maxWidth: 340px` wrapper.
 
 ---
 
@@ -545,7 +541,7 @@ WHATSAPP_GROUP_URL=
 | WhatsApp group link for Hive | Need group URL | Update placeholder in hive_welcome email template |
 | Hive Zoom link | Content | Update placeholder in hive_welcome email template |
 | Real course video links | Content production | Replace Vimeo placeholders in `CoursePlayer` with real lesson IDs |
-| Real challenge video links | Content production | Replace Vimeo placeholders in `ChallengePlayer` with real video IDs |
+| Challenge day 0 + day 8 videos | Content production | Replace PLACEHOLDER videoId in `lib/challenge-config.ts` for opening + closing sessions |
 | Real hive_content rows | Content | Insert rows into `hive_content` table via Supabase dashboard |
 | Hive AI matching system | Future feature | Designed as "בקרוב" placeholder on /hive page |
 | WhatsApp API for cart abandonment | Provider selection needed | Choose from: Twilio, Green API, Infobip, or Meta direct. Connect to `CHECKOUT_STARTED` event sequence. |
