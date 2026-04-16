@@ -253,7 +253,7 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
     }
 
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
         <button
           onClick={() => setPhase("form")}
           className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold"
