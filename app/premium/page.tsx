@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { PremiumBookingFlow } from "./PremiumBookingFlow";
-import { CreditBanner } from "@/components/landing/CreditBanner";
-import { getUserCredit } from "@/lib/credit";
 import { createServerClient } from "@/lib/supabase/server";
 import { PRODUCT_MAP } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
@@ -23,9 +21,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/premium" },
 };
 
-export default async function PremiumPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
-  const { email = "" } = await searchParams;
-  const credit        = email ? await getUserCredit(email) : 0;
+export default async function PremiumPage() {
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const price         = String(PRODUCT_MAP.premium_14000.price);
 
@@ -139,8 +135,6 @@ export default async function PremiumPage({ searchParams }: { searchParams: Prom
         "סמכות":    "16 סרטונים מקצועיים שמציגים את הידע שלך - בניית סמכות שאי אפשר לצקצק.",
       }}
 
-      creditNote={credit > 0 ? `יש לך זיכוי של ${credit} שקל - מקוזז אוטומטית` : undefined}
-
       faqSectionTitle="שאלות נפוצות על יום הצילום הפרמיום"
       faqs={PREMIUM_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
@@ -156,12 +150,11 @@ export default async function PremiumPage({ searchParams }: { searchParams: Prom
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <p style={{ fontSize: 52, fontWeight: 900, color: "#EDE9E1", margin: "0 0 4px", direction: "ltr" }}>₪14,000</p>
             <p style={{ color: "#9E9990", margin: 0 }}>+ מע״מ - כולל הכל מהאסטרטגיה ועד 3 חודשי ליווי</p>
-            <CreditBanner credit={credit} listPrice={PRODUCT_MAP.premium_14000.price} productName="יום הצילום הפרמיום" dark />
           </div>
           <PremiumBookingFlow
             bookedSlots={bookedSlots ?? []}
             price={price}
-            credit={credit}
+            credit={0}
             whatsappPhone={whatsappPhone}
           />
         </section>

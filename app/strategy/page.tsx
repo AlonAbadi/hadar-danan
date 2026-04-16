@@ -1,9 +1,6 @@
 import Link from "next/link";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { CallForm } from "@/app/call/CallForm";
-import { AbandonCheckoutPopup } from "@/components/landing/AbandonCheckoutPopup";
-import { CreditBanner } from "@/components/landing/CreditBanner";
-import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
@@ -23,11 +20,8 @@ export const metadata = {
   alternates: { canonical: "/strategy" },
 };
 
-export default async function StrategyPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
-  const { email = "" } = await searchParams;
-  const price          = String(PRODUCT_MAP.strategy_4000.price);
-  const credit         = email ? await getUserCredit(email) : 0;
-
+export default async function StrategyPage() {
+  const price   = String(PRODUCT_MAP.strategy_4000.price);
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   return (
@@ -45,7 +39,6 @@ export default async function StrategyPage({ searchParams }: { searchParams: Pro
         { name: "פגישת אסטרטגיה", url: `${APP_URL}/strategy` },
       ]} />
       <FAQSchema items={STRATEGY_FAQS} />
-      <AbandonCheckoutPopup product="strategy" />
       <ProductLandingPage
         productName="פגישת אסטרטגיה"
         price={PRODUCT_MAP.strategy_4000.price}
@@ -135,8 +128,6 @@ export default async function StrategyPage({ searchParams }: { searchParams: Pro
           "לקבל":    "בדיוק לזה הפגישה. תצא עם מסמך ברור ומוכן לביצוע.",
         }}
 
-        creditNote={credit > 0 ? `יש לך זיכוי של ${credit} שקל - מקוזז אוטומטית` : undefined}
-
         faqSectionTitle="שאלות נפוצות על פגישת האסטרטגיה"
         faqs={STRATEGY_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
@@ -163,14 +154,7 @@ export default async function StrategyPage({ searchParams }: { searchParams: Pro
             <div style={{ background: "#191F2B", border: "1px solid #2C323E", borderRadius: 16, padding: "28px 24px" }}>
               <h3 style={{ fontWeight: 800, fontSize: 18, color: "#EDE9E1", marginBottom: 8, marginTop: 0 }}>שלח/י פנייה</h3>
               <p style={{ color: "#9E9990", fontSize: 14, marginBottom: 20 }}>מלא/י את הטופס - נחזור אליך תוך 24 שעות לתיאום.</p>
-              <CreditBanner credit={credit} listPrice={PRODUCT_MAP.strategy_4000.price} productName="פגישת האסטרטגיה" dark />
-              <CallForm price={price} />
-              {credit > 0 && (
-                <p style={{ textAlign: "center", fontSize: 11, color: "rgba(201,150,74,0.75)", marginTop: 8 }}>
-                  הזיכוי מקוזז אוטומטית -{" "}
-                  <a href="/my" style={{ color: "rgba(201,150,74,0.75)", textDecoration: "underline" }}>בדוק באזור האישי</a>
-                </p>
-              )}
+                <CallForm price={price} />
             </div>
           </section>
         }

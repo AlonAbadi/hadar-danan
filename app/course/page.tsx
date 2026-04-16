@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { AbandonCheckoutPopup } from "@/components/landing/AbandonCheckoutPopup";
 import { CourseLandingClient } from "./CourseLandingClient";
-import { getUserCredit } from "@/lib/credit";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
@@ -20,11 +18,9 @@ const COURSE_FAQS = [
   { question: "האם הקורס מתעדכן?",              answer: "כן. כשהדר מוסיפה תכנים - אתה מקבל אותם ללא עלות נוספת. קנית פעם אחת, מרוויח לאורך זמן." },
 ];
 
-export default async function CoursePage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
-  const { email = "" } = await searchParams;
-  const whatsappPhone  = process.env.WHATSAPP_PHONE ?? "972539566961";
-  const credit         = email ? await getUserCredit(email) : 0;
-  const APP_URL        = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+export default async function CoursePage() {
+  const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
+  const APP_URL       = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   return (
     <>
@@ -41,7 +37,6 @@ export default async function CoursePage({ searchParams }: { searchParams: Promi
         { name: "דף הבית", url: APP_URL },
         { name: "קורס דיגיטלי", url: `${APP_URL}/course` },
       ]} />
-      <AbandonCheckoutPopup product="course_1800" />
       <p
         style={{
           maxWidth: 680,
@@ -56,7 +51,7 @@ export default async function CoursePage({ searchParams }: { searchParams: Promi
       >
         קורס בידול מותג אישי הוא קורס דיגיטלי של 8 מודולים ו-16 שיעורים המבוסס על שיטת TrueSignal. הקורס מלמד בעלי עסקים לאתר את הבידול האמיתי שלהם, לבנות מסר שמוכר ולהפוך תוכן ללידים. 3,500+ עסקים כבר יישמו את השיטה. גישה לנצח, ₪1,800 תשלום חד-פעמי.
       </p>
-      <CourseLandingClient credit={credit} whatsappPhone={whatsappPhone} email={email} />
+      <CourseLandingClient credit={0} whatsappPhone={whatsappPhone} email="" />
     </>
   );
 }

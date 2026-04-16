@@ -76,16 +76,6 @@ export async function POST(req: NextRequest) {
     .eq("id", user_id)
     .single();
 
-  // Permanent per-email discounts (fraction to deduct, e.g. 0.99 = 99% off)
-  const PERMANENT_DISCOUNTS: Record<string, number> = {
-    "alonabadi9@gmail.com":  0.99,
-    "goodtoseeya1@gmail.com": 0.999,
-  };
-  const discountRate    = PERMANENT_DISCOUNTS[userRow?.email ?? ""] ?? 0;
-  const effectivePrice  = discountRate > 0
-    ? Math.max(1, Math.round(listPrice * (1 - discountRate)))
-    : listPrice;
-
   // Cancel any existing pending purchases for this user+product combo
   // before creating a new one (prevents duplicate pending rows on retry)
   await supabase
@@ -95,64 +85,7 @@ export async function POST(req: NextRequest) {
     .eq("product", product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000")
     .eq("status", "pending");
 
-  // Credit = SUM of actual amounts paid across all completed purchases
-  const { data: completedPurchases } = await supabase
-    .from("purchases")
-    .select("amount")
-    .eq("user_id", user_id)
-    .eq("status", "completed");
-
-  const credit = (completedPurchases ?? []).reduce((sum, p) => sum + (p.amount ?? 0), 0);
-  // When a personal discount is active, credit is not applied —
-  // the user always pays the discounted price (minimum ₪1).
-  const amount = discountRate > 0
-    ? effectivePrice
-    : Math.max(0, effectivePrice - credit);
-
-  // If fully covered by credit, no payment needed — complete directly
-  if (amount === 0) {
-    const { data: freePurchase, error: freeErr } = await supabase
-      .from("purchases")
-      .insert({
-        user_id,
-        product: product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000",
-        amount: 0,
-        currency: "ILS",
-        status: "completed",
-      })
-      .select("id")
-      .single();
-
-    if (freeErr || !freePurchase) {
-      return NextResponse.json({ error: "DB error" }, { status: 500 });
-    }
-
-    await supabase.from("events").insert({
-      user_id,
-      type: "PURCHASE_COMPLETED",
-      metadata: { product, amount: 0, credit_applied: credit },
-    });
-
-    const productEvent =
-      product === "challenge_197" ? "CHALLENGE_PURCHASED"  :
-      product === "workshop_1080" ? "WORKSHOP_PURCHASED"   :
-      product === "course_1800"   ? "COURSE_PURCHASED"     : null;
-
-    if (productEvent) {
-      await supabase.from("events").insert({
-        user_id,
-        type: productEvent,
-        metadata: { product, amount: 0 },
-      });
-    }
-
-    await supabase.from("users").update({ status: "buyer" }).eq("id", user_id).eq("status", "high_intent");
-
-    return NextResponse.json({
-      url: `${appUrl}/${product.replace("_197", "").replace("_1080", "").replace("_1800", "").replace("_4000", "")}/success?purchase=${freePurchase.id}`,
-      free: true,
-    });
-  }
+  const amount = listPrice;
 
   // Create a pending purchase record for idempotency
   const { data: purchase, error: purchaseErr } = await supabase
