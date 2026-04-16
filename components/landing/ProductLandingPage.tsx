@@ -131,7 +131,7 @@ function VSL({ videoId, productName }: { videoId?: string; productName: string }
       }}>REELS</div>
       <div style={{ aspectRatio: '9/16', borderRadius: 16, overflow: 'hidden' }}>
         <iframe
-          src={`https://player.vimeo.com/video/${videoId}?autoplay=0&title=0&byline=0&portrait=0&cc=1`}
+          src={`https://player.vimeo.com/video/${videoId}?autoplay=0&loop=0&title=0&byline=0&portrait=0&cc=1`}
           style={{ width: '100%', height: '100%', border: 'none' }}
           allow="autoplay; fullscreen"
           title={productName}
