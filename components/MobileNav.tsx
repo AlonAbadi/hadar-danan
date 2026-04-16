@@ -149,7 +149,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
             alt="beegood"
             width={64}
             height={16}
-            style={{ opacity: 0.6, height: 16, width: "auto" }}
+            style={{ opacity: 0.7, height: 22, width: "auto" }}
           />
         </div>
 
