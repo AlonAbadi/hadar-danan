@@ -32,7 +32,7 @@ export interface ProductLandingPageProps {
   heroSub?:   string;
   vslVideoId?: string;
   vimeoId?: string;
-  stats?:     { val: string; label: string }[];
+  stats?:     { val: React.ReactNode; label: string }[];
   heroExtra?: React.ReactNode;
 
   problemItems:  { icon: string; text: React.ReactNode }[];

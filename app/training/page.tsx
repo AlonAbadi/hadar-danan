@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { SignupForm } from "@/components/landing/SignupForm";
+import { TrainingViewCounter } from "@/app/training/watch/TrainingViewCounter";
+import { getTrainingViewCount } from "@/lib/training-views";
 
 export const metadata: Metadata = {
   title: "הדרכה חינמית | הדר דנן",
@@ -8,7 +10,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/training" },
 };
 
-export default function TrainingPage() {
+export default async function TrainingPage() {
+  const viewCount = await getTrainingViewCount();
+
   return (
     <ProductLandingPage
       productName="הדרכה חינמית"
@@ -20,9 +24,9 @@ export default function TrainingPage() {
       headline={<>הדרכה חינמית. <em>הצעד הראשון</em> לבידול שלך.</>}
       heroSub="הדרכה של 20 דקות. בלי ציוד, בלי ניסיון, בלי תקציב. רק בהירות אמיתית על הפער בין מי שאתה לבין מה שהעסק שלך משדר."
       stats={[
-        { val: "20",  label: "דקות" },
-        { val: "0",   label: "עלות" },
-        { val: "250+", label: "עסקים השתמשו" },
+        { val: "20", label: "דקות" },
+        { val: "0",  label: "עלות" },
+        { val: <TrainingViewCounter initialCount={viewCount} />, label: "צפו בהדרכה" },
       ]}
 
       problemItems={[

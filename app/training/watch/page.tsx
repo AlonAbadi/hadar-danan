@@ -4,8 +4,7 @@ import { ProductsSection } from "@/components/ProductsSection";
 import { PageViewTracker } from "./PageViewTracker";
 import { VimeoTracker } from "./VimeoTracker";
 import { WatchGreeting } from "./WatchPersonalized";
-import { TrainingViewCounter } from "./TrainingViewCounter";
-import { getTrainingViewCount } from "@/lib/training-views";
+import { ViewTracker } from "./ViewTracker";
 
 export const metadata: Metadata = {
   title: "הדרכה חינמית - צפייה | הדר דנן",
@@ -13,12 +12,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/training/watch" },
 };
 
-export default async function TrainingWatchPage() {
-  const viewCount = await getTrainingViewCount();
-
+export default function TrainingWatchPage() {
   return (
     <main dir="rtl" className="min-h-screen font-assistant" style={{ background: "#0D1018" }}>
       <PageViewTracker />
+      {/* Records +1 view on every page load — count displayed on /training */}
+      <ViewTracker />
 
       {/* ══════════════════════════════════════════════════════
           1. VIDEO HERO
@@ -44,32 +43,12 @@ export default async function TrainingWatchPage() {
           הדרכה של כ־20 דקות. למה השיווק שלך לא עובד - ומה עושים עם זה.
         </p>
 
-        {/* Stats strip */}
-        <div className="stats-strip" style={{ maxWidth: 480, margin: "0 auto 32px" }}>
-          <div className="hero-stats">
-            <div>
-              <div className="stat-val">20</div>
-              <div className="stat-label">דקות</div>
-            </div>
-            <div>
-              <div className="stat-val">0</div>
-              <div className="stat-label">עלות</div>
-            </div>
-            <div>
-              <div className="stat-val">
-                <TrainingViewCounter initialCount={viewCount} />
-              </div>
-              <div className="stat-label">צפו בהדרכה</div>
-            </div>
-          </div>
-        </div>
-
         {/* Vimeo embed */}
         <div style={{ maxWidth: 860, margin: "0 auto" }}>
           <div style={{ padding: "56.25% 0 0 0", position: "relative" }}>
             <iframe
               id="vimeo-training"
-              src="https://player.vimeo.com/video/1178865564?badge=0&autopause=0&player_id=0&app_id=58479&texttrack=he"
+              src="https://player.vimeo.com/video/1178865564?badge=0&autopause=0&loop=0&player_id=0&app_id=58479&texttrack=he"
               frameBorder="0"
               allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
