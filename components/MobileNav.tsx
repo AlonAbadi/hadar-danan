@@ -153,8 +153,8 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
               height: 22,
               width: "auto",
               opacity: 0.92,
-              marginTop: 5,
-              filter: "brightness(1.35) drop-shadow(0 0 6px rgba(232,185,74,0.55))",
+              marginTop: 6,
+              filter: "brightness(1.2) drop-shadow(0 0 6px rgba(232,185,74,0.55))",
             }}
           />
         </div>
