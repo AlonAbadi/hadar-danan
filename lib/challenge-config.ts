@@ -42,7 +42,7 @@ export const CHALLENGE_DAYS: ChallengeDay[] = [
   },
   {
     day: 4,
-    videoId: "PLACEHOLDER",
+    videoId: "1147280995",
     title: "הסיפור שמחבר",
     duration: 7,
     aspectRatio: "9:16",
