@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
+import Script from 'next/script';
 
 // ── Design tokens ──────────────────────────────────────────────
 const BG         = '#080C14';
@@ -30,6 +31,7 @@ export interface ProductLandingPageProps {
   headline:   React.ReactNode;
   heroSub?:   string;
   vslVideoId?: string;
+  vimeoId?: string;
   stats?:     { val: string; label: string }[];
   heroExtra?: React.ReactNode;
 
@@ -509,7 +511,7 @@ function SecTitle({ children, sub }: { children: React.ReactNode; sub?: string }
 // ── Main component ─────────────────────────────────────────────
 export default function ProductLandingPage({
   productName, price, originalPrice, checkoutHref,
-  headline, heroSub, vslVideoId, stats, heroExtra,
+  headline, heroSub, vslVideoId, vimeoId, stats, heroExtra,
   problemItems, agitationText,
   solutionTitle, solutionDesc, solutionItems,
   notForItems, forItems,
@@ -589,9 +591,33 @@ export default function ProductLandingPage({
 
         <h1 className="hero-hook">{headline}</h1>
 
-        <div className="vsl-wrap">
-          <VSL videoId={vslVideoId} productName={productName} />
-        </div>
+        {vimeoId ? (
+          <div className="vsl-wrap">
+            <div style={{ maxWidth: 260, margin: '0 auto', position: 'relative' }}>
+              <div style={{
+                position: 'relative',
+                paddingTop: '177.78%',
+                borderRadius: 16,
+                overflow: 'hidden',
+                background: '#141820',
+              }}>
+                <iframe
+                  src={`https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                  title="VSL"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <Script src="https://player.vimeo.com/api/player.js" strategy="afterInteractive" />
+          </div>
+        ) : (
+          <div className="vsl-wrap">
+            <VSL videoId={vslVideoId} productName={productName} />
+          </div>
+        )}
 
         <div style={{ textAlign: 'center' }}>
           {ctaSlot ? (
