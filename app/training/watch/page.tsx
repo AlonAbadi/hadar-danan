@@ -4,6 +4,8 @@ import { ProductsSection } from "@/components/ProductsSection";
 import { PageViewTracker } from "./PageViewTracker";
 import { VimeoTracker } from "./VimeoTracker";
 import { WatchGreeting } from "./WatchPersonalized";
+import { TrainingViewCounter } from "./TrainingViewCounter";
+import { getTrainingViewCount } from "@/lib/training-views";
 
 export const metadata: Metadata = {
   title: "הדרכה חינמית - צפייה | הדר דנן",
@@ -11,7 +13,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/training/watch" },
 };
 
-export default function TrainingWatchPage() {
+export default async function TrainingWatchPage() {
+  const viewCount = await getTrainingViewCount();
+
   return (
     <main dir="rtl" className="min-h-screen font-assistant" style={{ background: "#0D1018" }}>
       <PageViewTracker />
@@ -39,6 +43,26 @@ export default function TrainingWatchPage() {
         <p style={{ color: "#9E9990", fontSize: "1rem", marginBottom: 32 }}>
           הדרכה של כ־20 דקות. למה השיווק שלך לא עובד - ומה עושים עם זה.
         </p>
+
+        {/* Stats strip */}
+        <div className="stats-strip" style={{ maxWidth: 480, margin: "0 auto 32px" }}>
+          <div className="hero-stats">
+            <div>
+              <div className="stat-val">20</div>
+              <div className="stat-label">דקות</div>
+            </div>
+            <div>
+              <div className="stat-val">0</div>
+              <div className="stat-label">עלות</div>
+            </div>
+            <div>
+              <div className="stat-val">
+                <TrainingViewCounter initialCount={viewCount} />
+              </div>
+              <div className="stat-label">צפו בהדרכה</div>
+            </div>
+          </div>
+        </div>
 
         {/* Vimeo embed */}
         <div style={{ maxWidth: 860, margin: "0 auto" }}>
