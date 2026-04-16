@@ -18,7 +18,7 @@ export const CHALLENGE_DAYS: ChallengeDay[] = [
   },
   {
     day: 1,
-    videoId: "PLACEHOLDER",
+    videoId: "1146491419",
     title: "בהירות — למה אתה עושה מה שאתה עושה",
     duration: 7,
     aspectRatio: "9:16",
