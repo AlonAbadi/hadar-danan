@@ -142,6 +142,15 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
           </Link>
         ))}
 
+        {/* BeeGood text logo separator */}
+        <Image
+          src="/beegoodtxt.png"
+          alt="beegood"
+          width={80}
+          height={20}
+          style={{ opacity: 0.65, height: 20, width: "auto", flexShrink: 0, margin: "0 4px" }}
+        />
+
         {/* Dropdown - מסלולים */}
         <div
           style={{ position: "relative" }}

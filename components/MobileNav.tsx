@@ -142,8 +142,16 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
           )}
         </div>
 
-        {/* SPACER */}
-        <div style={{ flex: 1 }} />
+        {/* CENTER - beegood text logo */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Image
+            src="/beegoodtxt.png"
+            alt="beegood"
+            width={64}
+            height={16}
+            style={{ opacity: 0.6, height: 16, width: "auto" }}
+          />
+        </div>
 
         {/* FAR RIGHT — text + bee logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
