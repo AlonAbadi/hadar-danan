@@ -426,7 +426,7 @@ export default async function LandingPage() {
         {/* ══════════════════════════════════════════════════════
             7. FOOTER
         ══════════════════════════════════════════════════════ */}
-        <footer className="px-6 py-12" style={{ background: "#101520" }}>
+        <footer className="px-6 py-12" style={{ background: "#101520", paddingBottom: "100px" }}>
           <div className="max-w-5xl mx-auto flex flex-col gap-8">
 
             {/* Credit CTA */}
