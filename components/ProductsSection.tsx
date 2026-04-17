@@ -141,7 +141,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         </div>
 
         {/* ── Premium grid ── */}
-        <div className="nf-premium-grid" style={{ maxWidth: 780, margin: "16px auto", padding: "0 24px" }}>
+        <div className="nf-premium-grid" style={{ maxWidth: 960, margin: "16px auto", padding: "0 24px" }}>
           <a href="/premium" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
             <img src="/shooting.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "15% 5%" }} />
             <div style={{ position: "absolute", inset: 0, background: overlay }} />
@@ -162,6 +162,17 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
               <div style={nameStyle}>שותפות אסטרטגית</div>
               <p style={descStyle}>למשפיעניות וחברות שרוצות שותף לדרך</p>
               <span style={ctaStyle}>בדוק התאמה ←</span>
+            </div>
+          </a>
+          <a href="/atelier" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(145deg, #1A1E2C 0%, #0D1018 50%, #101520 100%)" }} />
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "radial-gradient(ellipse at 50% 30%, rgba(201,150,74,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", top: 14, left: 14, fontSize: 11, fontWeight: 700, color: "#C9964A", background: "rgba(201,150,74,0.15)", border: "1px solid rgba(201,150,74,0.3)", borderRadius: 6, padding: "4px 10px", letterSpacing: "0.08em", zIndex: 2 }}>ATELIER</div>
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
+              <div style={{ ...priceStyle, fontSize: 15 }}>בהתאמה אישית</div>
+              <div style={nameStyle}>beegood atelier</div>
+              <p style={descStyle}>למשפיעניות שרוצות להפוך למנהיגות תרבותיות - עולם שלם תחת הדומיין שלך</p>
+              <span style={{ ...ctaStyle, borderColor: "rgba(201,150,74,0.45)" }}>לבדיקת התאמה ←</span>
             </div>
           </a>
         </div>
@@ -247,7 +258,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         }
         .nf-premium-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(3, 1fr);
           gap: 14px;
         }
         @media (max-width: 768px) {

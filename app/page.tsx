@@ -10,7 +10,7 @@ import { StatsSection } from "@/components/landing/StatsSection";
 import { ProductsSection } from "@/components/ProductsSection";
 import HomeStickyBar from "@/components/home/HomeStickyBar";
 import SocialProofStrip from "@/components/SocialProofStrip";
-import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Star } from "lucide-react";
+import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Star, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
@@ -38,8 +38,9 @@ const ROW1_PRODUCTS = [
 ];
 
 const ROW2_PRODUCTS = [
-  { title: "יום צילום פרמיום",  who: "לעסקים שרוצים תוצאה מלאה: אסטרטגיה + הפקה + עריכה",           price: "₪14,000",        priceNote: "+ מע״מ",  cta: "לפרטים ←",      href: "/premium",     icon: Video, tag: "יום הפקה" },
-  { title: "שותפות אסטרטגית",   who: "למשפיעניות וחברות שרוצות שותף לדרך - לא ספק שירות",           price: "₪10,000-30,000", priceNote: "/ חודש",  cta: "בדוק התאמה ←",  href: "/partnership", icon: Users, tag: "על בסיס מקום פנוי" },
+  { title: "יום צילום פרמיום",  who: "לעסקים שרוצים תוצאה מלאה: אסטרטגיה + הפקה + עריכה",           price: "₪14,000",        priceNote: "+ מע״מ",  cta: "לפרטים ←",         href: "/premium",     icon: Video,     tag: "יום הפקה" },
+  { title: "שותפות אסטרטגית",   who: "למשפיעניות וחברות שרוצות שותף לדרך - לא ספק שירות",           price: "₪10,000-30,000", priceNote: "/ חודש",  cta: "בדוק התאמה ←",     href: "/partnership", icon: Users,     tag: "על בסיס מקום פנוי" },
+  { title: "beegood atelier",   who: "למשפיעניות שרוצות להפוך למנהיגות תרבותיות - עולם שלם תחת הדומיין שלך", price: "בהתאמה אישית", priceNote: "", cta: "לבדיקת התאמה ←", href: "/atelier",     icon: Sparkles,  tag: "בוטיק · מספר מקומות מוגבל" },
 ];
 
 const TESTIMONIALS = [
