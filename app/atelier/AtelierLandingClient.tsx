@@ -313,7 +313,9 @@ export function AtelierLandingClient({ faqs }: Props) {
                 </div>
               </div>
               <div className="team-person">
-                <div className="team-photo-placeholder">[תמונה של הדר]</div>
+                <div className="team-photo-placeholder" style={{ padding: 0, overflow: "hidden" }}>
+                  <img src="/hadarprotrait.png" alt="הדר דנן" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                </div>
                 <div className="team-name">הדר דנן</div>
                 <div className="team-role">Creative · Strategy</div>
                 <div className="team-desc">
