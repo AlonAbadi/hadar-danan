@@ -309,7 +309,7 @@ export function AtelierLandingClient({ faqs }: Props) {
                   <img src="/alonimage.png" alt="אלון עבדי" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 </div>
                 <div className="team-name">אלון עבדי</div>
-                <div className="team-role">Strategy · Technology</div>
+                <div className="team-role">Strategy · Architecture</div>
                 <div className="team-desc">
                   חד, אינטואיטיבי, יודע לאסוף נקודות ולחבר אותן לתמונה שלמה. רואה מה שעוד לא נאמר ומתרגם אותו למבנה שעובד. עשרות שנות ניסיון עסקי, אסטרטגי וטכנולוגי - בונה את העולם שמחזיק את החזון.
                 </div>
