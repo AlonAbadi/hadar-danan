@@ -2,9 +2,6 @@ import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
 import { NextChallengeBadge } from "./NextChallengeBadge";
-import { AbandonCheckoutPopup } from "@/components/landing/AbandonCheckoutPopup";
-import { CreditBanner } from "@/components/landing/CreditBanner";
-import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
@@ -24,13 +21,10 @@ export const metadata = {
   alternates: { canonical: "/challenge" },
 };
 
-export default async function ChallengePage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
-  const { email = "" } = await searchParams;
+export default async function ChallengePage() {
   const price         = String(PRODUCT_MAP.challenge_197.price);
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
-  const credit        = email ? await getUserCredit(email) : 0;
-
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+  const APP_URL       = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   return (
     <>
@@ -47,11 +41,9 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         { name: "דף הבית", url: APP_URL },
         { name: "אתגר 7 הימים", url: `${APP_URL}/challenge` },
       ]} />
-      <AbandonCheckoutPopup product="challenge" />
       <ProductLandingPage
         productName="אתגר 7 הימים"
         price={PRODUCT_MAP.challenge_197.price}
-        originalPrice={397}
         checkoutHref="#cta"
 
         headline={<>7 ימים. מסר אחד.<br /><em>תוצאות שאתה רואה.</em></>}
@@ -140,8 +132,6 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
           "לא יודע":          "בדיוק לזה האתגר. כל יום צעד ברור ומוגדר.",
         }}
 
-        creditNote={credit > 0 ? `יש לך זיכוי של ${credit} שקל מרכישות קודמות - מקוזז אוטומטית` : undefined}
-
         faqSectionTitle="שאלות נפוצות על אתגר 7 הימים"
         faqs={CHALLENGE_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
@@ -150,18 +140,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
 
         whatsappNumber={whatsappPhone}
 
-        ctaSlot={
-          <>
-            <CreditBanner credit={credit} listPrice={PRODUCT_MAP.challenge_197.price} productName="האתגר 7 הימים" dark />
-            <ChallengeCTA price={price} whatsappPhone={whatsappPhone} credit={credit} />
-            {credit > 0 && (
-              <p style={{ textAlign: "center", fontSize: 11, color: "rgba(201,150,74,0.75)", marginTop: 8 }}>
-                הזיכוי מרכישות קודמות מקוזז אוטומטית -{" "}
-                <a href="/my" style={{ color: "rgba(201,150,74,0.75)", textDecoration: "underline" }}>בדוק באזור האישי</a>
-              </p>
-            )}
-          </>
-        }
+        ctaSlot={<ChallengeCTA price={price} whatsappPhone={whatsappPhone} credit={0} />}
       />
     </>
   );

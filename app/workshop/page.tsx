@@ -1,9 +1,6 @@
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { WorkshopCTA } from "./WorkshopCTA";
 import { NextWorkshopBadge } from "./NextWorkshopBadge";
-import { AbandonCheckoutPopup } from "@/components/landing/AbandonCheckoutPopup";
-import { CreditBanner } from "@/components/landing/CreditBanner";
-import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
@@ -23,13 +20,10 @@ export const metadata = {
   alternates: { canonical: "/workshop" },
 };
 
-export default async function WorkshopPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
-  const { email = "" } = await searchParams;
+export default async function WorkshopPage() {
   const price         = String(PRODUCT_MAP.workshop_1080.price);
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
-  const credit        = email ? await getUserCredit(email) : 0;
-
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+  const APP_URL       = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   return (
     <>
@@ -46,11 +40,9 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         { name: "דף הבית", url: APP_URL },
         { name: "סדנה יום אחד", url: `${APP_URL}/workshop` },
       ]} />
-      <AbandonCheckoutPopup product="workshop" />
       <ProductLandingPage
         productName="סדנה יום אחד"
         price={PRODUCT_MAP.workshop_1080.price}
-        originalPrice={1980}
         checkoutHref="#cta"
 
         headline={<>יום אחד. <em>בידול שמשנה</em> את כל השאר.</>}
@@ -137,8 +129,6 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
           "מסר":      "מודול 2 בסדנה בונה את המיתוג האישי שלך - מסר חד ובלתי נשכח.",
         }}
 
-        creditNote={credit > 0 ? `יש לך זיכוי של ${credit} שקל - מקוזז אוטומטית` : undefined}
-
         faqSectionTitle="שאלות נפוצות על הסדנה"
         faqs={WORKSHOP_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
@@ -147,18 +137,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
 
         whatsappNumber={whatsappPhone}
 
-        ctaSlot={
-          <>
-            <CreditBanner credit={credit} listPrice={PRODUCT_MAP.workshop_1080.price} productName="הסדנה יום אחד" dark />
-            <WorkshopCTA price={price} whatsappPhone={whatsappPhone} credit={credit} />
-            {credit > 0 && (
-              <p style={{ textAlign: "center", fontSize: 11, color: "rgba(201,150,74,0.75)", marginTop: 8 }}>
-                הזיכוי מקוזז אוטומטית -{" "}
-                <a href="/my" style={{ color: "rgba(201,150,74,0.75)", textDecoration: "underline" }}>בדוק באזור האישי</a>
-              </p>
-            )}
-          </>
-        }
+        ctaSlot={<WorkshopCTA price={price} whatsappPhone={whatsappPhone} credit={0} />}
       />
     </>
   );
