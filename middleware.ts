@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareClient } from "@/lib/supabase/middleware-client";
+import { parseHostToTenantSlug } from "@/lib/tenant";
 
 // Routes that require a valid Supabase session
 const PROTECTED_PREFIXES = ["/account", "/course/content", "/challenge/content", "/hive/members"];
@@ -43,6 +44,12 @@ function checkBasicAuth(request: NextRequest): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
+  // ── Tenant detection ─────────────────────────────────────────
+  const tenantSlug = parseHostToTenantSlug(request.headers.get("host"));
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-tenant-slug", tenantSlug);
+  const requestInit = { request: { headers: requestHeaders } };
+
   // ── Basic Auth for /admin/* ──────────────────────────────────
   if (pathname.startsWith("/admin")) {
     if (!checkBasicAuth(request)) return UNAUTHORIZED;
@@ -51,7 +58,7 @@ export async function middleware(request: NextRequest) {
   // ── Supabase session refresh ─────────────────────────────────
   // `response` may be replaced inside setAll() to forward updated request
   // cookies. All subsequent cookie writes go onto the final `response`.
-  let response = NextResponse.next({ request });
+  let response = NextResponse.next(requestInit);
 
   const supabase = createMiddlewareClient({
     getCookies() {
@@ -59,7 +66,7 @@ export async function middleware(request: NextRequest) {
     },
     setCookies(cookiesToSet) {
       cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-      response = NextResponse.next({ request });
+      response = NextResponse.next(requestInit);
       cookiesToSet.forEach(({ name, value, options }) =>
         response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
       );
