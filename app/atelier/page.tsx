@@ -36,13 +36,6 @@ export default async function AtelierPage() {
         { name: "דף הבית", url: APP_URL },
         { name: "beegood atelier", url: `${APP_URL}/atelier` },
       ]} />
-      <p style={{
-        maxWidth: 680, margin: "0 auto", padding: "28px 20px 0",
-        color: "#9E9990", fontSize: 16, lineHeight: 1.8,
-        textAlign: "center", fontFamily: "var(--font-assistant)",
-      }}>
-        beegood atelier הוא השירות הבוטיקי של beegood - אסטרטגיה, נרטיב ופלטפורמה דיגיטלית מלאה למשפיעניות נבחרות. עובדים לפי שיטת TrueSignal של הדר דנן ואלון עבדי, עם מספר מצומצם של לקוחות בכל זמן נתון. דמי כניסה חד-פעמיים + עמלה חודשית מהכנסות הפלטפורמה.
-      </p>
       <AtelierLandingClient faqs={ATELIER_FAQS} />
     </>
   );
