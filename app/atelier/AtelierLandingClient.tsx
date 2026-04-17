@@ -446,12 +446,6 @@ export function AtelierLandingClient({ faqs }: Props) {
         </div>
       </section>
 
-      {/* ═══ FOOTER NOTE ═══ */}
-      <div className="footer-note">
-        <p>© 2026 beegood · אלון עבדי + הדר דנן</p>
-        <p>beegood atelier · אסטרטגיה ופלטפורמה ללקוחות נבחרות</p>
-      </div>
-
     </div>
   );
 }
