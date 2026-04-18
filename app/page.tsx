@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import { parseVariant, AB_CONTENT } from "@/lib/ab";
+import { getTenant } from "@/lib/tenant";
 import { createServerClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/landing/PageTracker";
 import { CarouselWithDots } from "@/components/landing/CarouselWithDots";
@@ -64,12 +65,41 @@ const TESTIMONIALS = [
   },
 ];
 
+function renderTagline(tagline: string) {
+  const MARK = "TrueSignal©";
+  const idx  = tagline.indexOf(MARK);
+  if (idx === -1) return <>{tagline}</>;
+  return (
+    <>
+      {tagline.slice(0, idx)}
+      <span dir="ltr" style={{ unicodeBidi: "embed" }}>{MARK}</span>
+      {tagline.slice(idx + MARK.length)}
+    </>
+  );
+}
+
 export default async function LandingPage() {
   const cookieStore = await cookies();
   const variant = parseVariant(cookieStore.get("ab_variant")?.value);
   const content = AB_CONTENT[variant];
   const userCount = await getUserCount();
   const displayCount = Math.max(userCount + 250, 3500);
+
+  let footerTagline     = "אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | TrueSignal©";
+  let footerCompanyLine = "© 2026 הדר דנן בע״מ | ח.פ. 516791555 · כל הזכויות שמורות";
+  let footerAddressLine = "החילזון 5, רמת גן | 053-9566961";
+  try {
+    const tenant        = await getTenant();
+    const tenantContent = tenant.content ?? {};
+    const legal         = tenant.legal   ?? {};
+    footerTagline     = (tenantContent["tagline"]  as string)   ?? footerTagline;
+    const cn          = (legal["company_name"]   as string)   ?? "הדר דנן בע״מ";
+    const ci          = (legal["company_id"]     as string)   ?? "516791555";
+    const ad          = (legal["address"]        as string)   ?? "החילזון 5 רמת גן";
+    const ph          = (legal["phone"]          as string)   ?? "053-9566961";
+    footerCompanyLine = `© 2026 ${cn} | ח.פ. ${ci} · כל הזכויות שמורות`;
+    footerAddressLine = `${ad} | ${ph}`;
+  } catch { /* use fallbacks */ }
 
   return (
     <>
@@ -468,9 +498,9 @@ export default async function LandingPage() {
                 <a href="/terms" className="hover:text-white transition">תנאי שימוש</a>
                 <a href="/accessibility" className="hover:text-white transition">הצהרת נגישות</a>
               </div>
-              <p className="font-medium" style={{ color: "rgba(158,153,144,0.6)" }}>אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{unicodeBidi:"embed"}}>TrueSignal©</span></p>
-              <p>© 2026 הדר דנן בע״מ | ח.פ. 516791555 · כל הזכויות שמורות</p>
-              <p>החילזון 5, רמת גן | 053-9566961</p>
+              <p className="font-medium" style={{ color: "rgba(158,153,144,0.6)" }}>{renderTagline(footerTagline)}</p>
+              <p>{footerCompanyLine}</p>
+              <p>{footerAddressLine}</p>
               <p className="mt-1">
                 <a href="/unsubscribe" className="hover:text-white transition">לביטול הסכמה לדיוור</a>
               </p>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
+import { getTenant } from "@/lib/tenant";
 import { PremiumBookingFlow } from "./PremiumBookingFlow";
 import { createServerClient } from "@/lib/supabase/server";
 import { PRODUCT_MAP } from "@/lib/products";
@@ -32,6 +33,24 @@ export default async function PremiumPage() {
     .eq("status", "confirmed");
 
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+
+  let tenantName        = "הדר דנן";
+  let tenantTagline     = "אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | TrueSignal©";
+  let tenantCompanyLine = "© 2026 הדר דנן בע״מ | ח.פ. 516791555";
+  let tenantAddressLine = "החילזון 5, רמת גן | 053-9566961";
+  try {
+    const tenant  = await getTenant();
+    const content = tenant.content ?? {};
+    const legal   = tenant.legal   ?? {};
+    tenantName        = tenant.name                            ?? tenantName;
+    tenantTagline     = (content["tagline"]      as string)   ?? tenantTagline;
+    const cn          = (legal["company_name"]   as string)   ?? "הדר דנן בע״מ";
+    const ci          = (legal["company_id"]     as string)   ?? "516791555";
+    const ad          = (legal["address"]        as string)   ?? "החילזון 5 רמת גן";
+    const ph          = (legal["phone"]          as string)   ?? "053-9566961";
+    tenantCompanyLine = `© 2026 ${cn} | ח.פ. ${ci}`;
+    tenantAddressLine = `${ad} | ${ph}`;
+  } catch { /* use fallbacks */ }
 
   return (
     <>
@@ -159,6 +178,11 @@ export default async function PremiumPage() {
           />
         </section>
       }
+
+      tenantName={tenantName}
+      tenantTagline={tenantTagline}
+      tenantCompanyLine={tenantCompanyLine}
+      tenantAddressLine={tenantAddressLine}
     />
     </>
   );

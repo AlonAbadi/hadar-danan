@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
+import { getTenant } from "@/lib/tenant";
 import { HivePricingSection } from "./HivePricingSection";
 
 export const metadata: Metadata = {
@@ -8,7 +9,25 @@ export const metadata: Metadata = {
   alternates: { canonical: "/hive" },
 };
 
-export default function HivePage() {
+export default async function HivePage() {
+  let tenantName        = "הדר דנן";
+  let tenantTagline     = "אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | TrueSignal©";
+  let tenantCompanyLine = "© 2026 הדר דנן בע״מ | ח.פ. 516791555";
+  let tenantAddressLine = "החילזון 5, רמת גן | 053-9566961";
+  try {
+    const tenant  = await getTenant();
+    const content = tenant.content ?? {};
+    const legal   = tenant.legal   ?? {};
+    tenantName        = tenant.name                            ?? tenantName;
+    tenantTagline     = (content["tagline"]      as string)   ?? tenantTagline;
+    const cn          = (legal["company_name"]   as string)   ?? "הדר דנן בע״מ";
+    const ci          = (legal["company_id"]     as string)   ?? "516791555";
+    const ad          = (legal["address"]        as string)   ?? "החילזון 5 רמת גן";
+    const ph          = (legal["phone"]          as string)   ?? "053-9566961";
+    tenantCompanyLine = `© 2026 ${cn} | ח.פ. ${ci}`;
+    tenantAddressLine = `${ad} | ${ph}`;
+  } catch { /* use fallbacks */ }
+
   return (
     <ProductLandingPage
       productName="הכוורת"
@@ -76,6 +95,11 @@ export default function HivePage() {
       hideMicroCommitment
 
       priceSectionSlot={<HivePricingSection />}
+
+      tenantName={tenantName}
+      tenantTagline={tenantTagline}
+      tenantCompanyLine={tenantCompanyLine}
+      tenantAddressLine={tenantAddressLine}
     />
   );
 }

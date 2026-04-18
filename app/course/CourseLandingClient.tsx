@@ -53,13 +53,31 @@ function getResultMsg(answers: Record<number, string>): string {
   return msg;
 }
 
+const FALLBACK_TENANT_NAME = "הדר דנן";
+const FALLBACK_TAGLINE     = "אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | TrueSignal©";
+
+function renderTagline(tagline: string) {
+  const MARK = "TrueSignal©";
+  const idx  = tagline.indexOf(MARK);
+  if (idx === -1) return <>{tagline}</>;
+  return (
+    <>
+      {tagline.slice(0, idx)}
+      <span dir="ltr" style={{ unicodeBidi: "embed" }}>{MARK}</span>
+      {tagline.slice(idx + MARK.length)}
+    </>
+  );
+}
+
 interface Props {
   credit: number;
   whatsappPhone: string;
   email: string;
+  tenantName?:    string;
+  tenantTagline?: string;
 }
 
-export function CourseLandingClient({ credit, whatsappPhone, email }: Props) {
+export function CourseLandingClient({ credit, whatsappPhone, email, tenantName, tenantTagline }: Props) {
   const price = PRODUCT_MAP.course_1800.price;
   const wa    = `https://wa.me/${whatsappPhone}`;
 
@@ -514,8 +532,8 @@ export function CourseLandingClient({ credit, whatsappPhone, email }: Props) {
 
       {/* FOOTER */}
       <div className="lp-footer">
-        <div className="lp-footer-logo">הדר דנן</div>
-        <div className="lp-footer-signal">אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr">TrueSignal©</span></div>
+        <div className="lp-footer-logo">{tenantName ?? FALLBACK_TENANT_NAME}</div>
+        <div className="lp-footer-signal">{renderTagline(tenantTagline ?? FALLBACK_TAGLINE)}</div>
         <div className="lp-footer-links">
           <a href="/terms">תנאי שימוש</a>
           <a href="/privacy">מדיניות פרטיות</a>

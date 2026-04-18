@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CourseLandingClient } from "./CourseLandingClient";
+import { getTenant } from "@/lib/tenant";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
@@ -21,6 +22,15 @@ const COURSE_FAQS = [
 export default async function CoursePage() {
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const APP_URL       = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+
+  let tenantName    = "הדר דנן";
+  let tenantTagline = "אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | TrueSignal©";
+  try {
+    const tenant  = await getTenant();
+    const content = tenant.content ?? {};
+    tenantName    = tenant.name                          ?? tenantName;
+    tenantTagline = (content["tagline"] as string)       ?? tenantTagline;
+  } catch { /* use fallbacks */ }
 
   return (
     <>
@@ -51,7 +61,7 @@ export default async function CoursePage() {
       >
         קורס בידול מותג אישי הוא קורס דיגיטלי של 8 מודולים ו-16 שיעורים המבוסס על שיטת TrueSignal. הקורס מלמד בעלי עסקים לאתר את הבידול האמיתי שלהם, לבנות מסר שמוכר ולהפוך תוכן ללידים. 3,500+ עסקים כבר יישמו את השיטה. גישה לנצח, ₪1,800 תשלום חד-פעמי.
       </p>
-      <CourseLandingClient credit={0} whatsappPhone={whatsappPhone} email="" />
+      <CourseLandingClient credit={0} whatsappPhone={whatsappPhone} email="" tenantName={tenantName} tenantTagline={tenantTagline} />
     </>
   );
 }

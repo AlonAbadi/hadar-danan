@@ -4,6 +4,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Script from 'next/script';
 
+// ── Footer fallback constants ───────────────────────────────────
+const FALLBACK_TENANT_NAME    = "הדר דנן";
+const FALLBACK_TAGLINE        = "אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | TrueSignal©";
+const FALLBACK_COMPANY_LINE   = "© 2026 הדר דנן בע״מ | ח.פ. 516791555";
+const FALLBACK_ADDRESS_LINE   = "החילזון 5, רמת גן | 053-9566961";
+
 // ── Design tokens ──────────────────────────────────────────────
 const BG         = '#080C14';
 const CARD       = '#141820';
@@ -76,6 +82,11 @@ export interface ProductLandingPageProps {
   ctaSlot?:          React.ReactNode;
   priceSectionSlot?: React.ReactNode;
   bottomSlot?:       React.ReactNode;
+
+  tenantName?:        string;
+  tenantTagline?:     string;
+  tenantCompanyLine?: string;
+  tenantAddressLine?: string;
 }
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -138,6 +149,19 @@ function VSL({ videoId, productName }: { videoId?: string; productName: string }
         />
       </div>
     </div>
+  );
+}
+
+function renderTagline(tagline: string) {
+  const MARK = "TrueSignal©";
+  const idx  = tagline.indexOf(MARK);
+  if (idx === -1) return <>{tagline}</>;
+  return (
+    <>
+      {tagline.slice(0, idx)}
+      <span dir="ltr" style={{ unicodeBidi: "embed" }}>{MARK}</span>
+      {tagline.slice(idx + MARK.length)}
+    </>
   );
 }
 
@@ -526,6 +550,7 @@ export default function ProductLandingPage({
   finalTitle, finalSub,
   whatsappNumber,
   ctaSlot, priceSectionSlot, bottomSlot,
+  tenantName, tenantTagline, tenantCompanyLine, tenantAddressLine,
 }: ProductLandingPageProps) {
 
   const [stickyVisible, setStickyVisible] = useState(false);
@@ -921,9 +946,9 @@ export default function ProductLandingPage({
 
       {/* ── Footer ──────────────────────────────────────────────── */}
       <div className="lp-footer">
-        <div className="lp-footer-logo">הדר דנן</div>
+        <div className="lp-footer-logo">{tenantName ?? FALLBACK_TENANT_NAME}</div>
         <div className="lp-footer-signal">
-          אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr">TrueSignal©</span>
+          {renderTagline(tenantTagline ?? FALLBACK_TAGLINE)}
         </div>
         <div className="lp-footer-links">
           <a href="/terms">תנאי שימוש</a>
@@ -932,10 +957,10 @@ export default function ProductLandingPage({
           <a href="/accessibility">נגישות</a>
         </div>
         <div className="lp-footer-company">
-          © 2026 הדר דנן בע״מ | ח.פ. 516791555
+          {tenantCompanyLine ?? FALLBACK_COMPANY_LINE}
         </div>
         <div className="lp-footer-company">
-          החילזון 5, רמת גן | 053-9566961
+          {tenantAddressLine ?? FALLBACK_ADDRESS_LINE}
         </div>
       </div>
     </div>
