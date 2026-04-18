@@ -1,12 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getTenant } from "@/lib/tenant";
 
 export const metadata: Metadata = {
   title: "הצהרת נגישות | הדר דנן",
   description: "הצהרת נגישות האתר של הדר דנן בע״מ - עמידה בתקן ישראלי 5568 ו-WCAG 2.1 AA",
 };
 
-export default function AccessibilityPage() {
+export default async function AccessibilityPage() {
+  let companyName = "הדר דנן בע״מ";
+  let phone       = "053-9566961";
+  try {
+    const tenant = await getTenant();
+    const legal  = tenant.legal ?? {};
+    companyName = (legal["company_name"] as string) ?? companyName;
+    phone       = (legal["phone"]        as string) ?? phone;
+  } catch { /* use fallbacks */ }
+
+  // Hadar-specific Israeli phone format. Generalize when a non-Israeli tenant onboards.
+  // Converts "053-9566961" → "+972539566961" for the tel: href.
+  const phoneE164 = "+972" + phone.replace(/\D/g, "").replace(/^0/, "");
+
   return (
     <div className="min-h-screen font-assistant" style={{ background: "#101520", color: "#EDE9E1" }} dir="rtl">
       <main id="main-content" className="max-w-3xl mx-auto px-6 py-16">
@@ -33,7 +47,7 @@ export default function AccessibilityPage() {
               { term: "תקן",            def: "ת״י 5568 / WCAG 2.1" },
               { term: "רמת עמידה",      def: "AA" },
               { term: "תאריך הנגשה",   def: "מרץ 2026" },
-              { term: "גורם מנגיש",     def: "הדר דנן בע״מ" },
+              { term: "גורם מנגיש",     def: companyName },
             ].map(({ term, def }) => (
               <div key={term} className="flex gap-4 items-baseline pb-3" style={{ borderBottom: "1px solid #2C323E" }}>
                 <dt className="text-sm font-semibold w-36 flex-shrink-0" style={{ color: "#9E9990" }}>{term}</dt>
@@ -151,11 +165,11 @@ export default function AccessibilityPage() {
               <dt className="font-semibold flex-shrink-0">טלפון:</dt>
               <dd>
                 <a
-                  href="tel:+972539566961"
+                  href={`tel:${phoneE164}`}
                   className="underline hover:opacity-70 transition"
                   style={{ color: "#C9964A" }}
                 >
-                  053-9566961
+                  {phone}
                 </a>
               </dd>
             </div>

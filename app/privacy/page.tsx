@@ -1,10 +1,24 @@
 import Link from "next/link";
+import { getTenant } from "@/lib/tenant";
 
 export const metadata = {
   title: "מדיניות פרטיות | הדר דנן",
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  let companyName = "הדר דנן בע״מ";
+  let companyId   = "516791555";
+  let address     = "החילזון 5, רמת גן";
+  let phone       = "053-9566961";
+  try {
+    const tenant = await getTenant();
+    const legal  = tenant.legal ?? {};
+    companyName = (legal["company_name"] as string) ?? companyName;
+    companyId   = (legal["company_id"]   as string) ?? companyId;
+    address     = (legal["address"]      as string) ?? address;
+    phone       = (legal["phone"]        as string) ?? phone;
+  } catch { /* use fallbacks */ }
+
   return (
     <div
       dir="rtl"
@@ -149,9 +163,9 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="11. יצירת קשר">
-          <p>הדר דנן בע״מ | ח.פ. 516791555</p>
-          <p>כתובת: החילזון 5, רמת גן</p>
-          <p>טלפון: 053-9566961</p>
+          <p>{companyName} | ח.פ. {companyId}</p>
+          <p>כתובת: {address}</p>
+          <p>טלפון: {phone}</p>
           <p>אימייל: billing@hadardanan.co.il</p>
           <p>אתר: beegood.online</p>
         </Section>
