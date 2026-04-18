@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
           email, name, phone, status: "premium_lead" as const,
           ...(marketing_consent ? { marketing_consent: true, consent_at: new Date().toISOString() } : {}),
         },
-        { onConflict: "email", ignoreDuplicates: false }
+        { onConflict: "email,tenant_id", ignoreDuplicates: false }
       )
       .select("id")
       .single();

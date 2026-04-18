@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
           ...(marketing_consent ? { marketing_consent: true, consent_at: new Date().toISOString() } : {}),
         },
         {
-          onConflict: "email",
+          onConflict: "email,tenant_id",
           ignoreDuplicates: false, // update name/phone if they changed
         }
       )

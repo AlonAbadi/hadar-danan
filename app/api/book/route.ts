@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
           phone,
           last_seen_at: new Date().toISOString(),
         },
-        { onConflict: "email", ignoreDuplicates: false }
+        { onConflict: "email,tenant_id", ignoreDuplicates: false }
       )
       .select("id")
       .single();
