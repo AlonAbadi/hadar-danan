@@ -414,7 +414,7 @@ export default async function LandingPage() {
                       </div>
                       <div>
                         <p className="font-bold text-sm" style={{ color: "#EDE9E1" }}>{t.name}</p>
-                        <p className="text-xs mt-0.5" style={{ color: "#6B7080" }}>{t.date}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "#9E9990" }}>{t.date}</p>
                       </div>
                     </div>
                   </div>

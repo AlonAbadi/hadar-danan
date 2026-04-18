@@ -20,7 +20,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             <span style={{ color: "#EDE9E1" }}>כל אחד נמצא</span><br />
             <span className="text-gradient-gold">במקום אחר</span>
           </h2>
-          <p style={{ color: "#6B7080", fontSize: "0.95rem" }}>
+          <p style={{ color: "#9E9990", fontSize: "0.95rem" }}>
             כשהאות שלך ברור - הלקוחות הנכונים מגיעים מאליהם
           </p>
         </div>
