@@ -112,7 +112,12 @@ export function AccessibilityWidget() {
           padding: 0,
         }}
       >
-        <img src="/access.png?v=3" alt="" aria-hidden="true" width={34} height={34} style={{ display: "block", flexShrink: 0 }} />
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="11" stroke="#C9964A" strokeWidth="1.5" />
+          <circle cx="12" cy="6.5" r="1.5" fill="#C9964A" />
+          <path d="M9 10h6M12 10v4.5l2.5 3" stroke="#C9964A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9.5 14.5A3 3 0 1 0 14 17" stroke="#C9964A" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
       </button>
 
       {/* ── Panel ── */}
