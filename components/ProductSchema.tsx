@@ -1,16 +1,9 @@
+import { getTenant } from "@/lib/tenant";
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
-const PROVIDER = {
-  "@type": "Organization",
-  "name": "BeeGood",
-  "url": APP_URL,
-};
-
-const INSTRUCTOR = {
-  "@type": "Person",
-  "name": "הדר דנן",
-  "url": APP_URL,
-};
+const FALLBACK_PROVIDER_NAME   = "BeeGood";
+const FALLBACK_INSTRUCTOR_NAME = "הדר דנן";
 
 type ProductSchemaProps = {
   type:        "Course" | "Service";
@@ -21,7 +14,31 @@ type ProductSchemaProps = {
   imageUrl?:   string;
 };
 
-export function ProductSchema({ type, name, description, url, price, imageUrl }: ProductSchemaProps) {
+export async function ProductSchema({ type, name, description, url, price, imageUrl }: ProductSchemaProps) {
+  let providerName   = FALLBACK_PROVIDER_NAME;
+  let instructorName = FALLBACK_INSTRUCTOR_NAME;
+
+  try {
+    const tenant  = await getTenant();
+    const content = tenant.content ?? {};
+    providerName   = (content["site_name"] as string) ?? FALLBACK_PROVIDER_NAME;
+    instructorName = tenant.name           ?? FALLBACK_INSTRUCTOR_NAME;
+  } catch (err) {
+    console.error("[ProductSchema] getTenant() failed, using fallback schema:", err);
+  }
+
+  const provider = {
+    "@type": "Organization",
+    "name": providerName,
+    "url": APP_URL,
+  };
+
+  const instructor = {
+    "@type": "Person",
+    "name": instructorName,
+    "url": APP_URL,
+  };
+
   const base = {
     "@context":    "https://schema.org",
     "@type":       type,
@@ -29,7 +46,7 @@ export function ProductSchema({ type, name, description, url, price, imageUrl }:
     "description": description,
     "url":         url,
     "inLanguage":  "he",
-    "provider":    PROVIDER,
+    "provider":    provider,
     "offers": {
       "@type":         "Offer",
       "price":         price,
@@ -41,7 +58,7 @@ export function ProductSchema({ type, name, description, url, price, imageUrl }:
   };
 
   const withInstructor = type === "Course"
-    ? { ...base, "instructor": INSTRUCTOR }
+    ? { ...base, "instructor": instructor }
     : base;
 
   return (
