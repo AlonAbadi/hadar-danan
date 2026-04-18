@@ -37,7 +37,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                 <div className="nf-empty" />
                 <div className="nf-node nf-node-gold">1</div>
                 <a href="/training" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
-                  <img src="/hadarlesson.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 15%" }} />
+                  <img src="/hadarlesson.jpg" loading="lazy" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 15%" }} />
                   <div style={{ position: "absolute", inset: 0, background: overlay }} />
                   <div style={{ position: "absolute", top: 10, right: 10, fontSize: 9, fontWeight: 700, color: "#C9964A", background: "rgba(201,150,74,0.15)", border: "1px solid rgba(201,150,74,0.3)", borderRadius: 4, padding: "2px 8px", zIndex: 2 }}>מתחילים כאן</div>
                   <div style={{ position: "absolute", left: 8, top: 8, fontSize: "5rem", fontWeight: 800, color: "rgba(255,255,255,0.22)", lineHeight: 1, userSelect: "none" }}>1</div>
@@ -57,7 +57,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           {/* ── Step 2 - card LEFT ── */}
           <div className="nf-row">
             <a href="/challenge" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
-              <img src="/etgar.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "35% 10%" }} />
+              <img src="/etgar.jpg" loading="lazy" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "35% 10%" }} />
               <div style={{ position: "absolute", inset: 0, background: overlay }} />
               <div style={{ position: "absolute", left: 8, top: 8, fontSize: "5rem", fontWeight: 800, color: "rgba(255,255,255,0.22)", lineHeight: 1, userSelect: "none" }}>2</div>
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
@@ -79,7 +79,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             <div className="nf-empty" />
             <div className="nf-node">3</div>
             <a href="/workshop" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
-              <img src="/sadna.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "60% 8%" }} />
+              <img src="/sadna.jpg" loading="lazy" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "60% 8%" }} />
               <div style={{ position: "absolute", inset: 0, background: overlay }} />
               <div style={{ position: "absolute", left: 8, top: 8, fontSize: "5rem", fontWeight: 800, color: "rgba(255,255,255,0.22)", lineHeight: 1, userSelect: "none" }}>3</div>
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
@@ -97,7 +97,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           {/* ── Step 4 - card LEFT ── */}
           <div className="nf-row">
             <a href="/course" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
-              <img src="/coursehadar.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "25% 5%" }} />
+              <img src="/coursehadar.jpg" loading="lazy" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "25% 5%" }} />
               <div style={{ position: "absolute", inset: 0, background: overlay }} />
               <div style={{ position: "absolute", left: 8, top: 8, fontSize: "5rem", fontWeight: 800, color: "rgba(255,255,255,0.22)", lineHeight: 1, userSelect: "none" }}>4</div>
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
@@ -119,7 +119,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             <div className="nf-empty" />
             <div className="nf-node nf-node-gold">5</div>
             <a href="/strategy" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
-              <img src="/strategymeeting.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 8%" }} />
+              <img src="/strategymeeting.jpg" loading="lazy" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 8%" }} />
               <div style={{ position: "absolute", inset: 0, background: overlay }} />
               <div style={{ position: "absolute", top: 10, right: 10, fontSize: 9, fontWeight: 700, color: "#1A1206", background: "linear-gradient(135deg,#E8B94A,#C9964A)", borderRadius: 4, padding: "2px 8px", zIndex: 2 }}>מומלץ</div>
               <div style={{ position: "absolute", left: 8, top: 8, fontSize: "5rem", fontWeight: 800, color: "rgba(255,255,255,0.22)", lineHeight: 1, userSelect: "none" }}>5</div>
@@ -143,7 +143,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         {/* ── Premium grid ── */}
         <div className="nf-premium-grid" style={{ maxWidth: 960, margin: "16px auto", padding: "0 24px" }}>
           <a href="/premium" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
-            <img src="/shooting.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "15% 5%" }} />
+            <img src="/shooting.jpg" loading="lazy" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "15% 5%" }} />
             <div style={{ position: "absolute", inset: 0, background: overlay }} />
             <div style={{ position: "absolute", top: 14, left: 14, fontSize: 11, fontWeight: 700, color: "#C9964A", background: "rgba(201,150,74,0.15)", border: "1px solid rgba(201,150,74,0.3)", borderRadius: 6, padding: "4px 10px", letterSpacing: "0.08em", zIndex: 2 }}>PREMIUM</div>
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
@@ -154,7 +154,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             </div>
           </a>
           <a href="/partnership" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
-            <img src="/partnership.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "75% 5%" }} />
+            <img src="/partnership.jpg" loading="lazy" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "75% 5%" }} />
             <div style={{ position: "absolute", inset: 0, background: overlay }} />
             <div style={{ position: "absolute", top: 14, left: 14, fontSize: 11, fontWeight: 700, color: "#C9964A", background: "rgba(201,150,74,0.15)", border: "1px solid rgba(201,150,74,0.3)", borderRadius: 6, padding: "4px 10px", letterSpacing: "0.08em", zIndex: 2 }}>PREMIUM</div>
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
@@ -187,7 +187,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         {/* ── Hive card ── */}
         <div style={{ maxWidth: 500, margin: "16px auto 80px", padding: "0 24px" }}>
           <a href="/hive" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
-            <img src="/hive.png" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "40% 10%" }} />
+            <img src="/hive.jpg" loading="lazy" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "40% 10%" }} />
             <div style={{ position: "absolute", inset: 0, background: overlay }} />
             <div style={{ position: "absolute", top: 10, right: 10, fontSize: 9, fontWeight: 700, color: "#1A1206", background: "linear-gradient(135deg,#E8B94A,#C9964A)", borderRadius: 4, padding: "2px 8px", zIndex: 2 }}>פופולרי</div>
             <div style={{ position: "absolute", bottom: 80, right: 16, fontSize: "2.4rem", zIndex: 2 }}>🐝</div>
