@@ -144,6 +144,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
 
         {/* CENTER - beegood text logo */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Link href="/" aria-label="עמוד הבית">
           <Image
             src="/beegoodtxt.png"
             alt="beegood"
@@ -157,6 +158,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
               filter: "brightness(1.2) drop-shadow(0 0 6px rgba(232,185,74,0.55))",
             }}
           />
+          </Link>
         </div>
 
         {/* FAR RIGHT — text + bee logo */}
