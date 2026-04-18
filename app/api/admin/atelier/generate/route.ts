@@ -117,6 +117,11 @@ ${testimonialsText || "- לא צוינו"}
   ]
 }`;
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error("[atelier/generate] ANTHROPIC_API_KEY not set");
+    return NextResponse.json({ error: "ANTHROPIC_API_KEY חסר בסביבה" }, { status: 500 });
+  }
+
   try {
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
@@ -130,7 +135,6 @@ ${testimonialsText || "- לא צוינו"}
     try {
       generated = JSON.parse(raw);
     } catch {
-      // strip possible markdown fences
       const cleaned = raw.replace(/^```json\s*/i, "").replace(/\s*```$/i, "").trim();
       generated = JSON.parse(cleaned);
     }
@@ -153,7 +157,8 @@ ${testimonialsText || "- לא צוינו"}
 
     return NextResponse.json({ generated });
   } catch (err) {
-    console.error("[atelier/generate] Claude error:", err);
-    return NextResponse.json({ error: "שגיאה ביצירת תוכן" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[atelier/generate] error:", msg);
+    return NextResponse.json({ error: `שגיאה: ${msg}` }, { status: 500 });
   }
 }
