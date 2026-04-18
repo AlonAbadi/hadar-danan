@@ -554,6 +554,23 @@ export default function ProductLandingPage({
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  useEffect(() => {
+    if (!vimeoId) return;
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      const w = window as Window & { Vimeo?: { Player: new (el: HTMLElement) => { setLoop(v: boolean): void } } };
+      const iframe = document.getElementById('vimeo-vsl') as HTMLElement | null;
+      if (w.Vimeo?.Player && iframe) {
+        clearInterval(interval);
+        const player = new w.Vimeo.Player(iframe);
+        player.setLoop(false);
+      }
+      if (attempts > 20) clearInterval(interval);
+    }, 500);
+    return () => clearInterval(interval);
+  }, [vimeoId]);
+
   const wa = whatsappNumber ?? process.env.NEXT_PUBLIC_WHATSAPP_PHONE ?? '972539566961';
   const waHref = `https://wa.me/${wa}`;
 
@@ -602,6 +619,7 @@ export default function ProductLandingPage({
                 background: '#141820',
               }}>
                 <iframe
+                  id="vimeo-vsl"
                   src={`https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&loop=0&player_id=0&app_id=58479`}
                   allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
