@@ -23,7 +23,7 @@ export const metadata = {
 
 export default async function WorkshopPage() {
   const price         = String(PRODUCT_MAP.workshop_1080.price);
-  const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
+  let whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const APP_URL       = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   let tenantName        = "הדר דנן";
@@ -42,6 +42,7 @@ export default async function WorkshopPage() {
     const ph          = (legal["phone"]          as string)   ?? "053-9566961";
     tenantCompanyLine = `© 2026 ${cn} | ח.פ. ${ci}`;
     tenantAddressLine = `${ad} | ${ph}`;
+    whatsappPhone     = (legal["whatsapp_phone"]   as string)   ?? whatsappPhone;
   } catch { /* use fallbacks */ }
 
   return (

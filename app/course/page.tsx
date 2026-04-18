@@ -20,7 +20,7 @@ const COURSE_FAQS = [
 ];
 
 export default async function CoursePage() {
-  const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
+  let whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const APP_URL       = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   let tenantName    = "הדר דנן";
@@ -28,8 +28,10 @@ export default async function CoursePage() {
   try {
     const tenant  = await getTenant();
     const content = tenant.content ?? {};
+    const legal   = tenant.legal   ?? {};
     tenantName    = tenant.name                          ?? tenantName;
     tenantTagline = (content["tagline"] as string)       ?? tenantTagline;
+    whatsappPhone = (legal["whatsapp_phone"] as string)  ?? whatsappPhone;
   } catch { /* use fallbacks */ }
 
   return (

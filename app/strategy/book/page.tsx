@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import { StrategyBookFlow } from "./StrategyBookFlow";
 import { getUserCredit } from "@/lib/credit";
+import { getTenant } from "@/lib/tenant";
 
 export const metadata = {
   title: "קביעת פגישת אסטרטגיה | הדר דנן",
@@ -22,8 +23,13 @@ export default async function BookingPage({
     .select("slot_date, slot_time")
     .eq("status", "confirmed");
 
-  const price         = process.env.NEXT_PUBLIC_PRICE_CALL ?? "4000";
-  const whatsappPhone = process.env.WHATSAPP_PHONE ?? "";
+  const price       = process.env.NEXT_PUBLIC_PRICE_CALL ?? "4000";
+  let whatsappPhone = process.env.WHATSAPP_PHONE ?? "";
+  try {
+    const tenant = await getTenant();
+    const legal  = tenant.legal ?? {};
+    whatsappPhone = (legal["whatsapp_phone"] as string) ?? whatsappPhone;
+  } catch { /* use fallbacks */ }
 
   return (
     <div dir="rtl" className="min-h-screen font-assistant" style={{ background: "#0D1018", color: "#EDE9E1" }}>
