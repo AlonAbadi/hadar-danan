@@ -24,6 +24,17 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = createServerClient();
+  const id = req.nextUrl.searchParams.get("id");
+
+  if (id) {
+    const { data, error } = await safeFrom(supabase, "atelier_applications")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error) return NextResponse.json({ error: "DB error" }, { status: 500 });
+    return NextResponse.json({ application: data });
+  }
+
   const { data, error } = await safeFrom(supabase, "atelier_applications")
     .select("id, name, phone, instagram, story, status, created_at")
     .order("created_at", { ascending: false });
@@ -34,4 +45,23 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ applications: data ?? [] });
+}
+
+export async function PATCH(req: NextRequest) {
+  if (!isAdminAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  const body = await req.json();
+  const supabase = createServerClient();
+
+  const { error } = await safeFrom(supabase, "atelier_applications")
+    .update(body)
+    .eq("id", id);
+
+  if (error) return NextResponse.json({ error: "DB error" }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }

@@ -120,7 +120,7 @@ export default function AtelierAdminPage() {
         {filtered.map((app, i) => (
           <button
             key={app.id}
-            onClick={() => setSelected(app)}
+            onClick={() => window.location.href = `/admin/atelier/${app.id}`}
             style={{
               width: "100%",
               display: "grid",
