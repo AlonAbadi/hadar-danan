@@ -1,6 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface Analysis {
+  fit_score: number;
+  fit_label: string;
+  niche_guess: string;
+  audience_guess: string;
+  strengths: string[];
+  questions: string[];
+  one_liner: string;
+}
 
 interface Product { name: string; price: number }
 interface Testimonial { name: string; quote: string }
@@ -42,6 +52,22 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [generated, setGenerated] = useState<Generated | null>(app.generated_content ?? null);
   const [selectedPalette, setSelectedPalette] = useState<string | null>(app.selected_palette ?? null);
   const [genError, setGenError] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  useEffect(() => {
+    setAnalyzing(true);
+    fetch("/api/admin/atelier/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: app.name, instagram: app.instagram, story: app.story }),
+    })
+      .then(r => r.json())
+      .then(d => { if (d.analysis) setAnalysis(d.analysis); })
+      .catch(() => {})
+      .finally(() => setAnalyzing(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const s = {
     page: { minHeight: "100vh", background: "#0D1018", padding: "32px", fontFamily: "var(--font-assistant), Assistant, sans-serif" } as React.CSSProperties,
@@ -98,6 +124,60 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 24, fontWeight: 800, color: "#EDE9E1" }}>{app.name}</div>
         <div style={{ fontSize: 13, color: "#9E9990", marginTop: 4 }}>{app.instagram} · {app.phone}</div>
+      </div>
+
+      {/* AI Analysis */}
+      <div style={{ ...s.card, borderColor: analyzing ? "#2C323E" : analysis ? "#C9964A44" : "#2C323E" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#EDE9E1" }}>ניתוח ליד — Claude</div>
+          {analyzing && <div style={{ fontSize: 12, color: "#9E9990" }}>⏳ מנתח...</div>}
+          {analysis && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", border: `3px solid ${analysis.fit_score >= 7 ? "#34A853" : analysis.fit_score >= 5 ? "#E8B94A" : "#9E9990"}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 14, fontWeight: 800, color: "#EDE9E1",
+              }}>{analysis.fit_score}</div>
+              <span style={{ fontSize: 13, fontWeight: 700, color: analysis.fit_score >= 7 ? "#34A853" : analysis.fit_score >= 5 ? "#E8B94A" : "#9E9990" }}>{analysis.fit_label}</span>
+            </div>
+          )}
+        </div>
+
+        {analysis && (
+          <>
+            <div style={{ background: "#1D2430", borderRadius: 8, padding: "12px 16px", marginBottom: 16, fontSize: 15, color: "#EDE9E1", lineHeight: 1.6, fontStyle: "italic" }}>
+              &ldquo;{analysis.one_liner}&rdquo;
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>נישה משוערת</div>
+                <div style={{ fontSize: 14, color: "#EDE9E1" }}>{analysis.niche_guess}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>קהל משוער</div>
+                <div style={{ fontSize: 14, color: "#EDE9E1" }}>{analysis.audience_guess}</div>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>חוזקות</div>
+                {analysis.strengths.map((s, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13, color: "#EDE9E1" }}>
+                    <span style={{ color: "#34A853" }}>✓</span> {s}
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>שאלות לשיחת גילוי</div>
+                {analysis.questions.map((q, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13, color: "#EDE9E1" }}>
+                    <span style={{ color: "#C9964A" }}>{i + 1}.</span> {q}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Story */}

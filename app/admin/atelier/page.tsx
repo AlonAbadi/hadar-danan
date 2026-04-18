@@ -42,18 +42,30 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("he-IL");
 }
 
-const cardStyle: React.CSSProperties = {
-  background: "#141820",
-  border: "1px solid #2C323E",
-  borderRadius: 12,
-  padding: 20,
-};
+function initials(name: string): string {
+  return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function storyScore(story: string): { score: number; label: string; color: string } {
+  const words = story.trim().split(/\s+/).length;
+  const hasNumbers = /\d/.test(story);
+  const hasSelling = /מוכר|מכר|לקוח|עסק|מותג|פרילנס|תחום/.test(story);
+  const hasAudience = /עוקב|קהל|קהילה|אינסטגרם|קורס|סדנה|הדרכ/.test(story);
+  let score = 0;
+  if (words > 30) score += 2;
+  else if (words > 15) score += 1;
+  if (hasNumbers) score += 1;
+  if (hasSelling) score += 2;
+  if (hasAudience) score += 2;
+  if (score >= 5) return { score, label: "מתאים מאוד", color: "#34A853" };
+  if (score >= 3) return { score, label: "מעניין", color: "#E8B94A" };
+  return { score, label: "לא ברור", color: "#9E9990" };
+}
 
 export default function AtelierAdminPage() {
   const [applications, setApplications] = useState<AtelierApplication[]>([]);
-  const [loading,      setLoading]      = useState(true);
+  const [loading, setLoading]      = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [selected,     setSelected]     = useState<AtelierApplication | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/atelier/applications")
@@ -68,206 +80,125 @@ export default function AtelierAdminPage() {
     : applications.filter(a => a.status === filterStatus);
 
   return (
-    <div dir="rtl" style={{
-      fontFamily: "var(--font-assistant), Assistant, sans-serif",
-      minHeight: "100vh",
-      background: "#0D1018",
-      padding: 24,
-    }}>
+    <div dir="rtl" style={{ fontFamily: "var(--font-assistant), Assistant, sans-serif", minHeight: "100vh", background: "#0D1018", padding: 32 }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#EDE9E1" }}>beegood atelier</div>
-        <div style={{ fontSize: 13, color: "#9E9990", marginTop: 2 }}>בקשות להצטרפות</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
+        <div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#EDE9E1" }}>beegood atelier</div>
+          <div style={{ fontSize: 14, color: "#9E9990", marginTop: 4 }}>לידים להצטרפות לפלטפורמה</div>
+        </div>
+        <div style={{ display: "flex", gap: 16 }}>
+          <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 10, padding: "14px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#E8B94A" }}>{applications.length}</div>
+            <div style={{ fontSize: 11, color: "#9E9990", marginTop: 2 }}>סה"כ לידים</div>
+          </div>
+          <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 10, padding: "14px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#34A853" }}>{applications.filter(a => a.status === "accepted").length}</div>
+            <div style={{ fontSize: 11, color: "#9E9990", marginTop: 2 }}>התקבלו</div>
+          </div>
+          <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 10, padding: "14px 20px", textAlign: "center" }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#4285F4" }}>{applications.filter(a => a.status === "new").length}</div>
+            <div style={{ fontSize: 11, color: "#9E9990", marginTop: 2 }}>חדשים</div>
+          </div>
+        </div>
       </div>
 
-      {/* Filter bar */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+      {/* Filters */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
         {["all", ...Object.keys(STATUS_LABELS)].map(s => (
-          <button
-            key={s}
-            onClick={() => setFilterStatus(s)}
-            style={{
-              padding: "6px 16px",
-              borderRadius: 9999,
-              border: `1px solid ${filterStatus === s ? "#C9964A" : "#2C323E"}`,
-              background: filterStatus === s ? "rgba(201,150,74,0.12)" : "transparent",
-              color: filterStatus === s ? "#C9964A" : "#9E9990",
-              fontSize: 13,
-              fontWeight: filterStatus === s ? 700 : 400,
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            {s === "all" ? "הכל" : STATUS_LABELS[s]}
+          <button key={s} onClick={() => setFilterStatus(s)} style={{
+            padding: "6px 16px", borderRadius: 9999, fontFamily: "inherit",
+            border: `1px solid ${filterStatus === s ? "#C9964A" : "#2C323E"}`,
+            background: filterStatus === s ? "rgba(201,150,74,0.12)" : "transparent",
+            color: filterStatus === s ? "#C9964A" : "#9E9990",
+            fontSize: 13, fontWeight: filterStatus === s ? 700 : 400, cursor: "pointer",
+          }}>
+            {s === "all" ? `הכל (${applications.length})` : `${STATUS_LABELS[s]} (${applications.filter(a => a.status === s).length})`}
           </button>
         ))}
       </div>
 
-      {/* Count */}
-      <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 16 }}>
-        {loading ? "טוען..." : `${filtered.length} בקשות`}
-      </div>
+      {/* Cards grid */}
+      {loading ? (
+        <div style={{ color: "#9E9990", fontSize: 14 }}>טוען...</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ color: "#9E9990", fontSize: 14, padding: 40, textAlign: "center" }}>אין לידים בסטטוס זה</div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
+          {filtered.map(app => {
+            const fit = storyScore(app.story);
+            return (
+              <button
+                key={app.id}
+                onClick={() => window.location.href = `/admin/atelier/${app.id}`}
+                style={{
+                  background: "#141820", border: "1px solid #2C323E", borderRadius: 14,
+                  padding: 24, cursor: "pointer", textAlign: "right", fontFamily: "inherit",
+                  transition: "all 0.2s", display: "flex", flexDirection: "column", gap: 16,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#C9964A44"; e.currentTarget.style.background = "#1A1F2B"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#2C323E"; e.currentTarget.style.background = "#141820"; }}
+              >
+                {/* Top row: avatar + name + status */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                    {/* Avatar */}
+                    <div style={{
+                      width: 52, height: 52, borderRadius: "50%", flexShrink: 0,
+                      background: "linear-gradient(135deg, #C9964A, #9E7C3A)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 18, fontWeight: 800, color: "#0D1018",
+                    }}>
+                      {initials(app.name)}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 17, fontWeight: 800, color: "#EDE9E1" }}>{app.name}</div>
+                      <div style={{ fontSize: 12, color: "#C9964A", marginTop: 2 }}>
+                        {app.instagram.replace("https://www.instagram.com/", "@").replace("https://instagram.com/", "@").replace(/\/$/, "")}
+                      </div>
+                      <div style={{ fontSize: 12, color: "#9E9990", marginTop: 1, direction: "ltr", textAlign: "right" }}>{app.phone}</div>
+                    </div>
+                  </div>
+                  {/* Status */}
+                  <span style={{
+                    padding: "3px 12px", borderRadius: 9999, fontSize: 11, fontWeight: 700,
+                    background: (STATUS_COLORS[app.status] ?? "#9E9990") + "22",
+                    color: STATUS_COLORS[app.status] ?? "#9E9990",
+                    border: `1px solid ${(STATUS_COLORS[app.status] ?? "#9E9990")}44`,
+                    whiteSpace: "nowrap",
+                  }}>
+                    {STATUS_LABELS[app.status] ?? app.status}
+                  </span>
+                </div>
 
-      {/* Table */}
-      <div style={{ ...cardStyle, padding: 0, overflow: "hidden" }}>
-        {!loading && filtered.length === 0 && (
-          <div style={{ padding: 40, textAlign: "center", color: "#9E9990", fontSize: 14 }}>
-            אין בקשות
-          </div>
-        )}
+                {/* Story preview */}
+                <div style={{
+                  background: "#1D2430", borderRadius: 8, padding: "12px 14px",
+                  fontSize: 13, color: "#9E9990", lineHeight: 1.65,
+                  display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as const,
+                  overflow: "hidden",
+                }}>
+                  {app.story}
+                </div>
 
-        {filtered.map((app, i) => (
-          <button
-            key={app.id}
-            onClick={() => window.location.href = `/admin/atelier/${app.id}`}
-            style={{
-              width: "100%",
-              display: "grid",
-              gridTemplateColumns: "1fr 120px 140px 100px 110px",
-              alignItems: "center",
-              gap: 16,
-              padding: "14px 20px",
-              background: "none",
-              border: "none",
-              borderBottom: i < filtered.length - 1 ? "1px solid #2C323E" : "none",
-              cursor: "pointer",
-              textAlign: "right",
-              fontFamily: "inherit",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "none")}
-          >
-            {/* Name + preview */}
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1" }}>{app.name}</div>
-              <div style={{ fontSize: 12, color: "#9E9990", marginTop: 2, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", maxWidth: 260 }}>
-                {app.story}
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div style={{ fontSize: 13, color: "#9E9990", direction: "ltr", textAlign: "left" }}>
-              {app.phone}
-            </div>
-
-            {/* Instagram */}
-            <div style={{ fontSize: 13, color: "#C9964A" }}>
-              {app.instagram}
-            </div>
-
-            {/* Status */}
-            <div>
-              <span style={{
-                display: "inline-block",
-                padding: "2px 10px",
-                borderRadius: 9999,
-                fontSize: 12,
-                fontWeight: 700,
-                background: (STATUS_COLORS[app.status] ?? "#9E9990") + "22",
-                color: STATUS_COLORS[app.status] ?? "#9E9990",
-                border: `1px solid ${(STATUS_COLORS[app.status] ?? "#9E9990")}44`,
-              }}>
-                {STATUS_LABELS[app.status] ?? app.status}
-              </span>
-            </div>
-
-            {/* Date */}
-            <div style={{ fontSize: 12, color: "#9E9990", textAlign: "left" }}>
-              {relativeTime(app.created_at)}
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* Modal */}
-      {selected && (
-        <div
-          onClick={() => setSelected(null)}
-          style={{
-            position: "fixed", inset: 0,
-            background: "rgba(0,0,0,0.7)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            zIndex: 100, padding: 24,
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: "#141820",
-              border: "1px solid #2C323E",
-              borderRadius: 16,
-              padding: 32,
-              maxWidth: 560,
-              width: "100%",
-              maxHeight: "80vh",
-              overflowY: "auto",
-              position: "relative",
-            }}
-          >
-            {/* Close */}
-            <button
-              onClick={() => setSelected(null)}
-              style={{
-                position: "absolute", top: 16, left: 16,
-                background: "none", border: "none", cursor: "pointer",
-                color: "#9E9990", fontSize: 20, lineHeight: 1,
-                fontFamily: "inherit",
-              }}
-            >
-              ✕
-            </button>
-
-            {/* Status badge */}
-            <span style={{
-              display: "inline-block",
-              padding: "2px 10px",
-              borderRadius: 9999,
-              fontSize: 12,
-              fontWeight: 700,
-              background: (STATUS_COLORS[selected.status] ?? "#9E9990") + "22",
-              color: STATUS_COLORS[selected.status] ?? "#9E9990",
-              border: `1px solid ${(STATUS_COLORS[selected.status] ?? "#9E9990")}44`,
-              marginBottom: 16,
-            }}>
-              {STATUS_LABELS[selected.status] ?? selected.status}
-            </span>
-
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: "#EDE9E1", marginBottom: 4 }}>
-              {selected.name}
-            </h2>
-            <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 20 }}>
-              {new Date(selected.created_at).toLocaleString("he-IL")}
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>טלפון</div>
-                <div style={{ fontSize: 15, color: "#EDE9E1", direction: "ltr", textAlign: "right" }}>{selected.phone}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>אינסטגרם</div>
-                <div style={{ fontSize: 15, color: "#C9964A" }}>{selected.instagram}</div>
-              </div>
-            </div>
-
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>הסיפור</div>
-              <div style={{
-                fontSize: 15,
-                color: "#EDE9E1",
-                lineHeight: 1.75,
-                background: "#1D2430",
-                border: "1px solid #2C323E",
-                borderRadius: 10,
-                padding: 16,
-                whiteSpace: "pre-wrap",
-              }}>
-                {selected.story}
-              </div>
-            </div>
-          </div>
+                {/* Bottom row: fit score + time */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: "50%", background: fit.color,
+                      boxShadow: `0 0 6px ${fit.color}`,
+                    }} />
+                    <span style={{ fontSize: 12, color: fit.color, fontWeight: 700 }}>{fit.label}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 11, color: "#9E9990" }}>{relativeTime(app.created_at)}</span>
+                    <span style={{ fontSize: 12, color: "#C9964A", fontWeight: 600 }}>פתח ←</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
