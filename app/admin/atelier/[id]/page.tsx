@@ -1,13 +1,14 @@
 import { createServerClient } from "@/lib/supabase/server";
 import { AtelierOnboardClient } from "./AtelierOnboardClient";
 
-export default async function AtelierDetailPage({ params }: { params: { id: string } }) {
+export default async function AtelierDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = createServerClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (supabase as any)
     .from("atelier_applications")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (!data) {
