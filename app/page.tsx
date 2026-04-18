@@ -89,10 +89,11 @@ export default async function LandingPage() {
             {/* ── MOBILE: full-bleed overlay, thumb-zone optimized ── */}
             <div className="md:hidden" style={{ position: "relative", height: "93svh" }}>
               <Image
-                src="/hadar1.png"
+                src="/hadar1.jpg"
                 alt="הדר דנן"
                 fill
                 priority
+                sizes="100vw"
                 style={{ objectFit: "cover", objectPosition: "center 10%" }}
               />
               {/* Bottom-to-top overlay */}
@@ -154,12 +155,13 @@ export default async function LandingPage() {
                 display: "inline-block",
               }}>
                 <Image
-                  src="/hadar1.png"
+                  src="/hadar1.jpg"
                   alt="הדר דנן"
                   width={842}
                   height={1264}
                   priority
-                  quality={90}
+                  sizes="50vw"
+                  quality={80}
                   style={{
                     height: "100%",
                     width: "auto",
