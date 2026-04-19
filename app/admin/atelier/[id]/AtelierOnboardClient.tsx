@@ -556,10 +556,15 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
           </div>
         </div>
 
+        {!niche && (
+          <div style={{ background: "rgba(232,185,74,0.08)", border: "1px solid #E8B94A44", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 13, color: "#E8B94A" }}>
+            ← מלא את שדה "תחום / נישה" כדי להפעיל את Claude
+          </div>
+        )}
         <button
           onClick={handleGenerate}
           disabled={generating || !niche}
-          style={{ ...s.btn, background: generating ? "#2C323E" : "linear-gradient(135deg, #E8B94A, #C9964A)", color: generating ? "#9E9990" : "#0D1018", width: "100%", padding: "16px", fontSize: 16 }}
+          style={{ ...s.btn, background: generating || !niche ? "#2C323E" : "linear-gradient(135deg, #E8B94A, #C9964A)", color: generating || !niche ? "#9E9990" : "#0D1018", width: "100%", padding: "16px", fontSize: 16, cursor: !niche ? "not-allowed" : "pointer" }}
         >
           {generating ? "⏳ יוצר עם Claude..." : "✨ צור אתר עם Claude"}
         </button>
