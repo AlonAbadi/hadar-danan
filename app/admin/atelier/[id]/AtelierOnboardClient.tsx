@@ -98,6 +98,9 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [genError, setGenError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(app.ai_analysis ?? null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [generatingClient, setGeneratingClient] = useState(false);
+  const [clientCode, setClientCode] = useState<string | null>(null);
+  const [clientCodeError, setClientCodeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (app.ai_analysis) return; // already cached — skip API call
@@ -165,6 +168,54 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
     } finally {
       setGenerating(false);
     }
+  }
+
+  async function handleGenerateClient() {
+    if (!generated) return;
+    setGeneratingClient(true);
+    setClientCode(null);
+    setClientCodeError(null);
+    try {
+      const res = await fetch("/api/admin/atelier/generate-client", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          app: {
+            id: app.id,
+            name: app.name,
+            instagram: app.instagram,
+            niche,
+            target_audience: audience,
+            whatsapp,
+            business_type: businessType,
+            business_id: businessId,
+            domain: app.domain ?? "",
+            products: products.filter((p: Product) => p.name),
+            modules,
+          },
+          generated,
+          selectedPalette,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setClientCodeError(data.error ?? "שגיאה"); return; }
+      setClientCode(data.code);
+    } catch {
+      setClientCodeError("שגיאת רשת");
+    } finally {
+      setGeneratingClient(false);
+    }
+  }
+
+  function downloadClientTs() {
+    if (!clientCode) return;
+    const blob = new Blob([clientCode], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "client.ts";
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async function uploadFile(file: File, folder: string): Promise<{ url: string; name: string } | null> {
@@ -659,7 +710,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {[
                 { text: `git clone beegood-template → ${app.name.toLowerCase().replace(/\s/g, "-")}`, mono: true },
-                { text: "הצב lib/client.ts עם התוכן שנוצר" },
+                { text: "צור lib/client.ts בלחיצה על הכפתור למטה ←" },
                 { text: "העלה תמונות ל-/public" },
                 { text: "צור Supabase project חדש + הרץ migrations" },
                 { text: "צור Vercel project + הגדר env vars" },
@@ -674,6 +725,74 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Generate client.ts */}
+          <div style={s.card}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div style={s.section}>צור lib/client.ts</div>
+              {!selectedPalette && (
+                <div style={{ fontSize: 12, color: "#9E9990" }}>בחר פלטת צבעים למעלה כדי להמשיך</div>
+              )}
+            </div>
+
+            <button
+              onClick={handleGenerateClient}
+              disabled={generatingClient || !selectedPalette}
+              style={{
+                ...s.btn,
+                background: !selectedPalette ? "#2C323E" : "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+                color: !selectedPalette ? "#9E9990" : "#0D1018",
+                cursor: !selectedPalette ? "not-allowed" : "pointer",
+                width: "100%",
+                fontSize: 16,
+                padding: "16px 28px",
+                marginBottom: 16,
+                opacity: generatingClient ? 0.7 : 1,
+              }}
+            >
+              {generatingClient ? "יוצר..." : "⚡ צור lib/client.ts"}
+            </button>
+
+            {clientCodeError && (
+              <div style={{ color: "#FF6B6B", fontSize: 13, marginBottom: 12 }}>{clientCodeError}</div>
+            )}
+
+            {clientCode && (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ fontSize: 13, color: "#34A853", fontWeight: 700 }}>✓ הקובץ מוכן להורדה</div>
+                  <button
+                    onClick={downloadClientTs}
+                    style={{ ...s.btn, background: "#34A853", color: "#fff", padding: "8px 20px", fontSize: 13 }}
+                  >
+                    ⬇ הורד client.ts
+                  </button>
+                </div>
+                <pre style={{
+                  background: "#080C14",
+                  border: "1px solid #2C323E",
+                  borderRadius: 8,
+                  padding: 20,
+                  fontSize: 12,
+                  color: "#EDE9E1",
+                  overflowX: "auto",
+                  lineHeight: 1.7,
+                  maxHeight: 500,
+                  overflowY: "auto",
+                  direction: "ltr",
+                  textAlign: "left",
+                }}>
+                  {clientCode}
+                </pre>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(clientCode); }}
+                  style={{ ...s.btn, background: "#1D2430", color: "#9E9990", padding: "8px 20px", fontSize: 12, marginTop: 10, border: "1px solid #2C323E" }}
+                >
+                  העתק ללוח
+                </button>
+              </>
+            )}
           </div>
         </>
       )}
