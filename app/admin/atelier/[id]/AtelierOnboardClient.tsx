@@ -13,6 +13,17 @@ interface Analysis {
 }
 
 interface Product { name: string; price: number }
+
+const PRESET_PRODUCTS: Product[] = [
+  { name: "הדרכה חינמית", price: 0 },
+  { name: "אתגר 7 ימים", price: 197 },
+  { name: "סדנה יום אחד", price: 1080 },
+  { name: "קורס דיגיטלי", price: 1800 },
+  { name: "פגישת אסטרטגיה", price: 4000 },
+  { name: "יום צילום פרמיום", price: 14000 },
+  { name: "שותפות אסטרטגית", price: 10000 },
+  { name: "מנוי חודשי (כוורת)", price: 97 },
+];
 interface Testimonial { name: string; quote: string }
 interface Palette {
   id: string; name: string;
@@ -209,15 +220,53 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
         {/* Products */}
         <div style={{ marginBottom: 20 }}>
           <div style={s.label}>מוצרים במשפך</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
-            {products.map((p, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 120px", gap: 10 }}>
-                <input style={s.input} value={p.name} onChange={e => setProducts(products.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder={`מוצר ${i + 1}`} />
-                <input style={{ ...s.input, direction: "ltr" }} type="number" value={p.price || ""} onChange={e => setProducts(products.map((x, j) => j === i ? { ...x, price: Number(e.target.value) } : x))} placeholder="מחיר ₪" />
-              </div>
-            ))}
-            <button onClick={() => setProducts([...products, { name: "", price: 0 }])} style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#9E9990", padding: "8px 16px" }}>+ מוצר נוסף</button>
+
+          {/* Presets */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, margin: "10px 0 14px" }}>
+            {PRESET_PRODUCTS.map(preset => {
+              const isSelected = products.some(p => p.name === preset.name);
+              return (
+                <button
+                  key={preset.name}
+                  type="button"
+                  onClick={() => {
+                    if (isSelected) {
+                      setProducts(products.filter(p => p.name !== preset.name));
+                    } else {
+                      setProducts([...products.filter(p => p.name), { ...preset }]);
+                    }
+                  }}
+                  style={{
+                    padding: "6px 14px", borderRadius: 20, fontSize: 13, cursor: "pointer",
+                    fontFamily: "inherit", transition: "all 0.15s",
+                    background: isSelected ? "rgba(201,150,74,0.15)" : "#1D2430",
+                    border: `1px solid ${isSelected ? "#C9964A" : "#2C323E"}`,
+                    color: isSelected ? "#C9964A" : "#9E9990",
+                    fontWeight: isSelected ? 700 : 400,
+                  }}
+                >
+                  {isSelected ? "✓ " : ""}{preset.name}
+                  {preset.price > 0 && <span style={{ marginRight: 4, opacity: 0.7, fontSize: 11 }}>₪{preset.price.toLocaleString()}</span>}
+                  {preset.price === 0 && <span style={{ marginRight: 4, opacity: 0.7, fontSize: 11 }}>חינם</span>}
+                </button>
+              );
+            })}
           </div>
+
+          {/* Selected + editable */}
+          {products.filter(p => p.name).length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+              {products.filter(p => p.name).map((p, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 120px 36px", gap: 8, alignItems: "center" }}>
+                  <input style={s.input} value={p.name} onChange={e => setProducts(products.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} />
+                  <input style={{ ...s.input, direction: "ltr" }} type="number" value={p.price || ""} onChange={e => setProducts(products.map((x, j) => j === i ? { ...x, price: Number(e.target.value) } : x))} placeholder="₪" />
+                  <button type="button" onClick={() => setProducts(products.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 16, padding: 0 }}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button type="button" onClick={() => setProducts([...products.filter(p => p.name), { name: "", price: 0 }])} style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#9E9990", padding: "7px 14px", fontSize: 13 }}>+ הוסף מוצר ידני</button>
         </div>
 
         {/* Testimonials */}
