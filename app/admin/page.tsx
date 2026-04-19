@@ -35,18 +35,20 @@ async function getHubKPIs() {
 }
 
 const NAV_CARDS = [
-  { title: 'סקירה כללית',      desc: 'הכנסות, גרפים, conversion funnel',          href: '/admin/sales' },
-  { title: 'פאנל מכירות',      desc: 'מסלול רכישה, שלבים, נטישות',               href: '/admin/funnel' },
-  { title: 'מוצרים',           desc: 'ניהול מוצרים, מחירים, סטטוס',              href: '/admin/products' },
-  { title: 'פגישות',           desc: 'ניהול פגישות אסטרטגיה',                    href: '/admin/bookings' },
-  { title: 'ניהול לידים CRM',  desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',      href: '/admin/crm' },
-  { title: 'אימיילים',         desc: 'רצפי אימייל, open rate, שליחה ידנית',      href: '/admin/email' },
-  { title: 'וידאו ואנליטיקס',  desc: 'מעקב צפיות, milestones',                   href: '/admin/video' },
-  { title: 'רכישת לקוחות',    desc: 'מקורות תנועה, CAC, ROAS',                   href: '/admin/acquisition' },
-  { title: 'מודל MMM',         desc: 'הקצאת תקציב, רגרסיה, תחזיות',             href: '/admin/mmm' },
-  { title: 'A/B Testing',      desc: 'ניסויים פעילים, תוצאות',                   href: '/admin/abtesting' },
-  { title: 'כוורת',            desc: 'חברי קהילה, ניהול מנויים',                 href: '/admin/hive' },
-  { title: 'לוגים',            desc: 'שגיאות, אירועים, מעקב מערכת',             href: '/admin/logs' },
+  { title: 'סקירה כללית',      desc: 'הכנסות, גרפים, conversion funnel',          href: '/admin/sales',       group: 'מכירות' },
+  { title: 'פאנל מכירות',      desc: 'מסלול רכישה, שלבים, נטישות',               href: '/admin/funnel',      group: 'מכירות' },
+  { title: 'מוצרים',           desc: 'ניהול מוצרים, מחירים, סטטוס',              href: '/admin/products',    group: 'מכירות' },
+  { title: 'פגישות',           desc: 'ניהול פגישות אסטרטגיה',                    href: '/admin/bookings',    group: 'מכירות' },
+  { title: 'קופונים ודילים',   desc: 'קודי הנחה, מותגים, תאריכי תפוגה',          href: '/admin/deals',       group: 'מכירות' },
+  { title: 'ניהול לידים CRM',  desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',      href: '/admin/crm',         group: 'לידים' },
+  { title: 'atelier — לידים',  desc: 'טפסי הצטרפות, ניתוח AI, אונבורדינג',       href: '/admin/atelier',     group: 'לידים' },
+  { title: 'אימיילים',         desc: 'רצפי אימייל, open rate, שליחה ידנית',      href: '/admin/email',       group: 'שיווק' },
+  { title: 'רכישת לקוחות',    desc: 'מקורות תנועה, CAC, ROAS',                   href: '/admin/acquisition', group: 'שיווק' },
+  { title: 'A/B Testing',      desc: 'ניסויים פעילים, תוצאות',                   href: '/admin/abtesting',   group: 'שיווק' },
+  { title: 'וידאו ואנליטיקס',  desc: 'מעקב צפיות, milestones',                   href: '/admin/video',       group: 'תוכן' },
+  { title: 'כוורת',            desc: 'חברי קהילה, ניהול מנויים',                 href: '/admin/community',   group: 'קהילה' },
+  { title: 'מודל MMM',         desc: 'הקצאת תקציב, רגרסיה, תחזיות',             href: '/admin/mmm',         group: 'אנליטיקה' },
+  { title: 'לוגים',            desc: 'שגיאות, אירועים, מעקב מערכת',             href: '/admin/system',      group: 'מערכת' },
 ];
 
 export default async function AdminHubPage() {
@@ -162,14 +164,23 @@ export default async function AdminHubPage() {
           ))}
         </div>
 
-        <div className="hub-cards-grid">
-          {NAV_CARDS.map((card) => (
-            <Link key={card.href} href={card.href} className="hub-card">
-              <div className="hub-card-title">{card.title}</div>
-              <div className="hub-card-desc">{card.desc}</div>
-            </Link>
-          ))}
-        </div>
+        {['מכירות', 'לידים', 'שיווק', 'תוכן', 'קהילה', 'אנליטיקה', 'מערכת'].map(group => {
+          const cards = NAV_CARDS.filter(c => c.group === group);
+          if (!cards.length) return null;
+          return (
+            <div key={group} style={{ marginBottom: 32 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#9E9990', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{group}</div>
+              <div className="hub-cards-grid">
+                {cards.map((card) => (
+                  <Link key={card.href} href={card.href} className="hub-card">
+                    <div className="hub-card-title">{card.title}</div>
+                    <div className="hub-card-desc">{card.desc}</div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
   );
