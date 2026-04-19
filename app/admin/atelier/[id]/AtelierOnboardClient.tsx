@@ -43,6 +43,8 @@ const PRESET_MODULES: Module[] = [
 
 const MODULE_CATEGORIES = ["שיווק", "תוכן", "קהילה", "מכירות", "אנליטיקה"];
 
+interface PhysicalProduct { name: string; price: number; description: string; image_url: string }
+interface DocFile { name: string; url: string; type: string }
 interface Testimonial { name: string; quote: string }
 interface Palette {
   id: string; name: string;
@@ -79,6 +81,17 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
     app.testimonials ?? [{ name: "", quote: "" }, { name: "", quote: "" }]
   );
   const [modules, setModules] = useState<string[]>(app.modules ?? []);
+  const [whatsapp, setWhatsapp] = useState<string>(app.whatsapp ?? "");
+  const [businessType, setBusinessType] = useState<string>(app.business_type ?? "");
+  const [businessId, setBusinessId] = useState<string>(app.business_id ?? "");
+  const [businessAddress, setBusinessAddress] = useState<string>(app.business_address ?? "");
+  const [heroImageUrl, setHeroImageUrl] = useState<string>(app.hero_image_url ?? "");
+  const [documents, setDocuments] = useState<DocFile[]>(app.documents ?? []);
+  const [physicalProducts, setPhysicalProducts] = useState<PhysicalProduct[]>(
+    app.physical_products ?? []
+  );
+  const [uploadingHero, setUploadingHero] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState<Generated | null>(app.generated_content ?? null);
   const [selectedPalette, setSelectedPalette] = useState<string | null>(app.selected_palette ?? null);
@@ -125,6 +138,9 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
           products: products.filter(p => p.name),
           testimonials: testimonials.filter(t => t.name && t.quote),
           modules,
+          whatsapp, business_type: businessType, business_id: businessId,
+          business_address: businessAddress,
+          physical_products: physicalProducts.filter(p => p.name),
         }),
       });
       const data = await res.json();
@@ -134,6 +150,57 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
       setGenError("שגיאת רשת");
     } finally {
       setGenerating(false);
+    }
+  }
+
+  async function uploadFile(file: File, folder: string): Promise<{ url: string; name: string } | null> {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", folder);
+    const res = await fetch("/api/admin/atelier/upload", { method: "POST", body: fd });
+    if (!res.ok) return null;
+    return res.json();
+  }
+
+  async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingHero(true);
+    const result = await uploadFile(file, `hero/${app.id}`);
+    if (result) {
+      setHeroImageUrl(result.url);
+      await fetch(`/api/admin/atelier/applications?id=${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hero_image_url: result.url }),
+      });
+    }
+    setUploadingHero(false);
+  }
+
+  async function handleDocUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingDoc(true);
+    const result = await uploadFile(file, `docs/${app.id}`);
+    if (result) {
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+      const type = ext === "pdf" ? "pdf" : "word";
+      const newDocs = [...documents, { name: result.name, url: result.url, type }];
+      setDocuments(newDocs);
+      await fetch(`/api/admin/atelier/applications?id=${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documents: newDocs }),
+      });
+    }
+    setUploadingDoc(false);
+  }
+
+  async function handlePhysicalProductImageUpload(idx: number, file: File) {
+    const result = await uploadFile(file, `products/${app.id}`);
+    if (result) {
+      setPhysicalProducts(physicalProducts.map((p, i) => i === idx ? { ...p, image_url: result.url } : p));
     }
   }
 
@@ -216,6 +283,130 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
       <div style={s.card}>
         <div style={s.label}>הסיפור שלה</div>
         <div style={{ fontSize: 15, color: "#EDE9E1", lineHeight: 1.75, marginTop: 6 }}>{app.story}</div>
+      </div>
+
+      {/* Business details */}
+      <div style={s.card}>
+        <div style={s.section}>פרטים עסקיים</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+          <div>
+            <div style={s.label}>WhatsApp (מספר נייד)</div>
+            <input style={s.input} value={whatsapp} onChange={e => setWhatsapp(e.target.value)} placeholder="05X-XXXXXXX" dir="ltr" />
+          </div>
+          <div>
+            <div style={s.label}>כתובת עסקית</div>
+            <input style={s.input} value={businessAddress} onChange={e => setBusinessAddress(e.target.value)} placeholder="רחוב, עיר" />
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 12, alignItems: "start" }}>
+          <div>
+            <div style={s.label}>סוג עסק</div>
+            <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              {["עוסק מורשה", "חברה בע\"מ"].map(t => (
+                <button key={t} type="button" onClick={() => setBusinessType(t)} style={{
+                  padding: "8px 16px", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit",
+                  background: businessType === t ? "rgba(201,150,74,0.15)" : "#1D2430",
+                  border: `1px solid ${businessType === t ? "#C9964A" : "#2C323E"}`,
+                  color: businessType === t ? "#C9964A" : "#9E9990", fontWeight: businessType === t ? 700 : 400,
+                }}>{t}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={s.label}>מספר {businessType === "חברה בע\"מ" ? "ח.פ" : "עוסק מורשה"}</div>
+            <input style={s.input} value={businessId} onChange={e => setBusinessId(e.target.value)} placeholder="XXXXXXXXX" dir="ltr" />
+          </div>
+        </div>
+      </div>
+
+      {/* Media & documents */}
+      <div style={s.card}>
+        <div style={s.section}>מדיה ומסמכים</div>
+
+        {/* Hero image */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={s.label}>תמונת Hero לאתר</div>
+          <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 10 }}>
+            {heroImageUrl ? (
+              <div style={{ position: "relative" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={heroImageUrl} alt="hero" style={{ width: 120, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #2C323E" }} />
+                <button type="button" onClick={() => setHeroImageUrl("")} style={{ position: "absolute", top: -8, left: -8, background: "#EA4335", border: "none", borderRadius: "50%", width: 20, height: 20, color: "#fff", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+              </div>
+            ) : (
+              <div style={{ width: 120, height: 80, borderRadius: 8, border: "2px dashed #2C323E", display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 12 }}>
+                {uploadingHero ? "⏳" : "אין תמונה"}
+              </div>
+            )}
+            <label style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990", cursor: "pointer", padding: "10px 18px" }}>
+              {uploadingHero ? "מעלה..." : "בחר תמונה"}
+              <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleHeroUpload} disabled={uploadingHero} />
+            </label>
+          </div>
+        </div>
+
+        {/* Documents */}
+        <div>
+          <div style={s.label}>קבצי תוכן / בריף (Word / PDF)</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "10px 0" }}>
+            {documents.map((doc, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1D2430", borderRadius: 8, padding: "10px 14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 18 }}>{doc.type === "pdf" ? "📄" : "📝"}</span>
+                  <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#C9964A", textDecoration: "none" }}>{doc.name}</a>
+                </div>
+                <button type="button" onClick={() => setDocuments(documents.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 16 }}>×</button>
+              </div>
+            ))}
+          </div>
+          <label style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#9E9990", padding: "8px 16px", fontSize: 13, cursor: "pointer", display: "inline-block" }}>
+            {uploadingDoc ? "⏳ מעלה..." : "+ הוסף קובץ"}
+            <input type="file" accept=".pdf,.doc,.docx" style={{ display: "none" }} onChange={handleDocUpload} disabled={uploadingDoc} />
+          </label>
+        </div>
+      </div>
+
+      {/* Physical products */}
+      <div style={s.card}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div style={s.section}>מוצרים פיזיים (1–3)</div>
+          {physicalProducts.length < 3 && (
+            <button type="button" onClick={() => setPhysicalProducts([...physicalProducts, { name: "", price: 0, description: "", image_url: "" }])}
+              style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#9E9990", padding: "8px 16px", fontSize: 13 }}>
+              + הוסף מוצר
+            </button>
+          )}
+        </div>
+        {physicalProducts.length === 0 && (
+          <div style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0" }}>בושם, תכשיט, מוצר ברנד של המשפיענית — עד 3 מוצרים</div>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {physicalProducts.map((p, i) => (
+            <div key={i} style={{ background: "#1D2430", borderRadius: 10, padding: 16, display: "grid", gridTemplateColumns: "80px 1fr", gap: 14 }}>
+              {/* Image upload */}
+              <label style={{ cursor: "pointer" }}>
+                {p.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.image_url} alt="" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #2C323E" }} />
+                ) : (
+                  <div style={{ width: 80, height: 80, borderRadius: 8, border: "2px dashed #2C323E", display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 11, textAlign: "center" }}>תמונה</div>
+                )}
+                <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { if (e.target.files?.[0]) handlePhysicalProductImageUpload(i, e.target.files[0]); }} />
+              </label>
+              {/* Fields */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 8 }}>
+                  <input style={s.input} value={p.name} onChange={e => setPhysicalProducts(physicalProducts.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder="שם המוצר" />
+                  <input style={{ ...s.input, direction: "ltr" }} type="number" value={p.price || ""} onChange={e => setPhysicalProducts(physicalProducts.map((x, j) => j === i ? { ...x, price: Number(e.target.value) } : x))} placeholder="₪" />
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input style={{ ...s.input, flex: 1 }} value={p.description} onChange={e => setPhysicalProducts(physicalProducts.map((x, j) => j === i ? { ...x, description: e.target.value } : x))} placeholder="תיאור קצר — רכיבים, ייחוד..." />
+                  <button type="button" onClick={() => setPhysicalProducts(physicalProducts.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 18, padding: "0 8px" }}>×</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Onboarding form */}

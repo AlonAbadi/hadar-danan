@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { application_id, name, niche, target_audience, tone_keywords, products, testimonials, modules } = body;
+  const { application_id, name, niche, target_audience, tone_keywords, products, testimonials, modules,
+          whatsapp, business_type, business_id, business_address, physical_products } = body;
 
   if (!application_id || !name || !niche) {
     return NextResponse.json({ error: "חסרים שדות חובה" }, { status: 400 });
@@ -145,12 +146,8 @@ ${testimonialsText || "- לא צוינו"}
     await (supabase as any)
       .from("atelier_applications")
       .update({
-        niche,
-        target_audience,
-        tone_keywords,
-        products,
-        testimonials,
-        modules,
+        niche, target_audience, tone_keywords, products, testimonials, modules,
+        whatsapp, business_type, business_id, business_address, physical_products,
         generated_content: generated,
         onboarded_at: new Date().toISOString(),
       })
