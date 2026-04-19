@@ -236,7 +236,13 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 24, fontWeight: 800, color: "#EDE9E1" }}>{app.name}</div>
-        <div style={{ fontSize: 13, color: "#9E9990", marginTop: 4 }}>{app.instagram} · {app.phone}</div>
+        <div style={{ fontSize: 13, color: "#9E9990", marginTop: 4, display: "flex", gap: 12, alignItems: "center" }}>
+          <a href={app.instagram} target="_blank" rel="noreferrer" style={{ color: "#C9964A", textDecoration: "none", fontWeight: 600 }}>
+            {app.instagram.replace("https://www.instagram.com/", "@").replace("https://instagram.com/", "@").replace(/\/$/, "")} ↗
+          </a>
+          <span style={{ color: "#2C323E" }}>·</span>
+          <span>{app.phone}</span>
+        </div>
       </div>
 
       {/* AI Analysis */}
