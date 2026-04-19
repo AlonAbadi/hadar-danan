@@ -96,22 +96,36 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [generated, setGenerated] = useState<Generated | null>(app.generated_content ?? null);
   const [selectedPalette, setSelectedPalette] = useState<string | null>(app.selected_palette ?? null);
   const [genError, setGenError] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [analysis, setAnalysis] = useState<Analysis | null>(app.ai_analysis ?? null);
   const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => {
-    setAnalyzing(true);
-    fetch("/api/admin/atelier/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: app.name, instagram: app.instagram, story: app.story }),
-    })
-      .then(r => r.json())
-      .then(d => { if (d.analysis) setAnalysis(d.analysis); })
-      .catch(() => {})
-      .finally(() => setAnalyzing(false));
+    if (app.ai_analysis) return; // already cached — skip API call
+    runAnalysis();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function runAnalysis() {
+    setAnalyzing(true);
+    try {
+      const res = await fetch("/api/admin/atelier/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: app.name, instagram: app.instagram, story: app.story }),
+      });
+      const d = await res.json();
+      if (d.analysis) {
+        setAnalysis(d.analysis);
+        // save to DB so next load uses cache
+        await fetch(`/api/admin/atelier/applications?id=${app.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ai_analysis: d.analysis }),
+        });
+      }
+    } catch { /* silent */ }
+    finally { setAnalyzing(false); }
+  }
 
   const s = {
     page: { minHeight: "100vh", background: "#0D1018", padding: "32px", fontFamily: "var(--font-assistant), Assistant, sans-serif" } as React.CSSProperties,
@@ -229,7 +243,10 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
       <div style={{ ...s.card, borderColor: analyzing ? "#2C323E" : analysis ? "#C9964A44" : "#2C323E" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#EDE9E1" }}>ניתוח ליד — Claude</div>
-          {analyzing && <div style={{ fontSize: 12, color: "#9E9990" }}>⏳ מנתח...</div>}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {analyzing && <div style={{ fontSize: 12, color: "#9E9990" }}>⏳ מנתח...</div>}
+            {!analyzing && <button type="button" onClick={runAnalysis} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 12, padding: 0 }} title="הרץ מחדש">↻ רענן</button>}
+          </div>
           {analysis && (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{
