@@ -131,7 +131,7 @@ function VSL({ videoId, productName }: { videoId?: string; productName: string }
       }}>REELS</div>
       <div style={{ aspectRatio: '9/16', borderRadius: 16, overflow: 'hidden' }}>
         <iframe
-          src={`https://player.vimeo.com/video/${videoId}?autoplay=0&loop=0&title=0&byline=0&portrait=0&cc=1`}
+          src={`https://player.vimeo.com/video/${videoId}?autoplay=0&loop=0&title=0&byline=0&portrait=0&cc=0`}
           style={{ width: '100%', height: '100%', border: 'none' }}
           allow="autoplay; fullscreen"
           title={productName}
@@ -620,7 +620,7 @@ export default function ProductLandingPage({
               }}>
                 <iframe
                   id="vimeo-vsl"
-                  src={`https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&loop=0&player_id=0&app_id=58479`}
+                  src={`https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&loop=0&player_id=0&app_id=58479&cc=0`}
                   allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
