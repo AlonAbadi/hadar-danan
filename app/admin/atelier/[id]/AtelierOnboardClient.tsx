@@ -24,6 +24,25 @@ const PRESET_PRODUCTS: Product[] = [
   { name: "שותפות אסטרטגית", price: 10000 },
   { name: "מנוי חודשי (כוורת)", price: 97 },
 ];
+interface Module { id: string; name: string; description: string; category: string }
+
+const PRESET_MODULES: Module[] = [
+  { id: "coupons",      name: "קופונים ודילים",        description: "קודי הנחה למשפיעניות ושותפים",         category: "שיווק" },
+  { id: "quiz",         name: "Quiz אבחון",             description: "3 שאלות שמפנות לקורס המתאים",          category: "שיווק" },
+  { id: "hive",         name: "קהילה חודשית (כוורת)",  description: "מנוי חודשי עם תוכן בלעדי",              category: "קהילה" },
+  { id: "affiliate",    name: "תוכנית שותפים",          description: "קישורי אפיליאייט עם עמלות",             category: "שיווק" },
+  { id: "challenge",    name: "אתגר ימים",              description: "אתגר קצר עם וידאו יומי",                category: "תוכן" },
+  { id: "course",       name: "קורס וידאו",             description: "קורס מודולרי עם נגן מאובטח",            category: "תוכן" },
+  { id: "ab_testing",   name: "A/B Testing",            description: "ניסויים על כותרות ו-CTAs",              category: "אנליטיקה" },
+  { id: "whatsapp",     name: "WhatsApp אוטומציה",      description: "הודעות אוטומטיות לסגירת עגלות",         category: "שיווק" },
+  { id: "strategy",     name: "הזמנת פגישה",            description: "יומן ותשלום לפגישות אסטרטגיה",          category: "מכירות" },
+  { id: "premium_day",  name: "יום פרמיום",             description: "הזמנה ותשלום ליום צילום/עבודה",         category: "מכירות" },
+  { id: "partnership",  name: "שותפות אסטרטגית",       description: "טופס ליד לשותפות עסקית גדולה",          category: "מכירות" },
+  { id: "video_analytics", name: "אנליטיקת וידאו",     description: "מעקב צפייה, נפילות וסיום",              category: "אנליטיקה" },
+];
+
+const MODULE_CATEGORIES = ["שיווק", "תוכן", "קהילה", "מכירות", "אנליטיקה"];
+
 interface Testimonial { name: string; quote: string }
 interface Palette {
   id: string; name: string;
@@ -59,6 +78,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(
     app.testimonials ?? [{ name: "", quote: "" }, { name: "", quote: "" }]
   );
+  const [modules, setModules] = useState<string[]>(app.modules ?? []);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState<Generated | null>(app.generated_content ?? null);
   const [selectedPalette, setSelectedPalette] = useState<string | null>(app.selected_palette ?? null);
@@ -104,6 +124,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
           niche, target_audience: audience, tone_keywords: tone,
           products: products.filter(p => p.name),
           testimonials: testimonials.filter(t => t.name && t.quote),
+          modules,
         }),
       });
       const data = await res.json();
@@ -215,6 +236,44 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
         <div style={{ marginBottom: 20 }}>
           <div style={s.label}>טון וסגנון</div>
           <input style={s.input} value={tone} onChange={e => setTone(e.target.value)} placeholder="למשל: חמה, ישירה, מעצימה" />
+        </div>
+
+        {/* Modules */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={s.label}>מודולים פעילים</div>
+            <span style={{ fontSize: 12, color: "#9E9990" }}>{modules.length} נבחרו</span>
+          </div>
+          {MODULE_CATEGORIES.map(cat => (
+            <div key={cat} style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "#9E9990", marginBottom: 8, fontWeight: 700, letterSpacing: "0.05em" }}>{cat}</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {PRESET_MODULES.filter(m => m.category === cat).map(mod => {
+                  const on = modules.includes(mod.id);
+                  return (
+                    <button
+                      key={mod.id}
+                      type="button"
+                      title={mod.description}
+                      onClick={() => setModules(on ? modules.filter(id => id !== mod.id) : [...modules, mod.id])}
+                      style={{
+                        padding: "7px 14px", borderRadius: 8, fontSize: 13, cursor: "pointer",
+                        fontFamily: "inherit", transition: "all 0.15s",
+                        background: on ? "rgba(201,150,74,0.12)" : "#1D2430",
+                        border: `1px solid ${on ? "#C9964A" : "#2C323E"}`,
+                        color: on ? "#C9964A" : "#9E9990",
+                        fontWeight: on ? 700 : 400,
+                        display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2, textAlign: "right",
+                      }}
+                    >
+                      <span>{on ? "✓ " : ""}{mod.name}</span>
+                      <span style={{ fontSize: 11, opacity: 0.65, fontWeight: 400 }}>{mod.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Products */}

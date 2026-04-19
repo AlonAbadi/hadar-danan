@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { application_id, name, niche, target_audience, tone_keywords, products, testimonials } = body;
+  const { application_id, name, niche, target_audience, tone_keywords, products, testimonials, modules } = body;
 
   if (!application_id || !name || !niche) {
     return NextResponse.json({ error: "חסרים שדות חובה" }, { status: 400 });
@@ -150,6 +150,7 @@ ${testimonialsText || "- לא צוינו"}
         tone_keywords,
         products,
         testimonials,
+        modules,
         generated_content: generated,
         onboarded_at: new Date().toISOString(),
       })
