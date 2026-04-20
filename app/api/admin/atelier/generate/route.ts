@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import mammoth from "mammoth";
 import { createServerClient } from "@/lib/supabase/server";
 
 function isAdminAuthorized(req: NextRequest): boolean {
@@ -149,6 +150,14 @@ ${testimonialsText || "- לא צוינו"}
           const res = await fetch(doc.url);
           const text = await res.text();
           messageContent.push({ type: "text", text: `📄 מסמך: ${doc.name}\n\n${text}\n\n---` });
+        } else if (
+          doc.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+          doc.name.toLowerCase().endsWith(".docx")
+        ) {
+          const res = await fetch(doc.url);
+          const buf = Buffer.from(await res.arrayBuffer());
+          const { value: text } = await mammoth.extractRawText({ buffer: buf });
+          messageContent.push({ type: "text", text: `📄 מסמך Word: ${doc.name}\n\n${text}\n\n---` });
         }
         // unsupported types are silently skipped
       } catch {
