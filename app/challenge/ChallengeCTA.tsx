@@ -36,6 +36,17 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
   const listPrice = Number(price);
   const toPay     = Math.max(0, listPrice - credit);
 
+  const BTN_STYLE: React.CSSProperties = {
+    display: "inline-block",
+    width: "auto",
+    padding: "15px 36px",
+    borderRadius: 14,
+    fontSize: 15,
+    fontWeight: 800,
+    border: "none",
+    cursor: "pointer",
+  };
+
   useEffect(() => {
     // 1. Quiz session (users who came through the quiz)
     const sessionUser = getSessionUser();
@@ -211,7 +222,7 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
             onBlur={(e) => { e.currentTarget.style.borderColor = "#2C323E"; }}
           />
         </div>
-        <button type="submit" className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold">
+        <button type="submit" className="btn-cta-gold active:scale-[0.98]" style={BTN_STYLE}>
           המשך לתשלום ←
         </button>
         <button type="button" onClick={() => setPhase("idle")} className="text-sm text-center transition" style={{ color: "#9E9990" }}>
@@ -227,7 +238,8 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
         <div className="flex flex-col gap-3" style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
           <button
             onClick={() => hasPhone ? doCheckout(quizUserId) : setPhase("phone")}
-            className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold"
+            className="btn-cta-gold active:scale-[0.98]"
+            style={BTN_STYLE}
           >
             {quizName ? `${quizName}, ` : ""}
             {toPay === 0
@@ -256,7 +268,8 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
       <div className="flex flex-col gap-3" style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
         <button
           onClick={() => setPhase("form")}
-          className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold"
+          className="btn-cta-gold active:scale-[0.98]"
+          style={BTN_STYLE}
         >
           {toPay === 0
             ? "קבל גישה חינם ←"
@@ -288,7 +301,8 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
         <button
           onClick={() => doCheckout(quizUserId)}
           disabled={phase === "loading"}
-          className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] disabled:opacity-60 btn-cta-gold"
+          className="btn-cta-gold active:scale-[0.98] disabled:opacity-60"
+          style={BTN_STYLE}
         >
           {phase === "loading" ? "מעביר לתשלום..." : "נסה שוב ←"}
         </button>
@@ -333,7 +347,8 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
       <button
         type="submit"
         disabled={phase === "loading"}
-        className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] disabled:opacity-60 btn-cta-gold"
+        className="w-full btn-cta-gold active:scale-[0.98] disabled:opacity-60"
+        style={{ borderRadius: 14, padding: "15px 36px", fontSize: 15, fontWeight: 800, border: "none", cursor: "pointer" }}
       >
         {phase === "loading"
           ? "מעביר לתשלום..."
