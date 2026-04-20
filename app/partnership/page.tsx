@@ -21,6 +21,7 @@ export default async function PartnershipPage() {
       price={0}
       checkoutHref="#apply"
 
+      vimeoId="1184810808"
       headline={<>שותפות אסטרטגית. <em>צמיחה משותפת.</em></>}
       heroSub="שותפות שיווקית לטווח ארוך - לא עוד ספק, אלא מישהי שיושבת לצדכם ומבינה את העסק. לא רק כותבת תוכן, אלא חושבת איתכם אסטרטגיה."
       stats={[

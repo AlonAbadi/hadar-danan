@@ -20,7 +20,7 @@ export default async function TrainingPage() {
       checkoutHref="#cta"
 
       vslVideoId="1182619417"
-      vimeoId="1182657741"
+      vimeoId="1184732776"
       headline={<>הדרכה חינמית. <em>הצעד הראשון</em> לבידול שלך.</>}
       heroSub="הדרכה של 20 דקות. בלי ציוד, בלי ניסיון, בלי תקציב. רק בהירות אמיתית על הפער בין מי שאתה לבין מה שהעסק שלך משדר."
       stats={[
