@@ -47,6 +47,14 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
     cursor: "pointer",
   };
 
+  const WRAPPER_STYLE: React.CSSProperties = {
+    textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 12,
+  };
+
   useEffect(() => {
     // 1. Quiz session (users who came through the quiz)
     const sessionUser = getSessionUser();
@@ -235,7 +243,7 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
   if (phase === "idle") {
     if (quizUserId) {
       return (
-        <div className="flex flex-col gap-3" style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
+        <div style={WRAPPER_STYLE}>
           <button
             onClick={() => hasPhone ? doCheckout(quizUserId) : setPhase("phone")}
             className="btn-cta-gold active:scale-[0.98]"
@@ -265,7 +273,7 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
     }
 
     return (
-      <div className="flex flex-col gap-3" style={{ maxWidth: 420, margin: '0 auto', width: '100%' }}>
+      <div style={WRAPPER_STYLE}>
         <button
           onClick={() => setPhase("form")}
           className="btn-cta-gold active:scale-[0.98]"
@@ -296,7 +304,7 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
   // Quiz user in loading/error state — show without registration form
   if (quizUserId && (phase === "loading" || phase === "error")) {
     return (
-      <div className="flex flex-col gap-3">
+      <div style={WRAPPER_STYLE}>
         {errorMsg && <p className="text-red-400 text-sm text-center">{errorMsg}</p>}
         <button
           onClick={() => doCheckout(quizUserId)}
