@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { application_id, name, niche, target_audience, tone_keywords, products, testimonials, modules,
-          whatsapp, business_type, business_id, business_address, physical_products } = body;
+          whatsapp, business_type, business_id, business_address, physical_products,
+          documents } = body;
 
   if (!application_id || !name || !niche) {
     return NextResponse.json({ error: "חסרים שדות חובה" }, { status: 400 });
@@ -36,7 +37,9 @@ export async function POST(req: NextRequest) {
     ? testimonials.map((t: { name: string; quote: string }) => `- ${t.name}: "${t.quote}"`).join("\n")
     : "";
 
+  const hasDocuments = Array.isArray(documents) && documents.length > 0;
   const prompt = `אתה כותב שיווקי מומחה בעברית. אתה עוזר לחברת beegood לבנות אתרי מכירה למשפיעניות וועוצים.
+${hasDocuments ? `\nמצורפים מסמכים אסטרטגיים של הלקוחה — קרא אותם בעיון לפני שאתה יוצר את התוכן. הם מקור האמת המרכזי לגבי הקול, הערכים, השיטה והמיתוג שלה. השתמש בניסוח, בשפה ובמסרים הספציפיים שמופיעים בהם.\n` : ""}
 
 פרטי הלקוחה:
 - שם: ${name}
@@ -123,11 +126,44 @@ ${testimonialsText || "- לא צוינו"}
     return NextResponse.json({ error: "ANTHROPIC_API_KEY חסר בסביבה" }, { status: 500 });
   }
 
+  // Build message content — prepend any uploaded documents so Claude reads them first
+  type ContentBlock =
+    | { type: "text"; text: string }
+    | { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string }; title?: string }
+    | { type: "document"; source: { type: "url"; url: string }; title?: string };
+
+  const messageContent: ContentBlock[] = [];
+
+  if (Array.isArray(documents) && documents.length > 0) {
+    for (const doc of documents as { name: string; url: string; type: string }[]) {
+      try {
+        if (doc.type === "application/pdf") {
+          const res = await fetch(doc.url);
+          const buf = Buffer.from(await res.arrayBuffer());
+          messageContent.push({
+            type: "document",
+            source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") },
+            title: doc.name,
+          });
+        } else if (doc.type.startsWith("text/")) {
+          const res = await fetch(doc.url);
+          const text = await res.text();
+          messageContent.push({ type: "text", text: `📄 מסמך: ${doc.name}\n\n${text}\n\n---` });
+        }
+        // unsupported types are silently skipped
+      } catch {
+        // don't fail the whole request if one doc can't be fetched
+      }
+    }
+  }
+
+  messageContent.push({ type: "text", text: prompt });
+
   try {
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-sonnet-4-6",
       max_tokens: 2000,
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: messageContent }],
     });
 
     const raw = message.content[0].type === "text" ? message.content[0].text : "";

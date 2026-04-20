@@ -158,6 +158,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
           whatsapp, business_type: businessType, business_id: businessId,
           business_address: businessAddress,
           physical_products: physicalProducts.filter(p => p.name),
+          documents,
         }),
       });
       const data = await res.json();
