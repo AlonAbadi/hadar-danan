@@ -73,6 +73,7 @@ export interface ProductLandingPageProps {
 
   whatsappNumber?: string;
 
+  ctaLabel?:         string;
   ctaSlot?:          React.ReactNode;
   priceSectionSlot?: React.ReactNode;
   bottomSlot?:       React.ReactNode;
@@ -258,6 +259,7 @@ function MicroCommitment({
   whatsappHref,
   displayPrice,
   dailyPrice,
+  ctaLabel,
 }: {
   questions: { q: string; options: string[] }[];
   resultMessages: Record<string, string>;
@@ -270,6 +272,7 @@ function MicroCommitment({
   whatsappHref: string;
   displayPrice: string;
   dailyPrice: string;
+  ctaLabel: string;
 }) {
   const [phase, setPhase] = useState<MicroStep>('questions');
   const [qIdx, setQIdx] = useState(0);
@@ -398,6 +401,7 @@ function MicroCommitment({
           checkoutHref={checkoutHref}
           ctaSlot={ctaSlot}
           whatsappHref={whatsappHref}
+          ctaLabel={ctaLabel}
         />
       )}
     </div>
@@ -407,11 +411,11 @@ function MicroCommitment({
 // ── Price card (shared) ────────────────────────────────────────
 function PriceCard({
   price, originalPrice, displayPrice, dailyPrice, productName,
-  creditNote, checkoutHref, ctaSlot, whatsappHref,
+  creditNote, checkoutHref, ctaSlot, whatsappHref, ctaLabel,
 }: {
   price: number; originalPrice?: number; displayPrice: string; dailyPrice: string;
   productName: string; creditNote?: string; checkoutHref: string;
-  ctaSlot?: React.ReactNode; whatsappHref: string;
+  ctaSlot?: React.ReactNode; whatsappHref: string; ctaLabel: string;
 }) {
   return (
     <div style={{
@@ -449,7 +453,7 @@ function PriceCard({
           display: 'block', padding: '15px', borderRadius: 10,
           fontWeight: 800, fontSize: 17, textDecoration: 'none', textAlign: 'center',
         }}>
-          {price === 0 ? 'צפה עכשיו חינם' : 'להצטרפות עכשיו'}
+          {ctaLabel}
         </a>
       )}
 
@@ -525,6 +529,7 @@ export default function ProductLandingPage({
   faqSectionTitle,
   finalTitle, finalSub,
   whatsappNumber,
+  ctaLabel: ctaLabelProp,
   ctaSlot, priceSectionSlot, bottomSlot,
 }: ProductLandingPageProps) {
 
@@ -579,9 +584,7 @@ export default function ProductLandingPage({
   const dailyPrice     = (price / 365).toFixed(0);
   const displayPrice   = price === 0 ? 'חינם' : `₪${price.toLocaleString('he-IL')}`;
 
-  const ctaLabel = price === 0
-    ? 'צפה עכשיו חינם'
-    : `להצטרפות - ${displayPrice}`;
+  const ctaLabel = ctaLabelProp ?? (price === 0 ? 'צפה עכשיו חינם' : `להצטרפות - ${displayPrice}`);
 
   const scrollToCTA = () => {
     const el = document.getElementById('cta');
@@ -598,7 +601,7 @@ export default function ProductLandingPage({
           {price > 0 && <><br />{displayPrice} - גישה מיידית</>}
         </div>
         <button onClick={scrollToCTA} className="lp-sticky-cta">
-          {price === 0 ? 'הצטרף/י חינם' : 'לרכישה'}
+          {ctaLabel}
         </button>
       </div>
 
@@ -876,6 +879,7 @@ export default function ProductLandingPage({
               whatsappHref={waHref}
               displayPrice={displayPrice}
               dailyPrice={dailyPrice}
+              ctaLabel={ctaLabel}
             />
           </div>
         </>
@@ -894,6 +898,7 @@ export default function ProductLandingPage({
               checkoutHref={checkoutHref}
               ctaSlot={ctaSlot}
               whatsappHref={waHref}
+              ctaLabel={ctaLabel}
             />
           </div>
         </>
@@ -928,7 +933,7 @@ export default function ProductLandingPage({
           {finalSub && <div className="lp-final-sub">{finalSub}</div>}
           {ctaSlot ?? (
             <a href={checkoutHref} className="lp-cta-btn" style={{ maxWidth: 380, margin: '0 auto 10px', display: 'block' }}>
-              {price === 0 ? 'צפה עכשיו חינם' : `מצטרף/ת - ${displayPrice}`}
+              {ctaLabel}
             </a>
           )}
         </div>
