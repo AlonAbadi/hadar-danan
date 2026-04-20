@@ -90,6 +90,10 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [physicalProducts, setPhysicalProducts] = useState<PhysicalProduct[]>(
     app.physical_products ?? []
   );
+  const [clientEmail, setClientEmail] = useState<string>(app.email ?? "");
+  const [sendingOnboarding, setSendingOnboarding] = useState(false);
+  const [onboardingSent, setOnboardingSent] = useState(!!app.onboarding_token);
+  const [onboardingSentError, setOnboardingSentError] = useState<string | null>(null);
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -128,6 +132,26 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
       }
     } catch { /* silent */ }
     finally { setAnalyzing(false); }
+  }
+
+  async function handleSendOnboarding() {
+    if (!clientEmail.trim()) return;
+    setSendingOnboarding(true);
+    setOnboardingSentError(null);
+    try {
+      const res = await fetch("/api/admin/atelier/send-onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ application_id: app.id, email: clientEmail }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setOnboardingSentError(d.error ?? "שגיאה"); return; }
+      setOnboardingSent(true);
+    } catch {
+      setOnboardingSentError("שגיאת רשת");
+    } finally {
+      setSendingOnboarding(false);
+    }
   }
 
   const s = {
@@ -295,6 +319,48 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
           <span style={{ color: "#2C323E" }}>·</span>
           <span>{app.phone}</span>
         </div>
+      </div>
+
+      {/* Send onboarding form */}
+      <div style={{ ...s.card, borderColor: onboardingSent ? "#34A85344" : "#2C323E" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#EDE9E1" }}>שלח טופס ללקוח</div>
+          {onboardingSent && <div style={{ fontSize: 12, color: "#34A853", fontWeight: 700 }}>✓ נשלח</div>}
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <div style={s.label}>כתובת מייל של הלקוחה</div>
+            <input
+              style={s.input}
+              type="email"
+              value={clientEmail}
+              onChange={e => setClientEmail(e.target.value)}
+              placeholder="name@example.com"
+              dir="ltr"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleSendOnboarding}
+            disabled={sendingOnboarding || !clientEmail.trim()}
+            style={{
+              ...s.btn,
+              marginTop: 22,
+              background: !clientEmail.trim() || sendingOnboarding ? "#2C323E" : "linear-gradient(135deg, #E8B94A, #C9964A)",
+              color: !clientEmail.trim() || sendingOnboarding ? "#9E9990" : "#0D1018",
+              cursor: !clientEmail.trim() ? "not-allowed" : "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {sendingOnboarding ? "⏳ שולח..." : onboardingSent ? "שלח שוב" : "שלח טופס →"}
+          </button>
+        </div>
+        {onboardingSentError && <div style={{ color: "#EA4335", fontSize: 13, marginTop: 8 }}>{onboardingSentError}</div>}
+        {onboardingSent && (
+          <div style={{ fontSize: 12, color: "#9E9990", marginTop: 8 }}>
+            הלקוחה תקבל מייל עם לינק לטופס שתמלא בעצמה
+          </div>
+        )}
       </div>
 
       {/* AI Analysis */}
