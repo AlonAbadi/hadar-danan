@@ -458,8 +458,8 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
         const data = await res.json();
         const userId = (data as Record<string, unknown>).user_id as string | undefined;
         postEvent({ type: "QUIZ_LEAD", user_id: userId, metadata: { email: leadForm.email } });
-        trackLead();
-        trackCompleteRegistration();
+        trackLead(userId);
+        trackCompleteRegistration(userId ? `reg_${userId}` : undefined);
 
         // Persist session so product pages skip re-registration
         if (userId) {

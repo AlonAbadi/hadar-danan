@@ -137,11 +137,11 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
       if (signupRes.ok) {
         const data = await signupRes.json();
         userId = data.user_id ?? null;
-        trackLead();
+        trackLead(userId ?? undefined);
         if (userId) saveUserDetails({ name: form.name, email: form.email, phone: form.phone, userId });
       }
 
-      trackInitiateCheckout("challenge_197", toPay);
+      trackInitiateCheckout("challenge_197", toPay); // single IC — not duplicated
       fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

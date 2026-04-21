@@ -148,7 +148,7 @@ export function BookingForm({ bookedSlots, onSuccess, initialForm }: Props) {
         });
         return;
       }
-      trackBooking();
+      trackBooking(resData.booking_id ?? undefined);
       setBooking({ date: formatDateFull(selectedDate), time: selectedTime });
       setPhase("success");
     } catch {

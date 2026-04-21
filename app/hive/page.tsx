@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { HivePricingSection } from "./HivePricingSection";
+import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 
 export const metadata: Metadata = {
   title: "הכוורת | קהילה חודשית - הדר דנן",
@@ -10,6 +11,8 @@ export const metadata: Metadata = {
 
 export default function HivePage() {
   return (
+    <>
+    <ViewContentTracker product="hive_97" value={97} />
     <ProductLandingPage
       productName="הכוורת"
       price={97}
@@ -77,5 +80,6 @@ export default function HivePage() {
 
       priceSectionSlot={<HivePricingSection />}
     />
+    </>
   );
 }

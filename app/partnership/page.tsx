@@ -1,6 +1,7 @@
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { PartnershipBookingFlow } from "./PartnershipBookingFlow";
 import { createServerClient } from "@/lib/supabase/server";
+import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 
 export const metadata = {
   title: "שותפות אסטרטגית | הדר דנן",
@@ -16,6 +17,8 @@ export default async function PartnershipPage() {
     .eq("status", "confirmed");
 
   return (
+    <>
+    <ViewContentTracker product="partnership_lead" value={0} />
     <ProductLandingPage
       productName="שותפות אסטרטגית"
       price={0}
@@ -106,5 +109,6 @@ export default async function PartnershipPage() {
         </section>
       }
     />
+    </>
   );
 }

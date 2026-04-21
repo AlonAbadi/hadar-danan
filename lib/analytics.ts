@@ -20,9 +20,9 @@ function gtag(...args: unknown[]) {
 }
 
 /** Free training form submitted → Lead */
-export function trackLead() {
+export function trackLead(eventId?: string) {
   try {
-    fbq("track", "Lead", { content_name: "free_training" });
+    fbq("track", "Lead", { content_name: "free_training" }, eventId ? { eventID: eventId } : undefined);
     gtag("event", "generate_lead", { method: "signup_form" });
   } catch {}
 }
@@ -36,10 +36,10 @@ export function trackInitiateCheckout(product: string, value: number, currency =
 }
 
 /** Strategy session booked → Schedule */
-export function trackBooking() {
+export function trackBooking(eventId?: string) {
   try {
-    fbq("track", "Schedule");
-    gtag("event", "booking", { event_category: "conversion" });
+    fbq("track", "Schedule", {}, eventId ? { eventID: eventId } : undefined);
+    gtag("event", "booking", { event_category: "conversion", event_id: eventId });
   } catch {}
 }
 
@@ -64,9 +64,9 @@ export function trackViewContent(product: string, value: number, currency = "ILS
 }
 
 /** After registration form submitted → CompleteRegistration */
-export function trackCompleteRegistration() {
+export function trackCompleteRegistration(eventId?: string) {
   try {
-    fbq("track", "CompleteRegistration");
+    fbq("track", "CompleteRegistration", {}, eventId ? { eventID: eventId } : undefined);
     gtag("event", "sign_up");
   } catch {}
 }

@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { sendCapiEvent } from "@/lib/meta-capi";
 
 const BodySchema = z.object({
   name:               z.string().min(2),
@@ -95,6 +96,19 @@ export async function POST(req: NextRequest) {
       status: "pending",
     });
   }
+
+  await sendCapiEvent({
+    eventName: "Lead",
+    eventId:   `partnership_${user.id}`,
+    userData:  {
+      email:           email.toLowerCase().trim(),
+      phone,
+      fbp:             req.cookies.get("_fbp")?.value,
+      fbc:             req.cookies.get("_fbc")?.value,
+      clientUserAgent: req.headers.get("user-agent") ?? undefined,
+    },
+    customData: { contentName: "partnership_lead", contentIds: ["partnership_lead"] },
+  });
 
   return NextResponse.json({ ok: true, user_id: user.id });
 }

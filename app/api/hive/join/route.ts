@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { sendCapiEvent } from "@/lib/meta-capi";
 
 const QUALIFYING_PRODUCTS = [
   "challenge_197",
@@ -186,6 +187,19 @@ export async function POST(req: NextRequest) {
       }));
       await supabase.from("jobs").insert(jobs);
     }
+
+    const price = tier === "discounted_29" ? 29 : 97;
+    await sendCapiEvent({
+      eventName: "Lead",
+      eventId:   `hive_${user.id}`,
+      userData:  {
+        email,
+        fbp:             req.cookies.get("_fbp")?.value,
+        fbc:             req.cookies.get("_fbc")?.value,
+        clientUserAgent: req.headers.get("user-agent") ?? undefined,
+      },
+      customData: { value: price, currency: "ILS", contentName: `hive_${tier}`, contentIds: [`hive_${tier}`] },
+    });
 
     return NextResponse.json({ success: true, tier }, { status: 201 });
   } catch (err) {

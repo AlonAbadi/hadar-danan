@@ -98,8 +98,9 @@ export function SignupForm({ ctaLabel, dark = false }: SignupFormProps) {
         setErrors(json.errors ?? { general: json.error ?? "שגיאה, נסה שוב" });
         return;
       }
-      trackLead();
       const userId = (json as Record<string, unknown>).user_id as string | undefined;
+      trackLead(userId);
+      if (userId) sessionStorage.setItem("last_signup_user_id", userId);
       if (userId) saveUserDetails({ name: form.name.trim(), email: form.email.trim().toLowerCase(), phone: form.phone.replace(/[\s-]/g, ""), userId });
       router.push("/training/watch");
     } catch {
