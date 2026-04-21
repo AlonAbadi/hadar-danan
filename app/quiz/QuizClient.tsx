@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { saveQuizSession } from "@/lib/quiz-session";
+import { trackLead, trackCompleteRegistration, trackViewContent } from "@/lib/analytics";
 import { buildNarrative } from "@/lib/quiz-narrative";
 import {
   type Answer,
@@ -110,6 +111,16 @@ const PRODUCTS: Product[] = [
   { id: "premium",       href: "/premium",     name: "יום צילום פרמיום",  price: "14,000 ש\"ח" },
   { id: "partnership",   href: "/partnership", name: "שותפות אסטרטגית",   price: "10,000-30,000 ש\"ח" },
 ];
+
+const PRODUCT_VALUE: Record<string, number> = {
+  free_training: 0,
+  challenge:     197,
+  workshop:      1080,
+  course:        1800,
+  strategy:      4000,
+  premium:       14000,
+  partnership:   0,
+};
 
 // ── Match score scaling ───────────────────────────────────────────
 
@@ -307,6 +318,7 @@ export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }
         answers: answers.reduce<Record<string, string>>((acc, a, i) => { acc[`q${i+1}`] = a; return acc; }, {}),
       },
     });
+    trackViewContent(winner.id, PRODUCT_VALUE[winner.id] ?? 0);
   }, [step, scores, winner, matchPct, answers]);
 
   function animateTransition(dir: SlideDir, callback: () => void) {
@@ -417,6 +429,8 @@ export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }
         const data = await res.json();
         const userId = (data as Record<string, unknown>).user_id as string | undefined;
         postEvent({ type: "QUIZ_LEAD", user_id: userId, metadata: { email: leadForm.email } });
+        trackLead();
+        trackCompleteRegistration();
 
         // Persist session so product pages skip re-registration
         if (userId) {

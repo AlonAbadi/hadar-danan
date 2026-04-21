@@ -157,11 +157,20 @@ export async function POST(req: NextRequest) {
       await supabase.from("jobs").insert(jobs);
     }
 
-    // Fire Lead to Meta CAPI (server-side)
+    const fbp = req.cookies.get("_fbp")?.value;
+    const fbc = req.cookies.get("_fbc")?.value;
+    const ua  = req.headers.get("user-agent") ?? undefined;
+
     await sendCapiEvent({
       eventName: "Lead",
       eventId:   user.id,
-      userData:  { email, phone: phone ?? undefined },
+      userData:  { email, phone: phone ?? undefined, fbp, fbc, clientUserAgent: ua },
+    });
+
+    await sendCapiEvent({
+      eventName: "CompleteRegistration",
+      eventId:   `reg_${user.id}`,
+      userData:  { email, phone: phone ?? undefined, fbp, fbc, clientUserAgent: ua },
     });
 
     return NextResponse.json({ ok: true, user_id: user.id }, { status: 201 });

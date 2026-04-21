@@ -19,6 +19,8 @@ export default function ChallengeSuccessPage() {
       nextStepHref={whatsappPhone ? `https://wa.me/${whatsappPhone}` : "/"}
       nextStepDesc="כל התכנים, הפידבקים והקהילה - בקבוצה"
       whatsappPhone={whatsappPhone || undefined}
+      trackingProduct="challenge_197"
+      trackingValue={197}
     />
     </Suspense>
   );

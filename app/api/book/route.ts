@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendCapiEvent } from "@/lib/meta-capi";
 
 const BookingSchema = z.object({
   name:         z.string().min(2, "שם חייב להכיל לפחות 2 תווים"),
@@ -137,6 +138,18 @@ export async function POST(req: NextRequest) {
       },
       run_at: new Date().toISOString(),
       status: "pending",
+    });
+
+    await sendCapiEvent({
+      eventName: "Schedule",
+      eventId:   bookingRow.id,
+      userData:  {
+        email,
+        phone,
+        fbp:             req.cookies.get("_fbp")?.value,
+        fbc:             req.cookies.get("_fbc")?.value,
+        clientUserAgent: req.headers.get("user-agent") ?? undefined,
+      },
     });
 
     return NextResponse.json({ ok: true, booking_id: bookingRow.id, user_id: user.id }, { status: 201 });

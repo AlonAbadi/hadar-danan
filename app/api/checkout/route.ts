@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { PRODUCT_MAP } from "@/lib/products";
+import { sendCapiEvent } from "@/lib/meta-capi";
 
 // Invoice description per product (more descriptive than the short UI name)
 const INVOICE_DESCRIPTIONS: Record<string, string> = {
@@ -160,6 +161,20 @@ export async function POST(req: NextRequest) {
     "InvoiceLines.Price":        String(amount),
     "InvoiceLines.Quantity":     "1",
     "InvoiceLines.IsVatFree":    "false",
+  });
+
+  // Fire InitiateCheckout to Meta CAPI — fires when user lands on Cardcom payment page
+  await sendCapiEvent({
+    eventName:  "InitiateCheckout",
+    eventId:    `ic_${purchase.id}`,
+    userData:   {
+      email:            userRow?.email   ?? undefined,
+      phone:            userRow?.phone   ?? undefined,
+      fbp:              req.cookies.get("_fbp")?.value,
+      fbc:              req.cookies.get("_fbc")?.value,
+      clientUserAgent:  req.headers.get("user-agent") ?? undefined,
+    },
+    customData: { value: amount, currency: "ILS", contentName: product },
   });
 
   const cardcomRes = await fetch(

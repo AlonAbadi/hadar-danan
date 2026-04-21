@@ -5,6 +5,10 @@ import { useEffect, useRef } from "react";
 const VIDEO_ID = "1178865564";
 const MILESTONES = [25, 50, 75];
 
+function fbq(...args: unknown[]) {
+  if (typeof window !== "undefined") (window as unknown as Record<string, (...a: unknown[]) => void>).fbq?.(...args);
+}
+
 function getCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
   return document.cookie.split("; ").find((c) => c.startsWith(`${name}=`))?.split("=")[1];
@@ -60,6 +64,7 @@ export function VimeoTracker({ iframeId }: { iframeId: string }) {
           if (pct >= milestone && !firedMilestones.current.has(milestone)) {
             firedMilestones.current.add(milestone);
             postEvent({ event_type: "watch_progress", percent_watched: milestone, drop_off_second: Math.floor(data.seconds) });
+            fbq("trackCustom", `VideoWatched${milestone}`, { video_id: VIDEO_ID, percent: milestone });
           }
         }
 
@@ -88,6 +93,7 @@ export function VimeoTracker({ iframeId }: { iframeId: string }) {
       p.on("ended", () => {
         firedMilestones.current.add(100);
         postEvent({ event_type: "completed", percent_watched: 100 });
+        fbq("trackCustom", "VideoCompleted", { video_id: VIDEO_ID });
       });
     }
 

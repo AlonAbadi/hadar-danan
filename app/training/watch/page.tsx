@@ -5,6 +5,7 @@ import { PageViewTracker } from "./PageViewTracker";
 import { VimeoTracker } from "./VimeoTracker";
 import { WatchGreeting } from "./WatchPersonalized";
 import { ViewTracker } from "./ViewTracker";
+import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 
 export const metadata: Metadata = {
   title: "הדרכה חינמית - צפייה | הדר דנן",
@@ -16,6 +17,7 @@ export default function TrainingWatchPage() {
   return (
     <main dir="rtl" className="min-h-screen font-assistant" style={{ background: "#0D1018" }}>
       <PageViewTracker />
+      <ViewContentTracker product="free_training" value={0} />
       {/* Records +1 view on every page load — count displayed on /training */}
       <ViewTracker />
 

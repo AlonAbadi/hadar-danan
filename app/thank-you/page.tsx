@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThankYouTracker } from "./ThankYouTracker";
 
 export const metadata = {
   title: "נרשמת בהצלחה | הדר דנן",
@@ -16,6 +17,7 @@ export default function ThankYouPage() {
       className="min-h-screen flex flex-col font-assistant"
       style={{ background: "#101520" }}
     >
+      <ThankYouTracker />
       {/* Nav */}
       <header className="px-6 py-4" style={{ borderBottom: "1px solid #2C323E", background: "rgba(16,21,32,0.9)" }}>
         <span className="font-black text-xl" style={{ color: "#C9964A" }}>הדר דנן</span>
