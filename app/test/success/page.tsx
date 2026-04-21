@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { SuccessPage } from "@/components/SuccessPage";
 
 export const metadata = {
@@ -7,6 +8,7 @@ export const metadata = {
 
 export default function TestSuccessPage() {
   return (
+    <Suspense>
     <SuccessPage
       productName="מוצר טסט"
       emoji="✅"
@@ -16,5 +18,6 @@ export default function TestSuccessPage() {
       nextStepHref="/"
       nextStepDesc="הטסט הצליח"
     />
+    </Suspense>
   );
 }
