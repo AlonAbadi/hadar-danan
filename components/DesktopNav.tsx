@@ -28,7 +28,7 @@ const EXTRA_LINKS = [
 ];
 
 const DECK_LINKS = [
-  { label: "עברית",   href: "/deck/he" },
+  { label: "עברית",   href: "/deck/he/index.html" },
   { label: "English", href: "/deck/en/index.html" },
 ];
 

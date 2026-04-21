@@ -31,7 +31,7 @@ const ITEMS_GROUP4 = [{ label: "הכוורת 🐝",        href: "/hive" }];
 const ITEMS_GROUP5 = [{ label: "האזור האישי שלי", href: "/account" }];
 
 const DECK_ITEMS = [
-  { label: "מצגת שותפים — עברית",   href: "/deck/he" },
+  { label: "מצגת שותפים — עברית",   href: "/deck/he/index.html" },
   { label: "מצגת שותפים — English", href: "/deck/en/index.html" },
 ];
 

@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>beegood - Partner Deck</title>
+<template id="__bundler_thumbnail" data-bg-color="#141110">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#141110"/>
+    <g transform="translate(600 380)" fill="#c9964a">
+      <ellipse cx="0" cy="0" rx="110" ry="140"/>
+      <path d="M -130 -30 Q -170 -70 -140 -110 Q -100 -90 -90 -50 Z" fill="#c9964a" opacity="0.85"/>
+      <path d="M 130 -30 Q 170 -70 140 -110 Q 100 -90 90 -50 Z" fill="#c9964a" opacity="0.85"/>
+      <rect x="-90" y="-60" width="180" height="18" fill="#141110"/>
+      <rect x="-90" y="-10" width="180" height="18" fill="#141110"/>
+      <rect x="-90" y="40" width="180" height="18" fill="#141110"/>
+    </g>
+    <text x="600" y="620" text-anchor="middle" fill="#f3ecdf" font-family="serif" font-size="72" font-style="italic" font-weight="300">beegood.</text>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Assistant:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="deck-stage.js"></script>
+<style>
+  :root {
+    --ink: #141110;
+    --ink-2: #3f3733;
+    --ink-3: #8a7d72;
+    --cream: #f3ecdf;
+    --cream-2: #e8dfcd;
+    --paper: #faf4e8;
+    --gold: #c9964a;
+    --gold-deep: #9a6e28;
+    --rule: rgba(20,17,16,0.14);
+
+    --t-display: 132px;
+    --t-title:   72px;
+    --t-subtitle:44px;
+    --t-body:    32px;
+    --t-small:   26px;
+    --t-micro:   24px;
+
+    --pad-x: 110px;
+    --pad-top: 80px;
+    --pad-bottom: 70px;
+  }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: #000;
+    font-family: 'Assistant', -apple-system, sans-serif;
+    color: var(--ink);
+  }
+
+  deck-stage > section {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Assistant', sans-serif;
+    font-size: var(--t-body);
+    line-height: 1.4;
+    overflow: hidden;
+    font-weight: 400;
+  }
+
+  /* ——— page chrome: wordmark, markers, confidential ——— */
+  .chrome-top {
+    position: absolute;
+    top: 48px;
+    left: var(--pad-x);
+    right: var(--pad-x);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .wordmark {
+    font-family: 'Fraunces', serif;
+    font-size: 34px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-transform: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .wordmark em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--gold);
+    margin-left: -0.08em;
+  }
+  .wordmark .bee-chrome {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    display: block;
+  }
+  .marker { font-weight: 500; }
+
+  .chrome-bottom {
+    position: absolute;
+    bottom: 40px;
+    left: var(--pad-x);
+    right: var(--pad-x);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    letter-spacing: 0.16em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+
+  .frame {
+    position: absolute;
+    inset: 140px var(--pad-x) 90px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ——— type tokens ——— */
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--t-micro);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 500;
+  }
+  .display, .title, .serif {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    color: var(--ink);
+    margin: 0;
+  }
+  .display { font-size: var(--t-display); }
+  .title   { font-size: var(--t-title); line-height: 1.08; font-weight: 400; }
+  .subtitle {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: var(--t-subtitle);
+    line-height: 1.22;
+    letter-spacing: -0.012em;
+    color: var(--ink-2);
+    margin: 0;
+  }
+  .body {
+    font-size: var(--t-body);
+    line-height: 1.5;
+    color: var(--ink-2);
+    font-weight: 400;
+    max-width: 1200px;
+  }
+  .body strong { color: var(--ink); font-weight: 600; }
+  .small {
+    font-size: var(--t-small);
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+  .italic { font-style: italic; color: var(--gold-deep); font-weight: 300; }
+
+  .hr { height: 1px; background: var(--rule); width: 100%; }
+  .hr-gold { height: 1px; background: var(--gold); width: 100%; }
+
+  /* ——— layout atoms ——— */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 100px;
+    flex: 1;
+    align-items: start;
+  }
+  .stack-lg > * + * { margin-top: 36px; }
+  .stack-md > * + * { margin-top: 22px; }
+  .stack-sm > * + * { margin-top: 12px; }
+
+  /* ============== SLIDE 1 : COVER ============== */
+  .s-cover { background: var(--ink); position: relative; color: var(--cream); }
+  .s-cover .chrome-top,
+  .s-cover .chrome-bottom { color: rgba(243,236,223,0.75); z-index: 3; }
+  .s-cover .wordmark { color: var(--cream); }
+  .s-cover .wordmark em { color: var(--gold); }
+  .cover-video-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .cover-video-bg iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 177.78vh;
+    height: 100%;
+    min-width: 100%;
+    min-height: 56.25vw;
+    transform: translate(-50%, -50%);
+    border: 0;
+    pointer-events: none;
+    display: block;
+  }
+  .cover-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(180deg, rgba(20,17,16,0.55) 0%, rgba(20,17,16,0.35) 35%, rgba(20,17,16,0.55) 75%, rgba(20,17,16,0.85) 100%);
+  }
+  .cover-hero {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 var(--pad-x);
+    color: var(--cream);
+  }
+  .cover-bee {
+    width: 200px;
+    height: auto;
+    display: block;
+    margin-bottom: 36px;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4));
+  }
+  .cover-wordmark {
+    font-family: 'Fraunces', serif;
+    font-size: 260px;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+    font-weight: 300;
+    color: var(--cream);
+    margin: 0;
+  }
+  .cover-wordmark em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--gold);
+  }
+  .cover-sub {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 42px;
+    color: rgba(243,236,223,0.82);
+    line-height: 1.3;
+    letter-spacing: -0.008em;
+    max-width: 1000px;
+    margin: 44px auto 0;
+  }
+
+  /* ============== SLIDE 2 : CONTEXT ============== */
+  .ctx-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 140px;
+    flex: 1;
+    align-items: start;
+    margin-top: 40px;
+  }
+  .ctx-cols .col { padding-top: 0; }
+  .ctx-cols h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 64px;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+    margin: 0 0 36px;
+    max-width: 560px;
+  }
+  .ctx-cols .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--t-micro);
+    color: var(--gold-deep);
+    letter-spacing: 0.14em;
+    margin-bottom: 28px;
+    text-transform: uppercase;
+  }
+  .ctx-cols p {
+    font-size: var(--t-body);
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin: 0;
+    max-width: 580px;
+  }
+
+  /* ============== SLIDE 3 : PROBLEM ============== */
+  .problem-list {
+    margin: 72px 0 0;
+    max-width: 1500px;
+  }
+  .problem-list .row {
+    padding: 40px 0;
+    border-top: 1px solid var(--gold);
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    align-items: baseline;
+    gap: 40px;
+  }
+  .problem-list .row:last-of-type {
+    border-bottom: 1px solid var(--gold);
+  }
+  .problem-list .row .idx {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--t-micro);
+    color: var(--gold-deep);
+    letter-spacing: 0.14em;
+  }
+  .problem-list .row .t {
+    font-family: 'Fraunces', serif;
+    font-size: 54px;
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .problem-foot {
+    margin-top: 48px;
+    font-size: var(--t-small);
+    color: var(--ink-3);
+    font-style: italic;
+  }
+
+  /* ============== SLIDE 4 : OPPORTUNITY ============== */
+  .opp {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 100px;
+    flex: 1;
+    align-items: start;
+    margin-top: 48px;
+  }
+  .opp p {
+    font-size: var(--t-body);
+    line-height: 1.55;
+    color: var(--ink-2);
+    max-width: 700px;
+    margin: 0;
+  }
+  .vs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--rule);
+  }
+  .vs > div { padding: 36px 32px; }
+  .vs .hd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 22px;
+    font-weight: 500;
+  }
+  .vs .left  { border-right: 1px solid var(--rule); background: transparent; }
+  .vs .right { background: var(--cream); }
+  .vs ul { list-style: none; padding: 0; margin: 0; }
+  .vs li {
+    padding: 12px 0;
+    font-size: 26px;
+    color: var(--ink-2);
+    border-bottom: 1px dotted var(--rule);
+  }
+  .vs li:last-child { border-bottom: 0; }
+  .vs .right li { color: var(--ink); font-weight: 500; }
+  .vs .right .hd { color: var(--gold-deep); }
+
+  /* ============== SLIDE 5 : INTRODUCING ============== */
+  .s-intro { background: var(--cream); }
+  .intro-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 200px;
+    text-align: center;
+    align-items: center;
+  }
+  .intro-headline {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 92px;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    max-width: 1500px;
+    margin: 0;
+  }
+  .intro-headline em {
+    font-style: italic;
+    color: var(--gold);
+    font-weight: 300;
+  }
+  .intro-sub {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 38px;
+    line-height: 1.35;
+    color: var(--ink-2);
+    max-width: 1200px;
+    margin: 44px 0 0;
+    letter-spacing: -0.005em;
+  }
+  .chips {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 64px;
+  }
+  .chip {
+    padding: 14px 28px;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+  }
+  .chip.alt { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+
+  /* ============== SLIDE 6 : HOW IT WORKS ============== */
+  .two-arm {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    flex: 1;
+    margin-top: 40px;
+  }
+  .arm {
+    border-top: 2px solid var(--ink);
+    padding-top: 32px;
+    display: flex;
+    flex-direction: column;
+  }
+  .arm .kind {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold-deep);
+    margin-bottom: 18px;
+  }
+  .arm h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 56px;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0 0 32px;
+    color: var(--ink);
+  }
+  .arm h3 em { font-style: italic; color: var(--gold); font-weight: 300; }
+  .arm ul { list-style: none; padding: 0; margin: 0; }
+  .arm ul li {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 25px;
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .arm ul li strong { color: var(--ink); font-weight: 600; }
+  .arm .named {
+    margin-top: 24px;
+    padding-top: 20px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 28px;
+    color: var(--gold-deep);
+    font-weight: 300;
+  }
+
+  /* Pipeline (A-to-Z turnkey steps) */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px 60px;
+    margin-top: 40px;
+    flex: 1;
+  }
+  .pipeline .step {
+    border-top: 2px solid var(--ink);
+    padding-top: 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .pipeline .step .n {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    color: var(--gold-deep);
+    letter-spacing: 0.12em;
+    margin-bottom: 12px;
+  }
+  .pipeline .step .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    color: var(--ink-3);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .pipeline .step h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 38px;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    margin: 0 0 18px;
+    color: var(--ink);
+  }
+  .pipeline .step h4 em { font-style: italic; color: var(--gold); font-weight: 300; }
+  .pipeline .step p {
+    font-size: 24px;
+    line-height: 1.45;
+    color: var(--ink-2);
+    margin: 0;
+  }
+  .unifier {
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 36px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  /* ============== SLIDE 7 : PRODUCT ============== */
+  .devices {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 60px;
+    flex: 1;
+    align-items: center;
+    margin-top: 20px;
+  }
+  .laptop {
+    background: var(--ink);
+    border-radius: 18px 18px 6px 6px;
+    padding: 16px 16px 0;
+    position: relative;
+    aspect-ratio: 16 / 10;
+    box-shadow: 0 30px 60px -30px rgba(20,17,16,0.35);
+  }
+  .laptop::after {
+    content: "";
+    position: absolute;
+    left: -8%;
+    right: -8%;
+    bottom: -14px;
+    height: 14px;
+    background: var(--ink);
+    border-radius: 0 0 14px 14px;
+  }
+  .laptop .screen {
+    background: var(--cream);
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    padding: 36px 44px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Assistant', sans-serif;
+  }
+  .laptop .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+  }
+  .laptop .nav .m {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 500;
+  }
+  .laptop .nav .m em { color: var(--gold); font-style: italic; font-weight: 400; }
+  .laptop .nav .items {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    gap: 20px;
+  }
+  .laptop .hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .laptop .hero .eb {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--gold-deep);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .laptop .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 42px;
+    line-height: 1.05;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+  }
+  .laptop .hero h1 em { font-style: italic; color: var(--gold); }
+  .laptop .hero p {
+    font-size: 14px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    margin: 0 0 18px;
+    max-width: 440px;
+  }
+  .laptop .hero .btn {
+    align-self: flex-start;
+    background: var(--ink);
+    color: var(--cream);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .laptop-cap, .phone-cap {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    margin-top: 28px;
+  }
+  .phone-col { display: flex; flex-direction: column; align-items: center; }
+  .phone {
+    width: 280px;
+    aspect-ratio: 9 / 19;
+    background: var(--ink);
+    border-radius: 42px;
+    padding: 10px;
+    box-shadow: 0 30px 60px -30px rgba(20,17,16,0.4);
+  }
+  .phone .screen {
+    background: #2a2420;
+    width: 100%;
+    height: 100%;
+    border-radius: 32px;
+    color: var(--cream);
+    padding: 44px 24px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .phone .screen::before {
+    content:"";
+    position: absolute;
+    top: 12px; left: 50%;
+    transform: translateX(-50%);
+    width: 80px; height: 18px;
+    background: #000;
+    border-radius: 99px;
+  }
+  .phone .screen .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: rgba(243,236,223,0.5);
+    text-transform: uppercase;
+    margin-top: 20px;
+  }
+  .phone .screen h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 34px;
+    line-height: 1.05;
+    margin: 14px 0 10px;
+    letter-spacing: -0.02em;
+  }
+  .phone .screen h2 em { font-style: italic; color: var(--gold); }
+  .phone .screen p {
+    font-size: 11px;
+    line-height: 1.5;
+    color: rgba(243,236,223,0.7);
+    margin: 0 0 20px;
+  }
+  .phone .screen .well {
+    margin-top: auto;
+    border: 1px solid rgba(243,236,223,0.2);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .phone .screen .well .h {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--gold);
+  }
+  .phone .screen .well .p {
+    font-size: 10px;
+    color: rgba(243,236,223,0.6);
+    margin-top: 6px;
+  }
+
+  /* Live iframe inside the phone frame */
+  .phone .screen.phone-live {
+    padding: 0;
+    overflow: hidden;
+    border-radius: 32px;
+    background: #fff;
+    position: relative;
+  }
+  .phone .screen.phone-live::before { z-index: 2; }
+  .phone .screen.phone-live iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Render at a real mobile viewport width, then scale to fit */
+    --vw: 390px;
+    --vh: 824px;
+    width: var(--vw);
+    height: var(--vh);
+    border: 0;
+    display: block;
+    transform-origin: top left;
+    /* .phone outer is 280px wide with 10px padding each side → inner 260px
+       scale = 260/390 ≈ 0.667 */
+    transform: scale(0.667);
+  }
+  .feat-row {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    margin-bottom: 110px;
+  }
+  .feat-row .f {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    text-align: center;
+    color: var(--ink-2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 8px;
+    border-right: 1px solid var(--rule);
+    line-height: 1.3;
+  }
+  .feat-row .f:last-child { border-right: 0; }
+
+  /* ============== SLIDE 8 : MARKET ============== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+    flex: 1;
+    align-items: end;
+    margin-top: 60px;
+  }
+  .stat {
+    border-top: 1px solid var(--ink);
+    padding-top: 28px;
+    min-height: 280px;
+    display: flex;
+    align-items: flex-end;
+  }
+  .stat .l {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 54px;
+    color: var(--ink);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+  .stats-foot {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 30px;
+    color: var(--ink-2);
+    font-weight: 300;
+  }
+
+  /* ============== SLIDE 9 : TRACTION ============== */
+  .timeline {
+    margin-top: 48px;
+    flex: 1;
+  }
+  .tl-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    column-gap: 60px;
+    padding: 32px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .tl-row:first-child { border-top: 1px solid var(--ink); }
+  .tl-row .date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    letter-spacing: 0.12em;
+    color: var(--gold-deep);
+    text-transform: uppercase;
+  }
+  .tl-row .h {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 36px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .tl-row .d {
+    font-size: 24px;
+    color: var(--ink-2);
+    line-height: 1.45;
+    max-width: 1200px;
+  }
+  .tl-foot {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--gold);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 30px;
+    color: var(--ink-2);
+    font-weight: 300;
+  }
+
+  /* ============== SLIDE 10 : MODEL ============== */
+  .model {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 56px;
+    flex: 1;
+    margin-top: 48px;
+  }
+  .rev { display: flex; flex-direction: column; }
+  .rev .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    color: var(--gold-deep);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .rev h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 44px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+    margin: 0 0 24px;
+  }
+  .rev h3 em { font-style: italic; color: var(--gold); font-weight: 300; }
+  .rev ul { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--ink); }
+  .rev li {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 22px;
+    color: var(--ink-2);
+    line-height: 1.45;
+  }
+  .rev li strong { color: var(--ink); font-weight: 600; }
+  .model-foot {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--gold);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 34px;
+    color: var(--ink);
+    text-align: center;
+    letter-spacing: -0.01em;
+  }
+
+  /* ============== SLIDE 11 : ROADMAP ============== */
+  .road {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 36px;
+    flex: 1;
+    margin-top: 56px;
+  }
+  .q {
+    border-top: 2px solid var(--ink);
+    padding-top: 28px;
+    display: flex;
+    flex-direction: column;
+  }
+  .q .when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    color: var(--gold-deep);
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  .q ul { list-style: none; padding: 0; margin: 0; }
+  .q li {
+    font-size: 24px;
+    padding: 16px 0;
+    border-bottom: 1px dotted var(--rule);
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .q li:last-child { border-bottom: 0; }
+
+  /* ============== SLIDE 12 : TEAM ============== */
+  .team {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 100px;
+    flex: 1;
+    margin-top: 40px;
+  }
+  .member {
+    border-top: 1px solid var(--ink);
+    padding-top: 36px;
+    display: flex;
+    flex-direction: column;
+  }
+  .member .role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    color: var(--gold-deep);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .member .name {
+    font-family: 'Fraunces', serif;
+    font-size: 72px;
+    font-weight: 300;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    margin: 0 0 28px;
+    color: var(--ink);
+  }
+  .member .disc {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--gold-deep);
+    letter-spacing: 0.01em;
+    margin-bottom: 20px;
+  }
+  .member .bio {
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 640px;
+  }
+  .team-foot {
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid var(--gold);
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+
+  /* ============== SLIDE 13 : PARTNERSHIP ============== */
+  .part {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 90px;
+    flex: 1;
+    margin-top: 40px;
+  }
+  .frame-card {
+    border: 1px solid var(--rule);
+    padding: 56px 48px;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+  }
+  .frame-card.alt { background: var(--cream); border-color: var(--ink); }
+  .frame-card .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    color: var(--gold-deep);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .frame-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 44px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 0;
+    color: var(--ink);
+  }
+  .frame-card h3 em { font-style: italic; color: var(--gold); font-weight: 300; }
+
+  /* ============== SLIDE 14 : NEXT STEPS ============== */
+  .s-next { background: var(--cream); }
+  .next-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0 var(--pad-x);
+  }
+  .next-wrap .big {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 120px;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    max-width: 1500px;
+    margin: 0;
+  }
+  .next-wrap .big em { font-style: italic; color: var(--gold); }
+  .contact {
+    margin-top: 70px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    color: var(--ink);
+    letter-spacing: 0.06em;
+  }
+  .contact .row {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    text-align: left;
+    gap: 32px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    width: 720px;
+  }
+  .contact .row:last-child { border-bottom: 0; }
+  .contact .row .k {
+    text-transform: uppercase;
+    color: var(--ink-3);
+    letter-spacing: 0.12em;
+  }
+
+  /* ===================================================================
+     MOBILE LAYOUT
+     Activated by body.is-mobile — cloned slides live in #mobile-deck
+     (outside deck-stage) so ::slotted rules don't apply.
+     =================================================================== */
+
+  body.is-mobile {
+    background: var(--paper);
+    overflow-x: hidden;
+  }
+  body.is-mobile deck-stage { display: none !important; }
+
+  #mobile-deck {
+    display: none;
+  }
+  body.is-mobile #mobile-deck {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+    background: var(--paper);
+  }
+
+  /* Each cloned slide becomes a vertical section */
+  body.is-mobile .m-slide {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding: 28px 24px 40px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+    overflow: visible;
+  }
+  body.is-mobile .m-slide.s-cover  { background: var(--ink); color: var(--cream); min-height: 100vh; }
+  body.is-mobile .m-slide.s-intro  { background: var(--cream); }
+  body.is-mobile .m-slide.s-next   { background: var(--cream); }
+
+  /* Mobile chrome: full-width, smaller, relative positioning */
+  body.is-mobile .m-slide .chrome-top {
+    position: static !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    padding: 0;
+    margin-bottom: 28px;
+  }
+  body.is-mobile .m-slide .wordmark { font-size: 20px; gap: 8px; }
+  body.is-mobile .m-slide .wordmark .bee-chrome { width: 22px; height: 22px; }
+  body.is-mobile .m-slide .marker { font-size: 10px; }
+
+  body.is-mobile .m-slide .chrome-bottom {
+    position: static !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    padding: 0;
+    margin-top: 36px;
+    gap: 12px;
+    color: var(--ink-3);
+  }
+
+  /* Frame becomes a normal flow container */
+  body.is-mobile .m-slide .frame {
+    position: static !important;
+    inset: auto !important;
+    padding: 0 !important;
+    display: block;
+  }
+
+  /* Typography rescale */
+  body.is-mobile .m-slide {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  body.is-mobile .m-slide .eyebrow { font-size: 12px; letter-spacing: 0.16em; }
+  body.is-mobile .m-slide .title { font-size: 34px; line-height: 1.1; letter-spacing: -0.02em; }
+  body.is-mobile .m-slide .subtitle { font-size: 20px; }
+  body.is-mobile .m-slide .body,
+  body.is-mobile .m-slide p { font-size: 16px; line-height: 1.55; max-width: 100%; }
+  body.is-mobile .m-slide h2,
+  body.is-mobile .m-slide h3,
+  body.is-mobile .m-slide h4 { max-width: 100% !important; }
+
+  body.is-mobile .m-slide .hr,
+  body.is-mobile .m-slide .hr-gold { margin: 20px 0 !important; }
+
+  /* ---- Slide 1: Cover on mobile ---- */
+  body.is-mobile .m-slide.s-cover {
+    padding: 28px 24px 40px;
+    color: var(--cream);
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column;
+  }
+  body.is-mobile .m-slide.s-cover .chrome-top { order: 1; }
+  body.is-mobile .m-slide.s-cover .cover-video-bg { order: 2; }
+  body.is-mobile .m-slide.s-cover .cover-hero { order: 3; }
+  body.is-mobile .m-slide.s-cover .chrome-bottom { order: 4; }
+  body.is-mobile .m-slide.s-cover .chrome-top,
+  body.is-mobile .m-slide.s-cover .chrome-bottom { color: rgba(243,236,223,0.85); }
+  body.is-mobile .m-slide.s-cover .chrome-top {
+    padding: 4px 0 16px !important;
+    margin-bottom: 20px !important;
+    border-bottom: 1px solid rgba(243,236,223,0.12);
+  }
+  body.is-mobile .m-slide.s-cover .wordmark { color: var(--cream); font-size: 22px; }
+  body.is-mobile .m-slide.s-cover .wordmark em { color: var(--gold); }
+  body.is-mobile .m-slide.s-cover .cover-video-bg {
+    position: relative !important;
+    inset: auto !important;
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    max-height: 70vh;
+    margin: 28px 0;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  body.is-mobile .m-slide.s-cover .cover-video-bg iframe {
+    position: absolute;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+  body.is-mobile .m-slide.s-cover .cover-scrim { display: none; }
+  body.is-mobile .m-slide.s-cover .cover-hero {
+    position: static !important;
+    inset: auto !important;
+    padding: 0 !important;
+    display: block;
+    text-align: left;
+  }
+  body.is-mobile .m-slide.s-cover .cover-bee {
+    width: 72px;
+    margin: 0 0 14px;
+  }
+  body.is-mobile .m-slide.s-cover .cover-wordmark { font-size: 86px; margin: 0; }
+  body.is-mobile .m-slide.s-cover .cover-sub {
+    font-size: 20px;
+    margin: 16px 0 0;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  /* ---- Slide 2: Context ---- */
+  body.is-mobile .m-slide .ctx-cols {
+    display: block !important;
+    margin-top: 28px !important;
+  }
+  body.is-mobile .m-slide .ctx-cols .col { margin-bottom: 32px; }
+  body.is-mobile .m-slide .ctx-cols h3 { font-size: 28px; margin: 0 0 16px; max-width: 100%; }
+  body.is-mobile .m-slide .ctx-cols .num { margin-bottom: 12px; font-size: 12px; }
+  body.is-mobile .m-slide .ctx-cols p { font-size: 16px; max-width: 100%; }
+
+  /* ---- Slide 3: Problem ---- */
+  body.is-mobile .m-slide .problem-list { margin: 32px 0 0; max-width: 100%; }
+  body.is-mobile .m-slide .problem-list .row {
+    padding: 20px 0;
+    grid-template-columns: 40px 1fr;
+    gap: 14px;
+  }
+  body.is-mobile .m-slide .problem-list .row .idx { font-size: 12px; }
+  body.is-mobile .m-slide .problem-list .row .t { font-size: 22px; line-height: 1.25; }
+  body.is-mobile .m-slide .problem-foot { margin-top: 22px; font-size: 14px; }
+
+  /* ---- Slide 4: Opportunity ---- */
+  body.is-mobile .m-slide .opp {
+    display: block !important;
+    margin-top: 24px !important;
+  }
+  body.is-mobile .m-slide .opp p { font-size: 16px; max-width: 100%; margin-bottom: 24px; }
+  body.is-mobile .m-slide .vs {
+    grid-template-columns: 1fr !important;
+  }
+  body.is-mobile .m-slide .vs > div { padding: 20px 18px; }
+  body.is-mobile .m-slide .vs .left { border-right: 0 !important; border-bottom: 1px solid var(--rule); }
+  body.is-mobile .m-slide .vs .hd { font-size: 12px; margin-bottom: 12px; }
+  body.is-mobile .m-slide .vs li { font-size: 15px; padding: 8px 0; }
+
+  /* ---- Slide 5: Introducing ---- */
+  body.is-mobile .m-slide.s-intro .intro-wrap {
+    position: static !important;
+    inset: auto !important;
+    padding: 0 !important;
+    text-align: left;
+    align-items: flex-start;
+    justify-content: flex-start;
+    display: block;
+  }
+  body.is-mobile .m-slide.s-intro .intro-headline { font-size: 32px; max-width: 100%; text-align: left; }
+  body.is-mobile .m-slide.s-intro .intro-sub { font-size: 18px; margin-top: 20px; max-width: 100%; text-align: left; }
+  body.is-mobile .m-slide.s-intro .chips { justify-content: flex-start; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+  body.is-mobile .m-slide.s-intro .chip { font-size: 11px; padding: 8px 16px; }
+
+  /* ---- Slide 6: How it works ---- */
+  body.is-mobile .m-slide .two-arm {
+    display: block !important;
+    margin-top: 24px !important;
+  }
+  body.is-mobile .m-slide .arm { margin-bottom: 32px; padding-top: 20px; }
+  body.is-mobile .m-slide .arm h3 { font-size: 26px; margin: 0 0 16px; }
+  body.is-mobile .m-slide .arm .kind { font-size: 12px; margin-bottom: 10px; }
+  body.is-mobile .m-slide .arm ul li { font-size: 15px; padding: 10px 0; }
+  body.is-mobile .m-slide .arm .named { font-size: 16px; }
+  body.is-mobile .m-slide .unifier { font-size: 18px; margin-top: 24px; padding-top: 16px; }
+
+  /* Pipeline (mobile) */
+  body.is-mobile .m-slide .pipeline {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+    margin-top: 24px !important;
+  }
+  body.is-mobile .m-slide .pipeline .step { padding-top: 18px; }
+  body.is-mobile .m-slide .pipeline .step .n { font-size: 14px; margin-bottom: 8px; }
+  body.is-mobile .m-slide .pipeline .step .k { font-size: 11px; margin-bottom: 12px; }
+  body.is-mobile .m-slide .pipeline .step h4 { font-size: 22px; margin: 0 0 12px; }
+  body.is-mobile .m-slide .pipeline .step p { font-size: 15px; }
+
+  /* ---- Slide 7: Product ---- */
+  body.is-mobile .m-slide .devices {
+    display: block !important;
+    margin-top: 20px !important;
+  }
+  body.is-mobile .m-slide .laptop { margin-bottom: 28px; }
+  body.is-mobile .m-slide .phone-col { margin-top: 20px; }
+  body.is-mobile .m-slide .phone { width: 240px; margin: 0 auto; }
+  body.is-mobile .m-slide .laptop-cap,
+  body.is-mobile .m-slide .phone-cap { font-size: 11px; margin-top: 14px; text-align: center; }
+  body.is-mobile .m-slide .feat-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px;
+    margin: 24px 0 !important;
+    padding-top: 16px;
+  }
+  body.is-mobile .m-slide .feat-row .f {
+    font-size: 11px;
+    border-right: 0;
+    padding: 10px 8px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+  }
+
+  /* ---- Slide 8: Foundation ---- */
+  body.is-mobile .m-slide .stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+    margin-top: 28px !important;
+  }
+  body.is-mobile .m-slide .stat { min-height: 0; padding-top: 14px; }
+  body.is-mobile .m-slide .stat .l { font-size: 24px; }
+  body.is-mobile .m-slide .stats-foot { font-size: 16px; margin-top: 24px; padding-top: 18px; }
+
+  /* ---- Slide 9: Traction ---- */
+  body.is-mobile .m-slide .timeline { margin-top: 28px; }
+  body.is-mobile .m-slide .tl-row {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+    padding: 18px 0;
+  }
+  body.is-mobile .m-slide .tl-row .date { font-size: 11px; margin-bottom: 4px; }
+  body.is-mobile .m-slide .tl-row .h { font-size: 20px; margin-bottom: 6px; }
+  body.is-mobile .m-slide .tl-row .d { font-size: 15px; max-width: 100%; }
+  body.is-mobile .m-slide .tl-foot { font-size: 16px; margin-top: 18px; }
+
+  /* ---- Slide 10: Model ---- */
+  body.is-mobile .m-slide .model {
+    display: block !important;
+    margin-top: 24px !important;
+  }
+  body.is-mobile .m-slide .rev { margin-bottom: 28px; }
+  body.is-mobile .m-slide .rev h3 { font-size: 26px; margin: 0 0 16px; }
+  body.is-mobile .m-slide .rev .label { font-size: 12px; margin-bottom: 10px; }
+  body.is-mobile .m-slide .rev li { font-size: 15px; padding: 14px 0; }
+  body.is-mobile .m-slide .model-foot { font-size: 18px; margin-top: 20px; padding-top: 16px; }
+
+  /* ---- Slide 11: Roadmap ---- */
+  body.is-mobile .m-slide .road {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    margin-top: 28px !important;
+  }
+  body.is-mobile .m-slide .q { padding-top: 16px; }
+  body.is-mobile .m-slide .q .when { font-size: 12px; margin-bottom: 12px; }
+  body.is-mobile .m-slide .q li { font-size: 15px; padding: 10px 0; }
+
+  /* ---- Slide 12: Team ---- */
+  body.is-mobile .m-slide .team {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+    margin-top: 28px !important;
+  }
+  body.is-mobile .m-slide .member { padding-top: 20px; }
+  body.is-mobile .m-slide .member .role { font-size: 12px; margin-bottom: 10px; }
+  body.is-mobile .m-slide .member .name { font-size: 42px; margin: 0 0 14px; }
+  body.is-mobile .m-slide .member .disc { font-size: 15px; margin-bottom: 12px; }
+  body.is-mobile .m-slide .member .bio { font-size: 15px; max-width: 100%; }
+  body.is-mobile .m-slide .team-foot { font-size: 18px; margin-top: 24px; padding-top: 16px; }
+
+  /* ---- Slide 13: Partnership ---- */
+  body.is-mobile .m-slide .part {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+    margin-top: 28px !important;
+  }
+  body.is-mobile .m-slide .frame-card { padding: 28px 22px; }
+  body.is-mobile .m-slide .frame-card .kicker { font-size: 12px; margin-bottom: 16px; }
+  body.is-mobile .m-slide .frame-card h3 { font-size: 22px; line-height: 1.3; }
+
+  /* ---- Slide 14: Next steps ---- */
+  body.is-mobile .m-slide.s-next .next-wrap {
+    position: static !important;
+    inset: auto !important;
+    padding: 0 !important;
+    display: block;
+    text-align: left;
+  }
+  body.is-mobile .m-slide.s-next .next-wrap .big { font-size: 48px; max-width: 100%; }
+  body.is-mobile .m-slide.s-next .contact { margin-top: 36px; gap: 10px; font-size: 15px; }
+  body.is-mobile .m-slide.s-next .contact .row {
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+    gap: 4px;
+    padding: 12px 0;
+  }
+  body.is-mobile .m-slide.s-next .contact .row .k { font-size: 10px; letter-spacing: 0.14em; }
+
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- 1 · COVER -->
+  <section data-label="Cover" class="s-cover">
+    <div class="cover-video-bg">
+      <iframe
+        src="https://player.vimeo.com/video/1184729898?autoplay=1&loop=1&controls=0&title=0&byline=0&portrait=0"
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowfullscreen></iframe>
+    </div>
+    <div class="cover-scrim"></div>
+
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">PARTNER DECK · 2026</div>
+    </div>
+
+    <div class="cover-hero">
+      <img class="cover-bee" src="assets/beegood-logo.png" alt="beegood"/>
+      <div class="cover-wordmark">bee<em>good.</em></div>
+      <div class="cover-sub">A boutique atelier turning influence into cultural authority.</div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>HADAR DANAN &amp; ALON ABADI · CO-FOUNDERS</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 2 · CONTEXT -->
+  <section data-label="Context">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">02 / 14 · CONTEXT</div>
+    </div>
+
+    <div class="frame">
+      <div class="eyebrow">The market shift, in two movements</div>
+      <div class="hr" style="margin: 28px 0 0;"></div>
+
+      <div class="ctx-cols">
+        <div class="col">
+          <div class="num">ONE</div>
+          <h3>The cold-lead economy is over.</h3>
+          <p>Ads are taxed. Feeds are saturated. Generic funnels convert worse every quarter. Influencers, coaches, consultants, lawyers, doctors, aestheticians, mentors — every personal brand is paying more to reach people who trust less.</p>
+        </div>
+        <div class="col">
+          <div class="num">TWO</div>
+          <h3>The signal economy is here.</h3>
+          <p>The practices that win are the ones whose audience <em>self-qualifies</em> before it ever speaks to them. A worldview, a method, a way in. Hot leads arrive already sold; the rest never arrive at all.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 3 · PROBLEM -->
+  <section data-label="Problem">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">03 / 14 · THE PROBLEM</div>
+    </div>
+
+    <div class="frame">
+      <h2 class="title" style="max-width: 1600px; font-size: 72px; font-weight: 300;">
+        They can only sell what <em>they are.</em><br/>The content has stopped doing that.
+      </h2>
+
+      <div class="problem-list">
+        <div class="row">
+          <div class="idx">01</div>
+          <div class="t">Their creative follows trends, not their own frequency.</div>
+        </div>
+        <div class="row">
+          <div class="idx">02</div>
+          <div class="t">Their differentiation is buried under content that sounds like everyone else's.</div>
+        </div>
+        <div class="row">
+          <div class="idx">03</div>
+          <div class="t">Their leads arrive cold because nothing pre-qualifies them on the truth.</div>
+        </div>
+      </div>
+
+      <div class="problem-foot" style="margin-bottom: 100px;">The truth is an option, too — and it's the one that converts.</div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 4 · OPPORTUNITY -->
+  <section data-label="Opportunity">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">04 / 14 · THE OPPORTUNITY</div>
+    </div>
+
+    <div class="frame">
+      <h2 class="title" style="max-width: 1600px;">
+        The market is ready for a new kind of partner.
+      </h2>
+
+      <div class="opp">
+        <p>
+          Agencies buy cold clicks. Funnel consultants sell decks. SaaS vendors ship tools. Video houses produce content.
+          No one sits with a personal brand long enough to build the full stack: <strong>narrative, method, funnel, platform</strong> — so that only hot leads ever land in the inbox.
+          <br/><br/>
+          That is the gap beegood occupies, for every practice whose growth depends on qualified demand.
+        </p>
+
+        <div class="vs">
+          <div class="left">
+            <div class="hd">What exists</div>
+            <ul>
+              <li>Paid-ad agencies</li>
+              <li>Funnel consultants</li>
+              <li>Course platforms</li>
+              <li>Video production houses</li>
+            </ul>
+          </div>
+          <div class="right">
+            <div class="hd">What is missing</div>
+            <ul>
+              <li>An atelier that builds all four —</li>
+              <li>strategy, narrative, platform, content —</li>
+              <li>so the funnel delivers hot leads,</li>
+              <li>not just traffic.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 5 · INTRODUCING -->
+  <section data-label="Introducing beegood" class="s-intro">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">05 / 14 · INTRODUCING</div>
+    </div>
+
+    <div class="intro-wrap">
+      <h1 class="intro-headline">
+        One atelier for the <em>whole thing.</em> We build your strategy, then run everything it needs.
+      </h1>
+      <p class="intro-sub">
+        beegood is a turnkey revolution for influencers and personal brands — coaches, consultants, lawyers, doctors, mentors, beauty practitioners. We start with <em>strategy</em>, built only for you. Then we implement it across platform, funnel, data, creative, and CRM. You do only what you are great at. We take care of the rest — A to Z, fast and accurate.
+      </p>
+      <div class="chips">
+        <div class="chip">beegood atelier</div>
+        <div class="chip alt">The TrueSignal Method</div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 6 · HOW IT WORKS -->
+  <section data-label="How it works">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">06 / 14 · HOW IT WORKS</div>
+    </div>
+
+    <div class="frame">
+      <div class="eyebrow">A turnkey revolution — from strategy to sale, we do it all</div>
+
+      <div class="pipeline">
+        <div class="step">
+          <div class="n">01</div>
+          <div class="k">Strategy</div>
+          <h4>A strategy built only for <em>them.</em></h4>
+          <p>We start with the person — life, work, frequency, differentiation. Strategy comes first, always. Not templates, not playbooks. A positioning built from the truth of who they actually are.</p>
+        </div>
+        <div class="step">
+          <div class="n">02</div>
+          <div class="k">Platform</div>
+          <h4>Strategy <em>implemented</em> as product.</h4>
+          <p>We translate the strategy into a working platform on beegood.online — multi-tenant, fast, accurate. Eight products, the TrueSignal quiz, credit system, checkout, CRM. Ready to sell on day one.</p>
+        </div>
+        <div class="step">
+          <div class="n">03</div>
+          <div class="k">Funnel &amp; data</div>
+          <h4>A funnel that actually <em>works.</em></h4>
+          <p>The quiz doesn't just convert — it teaches. Every answer becomes data. Meta Pixel connects to the funnel for real optimization. Only pre-qualified, hot leads reach the practice.</p>
+        </div>
+        <div class="step">
+          <div class="n">04</div>
+          <div class="k">Creative</div>
+          <h4>Video that carries the <em>strategy.</em></h4>
+          <p>We take the creative to the next level by building the strategy into the content itself — brand-awareness films, CTA campaigns, product launches. Still human. Not AI. This is where we are the best.</p>
+        </div>
+        <div class="step">
+          <div class="n">05</div>
+          <div class="k">CRM &amp; ops</div>
+          <h4>A CRM and operating <em>spine.</em></h4>
+          <p>A CRM built for each atelier client. Online courses, live challenges, product delivery, member comms — all run through beegood. They never touch a dashboard they did not ask for.</p>
+        </div>
+        <div class="step">
+          <div class="n">06</div>
+          <div class="k">Ongoing</div>
+          <h4>They do their <em>real work.</em></h4>
+          <p>The personal brand shows up for the thing only they can do. We take care of the rest, A to Z, fast and accurate. That is the revolution — a single partner for every layer of the business.</p>
+        </div>
+      </div>
+
+      <div class="unifier">First strategy. Then everything it needs to live in the market. One atelier. One brain. Turnkey.</div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 7 · PRODUCT -->
+  <section data-label="Product">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">07 / 14 · PRODUCT</div>
+    </div>
+
+    <div class="frame">
+      <h2 class="title" style="font-size: 60px;">The product, in two surfaces.</h2>
+      <div style="height: 0;"></div>
+
+      <div class="devices">
+        <div>
+          <div class="laptop">
+            <div class="screen">
+              <div class="nav">
+                <div class="m">bee<em>good.</em></div>
+                <div class="items"><span>Method</span><span>Products</span><span>Diagnosis</span><span>Log in</span></div>
+              </div>
+              <div class="hero">
+                <div class="eb">The TrueSignal Method</div>
+                <h1>Turn your <em>signal</em><br/>into a business.</h1>
+                <p>Take the diagnosis. Get matched to one of eight products. Every shekel you pay becomes credit toward the next.</p>
+                <div class="btn">Begin diagnosis</div>
+              </div>
+            </div>
+          </div>
+          <div class="laptop-cap">beegood.online · The platform</div>
+        </div>
+
+        <div class="phone-col">
+          <div class="phone">
+            <div class="screen phone-live">
+              <iframe
+                src="https://shiri-two.vercel.app/"
+                title="shiri-two.vercel.app"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            </div>
+          </div>
+          <div class="phone-cap">Atelier client · Shiri Fadlon · הבאר</div>
+        </div>
+        </div>
+      </div>
+
+      <div class="feat-row">
+        <div class="f">TrueSignal<br/>Diagnosis · AI</div>
+        <div class="f">Quiz to<br/>Product Match</div>
+        <div class="f">Credit<br/>System</div>
+        <div class="f">Admin<br/>+ CRM</div>
+        <div class="f">Multi-tenant<br/>Architecture</div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 8 · MARKET -->
+  <section data-label="Market">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">08 / 14 · MARKET &amp; AUDIENCE</div>
+    </div>
+
+    <div class="frame">
+      <h2 class="title">The foundation behind the thesis.</h2>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="l">Followers<br/>reached</div>
+        </div>
+        <div class="stat">
+          <div class="l">Clients<br/>served</div>
+        </div>
+        <div class="stat">
+          <div class="l">Videos<br/>produced</div>
+        </div>
+        <div class="stat">
+          <div class="l">Industries<br/>covered</div>
+        </div>
+      </div>
+
+      <div class="stats-foot">Built from Hadar Danan's practice. Now the foundation of beegood.</div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 9 · TRACTION -->
+  <section data-label="Traction">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">09 / 14 · TRACTION</div>
+    </div>
+
+    <div class="frame">
+      <h2 class="title">Twelve weeks, on record.</h2>
+
+      <div class="timeline">
+        <div class="tl-row">
+          <div class="date">APR 2026</div>
+          <div>
+            <div class="h">beegood.online launched.</div>
+            <div class="d">TrueSignal AI Diagnosis live. Eight products shipped. Full CRM and Google OAuth in production.</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="date">APR 2026</div>
+          <div>
+            <div class="h">beegood atelier formalized.</div>
+            <div class="d">Shiri Fadlon signed as first named atelier client. Site in production.</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="date">MAR 2026</div>
+          <div>
+            <div class="h">Santosha design system and methodology locked.</div>
+            <div class="d">TrueSignal positioned as the brand's intellectual property.</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="date">FEB 2026</div>
+          <div>
+            <div class="h">Meta Israel pilot presentation.</div>
+            <div class="d">Hadar Danan business valued at 17-18M NIS on internal methodology.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-foot">Twelve weeks. Both arms operational.</div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 10 · MODEL -->
+  <section data-label="Business model">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">10 / 14 · BUSINESS MODEL</div>
+    </div>
+
+    <div class="frame">
+      <h2 class="title">Three revenue lines.</h2>
+
+      <div class="model">
+        <div class="rev">
+          <div class="label">01 · Establishment</div>
+          <h3>Strategy &amp; <em>platform build.</em></h3>
+          <ul>
+            <li><strong>One-time fee</strong> for onboarding a cultural leader into the atelier</li>
+            <li>Includes <strong>positioning strategy</strong>, narrative architecture, and <strong>full multi-tenant platform</strong> build on beegood.online</li>
+            <li>The core of the engagement — and the primary revenue event</li>
+          </ul>
+        </div>
+
+        <div class="rev">
+          <div class="label">02 · Ongoing</div>
+          <h3>Commission on <em>platform revenue.</em></h3>
+          <ul>
+            <li><strong>Monthly commission</strong> on gross revenue through the client's platform</li>
+            <li>Client operates their own payment terminal; beegood invoices commission</li>
+            <li>Recurring, aligned upside as the client scales</li>
+          </ul>
+        </div>
+
+        <div class="rev">
+          <div class="label">03 · Production</div>
+          <h3>Member-rate <em>content days.</em></h3>
+          <ul>
+            <li>Atelier members receive <strong>discounted video production</strong> through beegood studio</li>
+            <li>Priced per shoot day, not per deliverable</li>
+            <li>Keeps craft close; optional, not a dependency</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="model-foot">Establishment funds the craft. Commission compounds the scale. Production keeps the signal alive.</div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 11 · ROADMAP -->
+  <section data-label="Roadmap">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">11 / 14 · ROADMAP</div>
+    </div>
+
+    <div class="frame">
+      <h2 class="title">Four quarters ahead.</h2>
+
+      <div class="road">
+        <div class="q">
+          <div class="when">Q2 · 2026</div>
+          <ul>
+            <li>Shiri Fadlon multi-tenant launch</li>
+            <li>Second atelier client signed</li>
+            <li>Meta Pixel and attribution loop live</li>
+          </ul>
+        </div>
+        <div class="q">
+          <div class="when">Q3 · 2026</div>
+          <ul>
+            <li>Third atelier client</li>
+            <li>beegood.online email sequences shipped</li>
+            <li>Cardcom and invoice automation</li>
+          </ul>
+        </div>
+        <div class="q">
+          <div class="when">Q4 · 2026</div>
+          <ul>
+            <li>Platform international audience test</li>
+            <li>Atelier waitlist opens</li>
+            <li>First team hire</li>
+          </ul>
+        </div>
+        <div class="q">
+          <div class="when">Q1 · 2027</div>
+          <ul>
+            <li>beegood atelier positioned as the Hebrew-market reference for cultural-leader building</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 12 · TEAM -->
+  <section data-label="Team">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">12 / 14 · TEAM</div>
+    </div>
+
+    <div class="frame">
+      <h2 class="title">The partnership.</h2>
+
+      <div class="team">
+        <div class="member">
+          <div class="role">Co-founder</div>
+          <div class="name">Hadar Danan</div>
+          <div class="disc">Creative direction · Strategy · Public voice</div>
+          <div class="bio">Built a practice that reached 70,000+ followers and served 3,500+ clients across 80+ industries before beegood existed. The atelier's anchor client and the brand's outward face.</div>
+        </div>
+        <div class="member">
+          <div class="role">Co-founder</div>
+          <div class="name">Alon Abadi</div>
+          <div class="disc">Strategy · Business architecture · Technology · Product</div>
+          <div class="bio">Co-architect of beegood's strategy and business model. Designer and builder of beegood.online, the TrueSignal diagnosis engine, and the atelier's multi-tenant platform. Integrates aesthetic, strategic, and philosophical thinking into every layer of the system.</div>
+        </div>
+      </div>
+
+      <div class="team-foot">Equal partners. Complementary disciplines. One atelier.</div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 13 · PARTNERSHIP -->
+  <section data-label="Partnership">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">13 / 14 · PARTNERSHIP</div>
+    </div>
+
+    <div class="frame">
+      <h2 class="title">Two conversations. One table.</h2>
+
+      <div class="part">
+        <div class="frame-card">
+          <div class="kicker">For strategic partners</div>
+          <h3>We work with a small number of partners who extend the atelier's reach, into media, technology, education, and capital. Partnership with beegood is <em>long-form.</em> We move slowly and we choose carefully.</h3>
+        </div>
+        <div class="frame-card alt">
+          <div class="kicker">For investors</div>
+          <h3>beegood is not raising a traditional round. We are selectively opening conversations with investors whose presence extends the <em>craft,</em> not just the cap table. If the fit is right, we will talk structure.</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+  <!-- 14 · NEXT STEPS -->
+  <section data-label="Next steps" class="s-next">
+    <div class="chrome-top">
+      <div class="wordmark"><img class="bee-chrome" src="assets/beegood-logo.png" alt=""/>bee<em>good.</em></div>
+      <div class="marker">14 / 14 · NEXT STEPS</div>
+    </div>
+
+    <div class="next-wrap">
+      <div class="big">Let's find out if <em>this fits.</em></div>
+
+      <div class="contact">
+        <div class="row"><span class="k">Hadar Danan</span><span>hadar@beegood.online</span></div>
+        <div class="row"><span class="k">Alon Abadi</span><span>alon@beegood.online</span></div>
+        <div class="row"><span class="k">Web</span><span>beegood.online</span></div>
+      </div>
+    </div>
+
+    <div class="chrome-bottom">
+      <div>beegood atelier · Tel Aviv · 2026</div>
+      <div>CONFIDENTIAL</div>
+    </div>
+  </section>
+
+</deck-stage>
+
+<div id="mobile-deck" aria-hidden="true"></div>
+
+<script>
+  (function setupMobile() {
+    const MOBILE_MAX = 900;
+    const stage = document.querySelector('deck-stage');
+    const mount = document.getElementById('mobile-deck');
+    let cloned = false;
+
+    function isMobile() {
+      return Math.min(window.innerWidth, window.innerHeight) <= MOBILE_MAX
+          || window.matchMedia('(max-width: 900px)').matches;
+    }
+
+    function activate() {
+      document.body.classList.add('is-mobile');
+      if (!cloned) {
+        const sections = stage.querySelectorAll(':scope > section');
+        sections.forEach((s, i) => {
+          const c = s.cloneNode(true);
+          c.removeAttribute('data-screen-label');
+          c.removeAttribute('data-om-validate');
+          c.classList.add('m-slide');
+          c.setAttribute('data-m-idx', String(i + 1));
+          mount.appendChild(c);
+        });
+        cloned = true;
+      }
+      mount.setAttribute('aria-hidden', 'false');
+    }
+
+    function deactivate() {
+      document.body.classList.remove('is-mobile');
+      mount.setAttribute('aria-hidden', 'true');
+    }
+
+    function sync() { (isMobile() ? activate : deactivate)(); }
+
+    // Delay one tick so deck-stage finishes its initial slot collection.
+    setTimeout(sync, 50);
+    window.addEventListener('resize', sync);
+  })();
+</script>
+
+</body>
+</html>
