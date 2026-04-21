@@ -29,7 +29,7 @@ const EXTRA_LINKS = [
 
 const DECK_LINKS = [
   { label: "עברית",   href: "/deck/he" },
-  { label: "English", href: "/deck/en" },
+  { label: "English", href: "/deck/en/index.html" },
 ];
 
 const LINK_STYLE = (active: boolean): React.CSSProperties => ({

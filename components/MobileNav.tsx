@@ -32,7 +32,7 @@ const ITEMS_GROUP5 = [{ label: "האזור האישי שלי", href: "/account" 
 
 const DECK_ITEMS = [
   { label: "מצגת שותפים — עברית",   href: "/deck/he" },
-  { label: "מצגת שותפים — English", href: "/deck/en" },
+  { label: "מצגת שותפים — English", href: "/deck/en/index.html" },
 ];
 
 interface MobileNavProps {
