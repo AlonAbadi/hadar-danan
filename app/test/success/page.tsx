@@ -17,6 +17,8 @@ export default function TestSuccessPage() {
       nextStepLabel="חזרה לדף הבית"
       nextStepHref="/"
       nextStepDesc="הטסט הצליח"
+      trackingProduct="test_1"
+      trackingValue={1}
     />
     </Suspense>
   );
