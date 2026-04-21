@@ -1,3 +1,4 @@
+import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import type { Metadata } from "next";
 import { CourseLandingClient } from "./CourseLandingClient";
 import { ProductSchema } from "@/components/ProductSchema";

@@ -15,6 +15,8 @@ export default function CourseSuccessPage() {
       nextStepLabel="התחל את הקורס"
       nextStepHref="/course/content"
       nextStepDesc="כל השיעורים פתוחים - לך בקצב שלך"
+      trackingProduct="course_1800"
+      trackingValue={1800}
     />
   );
 }

@@ -15,6 +15,8 @@ export default function StrategySuccessPage() {
       nextStepLabel="חזור לדף הבית"
       nextStepHref="/"
       nextStepDesc="ממתינים לפגישה!"
+      trackingProduct="strategy_4000"
+      trackingValue={4000}
     />
   );
 }

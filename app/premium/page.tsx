@@ -1,3 +1,4 @@
+import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import type { Metadata } from "next";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { PremiumBookingFlow } from "./PremiumBookingFlow";
@@ -48,7 +49,8 @@ export default async function PremiumPage() {
         { name: "דף הבית", url: APP_URL },
         { name: "יום צילום פרמיום", url: `${APP_URL}/premium` },
       ]} />
-    <ProductLandingPage
+    <ViewContentTracker product="premium_14000" value={14000} />
+      <ProductLandingPage
       productName="יום צילום פרמיום"
       price={PRODUCT_MAP.premium_14000.price}
       checkoutHref="#cta"

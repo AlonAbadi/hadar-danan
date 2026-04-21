@@ -44,9 +44,29 @@ export function trackBooking() {
 }
 
 /** Purchase confirmed → Purchase */
-export function trackPurchase(product: string, value: number, currency = "ILS") {
+export function trackPurchase(product: string, value: number, currency = "ILS", eventId?: string) {
   try {
-    fbq("track", "Purchase", { value, currency, content_name: product });
-    gtag("event", "purchase", { currency, value, items: [{ item_id: product }] });
+    if (eventId) {
+      fbq("track", "Purchase", { value, currency, content_name: product }, { eventID: eventId });
+    } else {
+      fbq("track", "Purchase", { value, currency, content_name: product });
+    }
+    gtag("event", "purchase", { currency, value, transaction_id: eventId, items: [{ item_id: product }] });
+  } catch {}
+}
+
+/** Product page viewed → ViewContent */
+export function trackViewContent(product: string, value: number, currency = "ILS") {
+  try {
+    fbq("track", "ViewContent", { content_name: product, value, currency, content_type: "product" });
+    gtag("event", "view_item", { currency, value, items: [{ item_id: product }] });
+  } catch {}
+}
+
+/** After registration form submitted → CompleteRegistration */
+export function trackCompleteRegistration() {
+  try {
+    fbq("track", "CompleteRegistration");
+    gtag("event", "sign_up");
   } catch {}
 }

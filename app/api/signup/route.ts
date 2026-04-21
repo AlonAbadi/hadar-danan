@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { SignupSchema } from "@/lib/validations";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendCapiEvent } from "@/lib/meta-capi";
 
 export async function POST(req: NextRequest) {
   // ── Rate limit: 5 requests / minute per IP ──────────────
@@ -155,6 +156,13 @@ export async function POST(req: NextRequest) {
       }));
       await supabase.from("jobs").insert(jobs);
     }
+
+    // Fire Lead to Meta CAPI (server-side)
+    await sendCapiEvent({
+      eventName: "Lead",
+      eventId:   user.id,
+      userData:  { email, phone: phone ?? undefined },
+    });
 
     return NextResponse.json({ ok: true, user_id: user.id }, { status: 201 });
   } catch (err) {

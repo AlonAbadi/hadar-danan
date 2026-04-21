@@ -1,3 +1,4 @@
+import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { WorkshopCTA } from "./WorkshopCTA";
 import { NextWorkshopBadge } from "./NextWorkshopBadge";
@@ -47,6 +48,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         { name: "סדנה יום אחד", url: `${APP_URL}/workshop` },
       ]} />
       <AbandonCheckoutPopup product="workshop" />
+      <ViewContentTracker product="workshop_1080" value={1080} />
       <ProductLandingPage
         productName="סדנה יום אחד"
         price={PRODUCT_MAP.workshop_1080.price}

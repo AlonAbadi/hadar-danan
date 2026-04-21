@@ -125,9 +125,10 @@ export async function POST(req: NextRequest) {
     ReturnValue: purchase.id,
 
     // Redirect URLs (NEVER rely on these alone — webhook is the source of truth)
+    // oid= passed for Meta Pixel browser/CAPI event_id deduplication
     SuccessRedirectUrl: product === "challenge_197"
-      ? `${appUrl}/challenge/thank-you`
-      : `${appUrl}/${product.split("_")[0]}/success`,
+      ? `${appUrl}/challenge/thank-you?oid=${purchase.id}`
+      : `${appUrl}/${product.split("_")[0]}/success?oid=${purchase.id}`,
     ErrorRedirectUrl: `${appUrl}/checkout-error`,
 
     // Webhook — Cardcom calls this server-to-server BEFORE redirecting the user

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { trackPurchase } from "@/lib/analytics";
 
 interface SuccessPageProps {
   productName: string;
@@ -12,6 +14,8 @@ interface SuccessPageProps {
   nextStepHref: string;
   nextStepDesc: string;
   whatsappPhone?: string;
+  trackingProduct?: string;
+  trackingValue?: number;
 }
 
 const WA_ICON = (
@@ -29,9 +33,24 @@ export function SuccessPage({
   nextStepHref,
   nextStepDesc,
   whatsappPhone,
+  trackingProduct,
+  trackingValue,
 }: SuccessPageProps) {
   const [visible, setVisible] = useState(false);
+  const searchParams = useSearchParams();
+
   useEffect(() => { setTimeout(() => setVisible(true), 80); }, []);
+
+  useEffect(() => {
+    if (!trackingProduct || !trackingValue) return;
+    // sessionStorage guard prevents re-firing on page refresh
+    const key = `purchase_fired_${trackingProduct}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    const eventId = searchParams.get("oid") ?? undefined;
+    trackPurchase(trackingProduct, trackingValue, "ILS", eventId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const STEPS = [
     { num: "1", title: "קיבלת מייל אישור", desc: "בדוק את תיבת הדואר שלך" },

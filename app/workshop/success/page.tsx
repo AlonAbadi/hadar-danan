@@ -15,6 +15,8 @@ export default function WorkshopSuccessPage() {
       nextStepLabel="קבע תאריך לסדנה"
       nextStepHref="/strategy/book"
       nextStepDesc="בחר תאריך שמתאים לך מהיומן"
+      trackingProduct="workshop_1080"
+      trackingValue={1080}
     />
   );
 }

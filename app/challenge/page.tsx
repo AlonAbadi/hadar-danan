@@ -1,3 +1,4 @@
+import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
@@ -48,6 +49,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         { name: "אתגר 7 הימים", url: `${APP_URL}/challenge` },
       ]} />
       <AbandonCheckoutPopup product="challenge" />
+      <ViewContentTracker product="challenge_197" value={197} />
       <ProductLandingPage
         productName="אתגר 7 הימים"
         price={PRODUCT_MAP.challenge_197.price}

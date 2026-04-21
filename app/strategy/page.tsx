@@ -1,3 +1,4 @@
+import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import Link from "next/link";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { CallForm } from "@/app/call/CallForm";
@@ -39,6 +40,7 @@ export default async function StrategyPage() {
         { name: "פגישת אסטרטגיה", url: `${APP_URL}/strategy` },
       ]} />
       <FAQSchema items={STRATEGY_FAQS} />
+      <ViewContentTracker product="strategy_4000" value={4000} />
       <ProductLandingPage
         productName="פגישת אסטרטגיה"
         price={PRODUCT_MAP.strategy_4000.price}

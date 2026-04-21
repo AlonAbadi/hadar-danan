@@ -15,6 +15,8 @@ export default function PremiumSuccessPage() {
       nextStepLabel="חזור לדף הבית"
       nextStepHref="/"
       nextStepDesc="מחכים ליום הגדול!"
+      trackingProduct="premium_14000"
+      trackingValue={14000}
     />
   );
 }

@@ -20,6 +20,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { sendCapiEvent } from "@/lib/meta-capi";
 
 // ── Shared fulfillment logic ───────────────────────────────────────────────
 
@@ -135,6 +136,27 @@ async function fulfillPurchase(
     .update({ status: "buyer" })
     .eq("id", purchase.user_id)
     .eq("status", "high_intent");
+
+  // Fire Purchase to Meta Conversions API (server-side, not blocked by iOS/adblockers)
+  // event_id = purchase.id — deduplicates with browser pixel firing on success page
+  const { data: userForCapi } = await supabase
+    .from("users")
+    .select("email, phone")
+    .eq("id", purchase.user_id)
+    .single();
+
+  if (userForCapi) {
+    await sendCapiEvent({
+      eventName: "Purchase",
+      eventId:   purchase.id,
+      userData:  { email: userForCapi.email ?? undefined, phone: userForCapi.phone ?? undefined },
+      customData: {
+        value:       purchase.amount ?? undefined,
+        currency:    "ILS",
+        contentName: purchase.product,
+      },
+    });
+  }
 
   return { ok: true };
 }
