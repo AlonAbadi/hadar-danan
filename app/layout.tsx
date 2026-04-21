@@ -64,6 +64,7 @@ export default function RootLayout({
       dir="rtl"
       className={`${assistant.variable} h-full`}
     >
+      <meta name="facebook-domain-verification" content="remqmo1rv45m6h18tkiu3r15mki3bs" />
       {/* fbq stub — runs before hydration so useEffect calls are queued */}
       <script dangerouslySetInnerHTML={{ __html: `window.fbq=window.fbq||function(){(window.fbq.q=window.fbq.q||[]).push(arguments)};window.fbq.q=window.fbq.q||[];` }} />
       <link rel="preload" href="/hadar1.jpg" as="image" type="image/jpeg" />
