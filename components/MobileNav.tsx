@@ -30,6 +30,11 @@ const ITEMS_GROUP3 = [
 const ITEMS_GROUP4 = [{ label: "הכוורת 🐝",        href: "/hive" }];
 const ITEMS_GROUP5 = [{ label: "האזור האישי שלי", href: "/account" }];
 
+const DECK_ITEMS = [
+  { label: "מצגת שותפים — עברית",   href: "/deck/he" },
+  { label: "מצגת שותפים — English", href: "/deck/en" },
+];
+
 interface MobileNavProps {
   userInitial?: string | null;
 }
@@ -301,6 +306,33 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
           {/* Group 5 */}
           {ITEMS_GROUP5.map((item) => (
             <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
+          ))}
+
+          <Divider />
+
+          {/* מצגת שותפים */}
+          {DECK_ITEMS.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={close}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                direction: "rtl",
+                padding: "16px 24px",
+                borderBottom: "1px solid #2C323E",
+                color: "#9E9990",
+                fontSize: 14,
+                textDecoration: "none",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#1D2430"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              {item.label}
+            </a>
           ))}
 
           {/* ── Sign-out capsule (logged-in only) ────────────── */}

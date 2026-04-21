@@ -27,6 +27,11 @@ const EXTRA_LINKS = [
   { label: "האזור האישי שלי", href: "/my" },
 ];
 
+const DECK_LINKS = [
+  { label: "עברית",   href: "/deck/he" },
+  { label: "English", href: "/deck/en" },
+];
+
 const LINK_STYLE = (active: boolean): React.CSSProperties => ({
   color: active ? "#E8B94A" : "#EDE9E1",
   fontSize: 14,
@@ -44,7 +49,8 @@ interface DesktopNavProps {
 export function DesktopNav({ userInitial = null }: DesktopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [dropOpen, setDropOpen] = useState(false);
+  const [dropOpen, setDropOpen]   = useState(false);
+  const [deckOpen, setDeckOpen]   = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleCapsuleClick = () => {
@@ -216,6 +222,68 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
             {link.label}
           </Link>
         ))}
+
+        {/* Dropdown - מצגת שותפים */}
+        <div
+          style={{ position: "relative" }}
+          onMouseEnter={() => setDeckOpen(true)}
+          onMouseLeave={() => setDeckOpen(false)}
+        >
+          <button
+            style={{
+              ...LINK_STYLE(false),
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            מצגת שותפים ▾
+          </button>
+
+          {deckOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                background: "#141820",
+                border: "1px solid #2C323E",
+                borderRadius: 8,
+                minWidth: 160,
+                zIndex: 100,
+                direction: "rtl",
+                overflow: "hidden",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+              }}
+            >
+              {DECK_LINKS.map((item, i) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "block",
+                    padding: "12px 24px",
+                    borderBottom: i < DECK_LINKS.length - 1 ? "1px solid #2C323E" : "none",
+                    color: "#EDE9E1",
+                    fontSize: 14,
+                    fontFamily: "var(--font-assistant), Assistant, sans-serif",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#1D2430"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
 
       </div>
     </nav>
