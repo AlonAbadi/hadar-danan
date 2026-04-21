@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendCapiEvent } from "@/lib/meta-capi";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
@@ -84,6 +85,21 @@ export async function POST(req: NextRequest) {
     `"${story.slice(0, 300)}${story.length > 300 ? "..." : ""}"`;
 
   console.info("[atelier/apply] New application #" + data.id + "\n" + waMessage);
+
+  await sendCapiEvent({
+    eventName:  "Lead",
+    eventId:    `atelier_${data.id}`,
+    userData:   {
+      phone,
+      fbp:             req.cookies.get("_fbp")?.value,
+      fbc:             req.cookies.get("_fbc")?.value,
+      clientUserAgent: req.headers.get("user-agent") ?? undefined,
+    },
+    customData: {
+      contentName: "atelier_influencer",
+      contentIds:  ["atelier_influencer"],
+    },
+  });
 
   return NextResponse.json({ success: true, id: data.id });
 }

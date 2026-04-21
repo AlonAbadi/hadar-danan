@@ -24,7 +24,7 @@ export function AtelierLandingClient({ faqs }: Props) {
   const [success,   setSuccess]   = useState(false);
   const [error,     setError]     = useState<string | null>(null);
 
-  // Fire ATELIER_VIEW on mount
+  // Fire ATELIER_VIEW + ViewContent on mount
   useEffect(() => {
     fetch("/api/events", {
       method: "POST",
@@ -34,6 +34,14 @@ export function AtelierLandingClient({ faqs }: Props) {
         metadata: { page: "atelier" },
       }),
     }).catch(() => {});
+    if (typeof window !== "undefined") {
+      window.fbq?.("track", "ViewContent", {
+        content_name: "atelier_influencer",
+        content_type: "product",
+        value: 0,
+        currency: "ILS",
+      });
+    }
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -66,6 +74,15 @@ export function AtelierLandingClient({ faqs }: Props) {
           metadata: { page: "atelier" },
         }),
       }).catch(() => {});
+
+      // Browser Pixel — Lead (influencer) with eventID for CAPI deduplication
+      const appId = (data as Record<string, unknown>).id as string | undefined;
+      if (typeof window !== "undefined") {
+        window.fbq?.("track", "Lead",
+          { content_name: "atelier_influencer", content_type: "product" },
+          appId ? { eventID: `atelier_${appId}` } : undefined,
+        );
+      }
     } catch {
       setError("שגיאה בשליחה. בדקי חיבור לאינטרנט ונסי שוב.");
     } finally {
