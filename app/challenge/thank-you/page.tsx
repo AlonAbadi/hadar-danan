@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { PurchaseTracker } from "@/components/analytics/PurchaseTracker";
 
 const WHATSAPP_URL = "https://chat.whatsapp.com/KNS9JEHWdjYFVf0uJdZPB7";
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default function ChallengeThankyouPage() {
   return (
     <>
-    <PurchaseTracker product="challenge_197" value={197} />
+    <Suspense><PurchaseTracker product="challenge_197" value={197} /></Suspense>
     <main
       dir="rtl"
       className="font-assistant min-h-screen flex items-center justify-center px-6 py-20"

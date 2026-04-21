@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { SuccessPage } from "@/components/SuccessPage";
 
 export const metadata = {
@@ -7,6 +8,7 @@ export const metadata = {
 
 export default function PremiumSuccessPage() {
   return (
+    <Suspense>
     <SuccessPage
       productName="יום צילום פרמיום"
       emoji="🎬"
@@ -18,5 +20,6 @@ export default function PremiumSuccessPage() {
       trackingProduct="premium_14000"
       trackingValue={14000}
     />
+    </Suspense>
   );
 }

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { SuccessPage } from "@/components/SuccessPage";
 
 export const metadata = {
@@ -8,6 +9,7 @@ export const metadata = {
 export default function ChallengeSuccessPage() {
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "";
   return (
+    <Suspense>
     <SuccessPage
       productName="אתגר 7 הימים"
       emoji="🚀"
@@ -18,5 +20,6 @@ export default function ChallengeSuccessPage() {
       nextStepDesc="כל התכנים, הפידבקים והקהילה - בקבוצה"
       whatsappPhone={whatsappPhone || undefined}
     />
+    </Suspense>
   );
 }
