@@ -154,6 +154,7 @@ async function fulfillPurchase(
         value:       purchase.amount ?? undefined,
         currency:    "ILS",
         contentName: purchase.product,
+        contentIds:  [purchase.product],
       },
     });
   }

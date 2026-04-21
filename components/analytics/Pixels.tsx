@@ -7,7 +7,7 @@ import Script from "next/script";
  * Meta Pixel is initialized inline in layout.tsx (synchronous, before hydration).
  */
 export function Pixels() {
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "G-L76SZ1SCS1";
   if (!gaId) return null;
 
   return (

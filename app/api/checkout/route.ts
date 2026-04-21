@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
       fbc:              req.cookies.get("_fbc")?.value,
       clientUserAgent:  req.headers.get("user-agent") ?? undefined,
     },
-    customData: { value: amount, currency: "ILS", contentName: product },
+    customData: { value: amount, currency: "ILS", contentName: product, contentIds: [product] },
   });
 
   const cardcomRes = await fetch(

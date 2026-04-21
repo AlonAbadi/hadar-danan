@@ -70,13 +70,6 @@ export default function RootLayout({
       )}
       <link rel="preload" href="/hadar1.jpg" as="image" type="image/jpeg" />
       <body className="min-h-full flex flex-col font-assistant antialiased" style={{ background: "#101520", color: "#EDE9E1" }}>
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-L76SZ1SCS1" strategy="afterInteractive" />
-        <Script id="gtag-init" strategy="afterInteractive">{`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-L76SZ1SCS1');
-        `}</Script>
         <SchemaMarkup />
         <a href="#main-content" className="skip-link">דלג לתוכן הראשי</a>
         <Pixels />

@@ -35,6 +35,7 @@ interface CapiPayload {
     value?: number;
     currency?: string;
     contentName?: string;
+    contentIds?: string[];
   };
 }
 
@@ -62,11 +63,12 @@ export async function sendCapiEvent(payload: CapiPayload): Promise<void> {
       ...(payload.customData.value       != null && { value:        payload.customData.value }),
       ...(payload.customData.currency             && { currency:     payload.customData.currency }),
       ...(payload.customData.contentName          && { content_name: payload.customData.contentName }),
+      ...(payload.customData.contentIds?.length   && { content_ids:  payload.customData.contentIds, content_type: "product" }),
     };
   }
 
   try {
-    await fetch(
+    const res = await fetch(
       `https://graph.facebook.com/v20.0/${pixelId}/events?access_token=${token}`,
       {
         method:  "POST",
@@ -74,5 +76,11 @@ export async function sendCapiEvent(payload: CapiPayload): Promise<void> {
         body:    JSON.stringify({ data: [event] }),
       }
     );
-  } catch {}
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(`[CAPI] ${payload.eventName} failed ${res.status}:`, body);
+    }
+  } catch (err) {
+    console.error(`[CAPI] ${payload.eventName} network error:`, err);
+  }
 }
