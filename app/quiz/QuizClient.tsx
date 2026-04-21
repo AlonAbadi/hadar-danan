@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
-import { saveQuizSession } from "@/lib/quiz-session";
-import { trackLead, trackCompleteRegistration, trackViewContent } from "@/lib/analytics";
+import { saveQuizSession, getQuizSession } from "@/lib/quiz-session";
+import { trackLead, trackCompleteRegistration, trackViewContent, trackInitiateCheckout } from "@/lib/analytics";
 import { buildNarrative } from "@/lib/quiz-narrative";
 import {
   type Answer,
@@ -224,12 +224,23 @@ type InitialUser = {
   marketing_consent: boolean;
 } | null;
 
-// ── Component ─────────────────────────────────────────────────────
-// Steps: 0-5 = questions, 6 = lead gate, 7 = result
+type InitialQuizResult = {
+  answers: Record<string, string>;
+  recommendedProduct: string;
+  matchPercent: number;
+} | null;
 
-export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }) {
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<Answer[]>([]);
+// ── Component ─────────────────────────────────────────────────────
+// Steps: -1 = checking session, 0-5 = questions, 6 = lead gate, 7 = result
+
+export function QuizClient({ initialUser = null, initialQuizResult = null }: { initialUser?: InitialUser; initialQuizResult?: InitialQuizResult }) {
+  const hasServerResult = !!initialQuizResult;
+  const serverAnswers: Answer[] = hasServerResult
+    ? ["q1","q2","q3","q4","q5","q6"].map(k => (initialQuizResult!.answers[k] as Answer) ?? "A")
+    : [];
+
+  const [step, setStep] = useState(hasServerResult ? 7 : -1);
+  const [answers, setAnswers] = useState<Answer[]>(serverAnswers);
   const [animPhase, setAnimPhase] = useState<AnimPhase>("idle");
   const [slideDir, setSlideDir] = useState<SlideDir>("forward");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -272,8 +283,8 @@ export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }
   const personalizedReasons = winner ? getPersonalizedReasons(answers, winner.id) : [];
   const narrative = step === 7 && answers.length === 6 ? buildNarrative(answers) : null;
 
-  const startedRef = useRef(false);
-  const completedRef = useRef(false);
+  const startedRef  = useRef(hasServerResult); // don't re-fire QUIZ_STARTED when resuming
+  const completedRef = useRef(hasServerResult); // don't re-fire QUIZ_COMPLETED when resuming
 
   useEffect(() => {
     if (startedRef.current) return;
@@ -281,12 +292,30 @@ export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }
     postEvent({ type: "QUIZ_STARTED" });
   }, []);
 
-  // Result: scroll to top + stagger animations + counter
+  // Detect prior quiz session in localStorage (anonymous users / new device)
   useEffect(() => {
-    if (step !== 7) return;
+    if (hasServerResult) return; // already handled by server-provided result
+    const session = getQuizSession();
+    if (session) {
+      const restored = ["q1","q2","q3","q4","q5","q6"].map(k => (session.answers[k] as Answer) ?? "A");
+      setAnswers(restored);
+      setLeadForm({ name: session.name, email: session.email, phone: session.phone });
+      startedRef.current   = true;
+      completedRef.current = true;
+      setStep(7);
+    } else {
+      setStep(0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Result: scroll to top + stagger animations + counter + ViewContent pixel
+  useEffect(() => {
+    if (step !== 7 || !winner) return;
     window.scrollTo(0, 0);
     setResultReady(false);
     setDisplayPct(0);
+    trackViewContent(winner.id, PRODUCT_VALUE[winner.id] ?? 0);
 
     const t1 = setTimeout(() => setResultReady(true), 50);
     const t2 = setTimeout(() => {
@@ -318,7 +347,6 @@ export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }
         answers: answers.reduce<Record<string, string>>((acc, a, i) => { acc[`q${i+1}`] = a; return acc; }, {}),
       },
     });
-    trackViewContent(winner.id, PRODUCT_VALUE[winner.id] ?? 0);
   }, [step, scores, winner, matchPct, answers]);
 
   function animateTransition(dir: SlideDir, callback: () => void) {
@@ -340,6 +368,7 @@ export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }
     if (animPhase === "out") return;
     setSelectedId(id);
     postEvent({ type: "QUIZ_STEP", metadata: { question: step + 1, answer: id } });
+    if (typeof window !== "undefined") window.fbq?.("trackCustom", "QuizStep", { question: step + 1, answer: id });
     setTimeout(() => {
       animateTransition("forward", () => {
         const newAnswers = [...answers, id];
@@ -486,6 +515,7 @@ export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }
 
   function handleCTAClick(productId: string, href: string) {
     postEvent({ type: "QUIZ_CTA_CLICK", metadata: { product_id: productId } });
+    trackInitiateCheckout(productId, PRODUCT_VALUE[productId] ?? 0);
     window.location.href = href;
   }
 
@@ -545,6 +575,9 @@ export function QuizClient({ initialUser = null }: { initialUser?: InitialUser }
   const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP_PHONE
     ? `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_PHONE}`
     : "/strategy";
+
+  // ── Brief blank state while checking localStorage ─────────────────
+  if (step === -1) return null;
 
   // ── Questions + lead gate wrapper (dark quiz theme) ───────────────
   if (step < 7) {
