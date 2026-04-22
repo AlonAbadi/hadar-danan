@@ -49,6 +49,7 @@ const PRODUCT_CUSTOM_EVENT: Record<string, string> = {
   course_1800:    "PurchaseCourse",
   strategy_4000:  "PurchaseStrategy",
   premium_14000:  "PurchasePremium",
+  test_1:         "PurchaseTest",
 };
 
 /** Product-specific purchase custom event — fires alongside standard Purchase */

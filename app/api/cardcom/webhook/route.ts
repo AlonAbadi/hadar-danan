@@ -185,6 +185,7 @@ async function fulfillPurchase(
       course_1800:    "PurchaseCourse",
       strategy_4000:  "PurchaseStrategy",
       premium_14000:  "PurchasePremium",
+      test_1:         "PurchaseTest",
     };
     const customEventName = PRODUCT_CUSTOM_EVENT[purchase.product];
     if (customEventName) {
