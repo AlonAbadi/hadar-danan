@@ -11,6 +11,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { PRODUCT_MAP } from "@/lib/products";
 import { sendCapiEvent } from "@/lib/meta-capi";
+import { getClientIp } from "@/lib/rate-limit";
 
 // Invoice description per product (more descriptive than the short UI name)
 const INVOICE_DESCRIPTIONS: Record<string, string> = {
@@ -97,6 +98,10 @@ export async function POST(req: NextRequest) {
       amount,
       currency: "ILS",
       status: "pending",
+      meta_fbp:         req.cookies.get("_fbp")?.value ?? null,
+      meta_fbc:         req.cookies.get("_fbc")?.value ?? null,
+      meta_client_ip:   getClientIp(req),
+      meta_user_agent:  req.headers.get("user-agent") ?? null,
     })
     .select("id")
     .single();

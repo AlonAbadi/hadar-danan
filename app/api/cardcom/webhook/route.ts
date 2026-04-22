@@ -58,7 +58,7 @@ async function fulfillPurchase(
     })
     .eq("id", purchaseId)
     .eq("status", "pending")   // only update pending — prevents overwriting refunds
-    .select("id, user_id, product, amount")
+    .select("id, user_id, product, amount, meta_fbp, meta_fbc, meta_client_ip, meta_user_agent")
     .single();
 
   if (purchaseErr || !purchase) {
@@ -149,7 +149,14 @@ async function fulfillPurchase(
     await sendCapiEvent({
       eventName: "Purchase",
       eventId:   purchase.id,
-      userData:  { email: userForCapi.email ?? undefined, phone: userForCapi.phone ?? undefined },
+      userData:  {
+        email:           userForCapi.email ?? undefined,
+        phone:           userForCapi.phone ?? undefined,
+        fbp:             purchase.meta_fbp  ?? undefined,
+        fbc:             purchase.meta_fbc  ?? undefined,
+        clientIpAddress: purchase.meta_client_ip   ?? undefined,
+        clientUserAgent: purchase.meta_user_agent  ?? undefined,
+      },
       customData: {
         value:       purchase.amount ?? undefined,
         currency:    "ILS",

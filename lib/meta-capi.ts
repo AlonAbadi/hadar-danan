@@ -23,6 +23,7 @@ interface UserData {
   email?: string;
   phone?: string;
   clientUserAgent?: string;
+  clientIpAddress?: string;
   fbp?: string;  // _fbp cookie value
   fbc?: string;  // _fbc cookie value (fbclid)
 }
@@ -47,7 +48,8 @@ export async function sendCapiEvent(payload: CapiPayload): Promise<void> {
   const ud: Record<string, string | string[]> = {};
   if (payload.userData.email) ud.em = [hashEmail(payload.userData.email)];
   if (payload.userData.phone) ud.ph = [hashPhone(payload.userData.phone)];
-  if (payload.userData.clientUserAgent) ud.client_user_agent = payload.userData.clientUserAgent;
+  if (payload.userData.clientUserAgent) ud.client_user_agent  = payload.userData.clientUserAgent;
+  if (payload.userData.clientIpAddress) ud.client_ip_address  = payload.userData.clientIpAddress;
   if (payload.userData.fbp) ud.fbp = payload.userData.fbp;
   if (payload.userData.fbc) ud.fbc = payload.userData.fbc;
 
