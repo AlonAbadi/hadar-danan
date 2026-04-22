@@ -43,6 +43,24 @@ export function trackBooking(eventId?: string) {
   } catch {}
 }
 
+const PRODUCT_CUSTOM_EVENT: Record<string, string> = {
+  challenge_197:  "PurchaseChallenge",
+  workshop_1080:  "PurchaseWorkshop",
+  course_1800:    "PurchaseCourse",
+  strategy_4000:  "PurchaseStrategy",
+  premium_14000:  "PurchasePremium",
+};
+
+/** Product-specific purchase custom event — fires alongside standard Purchase */
+export function trackProductPurchase(product: string, value: number, currency = "ILS", eventId?: string) {
+  try {
+    const customEvent = PRODUCT_CUSTOM_EVENT[product];
+    if (!customEvent) return;
+    const opts = eventId ? { eventID: `${customEvent.toLowerCase()}_${eventId}` } : undefined;
+    fbq("trackCustom", customEvent, { value, currency, content_name: product }, opts);
+  } catch {}
+}
+
 /** Purchase confirmed → Purchase */
 export function trackPurchase(product: string, value: number, currency = "ILS", eventId?: string) {
   try {

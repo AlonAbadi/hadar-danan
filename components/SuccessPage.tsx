@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { trackPurchase } from "@/lib/analytics";
+import { trackPurchase, trackProductPurchase } from "@/lib/analytics";
 
 interface SuccessPageProps {
   productName: string;
@@ -49,6 +49,7 @@ export function SuccessPage({
     sessionStorage.setItem(key, "1");
     const eventId = searchParams.get("oid") ?? undefined;
     trackPurchase(trackingProduct, trackingValue, "ILS", eventId);
+    trackProductPurchase(trackingProduct, trackingValue, "ILS", eventId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

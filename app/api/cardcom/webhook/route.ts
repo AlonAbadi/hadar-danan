@@ -152,26 +152,49 @@ async function fulfillPurchase(
 
     const firstName = userForCapi.name?.trim().split(" ")[0] || undefined;
 
+    const sharedUserData = {
+      email:           userForCapi.email ?? undefined,
+      phone:           userForCapi.phone ?? undefined,
+      firstName,
+      externalId:      purchase.user_id,
+      fbp:             purchase.meta_fbp  ?? undefined,
+      fbc,
+      clientIpAddress: purchase.meta_client_ip   ?? undefined,
+      clientUserAgent: purchase.meta_user_agent  ?? undefined,
+    };
+
+    const sharedCustomData = {
+      value:       purchase.amount ?? undefined,
+      currency:    "ILS",
+      contentName: purchase.product,
+      contentIds:  [purchase.product],
+    };
+
+    // Standard Purchase event
     await sendCapiEvent({
-      eventName: "Purchase",
-      eventId:   purchase.id,
-      userData:  {
-        email:           userForCapi.email ?? undefined,
-        phone:           userForCapi.phone ?? undefined,
-        firstName,
-        externalId:      purchase.user_id,
-        fbp:             purchase.meta_fbp  ?? undefined,
-        fbc,
-        clientIpAddress: purchase.meta_client_ip   ?? undefined,
-        clientUserAgent: purchase.meta_user_agent  ?? undefined,
-      },
-      customData: {
-        value:       purchase.amount ?? undefined,
-        currency:    "ILS",
-        contentName: purchase.product,
-        contentIds:  [purchase.product],
-      },
+      eventName:  "Purchase",
+      eventId:    purchase.id,
+      userData:   sharedUserData,
+      customData: sharedCustomData,
     });
+
+    // Product-specific custom event for per-product campaign optimization
+    const PRODUCT_CUSTOM_EVENT: Record<string, string> = {
+      challenge_197:  "PurchaseChallenge",
+      workshop_1080:  "PurchaseWorkshop",
+      course_1800:    "PurchaseCourse",
+      strategy_4000:  "PurchaseStrategy",
+      premium_14000:  "PurchasePremium",
+    };
+    const customEventName = PRODUCT_CUSTOM_EVENT[purchase.product];
+    if (customEventName) {
+      await sendCapiEvent({
+        eventName:  customEventName,
+        eventId:    `${customEventName.toLowerCase()}_${purchase.id}`,
+        userData:   sharedUserData,
+        customData: sharedCustomData,
+      });
+    }
   }
 
   return { ok: true };
