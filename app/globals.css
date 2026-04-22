@@ -544,12 +544,15 @@ html.a11y-reading-mode img { max-width: 100% !important; }
   gap: 32px;
   align-items: stretch;
   margin-top: 20px;
+  overflow: hidden;
 }
 .shift-col {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 32px 26px;
+  min-width: 0;
+  overflow: hidden;
 }
 .shift-col.before { opacity: 0.75; }
 .shift-col.after {
@@ -608,8 +611,9 @@ html.a11y-reading-mode img { max-width: 100% !important; }
   color: var(--gold);
 }
 
-@media (max-width: 760px) {
-  .shift-grid { grid-template-columns: 1fr; gap: 16px; }
+@media (max-width: 860px) {
+  .shift-grid { grid-template-columns: 1fr; gap: 16px; overflow: visible; }
+  .shift-col { overflow: visible; }
   .shift-arrow { transform: rotate(90deg); font-size: 24px; padding: 4px 0; }
 }
 
@@ -789,6 +793,9 @@ html.a11y-reading-mode img { max-width: 100% !important; }
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 28px 26px;
+  min-width: 0;
+  overflow: hidden;
+  word-break: break-word;
 }
 .forwhom-col.yes { border-color: rgba(76,175,130,0.22); }
 .forwhom-col.no  { border-color: rgba(224,85,85,0.22); }
@@ -839,7 +846,7 @@ html.a11y-reading-mode img { max-width: 100% !important; }
   top: 1px;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
   .forwhom-grid { grid-template-columns: 1fr; }
 }
 
