@@ -86,19 +86,38 @@ export async function POST(req: NextRequest) {
 
   console.info("[atelier/apply] New application #" + data.id + "\n" + waMessage);
 
+  const fbp             = req.cookies.get("_fbp")?.value;
+  const fbc             = req.cookies.get("_fbc")?.value;
+  const clientUserAgent = req.headers.get("user-agent") ?? undefined;
+  const clientIpAddress = getClientIp(req);
+  const firstName       = name.trim().split(" ")[0] || undefined;
+
+  const sharedUserData = {
+    phone,
+    firstName,
+    fbp,
+    fbc,
+    clientUserAgent,
+    clientIpAddress,
+  };
+
+  const sharedCustomData = {
+    contentName: "atelier_influencer",
+    contentIds:  ["atelier_influencer"],
+  };
+
   await sendCapiEvent({
     eventName:  "Lead",
     eventId:    `atelier_${data.id}`,
-    userData:   {
-      phone,
-      fbp:             req.cookies.get("_fbp")?.value,
-      fbc:             req.cookies.get("_fbc")?.value,
-      clientUserAgent: req.headers.get("user-agent") ?? undefined,
-    },
-    customData: {
-      contentName: "atelier_influencer",
-      contentIds:  ["atelier_influencer"],
-    },
+    userData:   sharedUserData,
+    customData: sharedCustomData,
+  });
+
+  await sendCapiEvent({
+    eventName:  "AtelierLead",
+    eventId:    `atelierLead_${data.id}`,
+    userData:   sharedUserData,
+    customData: sharedCustomData,
   });
 
   return NextResponse.json({ success: true, id: data.id });
