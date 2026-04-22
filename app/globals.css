@@ -585,7 +585,7 @@ html.a11y-reading-mode img { max-width: 100% !important; }
   font-size: 14px;
   color: var(--fg-muted);
   line-height: 1.6;
-  padding-inline-end: 20px;
+  padding-inline-start: 20px;
   position: relative;
 }
 .shift-col.before .shift-list li::before {
@@ -825,7 +825,7 @@ html.a11y-reading-mode img { max-width: 100% !important; }
   font-size: 14px;
   color: var(--fg-muted);
   line-height: 1.6;
-  padding-inline-end: 24px;
+  padding-inline-start: 24px;
   position: relative;
 }
 .forwhom-col.yes li::before {
