@@ -1,6 +1,5 @@
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { PartnershipBookingFlow } from "./PartnershipBookingFlow";
-import { createServerClient } from "@/lib/supabase/server";
 import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 
 export const metadata = {
@@ -10,11 +9,6 @@ export const metadata = {
 };
 
 export default async function PartnershipPage() {
-  const supabase = createServerClient();
-  const { data: bookedSlots } = await supabase
-    .from("bookings")
-    .select("slot_date, slot_time")
-    .eq("status", "confirmed");
 
   return (
     <>
@@ -86,7 +80,7 @@ export default async function PartnershipPage() {
       ]}
 
       finalTitle="בדוק/י אם יש התאמה"
-      finalSub="שיחת היכרות של 20 דקות - ללא עלות וללא התחייבות."
+      finalSub="השאר פרטים ונחזור אליך תוך 24–48 שעות."
 
       hideMicroCommitment
 
@@ -97,14 +91,14 @@ export default async function PartnershipPage() {
               בדוק/י אם יש התאמה
             </h2>
             <p style={{ color: "#9E9990", fontSize: 15 }}>
-              מלא/י את הפרטים ובחר/י מועד לשיחת היכרות קצרה - 20 דקות, ללא עלות וללא התחייבות.
+              מלא/י את הפרטים ונחזור אליך תוך 24–48 שעות לשיחת היכרות קצרה.
             </p>
             <p style={{ color: "rgba(158,153,144,0.5)", fontSize: 13, marginTop: 8 }}>
               10,000-30,000 שקל + מע״מ לחודש - על בסיס מקום פנוי
             </p>
           </div>
           <div style={{ background: "#191F2B", border: "1px solid #2C323E", borderRadius: 20, padding: "28px 24px" }}>
-            <PartnershipBookingFlow bookedSlots={bookedSlots ?? []} />
+            <PartnershipBookingFlow />
           </div>
         </section>
       }
