@@ -160,13 +160,13 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
               <div style={priceStyle}>₪10k-30k <span style={{ fontSize: 12, fontWeight: 400, color: "rgba(237,233,225,0.5)" }}>/ חודש</span></div>
               <div style={nameStyle}>שותפות אסטרטגית</div>
-              <p style={descStyle}>למשפיעניות וחברות שרוצות שותף לדרך</p>
+              <p style={descStyle}>לעסקים וחברות שרוצות שותף לדרך</p>
               <span style={ctaStyle}>בדוק התאמה ←</span>
             </div>
           </a>
           <a href="/atelier" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(145deg, #1A1E2C 0%, #0D1018 50%, #101520 100%)" }} />
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "radial-gradient(ellipse at 50% 30%, rgba(201,150,74,0.08) 0%, transparent 65%)", pointerEvents: "none" }} />
+            <img src="/atelier-velvet-800x1120.png" loading="lazy" alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,14,24,0.95) 0%, rgba(10,14,24,0.5) 50%, rgba(10,14,24,0.2) 100%)" }} />
             <div style={{ position: "absolute", top: 14, left: 14, fontSize: 11, fontWeight: 700, color: "#C9964A", background: "rgba(201,150,74,0.15)", border: "1px solid rgba(201,150,74,0.3)", borderRadius: 6, padding: "4px 10px", letterSpacing: "0.08em", zIndex: 2 }}>ATELIER</div>
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
               <div style={{ ...priceStyle, fontSize: 15 }}>בהתאמה אישית</div>
