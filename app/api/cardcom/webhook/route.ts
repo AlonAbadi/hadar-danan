@@ -141,19 +141,27 @@ async function fulfillPurchase(
   // event_id = purchase.id — deduplicates with browser pixel firing on success page
   const { data: userForCapi } = await supabase
     .from("users")
-    .select("email, phone")
+    .select("email, phone, name, click_id")
     .eq("id", purchase.user_id)
     .single();
 
   if (userForCapi) {
+    // Build fbc from stored fbclid if the browser cookie wasn't captured at checkout
+    const fbc = purchase.meta_fbc
+      ?? (userForCapi.click_id ? `fb.1.${Date.now()}.${userForCapi.click_id}` : undefined);
+
+    const firstName = userForCapi.name?.trim().split(" ")[0] || undefined;
+
     await sendCapiEvent({
       eventName: "Purchase",
       eventId:   purchase.id,
       userData:  {
         email:           userForCapi.email ?? undefined,
         phone:           userForCapi.phone ?? undefined,
+        firstName,
+        externalId:      purchase.user_id,
         fbp:             purchase.meta_fbp  ?? undefined,
-        fbc:             purchase.meta_fbc  ?? undefined,
+        fbc,
         clientIpAddress: purchase.meta_client_ip   ?? undefined,
         clientUserAgent: purchase.meta_user_agent  ?? undefined,
       },
