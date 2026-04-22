@@ -65,6 +65,15 @@ export function PartnershipBookingFlow({ bookedSlots }: Props) {
         return;
       }
 
+      const data = await res.json().catch(() => ({}));
+      const userId = data.user_id as string | undefined;
+
+      // Fire Pixel Lead — deduplicates with server-side CAPI using matching eventID
+      window.fbq?.("track", "Lead",
+        { content_name: "partnership_lead", content_ids: ["partnership_lead"] },
+        userId ? { eventID: `partnership_${userId}` } : undefined
+      );
+
       // Save name/email/phone so BookingForm can pre-fill
       setLeadForm({ name: form.name, email: form.email, phone: form.phone });
       setStep("booking");
