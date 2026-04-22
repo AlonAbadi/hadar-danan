@@ -38,6 +38,7 @@ export function VimeoTracker({ iframeId }: { iframeId: string }) {
         | { Player: new (el: HTMLIFrameElement) => {
             on: (event: string, cb: (data: { seconds: number; duration: number; percent: number }) => void) => void;
             off: (event: string) => void;
+            setLoop: (loop: boolean) => Promise<void>;
           } }
         | undefined;
 
@@ -47,6 +48,7 @@ export function VimeoTracker({ iframeId }: { iframeId: string }) {
       }
 
       const p = new Vimeo.Player(iframe);
+      p.setLoop(false).catch(() => {});
 
       // play - fired when user starts or resumes watching
       p.on("play", () => {
