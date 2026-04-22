@@ -624,7 +624,7 @@ export default function ProductLandingPage({
               }}>
                 <iframe
                   id="vimeo-vsl"
-                  src={`https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&loop=0&autoplay=1&muted=1&player_id=0&app_id=58479&cc=0`}
+                  src={`https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&loop=0&autoplay=1&player_id=0&app_id=58479&cc=0`}
                   allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
