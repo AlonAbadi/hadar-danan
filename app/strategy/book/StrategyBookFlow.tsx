@@ -22,6 +22,12 @@ export function StrategyBookFlow({ bookedSlots, price, credit, whatsappPhone }: 
   function handleBooked(data: BookingSuccessData) {
     setBooked(data);
     setPhase("payment");
+
+    // Browser Pixel Lead — deduplicates with CAPI Schedule using matching eventID
+    window.fbq?.("track", "Lead",
+      { content_name: "strategy_4000", content_ids: ["strategy_4000"] },
+      { eventID: data.bookingId },
+    );
   }
 
   async function handlePayment() {
