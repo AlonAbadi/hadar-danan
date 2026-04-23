@@ -40,15 +40,17 @@ export async function POST(req: NextRequest) {
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const prompt = `You are a TypeScript and Next.js expert. Your task: write a complete, ready-to-use \`lib/client.ts\` file for a new beegood client.
+  const prompt = `You are a Hebrew copywriter and TypeScript expert. Write a complete, ready-to-use \`lib/client.ts\` for a beegood client site.
 
-Instructions:
-- Output ONLY TypeScript code — no explanations, no markdown fences
-- Every value must be complete and real — no placeholders
-- Follow the structure below EXACTLY — same key names, same file extensions, same import expressions
-- Use the provided data to create real, compelling marketing copy
-- All text in Hebrew (except name_en, domain)
-- For modules: output true or false (not strings, not placeholders)
+Rules:
+- Output ONLY TypeScript — no markdown fences, no comments, no explanations
+- Every FILL → real compelling Hebrew marketing text (no placeholders)
+- Every FILL_BOOL → true or false
+- All copy must be authentic and specific to this client's niche and audience
+- name_en must be a valid URL slug: lowercase, hyphens only, no spaces
+- whatsapp must be in international format: 972XXXXXXXXX (9 digits after 972, no leading zero)
+- domain must be the real domain (e.g. example.co.il)
+- Pages copy must be persuasive, emotionally resonant Hebrew sales copy tailored to this client
 
 Client data:
 - Name: ${app.name}
@@ -71,7 +73,6 @@ Generated content:
 - Free training: ${generated.free_training?.title ?? "הדרכה חינמית"} — ${generated.free_training?.description ?? ""}
 - Welcome email subject: ${generated.emails?.welcome?.subject ?? ""}
 - Social proof: ${generated.social_proof?.stat1?.number ?? "250+"} ${generated.social_proof?.stat1?.label ?? "לקוחות"}, ${generated.social_proof?.stat2?.number ?? "4"} ${generated.social_proof?.stat2?.label ?? "שנים"}, ${generated.social_proof?.stat3?.number ?? "97%"} ${generated.social_proof?.stat3?.label ?? "ממליצים"}
-- Tagline (below stats): describe in 5-8 Hebrew words the unique value of ${app.name}
 
 Selected color palette (${palette.name ?? ""}):
 - bg: ${palette.bg}
@@ -87,7 +88,7 @@ Choose the design_preset that best matches this palette:
 
 Then derive all additional colors (bg_dark, card, card_soft, border, accent_light, accent_dark, fg, fg_muted) consistent with the chosen preset and the palette above.
 
-Output the complete file in exactly this format:
+Output the complete file in exactly this format — replace every FILL with real Hebrew text, FILL_BOOL with true/false:
 
 export const CLIENT = {
 
@@ -195,14 +196,148 @@ export const CLIENT = {
     video_analytics: FILL_BOOL,
   },
 
-} as const;
+  // ─── Pages ───────────────────────────────────────────────
+  pages: {
 
-Replace every FILL with the real Hebrew value, every FILL_BOOL with true or false, and replace "dark_gold" in design_preset with the correct preset name. Keep all other tokens (import expressions, file paths, key names) exactly as written.`;
+    about: {
+      section_title: "FILL",
+      principles: [
+        { n: "1", q: "FILL", body: "FILL" },
+        { n: "2", q: "FILL", body: "FILL" },
+        { n: "3", q: "FILL", body: "FILL" },
+      ],
+      quote: "FILL",
+    },
+
+    training: {
+      pain_points:    ["FILL", "FILL", "FILL"],
+      agitation:      "FILL",
+      solution_title: "FILL",
+      steps: [
+        { num: "1", title: "FILL", desc: "FILL" },
+        { num: "2", title: "FILL", desc: "FILL" },
+        { num: "3", title: "FILL", desc: "FILL" },
+      ],
+      for_who:     ["FILL", "FILL"],
+      not_for:     ["FILL"],
+      testimonials: [
+        { text: "FILL", author: "FILL", role: "FILL" },
+        { text: "FILL", author: "FILL", role: "FILL" },
+      ],
+      final_title: "FILL",
+    },
+
+    challenge: {
+      pain_points:    ["FILL", "FILL", "FILL"],
+      agitation:      "FILL",
+      solution_title: "FILL",
+      solution_desc:  "FILL",
+      steps: [
+        { num: "1", title: "FILL", desc: "FILL" },
+        { num: "2", title: "FILL", desc: "FILL" },
+        { num: "3", title: "FILL", desc: "FILL" },
+      ],
+      for_who:     ["FILL", "FILL"],
+      not_for:     ["FILL"],
+      testimonials: [
+        { text: "FILL", author: "FILL", role: "FILL" },
+        { text: "FILL", author: "FILL", role: "FILL" },
+      ],
+      faqs: [
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+      ],
+      quiz: {
+        questions: [{ q: "FILL?", options: ["FILL", "FILL", "FILL", "FILL"] }],
+        results:   { "FILL": "FILL" },
+      },
+      final_title: "FILL",
+      final_sub:   "FILL",
+    },
+
+    workshop: {
+      pain_points:    ["FILL", "FILL", "FILL"],
+      agitation:      "FILL",
+      solution_title: "FILL",
+      steps: [
+        { num: "1", title: "FILL", desc: "FILL" },
+        { num: "2", title: "FILL", desc: "FILL" },
+        { num: "3", title: "FILL", desc: "FILL" },
+      ],
+      for_who:     ["FILL", "FILL"],
+      not_for:     ["FILL"],
+      testimonials: [
+        { text: "FILL", author: "FILL", role: "FILL" },
+        { text: "FILL", author: "FILL", role: "FILL" },
+      ],
+      faqs: [
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+      ],
+      final_title: "FILL",
+      final_sub:   "FILL",
+    },
+
+    strategy: {
+      pain_points:    ["FILL", "FILL", "FILL"],
+      agitation:      "FILL",
+      solution_title: "FILL",
+      steps: [
+        { num: "1", title: "FILL", desc: "FILL" },
+        { num: "2", title: "FILL", desc: "FILL" },
+        { num: "3", title: "FILL", desc: "FILL" },
+      ],
+      for_who:     ["FILL", "FILL"],
+      not_for:     ["FILL"],
+      testimonials: [
+        { text: "FILL", author: "FILL", role: "FILL" },
+        { text: "FILL", author: "FILL", role: "FILL" },
+      ],
+      faqs: [
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+      ],
+      final_title: "FILL",
+      final_sub:   "FILL",
+    },
+
+    hive: {
+      pain_points:    ["FILL", "FILL", "FILL"],
+      agitation:      "FILL",
+      solution_title: "FILL",
+      steps: [
+        { num: "1", title: "FILL", desc: "FILL" },
+        { num: "2", title: "FILL", desc: "FILL" },
+        { num: "3", title: "FILL", desc: "FILL" },
+      ],
+      for_who:     ["FILL", "FILL"],
+      not_for:     ["FILL"],
+      testimonials: [
+        { text: "FILL", author: "FILL", role: "FILL" },
+        { text: "FILL", author: "FILL", role: "FILL" },
+      ],
+      faqs: [
+        { q: "איך מבטלים את המנוי?",     a: "בכל עת — דרך האזור האישי (/my) או בוואטסאפ. ביטול תוך 14 ימים = החזר מלא." },
+        { q: "האם יש התחייבות מינימלית?", a: "לא. ניתן לביטול בכל עת ללא עלות." },
+        { q: "FILL?", a: "FILL" },
+      ],
+      final_title: "FILL",
+    },
+
+  },
+
+} as const;`;
 
   try {
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 3000,
+      model: "claude-sonnet-4-6",
+      max_tokens: 8000,
       messages: [{ role: "user", content: prompt }],
     });
 
