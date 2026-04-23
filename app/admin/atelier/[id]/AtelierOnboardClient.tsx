@@ -106,6 +106,11 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [clientCode, setClientCode] = useState<string | null>(null);
   const [clientCodeError, setClientCodeError] = useState<string | null>(null);
 
+  const [deploySlug, setDeploySlug] = useState<string>("");
+  const [deploying, setDeploying] = useState(false);
+  const [deployUrl, setDeployUrl] = useState<string | null>(app.preview_url ?? null);
+  const [deployError, setDeployError] = useState<string | null>(null);
+
   useEffect(() => {
     if (app.ai_analysis) return; // already cached — skip API call
     runAnalysis();
@@ -225,6 +230,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
       const data = await res.json();
       if (!res.ok) { setClientCodeError(data.error ?? "שגיאה"); return; }
       setClientCode(data.code);
+      syncSlugFromCode(data.code);
     } catch {
       setClientCodeError("שגיאת רשת");
     } finally {
@@ -241,6 +247,36 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
     a.download = "client.ts";
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function handleDeploy() {
+    if (!clientCode || !deploySlug.trim()) return;
+    setDeploying(true);
+    setDeployError(null);
+    try {
+      const res = await fetch("/api/admin/atelier/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          application_id: app.id,
+          client_slug: deploySlug.trim(),
+          client_code: clientCode,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setDeployError(data.error ?? "שגיאה"); return; }
+      setDeployUrl(data.preview_url);
+    } catch {
+      setDeployError("שגיאת רשת");
+    } finally {
+      setDeploying(false);
+    }
+  }
+
+  // Pre-fill slug from client code whenever it's generated
+  function syncSlugFromCode(code: string) {
+    const match = code.match(/name_en:\s*["']([^"']+)["']/);
+    if (match?.[1] && !deploySlug) setDeploySlug(match[1]);
   }
 
   async function uploadFile(file: File, folder: string): Promise<{ url: string; name: string } | null> {
@@ -862,6 +898,100 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
             )}
           </div>
         </>
+      )}
+
+      {/* ── Deploy Preview ─────────────────────────────────────────────── */}
+      {clientCode && (
+        <div style={{ ...s.card, borderColor: deployUrl ? "#34A85344" : "#2C323E" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+            <div style={s.section}>🚀 פרסם Preview</div>
+            {deployUrl && (
+              <a
+                href={deployUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: 13, color: "#34A853", fontWeight: 700, textDecoration: "none" }}
+              >
+                {deployUrl.replace("https://", "")} ↗
+              </a>
+            )}
+          </div>
+
+          {!deployUrl && (
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-end", marginBottom: 14 }}>
+              <div style={{ flex: 1 }}>
+                <div style={s.label}>שם הפרויקט (slug)</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 0, marginTop: 6 }}>
+                  <span style={{ background: "#1D2430", border: "1px solid #2C323E", borderRight: "none", borderRadius: "8px 0 0 8px", padding: "10px 12px", fontSize: 13, color: "#9E9990", whiteSpace: "nowrap" }}>
+                    beegood-
+                  </span>
+                  <input
+                    style={{ ...s.input, borderRadius: "0 8px 8px 0", flex: 1 }}
+                    value={deploySlug}
+                    onChange={e => setDeploySlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                    placeholder="client-name"
+                    dir="ltr"
+                  />
+                </div>
+                <div style={{ fontSize: 11, color: "#9E9990", marginTop: 5 }}>
+                  האתר יהיה זמין ב־beegood-{deploySlug || "client-name"}.vercel.app
+                </div>
+              </div>
+              <button
+                onClick={handleDeploy}
+                disabled={deploying || !deploySlug.trim()}
+                style={{
+                  ...s.btn,
+                  background: deploying || !deploySlug.trim()
+                    ? "#2C323E"
+                    : "linear-gradient(135deg, #4285F4, #2B6AE0)",
+                  color: deploying || !deploySlug.trim() ? "#9E9990" : "#fff",
+                  cursor: !deploySlug.trim() ? "not-allowed" : "pointer",
+                  whiteSpace: "nowrap",
+                  paddingLeft: 28,
+                  paddingRight: 28,
+                }}
+              >
+                {deploying ? "⏳ מפרסם..." : "🚀 פרסם ←"}
+              </button>
+            </div>
+          )}
+
+          {deployUrl && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ background: "#1D2430", borderRadius: 8, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 12, color: "#9E9990", marginBottom: 4 }}>האתר יהיה חי תוך ~3 דקות</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#34A853", direction: "ltr" }}>{deployUrl}</div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(deployUrl)}
+                    style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990", padding: "8px 14px", fontSize: 12 }}
+                  >
+                    העתק
+                  </button>
+                  <a
+                    href={deployUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ ...s.btn, background: "#34A853", color: "#fff", padding: "8px 14px", fontSize: 12, textDecoration: "none", display: "inline-block" }}
+                  >
+                    פתח ↗
+                  </a>
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: "#9E9990", lineHeight: 1.6 }}>
+                <strong style={{ color: "#E8B94A" }}>Preview mode:</strong> Supabase, Cardcom ו-Resend מחוברים לסטאבים.
+                כדי להעביר ללייב — חבר Supabase אמיתי, הגדר Cardcom terminal, ורשום את הדומיין.
+              </div>
+            </div>
+          )}
+
+          {deployError && (
+            <div style={{ color: "#FF6B6B", fontSize: 13, marginTop: 8 }}>{deployError}</div>
+          )}
+        </div>
       )}
     </div>
   );
