@@ -108,7 +108,11 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [clientCode, setClientCode] = useState<string | null>(null);
   const [clientCodeError, setClientCodeError] = useState<string | null>(null);
 
-  const [deploySlug, setDeploySlug] = useState<string>("");
+  const [deploySlug, setDeploySlug] = useState<string>(
+    app.preview_url
+      ? (app.preview_url as string).replace("https://beegood-", "").replace(".vercel.app", "")
+      : ""
+  );
   const [deploying, setDeploying] = useState(false);
   const [deployUrl, setDeployUrl] = useState<string | null>(app.preview_url ?? null);
   const [deployError, setDeployError] = useState<string | null>(null);
@@ -1011,6 +1015,13 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                     style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990", padding: "8px 14px", fontSize: 12 }}
                   >
                     העתק
+                  </button>
+                  <button
+                    onClick={handleDeploy}
+                    disabled={deploying}
+                    style={{ ...s.btn, background: deploying ? "#2C323E" : "linear-gradient(135deg, #4285F4, #2B6AE0)", color: deploying ? "#9E9990" : "#fff", padding: "8px 14px", fontSize: 12, cursor: deploying ? "not-allowed" : "pointer" }}
+                  >
+                    {deploying ? "⏳..." : "🔄 פרסם מחדש"}
                   </button>
                   <a
                     href={deployUrl}
