@@ -37,13 +37,13 @@ export const PRODUCT_LEAD_EVENT: Record<string, string> = {
  */
 export const LEAD_VALUE_ILS: Record<string, number> = {
   free_training:      0,
-  challenge:          30,     // ₪197  × ~15%
-  workshop:           108,    // ₪1,080 × ~10%
-  course:             180,    // ₪1,800 × ~10%
-  strategy:           800,    // ₪4,000 × ~20%
-  premium:            2100,   // ₪14,000 × ~15%
-  partnership:        5000,   // setup ₪25K avg × ~20% close
-  atelier_influencer: 2500,   // retainer plan, conservative
+  challenge:          197,
+  workshop:           1080,
+  course:             1800,
+  strategy:           4000,
+  premium:            14000,
+  partnership:        5000,   // not closed online — signals premium lead quality to Meta
+  atelier_influencer: 5000,   // not closed online — signals premium lead quality to Meta
 };
 
 /** Returns the camelCase custom event name for a product. */

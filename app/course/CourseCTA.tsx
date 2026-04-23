@@ -119,7 +119,7 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
             userId:           userId ?? undefined,
             contentName:      "course",
             productEventName: "LeadCourse",
-            value:            180,
+            value:            1800,
             currency:         "ILS",
           }),
         }).catch(() => {});

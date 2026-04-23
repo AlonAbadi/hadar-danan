@@ -60,7 +60,7 @@ export function PremiumLeadForm() {
           userId:           premiumUserId ?? undefined,
           contentName:      "premium",
           productEventName: "LeadPremium",
-          value:            2100,
+          value:            14000,
           currency:         "ILS",
         }),
       }).catch(() => {});

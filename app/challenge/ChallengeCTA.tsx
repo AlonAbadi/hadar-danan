@@ -151,7 +151,7 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
             userId:           userId ?? undefined,
             contentName:      "challenge",
             productEventName: "LeadChallenge",
-            value:            30,
+            value:            197,
             currency:         "ILS",
           }),
         }).catch(() => {});

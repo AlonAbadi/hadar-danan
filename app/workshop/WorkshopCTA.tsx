@@ -124,7 +124,7 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
             userId:           userId ?? undefined,
             contentName:      "workshop",
             productEventName: "LeadWorkshop",
-            value:            108,
+            value:            1080,
             currency:         "ILS",
           }),
         }).catch(() => {});

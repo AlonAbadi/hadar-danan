@@ -34,7 +34,7 @@ export function StrategyBookFlow({ bookedSlots, price, credit, whatsappPhone }: 
         userId:           data.userId ?? undefined,
         contentName:      "strategy",
         productEventName: "LeadStrategy",
-        value:            800,
+        value:            4000,
         currency:         "ILS",
       }),
     }).catch(() => {});
