@@ -10,7 +10,7 @@ export interface ChallengeDay {
 export const CHALLENGE_DAYS: ChallengeDay[] = [
   {
     day: 0,
-    videoId: "1183797402",
+    videoId: "1185862328",
     title: "מפגש פתיחה",
     duration: 12,
     aspectRatio: "16:9",
