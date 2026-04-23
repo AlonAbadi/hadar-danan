@@ -186,28 +186,43 @@ export async function POST(req: NextRequest) {
   const ogImageUrl   = appRow?.og_image_url   ?? "";
 
   try {
-    // ── Step 1: Fork the template (skip if fork already exists) ────────────
+    // ── Step 1: Create repo from template (or reuse if already exists) ─────
+    // We use the "generate from template" API instead of fork because the
+    // template repo and the destination owner are the same GitHub account —
+    // GitHub does not allow forking a repo to yourself.
     const existsRes = await githubFetch(`/repos/${githubOwner}/${repoName}`, githubToken);
     if (!existsRes.ok) {
-      const forkRes = await githubFetch(
-        "/repos/AlonAbadi/atelier-client-template/forks",
+      // Mark the template repo as a GitHub template repo (idempotent)
+      await githubFetch(
+        "/repos/AlonAbadi/atelier-client-template",
+        githubToken,
+        { method: "PATCH", body: JSON.stringify({ is_template: true }) }
+      );
+
+      const createRes = await githubFetch(
+        "/repos/AlonAbadi/atelier-client-template/generate",
         githubToken,
         {
           method: "POST",
-          body: JSON.stringify({ name: repoName, default_branch_only: true }),
+          body: JSON.stringify({
+            owner:   githubOwner,
+            name:    repoName,
+            private: false,
+          }),
         }
       );
-      if (!forkRes.ok && forkRes.status !== 202) {
-        const err = await forkRes.json().catch(() => ({}));
+
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}));
         return NextResponse.json(
-          { error: `GitHub fork failed: ${(err as { message?: string }).message ?? forkRes.status}` },
+          { error: `GitHub repo create failed: ${(err as { message?: string }).message ?? createRes.status}` },
           { status: 500 }
         );
       }
 
       const ready = await waitForFork(githubOwner, repoName, githubToken);
       if (!ready) {
-        return NextResponse.json({ error: "GitHub fork timed out after 2 minutes" }, { status: 500 });
+        return NextResponse.json({ error: "GitHub repo creation timed out" }, { status: 500 });
       }
     }
 
