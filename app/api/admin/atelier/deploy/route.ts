@@ -82,6 +82,42 @@ function extractPrice(code: string, product: string): string {
   return match?.[1] ?? "";
 }
 
+/**
+ * Downloads an image from a URL (e.g. Supabase storage) and pushes it
+ * to the GitHub fork at the given public/ path.
+ * Silently skips if the image URL is empty or the download fails.
+ */
+async function pushImageToFork(
+  owner: string,
+  repo: string,
+  token: string,
+  imageUrl: string,
+  publicPath: string  // e.g. "public/hero.jpg"
+): Promise<void> {
+  if (!imageUrl) return;
+  try {
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) return;
+    const buffer = await imgRes.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+
+    // Get existing file SHA so GitHub accepts the PUT (update vs create)
+    const existingRes  = await githubFetch(`/repos/${owner}/${repo}/contents/${publicPath}`, token);
+    const existingData = existingRes.ok ? (await existingRes.json() as { sha?: string }) : {};
+
+    await githubFetch(`/repos/${owner}/${repo}/contents/${publicPath}`, token, {
+      method: "PUT",
+      body: JSON.stringify({
+        message: `chore: add ${publicPath}`,
+        content: base64,
+        ...(existingData.sha ? { sha: existingData.sha } : {}),
+      }),
+    });
+  } catch {
+    // Non-fatal — placeholder images in the template are the fallback
+  }
+}
+
 /** Extracts the whatsapp number from the generated client.ts string. */
 function extractWhatsapp(code: string): string {
   const match = code.match(/whatsapp:\s*["']([^"']+)["']/);
@@ -132,6 +168,18 @@ export async function POST(req: NextRequest) {
 
   const repoName   = `beegood-${client_slug}`;
   const previewUrl = `https://${repoName}.vercel.app`;
+
+  // Fetch image URLs from DB (hero + og) — used later to push real images to the fork
+  const supabaseForImages = createServerClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: appRow } = await (supabaseForImages as any)
+    .from("atelier_applications")
+    .select("hero_image_url, og_image_url")
+    .eq("id", application_id)
+    .single() as { data: { hero_image_url?: string; og_image_url?: string } | null };
+
+  const heroImageUrl = appRow?.hero_image_url ?? "";
+  const ogImageUrl   = appRow?.og_image_url   ?? "";
 
   try {
     // ── Step 1: Fork the template (skip if fork already exists) ────────────
@@ -191,6 +239,12 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+
+    // ── Step 3b: Push real images to fork (replaces placeholder images) ────
+    await Promise.all([
+      pushImageToFork(githubOwner, repoName, githubToken, heroImageUrl, "public/hero.jpg"),
+      pushImageToFork(githubOwner, repoName, githubToken, ogImageUrl,   "public/og-image.jpg"),
+    ]);
 
     // ── Step 4: Create (or reuse) Vercel project linked to the fork ────────
     let vercelProjectId: string;

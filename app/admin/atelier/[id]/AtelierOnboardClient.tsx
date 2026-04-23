@@ -86,6 +86,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [businessId, setBusinessId] = useState<string>(app.business_id ?? "");
   const [businessAddress, setBusinessAddress] = useState<string>(app.business_address ?? "");
   const [heroImageUrl, setHeroImageUrl] = useState<string>(app.hero_image_url ?? "");
+  const [ogImageUrl, setOgImageUrl] = useState<string>(app.og_image_url ?? "");
   const [documents, setDocuments] = useState<DocFile[]>(app.documents ?? []);
   const [physicalProducts, setPhysicalProducts] = useState<PhysicalProduct[]>(
     app.physical_products ?? []
@@ -95,6 +96,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [onboardingSent, setOnboardingSent] = useState(!!app.onboarding_token);
   const [onboardingSentError, setOnboardingSentError] = useState<string | null>(null);
   const [uploadingHero, setUploadingHero] = useState(false);
+  const [uploadingOgImage, setUploadingOgImage] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState<Generated | null>(app.generated_content ?? null);
@@ -302,6 +304,22 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
       });
     }
     setUploadingHero(false);
+  }
+
+  async function handleOgImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingOgImage(true);
+    const result = await uploadFile(file, `og/${app.id}`);
+    if (result) {
+      setOgImageUrl(result.url);
+      await fetch(`/api/admin/atelier/applications?id=${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ og_image_url: result.url }),
+      });
+    }
+    setUploadingOgImage(false);
   }
 
   async function handleDocUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -518,6 +536,29 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
             <label style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990", cursor: "pointer", padding: "10px 18px" }}>
               {uploadingHero ? "מעלה..." : "בחר תמונה"}
               <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleHeroUpload} disabled={uploadingHero} />
+            </label>
+          </div>
+        </div>
+
+        {/* OG / Cover image */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={s.label}>תמונת כריכה / OG (1200×630)</div>
+          <div style={{ fontSize: 12, color: "#9E9990", marginBottom: 8 }}>משמשת כתמונה ב-WhatsApp / פייסבוק כשמשתפים את האתר</div>
+          <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 10 }}>
+            {ogImageUrl ? (
+              <div style={{ position: "relative" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={ogImageUrl} alt="og" style={{ width: 160, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #2C323E" }} />
+                <button type="button" onClick={() => setOgImageUrl("")} style={{ position: "absolute", top: -8, left: -8, background: "#EA4335", border: "none", borderRadius: "50%", width: 20, height: 20, color: "#fff", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+              </div>
+            ) : (
+              <div style={{ width: 160, height: 80, borderRadius: 8, border: "2px dashed #2C323E", display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 12 }}>
+                {uploadingOgImage ? "⏳" : "אין תמונה"}
+              </div>
+            )}
+            <label style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990", cursor: "pointer", padding: "10px 18px" }}>
+              {uploadingOgImage ? "מעלה..." : "בחר תמונה"}
+              <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleOgImageUpload} disabled={uploadingOgImage} />
             </label>
           </div>
         </div>
