@@ -23,6 +23,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const maxDuration = 300; // seconds — Vercel Pro allows up to 300s
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 function isAdminAuthorized(req: NextRequest): boolean {
@@ -68,10 +70,12 @@ function vercelFetch(path: string, token: string, teamId: string | undefined, op
 
 /** Polls until the GitHub fork repo is accessible (fork creation is async). */
 async function waitForFork(owner: string, repo: string, token: string): Promise<boolean> {
-  for (let i = 0; i < 12; i++) {
-    await new Promise(r => setTimeout(r, 3000));
+  // GitHub forks are async — wait a few seconds before the first poll
+  await new Promise(r => setTimeout(r, 5000));
+  for (let i = 0; i < 24; i++) {
     const res = await githubFetch(`/repos/${owner}/${repo}`, token);
     if (res.ok) return true;
+    await new Promise(r => setTimeout(r, 5000));
   }
   return false;
 }
@@ -203,7 +207,7 @@ export async function POST(req: NextRequest) {
 
       const ready = await waitForFork(githubOwner, repoName, githubToken);
       if (!ready) {
-        return NextResponse.json({ error: "GitHub fork timed out after 36s" }, { status: 500 });
+        return NextResponse.json({ error: "GitHub fork timed out after 2 minutes" }, { status: 500 });
       }
     }
 
