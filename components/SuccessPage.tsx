@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { trackPurchase, trackProductPurchase } from "@/lib/analytics";
+import { getSessionUser } from "@/lib/quiz-session";
 
 interface SuccessPageProps {
   productName: string;
@@ -50,6 +51,24 @@ export function SuccessPage({
     const eventId = searchParams.get("oid") ?? undefined;
     trackPurchase(trackingProduct, trackingValue, "ILS", eventId);
     trackProductPurchase(trackingProduct, trackingValue, "ILS", eventId);
+    // CAPI — server-side purchase event for iOS/Safari attribution
+    const user = getSessionUser();
+    fetch("/api/meta-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventName:   "Purchase",
+        eventId,
+        email:       user?.email,
+        phone:       user?.phone,
+        firstName:   user?.name?.split(" ")[0],
+        lastName:    user?.name?.split(" ").slice(1).join(" ") || undefined,
+        userId:      user?.userId,
+        contentName: trackingProduct,
+        value:       trackingValue,
+        currency:    "ILS",
+      }),
+    }).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
