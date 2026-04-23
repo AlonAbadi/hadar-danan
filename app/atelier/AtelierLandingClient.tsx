@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { trackProductLead } from "@/lib/analytics";
 
 interface FAQ {
   question: string;
@@ -38,7 +39,7 @@ export function AtelierLandingClient({ faqs }: Props) {
       window.fbq?.("track", "ViewContent", {
         content_name: "atelier_influencer",
         content_type: "product",
-        value: 0,
+        value: 2500,
         currency: "ILS",
       });
     }
@@ -75,18 +76,24 @@ export function AtelierLandingClient({ faqs }: Props) {
         }),
       }).catch(() => {});
 
-      // Browser Pixel — Lead + AtelierLead with eventID for CAPI deduplication
       const appId = (data as Record<string, unknown>).id as string | undefined;
-      if (typeof window !== "undefined") {
-        window.fbq?.("track", "Lead",
-          { content_name: "atelier_influencer", content_type: "product" },
-          appId ? { eventID: `atelier_${appId}` } : undefined,
-        );
-        window.fbq?.("trackCustom", "AtelierLead",
-          { content_name: "atelier_influencer", content_type: "product" },
-          appId ? { eventID: `atelierLead_${appId}` } : undefined,
-        );
-      }
+      const eventId = appId ? `atelier_${appId}` : undefined;
+      trackProductLead("atelier_influencer", eventId);
+      fetch("/api/meta-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventName:        "Lead",
+          eventId,
+          phone,
+          firstName:        name.split(" ")[0],
+          lastName:         name.split(" ").slice(1).join(" ") || undefined,
+          contentName:      "atelier_influencer",
+          productEventName: "AtelierLead",
+          value:            2500,
+          currency:         "ILS",
+        }),
+      }).catch(() => {});
     } catch {
       setError("שגיאה בשליחה. בדקי חיבור לאינטרנט ונסי שוב.");
     } finally {

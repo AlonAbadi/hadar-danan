@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { trackInitiateCheckout, trackLead } from "@/lib/analytics";
+import { trackInitiateCheckout, trackProductLead } from "@/lib/analytics";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { getSessionUser, saveUserDetails } from "@/lib/quiz-session";
 
@@ -137,7 +137,24 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
       if (signupRes.ok) {
         const data = await signupRes.json();
         userId = data.user_id ?? null;
-        trackLead(userId ?? undefined);
+        trackProductLead("challenge", userId ?? undefined);
+        fetch("/api/meta-event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventName:        "Lead",
+            eventId:          userId ?? undefined,
+            email:            form.email,
+            phone:            form.phone,
+            firstName:        form.name.split(" ")[0],
+            lastName:         form.name.split(" ").slice(1).join(" ") || undefined,
+            userId:           userId ?? undefined,
+            contentName:      "challenge",
+            productEventName: "LeadChallenge",
+            value:            30,
+            currency:         "ILS",
+          }),
+        }).catch(() => {});
         if (userId) saveUserDetails({ name: form.name, email: form.email, phone: form.phone, userId });
       }
 

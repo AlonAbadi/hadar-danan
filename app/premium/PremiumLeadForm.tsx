@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { trackLead, trackInitiateCheckout } from "@/lib/analytics";
+import { trackProductLead, trackInitiateCheckout } from "@/lib/analytics";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { getSessionUser } from "@/lib/quiz-session";
 
@@ -44,7 +44,26 @@ export function PremiumLeadForm() {
         return;
       }
 
-      trackLead();
+      const premiumData = await res.json().catch(() => ({}));
+      const premiumUserId = (premiumData as Record<string, string>).user_id;
+      trackProductLead("premium", premiumUserId ?? undefined);
+      fetch("/api/meta-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventName:        "Lead",
+          eventId:          premiumUserId ?? undefined,
+          email:            form.email,
+          phone:            form.phone,
+          firstName:        form.name.split(" ")[0],
+          lastName:         form.name.split(" ").slice(1).join(" ") || undefined,
+          userId:           premiumUserId ?? undefined,
+          contentName:      "premium",
+          productEventName: "LeadPremium",
+          value:            2100,
+          currency:         "ILS",
+        }),
+      }).catch(() => {});
       setDone(true);
     } catch {
       setError("שגיאת רשת, נסה שוב");

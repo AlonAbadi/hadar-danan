@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { trackLead } from "@/lib/analytics";
+import { trackProductLead } from "@/lib/analytics";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { getSessionUser, saveUserDetails } from "@/lib/quiz-session";
 
@@ -99,7 +99,25 @@ export function SignupForm({ ctaLabel, dark = false }: SignupFormProps) {
         return;
       }
       const userId = (json as Record<string, unknown>).user_id as string | undefined;
-      trackLead(userId);
+      trackProductLead("free_training", userId);
+      // CAPI — server-side deduplication for iOS/Safari users
+      fetch("/api/meta-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventName:        "Lead",
+          eventId:          userId,
+          email:            form.email.trim().toLowerCase(),
+          phone:            form.phone.replace(/[\s-]/g, ""),
+          firstName:        form.name.trim().split(" ")[0],
+          lastName:         form.name.trim().split(" ").slice(1).join(" ") || undefined,
+          userId,
+          contentName:      "free_training",
+          productEventName: "LeadFreeTraining",
+          value:            0,
+          currency:         "ILS",
+        }),
+      }).catch(() => {});
       if (userId) sessionStorage.setItem("last_signup_user_id", userId);
       if (userId) saveUserDetails({ name: form.name.trim(), email: form.email.trim().toLowerCase(), phone: form.phone.replace(/[\s-]/g, ""), userId });
       router.push("/training/watch");

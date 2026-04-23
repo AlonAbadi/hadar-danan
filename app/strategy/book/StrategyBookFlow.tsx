@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackProductLead } from "@/lib/analytics";
 import { BookingForm, type BookingSuccessData } from "./BookingForm";
 
 interface Props {
@@ -23,11 +24,20 @@ export function StrategyBookFlow({ bookedSlots, price, credit, whatsappPhone }: 
     setBooked(data);
     setPhase("payment");
 
-    // Browser Pixel Lead — deduplicates with CAPI Schedule using matching eventID
-    window.fbq?.("track", "Lead",
-      { content_name: "strategy_4000", content_ids: ["strategy_4000"] },
-      { eventID: data.bookingId },
-    );
+    trackProductLead("strategy", data.bookingId);
+    fetch("/api/meta-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventName:        "Lead",
+        eventId:          data.bookingId,
+        userId:           data.userId ?? undefined,
+        contentName:      "strategy",
+        productEventName: "LeadStrategy",
+        value:            800,
+        currency:         "ILS",
+      }),
+    }).catch(() => {});
   }
 
   async function handlePayment() {

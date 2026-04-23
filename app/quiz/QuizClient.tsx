@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { saveQuizSession, getQuizSession } from "@/lib/quiz-session";
-import { trackLead, trackCompleteRegistration, trackViewContent, trackInitiateCheckout } from "@/lib/analytics";
+import { trackProductLead, trackQuizRecommended, trackViewContent, trackInitiateCheckout, productLeadEventName, LEAD_VALUE_ILS } from "@/lib/analytics";
 import { buildNarrative } from "@/lib/quiz-narrative";
 import {
   type Answer,
@@ -285,11 +285,13 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
 
   const startedRef  = useRef(hasServerResult); // don't re-fire QUIZ_STARTED when resuming
   const completedRef = useRef(hasServerResult); // don't re-fire QUIZ_COMPLETED when resuming
+  const cameFromLeadRef = useRef(false); // suppress simultaneous ViewContent after Lead
 
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
     postEvent({ type: "QUIZ_STARTED" });
+    if (typeof window !== "undefined") window.fbq?.("trackCustom", "QuizStart");
   }, []);
 
   // Detect prior quiz session in localStorage (anonymous users / new device)
@@ -309,13 +311,22 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Result: scroll to top + stagger animations + counter + ViewContent pixel
+  // Result: scroll to top + stagger animations + counter + ViewContent + QuizRecommended pixel
   useEffect(() => {
     if (step !== 7 || !winner) return;
     window.scrollTo(0, 0);
     setResultReady(false);
     setDisplayPct(0);
-    trackViewContent(winner.id, PRODUCT_VALUE[winner.id] ?? 0);
+    // QuizRecommended — fires when user sees their result (stronger signal than QuizComplete)
+    // Used to build product-segmented lookalike audiences from quiz behaviour
+    trackQuizRecommended(winner.id, matchPct);
+    // Delay ViewContent when following a Lead event to avoid simultaneous burst
+    if (cameFromLeadRef.current) {
+      cameFromLeadRef.current = false;
+      setTimeout(() => trackViewContent(winner.id, PRODUCT_VALUE[winner.id] ?? 0), 3000);
+    } else {
+      trackViewContent(winner.id, PRODUCT_VALUE[winner.id] ?? 0);
+    }
 
     const t1 = setTimeout(() => setResultReady(true), 50);
     const t2 = setTimeout(() => {
@@ -374,6 +385,11 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
         const newAnswers = [...answers, id];
         setAnswers(newAnswers);
         setSelectedId(null);
+        if (newAnswers.length === QUESTIONS.length) {
+          const scoresNow = computeScores(newAnswers);
+          const winIdx = getWinnerIndex(scoresNow);
+          if (typeof window !== "undefined") window.fbq?.("trackCustom", "QuizComplete", { recommended_product: PRODUCTS[winIdx].id, match_percent: scalePrimary(scoresNow[winIdx]) });
+        }
         if (newAnswers.length === QUESTIONS.length && canSkipForm) {
           // Logged-in user with complete profile - skip lead gate, go straight to result
           const scoresNow  = computeScores(newAnswers);
@@ -458,8 +474,28 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
         const data = await res.json();
         const userId = (data as Record<string, unknown>).user_id as string | undefined;
         postEvent({ type: "QUIZ_LEAD", user_id: userId, metadata: { email: leadForm.email } });
-        trackLead(userId);
-        trackCompleteRegistration(userId ? `reg_${userId}` : undefined);
+        const leadEventId = typeof crypto !== "undefined" ? crypto.randomUUID() : undefined;
+        const nameParts = leadForm.name.trim().split(" ");
+        const scoresNow = computeScores(answers);
+        const recommendedProduct = PRODUCTS[getWinnerIndex(scoresNow)].id;
+        trackProductLead(recommendedProduct, leadEventId);
+        fetch("/api/meta-event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventName:        "Lead",
+            eventId:          leadEventId,
+            email:            leadForm.email.trim(),
+            phone:            leadForm.phone.trim(),
+            firstName:        nameParts[0],
+            lastName:         nameParts.slice(1).join(" ") || undefined,
+            userId,
+            contentName:      recommendedProduct,
+            productEventName: productLeadEventName(recommendedProduct),
+            value:            LEAD_VALUE_ILS[recommendedProduct] ?? 0,
+            currency:         "ILS",
+          }),
+        }).catch(() => {});
 
         // Persist session so product pages skip re-registration
         if (userId) {
@@ -492,6 +528,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
   }
 
   function goToResult(userId?: string) {
+    cameFromLeadRef.current = true;
     const scoresNow = computeScores(answers);
     const winIdx = getWinnerIndex(scoresNow);
     const prod = PRODUCTS[winIdx];

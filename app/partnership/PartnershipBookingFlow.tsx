@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { trackProductLead } from "@/lib/analytics";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { getSessionUser } from "@/lib/quiz-session";
 
@@ -60,12 +61,26 @@ export function PartnershipBookingFlow() {
 
       setSuccess(true);
 
-      // Browser Pixel Lead — deduplicates with CAPI using matching eventID
       const userId = (data as Record<string, string>).user_id;
-      window.fbq?.("track", "Lead",
-        { content_name: "partnership_lead", content_ids: ["partnership_lead"] },
-        userId ? { eventID: `partnership_${userId}` } : undefined,
-      );
+      const eventId = userId ? `partnership_${userId}` : undefined;
+      trackProductLead("partnership", eventId);
+      fetch("/api/meta-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventName:        "Lead",
+          eventId,
+          email:            form.email,
+          phone:            form.phone,
+          firstName:        form.name.split(" ")[0],
+          lastName:         form.name.split(" ").slice(1).join(" ") || undefined,
+          userId:           userId ?? undefined,
+          contentName:      "partnership",
+          productEventName: "LeadPartnership",
+          value:            5000,
+          currency:         "ILS",
+        }),
+      }).catch(() => {});
     } catch {
       setError("שגיאת רשת, נסה שוב");
     } finally {

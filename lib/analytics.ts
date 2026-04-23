@@ -19,11 +19,77 @@ function gtag(...args: unknown[]) {
   if (typeof window !== "undefined") window.gtag?.(...args);
 }
 
-/** Free training form submitted → Lead */
+export const PRODUCT_LEAD_EVENT: Record<string, string> = {
+  free_training:      "LeadFreeTraining",
+  challenge:          "LeadChallenge",
+  workshop:           "LeadWorkshop",
+  course:             "LeadCourse",
+  strategy:           "LeadStrategy",
+  premium:            "LeadPremium",
+  partnership:        "LeadPartnership",
+  atelier_influencer: "AtelierLead",
+};
+
+/**
+ * Expected revenue per lead = product price × estimated close rate.
+ * Used to feed Meta's value-based bidding so the algorithm learns
+ * which lead types are worth more and finds similar high-value audiences.
+ */
+export const LEAD_VALUE_ILS: Record<string, number> = {
+  free_training:      0,
+  challenge:          30,     // ₪197  × ~15%
+  workshop:           108,    // ₪1,080 × ~10%
+  course:             180,    // ₪1,800 × ~10%
+  strategy:           800,    // ₪4,000 × ~20%
+  premium:            2100,   // ₪14,000 × ~15%
+  partnership:        5000,   // setup ₪25K avg × ~20% close
+  atelier_influencer: 2500,   // retainer plan, conservative
+};
+
+/** Returns the camelCase custom event name for a product. */
+export function productLeadEventName(productId: string): string {
+  return PRODUCT_LEAD_EVENT[productId]
+    ?? `Lead${productId.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join("")}`;
+}
+
+/** Generic lead — used only where no product context is known */
 export function trackLead(eventId?: string) {
   try {
-    fbq("track", "Lead", { content_name: "free_training" }, eventId ? { eventID: eventId } : undefined);
+    fbq("track", "Lead", { content_name: "quiz_lead" }, eventId ? { eventID: eventId } : undefined);
     gtag("event", "generate_lead", { method: "signup_form" });
+  } catch {}
+}
+
+/**
+ * Product-specific lead — fires standard Lead + dedicated custom event,
+ * both carrying expected revenue value so Meta can do value optimisation.
+ */
+export function trackProductLead(productId: string, eventId?: string) {
+  try {
+    const customEvent = productLeadEventName(productId);
+    const value       = LEAD_VALUE_ILS[productId] ?? 0;
+    const opts        = eventId ? { eventID: eventId } : undefined;
+    fbq("track",       "Lead",       { content_name: productId, value, currency: "ILS" }, opts);
+    fbq("trackCustom", customEvent,  { content_name: productId, value, currency: "ILS" }, opts);
+    gtag("event", "generate_lead", { method: "signup_form", product: productId, value, currency: "ILS" });
+  } catch {}
+}
+
+/**
+ * Fires when the quiz results screen renders and the user sees their
+ * recommended product. Stronger intent signal than QuizComplete because
+ * it carries the specific product + expected value, enabling Meta to
+ * build product-segmented lookalike audiences from quiz behaviour.
+ */
+export function trackQuizRecommended(productId: string, matchPercent: number) {
+  try {
+    const value = LEAD_VALUE_ILS[productId] ?? 0;
+    fbq("trackCustom", "QuizRecommended", {
+      content_name:  productId,
+      value,
+      currency:      "ILS",
+      match_percent: matchPercent,
+    });
   } catch {}
 }
 
