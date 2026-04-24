@@ -138,7 +138,11 @@ ${testimonialsText || "- לא צוינו"}
   if (Array.isArray(documents) && documents.length > 0) {
     for (const doc of documents as { name: string; url: string; type: string }[]) {
       try {
-        if (doc.type === "application/pdf") {
+        const isPdf  = doc.type === "pdf" || doc.type === "application/pdf" || doc.name.toLowerCase().endsWith(".pdf");
+        const isDocx = doc.type === "word" || doc.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || doc.name.toLowerCase().endsWith(".docx");
+        const isText = doc.type.startsWith("text/") || doc.type === "text";
+
+        if (isPdf) {
           const res = await fetch(doc.url);
           const buf = Buffer.from(await res.arrayBuffer());
           messageContent.push({
@@ -146,14 +150,11 @@ ${testimonialsText || "- לא צוינו"}
             source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") },
             title: doc.name,
           });
-        } else if (doc.type.startsWith("text/")) {
+        } else if (isText) {
           const res = await fetch(doc.url);
           const text = await res.text();
           messageContent.push({ type: "text", text: `📄 מסמך: ${doc.name}\n\n${text}\n\n---` });
-        } else if (
-          doc.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-          doc.name.toLowerCase().endsWith(".docx")
-        ) {
+        } else if (isDocx) {
           const res = await fetch(doc.url);
           const buf = Buffer.from(await res.arrayBuffer());
           const { value: text } = await mammoth.extractRawText({ buffer: buf });

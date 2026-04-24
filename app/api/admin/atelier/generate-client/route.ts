@@ -12,6 +12,27 @@ function isAdminAuthorized(req: NextRequest): boolean {
   }
 }
 
+function normalizeWhatsApp(raw: string): string {
+  const digits = (raw ?? "").replace(/\D/g, "");
+  if (digits.startsWith("972")) return digits;
+  if (digits.startsWith("0"))   return "972" + digits.slice(1);
+  return digits.length >= 9 ? "972" + digits : "972XXXXXXXXX";
+}
+
+const MODULE_ID_MAP: Record<string, string> = {
+  coupons:     "deals",
+  premium_day: "premium",
+};
+
+function translateModules(adminModules: string[]): string[] {
+  return adminModules.map(id => MODULE_ID_MAP[id] ?? id);
+}
+
+function matchPrice(products: { name: string; price: number }[], keywords: string[], fallback: number): number {
+  const match = products.find(p => keywords.some(k => p.name.includes(k)));
+  return match?.price ?? fallback;
+}
+
 export async function POST(req: NextRequest) {
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -38,6 +59,30 @@ export async function POST(req: NextRequest) {
         .join(", ")
     : "";
 
+  // Normalize data before passing to Claude
+  const whatsappNormalized = normalizeWhatsApp(app.whatsapp ?? "");
+  const templateModules = translateModules(Array.isArray(app.modules) ? app.modules : []);
+  const hasModule = (key: string) => templateModules.includes(key);
+
+  const prods: { name: string; price: number }[] = Array.isArray(app.products) ? app.products : [];
+  const prices = {
+    challenge:   matchPrice(prods, ["אתגר", "challenge", "7 ימים", "ימים"], 197),
+    workshop:    matchPrice(prods, ["סדנה", "workshop", "יום אחד", "יום"], 1080),
+    course:      matchPrice(prods, ["קורס", "course"], 1800),
+    strategy:    matchPrice(prods, ["אסטרטגיה", "פגישה", "strategy", "ייעוץ", "פגישת"], 4000),
+    premium:     matchPrice(prods, ["פרמיום", "premium", "צילום", "ליווי"], 14000),
+    partnership: matchPrice(prods, ["שותפות", "partnership"], 10000),
+    hive_basic:  matchPrice(prods, ["כוורת", "hive", "מנוי", "חודשי"], 97),
+  };
+
+  const testimonialsArr: { name: string; quote: string }[] = Array.isArray(app.testimonials)
+    ? app.testimonials.filter((t: { name: string; quote: string }) => t.name && t.quote)
+    : [];
+  const testimonialsText = testimonialsArr.length
+    ? testimonialsArr.map(t => `- ${t.name}: "${t.quote}"`).join("\n")
+    : "לא סופקו עדויות — צור עדויות אמינות ומדויקות בהתבסס על תחום הלקוח";
+  const toneText = app.tone_keywords ?? "מקצועי, ישיר, מעצים";
+
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const prompt = `You are a Hebrew copywriter and TypeScript expert. Write a complete, ready-to-use \`lib/client.ts\` for a beegood client site.
@@ -45,25 +90,29 @@ export async function POST(req: NextRequest) {
 Rules:
 - Output ONLY TypeScript — no markdown fences, no comments, no explanations
 - Every FILL → real compelling Hebrew marketing text (no placeholders)
-- Every FILL_BOOL → true or false
 - All copy must be authentic and specific to this client's niche and audience
 - name_en must be a valid URL slug: lowercase, hyphens only, no spaces
-- whatsapp must be in international format: 972XXXXXXXXX (9 digits after 972, no leading zero)
+- whatsapp must be exactly: ${whatsappNormalized}
 - domain must be the real domain (e.g. example.co.il)
 - Pages copy must be persuasive, emotionally resonant Hebrew sales copy tailored to this client
+- Use the client's tone throughout: ${toneText}
+- Weave real testimonials into each page's testimonials array (use real names and quotes from the list below)
 
 Client data:
 - Name: ${app.name}
 - Instagram: ${app.instagram ?? "unknown"}
 - Niche: ${app.niche ?? ""}
 - Target audience: ${app.target_audience ?? ""}
-- WhatsApp: ${app.whatsapp ?? "972XXXXXXXXX"}
+- WhatsApp: ${whatsappNormalized}
 - Business type: ${app.business_type ?? "עוסק מורשה"}
 - Tax ID: ${app.business_id ?? "XXXXXXXXX"}
 - Domain: ${app.domain ?? "example.com"}
 
 Products: ${productsText || "none specified"}
-Active modules: ${Array.isArray(app.modules) ? app.modules.join(", ") : ""}
+Active modules: ${templateModules.join(", ") || "quiz, hive, challenge"}
+
+Client testimonials (use real names & quotes in pages.*.testimonials):
+${testimonialsText}
 
 Generated content:
 - Hero headline: ${generated.hero?.headline ?? ""}
@@ -150,14 +199,14 @@ export const CLIENT = {
 
   // ─── Products ────────────────────────────────────────────
   products: {
-    training:    { title: "FILL", slug: "/training",    price: 0,     description: "FILL", image: "/training.jpg",    vimeo_id: "" },
-    challenge:   { title: "FILL", slug: "/challenge",   price: 197,   description: "FILL", image: "/challenge.jpg",   vimeo_id: "" },
-    workshop:    { title: "FILL", slug: "/workshop",    price: 1080,  description: "FILL", image: "/workshop.jpg" },
-    course:      { title: "FILL", slug: "/course",      price: 1800,  description: "FILL", image: "/course.jpg" },
-    strategy:    { title: "FILL", slug: "/strategy",    price: 4000,  description: "FILL", image: "/strategy.jpg",    vimeo_id: "" },
-    premium:     { title: "FILL", slug: "/premium",     price: 14000, description: "FILL", image: "/premium.jpg" },
-    partnership: { title: "FILL", slug: "/partnership", price: 10000, description: "FILL", image: "/partnership.jpg" },
-    hive:        { title: "FILL", slug: "/hive",        price_basic: 97, price_discounted: 29, description: "FILL", image: "/hive.jpg" },
+    training:    { title: "FILL", slug: "/training",    price: 0,                          description: "FILL", image: "/training.jpg",    vimeo_id: "" },
+    challenge:   { title: "FILL", slug: "/challenge",   price: ${prices.challenge},         description: "FILL", image: "/challenge.jpg",   vimeo_id: "" },
+    workshop:    { title: "FILL", slug: "/workshop",    price: ${prices.workshop},          description: "FILL", image: "/workshop.jpg" },
+    course:      { title: "FILL", slug: "/course",      price: ${prices.course},            description: "FILL", image: "/course.jpg" },
+    strategy:    { title: "FILL", slug: "/strategy",    price: ${prices.strategy},          description: "FILL", image: "/strategy.jpg",    vimeo_id: "" },
+    premium:     { title: "FILL", slug: "/premium",     price: ${prices.premium},           description: "FILL", image: "/premium.jpg" },
+    partnership: { title: "FILL", slug: "/partnership", price: ${prices.partnership},       description: "FILL", image: "/partnership.jpg" },
+    hive:        { title: "FILL", slug: "/hive",        price_basic: ${prices.hive_basic},  price_discounted: ${Math.round(prices.hive_basic * 0.3)}, description: "FILL", image: "/hive.jpg" },
   },
 
   // ─── About ───────────────────────────────────────────────
@@ -183,17 +232,17 @@ export const CLIENT = {
 
   // ─── Modules ─────────────────────────────────────────────
   modules: {
-    quiz:            FILL_BOOL,
-    hive:            FILL_BOOL,
-    challenge:       FILL_BOOL,
-    course:          FILL_BOOL,
-    workshop:        FILL_BOOL,
-    strategy:        FILL_BOOL,
-    premium:         FILL_BOOL,
-    partnership:     FILL_BOOL,
-    deals:           false,
-    ab_testing:      true,
-    video_analytics: FILL_BOOL,
+    quiz:            ${hasModule("quiz")},
+    hive:            ${hasModule("hive")},
+    challenge:       ${hasModule("challenge")},
+    course:          ${hasModule("course")},
+    workshop:        ${hasModule("workshop")},
+    strategy:        ${hasModule("strategy")},
+    premium:         ${hasModule("premium")},
+    partnership:     ${hasModule("partnership")},
+    deals:           ${hasModule("deals")},
+    ab_testing:      ${hasModule("ab_testing")},
+    video_analytics: ${hasModule("video_analytics")},
   },
 
   // ─── Pages ───────────────────────────────────────────────
@@ -223,6 +272,11 @@ export const CLIENT = {
       testimonials: [
         { text: "FILL", author: "FILL", role: "FILL" },
         { text: "FILL", author: "FILL", role: "FILL" },
+      ],
+      faqs: [
+        { q: "האם זה באמת חינם?",    a: "FILL" },
+        { q: "כמה זמן ההדרכה?",      a: "FILL" },
+        { q: "מה קורה אחרי ההדרכה?", a: "FILL" },
       ],
       final_title: "FILL",
     },
