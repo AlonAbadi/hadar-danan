@@ -534,110 +534,6 @@ function courseUpsellStrategy(ctx: EmailTemplateContext): RenderedEmail {
 }
 
 // ─────────────────────────────────────────────────────────────
-// SEQUENCE 4 - Abandoned checkout (CHECKOUT_STARTED)
-// ─────────────────────────────────────────────────────────────
-
-// Email 1 (1h): Left something behind
-function cartAbandon1h(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
-  const product   = String(ctx.product ?? "challenge_197");
-  const ep        = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
-  const price     = product === "workshop_1080" ? "1,080" : product === "course_1800" ? "1,800" : product === "strategy_4000" ? "4,000" : "197";
-  const productName = product === "workshop_1080"
-    ? "הסדנה יום אחד"
-    : product === "course_1800"
-    ? "הקורס הדיגיטלי"
-    : product === "strategy_4000"
-    ? "פגישת האסטרטגיה"
-    : "הצ׳אלנג׳ 7 הימים";
-  const href = (product === "workshop_1080"
-    ? `${APP_URL}/workshop`
-    : product === "course_1800"
-    ? `${APP_URL}/course`
-    : product === "strategy_4000"
-    ? `${APP_URL}/strategy`
-    : `${APP_URL}/challenge`) + ep;
-
-  return {
-    subject: `${firstName}, שכחת משהו... 🛒`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>העגלה שלך מחכה, <span class="header-accent">${firstName}</span></h1>
-        <p>עצרת בדרך - בוא נסיים את זה</p>
-      </div>
-      <div class="body">
-        <p>היי ${firstName},</p>
-        <p>התחלת את תהליך ההרשמה ל<strong>${productName}</strong> אבל לא סיימת. קרה משהו?</p>
-        <p>המקום שמרת עדיין שמור לך - <strong>אבל לא לנצח.</strong></p>
-
-        <div class="highlight-box-yellow">
-          <p>⏱️ המחיר ₪${price} תקף עוד 24 שעות בלבד</p>
-        </div>
-
-        <a class="cta" href="${href}">השלם את ההרשמה עכשיו ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          יש בעיה טכנית או שאלה? השב לאימייל הזה - אסדר מיד.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// Email 2 (24h): Same offer + 10% coupon
-function cartAbandon24h(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
-  const product   = String(ctx.product ?? "challenge_197");
-  const ep        = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
-  const productName = product === "workshop_1080"
-    ? "הסדנה יום אחד"
-    : product === "course_1800"
-    ? "הקורס הדיגיטלי"
-    : product === "strategy_4000"
-    ? "פגישת האסטרטגיה"
-    : "הצ׳אלנג׳ 7 הימים";
-  const href = (product === "workshop_1080"
-    ? `${APP_URL}/workshop`
-    : product === "course_1800"
-    ? `${APP_URL}/course`
-    : product === "strategy_4000"
-    ? `${APP_URL}/strategy`
-    : `${APP_URL}/challenge`) + ep;
-
-  return {
-    subject: `${firstName} - אחרון. קוד הנחה 10% בפנים 🎁`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>ההזדמנות הזאת נסגרת הלילה</h1>
-        <p>אחרון אחרון - יש לי מתנה בשבילך</p>
-      </div>
-      <div class="body">
-        <p>היי ${firstName},</p>
-        <p>זה האימייל האחרון שאני שולח על <strong>${productName}</strong>.</p>
-        <p>כיוון שהתחלת את התהליך - אני רוצה לתת לך דחיפה קטנה:</p>
-
-        <div class="coupon-box">
-          <p>קוד הנחה 10% - בתוקף עד חצות:</p>
-          <p class="coupon-code">HADAR10</p>
-        </div>
-
-        <p>הזן את הקוד בהרשמה וקבל 10% הנחה מיידית.</p>
-
-        <a class="cta" href="${href}">מממש את ההנחה עכשיו ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          לא מעניין בכלל? אין בעיה - אשמח לדעת מה מנע ממך. השב לאימייל.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// ─────────────────────────────────────────────────────────────
 // SEQUENCE 5 - Re-engagement (INACTIVE_3_DAYS)
 // ─────────────────────────────────────────────────────────────
 
@@ -1080,9 +976,6 @@ const TEMPLATES: Record<string, TemplateFn> = {
   // Sequence 3 - workshop buyers
   workshop_confirmation:       workshopConfirmation,
   workshop_upsell_strategy:    workshopUpsellStrategy,
-  // Sequence 4 - abandoned checkout
-  cart_abandon_1h:             cartAbandon1h,
-  cart_abandon_24h:            cartAbandon24h,
   // Sequence 5 - re-engagement
   reengagement,
   // Sequence 4b - course buyers

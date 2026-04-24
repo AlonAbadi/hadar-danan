@@ -35,8 +35,6 @@ export async function sendManualEmail(userId: string, templateKey: string) {
     challenge_upsell_workshop: "מה השגת? + ההצעה הבאה שלך",
     workshop_confirmation:     "ההרשמה לסדנה אושרה",
     workshop_upsell_strategy:  "שבוע אחרי הסדנה - מה עכשיו?",
-    cart_abandon_1h:           "שכחת משהו... המקום עדיין שמור לך",
-    cart_abandon_24h:          "אחרון - קוד הנחה 10% בפנים",
     reengagement:              "התגעגענו אליך",
     booking_confirmation:      "הפגישה שלך נקבעה",
     premium_lead_confirmation:  "קיבלנו את הבקשה - ניצור קשר תוך 24 שעות",

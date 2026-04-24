@@ -18,7 +18,6 @@ const TRANSITIONS: Record<string, { from: UserStatus | UserStatus[]; to: UserSta
 // Events that should also trigger email sequences
 const SEQUENCE_TRIGGERS = new Set([
   "PURCHASE_COMPLETED",
-  "CHECKOUT_STARTED",
   "CHALLENGE_PURCHASED",
   "WORKSHOP_PURCHASED",
   "INACTIVE_3_DAYS",
