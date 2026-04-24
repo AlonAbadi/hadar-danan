@@ -851,7 +851,6 @@ async function executeTool(
         .from("atelier_applications")
         .update({
           generated_client_ts: input.code,
-          generated_client_ts_at: new Date().toISOString(),
         })
         .eq("id", input.application_id);
 
@@ -969,7 +968,6 @@ export async function POST(req: NextRequest) {
       const log3: unknown[] = Array.isArray(logRow3?.orchestration_log) ? logRow3.orchestration_log : [];
       await sb.from("atelier_applications").update({
         generated_client_ts: genResult.code,
-        generated_client_ts_at: new Date().toISOString(),
         pipeline_status: "awaiting_approval",
         orchestration_log: [...log3, {
           status: "awaiting_approval",
