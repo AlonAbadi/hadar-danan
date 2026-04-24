@@ -179,8 +179,9 @@ export const CLIENT = {
 
   // ─── Hero ────────────────────────────────────────────────
   hero: {
-    image:       "/hero.jpg",
-    image_alt:   "FILL",
+    image:          "/hero.jpg",
+    image_alt:      "FILL",
+    image_position: "center 25%",
     headline_a:  "FILL",
     headline_b:  "FILL",
     desc_a:      "FILL",

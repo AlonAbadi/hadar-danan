@@ -110,7 +110,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
 
   const [deploySlug, setDeploySlug] = useState<string>(() => {
     if (app.preview_url) {
-      return (app.preview_url as string).replace("https://beegood-", "").replace(".vercel.app", "");
+      return (app.preview_url as string).replace("https://", "").replace(".vercel.app", "");
     }
     if (app.generated_client_ts) {
       const m = (app.generated_client_ts as string).match(/name_en:\s*["']([^"']+)["']/);
@@ -979,7 +979,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
             <div style={{ fontSize: 16, fontWeight: 700, color: "#34A853", marginBottom: 16 }}>✓ תוכן נוצר — השלבים הבאים</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {[
-                { text: `git clone beegood-template → ${app.name.toLowerCase().replace(/\s/g, "-")}`, mono: true },
+                { text: `git clone atelier-client-template → ${app.name.toLowerCase().replace(/\s/g, "-")}`, mono: true },
                 { text: "צור lib/client.ts בלחיצה על הכפתור למטה ←" },
                 { text: "העלה תמונות ל-/public" },
                 { text: "צור Supabase project חדש + הרץ migrations" },
@@ -1089,11 +1089,8 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
               <div style={{ flex: 1 }}>
                 <div style={s.label}>שם הפרויקט (slug)</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 0, marginTop: 6 }}>
-                  <span style={{ background: "#1D2430", border: "1px solid #2C323E", borderRight: "none", borderRadius: "8px 0 0 8px", padding: "10px 12px", fontSize: 13, color: "#9E9990", whiteSpace: "nowrap" }}>
-                    beegood-
-                  </span>
                   <input
-                    style={{ ...s.input, borderRadius: "0 8px 8px 0", flex: 1 }}
+                    style={{ ...s.input, flex: 1 }}
                     value={deploySlug}
                     onChange={e => setDeploySlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
                     placeholder="client-name"
@@ -1101,7 +1098,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   />
                 </div>
                 <div style={{ fontSize: 11, color: "#9E9990", marginTop: 5 }}>
-                  האתר יהיה זמין ב־beegood-{deploySlug || "client-name"}.vercel.app
+                  האתר יהיה זמין ב־{deploySlug || "client-name"}.vercel.app
                 </div>
               </div>
               <button

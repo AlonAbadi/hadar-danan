@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const repoName   = `beegood-${client_slug}`;
+  const repoName   = client_slug;
   const previewUrl = `https://${repoName}.vercel.app`;
 
   // Fetch image URLs from DB (hero + og) — used later to push real images to the fork
