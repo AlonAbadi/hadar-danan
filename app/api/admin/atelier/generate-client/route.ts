@@ -384,6 +384,81 @@ export const CLIENT = {
       final_title: "FILL",
     },
 
+    course: {
+      pain_points:    ["FILL", "FILL", "FILL"],
+      agitation:      "FILL",
+      solution_title: "FILL",
+      steps: [
+        { num: "1", title: "FILL", desc: "FILL" },
+        { num: "2", title: "FILL", desc: "FILL" },
+        { num: "3", title: "FILL", desc: "FILL" },
+      ],
+      for_who:     ["FILL", "FILL"],
+      not_for:     ["FILL"],
+      testimonials: [
+        { text: "FILL", author: "FILL", role: "FILL" },
+        { text: "FILL", author: "FILL", role: "FILL" },
+      ],
+      faqs: [
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+      ],
+      final_title: "FILL",
+      final_sub:   "FILL",
+    },
+
+    premium: {
+      pain_points:    ["FILL", "FILL", "FILL"],
+      agitation:      "FILL",
+      solution_title: "FILL",
+      steps: [
+        { num: "1", title: "FILL", desc: "FILL" },
+        { num: "2", title: "FILL", desc: "FILL" },
+        { num: "3", title: "FILL", desc: "FILL" },
+      ],
+      for_who:     ["FILL", "FILL"],
+      not_for:     ["FILL"],
+      testimonials: [
+        { text: "FILL", author: "FILL", role: "FILL" },
+        { text: "FILL", author: "FILL", role: "FILL" },
+      ],
+      faqs: [
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+      ],
+      final_title: "FILL",
+      final_sub:   "FILL",
+    },
+
+    partnership: {
+      pain_points:    ["FILL", "FILL", "FILL"],
+      agitation:      "FILL",
+      solution_title: "FILL",
+      steps: [
+        { num: "1", title: "FILL", desc: "FILL" },
+        { num: "2", title: "FILL", desc: "FILL" },
+        { num: "3", title: "FILL", desc: "FILL" },
+      ],
+      for_who:     ["FILL", "FILL"],
+      not_for:     ["FILL"],
+      testimonials: [
+        { text: "FILL", author: "FILL", role: "FILL" },
+        { text: "FILL", author: "FILL", role: "FILL" },
+      ],
+      faqs: [
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+        { q: "FILL?", a: "FILL" },
+      ],
+      final_title: "FILL",
+      final_sub:   "FILL",
+    },
+
   },
 
 } as const;`;
