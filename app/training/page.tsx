@@ -5,7 +5,7 @@ import { TrainingViewCounter } from "@/app/training/watch/TrainingViewCounter";
 import { getTrainingViewCount } from "@/lib/training-views";
 
 export const metadata: Metadata = {
-  title: "הדרכה חינמית | הדר דנן",
+  title: "הדרכה חינמית",
   description: "גלה למה השיווק שלך לא עובד - ומה לעשות עם זה. הדרכה חינמית של הדר דנן, 20 דקות שמשנות גישה.",
   alternates: { canonical: "/training" },
 };

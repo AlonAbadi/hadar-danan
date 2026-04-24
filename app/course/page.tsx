@@ -38,20 +38,6 @@ export default async function CoursePage() {
         { name: "דף הבית", url: APP_URL },
         { name: "קורס דיגיטלי", url: `${APP_URL}/course` },
       ]} />
-      <p
-        style={{
-          maxWidth: 680,
-          margin: "0 auto",
-          padding: "28px 20px 0",
-          color: "#9E9990",
-          fontSize: 16,
-          lineHeight: 1.8,
-          textAlign: "center",
-          fontFamily: "var(--font-assistant)",
-        }}
-      >
-        קורס בידול מותג אישי הוא קורס דיגיטלי של 8 מודולים ו-16 שיעורים המבוסס על שיטת TrueSignal. הקורס מלמד בעלי עסקים לאתר את הבידול האמיתי שלהם, לבנות מסר שמוכר ולהפוך תוכן ללידים. 3,500+ עסקים כבר יישמו את השיטה. גישה לנצח, ₪1,800 תשלום חד-פעמי.
-      </p>
       <CourseLandingClient credit={0} whatsappPhone={whatsappPhone} email="" />
     </>
   );

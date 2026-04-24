@@ -45,22 +45,22 @@ const ROW2_PRODUCTS = [
 
 const TESTIMONIALS = [
   {
-    text: "מי שרוצה שירות פרימיום יחס מעולה ושיוציאו אותך הכי אותנטי זה המקום!!",
-    name: "ניסן אלנקווה",
-    date: "לפני 11 חודשים",
-    initial: "נ",
+    text: "מרוצה במקסימום הצלחתם להפוך את הנקודה שהכי קשה לי בעסק לנקודת חוזקה ואני אפילו נהנה מזה עכשיו :) אין עליכם תודה ענקית!!",
+    name: "רועי מנדלמן",
+    date: "לפני 8 חודשים",
+    initial: "ר",
   },
   {
-    text: "שירות מעולה, הבנה מאוד רצינית ומעמיקה על איך לשווק נכון עסק ואיזה סרטונים טובים לו. מומלץ בחום.",
-    name: "נטע מרום",
+    text: "שירות ברמה אחרת! אחרי אכזבות מחברות אחרות, סוף סוף מצאתי צוות מקצועי, אדיב וקשוב לצרכים שלי. מהרגע הראשון הרגשתי שאני בידיים טובות. הם הצליחו לקחת את העסק שלי כמה צעדים קדימה עם תוכן מדוייק שהביא לי הרבה פניות. מומלץ בחום.",
+    name: "gal masas",
     date: "לפני שנה",
-    initial: "נ",
+    initial: "G",
   },
   {
-    text: "הגעתי לצילומים אצל הדר דנן עם קצת חשש ופרפרים אבל תוך רגע כל הלחץ הסתיים. הצוות שם פשוט תותחים מהרגע שנכנסתי, הייתה אווירה כיפית, נעימה ומקצועית בטירוף.",
-    name: "נטלי גדקר",
+    text: "מקצוענות נטו!! נהנתי מהדרך ומהשירות. זה הכי כיף לעבוד עם אנשים שגם סופר מקצועיים וגם סופר שירותיים ואדיבים בנוסף, הקפיץ לי את העסק והעלה לי את רמת החשיפה וכמות הלקוחות! ממליץ בחום!",
+    name: "tal barell",
     date: "לפני שנה",
-    initial: "נ",
+    initial: "T",
   },
 ];
 
@@ -141,6 +141,15 @@ export default async function LandingPage() {
                 }}>
                   {content.cta}
                 </a>
+                <p style={{
+                  color: "#9E9990",
+                  fontSize: 12,
+                  textAlign: "center",
+                  marginTop: 8,
+                  direction: "rtl",
+                }}>
+                  6 שאלות · 2 דקות · ללא כרטיס אשראי
+                </p>
               </div>
             </div>
 
@@ -225,6 +234,15 @@ export default async function LandingPage() {
                 }}>
                   {content.cta}
                 </a>
+                <p style={{
+                  color: "#9E9990",
+                  fontSize: 12,
+                  textAlign: "center",
+                  marginTop: 8,
+                  direction: "rtl",
+                }}>
+                  6 שאלות · 2 דקות · ללא כרטיס אשראי
+                </p>
 
 
               </div>
@@ -273,6 +291,28 @@ export default async function LandingPage() {
           {/* ══════════════════════════════════════════════════════
               4. PRODUCTS - LADDER + NETFLIX
           ══════════════════════════════════════════════════════ */}
+          {/* Quiz bridge — recovers visitors overwhelmed by product choices */}
+          <div
+            style={{
+              background: "#080C14",
+              paddingTop: 8,
+              paddingBottom: 8,
+              textAlign: "center",
+            }}
+          >
+            <a
+              href="/quiz"
+              style={{
+                color: "#C9964A",
+                fontSize: 14,
+                fontWeight: 600,
+                textDecoration: "none",
+                direction: "rtl",
+              }}
+            >
+              לא בטוח/ה מה מתאים לך? ← קח את הקוויז וקבל המלצה אישית
+            </a>
+          </div>
           <ProductsSection />
 
           {/* ══════════════════════════════════════════════════════
@@ -431,17 +471,6 @@ export default async function LandingPage() {
         ══════════════════════════════════════════════════════ */}
         <footer className="px-6 py-12" style={{ background: "#101520", paddingBottom: "100px" }}>
           <div className="max-w-5xl mx-auto flex flex-col gap-8">
-
-            {/* Credit CTA */}
-            <div className="text-center">
-              <a
-                href="/my"
-                className="inline-flex items-center gap-2 text-sm font-bold transition hover:opacity-80"
-                style={{ color: "#C9964A" }}
-              >
-                יש לך זיכוי? בדוק באזור האישי שלך ←
-              </a>
-            </div>
 
             {/* Links */}
             <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm" style={{ color: "#9E9990" }}>

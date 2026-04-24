@@ -92,6 +92,10 @@ function buildEmail(name: string, link: string): string {
     .header p { font-size: 14px; color: #9ca3af; margin-top: 6px; }
     .body { padding: 32px; }
     .body p { font-size: 16px; line-height: 1.8; color: #374151; margin-bottom: 16px; }
+    .checklist { background: #f9fafb; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
+    .checklist-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 15px; color: #374151; line-height: 1.5; }
+    .checklist-item:last-child { margin-bottom: 0; }
+    .check { color: #C9964A; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
     .cta { display: inline-block; background: #C9964A; color: #fff !important; text-decoration: none; font-weight: 800; font-size: 16px; padding: 15px 36px; border-radius: 10px; margin: 8px 0 20px; }
     .note { font-size: 13px; color: #9ca3af; margin-top: 4px; }
     .footer { padding: 20px 32px; border-top: 1px solid #f3f4f6; font-size: 12px; color: #9ca3af; }
@@ -103,14 +107,20 @@ function buildEmail(name: string, link: string): string {
       <div class="header">
         <div class="header-logo">BeeGood · Atelier</div>
         <h1>שלום ${name} 👋</h1>
-        <p>הטופס שלך לבניית הזהות הדיגיטלית מחכה</p>
+        <p>הטופס שלך לבניית האתר האישי מחכה</p>
       </div>
       <div class="body">
-        <p>קיבלנו את הבקשה שלך וזה הזמן להתחיל לבנות.</p>
-        <p>מלאי את הטופס הבא — ככל שתספקי יותר פרטים, קלוד יוכל לייצר זהות מדויקת ואמיתית יותר עבורך.</p>
-        <p>את יכולה לצרף מסמכים, קבצים, כל דבר שמתאר את הקול והשיטה שלך.</p>
+        <p>קיבלנו את הבקשה שלך — עכשיו הזמן להתחיל לבנות את האתר שלך עם Claude.</p>
+        <p>מלאי את הטופס, וככל שתספקי יותר פרטים ותמונות — כך האתר יהיה מדויק ואמיתי יותר.</p>
+        <div class="checklist">
+          <div style="font-size: 13px; font-weight: 700; color: #9ca3af; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 14px;">מה תמצאי בטופס</div>
+          <div class="checklist-item"><span class="check">✦</span><span>פרטי העסק והמוצרים שלך</span></div>
+          <div class="checklist-item"><span class="check">✦</span><span>עדויות לקוחות — ציטוטים אמיתיים שיופיעו באתר</span></div>
+          <div class="checklist-item"><span class="check">✦</span><span>העלאת תמונות שלך — פרופיל, עבודה, סגנון (Claude יראה אותן ויתאים את האתר)</span></div>
+          <div class="checklist-item"><span class="check">✦</span><span>מסמכים אופציונליים — בריף, מצגת, כל דבר שמתאר את הקול שלך</span></div>
+        </div>
         <a class="cta" href="${link}">למילוי הטופס ←</a>
-        <p class="note">הלינק תקף ל-14 ימים. אם יש שאלות — ענה על המייל הזה.</p>
+        <p class="note">הלינק תקף ל-14 ימים. שאלות? ענה על המייל הזה.</p>
       </div>
       <div class="footer">BeeGood · beegood.online</div>
     </div>

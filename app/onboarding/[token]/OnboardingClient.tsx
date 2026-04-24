@@ -4,7 +4,7 @@ import { useState } from "react";
 
 interface Product { name: string; price: number }
 interface Testimonial { name: string; quote: string }
-interface DocFile { name: string; url: string; type: string }
+interface DocFile { name: string; url: string; type: string; description?: string }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function OnboardingClient({ app, token }: { app: Record<string, any>; token: string }) {
@@ -23,6 +23,11 @@ export default function OnboardingClient({ app, token }: { app: Record<string, a
   const [businessAddress, setBusinessAddress] = useState<string>(app.business_address ?? "");
   const [documents, setDocuments] = useState<DocFile[]>(app.documents ?? []);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const logoDoc = documents.find(d => d.type === "logo");
+  const logoUrl = logoDoc?.url ?? null;
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(!!app.onboarding_submitted_at);
   const [error, setError] = useState<string | null>(null);
@@ -41,21 +46,64 @@ export default function OnboardingClient({ app, token }: { app: Record<string, a
     divider: { height: 1, background: "#f3f4f6", margin: "24px 0" },
   };
 
+  async function uploadFile(file: File): Promise<{ url: string; name: string; type: string } | null> {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("token", token);
+    const res = await fetch("/api/onboarding/upload", { method: "POST", body: fd });
+    if (!res.ok) return null;
+    return res.json();
+  }
+
   async function handleDocUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingDoc(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("token", token);
-      const res = await fetch("/api/onboarding/upload", { method: "POST", body: fd });
-      if (res.ok) {
-        const data = await res.json();
-        setDocuments(prev => [...prev, { name: data.name, url: data.url, type: data.type }]);
-      }
+      const data = await uploadFile(file);
+      if (data) setDocuments(prev => [...prev, { name: data.name, url: data.url, type: data.type }]);
     } finally {
       setUploadingDoc(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingImage(true);
+    try {
+      for (const file of Array.from(files)) {
+        const data = await uploadFile(file);
+        if (data) {
+          setDocuments(prev => [...prev, { name: data.name, url: data.url, type: data.type, description: "" }]);
+        }
+      }
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
+  }
+
+  function updateImageDescription(url: string, description: string) {
+    setDocuments(prev => prev.map(d => d.url === url ? { ...d, description } : d));
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const data = await uploadFile(file);
+      if (data) {
+        // Replace any existing logo
+        setDocuments(prev => [
+          ...prev.filter(d => d.type !== "logo"),
+          { name: data.name, url: data.url, type: "logo" },
+        ]);
+      }
+    } finally {
+      setUploadingLogo(false);
       e.target.value = "";
     }
   }
@@ -151,6 +199,40 @@ export default function OnboardingClient({ app, token }: { app: Record<string, a
         {/* Brand & Identity */}
         <div style={s.card}>
           <div style={s.section}>מיתוג וזהות</div>
+
+          {/* Logo */}
+          <div style={{ marginBottom: 22 }}>
+            <label style={s.label}>לוגו העסק (PNG / SVG / WEBP)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 8 }}>
+              {logoUrl ? (
+                <div style={{ position: "relative" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={logoUrl}
+                    alt="לוגו"
+                    style={{ width: 80, height: 80, objectFit: "contain", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#f9fafb", padding: 6 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setDocuments(prev => prev.filter(d => d.type !== "logo"))}
+                    style={{ position: "absolute", top: -8, left: -8, background: "#ef4444", border: "none", borderRadius: "50%", width: 22, height: 22, color: "#fff", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}
+                  >×</button>
+                </div>
+              ) : (
+                <div style={{ width: 80, height: 80, borderRadius: 10, border: "2px dashed #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", color: "#d1d5db", fontSize: 24, background: "#f9fafb" }}>
+                  {uploadingLogo ? "⏳" : "🖼"}
+                </div>
+              )}
+              <label style={{ border: "1.5px solid #e5e7eb", borderRadius: 10, padding: "10px 18px", fontSize: 14, cursor: uploadingLogo ? "default" : "pointer", color: "#6b7280", background: "#f9fafb", fontFamily: "inherit", display: "inline-block" }}>
+                {uploadingLogo ? "מעלה..." : logoUrl ? "החלף לוגו" : "בחר לוגו"}
+                <input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" style={{ display: "none" }} onChange={handleLogoUpload} disabled={uploadingLogo} />
+              </label>
+              {!logoUrl && <span style={{ fontSize: 12, color: "#9ca3af" }}>תמונה על רקע שקוף עדיפה</span>}
+            </div>
+          </div>
+
+          <div style={s.divider} />
+
           <div style={{ marginBottom: 16 }}>
             <label style={s.label}>תחום / נישה *</label>
             <input style={s.input} value={niche} onChange={e => setNiche(e.target.value)} placeholder="למשל: מאמנת תזונה לנשים אחרי לידה" />
@@ -207,21 +289,69 @@ export default function OnboardingClient({ app, token }: { app: Record<string, a
           </button>
         </div>
 
+        {/* Photos */}
+        <div style={s.card}>
+          <div style={s.section}>תמונות שלך</div>
+          <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 6, lineHeight: 1.6 }}>
+            העלי תמונות שלך — תמונת פרופיל, תמונות מהעבודה, תמונות שמייצגות אותך ואת הסגנון שלך.
+            <br />
+            לכל תמונה אפשר להוסיף תיאור קצר כדי שנדע להשתמש בה נכון.
+          </div>
+
+          {/* Uploaded images */}
+          {documents.filter(d => d.type.startsWith("image/")).length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 16, marginTop: 14 }}>
+              {documents.filter(d => d.type.startsWith("image/")).map((img, _i) => (
+                <div key={img.url} style={{ border: "1.5px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
+                  <div style={{ display: "flex", gap: 14, padding: "12px 14px", alignItems: "flex-start" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt={img.name}
+                      style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb", flexShrink: 0 }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{img.name}</div>
+                      <textarea
+                        style={{ ...s.textarea, minHeight: 60, fontSize: 13 }}
+                        value={img.description ?? ""}
+                        onChange={e => updateImageDescription(img.url, e.target.value)}
+                        placeholder="תארי מה בתמונה — למשל: &#34;תמונת פרופיל שלי&#34;, &#34;בשיעור עם לקוחה&#34;, &#34;ביום צילום&#34;"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDocuments(documents.filter(d => d.url !== img.url))}
+                      style={{ background: "none", border: "none", color: "#d1d5db", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: "4px", flexShrink: 0 }}
+                    >×</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <label style={{ display: "block", border: "2px dashed #e5e7eb", borderRadius: 12, padding: "20px", textAlign: "center", cursor: uploadingImage ? "default" : "pointer", color: "#9ca3af", fontSize: 14 }}>
+            {uploadingImage ? "⏳ מעלה..." : "לחצי להעלאת תמונות"}
+            <div style={{ fontSize: 12, marginTop: 4 }}>JPG, PNG, WEBP — ניתן לבחור מספר תמונות בבת אחת</div>
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple style={{ display: "none" }} onChange={handleImageUpload} disabled={uploadingImage} />
+          </label>
+        </div>
+
         {/* Documents */}
         <div style={s.card}>
           <div style={s.section}>מסמכים ותוכן</div>
           <div style={{ fontSize: 13, color: "#9ca3af", marginBottom: 16 }}>
             צרפי קבצים שמתארים את הקול, השיטה והמיתוג שלך — בריף, מצגת, מסמך אסטרטגיה וכד׳ (PDF, Word, טקסט)
           </div>
-          {documents.length > 0 && (
+          {documents.filter(d => !d.type.startsWith("image/")).length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
-              {documents.map((doc, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f9fafb", borderRadius: 10, padding: "10px 14px", border: "1px solid #e5e7eb" }}>
+              {documents.filter(d => !d.type.startsWith("image/")).map((doc, _i) => (
+                <div key={doc.url} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f9fafb", borderRadius: 10, padding: "10px 14px", border: "1px solid #e5e7eb" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 18 }}>{doc.type?.includes("pdf") ? "📄" : "📝"}</span>
                     <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#C9964A", textDecoration: "none", fontWeight: 600 }}>{doc.name}</a>
                   </div>
-                  <button type="button" onClick={() => setDocuments(documents.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#d1d5db", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+                  <button type="button" onClick={() => setDocuments(documents.filter(d => d.url !== doc.url))} style={{ background: "none", border: "none", color: "#d1d5db", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
                 </div>
               ))}
             </div>

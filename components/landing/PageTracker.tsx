@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { AbVariant } from "@/lib/ab";
 
 interface PageTrackerProps {
-  abVariant: "A" | "B";
+  abVariant: AbVariant;
 }
 
 function getCookie(name: string): string | undefined {

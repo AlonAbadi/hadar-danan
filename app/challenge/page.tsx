@@ -19,7 +19,7 @@ const CHALLENGE_FAQS = [
 ];
 
 export const metadata = {
-  title: "אתגר 7 הימים | הדר דנן",
+  title: "אתגר 7 הימים",
   description: "7 ימים. מסר אחד ביום. תהליך שמשנה את הדרך שאתה מציג את עצמך. 197 שקל בלבד.",
   alternates: { canonical: "/challenge" },
 };

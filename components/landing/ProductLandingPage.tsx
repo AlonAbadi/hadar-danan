@@ -564,13 +564,12 @@ export default function ProductLandingPage({
     let attempts = 0;
     const interval = setInterval(() => {
       attempts++;
-      const w = window as Window & { Vimeo?: { Player: new (el: HTMLElement) => { setLoop(v: boolean): Promise<void>; play(): Promise<void> } } };
+      const w = window as Window & { Vimeo?: { Player: new (el: HTMLElement) => { setLoop(v: boolean): Promise<void> } } };
       const iframe = document.getElementById('vimeo-vsl') as HTMLElement | null;
       if (w.Vimeo?.Player && iframe) {
         clearInterval(interval);
         const player = new w.Vimeo.Player(iframe);
         player.setLoop(false).catch(() => {});
-        player.play().catch(() => {}); // browsers may block until user interaction
       }
       if (attempts > 20) clearInterval(interval);
     }, 500);
@@ -624,12 +623,12 @@ export default function ProductLandingPage({
               }}>
                 <iframe
                   id="vimeo-vsl"
-                  src={`https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&loop=0&autoplay=1&player_id=0&app_id=58479&cc=0`}
+                  src={`https://player.vimeo.com/video/${vimeoId}?badge=0&autopause=0&loop=0&player_id=0&app_id=58479&cc=0`}
                   allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
                   title="VSL"
-                  loading="eager"
+                  loading="lazy"
                 />
               </div>
             </div>

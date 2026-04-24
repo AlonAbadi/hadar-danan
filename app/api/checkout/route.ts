@@ -139,7 +139,8 @@ export async function POST(req: NextRequest) {
 
     // Webhook — Cardcom calls this server-to-server BEFORE redirecting the user
     // We pass order= so the GET handler can identify the purchase immediately
-    IndicatorUrl: `${appUrl}/api/cardcom/webhook?order=${purchase.id}`,
+    // wt= is a shared secret that validates the call came from Cardcom
+    IndicatorUrl: `${appUrl}/api/cardcom/webhook?order=${purchase.id}&wt=${process.env.CARDCOM_WEBHOOK_TOKEN ?? ""}`,
 
     // Customer details — pre-fills the Cardcom payment form
     CardOwnerName:       customerName,

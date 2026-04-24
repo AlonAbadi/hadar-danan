@@ -382,8 +382,9 @@ function LoginPageInner() {
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
-            <label style={S.label}>אימייל</label>
+            <label htmlFor="login-email" style={S.label}>אימייל</label>
             <input
+              id="login-email"
               type="email"
               required
               value={email}
@@ -398,10 +399,11 @@ function LoginPageInner() {
 
           <div>
             <div style={S.passwordRow}>
-              <label style={{ ...S.label, margin: 0 }}>סיסמה</label>
+              <label htmlFor="login-password" style={{ ...S.label, margin: 0 }}>סיסמה</label>
               <Link href="/forgot-password" style={S.forgotLink}>שכחתי סיסמה</Link>
             </div>
             <input
+              id="login-password"
               type="password"
               required
               value={password}

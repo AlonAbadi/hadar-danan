@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FEATURED_REVIEWS, AGGREGATE } from '@/data/reviews';
+import { FEATURED_REVIEWS, AGGREGATE, REVIEWS } from '@/data/reviews';
 
 function GoogleG() {
   return (
@@ -52,6 +52,7 @@ export default function SocialProofStrip() {
             <div className="flex items-center gap-1.5">
               <span className="text-[#E8B94A] text-base leading-none tracking-wider">★★★★★</span>
               <span className="text-[#EDE9E1] font-bold text-base">{AGGREGATE.rating.toFixed(1)}</span>
+              <span className="text-[#9E9990] text-base">· {REVIEWS.length} ביקורות</span>
             </div>
           </div>
 

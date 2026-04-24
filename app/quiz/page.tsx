@@ -36,6 +36,7 @@ export default async function QuizPage() {
   } | null;
 
   let initialUser: InitialUser = null;
+  let initialQuizResult: { answers: Record<string, string>; recommendedProduct: string; matchPercent: number } | null = null;
 
   if (user) {
     const db = createServerClient();
@@ -53,8 +54,24 @@ export default async function QuizPage() {
         email:              userData.email,
         marketing_consent:  userData.marketing_consent,
       };
+
+      const { data: quizData } = await db
+        .from("quiz_results")
+        .select("answers, recommended_product, match_percent")
+        .eq("user_id", userData.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (quizData?.answers && quizData.recommended_product) {
+        initialQuizResult = {
+          answers:            quizData.answers as Record<string, string>,
+          recommendedProduct: quizData.recommended_product,
+          matchPercent:       quizData.match_percent ?? 86,
+        };
+      }
     }
   }
 
-  return <QuizClient initialUser={initialUser} />;
+  return <QuizClient initialUser={initialUser} initialQuizResult={initialQuizResult} />;
 }

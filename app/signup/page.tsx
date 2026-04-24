@@ -341,8 +341,9 @@ function SignupPageInner() {
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div>
-            <label style={S.label}>שם מלא</label>
+            <label htmlFor="signup-name" style={S.label}>שם מלא</label>
             <input
+              id="signup-name"
               type="text"
               required
               value={name}
@@ -355,8 +356,9 @@ function SignupPageInner() {
           </div>
 
           <div>
-            <label style={S.label}>אימייל</label>
+            <label htmlFor="signup-email" style={S.label}>אימייל</label>
             <input
+              id="signup-email"
               type="email"
               required
               value={email}
@@ -370,8 +372,9 @@ function SignupPageInner() {
           </div>
 
           <div>
-            <label style={S.label}>סיסמה</label>
+            <label htmlFor="signup-password" style={S.label}>סיסמה</label>
             <input
+              id="signup-password"
               type="password"
               required
               value={password}

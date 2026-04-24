@@ -127,16 +127,34 @@ ${testimonialsText || "- לא צוינו"}
     return NextResponse.json({ error: "ANTHROPIC_API_KEY חסר בסביבה" }, { status: 500 });
   }
 
-  // Build message content — prepend any uploaded documents so Claude reads them first
+  // Build message content — prepend any uploaded documents + images so Claude reads them first
   type ContentBlock =
     | { type: "text"; text: string }
     | { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string }; title?: string }
-    | { type: "document"; source: { type: "url"; url: string }; title?: string };
+    | { type: "document"; source: { type: "url"; url: string }; title?: string }
+    | { type: "image"; source: { type: "url"; url: string } };
 
   const messageContent: ContentBlock[] = [];
 
   if (Array.isArray(documents) && documents.length > 0) {
-    for (const doc of documents as { name: string; url: string; type: string }[]) {
+    type DocEntry = { name: string; url: string; type: string; description?: string };
+    const imageEntries = (documents as DocEntry[]).filter(d => d.type.startsWith("image/"));
+    const docEntries   = (documents as DocEntry[]).filter(d => !d.type.startsWith("image/"));
+
+    // Images first — include description as context text if provided
+    if (imageEntries.length > 0) {
+      messageContent.push({ type: "text", text: `להלן תמונות שהלקוחה העלתה — השתמש בהן כדי להבין את הסגנון, האישיות והמיתוג שלה:` });
+      for (const img of imageEntries) {
+        if (img.description?.trim()) {
+          messageContent.push({ type: "text", text: `📸 ${img.name}: ${img.description}` });
+        }
+        messageContent.push({ type: "image", source: { type: "url", url: img.url } });
+      }
+      messageContent.push({ type: "text", text: `---` });
+    }
+
+    // Documents
+    for (const doc of docEntries) {
       try {
         const isPdf  = doc.type === "pdf" || doc.type === "application/pdf" || doc.name.toLowerCase().endsWith(".pdf");
         const isDocx = doc.type === "word" || doc.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || doc.name.toLowerCase().endsWith(".docx");
@@ -160,7 +178,6 @@ ${testimonialsText || "- לא צוינו"}
           const { value: text } = await mammoth.extractRawText({ buffer: buf });
           messageContent.push({ type: "text", text: `📄 מסמך Word: ${doc.name}\n\n${text}\n\n---` });
         }
-        // unsupported types are silently skipped
       } catch {
         // don't fail the whole request if one doc can't be fetched
       }

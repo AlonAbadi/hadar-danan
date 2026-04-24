@@ -105,17 +105,47 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [analysis, setAnalysis] = useState<Analysis | null>(app.ai_analysis ?? null);
   const [analyzing, setAnalyzing] = useState(false);
   const [generatingClient, setGeneratingClient] = useState(false);
-  const [clientCode, setClientCode] = useState<string | null>(null);
+  const [clientCode, setClientCode] = useState<string | null>(app.generated_client_ts ?? null);
   const [clientCodeError, setClientCodeError] = useState<string | null>(null);
 
-  const [deploySlug, setDeploySlug] = useState<string>(
-    app.preview_url
-      ? (app.preview_url as string).replace("https://beegood-", "").replace(".vercel.app", "")
-      : ""
-  );
+  const [deploySlug, setDeploySlug] = useState<string>(() => {
+    if (app.preview_url) {
+      return (app.preview_url as string).replace("https://beegood-", "").replace(".vercel.app", "");
+    }
+    if (app.generated_client_ts) {
+      const m = (app.generated_client_ts as string).match(/name_en:\s*["']([^"']+)["']/);
+      return m?.[1] ?? "";
+    }
+    return "";
+  });
   const [deploying, setDeploying] = useState(false);
   const [deployUrl, setDeployUrl] = useState<string | null>(app.preview_url ?? null);
   const [deployError, setDeployError] = useState<string | null>(null);
+
+  const [orchestrating, setOrchestrating] = useState(false);
+  const [orchestrateResult, setOrchestrateResult] = useState<{ summary: string; paused_for_human: boolean; next_action?: string } | null>(null);
+  const [orchestrateError, setOrchestrateError] = useState<string | null>(null);
+  const [pipelineStatus, setPipelineStatus] = useState<string>(app.pipeline_status ?? "pending");
+  const [orchestrationLog, setOrchestrationLog] = useState<{ status: string; msg: string; ts: string }[]>(
+    Array.isArray(app.orchestration_log) ? app.orchestration_log : []
+  );
+
+  // Poll pipeline status every 5 seconds while orchestrating
+  useEffect(() => {
+    if (!orchestrating) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/admin/atelier/applications?id=${app.id}`);
+        const d = await res.json();
+        if (d.application) {
+          setPipelineStatus(d.application.pipeline_status ?? "pending");
+          setOrchestrationLog(Array.isArray(d.application.orchestration_log) ? d.application.orchestration_log : []);
+        }
+      } catch { /* silent */ }
+    }, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orchestrating]);
 
   useEffect(() => {
     if (app.ai_analysis) return; // already cached — skip API call
@@ -288,6 +318,34 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
     if (match?.[1] && !deploySlug) setDeploySlug(match[1]);
   }
 
+  async function handleOrchestrate() {
+    setOrchestrating(true);
+    setOrchestrateResult(null);
+    setOrchestrateError(null);
+    try {
+      const res = await fetch("/api/admin/atelier/orchestrate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ application_id: app.id }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setOrchestrateError(d.error ?? "שגיאה"); return; }
+      setOrchestrateResult({ summary: d.summary, paused_for_human: d.paused_for_human, next_action: d.next_action });
+      // Refresh status after completion
+      const refresh = await fetch(`/api/admin/atelier/applications?id=${app.id}`);
+      const rd = await refresh.json();
+      if (rd.application) {
+        setPipelineStatus(rd.application.pipeline_status ?? "pending");
+        setOrchestrationLog(Array.isArray(rd.application.orchestration_log) ? rd.application.orchestration_log : []);
+        if (rd.application.generated_client_ts) setClientCode(rd.application.generated_client_ts);
+      }
+    } catch {
+      setOrchestrateError("שגיאת רשת");
+    } finally {
+      setOrchestrating(false);
+    }
+  }
+
   async function uploadFile(file: File, folder: string): Promise<{ url: string; name: string } | null> {
     const fd = new FormData();
     fd.append("file", file);
@@ -380,6 +438,67 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
           <span style={{ color: "#2C323E" }}>·</span>
           <span>{app.phone}</span>
         </div>
+      </div>
+
+      {/* ── Orchestrator Panel ──────────────────────────────────────────── */}
+      <div style={{ ...s.card, borderColor: orchestrating ? "#C9964A" : pipelineStatus === "error" ? "#EA4335" : pipelineStatus === "awaiting_approval" || pipelineStatus === "deployed" ? "#34A85344" : "#2C323E" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#EDE9E1" }}>Orchestrator — ProjectManagerAgent</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const,
+              color: pipelineStatus === "error" ? "#EA4335" : pipelineStatus === "deployed" || pipelineStatus === "live" ? "#34A853" : pipelineStatus === "awaiting_approval" ? "#E8B94A" : "#9E9990",
+              background: pipelineStatus === "error" ? "rgba(234,67,53,0.1)" : pipelineStatus === "deployed" || pipelineStatus === "live" ? "rgba(52,168,83,0.1)" : pipelineStatus === "awaiting_approval" ? "rgba(232,185,74,0.1)" : "#1D2430",
+              padding: "3px 10px", borderRadius: 20,
+            }}>{pipelineStatus}</span>
+            <button
+              type="button"
+              onClick={handleOrchestrate}
+              disabled={orchestrating}
+              style={{
+                ...s.btn,
+                background: orchestrating ? "#2C323E" : "linear-gradient(135deg, #9B59B6, #7D3C98)",
+                color: orchestrating ? "#9E9990" : "#fff",
+                cursor: orchestrating ? "not-allowed" : "pointer",
+                padding: "10px 22px",
+                fontSize: 13,
+                whiteSpace: "nowrap" as const,
+              }}
+            >
+              {orchestrating ? "⚙️ מריץ..." : "⚙️ הרץ Orchestrator"}
+            </button>
+          </div>
+        </div>
+
+        {orchestrateError && (
+          <div style={{ color: "#EA4335", fontSize: 13, marginBottom: 10 }}>{orchestrateError}</div>
+        )}
+
+        {orchestrateResult && (
+          <div style={{ background: orchestrateResult.paused_for_human ? "rgba(232,185,74,0.06)" : "rgba(52,168,83,0.06)", border: `1px solid ${orchestrateResult.paused_for_human ? "#E8B94A33" : "#34A85333"}`, borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
+            <div style={{ fontSize: 13, color: "#EDE9E1", marginBottom: orchestrateResult.next_action ? 8 : 0 }}>{orchestrateResult.summary}</div>
+            {orchestrateResult.next_action && (
+              <div style={{ fontSize: 12, color: "#E8B94A", marginTop: 4 }}>⏳ הצעד הבא: {orchestrateResult.next_action}</div>
+            )}
+          </div>
+        )}
+
+        {orchestrationLog.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 180, overflowY: "auto" }}>
+            {[...orchestrationLog].reverse().map((entry, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, fontSize: 12, color: "#9E9990", alignItems: "flex-start" }}>
+                <span style={{ color: "#2C323E", whiteSpace: "nowrap" as const, flexShrink: 0 }}>
+                  {new Date(entry.ts).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <span style={{
+                  color: entry.status === "error" ? "#EA4335" : entry.status === "deployed" || entry.status === "live" ? "#34A853" : "#C9964A",
+                  minWidth: 80, flexShrink: 0,
+                }}>{entry.status}</span>
+                <span style={{ color: "#9E9990" }}>{entry.msg}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Send onboarding form */}

@@ -208,6 +208,20 @@ async function fulfillPurchase(
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
 
+  // Validate shared secret — rejects spoofed requests before any DB work
+  const webhookToken = process.env.CARDCOM_WEBHOOK_TOKEN;
+  if (webhookToken) {
+    const receivedToken = searchParams.get("wt");
+    if (receivedToken !== webhookToken) {
+      await createServerClient().from("error_logs").insert({
+        context: "api/cardcom/webhook GET",
+        error:   "invalid webhook token",
+        payload: { url: req.url },
+      });
+      return new Response("OK", { status: 200 }); // 200 to avoid Cardcom retries on our own requests
+    }
+  }
+
   // Cardcom sends lowprofilecode (lowercase) appended to our IndicatorUrl
   const lowProfileCode =
     searchParams.get("lowprofilecode") ?? searchParams.get("LowProfileCode");
@@ -326,6 +340,15 @@ export async function GET(req: NextRequest) {
 // Kept for backward compatibility.
 
 export async function POST(req: NextRequest) {
+  // Validate webhook token from query string
+  const webhookToken = process.env.CARDCOM_WEBHOOK_TOKEN;
+  if (webhookToken) {
+    const { searchParams } = new URL(req.url);
+    if (searchParams.get("wt") !== webhookToken) {
+      return new Response("OK", { status: 200 });
+    }
+  }
+
   let body: Record<string, string>;
   try {
     const text = await req.text();
