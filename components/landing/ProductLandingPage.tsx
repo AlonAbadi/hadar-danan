@@ -628,7 +628,6 @@ export default function ProductLandingPage({
                   referrerPolicy="strict-origin-when-cross-origin"
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
                   title="VSL"
-                  loading="lazy"
                 />
               </div>
             </div>
