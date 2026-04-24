@@ -129,6 +129,8 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const [orchestrationLog, setOrchestrationLog] = useState<{ status: string; msg: string; ts: string }[]>(
     Array.isArray(app.orchestration_log) ? app.orchestration_log : []
   );
+  const [orchestrateElapsed, setOrchestrateElapsed] = useState(0);
+  const orchestrateStartRef = useRef<number | null>(null);
 
   // Poll pipeline status every 5 seconds while orchestrating
   useEffect(() => {
@@ -145,6 +147,15 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
     }, 5000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orchestrating]);
+
+  // Elapsed-time ticker while orchestrating
+  useEffect(() => {
+    if (!orchestrating) { setOrchestrateElapsed(0); return; }
+    const t = setInterval(() => {
+      setOrchestrateElapsed(Math.floor((Date.now() - (orchestrateStartRef.current ?? Date.now())) / 1000));
+    }, 1000);
+    return () => clearInterval(t);
   }, [orchestrating]);
 
   useEffect(() => {
@@ -320,6 +331,8 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
 
   async function handleOrchestrate() {
     setOrchestrating(true);
+    setOrchestrateElapsed(0);
+    orchestrateStartRef.current = Date.now();
     setOrchestrateResult(null);
     setOrchestrateError(null);
     try {
@@ -465,10 +478,33 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 whiteSpace: "nowrap" as const,
               }}
             >
-              {orchestrating ? "⚙️ מריץ..." : "⚙️ הרץ Orchestrator"}
+              {orchestrating ? `⚙️ מריץ... ${orchestrateElapsed}s` : "⚙️ הרץ Orchestrator"}
             </button>
           </div>
         </div>
+
+        {orchestrating && (
+          <div style={{ background: "rgba(155,89,182,0.08)", border: "1px solid #9B59B644", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              <span style={{ fontSize: 18, animation: "spin 1.5s linear infinite", display: "inline-block" }}>⚙️</span>
+              <span style={{ fontSize: 13, color: "#EDE9E1", fontWeight: 600 }}>
+                {orchestrateElapsed < 15  ? "קורא נתוני הבקשה..." :
+                 orchestrateElapsed < 60  ? "קלוד כותב את lib/client.ts..." :
+                 orchestrateElapsed < 120 ? `ממשיך לכתוב... (${orchestrateElapsed}s — עוד כ-${120 - orchestrateElapsed}s)` :
+                                            `עוד רגע... (${orchestrateElapsed}s)`}
+              </span>
+            </div>
+            <div style={{ background: "#1D2430", borderRadius: 4, height: 4, overflow: "hidden" }}>
+              <div style={{
+                height: "100%",
+                background: "linear-gradient(90deg, #9B59B6, #7D3C98)",
+                width: `${Math.min(95, (orchestrateElapsed / 120) * 100)}%`,
+                transition: "width 1s linear",
+                borderRadius: 4,
+              }} />
+            </div>
+          </div>
+        )}
 
         {orchestrateError && (
           <div style={{ color: "#EA4335", fontSize: 13, marginBottom: 10 }}>{orchestrateError}</div>
