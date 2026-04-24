@@ -455,7 +455,7 @@ export const CLIENT = {
   try {
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 8000,
+      max_tokens: 5000,
       messages: [{ role: "user", content: prompt }],
     });
     const raw     = message.content[0].type === "text" ? message.content[0].text : "";
@@ -924,7 +924,7 @@ export async function POST(req: NextRequest) {
   {
     const { data: appCheck } = await sb
       .from("atelier_applications")
-      .select("pipeline_status, selected_palette, generated_content, name")
+      .select("*")
       .eq("id", application_id)
       .single();
 
@@ -950,33 +950,32 @@ export async function POST(req: NextRequest) {
       const genResult = await generateClientTsDirectly(appCheck, anthropic);
       if (genResult.error || !genResult.code) {
         const errMsg = genResult.error ?? "Unknown generation error";
-        const { data: logRow2 } = await sb.from("atelier_applications").select("orchestration_log").eq("id", application_id).single();
-        const log2: unknown[] = Array.isArray(logRow2?.orchestration_log) ? logRow2.orchestration_log : [];
         await sb.from("atelier_applications").update({
           pipeline_status: "error",
           error_detail: errMsg,
-          orchestration_log: [...log2, { status: "error", msg: errMsg, ts: new Date().toISOString() }],
         }).eq("id", application_id);
         return NextResponse.json({ ok: false, error: errMsg }, { status: 500 });
       }
 
-      // Validate
-      const validation = validateClientTs(genResult.code);
-
-      // Save to DB
-      const { data: logRow3 } = await sb.from("atelier_applications").select("orchestration_log").eq("id", application_id).single();
-      const log3: unknown[] = Array.isArray(logRow3?.orchestration_log) ? logRow3.orchestration_log : [];
+      // SAVE IMMEDIATELY — before any other step so Vercel timeout can't prevent it
       await sb.from("atelier_applications").update({
         generated_client_ts: genResult.code,
         pipeline_status: "awaiting_approval",
+      }).eq("id", application_id);
+
+      // Validate + update log (non-critical, best-effort)
+      const validation = validateClientTs(genResult.code);
+      const { data: logRow3 } = await sb.from("atelier_applications").select("orchestration_log").eq("id", application_id).single();
+      const log3: unknown[] = Array.isArray(logRow3?.orchestration_log) ? logRow3.orchestration_log : [];
+      await sb.from("atelier_applications").update({
         orchestration_log: [...log3, {
           status: "awaiting_approval",
-          msg: `client.ts generated (${genResult.code.length} chars). Validation: ${validation.valid ? "✓ passed" : `warnings: ${validation.errors?.join(", ")}`}`,
+          msg: `client.ts נשמר (${genResult.code.length} תווים). ולידציה: ${validation.valid ? "✓ עבר" : `אזהרות: ${validation.errors?.join(", ")}`}`,
           ts: new Date().toISOString(),
         }],
       }).eq("id", application_id);
 
-      // Notify admin
+      // Notify admin (non-critical, best-effort)
       try {
         const adminEmail = process.env.ADMIN_EMAIL;
         if (adminEmail) {
