@@ -916,6 +916,92 @@ export async function POST(req: NextRequest) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const baseUrl   = new URL(req.url).origin;
   const authHeader = req.headers.get("authorization") ?? "";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = supabase as any;
+
+  // ── Fast-path: awaiting_palette → skip agentic loop entirely ─────────────────
+  // The agentic loop adds 3 extra Claude calls (~45s overhead) which pushes total
+  // over Vercel's 300s limit. For this step we execute directly.
+  {
+    const { data: appCheck } = await sb
+      .from("atelier_applications")
+      .select("pipeline_status, selected_palette, generated_content, name")
+      .eq("id", application_id)
+      .single();
+
+    if (appCheck?.pipeline_status === "awaiting_palette") {
+      if (!appCheck.selected_palette) {
+        return NextResponse.json({
+          ok: true, iterations: 0,
+          summary: "בחר פלטת צבעים תחילה",
+          paused_for_human: true,
+          next_action: "Select a color palette in the admin UI, then run orchestrate again",
+        });
+      }
+
+      // Update status → generating_code
+      const { data: logRow } = await sb.from("atelier_applications").select("orchestration_log").eq("id", application_id).single();
+      const existingLog: unknown[] = Array.isArray(logRow?.orchestration_log) ? logRow.orchestration_log : [];
+      await sb.from("atelier_applications").update({
+        pipeline_status: "generating_code",
+        orchestration_log: [...existingLog, { status: "generating_code", msg: `Palette "${appCheck.selected_palette}" confirmed selected. Generating client.ts directly.`, ts: new Date().toISOString() }],
+      }).eq("id", application_id);
+
+      // Generate client.ts directly (no HTTP hop)
+      const genResult = await generateClientTsDirectly(appCheck, anthropic);
+      if (genResult.error || !genResult.code) {
+        const errMsg = genResult.error ?? "Unknown generation error";
+        const { data: logRow2 } = await sb.from("atelier_applications").select("orchestration_log").eq("id", application_id).single();
+        const log2: unknown[] = Array.isArray(logRow2?.orchestration_log) ? logRow2.orchestration_log : [];
+        await sb.from("atelier_applications").update({
+          pipeline_status: "error",
+          error_detail: errMsg,
+          orchestration_log: [...log2, { status: "error", msg: errMsg, ts: new Date().toISOString() }],
+        }).eq("id", application_id);
+        return NextResponse.json({ ok: false, error: errMsg }, { status: 500 });
+      }
+
+      // Validate
+      const validation = validateClientTs(genResult.code);
+
+      // Save to DB
+      const { data: logRow3 } = await sb.from("atelier_applications").select("orchestration_log").eq("id", application_id).single();
+      const log3: unknown[] = Array.isArray(logRow3?.orchestration_log) ? logRow3.orchestration_log : [];
+      await sb.from("atelier_applications").update({
+        generated_client_ts: genResult.code,
+        generated_client_ts_at: new Date().toISOString(),
+        pipeline_status: "awaiting_approval",
+        orchestration_log: [...log3, {
+          status: "awaiting_approval",
+          msg: `client.ts generated (${genResult.code.length} chars). Validation: ${validation.valid ? "✓ passed" : `warnings: ${validation.errors?.join(", ")}`}`,
+          ts: new Date().toISOString(),
+        }],
+      }).eq("id", application_id);
+
+      // Notify admin
+      try {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (adminEmail) {
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          const fromEmail = process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online";
+          await resend.emails.send({
+            from: `BeeGood Atelier <${fromEmail}>`,
+            to: adminEmail,
+            subject: `✅ client.ts מוכן — ${appCheck.name}`,
+            html: `<div dir="rtl" style="font-family:sans-serif;padding:20px"><h2 style="color:#C9964A">BeeGood Atelier</h2><p>client.ts נוצר בהצלחה עבור <strong>${appCheck.name}</strong>.<br/>גש לממשק האדמין כדי לבדוק ולפרסם.</p></div>`,
+          });
+        }
+      } catch { /* non-fatal */ }
+
+      return NextResponse.json({
+        ok: true, iterations: 1,
+        summary: `client.ts נוצר בהצלחה עבור ${appCheck.name}. ${validation.valid ? "עבר ולידציה ✓" : "יש אזהרות — בדוק לפני פרסום"}`,
+        paused_for_human: true,
+        next_action: "Review the generated client.ts in the admin UI and click Deploy",
+      });
+    }
+  }
+  // ── End fast-path ─────────────────────────────────────────────────────────────
 
   const messages: Anthropic.MessageParam[] = [
     {
