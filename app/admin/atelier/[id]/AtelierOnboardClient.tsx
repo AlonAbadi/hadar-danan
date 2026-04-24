@@ -476,12 +476,30 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
 
         {orchestrateResult && (
           <div style={{ background: orchestrateResult.paused_for_human ? "rgba(232,185,74,0.06)" : "rgba(52,168,83,0.06)", border: `1px solid ${orchestrateResult.paused_for_human ? "#E8B94A33" : "#34A85333"}`, borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
-            <div style={{ fontSize: 13, color: "#EDE9E1", marginBottom: orchestrateResult.next_action ? 8 : 0 }}>{orchestrateResult.summary}</div>
+            <div style={{ fontSize: 13, color: "#EDE9E1", marginBottom: 8 }}>{orchestrateResult.summary}</div>
             {orchestrateResult.next_action && (
-              <div style={{ fontSize: 12, color: "#E8B94A", marginTop: 4 }}>⏳ הצעד הבא: {orchestrateResult.next_action}</div>
+              <div style={{ fontSize: 12, color: "#E8B94A" }}>⏳ {orchestrateResult.next_action}</div>
             )}
           </div>
         )}
+
+        {/* Contextual next-step hint based on pipeline status */}
+        {!orchestrateResult && (() => {
+          const hints: Record<string, string> = {
+            pending:             "לחץ הרץ Orchestrator כדי להתחיל",
+            onboarding_complete: "לחץ הרץ Orchestrator — יתחיל ניתוח ויצירת תוכן",
+            awaiting_palette:    "בחר פלטת צבעים למטה, ואז לחץ הרץ Orchestrator שוב",
+            awaiting_approval:   "client.ts מוכן — גלול למטה לאישור ופרסום",
+            deployed:            "האתר פורסם ✓ — הגדר דומיין + Supabase + env vars",
+            live:                "האתר חי ✓",
+          };
+          const hint = hints[pipelineStatus];
+          return hint ? (
+            <div style={{ fontSize: 12, color: "#E8B94A", background: "rgba(232,185,74,0.06)", border: "1px solid #E8B94A33", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+              ⏳ {hint}
+            </div>
+          ) : null;
+        })()}
 
         {orchestrationLog.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 180, overflowY: "auto" }}>
@@ -996,8 +1014,8 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
             </div>
           </div>
 
-          {/* Generate client.ts */}
-          <div style={s.card}>
+          {/* Generate client.ts — manual fallback, hidden when orchestrator is managing */}
+          {pipelineStatus === "pending" && <div style={s.card}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={s.section}>צור lib/client.ts</div>
               {!selectedPalette && (
@@ -1062,7 +1080,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 </button>
               </>
             )}
-          </div>
+          </div>}
         </>
       )}
 
