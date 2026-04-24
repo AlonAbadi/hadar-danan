@@ -970,6 +970,26 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 </button>
               ))}
             </div>
+
+            {/* Orchestrate button next to palette — the natural next step */}
+            {pipelineStatus !== "pending" && selectedPalette && (
+              <button
+                onClick={handleOrchestrate}
+                disabled={orchestrating}
+                style={{
+                  ...s.btn,
+                  marginTop: 20,
+                  width: "100%",
+                  padding: "14px",
+                  fontSize: 15,
+                  background: orchestrating ? "#2C323E" : "linear-gradient(135deg, #9B59B6, #7D3C98)",
+                  color: orchestrating ? "#9E9990" : "#fff",
+                  cursor: orchestrating ? "not-allowed" : "pointer",
+                }}
+              >
+                {orchestrating ? `⚙️ יוצר client.ts... ${orchestrateElapsed}s` : "⚙️ המשך — צור client.ts ←"}
+              </button>
+            )}
           </div>
 
           {/* Copy */}

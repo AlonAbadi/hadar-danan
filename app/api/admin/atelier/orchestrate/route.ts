@@ -390,10 +390,15 @@ async function executeTool(
       if (!app.generated_content) return { error: "No generated_content found — run generate_content first" };
       if (!app.selected_palette) return { error: "No selected_palette — admin must select a color palette first" };
 
-      const res = await fetch(`${baseUrl}/api/admin/atelier/generate-client`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", authorization: authHeader },
-        body: JSON.stringify({
+      const abort = new AbortController();
+      const abortTimer = setTimeout(() => abort.abort(), 240_000);
+      let res: Response;
+      try {
+        res = await fetch(`${baseUrl}/api/admin/atelier/generate-client`, {
+          method: "POST",
+          signal: abort.signal,
+          headers: { "Content-Type": "application/json", authorization: authHeader },
+          body: JSON.stringify({
           app: {
             id: app.id,
             name: app.name,
@@ -414,6 +419,12 @@ async function executeTool(
           selectedPalette: app.selected_palette,
         }),
       });
+      } catch (err: unknown) {
+        clearTimeout(abortTimer);
+        const msg = err instanceof Error ? err.message : String(err);
+        return { error: `generate-client timed out or failed: ${msg}` };
+      }
+      clearTimeout(abortTimer);
       const json = await res.json();
       if (!res.ok) return { error: json.error ?? "generate-client failed" };
       return { ok: true, code: json.code };
