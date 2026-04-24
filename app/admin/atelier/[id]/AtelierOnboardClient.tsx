@@ -979,19 +979,18 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
             <div style={{ fontSize: 16, fontWeight: 700, color: "#34A853", marginBottom: 16 }}>✓ תוכן נוצר — השלבים הבאים</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {[
-                { text: `git clone atelier-client-template → ${app.name.toLowerCase().replace(/\s/g, "-")}`, mono: true },
-                { text: "צור lib/client.ts בלחיצה על הכפתור למטה ←" },
-                { text: "העלה תמונות ל-/public" },
-                { text: "צור Supabase project חדש + הרץ migrations" },
-                { text: "צור Vercel project + הגדר env vars" },
-                { text: "הגדר דומיין + DNS" },
-                { text: "הגדר Resend domain + DNS records" },
-                { text: "הגדר Google OAuth" },
-                { text: "קבל Cardcom terminal מהלקוחה" },
+                { text: "בחר פלטה ← לחץ Orchestrate שוב ← אשר client.ts", auto: true },
+                { text: "לחץ פרסם — ריפו + Vercel נוצרים אוטומטית", auto: true },
+                { text: "העלה תמונת Hero + OG image (ידני)", manual: true },
+                { text: "צור Supabase project חדש + הרץ migrations (ידני)", manual: true },
+                { text: "הגדר דומיין + DNS ב-Vercel (ידני)", manual: true },
+                { text: "הגדר Resend domain + DNS records (ידני)", manual: true },
+                { text: "הגדר Google OAuth (ידני)", manual: true },
+                { text: "קבל Cardcom terminal מהלקוחה (ידני)", manual: true },
               ].map((step, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, fontSize: 13 }}>
-                  <span style={{ color: "#C9964A", fontWeight: 700, minWidth: 20 }}>{i + 1}.</span>
-                  <span style={{ fontFamily: step.mono ? "monospace" : "inherit", color: step.mono ? "#E8B94A" : "#9E9990" }}>{step.text}</span>
+                <div key={i} style={{ display: "flex", gap: 10, fontSize: 13, alignItems: "flex-start" }}>
+                  <span style={{ color: step.auto ? "#34A853" : "#C9964A", fontWeight: 700, minWidth: 20 }}>{i + 1}.</span>
+                  <span style={{ color: step.auto ? "#34A853" : "#9E9990" }}>{step.text}</span>
                 </div>
               ))}
             </div>
