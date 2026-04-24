@@ -2,7 +2,6 @@ import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { WorkshopCTA } from "./WorkshopCTA";
 import { NextWorkshopBadge } from "./NextWorkshopBadge";
-import { AbandonCheckoutPopup } from "@/components/landing/AbandonCheckoutPopup";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
@@ -47,7 +46,6 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         { name: "דף הבית", url: APP_URL },
         { name: "סדנה יום אחד", url: `${APP_URL}/workshop` },
       ]} />
-      <AbandonCheckoutPopup product="workshop" />
       <ViewContentTracker product="workshop_1080" value={1080} />
       <ProductLandingPage
         productName="סדנה יום אחד"

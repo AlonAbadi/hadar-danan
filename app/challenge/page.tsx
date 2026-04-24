@@ -3,7 +3,6 @@ import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
 import { NextChallengeBadge } from "./NextChallengeBadge";
-import { AbandonCheckoutPopup } from "@/components/landing/AbandonCheckoutPopup";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
@@ -48,7 +47,6 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         { name: "דף הבית", url: APP_URL },
         { name: "אתגר 7 הימים", url: `${APP_URL}/challenge` },
       ]} />
-      <AbandonCheckoutPopup product="challenge" />
       <ViewContentTracker product="challenge_197" value={197} />
       <ProductLandingPage
         productName="אתגר 7 הימים"
