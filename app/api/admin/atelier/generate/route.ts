@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import mammoth from "mammoth";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const maxDuration = 300;
+
 function isAdminAuthorized(req: NextRequest): boolean {
   const auth = req.headers.get("authorization") ?? "";
   if (!auth.startsWith("Basic ")) return false;
