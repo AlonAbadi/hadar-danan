@@ -118,6 +118,19 @@ export function AtelierLandingClient({ faqs }: Props) {
           <p className="hero-sub">
             לא עוד קולאבים. לא עוד מוניטיזציה שמרגישה זרה. מקום בו אנחנו לוקחים את הקול שלך, מדייקים אותו, ובונים עולם שלם סביבו - אסטרטגיה, נרטיב, ופלטפורמה דיגיטלית שמבטאת מי שאת באמת.
           </p>
+
+          <div style={{ maxWidth: 260, margin: '20px auto' }}>
+            <div style={{ position: 'relative', paddingTop: '177.78%', borderRadius: 16, overflow: 'hidden', background: '#141820' }}>
+              <iframe
+                src="https://player.vimeo.com/video/1185920691?badge=0&autopause=0&loop=0&player_id=0&app_id=58479&cc=0"
+                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                title="beegood atelier"
+              />
+            </div>
+          </div>
+
           <a href="#form" className="hero-cta">לבדיקת התאמה</a>
           <p className="hero-note">20 דקות שיחה. בלי עלות. בלי התחייבות.</p>
         </div>
