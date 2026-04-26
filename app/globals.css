@@ -614,7 +614,7 @@ html.a11y-reading-mode img { max-width: 100% !important; }
 @media (max-width: 860px) {
   .shift-grid { grid-template-columns: 1fr; gap: 16px; overflow: visible; }
   .shift-col { overflow: visible; }
-  .shift-arrow { transform: rotate(90deg); font-size: 24px; padding: 4px 0; }
+  .shift-arrow { transform: rotate(-90deg); font-size: 24px; padding: 4px 0; }
 }
 
 /* What is atelier */
