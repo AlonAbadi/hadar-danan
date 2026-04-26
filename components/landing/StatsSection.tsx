@@ -3,9 +3,9 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 
 const STATS = [
-  { value: 3500, label: "עסקים ליוינו" },
-  { value: 97,   label: "% ממליצים"    },
-  { value: 4,    label: "שנות ניסיון"  },
+  { value: 3500,  label: "לקוחות" },
+  { value: 50000, label: "תכנים"  },
+  { value: 80,    label: "תחומים" },
 ] as const;
 
 function easeQuarticOut(t: number): number {
