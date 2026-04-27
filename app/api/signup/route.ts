@@ -3,6 +3,23 @@ import { createServerClient } from "@/lib/supabase/server";
 import { SignupSchema } from "@/lib/validations";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendCapiEvent } from "@/lib/meta-capi";
+import { Resend } from "resend";
+
+function notifyNewLead(name: string, email: string, phone?: string | null, utmSource?: string | null) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  resend.emails.send({
+    from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
+    to: "alonabadi9@gmail.com",
+    subject: `ליד חדש: ${name}`,
+    html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6">
+      <h2 style="color:#C9964A">ליד חדש נכנס 🎯</h2>
+      <p><strong>שם:</strong> ${name}</p>
+      <p><strong>אימייל:</strong> ${email}</p>
+      ${phone ? `<p><strong>טלפון:</strong> ${phone}</p>` : ""}
+      ${utmSource ? `<p><strong>מקור:</strong> ${utmSource}</p>` : ""}
+    </div>`,
+  }).catch(() => {});
+}
 
 export async function POST(req: NextRequest) {
   // ── Rate limit: 5 requests / minute per IP ──────────────
@@ -160,6 +177,8 @@ export async function POST(req: NextRequest) {
     const fbp = req.cookies.get("_fbp")?.value;
     const fbc = req.cookies.get("_fbc")?.value;
     const ua  = req.headers.get("user-agent") ?? undefined;
+
+    notifyNewLead(name, email, phone, utm_source);
 
     await sendCapiEvent({
       eventName: "Lead",

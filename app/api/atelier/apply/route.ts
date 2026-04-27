@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendCapiEvent } from "@/lib/meta-capi";
+import { Resend } from "resend";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
@@ -85,6 +86,20 @@ export async function POST(req: NextRequest) {
     `"${story.slice(0, 300)}${story.length > 300 ? "..." : ""}"`;
 
   console.info("[atelier/apply] New application #" + data.id + "\n" + waMessage);
+
+  // Email notification to Hadar
+  new Resend(process.env.RESEND_API_KEY).emails.send({
+    from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
+    to: "alonabadi9@gmail.com",
+    subject: `בקשת atelier חדשה: ${name}`,
+    html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6">
+      <h2 style="color:#C9964A">בקשת atelier חדשה ✨</h2>
+      <p><strong>שם:</strong> ${name}</p>
+      <p><strong>טלפון:</strong> ${phone}</p>
+      <p><strong>אינסטגרם:</strong> ${instagram}</p>
+      <p><strong>סיפור:</strong><br/>${story.replace(/\n/g, "<br/>")}</p>
+    </div>`,
+  }).catch(() => {});
 
   const fbp             = req.cookies.get("_fbp")?.value;
   const fbc             = req.cookies.get("_fbc")?.value;
