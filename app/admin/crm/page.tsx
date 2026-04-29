@@ -452,6 +452,82 @@ function RemindersTab() {
   );
 }
 
+// ── Quiz Distribution ─────────────────────────────────────────────────────────
+
+const PRODUCT_LABELS: Record<string, string> = {
+  free_training: 'הדרכה חינמית',
+  challenge:     'אתגר 7 ימים',
+  workshop:      'סדנה יום אחד',
+  course:        'קורס דיגיטלי',
+  strategy:      'פגישת אסטרטגיה',
+  premium:       'יום צילום פרמיום',
+  partnership:   'שותפות אסטרטגית',
+};
+
+const PRODUCT_COLORS: Record<string, string> = {
+  free_training: '#4285F4',
+  challenge:     '#34A853',
+  workshop:      '#FBBC05',
+  course:        '#C9964A',
+  strategy:      '#E8B94A',
+  premium:       '#EA4335',
+  partnership:   '#9C27B0',
+};
+
+interface QuizRow { product: string; count: number; percent: number; }
+
+function QuizDistribution() {
+  const [total, setTotal]   = useState<number | null>(null);
+  const [rows, setRows]     = useState<QuizRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/quiz-stats')
+      .then(r => r.json())
+      .then(d => { setTotal(d.total ?? 0); setRows(d.distribution ?? []); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div style={{ ...cardStyle, color: '#9E9990', fontSize: 13 }}>טוען התפלגות קוויז...</div>
+  );
+  if (!rows.length) return null;
+
+  return (
+    <div style={{ ...cardStyle, marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 18 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>התפלגות תוצאות קוויז</div>
+        <div style={{ fontSize: 13, color: '#9E9990' }}>{total?.toLocaleString()} מילאו</div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {rows.map(r => {
+          const color = PRODUCT_COLORS[r.product] ?? '#9E9990';
+          const label = PRODUCT_LABELS[r.product] ?? r.product;
+          return (
+            <div key={r.product}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#EDE9E1' }}>{label}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color }}>
+                  {r.count.toLocaleString()} · {r.percent}%
+                </span>
+              </div>
+              <div style={{ height: 6, borderRadius: 9999, background: '#1D2430', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${r.percent}%`,
+                  borderRadius: 9999,
+                  background: color,
+                  transition: 'width 0.6s ease',
+                }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
@@ -487,6 +563,9 @@ export default function CrmPage() {
         <div style={{ fontSize: 22, fontWeight: 800, color: '#EDE9E1' }}>CRM</div>
         <div style={{ fontSize: 13, color: '#9E9990', marginTop: 2 }}>ניהול לקוחות ותהליכי מכירה</div>
       </div>
+
+      {/* Quiz distribution */}
+      <QuizDistribution />
 
       {/* Tab bar */}
       <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid #2C323E', marginBottom: 24 }}>
