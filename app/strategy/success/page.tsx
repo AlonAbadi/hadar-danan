@@ -14,10 +14,9 @@ export default function StrategySuccessPage() {
       emoji="🎯"
       confirmationTitle="התשלום התקבל!"
       confirmationDesc="קיבלנו את הרכישה שלך. ניצור איתך קשר תוך 24 שעות לתיאום מועד הפגישה."
-      step2Title="ניצור קשר לתיאום"
       nextStepLabel="חזור לדף הבית"
       nextStepHref="/"
-      nextStepDesc="נחזור אליך תוך 24 שעות לתיאום המועד"
+      nextStepDesc="נשמח לדבר איתך בקרוב!"
       trackingProduct="strategy_4000"
       trackingValue={4000}
     />
