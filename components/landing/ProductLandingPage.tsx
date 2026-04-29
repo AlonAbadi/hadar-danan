@@ -73,10 +73,11 @@ export interface ProductLandingPageProps {
 
   whatsappNumber?: string;
 
-  ctaLabel?:         string;
-  ctaSlot?:          React.ReactNode;
-  priceSectionSlot?: React.ReactNode;
-  bottomSlot?:       React.ReactNode;
+  ctaLabel?:            string;
+  displayPriceOverride?: string;
+  ctaSlot?:             React.ReactNode;
+  priceSectionSlot?:    React.ReactNode;
+  bottomSlot?:          React.ReactNode;
 }
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -530,6 +531,7 @@ export default function ProductLandingPage({
   finalTitle, finalSub,
   whatsappNumber,
   ctaLabel: ctaLabelProp,
+  displayPriceOverride,
   ctaSlot, priceSectionSlot, bottomSlot,
 }: ProductLandingPageProps) {
 
@@ -582,7 +584,7 @@ export default function ProductLandingPage({
   const showPriceCard  = price > 0 && !priceSectionSlot;
   const showMicro      = showPriceCard && !hideMicroCommitment && questions.length > 0;
   const dailyPrice     = (price / 365).toFixed(0);
-  const displayPrice   = price === 0 ? 'חינם' : `₪${price.toLocaleString('he-IL')}`;
+  const displayPrice   = displayPriceOverride ?? (price === 0 ? 'חינם' : `₪${price.toLocaleString('he-IL')}`);
 
   const ctaLabel = ctaLabelProp ?? (price === 0 ? 'צפה עכשיו חינם' : `להצטרפות - ${displayPrice}`);
 

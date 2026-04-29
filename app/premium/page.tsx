@@ -137,6 +137,9 @@ export default async function PremiumPage() {
       finalTitle="מוכן/ת ל-16 סרטונים שמשנים את העסק?"
       finalSub="מקומות מוגבלים - יום צילום אחד בשבוע בלבד."
 
+      ctaLabel="לרכישה - ₪14,000 + מע״מ"
+      displayPriceOverride="₪14,000 + מע״מ"
+
       whatsappNumber={whatsappPhone}
 
       hideMicroCommitment={false}
