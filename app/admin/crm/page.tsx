@@ -476,6 +476,52 @@ const PRODUCT_COLORS: Record<string, string> = {
 
 interface QuizRow { product: string; count: number; percent: number; }
 
+function PieChart({ rows }: { rows: QuizRow[] }) {
+  const size = 140;
+  const r = 54;
+  const cx = size / 2;
+  const cy = size / 2;
+
+  let cumulative = 0;
+  const slices = rows.map(row => {
+    const startAngle = cumulative;
+    const angle = (row.percent / 100) * 360;
+    cumulative += angle;
+    return { ...row, startAngle, angle };
+  });
+
+  function polarToXY(angleDeg: number, radius: number) {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
+  }
+
+  function slicePath(startAngle: number, angle: number) {
+    if (angle >= 359.99) {
+      return `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.001} ${cy - r} Z`;
+    }
+    const start = polarToXY(startAngle, r);
+    const end   = polarToXY(startAngle + angle, r);
+    const large = angle > 180 ? 1 : 0;
+    return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${large} 1 ${end.x} ${end.y} Z`;
+  }
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      {slices.map(s => (
+        <path
+          key={s.product}
+          d={slicePath(s.startAngle, s.angle)}
+          fill={PRODUCT_COLORS[s.product] ?? '#9E9990'}
+          stroke="#141820"
+          strokeWidth={2}
+        />
+      ))}
+      {/* Centre hole */}
+      <circle cx={cx} cy={cy} r={28} fill="#141820" />
+    </svg>
+  );
+}
+
 function QuizDistribution() {
   const [total, setTotal]   = useState<number | null>(null);
   const [rows, setRows]     = useState<QuizRow[]>([]);
@@ -499,30 +545,39 @@ function QuizDistribution() {
         <div style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>התפלגות תוצאות קוויז</div>
         <div style={{ fontSize: 13, color: '#9E9990' }}>{total?.toLocaleString()} מילאו</div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {rows.map(r => {
-          const color = PRODUCT_COLORS[r.product] ?? '#9E9990';
-          const label = PRODUCT_LABELS[r.product] ?? r.product;
-          return (
-            <div key={r.product}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#EDE9E1' }}>{label}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color }}>
-                  {r.count.toLocaleString()} · {r.percent}%
-                </span>
+
+      {/* Pie + bars side by side */}
+      <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+        <PieChart rows={rows} />
+
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {rows.map(r => {
+            const color = PRODUCT_COLORS[r.product] ?? '#9E9990';
+            const label = PRODUCT_LABELS[r.product] ?? r.product;
+            return (
+              <div key={r.product}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#EDE9E1' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0, display: 'inline-block' }} />
+                    {label}
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color }}>
+                    {r.count.toLocaleString()} · {r.percent}%
+                  </span>
+                </div>
+                <div style={{ height: 5, borderRadius: 9999, background: '#1D2430', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${r.percent}%`,
+                    borderRadius: 9999,
+                    background: color,
+                    transition: 'width 0.6s ease',
+                  }} />
+                </div>
               </div>
-              <div style={{ height: 6, borderRadius: 9999, background: '#1D2430', overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%',
-                  width: `${r.percent}%`,
-                  borderRadius: 9999,
-                  background: color,
-                  transition: 'width 0.6s ease',
-                }} />
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
