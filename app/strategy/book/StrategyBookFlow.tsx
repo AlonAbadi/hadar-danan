@@ -1,66 +1,68 @@
 "use client";
 
-import { useState } from "react";
-import { trackProductLead } from "@/lib/analytics";
-import { BookingForm, type BookingSuccessData } from "./BookingForm";
+import { useState, useEffect } from "react";
+import { getSessionUser } from "@/lib/quiz-session";
+
+function getCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  return document.cookie.split("; ").find((c) => c.startsWith(`${name}=`))?.split("=")[1];
+}
 
 interface Props {
-  bookedSlots:   { slot_date: string; slot_time: string }[];
   price:         string;
-  credit:        number;
   whatsappPhone: string;
 }
 
-export function StrategyBookFlow({ bookedSlots, price, credit, whatsappPhone }: Props) {
-  const [phase, setPhase]     = useState<"booking" | "payment">("booking");
-  const [booked, setBooked]   = useState<BookingSuccessData | null>(null);
+export function StrategyBookFlow({ price, whatsappPhone }: Props) {
+  const [form, setForm]       = useState({ name: "", email: "", phone: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
 
   const listPrice = Number(price);
-  const toPay     = Math.max(0, listPrice - credit);
 
-  function handleBooked(data: BookingSuccessData) {
-    setBooked(data);
-    setPhase("payment");
+  useEffect(() => {
+    const user = getSessionUser();
+    if (user) setForm({ name: user.name, email: user.email, phone: user.phone });
+  }, []);
 
-    trackProductLead("strategy", data.bookingId);
-    fetch("/api/meta-event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        eventName:        "Lead",
-        eventId:          data.bookingId,
-        userId:           data.userId ?? undefined,
-        contentName:      "strategy",
-        productEventName: "LeadStrategy",
-        value:            4000,
-        currency:         "ILS",
-      }),
-    }).catch(() => {});
-  }
-
-  async function handlePayment() {
-    if (!booked?.userId) return;
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true);
     setError(null);
+
     try {
-      const res = await fetch("/api/checkout", {
+      const signupRes = await fetch("/api/signup", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ product: "strategy_4000", user_id: booked.userId }),
+        body:    JSON.stringify({
+          name:         form.name,
+          email:        form.email,
+          phone:        form.phone,
+          anonymous_id: getCookie("anon_id"),
+        }),
       });
 
-      if (res.status === 503) {
-        const msg = encodeURIComponent(
-          `היי הדר! קבעתי פגישת אסטרטגיה ל-${booked.date} ב-${booked.time} ורוצה לסיים את התשלום`
-        );
+      if (!signupRes.ok) {
+        setError("שגיאה, נסה שוב");
+        return;
+      }
+
+      const { user_id } = await signupRes.json();
+
+      const checkoutRes = await fetch("/api/checkout", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ product: "strategy_4000", user_id }),
+      });
+
+      if (checkoutRes.status === 503) {
+        const msg = encodeURIComponent("היי הדר! אני מעוניין/ת בפגישת אסטרטגיה ורוצה להתקדם לתשלום");
         window.open(`https://wa.me/${whatsappPhone}?text=${msg}`, "_blank");
         return;
       }
 
-      if (res.ok) {
-        const { url } = await res.json();
+      if (checkoutRes.ok) {
+        const { url } = await checkoutRes.json();
         if (url) { window.location.href = url; return; }
       }
 
@@ -72,72 +74,60 @@ export function StrategyBookFlow({ bookedSlots, price, credit, whatsappPhone }: 
     }
   }
 
-  // ── Step 1: Booking ───────────────────────────────────────────
-  if (phase === "booking") {
-    return <BookingForm bookedSlots={bookedSlots} onSuccess={handleBooked} />;
-  }
-
-  // ── Step 2: Payment ───────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5" dir="rtl">
 
-      {/* Booking confirmation */}
-      <div
-        className="rounded-2xl p-5 flex items-start gap-4"
-        style={{ background: "rgba(201,150,74,0.06)", border: "1px solid rgba(201,150,74,0.2)" }}
-      >
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-          style={{ background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.3)" }}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="#C9964A" strokeWidth={2.5} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
+      {[
+        { id: "name",  label: "שם מלא",  type: "text",  placeholder: "ישראל ישראלי" },
+        { id: "email", label: "אימייל",   type: "email", placeholder: "israel@example.com" },
+        { id: "phone", label: "טלפון",    type: "tel",   placeholder: "0501234567" },
+      ].map(({ id, label, type, placeholder }) => (
+        <div key={id} className="flex flex-col gap-1">
+          <label htmlFor={id} className="text-sm font-medium" style={{ color: "#9E9990" }}>
+            {label}
+          </label>
+          <input
+            id={id}
+            type={type}
+            placeholder={placeholder}
+            required
+            value={form[id as keyof typeof form]}
+            onChange={(e) => setForm((f) => ({ ...f, [id]: e.target.value }))}
+            dir={type === "email" || type === "tel" ? "ltr" : "rtl"}
+            className="w-full rounded-xl border px-4 py-3 text-base outline-none transition"
+            style={{
+              background:   "rgba(255,255,255,0.06)",
+              borderColor:  "rgba(201,150,74,0.2)",
+              color:        "#EDE9E1",
+            }}
+          />
         </div>
-        <div className="flex flex-col gap-1">
-          <p className="font-black" style={{ color: "#EDE9E1" }}>הפגישה נקבעה!</p>
-          <p className="text-sm" style={{ color: "#9E9990" }}>{booked?.date} · {booked?.time}</p>
-          <p className="text-xs mt-0.5" style={{ color: "#9E9990" }}>אישור ישלח לאימייל לאחר התשלום</p>
-        </div>
-      </div>
+      ))}
 
-      {/* Payment card */}
       <div
-        className="rounded-2xl p-6 flex flex-col gap-4"
+        className="rounded-2xl p-5 flex justify-between items-center"
         style={{ background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid rgba(201,150,74,0.16)" }}
       >
-        <div
-          className="flex justify-between items-center pb-4"
-          style={{ borderBottom: "1px solid #2C323E" }}
-        >
-          <span style={{ color: "#9E9990" }}>פגישת אסטרטגיה · 90 דקות</span>
-          <div className="text-right">
-            {credit > 0 && (
-              <p className="text-xs line-through" style={{ color: "#9E9990" }}>
-                ₪{listPrice.toLocaleString("he-IL")}
-              </p>
-            )}
-            <p className="font-black text-2xl" style={{ color: "#EDE9E1" }}>
-              ₪{toPay.toLocaleString("he-IL")}
-            </p>
-          </div>
-        </div>
-
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-
-        <button
-          onClick={handlePayment}
-          disabled={loading}
-          className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] disabled:opacity-60 btn-cta-gold"
-        >
-          {loading ? "מעביר לתשלום..." : `לתשלום ₪${toPay.toLocaleString("he-IL")} ←`}
-        </button>
-
-        <p className="text-center text-sm font-semibold" style={{ color: "rgba(201,150,74,0.8)" }}>
-          ✓ לא פיצחנו בפגישה הראשונה? פגישה נוספת עלינו
-        </p>
+        <span style={{ color: "#9E9990" }}>פגישת אסטרטגיה · 90 דקות</span>
+        <span className="font-black text-2xl" style={{ color: "#EDE9E1" }}>
+          ₪{listPrice.toLocaleString("he-IL")}
+        </span>
       </div>
 
-    </div>
+      {error && <p className="text-red-400 text-sm">{error}</p>}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] disabled:opacity-60 btn-cta-gold"
+      >
+        {loading ? "מעביר לתשלום..." : `לתשלום ₪${listPrice.toLocaleString("he-IL")} ←`}
+      </button>
+
+      <p className="text-center text-sm font-semibold" style={{ color: "rgba(201,150,74,0.8)" }}>
+        ✓ לא פיצחנו בפגישה הראשונה? פגישה נוספת עלינו
+      </p>
+
+    </form>
   );
 }

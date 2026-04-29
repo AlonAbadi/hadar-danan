@@ -1,27 +1,12 @@
 import Link from "next/link";
-import { createServerClient } from "@/lib/supabase/server";
 import { StrategyBookFlow } from "./StrategyBookFlow";
-import { getUserCredit } from "@/lib/credit";
 
 export const metadata = {
-  title: "קביעת פגישת אסטרטגיה | הדר דנן",
-  description: "בחר/י מועד נוח לפגישת אסטרטגיה אחד-על-אחד - 90 דקות, תוכנית שנה קדימה.",
+  title: "פגישת אסטרטגיה | הדר דנן",
+  description: "פגישת אסטרטגיה אחד-על-אחד של 90 דקות. לאחר התשלום ניצור קשר לתיאום המועד.",
 };
 
-export default async function BookingPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ email?: string }>;
-}) {
-  const { email = "" } = await searchParams;
-  const credit = email ? await getUserCredit(email) : 0;
-
-  const supabase = createServerClient();
-  const { data: bookedSlots } = await supabase
-    .from("bookings")
-    .select("slot_date, slot_time")
-    .eq("status", "confirmed");
-
+export default async function BookingPage() {
   const price         = process.env.NEXT_PUBLIC_PRICE_CALL ?? "4000";
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "";
 
@@ -50,11 +35,11 @@ export default async function BookingPage({
           <div className="flex flex-col gap-4">
 
             <h1 className="text-3xl md:text-4xl font-black" style={{ color: "#EDE9E1" }}>
-              קבע/י פגישת אסטרטגיה
+              פגישת אסטרטגיה
             </h1>
             <p className="text-lg leading-relaxed max-w-lg" style={{ color: "#9E9990" }}>
               שיחה אחד-על-אחד של 90 דקות שבונה את מפת הדרכים השיווקית של העסק שלך.
-              מה שבונים ביחד — מוכן ליישום מיד למחרת.
+              לאחר התשלום ניצור איתך קשר לתיאום המועד.
             </p>
 
             {/* Guarantee */}
@@ -63,11 +48,8 @@ export default async function BookingPage({
             </p>
           </div>
 
-          {/* Two-step flow: pick slot → pay */}
           <StrategyBookFlow
-            bookedSlots={bookedSlots ?? []}
             price={price}
-            credit={credit}
             whatsappPhone={whatsappPhone}
           />
 
