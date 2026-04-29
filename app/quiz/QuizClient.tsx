@@ -112,6 +112,14 @@ const PRODUCTS: Product[] = [
   { id: "partnership",   href: "/partnership", name: "שותפות אסטרטגית",   price: "10,000-30,000 ש\"ח" },
 ];
 
+const PRODUCT_VIMEO: Record<string, string> = {
+  free_training: "1184732776",
+  challenge:     "1184733084",
+  workshop:      "1186650827",
+  strategy:      "1184732846",
+  premium:       "1184560999",
+};
+
 const PRODUCT_VALUE: Record<string, number> = {
   free_training: 0,
   challenge:     197,
@@ -987,47 +995,33 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
         </div>
 
         {/* 8. Hero card */}
-        <div
-          style={{
-            margin: "12px 16px 0",
-            borderRadius: 14,
-            overflow: "hidden",
-            position: "relative",
-            height: 280,
-            border: "1px solid rgba(201,168,76,0.3)",
-            boxShadow: "0 0 40px rgba(232,185,74,0.08)",
-            ...fadeUp(0.7, resultReady),
-          }}
-        >
-          <img src={heroImage} alt={winner.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 40%, transparent 100%)" }} />
-          <div style={{ position: "absolute", bottom: 0, right: 0, left: 0, padding: 16 }}>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                background: "rgba(232,185,74,0.15)",
-                color: C.gold,
-                padding: "4px 10px",
-                borderRadius: 100,
-                fontSize: 11,
-                fontWeight: 700,
-                marginBottom: 10,
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              הכי מתאים לכם
-            </span>
-            <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.2, color: "#fff", marginBottom: 8 }}>{winner.name}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-              <span style={{ color: C.gold, fontWeight: 700 }}>{winner.price}</span>
-              <span style={{ color: "rgba(255,255,255,0.4)" }}>·</span>
-              <span style={{ color: "rgba(255,255,255,0.6)" }}>{metaText}</span>
+        <div style={{ margin: "12px 16px 0", ...fadeUp(0.7, resultReady) }}>
+          {PRODUCT_VIMEO[winner.id] ? (
+            <div style={{ maxWidth: 220, margin: "0 auto" }}>
+              <div style={{ position: "relative", paddingTop: "177.78%", borderRadius: 14, overflow: "hidden", background: "#141820" }}>
+                <iframe
+                  src={`https://player.vimeo.com/video/${PRODUCT_VIMEO[winner.id]}?badge=0&autopause=0&loop=0&player_id=0&app_id=58479&cc=0`}
+                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+                  title={winner.name}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div style={{ borderRadius: 14, overflow: "hidden", position: "relative", height: 280, border: "1px solid rgba(201,168,76,0.3)", boxShadow: "0 0 40px rgba(232,185,74,0.08)" }}>
+              <img src={heroImage} alt={winner.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 40%, transparent 100%)" }} />
+              <div style={{ position: "absolute", bottom: 0, right: 0, left: 0, padding: 16 }}>
+                <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.2, color: "#fff", marginBottom: 8 }}>{winner.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+                  <span style={{ color: C.gold, fontWeight: 700 }}>{winner.price}</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)" }}>·</span>
+                  <span style={{ color: "rgba(255,255,255,0.6)" }}>{metaText}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 9. Action buttons */}
