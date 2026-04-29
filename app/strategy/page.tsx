@@ -142,7 +142,7 @@ export default async function StrategyPage() {
             className="btn-cta-gold"
             style={{ display: "inline-block", padding: "15px 40px", borderRadius: 10, fontWeight: 800, fontSize: 17, textDecoration: "none" }}
           >
-            קבע/י פגישה עכשיו - בחר/י מועד
+            קבע/י פגישה עכשיו ←
           </Link>
         }
 
