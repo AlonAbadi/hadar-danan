@@ -8,7 +8,7 @@ export type PurchaseStatus = "pending" | "completed" | "failed" | "refunded";
 export type JobStatus = "pending" | "running" | "done" | "failed";
 export type EmailLogStatus = "sent" | "opened" | "clicked";
 export type ExperimentStatus = "running" | "paused" | "concluded";
-export type AbVariant = "A" | "B";
+export type AbVariant = "A" | "B" | "C";
 
 export interface Database {
   public: {
