@@ -13,10 +13,11 @@ export default function StrategySuccessPage() {
       productName="פגישת אסטרטגיה"
       emoji="🎯"
       confirmationTitle="התשלום התקבל!"
-      confirmationDesc="קיבלנו את הרכישה שלך. אישור עם קישור ל-Zoom ישלח לאימייל תוך 24 שעות."
+      confirmationDesc="קיבלנו את הרכישה שלך. ניצור איתך קשר תוך 24 שעות לתיאום מועד הפגישה."
+      step2Title="ניצור קשר לתיאום"
       nextStepLabel="חזור לדף הבית"
       nextStepHref="/"
-      nextStepDesc="ממתינים לפגישה!"
+      nextStepDesc="נחזור אליך תוך 24 שעות לתיאום המועד"
       trackingProduct="strategy_4000"
       trackingValue={4000}
     />

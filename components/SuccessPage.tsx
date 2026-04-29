@@ -14,6 +14,7 @@ interface SuccessPageProps {
   nextStepLabel: string;
   nextStepHref: string;
   nextStepDesc: string;
+  step2Title?: string;
   whatsappPhone?: string;
   trackingProduct?: string;
   trackingValue?: number;
@@ -33,6 +34,7 @@ export function SuccessPage({
   nextStepLabel,
   nextStepHref,
   nextStepDesc,
+  step2Title = "תכין את עצמך",
   whatsappPhone,
   trackingProduct,
   trackingValue,
@@ -74,7 +76,7 @@ export function SuccessPage({
 
   const STEPS = [
     { num: "1", title: "קיבלת מייל אישור", desc: "בדוק את תיבת הדואר שלך" },
-    { num: "2", title: "תכין את עצמך", desc: nextStepDesc },
+    { num: "2", title: step2Title, desc: nextStepDesc },
     { num: "3", title: nextStepLabel, desc: null, href: nextStepHref },
   ];
 
