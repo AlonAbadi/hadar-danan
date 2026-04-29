@@ -101,12 +101,26 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             <a href="/course" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
               <Image src="/coursehadar.jpg" fill alt="" sizes="420px" style={{ objectFit: "cover", objectPosition: "25% 5%" }} />
               <div style={{ position: "absolute", inset: 0, background: overlay }} />
-              <div style={{ position: "absolute", left: 8, top: 8, fontSize: "5rem", fontWeight: 800, color: "rgba(255,255,255,0.22)", lineHeight: 1, userSelect: "none" }}>4</div>
+              {/* Coming soon overlay tint */}
+              <div style={{ position: "absolute", inset: 0, background: "rgba(8,12,20,0.45)", zIndex: 1 }} />
+              {/* Coming soon sticker */}
+              <div style={{
+                position: "absolute", top: 18, right: 14, zIndex: 3,
+                background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)",
+                color: "#1A1206", fontWeight: 800, fontSize: 12,
+                padding: "5px 13px", borderRadius: 6,
+                boxShadow: "0 4px 14px rgba(0,0,0,0.45)",
+                transform: "rotate(2deg)",
+                letterSpacing: "0.05em",
+              }}>
+                🔜 בקרוב
+              </div>
+              <div style={{ position: "absolute", left: 8, top: 8, fontSize: "5rem", fontWeight: 800, color: "rgba(255,255,255,0.12)", lineHeight: 1, userSelect: "none", zIndex: 2 }}>4</div>
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
                 <div style={priceStyle}>₪1,800</div>
                 <div style={nameStyle}>קורס דיגיטלי</div>
                 <p style={descStyle}>השיטה המלאה - לא רק לצלם, אלא להבין את ה־Signal שלך</p>
-                <span style={ctaStyle}>לקורס ←</span>
+                <span style={{ ...ctaStyle, borderColor: "rgba(158,153,144,0.3)", color: "#9E9990", cursor: "default" }}>בקרוב ←</span>
               </div>
             </a>
             <div className="nf-node">4</div>
@@ -191,7 +205,20 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           <a href="/hive" className="nf-card" style={{ position: "relative", height: "420px", overflow: "hidden", display: "block" }}>
             <Image src="/hive.jpg" fill alt="" sizes="500px" style={{ objectFit: "cover", objectPosition: "40% 10%" }} />
             <div style={{ position: "absolute", inset: 0, background: overlay }} />
-            <div style={{ position: "absolute", top: 10, right: 10, fontSize: 9, fontWeight: 700, color: "#1A1206", background: "linear-gradient(135deg,#E8B94A,#C9964A)", borderRadius: 4, padding: "2px 8px", zIndex: 2 }}>פופולרי</div>
+            {/* Coming soon overlay tint */}
+            <div style={{ position: "absolute", inset: 0, background: "rgba(8,12,20,0.45)", zIndex: 1 }} />
+            {/* Coming soon sticker */}
+            <div style={{
+              position: "absolute", top: 18, right: 14, zIndex: 3,
+              background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)",
+              color: "#1A1206", fontWeight: 800, fontSize: 12,
+              padding: "5px 13px", borderRadius: 6,
+              boxShadow: "0 4px 14px rgba(0,0,0,0.45)",
+              transform: "rotate(2deg)",
+              letterSpacing: "0.05em",
+            }}>
+              🔜 בקרוב
+            </div>
             <div style={{ position: "absolute", bottom: 80, right: 16, fontSize: "2.4rem", zIndex: 2 }}>🐝</div>
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, display: "flex", alignItems: "center", gap: 16, textAlign: "right" }}>
               <div style={{ flex: 1 }}>
@@ -201,7 +228,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
               <div style={{ flexShrink: 0, textAlign: "center" }}>
                 <div style={{ fontSize: 19, fontWeight: 800, color: "#C9964A", lineHeight: 1 }}>₪29-97</div>
                 <div style={{ fontSize: 12, color: "rgba(237,233,225,0.5)", marginBottom: 10 }}>לחודש</div>
-                <span style={{ display: "inline-block", background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)", color: "#1A1206", fontWeight: 700, borderRadius: 9999, padding: "10px 24px", fontSize: 14 }}>הצטרף ←</span>
+                <span style={{ display: "inline-block", border: "1px solid rgba(158,153,144,0.3)", color: "#9E9990", fontWeight: 700, borderRadius: 9999, padding: "10px 24px", fontSize: 14, cursor: "default" }}>בקרוב ←</span>
               </div>
             </div>
           </a>
