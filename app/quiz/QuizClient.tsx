@@ -118,6 +118,7 @@ const PRODUCT_VIMEO: Record<string, string> = {
   workshop:      "1186650827",
   strategy:      "1184732846",
   premium:       "1184560999",
+  partnership:   "1184810808",
 };
 
 const PRODUCT_VALUE: Record<string, number> = {
