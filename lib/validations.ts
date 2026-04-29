@@ -19,7 +19,7 @@ export const SignupSchema = z.object({
     .max(80, "שם ארוך מדי"),
   email: z.string().email("כתובת אימייל לא תקינה"),
   phone: israeliPhone,
-  ab_variant: z.enum(["A", "B"]).optional(),
+  ab_variant: z.enum(["A", "B", "C"]).optional(),
   utm_source: z.string().max(100).optional(),
   utm_campaign: z.string().max(100).optional(),
   utm_adset: z.string().max(100).optional(),
