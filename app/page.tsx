@@ -332,8 +332,23 @@ export default async function LandingPage() {
                 flexDirection: "column",
                 alignItems: "center",
                 gap: 12,
+                opacity: 0.55,
+                position: "relative",
               }}
             >
+              {/* Coming soon sticker */}
+              <div style={{
+                position: "absolute", top: -12, right: 20,
+                background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)",
+                color: "#1A1206", fontWeight: 800, fontSize: 12,
+                padding: "5px 13px", borderRadius: 6,
+                boxShadow: "0 4px 14px rgba(0,0,0,0.45)",
+                transform: "rotate(2deg)",
+                letterSpacing: "0.05em",
+                zIndex: 1,
+              }}>
+                🔜 בקרוב
+              </div>
               <Image src="/beegood_logo.png" alt="Bee Good" width={36} height={28} />
               <p style={{
                 margin: 0,
@@ -351,23 +366,22 @@ export default async function LandingPage() {
               <p style={{ margin: 0, fontSize: 15, color: "#9E9990", fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
                 כל התכנים של הדר במקום אחד
               </p>
-              <a
-                href="/binge"
+              <span
                 style={{
                   marginTop: 4,
                   display: "inline-block",
-                  background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
-                  color: "#080C14",
+                  border: "1px solid rgba(158,153,144,0.3)",
+                  color: "#9E9990",
                   fontSize: 14,
                   fontWeight: 800,
                   padding: "10px 28px",
                   borderRadius: 24,
-                  textDecoration: "none",
                   fontFamily: "var(--font-assistant), Assistant, sans-serif",
+                  cursor: "default",
                 }}
               >
-                לכל התכנים ←
-              </a>
+                בקרוב ←
+              </span>
             </div>
           </section>
 

@@ -102,7 +102,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
               <Image src="/coursehadar.jpg" fill alt="" sizes="420px" style={{ objectFit: "cover", objectPosition: "25% 5%" }} />
               <div style={{ position: "absolute", inset: 0, background: overlay }} />
               {/* Coming soon overlay tint */}
-              <div style={{ position: "absolute", inset: 0, background: "rgba(8,12,20,0.85)", zIndex: 1 }} />
+              <div style={{ position: "absolute", inset: 0, background: "rgba(8,12,20,0.93)", zIndex: 1 }} />
               {/* Coming soon sticker */}
               <div style={{
                 position: "absolute", top: 18, right: 14, zIndex: 3,
@@ -206,7 +206,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             <Image src="/hive.jpg" fill alt="" sizes="500px" style={{ objectFit: "cover", objectPosition: "40% 10%" }} />
             <div style={{ position: "absolute", inset: 0, background: overlay }} />
             {/* Coming soon overlay tint */}
-            <div style={{ position: "absolute", inset: 0, background: "rgba(8,12,20,0.85)", zIndex: 1 }} />
+            <div style={{ position: "absolute", inset: 0, background: "rgba(8,12,20,0.93)", zIndex: 1 }} />
             {/* Coming soon sticker */}
             <div style={{
               position: "absolute", top: 18, right: 14, zIndex: 3,
