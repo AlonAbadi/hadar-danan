@@ -25,6 +25,7 @@ type SlideDir = "forward" | "back";
 type Product = {
   id: string;
   href: string;
+  checkoutHref: string;
   name: string;
   price: string;
 };
@@ -103,13 +104,13 @@ const QUESTIONS = [
 // ── Products ─────────────────────────────────────────────────────
 
 const PRODUCTS: Product[] = [
-  { id: "free_training", href: "/training",    name: "הדרכה חינמית",      price: "חינם" },
-  { id: "challenge",     href: "/challenge",   name: "אתגר 7 הימים",      price: "197 ש\"ח" },
-  { id: "workshop",      href: "/workshop",    name: "סדנה יום אחד",      price: "1,080 ש\"ח" },
-  { id: "course",        href: "/course",      name: "קורס דיגיטלי",      price: "1,800 ש\"ח" },
-  { id: "strategy",      href: "/strategy",    name: "פגישת אסטרטגיה",    price: "4,000 ש\"ח" },
-  { id: "premium",       href: "/premium",     name: "יום צילום פרמיום",  price: "14,000 ש\"ח" },
-  { id: "partnership",   href: "/partnership", name: "שותפות אסטרטגית",   price: "10,000-30,000 ש\"ח" },
+  { id: "free_training", href: "/training",    checkoutHref: "/training",        name: "הדרכה חינמית",      price: "חינם" },
+  { id: "challenge",     href: "/challenge",   checkoutHref: "/challenge#cta",   name: "אתגר 7 הימים",      price: "197 ש\"ח" },
+  { id: "workshop",      href: "/workshop",    checkoutHref: "/workshop#cta",    name: "סדנה יום אחד",      price: "1,080 ש\"ח" },
+  { id: "course",        href: "/course",      checkoutHref: "/course#cta",      name: "קורס דיגיטלי",      price: "1,800 ש\"ח" },
+  { id: "strategy",      href: "/strategy",    checkoutHref: "/strategy/book",   name: "פגישת אסטרטגיה",    price: "4,000 ש\"ח" },
+  { id: "premium",       href: "/premium",     checkoutHref: "/premium#cta",     name: "יום צילום פרמיום",  price: "14,000 ש\"ח" },
+  { id: "partnership",   href: "/partnership", checkoutHref: "/partnership#cta", name: "שותפות אסטרטגית",   price: "10,000-30,000 ש\"ח" },
 ];
 
 const PRODUCT_VIMEO: Record<string, string> = {
@@ -1056,7 +1057,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
         {/* 9. Action buttons */}
         <div style={{ display: "flex", gap: 8, padding: "12px 16px 0", ...fadeUp(0.85, resultReady) }}>
           <button
-            onClick={() => handleCTAClick(winner.id, winner.href)}
+            onClick={() => handleCTAClick(winner.id, winner.checkoutHref)}
             style={{
               flex: 1,
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
