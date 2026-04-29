@@ -749,7 +749,7 @@ function premiumLeadConfirmation(ctx: EmailTemplateContext): RenderedEmail {
         </div>
         <div class="step-row">
           <div class="step-num">3</div>
-          <div class="step-text">נתאם יום צילום שמניב 16 סרטונים שמוכרים</div>
+          <div class="step-text">נתאם יום צילום שמניב 14 סרטונים שמוכרים</div>
         </div>
 
         <hr class="divider"/>
@@ -758,7 +758,7 @@ function premiumLeadConfirmation(ctx: EmailTemplateContext): RenderedEmail {
           <p>📋 מה כלול ביום הצילום הפרמיום:<br/>
           • אסטרטגיית תוכן מקצועית<br/>
           • יום צילום מלא עם צוות<br/>
-          • 16 סרטונים ערוכים ומוכנים לפרסום<br/>
+          • 14 סרטונים ערוכים ומוכנים לפרסום<br/>
           • 3 חודשי ליווי לאחר הצילום
           </p>
         </div>

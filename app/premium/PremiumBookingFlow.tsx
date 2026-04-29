@@ -126,7 +126,7 @@ export function PremiumBookingFlow({ price, whatsappPhone }: Props) {
         style={{ background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid rgba(201,150,74,0.16)" }}
       >
         <div className="flex justify-between items-start">
-          <span style={{ color: "#9E9990" }}>יום צילום פרמיום · 16 סרטונים</span>
+          <span style={{ color: "#9E9990" }}>יום צילום פרמיום · 14 סרטונים</span>
           <div className="text-right">
             <p className="font-black text-2xl" style={{ color: "#EDE9E1" }}>
               ₪{listPrice.toLocaleString("he-IL")}
@@ -138,7 +138,7 @@ export function PremiumBookingFlow({ price, whatsappPhone }: Props) {
           סה״כ לתשלום כולל מע״מ: <span style={{ color: "#EDE9E1", fontWeight: 700 }}>₪{priceWithVat.toLocaleString("he-IL")}</span>
         </p>
         <ul className="flex flex-col gap-1 text-sm" style={{ color: "#9E9990" }}>
-          {["אסטרטגיית תוכן לפני הצילום", "צוות מקצועי (צלם + במאי + מפיקה)", "16 סרטונים ערוכים תוך שבועיים", "3 חודשי ליווי אחרי"].map((item) => (
+          {["אסטרטגיית תוכן לפני הצילום", "צוות מקצועי (צלם + במאי + מפיקה)", "14 סרטונים ערוכים תוך שבועיים", "3 חודשי ליווי אחרי"].map((item) => (
             <li key={item} className="flex items-center gap-2">
               <span style={{ color: "#C9964A" }}>✓</span> {item}
             </li>

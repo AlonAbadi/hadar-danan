@@ -151,7 +151,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 20px 20px", zIndex: 2, textAlign: "right" }}>
               <div style={priceStyle}>₪14,000 <span style={{ fontSize: 12, fontWeight: 400, color: "rgba(237,233,225,0.5)" }}>+ מע״מ</span></div>
               <div style={nameStyle}>יום צילום פרמיום</div>
-              <p style={descStyle}>אסטרטגיה + הפקה + עריכה - 16 סרטונים</p>
+              <p style={descStyle}>אסטרטגיה + הפקה + עריכה - 14 סרטונים</p>
               <span style={ctaStyle}>לפרטים ←</span>
             </div>
           </a>
