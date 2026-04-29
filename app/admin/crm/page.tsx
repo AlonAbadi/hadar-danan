@@ -561,7 +561,9 @@ function QuizDistribution() {
       {/* Pie + bars side by side */}
       <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <PieChart rows={rows} />
+          <div style={{ width: '100%', maxWidth: 200 }}>
+            <PieChart rows={rows} />
+          </div>
         </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>

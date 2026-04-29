@@ -68,9 +68,10 @@ export async function GET(req: NextRequest) {
     const quizMap: Record<string, string> = {};
 
     if (userIds.length > 0) {
-      const [{ data: purchases }, { data: quizRows }] = await Promise.all([
+      const [{ data: purchases }, { data: quizByUser }, { data: identityRows }] = await Promise.all([
         supabase.from('purchases').select('user_id, status, amount').in('user_id', userIds),
         supabase.from('quiz_results').select('user_id, recommended_product').in('user_id', userIds).order('created_at', { ascending: false }),
+        supabase.from('identities').select('user_id, anonymous_id').in('user_id', userIds),
       ]);
 
       for (const p of purchases ?? []) {
@@ -81,10 +82,34 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // Keep only the most recent quiz result per user
-      for (const q of quizRows ?? []) {
+      // Primary: quiz_results.user_id match
+      for (const q of quizByUser ?? []) {
         if (q.user_id && !quizMap[q.user_id]) {
           quizMap[q.user_id] = q.recommended_product;
+        }
+      }
+
+      // Fallback: match via identities → anonymous_id
+      const anonIds = (identityRows ?? []).map(i => i.anonymous_id).filter(Boolean);
+      if (anonIds.length > 0) {
+        const { data: quizByAnon } = await supabase
+          .from('quiz_results')
+          .select('anonymous_id, recommended_product')
+          .in('anonymous_id', anonIds)
+          .order('created_at', { ascending: false });
+
+        // Build anon_id → user_id map
+        const anonToUser: Record<string, string> = {};
+        for (const row of identityRows ?? []) {
+          if (row.anonymous_id && row.user_id) anonToUser[row.anonymous_id] = row.user_id;
+        }
+
+        for (const q of quizByAnon ?? []) {
+          if (!q.anonymous_id) continue;
+          const uid = anonToUser[q.anonymous_id];
+          if (uid && !quizMap[uid]) {
+            quizMap[uid] = q.recommended_product;
+          }
         }
       }
     }
