@@ -153,6 +153,12 @@ export async function POST(req: NextRequest) {
     ShowInvoiceHead:      "true",
     HideCreditCardUserId: "false",
 
+    // Installments — up to 3 payments, default 1
+    MaxNumOfPayments:     "3",
+    MinNumOfPayments:     "1",
+    DefaultNumOfPayments: "1",
+    CreditTipe:           "1",
+
     // Invoice generation
     // InvoiceHeadOperation=1: generate invoice alongside the charge
     // DocTypeToCreate=1: חשבונית מס קבלה — includes product lines and VAT
