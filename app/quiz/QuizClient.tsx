@@ -470,13 +470,25 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
     setLeadState("loading");
     setLeadError(null);
 
-    // Read UTM attribution from cookies (set by proxy.ts on first landing)
+    // Read UTM attribution from cookies — truncate to avoid schema max-length failures
     const utmKeys = ["utm_source", "utm_campaign", "utm_adset", "utm_ad", "fbclid", "gclid"];
     const utmData: Record<string, string> = {};
     for (const key of utmKeys) {
       const val = getCookie(key);
-      if (val) utmData[key === "fbclid" || key === "gclid" ? "click_id" : key] = val;
+      if (val) {
+        const destKey = key === "fbclid" || key === "gclid" ? "click_id" : key;
+        const maxLen  = destKey === "click_id" ? 200 : 100;
+        utmData[destKey] = val.slice(0, maxLen);
+      }
     }
+
+    // Only send ab_variant if it's a known value
+    const abVariant = getCookie("ab_variant");
+    const safeAbVariant = (abVariant === "A" || abVariant === "B" || abVariant === "C") ? abVariant : undefined;
+
+    // Only send anonymous_id if it looks like a UUID
+    const anonId = getCookie("anon_id");
+    const safeAnonId = anonId && /^[0-9a-f-]{36}$/.test(anonId) ? anonId : undefined;
 
     try {
       const res = await fetch("/api/signup", {
@@ -486,8 +498,8 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
           name:              leadForm.name.trim(),
           email:             leadForm.email.trim(),
           phone:             leadForm.phone.trim(),
-          anonymous_id:      getCookie("anon_id"),
-          ab_variant:        getCookie("ab_variant"),
+          anonymous_id:      safeAnonId,
+          ab_variant:        safeAbVariant,
           marketing_consent: isLoggedIn ? (initialUser?.marketing_consent ?? false) : consent,
           ...utmData,
         }),
@@ -539,8 +551,11 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
 
         goToResult(userId);
       } else {
-        const body = await res.json().catch(() => ({}));
-        setLeadError((body as Record<string,string>).error ?? "שגיאה, נסה שוב");
+        const body = await res.json().catch(() => ({})) as Record<string, unknown>;
+        const msg = (body.error as string | undefined)
+          ?? (body.errors ? JSON.stringify(body.errors) : null)
+          ?? `שגיאה ${res.status}, נסה שוב`;
+        setLeadError(msg);
         setLeadState("error");
       }
     } catch {
