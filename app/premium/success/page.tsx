@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { SuccessPage } from "@/components/SuccessPage";
 
 export const metadata = {
-  title: "יום הצילום נקבע! | הדר דנן",
+  title: "התשלום התקבל! | הדר דנן",
   robots: { index: false, follow: false },
 };
 
@@ -12,11 +12,12 @@ export default function PremiumSuccessPage() {
     <SuccessPage
       productName="יום צילום פרמיום"
       emoji="🎬"
-      confirmationTitle="יום הצילום נקבע!"
-      confirmationDesc="קיבלנו את הרכישה שלך. הצוות יצור קשר תוך 24 שעות לתיאום פרטי האסטרטגיה לפני הצילום."
+      confirmationTitle="התשלום התקבל!"
+      confirmationDesc="ניצור איתך קשר תוך 24 שעות לתיאום מועד יום הצילום."
+      step2Title="ניצור קשר לתיאום"
       nextStepLabel="חזור לדף הבית"
       nextStepHref="/"
-      nextStepDesc="מחכים ליום הגדול!"
+      nextStepDesc="נשמח לדבר איתך בקרוב!"
       trackingProduct="premium_14000"
       trackingValue={14000}
     />

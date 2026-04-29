@@ -2,7 +2,6 @@ import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import type { Metadata } from "next";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { PremiumBookingFlow } from "./PremiumBookingFlow";
-import { createServerClient } from "@/lib/supabase/server";
 import { PRODUCT_MAP } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
@@ -25,14 +24,8 @@ export const metadata: Metadata = {
 export default async function PremiumPage() {
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const price         = String(PRODUCT_MAP.premium_14000.price);
-
-  const supabase = createServerClient();
-  const { data: bookedSlots } = await supabase
-    .from("bookings")
-    .select("slot_date, slot_time")
-    .eq("status", "confirmed");
-
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+  const priceWithVat  = Math.round(PRODUCT_MAP.premium_14000.price * 1.18);
+  const APP_URL       = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   return (
     <>
@@ -151,13 +144,16 @@ export default async function PremiumPage() {
       priceSectionSlot={
         <section style={{ padding: "48px 20px", maxWidth: 640, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <p style={{ fontSize: 52, fontWeight: 900, color: "#EDE9E1", margin: "0 0 4px", direction: "ltr" }}>₪14,000</p>
-            <p style={{ color: "#9E9990", margin: 0 }}>+ מע״מ - כולל הכל מהאסטרטגיה ועד 3 חודשי ליווי</p>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 10 }}>
+              <p style={{ fontSize: 52, fontWeight: 900, color: "#EDE9E1", margin: 0, direction: "ltr" }}>₪14,000</p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: "#C9964A", margin: 0 }}>+ מע״מ</p>
+            </div>
+            <p style={{ color: "#9E9990", margin: "6px 0 0", fontSize: 14 }}>
+              סה״כ כולל מע״מ: ₪{priceWithVat.toLocaleString("he-IL")} · כולל הכל מהאסטרטגיה ועד 3 חודשי ליווי
+            </p>
           </div>
           <PremiumBookingFlow
-            bookedSlots={bookedSlots ?? []}
             price={price}
-            credit={0}
             whatsappPhone={whatsappPhone}
           />
         </section>

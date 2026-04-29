@@ -87,7 +87,8 @@ export async function POST(req: NextRequest) {
     .eq("product", product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000")
     .eq("status", "pending");
 
-  const amount = listPrice;
+  // Premium includes VAT (18%) — charged at list price + VAT
+  const amount = product === "premium_14000" ? Math.round(listPrice * 1.18) : listPrice;
 
   // Create a pending purchase record for idempotency
   const { data: purchase, error: purchaseErr } = await supabase
@@ -153,8 +154,8 @@ export async function POST(req: NextRequest) {
     ShowInvoiceHead:      "true",
     HideCreditCardUserId: "false",
 
-    // Installments — up to 3 payments, default 1
-    MaxNumOfPayments:     "3",
+    // Installments — premium gets up to 6, others up to 3
+    MaxNumOfPayments:     product === "premium_14000" ? "6" : "3",
     MinNumOfPayments:     "1",
     DefaultNumOfPayments: "1",
     CreditTipe:           "1",
