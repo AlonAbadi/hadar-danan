@@ -26,7 +26,7 @@ function ApiStatusBanner({ name, configured }: { name: string; configured: boole
       <span style={{ color: '#9ca3af', fontSize: '11px' }}>
         {name === 'Meta Ads' ? 'META_ADS_ACCESS_TOKEN, META_AD_ACCOUNT_ID' :
          name === 'Google Ads' ? 'GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_DEVELOPER_TOKEN' :
-         'GA4_PROPERTY_ID'}
+         'GA4_PROPERTY_ID + GOOGLE_APPLICATION_CREDENTIALS_JSON'}
       </span>
     </div>
   );
@@ -143,6 +143,44 @@ export default function AcquisitionClient({
             }))}
         />
       </SectionCard>
+
+      {/* GA4 overview */}
+      {ga4.configured && ga4.data && (
+        <>
+          <KpiGrid cols={4}>
+            <KpiCard label="סשנים (GA4)" value={(ga4.data.overview?.sessions ?? 0).toLocaleString()} icon="📊" variant="info" />
+            <KpiCard label="משתמשים (GA4)" value={(ga4.data.overview?.users ?? 0).toLocaleString()} icon="👥" />
+            <KpiCard label="Bounce Rate" value={`${((ga4.data.overview?.bounceRate ?? 0) * 100).toFixed(1)}%`} icon="↩️" />
+            <KpiCard label="זמן סשן ממוצע" value={`${Math.round((ga4.data.overview?.avgSessionDuration ?? 0) / 60)}m`} icon="⏱️" />
+          </KpiGrid>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <SectionCard title="ערוצי תנועה (GA4)" titleEn="Traffic Channels" noPadding>
+              <DataTable
+                columns={[
+                  { key: 'channel', label: 'ערוץ', width: '40%' },
+                  { key: 'sessions', label: 'סשנים', align: 'center' },
+                  { key: 'users', label: 'משתמשים', align: 'center' },
+                ]}
+                rows={(ga4.data.channels ?? []).map((c: any) => ({
+                  channel: <span style={{ fontWeight: 500 }}>{c.channel}</span>,
+                  sessions: c.sessions.toLocaleString(),
+                  users: c.users.toLocaleString(),
+                }))}
+              />
+            </SectionCard>
+
+            <SectionCard title="אירועים (GA4)" titleEn="Key Events">
+              {(ga4.data.events ?? []).map((e: any) => (
+                <div key={e.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6', fontSize: 13 }}>
+                  <span style={{ color: '#374151' }}>{e.name}</span>
+                  <span style={{ fontWeight: 600, color: '#111827' }}>{e.count.toLocaleString()}</span>
+                </div>
+              ))}
+            </SectionCard>
+          </div>
+        </>
+      )}
 
       {/* Meta Ads campaigns */}
       <SectionCard

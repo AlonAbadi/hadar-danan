@@ -474,19 +474,73 @@ export async function getGoogleAdsData(dateRange?: string) {
 // ─── GA4 Data API ─────────────────────────────────────
 export async function getGA4Data(dateRange?: string) {
   const propertyId = process.env.GA4_PROPERTY_ID;
+  const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 
-  if (!propertyId) {
+  if (!propertyId || !credentialsJson) {
     return { configured: false, data: null };
   }
 
   try {
+    const { BetaAnalyticsDataClient } = await import('@google-analytics/data');
     const { since, until } = getApiDateRange(dateRange);
-    void since; void until;
-    return {
-      configured: true,
-      data: [],
-      note: 'Requires @google-analytics/data package',
-    };
+
+    const credentials = JSON.parse(credentialsJson);
+    const analyticsClient = new BetaAnalyticsDataClient({ credentials });
+
+    const [sessionsReport, sourcesReport, eventsReport] = await Promise.all([
+      analyticsClient.runReport({
+        property: `properties/${propertyId}`,
+        dateRanges: [{ startDate: since, endDate: until }],
+        metrics: [
+          { name: 'sessions' },
+          { name: 'totalUsers' },
+          { name: 'bounceRate' },
+          { name: 'averageSessionDuration' },
+        ],
+      }),
+      analyticsClient.runReport({
+        property: `properties/${propertyId}`,
+        dateRanges: [{ startDate: since, endDate: until }],
+        dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+        metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
+        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+        limit: 10,
+      }),
+      analyticsClient.runReport({
+        property: `properties/${propertyId}`,
+        dateRanges: [{ startDate: since, endDate: until }],
+        dimensions: [{ name: 'eventName' }],
+        metrics: [{ name: 'eventCount' }],
+        dimensionFilter: {
+          filter: {
+            fieldName: 'eventName',
+            inListFilter: { values: ['purchase', 'generate_lead', 'begin_checkout', 'sign_up'] },
+          },
+        },
+        orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+      }),
+    ]);
+
+    const overviewRow = sessionsReport[0]?.rows?.[0];
+    const overview = overviewRow ? {
+      sessions: Number(overviewRow.metricValues?.[0]?.value ?? 0),
+      users: Number(overviewRow.metricValues?.[1]?.value ?? 0),
+      bounceRate: Number(overviewRow.metricValues?.[2]?.value ?? 0),
+      avgSessionDuration: Number(overviewRow.metricValues?.[3]?.value ?? 0),
+    } : null;
+
+    const channels = (sourcesReport[0]?.rows ?? []).map(row => ({
+      channel: row.dimensionValues?.[0]?.value ?? 'Unknown',
+      sessions: Number(row.metricValues?.[0]?.value ?? 0),
+      users: Number(row.metricValues?.[1]?.value ?? 0),
+    }));
+
+    const events = (eventsReport[0]?.rows ?? []).map(row => ({
+      name: row.dimensionValues?.[0]?.value ?? '',
+      count: Number(row.metricValues?.[0]?.value ?? 0),
+    }));
+
+    return { configured: true, data: { overview, channels, events } };
   } catch (error) {
     return { configured: true, data: null, error: String(error) };
   }
