@@ -477,8 +477,8 @@ const PRODUCT_COLORS: Record<string, string> = {
 interface QuizRow { product: string; count: number; percent: number; }
 
 function PieChart({ rows }: { rows: QuizRow[] }) {
-  const size = 140;
-  const r = 54;
+  const size = 200;
+  const r = 78;
   const cx = size / 2;
   const cy = size / 2;
 
@@ -517,7 +517,7 @@ function PieChart({ rows }: { rows: QuizRow[] }) {
         />
       ))}
       {/* Centre hole */}
-      <circle cx={cx} cy={cy} r={28} fill="#141820" />
+      <circle cx={cx} cy={cy} r={40} fill="#141820" />
     </svg>
   );
 }
@@ -548,7 +548,9 @@ function QuizDistribution() {
 
       {/* Pie + bars side by side */}
       <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-        <PieChart rows={rows} />
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <PieChart rows={rows} />
+        </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {rows.map(r => {
@@ -583,7 +585,7 @@ function QuizDistribution() {
   );
 }
 
-// ── Shared styles ─────────────────────────────────────────────────────────────
+// ── Shared styles ──────────────────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
   background: '#141820',
