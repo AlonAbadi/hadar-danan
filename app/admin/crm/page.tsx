@@ -24,6 +24,7 @@ interface PipelineUser {
   utm_source: string | null;
   purchase_count: number;
   total_spent: number;
+  quiz_product: string | null;
 }
 
 interface Reminder {
@@ -261,6 +262,17 @@ function PipelineTab() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                 <StatusBadge status={u.status} />
+                {u.quiz_product && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 600,
+                    color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
+                    background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
+                    border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
+                    borderRadius: 6, padding: '2px 8px',
+                  }}>
+                    🎯 {PRODUCT_LABELS[u.quiz_product] ?? u.quiz_product}
+                  </span>
+                )}
                 {u.total_spent > 0 && (
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#34A853' }}>{formatPrice(u.total_spent)}</span>
                 )}

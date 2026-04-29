@@ -62,15 +62,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ users: [], total: 0 });
     }
 
-    // Fetch purchase summaries for these users
+    // Fetch purchase summaries + quiz results for these users
     const userIds: string[] = (users ?? []).map((u) => u.id);
     const purchaseMap: Record<string, { count: number; total_spent: number }> = {};
+    const quizMap: Record<string, string> = {};
 
     if (userIds.length > 0) {
-      const { data: purchases } = await supabase
-        .from('purchases')
-        .select('user_id, status, amount')
-        .in('user_id', userIds);
+      const [{ data: purchases }, { data: quizRows }] = await Promise.all([
+        supabase.from('purchases').select('user_id, status, amount').in('user_id', userIds),
+        supabase.from('quiz_results').select('user_id, recommended_product').in('user_id', userIds).order('created_at', { ascending: false }),
+      ]);
 
       for (const p of purchases ?? []) {
         if (!purchaseMap[p.user_id]) purchaseMap[p.user_id] = { count: 0, total_spent: 0 };
@@ -79,13 +80,21 @@ export async function GET(req: NextRequest) {
           purchaseMap[p.user_id].total_spent += p.amount ?? 0;
         }
       }
+
+      // Keep only the most recent quiz result per user
+      for (const q of quizRows ?? []) {
+        if (q.user_id && !quizMap[q.user_id]) {
+          quizMap[q.user_id] = q.recommended_product;
+        }
+      }
     }
 
     const result = (users ?? []).map((u) => ({
       ...u,
-      last_activity_at: null as string | null, // populated after migration 013
-      purchase_count: purchaseMap[u.id]?.count ?? 0,
-      total_spent:    purchaseMap[u.id]?.total_spent ?? 0,
+      last_activity_at: null as string | null,
+      purchase_count:   purchaseMap[u.id]?.count ?? 0,
+      total_spent:      purchaseMap[u.id]?.total_spent ?? 0,
+      quiz_product:     quizMap[u.id] ?? null,
     }));
 
     return NextResponse.json({ users: result, total: count ?? 0 });
