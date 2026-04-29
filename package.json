@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.86.1",
-    "@google-analytics/data": "^5.2.1",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.100.1",
     "lucide-react": "^1.7.0",
@@ -26,6 +25,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "googleapis": "^171.4.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
