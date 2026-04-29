@@ -76,6 +76,26 @@ const STATUS_COLORS: Record<string, string> = {
   partnership_lead: '#E8B94A',
 };
 
+const PRODUCT_LABELS: Record<string, string> = {
+  free_training: 'הדרכה חינמית',
+  challenge:     'אתגר 7 ימים',
+  workshop:      'סדנה יום אחד',
+  course:        'קורס דיגיטלי',
+  strategy:      'פגישת אסטרטגיה',
+  premium:       'יום צילום פרמיום',
+  partnership:   'שותפות אסטרטגית',
+};
+
+const PRODUCT_COLORS: Record<string, string> = {
+  free_training: '#4285F4',
+  challenge:     '#34A853',
+  workshop:      '#FBBC05',
+  course:        '#C9964A',
+  strategy:      '#E8B94A',
+  premium:       '#EA4335',
+  partnership:   '#9C27B0',
+};
+
 function StatusBadge({ status }: { status: string }) {
   const color = STATUS_COLORS[status] ?? '#9E9990';
   return (
@@ -466,26 +486,6 @@ function RemindersTab() {
 
 // ── Quiz Distribution ─────────────────────────────────────────────────────────
 
-const PRODUCT_LABELS: Record<string, string> = {
-  free_training: 'הדרכה חינמית',
-  challenge:     'אתגר 7 ימים',
-  workshop:      'סדנה יום אחד',
-  course:        'קורס דיגיטלי',
-  strategy:      'פגישת אסטרטגיה',
-  premium:       'יום צילום פרמיום',
-  partnership:   'שותפות אסטרטגית',
-};
-
-const PRODUCT_COLORS: Record<string, string> = {
-  free_training: '#4285F4',
-  challenge:     '#34A853',
-  workshop:      '#FBBC05',
-  course:        '#C9964A',
-  strategy:      '#E8B94A',
-  premium:       '#EA4335',
-  partnership:   '#9C27B0',
-};
-
 interface QuizRow { product: string; count: number; percent: number; }
 
 function PieChart({ rows }: { rows: QuizRow[] }) {
@@ -518,7 +518,7 @@ function PieChart({ rows }: { rows: QuizRow[] }) {
   }
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+    <svg viewBox={`0 0 ${size} ${size}`} style={{ width: '100%', height: 'auto', display: 'block' }}>
       {slices.map(s => (
         <path
           key={s.product}
