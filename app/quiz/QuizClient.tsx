@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
-import { saveQuizSession, getQuizSession } from "@/lib/quiz-session";
+import { saveQuizSession, getQuizSession, getSessionUser } from "@/lib/quiz-session";
 import { trackProductLead, trackQuizRecommended, trackViewContent, trackInitiateCheckout, productLeadEventName, LEAD_VALUE_ILS } from "@/lib/analytics";
 import { buildNarrative } from "@/lib/quiz-narrative";
 import {
@@ -259,7 +259,8 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
   const hasName     = !!(initialUser?.name?.trim());
   const hasPhone    = !!(initialUser?.phone?.trim());
   const hasConsent  = !!initialUser?.marketing_consent;
-  const canSkipForm = isLoggedIn && hasName && hasPhone;
+  const [localUserDetails, setLocalUserDetails] = useState<{ name: string; email: string; phone: string; userId: string } | null>(null);
+  const canSkipForm = (isLoggedIn && hasName && hasPhone) || !!(localUserDetails?.name && localUserDetails?.email && localUserDetails?.phone);
 
   // Lead gate
   const [leadForm, setLeadForm] = useState({
@@ -315,6 +316,14 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
       completedRef.current = true;
       setStep(7);
     } else {
+      // Pre-fill lead form from any prior signup (e.g. training page SignupForm)
+      const sessionUser = getSessionUser();
+      if (sessionUser) {
+        setLeadForm({ name: sessionUser.name, email: sessionUser.email, phone: sessionUser.phone });
+        if (sessionUser.name && sessionUser.email && sessionUser.phone) {
+          setLocalUserDetails(sessionUser);
+        }
+      }
       setStep(0);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -400,16 +409,20 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
           if (typeof window !== "undefined") window.fbq?.("trackCustom", "QuizComplete", { recommended_product: PRODUCTS[winIdx].id, match_percent: scalePrimary(scoresNow[winIdx]) });
         }
         if (newAnswers.length === QUESTIONS.length && canSkipForm) {
-          // Logged-in user with complete profile - skip lead gate, go straight to result
+          // User with complete profile (logged-in or from localStorage) - skip lead gate
           const scoresNow  = computeScores(newAnswers);
           const winIdx     = getWinnerIndex(scoresNow);
           const secondProd = PRODUCTS.find((_, i) => i !== winIdx && scoresNow[i] >= ALSO_CONSIDER_THRESHOLD);
           const pct        = scalePrimary(scoresNow[winIdx]);
+          const sessionName  = initialUser?.name  ?? localUserDetails?.name  ?? "";
+          const sessionEmail = initialUser?.email ?? localUserDetails?.email ?? "";
+          const sessionPhone = initialUser?.phone ?? localUserDetails?.phone ?? "";
+          const sessionId    = initialUser?.id    ?? localUserDetails?.userId ?? "";
           saveQuizSession({
-            name:               initialUser!.name  ?? "",
-            email:              initialUser!.email,
-            phone:              initialUser!.phone ?? "",
-            userId:             initialUser!.id,
+            name:               sessionName,
+            email:              sessionEmail,
+            phone:              sessionPhone,
+            userId:             sessionId,
             recommendedProduct: PRODUCTS[winIdx].id,
             secondProduct:      secondProd?.id,
             matchPercent:       pct,
@@ -420,7 +433,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              user_id:             initialUser!.id,
+              user_id:             sessionId || undefined,
               anonymous_id:        getCookie("anon_id"),
               answers:             newAnswers.reduce<Record<string,string>>((acc, a, i) => { acc[`q${i+1}`] = a; return acc; }, {}),
               scores:              scoresNow.reduce<Record<string,number>>((acc, s, i) => { acc[PRODUCTS[i].id] = s; return acc; }, {}),
