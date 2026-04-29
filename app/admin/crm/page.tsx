@@ -477,8 +477,8 @@ const PRODUCT_COLORS: Record<string, string> = {
 interface QuizRow { product: string; count: number; percent: number; }
 
 function PieChart({ rows }: { rows: QuizRow[] }) {
-  const size = 200;
-  const r = 78;
+  const size = 300;
+  const r = 118;
   const cx = size / 2;
   const cy = size / 2;
 
@@ -517,7 +517,7 @@ function PieChart({ rows }: { rows: QuizRow[] }) {
         />
       ))}
       {/* Centre hole */}
-      <circle cx={cx} cy={cy} r={40} fill="#141820" />
+      <circle cx={cx} cy={cy} r={58} fill="#141820" />
     </svg>
   );
 }
