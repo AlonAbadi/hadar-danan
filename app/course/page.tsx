@@ -1,44 +1,87 @@
-import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import type { Metadata } from "next";
-import { CourseLandingClient } from "./CourseLandingClient";
-import { ProductSchema } from "@/components/ProductSchema";
-import { FAQSchema } from "@/components/FAQSchema";
-import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
 export const metadata: Metadata = {
-  title: "קורס בידול מותג אישי - 8 מודולים | הדר דנן",
-  description: "8 מודולים. 16 שיעורים. שיטה שעברו דרכה 3,500+ עסקים. 1,800 שקל - גישה לנצח.",
+  title: "קורס דיגיטלי | בקרוב - הדר דנן",
+  description: "קורס בידול מותג אישי. 8 מודולים, 16 שיעורים. בקרוב.",
   alternates: { canonical: "/course" },
 };
 
-const COURSE_FAQS = [
-  { question: "לא בטוח שזה מתאים לתחום שלי",   answer: "הקורס עבר עם יותר מ-3,500 עסקים - רופאים, עורכי דין, מאמנים, יועצים, בעלי מקצוע. הבידול רלוונטי לכל מי שמוכר את עצמו ואת הידע שלו." },
-  { question: "כמה זמן לוקח לסיים את הקורס?",   answer: '16 שיעורים של כחצי שעה - סה"כ כ-8 שעות. אפשר שיעור ביום ולסיים תוך שבועיים, או לרוץ על זה בסוף שבוע. הגישה שלך לנצח.' },
-  { question: "ניסיתי קורסים בעבר ולא יצא לי כלום", answer: "רוב הקורסים נותנים תיאוריה. הקורס הזה בנוי על שיטה שהדר יישמה בשטח עם 3,500 עסקים - כל שיעור נגמר עם משימה אחת ברורה שמיישמים מיד." },
-  { question: "מה קורה אם אני לא מרוצה?",       answer: "צור קשר ונטפל בזה. ערבות תוצאה - עברת את כל 8 המודולים ולא יצאת עם מסר ברור, נחזיר לך את הכסף." },
-  { question: "האם הקורס מתעדכן?",              answer: "כן. כשהדר מוסיפה תכנים - אתה מקבל אותם ללא עלות נוספת. קנית פעם אחת, מרוויח לאורך זמן." },
-];
-
-export default async function CoursePage() {
-  const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
-  const APP_URL       = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
-
+export default function CoursePage() {
   return (
-    <>
-      <ProductSchema
-        type="Course"
-        name="קורס בידול מותג אישי - שיטת TrueSignal"
-        description="8 מודולים, 16 שיעורים. שיטת TrueSignal של הדר דנן שעברו דרכה 3,500+ עסקים."
-        url={`${APP_URL}/course`}
-        price={1800}
-        imageUrl={`${APP_URL}/coursehadar.png`}
-      />
-      <FAQSchema items={COURSE_FAQS} />
-      <BreadcrumbSchema crumbs={[
-        { name: "דף הבית", url: APP_URL },
-        { name: "קורס דיגיטלי", url: `${APP_URL}/course` },
-      ]} />
-      <CourseLandingClient credit={0} whatsappPhone={whatsappPhone} email="" />
-    </>
+    <div
+      dir="rtl"
+      className="font-assistant"
+      style={{
+        minHeight: "100svh",
+        background: "#0D1018",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem",
+      }}
+    >
+      <div style={{ textAlign: "center", maxWidth: 520 }}>
+        <div
+          style={{
+            fontSize: "3.5rem",
+            marginBottom: "1.5rem",
+            lineHeight: 1,
+          }}
+        >
+          🎓
+        </div>
+        <h1
+          style={{
+            fontSize: "clamp(2rem, 5vw, 3rem)",
+            fontWeight: 800,
+            background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            marginBottom: "1rem",
+            lineHeight: 1.2,
+          }}
+        >
+          קורס דיגיטלי
+        </h1>
+        <p
+          style={{
+            fontSize: "1.4rem",
+            color: "#EDE9E1",
+            fontWeight: 700,
+            marginBottom: "0.75rem",
+          }}
+        >
+          בקרוב 🔜
+        </p>
+        <p
+          style={{
+            fontSize: "1.05rem",
+            color: "#9E9990",
+            lineHeight: 1.7,
+            marginBottom: "2rem",
+          }}
+        >
+          8 מודולים. 16 שיעורים. שיטת TrueSignal© שעברו דרכה 3,500+ עסקים.
+          <br />
+          גישה לנצח — בקרוב.
+        </p>
+        <a
+          href="/"
+          style={{
+            display: "inline-block",
+            padding: "0.75rem 2rem",
+            background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+            color: "#0D1018",
+            fontWeight: 700,
+            borderRadius: "0.5rem",
+            textDecoration: "none",
+            fontSize: "1rem",
+          }}
+        >
+          חזרה לדף הבית ←
+        </a>
+      </div>
+    </div>
   );
 }

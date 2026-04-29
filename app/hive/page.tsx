@@ -1,85 +1,87 @@
 import type { Metadata } from "next";
-import ProductLandingPage from "@/components/landing/ProductLandingPage";
-import { HivePricingSection } from "./HivePricingSection";
-import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 
 export const metadata: Metadata = {
-  title: "הכוורת | קהילה חודשית - הדר דנן",
-  description: "קהילה חודשית של בעלי עסקים. מפגש זום עם הדר, תוכן בלעדי, קהילת WhatsApp. 29 שקל ללקוחות הדר, 97 שקל לכולם.",
+  title: "הכוורת | בקרוב - הדר דנן",
+  description: "קהילה חודשית של בעלי עסקים. בקרוב.",
   alternates: { canonical: "/hive" },
 };
 
 export default function HivePage() {
   return (
-    <>
-    <ViewContentTracker product="hive_97" value={97} />
-    <ProductLandingPage
-      productName="הכוורת"
-      price={97}
-      checkoutHref="#cta"
-
-      headline={<>הכוורת. <em>קהילה שצומחת</em> ביחד.</>}
-      heroSub="לא קורס. לא אתגר. מקום שבו ממשיכים לצמוח - יחד. מפגשי זום חודשיים, תוכן בלעדי, וקהילה פעילה שמבינה אותך."
-      stats={[
-        { val: "1x",   label: "מפגש זום בחודש" },
-        { val: "29",   label: "שקל ללקוחות הדר" },
-        { val: "97",   label: "שקל לכולם" },
-        { val: "0",    label: "התחייבות" },
-      ]}
-
-      problemItems={[
-        { icon: "🔇", text: "גמרת קורס, גמרת סדנה - ועכשיו אתה לבד. אין מי לשאול, אין מי לשמוע." },
-        { icon: "📉", text: "בלי עדכונים שוטפים - השיווק נוטה לחזור לישן. צמיחה צריכה מגע קבוע." },
-        { icon: "🔄", text: "כל חודש בלי קבוצת תמיכה, קל לאבד מומנטום ולחזור לניחושים." },
-      ]}
-      agitationText="הצמיחה האמיתית קורה לאחר הקורס - לא בתוכו. הכוורת היא המקום שבו ממשיכים לצמוח, כל חודש."
-
-      solutionTitle="מה כולל המנוי?"
-      solutionItems={[
-        { num: "1", title: "מפגש זום חודשי עם הדר",    desc: "שעה אחת בחודש עם הדר עצמה - שאלות, תוכן עדכני, ואסטרטגיה לחודש הבא." },
-        { num: "2", title: "תוכן בלעדי",               desc: "תכנים שלא יוצאים לשום מקום אחר - רק לחברי הכוורת. כלים, שיטות, ומה עובד עכשיו." },
-        { num: "3", title: "קהילת WhatsApp פעילה",     desc: "קבוצת WhatsApp של חברי הכוורת בלבד - תמיכה, שיתוף ניסיון, וחיבורים עסקיים." },
-      ]}
-
-      notForItems={[
-        "מי שרוצה פתרון חד-פעמי",
-        "מי שלא עובד על העסק שלו באופן שוטף",
-      ]}
-      forItems={[
-        "מי שסיים קורס, סדנה או אתגר",
-        "בעלי עסקים שרוצים קהילה שמבינה אותם",
-        "מי שרוצה עדכון שוטף ממה שעובד עכשיו",
-        "מי שרוצה חיבורים עסקיים אמיתיים",
-      ]}
-
-      whoName="הדר דנן"
-      whoRole="מייסדת הכוורת"
-      whoText="הכוורת נוצרה כי ראיתי שרוב בעלי העסקים מפסיקים לצמוח אחרי שגומרים קורס. חסר מגע קבוע, עדכון שוטף וקהילה שמבינה את האתגרים. זה בדיוק מה שהכוורת נותנת."
-
-      proofStats={[
-        { val: "29",   label: "שקל ללקוחות הדר" },
-        { val: "97",   label: "מחיר רגיל" },
-        { val: "1",    label: "מפגש זום בחודש" },
-      ]}
-      testimonials={[
-        { text: "הכוורת שומרת אותי ממוקד. כל מפגש עם הדר נותן לי מוטיבציה ורעיונות חדשים.", author: "ריקי מ.", role: "מאמנת אישית" },
-        { text: "הקהילה שאין לה תחליף - כולם מבינים מה עוברים עלינו כבעלי עסקים.", author: "דן כ.", role: "יועץ עסקי" },
-      ]}
-
-      faqs={[
-        { q: "איך מבטלים את המנוי?",              a: "בכל עת - דרך אזור האישי (/my) או בוואטסאפ. ביטול תוך 14 ימים = החזר מלא." },
-        { q: "מה ההבדל בין 29 שקל ל-97 שקל?",    a: "אותו מנוי בדיוק. מחיר 29 שקל הוא ללקוחות הדר שכבר רכשו אחד ממוצרי המסלול." },
-        { q: "מתי מתקיים מפגש הזום?",             a: "פעם בחודש - מועד מפורסם בתחילת כל חודש לכל חברי הכוורת." },
-        { q: "האם יש התחייבות חודשית מינימלית?",  a: "לא. מבטלים בכל עת. אין עלות ביטול." },
-      ]}
-
-      finalTitle="הצטרף/י לכוורת"
-      finalSub="ניתן לביטול בכל עת - ללא התחייבות."
-
-      hideMicroCommitment
-
-      priceSectionSlot={<HivePricingSection />}
-    />
-    </>
+    <div
+      dir="rtl"
+      className="font-assistant"
+      style={{
+        minHeight: "100svh",
+        background: "#0D1018",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem",
+      }}
+    >
+      <div style={{ textAlign: "center", maxWidth: 520 }}>
+        <div
+          style={{
+            fontSize: "3.5rem",
+            marginBottom: "1.5rem",
+            lineHeight: 1,
+          }}
+        >
+          🐝
+        </div>
+        <h1
+          style={{
+            fontSize: "clamp(2rem, 5vw, 3rem)",
+            fontWeight: 800,
+            background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            marginBottom: "1rem",
+            lineHeight: 1.2,
+          }}
+        >
+          הכוורת
+        </h1>
+        <p
+          style={{
+            fontSize: "1.4rem",
+            color: "#EDE9E1",
+            fontWeight: 700,
+            marginBottom: "0.75rem",
+          }}
+        >
+          בקרוב 🔜
+        </p>
+        <p
+          style={{
+            fontSize: "1.05rem",
+            color: "#9E9990",
+            lineHeight: 1.7,
+            marginBottom: "2rem",
+          }}
+        >
+          קהילה חודשית של בעלי עסקים שממשיכים לצמוח.
+          <br />
+          מפגשי זום, תוכן בלעדי, וקהילה שמבינה אותך.
+        </p>
+        <a
+          href="/"
+          style={{
+            display: "inline-block",
+            padding: "0.75rem 2rem",
+            background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+            color: "#0D1018",
+            fontWeight: 700,
+            borderRadius: "0.5rem",
+            textDecoration: "none",
+            fontSize: "1rem",
+          }}
+        >
+          חזרה לדף הבית ←
+        </a>
+      </div>
+    </div>
   );
 }
