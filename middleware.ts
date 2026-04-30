@@ -97,7 +97,7 @@ export async function middleware(request: NextRequest) {
   // UTM params → cookie (first touch only)
   const utmKeys = [
     "utm_source", "utm_medium", "utm_campaign", "utm_content",
-    "utm_adset", "utm_ad", "fbclid", "gclid",
+    "utm_adset", "utm_ad", "utm_term", "fbclid", "gclid",
   ];
   for (const key of utmKeys) {
     const value = searchParams.get(key);

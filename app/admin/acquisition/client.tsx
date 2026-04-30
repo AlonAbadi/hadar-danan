@@ -165,8 +165,17 @@ type TrainingVideoStats = {
   reached100: number;
 };
 
+type CampaignRow = {
+  source: string;
+  medium: string;
+  campaign: string;
+  content: string;
+  leads: number;
+};
+
 export default function AcquisitionClient({
   sources,
+  campaigns,
   metaAds,
   googleAds,
   ga4,
@@ -175,6 +184,7 @@ export default function AcquisitionClient({
   dateRange,
 }: {
   sources: any[];
+  campaigns: CampaignRow[];
   metaAds: any;
   googleAds: any;
   ga4: any;
@@ -652,6 +662,43 @@ export default function AcquisitionClient({
           </table>
         </div>
       </Card>
+
+      {/* ── Campaign Breakdown ──────────────────────────────────────── */}
+      {campaigns.length > 0 && (
+        <Card style={{ marginBottom: 24 }}>
+          <CardHeader title="ביצועים לפי קמפיין" sub="UTM Campaign Breakdown" />
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: C.soft }}>
+                  {[
+                    { l: 'מקור', w: '14%' },
+                    { l: 'מדיום', w: '12%' },
+                    { l: 'קמפיין', w: '26%' },
+                    { l: 'תוכן / אד', w: '26%' },
+                    { l: 'לידים' },
+                  ].map((h, i) => (
+                    <th key={i} style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, width: h.w }}>
+                      {h.l}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {campaigns.map((c, i) => (
+                  <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                    <td style={{ padding: '10px 16px', fontWeight: 600, color: C.gold }}>{c.source}</td>
+                    <td style={{ padding: '10px 16px', color: C.muted }}>{c.medium || '—'}</td>
+                    <td style={{ padding: '10px 16px', color: C.fg }}>{c.campaign || '—'}</td>
+                    <td style={{ padding: '10px 16px', color: C.muted, fontSize: 12 }}>{c.content || '—'}</td>
+                    <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: C.fg, fontFamily: 'system-ui' }}>{c.leads}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       {/* ── Meta Ads ─────────────────────────────────────────────────── */}
       <Card>

@@ -23,7 +23,10 @@ export interface Database {
           segment: string | null;
           ab_variant: AbVariant | null;
           utm_source: string | null;
+          utm_medium: string | null;
           utm_campaign: string | null;
+          utm_content: string | null;
+          utm_term: string | null;
           utm_adset: string | null;
           utm_ad: string | null;
           click_id: string | null;
@@ -48,7 +51,10 @@ export interface Database {
           segment?: string | null;
           ab_variant?: AbVariant | null;
           utm_source?: string | null;
+          utm_medium?: string | null;
           utm_campaign?: string | null;
+          utm_content?: string | null;
+          utm_term?: string | null;
           utm_adset?: string | null;
           utm_ad?: string | null;
           click_id?: string | null;
@@ -73,7 +79,10 @@ export interface Database {
           segment?: string | null;
           ab_variant?: AbVariant | null;
           utm_source?: string | null;
+          utm_medium?: string | null;
           utm_campaign?: string | null;
+          utm_content?: string | null;
+          utm_term?: string | null;
           utm_adset?: string | null;
           utm_ad?: string | null;
           click_id?: string | null;

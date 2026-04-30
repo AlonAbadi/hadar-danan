@@ -318,7 +318,7 @@ export async function getSourceAnalytics(dateRange?: string) {
 
   const { data: users } = await supabase
     .from('users')
-    .select('utm_source, utm_campaign, created_at, status')
+    .select('id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, created_at, status')
     .gte('created_at', dateFilter);
 
   const { data: purchases } = await supabase
@@ -327,52 +327,68 @@ export async function getSourceAnalytics(dateRange?: string) {
     .eq('status', 'completed')
     .gte('created_at', dateFilter);
 
-  // Get UTM sources for buyers
+  // Get UTM data for buyers
   const buyerIds = new Set(purchases?.map((p) => p.user_id) || []);
   const { data: buyerUsers } = await supabase
     .from('users')
-    .select('id, utm_source')
+    .select('id, utm_source, utm_medium, utm_campaign, utm_content')
     .in('id', Array.from(buyerIds).slice(0, 400));
 
-  const buyerSourceMap: Record<string, string> = {};
+  const buyerMap: Record<string, { source: string; medium: string; campaign: string }> = {};
   buyerUsers?.forEach((u) => {
-    buyerSourceMap[u.id] = u.utm_source || 'direct';
+    buyerMap[u.id] = {
+      source:   u.utm_source   || 'direct',
+      medium:   u.utm_medium   || '',
+      campaign: u.utm_campaign || '',
+    };
   });
 
   // Group by source
-  const sources: Record<string, {
-    leads: number;
-    buyers: number;
-    revenue: number;
-  }> = {};
-
-  // Leads = users who signed up in the date range
+  const sources: Record<string, { leads: number; buyers: number; revenue: number }> = {};
   users?.forEach((u) => {
     const src = u.utm_source || 'direct';
     if (!sources[src]) sources[src] = { leads: 0, buyers: 0, revenue: 0 };
     sources[src].leads += 1;
   });
 
-  // Buyers + revenue = based on purchases completed in the date range
-  // (buyer may have signed up outside the range — use purchase date, not signup date)
   const uniqueBuyersPerSource: Record<string, Set<string>> = {};
   purchases?.forEach((p) => {
-    const src = buyerSourceMap[p.user_id] || 'direct';
+    const src = buyerMap[p.user_id]?.source || 'direct';
     if (!sources[src]) sources[src] = { leads: 0, buyers: 0, revenue: 0 };
     if (!uniqueBuyersPerSource[src]) uniqueBuyersPerSource[src] = new Set();
     uniqueBuyersPerSource[src].add(p.user_id);
     sources[src].revenue += p.amount || 0;
   });
+  Object.entries(uniqueBuyersPerSource).forEach(([src, s]) => { sources[src].buyers = s.size; });
 
-  Object.entries(uniqueBuyersPerSource).forEach(([src, buyerSet]) => {
-    sources[src].buyers = buyerSet.size;
+  // Campaign breakdown: group by source+medium+campaign+content
+  const campaignMap: Record<string, { leads: number; source: string; medium: string; campaign: string; content: string }> = {};
+  users?.forEach((u) => {
+    if (!u.utm_campaign && !u.utm_source) return;
+    const key = [u.utm_source || 'direct', u.utm_medium || '', u.utm_campaign || '', u.utm_content || ''].join('||');
+    if (!campaignMap[key]) campaignMap[key] = {
+      leads: 0,
+      source:   u.utm_source   || 'direct',
+      medium:   u.utm_medium   || '',
+      campaign: u.utm_campaign || '',
+      content:  u.utm_content  || '',
+    };
+    campaignMap[key].leads += 1;
   });
 
-  return Object.entries(sources).map(([source, stats]) => ({
-    source,
-    ...stats,
-    conversionRate: stats.leads > 0 ? Math.round((stats.buyers / stats.leads) * 100) : 0,
-  }));
+  const campaigns = Object.values(campaignMap)
+    .filter(c => c.campaign || c.medium)
+    .sort((a, b) => b.leads - a.leads)
+    .slice(0, 20);
+
+  return {
+    sources: Object.entries(sources).map(([source, stats]) => ({
+      source,
+      ...stats,
+      conversionRate: stats.leads > 0 ? Math.round((stats.buyers / stats.leads) * 100) : 0,
+    })),
+    campaigns,
+  };
 }
 
 // ─── Time-to-Conversion ───────────────────────────────

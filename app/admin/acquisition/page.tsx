@@ -13,7 +13,7 @@ export default async function AcquisitionPage({
   const { range } = await searchParams;
   const dateRange = range || '30d';
 
-  const [sources, metaAds, googleAds, ga4, quiz, trainingVideo] = await Promise.all([
+  const [sourceData, metaAds, googleAds, ga4, quiz, trainingVideo] = await Promise.all([
     getSourceAnalytics(dateRange),
     getMetaAdsData(dateRange),
     getGoogleAdsData(dateRange),
@@ -25,7 +25,8 @@ export default async function AcquisitionPage({
   return (
     <Suspense>
       <AcquisitionClient
-        sources={sources}
+        sources={sourceData.sources}
+        campaigns={sourceData.campaigns}
         metaAds={metaAds}
         googleAds={googleAds}
         ga4={ga4}

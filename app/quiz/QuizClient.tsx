@@ -472,7 +472,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
     setLeadError(null);
 
     // Read UTM attribution from cookies — truncate to avoid schema max-length failures
-    const utmKeys = ["utm_source", "utm_campaign", "utm_adset", "utm_ad", "fbclid", "gclid"];
+    const utmKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "utm_adset", "utm_ad", "fbclid", "gclid"];
     const utmData: Record<string, string> = {};
     for (const key of utmKeys) {
       const val = getCookie(key);

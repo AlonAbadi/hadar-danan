@@ -51,7 +51,7 @@ export function SignupForm({ ctaLabel, dark = false }: SignupFormProps) {
     }
     setChecking(false);
 
-    const keys = ["utm_source", "utm_campaign", "utm_adset", "utm_ad", "fbclid", "gclid"];
+    const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "utm_adset", "utm_ad", "fbclid", "gclid"];
     const data: Record<string, string> = {};
     for (const key of keys) {
       const val = getCookie(key);
