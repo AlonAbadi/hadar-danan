@@ -1,4 +1,6 @@
 import { Suspense } from 'react';
+
+export const dynamic = 'force-dynamic';
 import { getSourceAnalytics, getMetaAdsData, getGoogleAdsData } from '@/lib/admin/queries';
 import { getGA4Data } from '@/lib/admin/ga4-server';
 import AcquisitionClient from './client';
