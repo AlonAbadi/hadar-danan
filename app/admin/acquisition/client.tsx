@@ -1,223 +1,466 @@
 'use client';
 
-import { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
-import { PageHeader, KpiGrid, KpiCard, SectionCard, DataTable, Badge, PercentBar, DateRangePicker, EmptyState, ActionButton } from '@/components/admin/ui';
+import { useRouter, usePathname } from 'next/navigation';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie,
+} from 'recharts';
 
-const COLORS = ['#c9a84c', '#3b82f6', '#22c55e', '#ef4444', '#8b5cf6', '#6b7280'];
-const TT = { contentStyle: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 12 }, labelStyle: { color: '#111827', fontWeight: 600 } };
+// ── Palette ───────────────────────────────────────────────────────────────
+const C = {
+  bg:     '#080C14',
+  card:   '#141820',
+  soft:   '#1D2430',
+  border: '#2C323E',
+  gold:   '#C9964A',
+  goldL:  '#E8B94A',
+  goldD:  '#9E7C3A',
+  fg:     '#EDE9E1',
+  muted:  '#9E9990',
+  green:  '#22c55e',
+  red:    '#ef4444',
+  blue:   '#3b82f6',
+  purple: '#8b5cf6',
+};
 
-function ApiStatusBanner({ name, configured }: { name: string; configured: boolean }) {
-  if (configured) return null;
+const CHART_COLORS = [C.gold, C.blue, C.green, C.purple, C.red, C.muted];
+
+const TT = {
+  contentStyle: { background: C.soft, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12, color: C.fg },
+  labelStyle: { color: C.fg, fontWeight: 600 },
+  itemStyle: { color: C.muted },
+  cursor: { fill: 'rgba(201,150,74,0.06)' },
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{
-      padding: '12px 16px',
-      background: '#fefce8',
-      border: '1px solid #fef08a',
-      borderRadius: '8px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '12px',
-      fontSize: '12px',
-      color: '#ca8a04',
-    }}>
-      <span>⚠️ {name} - לא מחובר. הוסף API credentials ב-.env</span>
-      <span style={{ color: '#9ca3af', fontSize: '11px' }}>
-        {name === 'Meta Ads' ? 'META_ADS_ACCESS_TOKEN, META_AD_ACCOUNT_ID' :
-         name === 'Google Ads' ? 'GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_DEVELOPER_TOKEN' :
-         'GA4_PROPERTY_ID + GOOGLE_APPLICATION_CREDENTIALS_JSON'}
-      </span>
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden', ...style }}>
+      {children}
     </div>
   );
 }
 
+function CardHeader({ title, sub, action }: { title: string; sub?: string; action?: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: C.fg }}>{title}</span>
+        {sub && <span style={{ fontSize: 11, color: C.muted, fontFamily: 'system-ui', fontWeight: 400 }}>{sub}</span>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function Kpi({ label, value, accent, sub }: { label: string; value: string; accent?: string; sub?: string }) {
+  return (
+    <Card>
+      <div style={{ padding: '18px 20px' }}>
+        <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>{label}</div>
+        <div style={{ fontSize: 28, fontWeight: 700, color: accent || C.fg, letterSpacing: '-0.02em', fontFamily: 'system-ui, sans-serif', lineHeight: 1 }}>{value}</div>
+        {sub && <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>{sub}</div>}
+      </div>
+    </Card>
+  );
+}
+
+function HBar({ data, valueKey, labelKey }: { data: any[]; valueKey: string; labelKey: string }) {
+  const max = Math.max(...data.map(d => d[valueKey]), 1);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {data.map((d, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 130, textAlign: 'right', fontSize: 12, color: C.fg, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d[labelKey]}</div>
+          <div style={{ flex: 1, background: C.soft, borderRadius: 4, overflow: 'hidden', height: 22 }}>
+            <div style={{
+              width: `${(d[valueKey] / max) * 100}%`,
+              height: '100%',
+              background: `linear-gradient(90deg, ${CHART_COLORS[i % CHART_COLORS.length]}, ${CHART_COLORS[(i + 1) % CHART_COLORS.length]})`,
+              borderRadius: 4,
+              opacity: 0.85,
+            }} />
+          </div>
+          <div style={{ width: 48, textAlign: 'left', fontSize: 12, fontWeight: 600, color: C.fg, fontFamily: 'system-ui' }}>
+            {d[valueKey].toLocaleString()}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Funnel({ steps }: { steps: { label: string; value: number; color?: string }[] }) {
+  const max = steps[0]?.value || 1;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {steps.map((step, i) => {
+        const prev = steps[i - 1];
+        const pct = (step.value / max) * 100;
+        const convPct = prev && prev.value > 0 ? ((step.value / prev.value) * 100).toFixed(1) : null;
+        const color = step.color || C.gold;
+        return (
+          <div key={step.label}>
+            {convPct && (
+              <div style={{ textAlign: 'center', fontSize: 11, color: C.muted, padding: '3px 0 8px' }}>
+                ↓ {convPct}% מ{prev.label}
+              </div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 110, textAlign: 'right', fontSize: 13, color: C.fg, fontWeight: 500, flexShrink: 0 }}>{step.label}</div>
+              <div style={{ flex: 1, background: C.soft, borderRadius: 6, overflow: 'hidden', height: 34 }}>
+                <div style={{
+                  width: `${pct}%`,
+                  height: '100%',
+                  background: `linear-gradient(90deg, ${color}cc, ${color})`,
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  paddingLeft: 10,
+                  paddingRight: 10,
+                  minWidth: 40,
+                  transition: 'width 0.6s ease',
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', fontFamily: 'system-ui', whiteSpace: 'nowrap' }}>
+                    {step.value.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              <div style={{ width: 44, textAlign: 'left', fontSize: 12, color: C.muted, fontFamily: 'system-ui', flexShrink: 0 }}>
+                {pct.toFixed(0)}%
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CrBadge({ value }: { value: number }) {
+  const color = value >= 5 ? C.green : value >= 2 ? C.gold : C.red;
+  return (
+    <span style={{ background: `${color}22`, color, padding: '3px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}>
+      {value}%
+    </span>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
 export default function AcquisitionClient({
   sources,
   metaAds,
   googleAds,
   ga4,
+  dateRange,
 }: {
   sources: any[];
   metaAds: any;
   googleAds: any;
   ga4: any;
+  dateRange: string;
 }) {
-  const [dateRange, setDateRange] = useState('30d');
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const totalLeads = sources.reduce((s, x) => s + x.leads, 0);
+  const setRange = (v: string) => router.push(`${pathname}?range=${v}`);
+
+  // ── Derived ────────────────────────────────────────────────────────────
+  const totalLeads   = sources.reduce((s, x) => s + x.leads, 0);
   const totalRevenue = sources.reduce((s, x) => s + x.revenue, 0);
-  const totalBuyers = sources.reduce((s, x) => s + x.buyers, 0);
-  const overallCR = totalLeads > 0 ? ((totalBuyers / totalLeads) * 100).toFixed(1) : '0';
-  const metaSpend = metaAds.data?.reduce((s: number, c: any) => s + c.spend, 0) || 0;
+  const totalBuyers  = sources.reduce((s, x) => s + x.buyers, 0);
+  const overallCR    = totalLeads > 0 ? ((totalBuyers / totalLeads) * 100).toFixed(1) : '0';
+
+  const ov        = ga4.data?.overview;
+  const channels  = (ga4.data?.channels ?? []).slice(0, 8);
+  const events    = ga4.data?.events ?? [];
+
+  const eventCount = (name: string) => events.find((e: any) => e.name === name)?.count ?? 0;
+
+  const funnelSteps = ga4.configured && ov ? [
+    { label: 'סשנים',          value: ov.sessions ?? 0,        color: C.blue },
+    { label: 'משתמשים',        value: ov.users ?? 0,           color: C.purple },
+    { label: 'begin_checkout', value: eventCount('begin_checkout'), color: C.gold },
+    { label: 'generate_lead',  value: eventCount('generate_lead'),  color: C.green },
+    { label: 'purchase',       value: eventCount('purchase'),        color: C.goldL },
+  ].filter(s => s.value > 0) : [];
+
+  const sourceRevChart = sources
+    .filter(s => s.revenue > 0)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 6)
+    .map(s => ({ name: s.source, value: s.revenue }));
+
+  const leadsBarData = sources
+    .sort((a, b) => b.leads - a.leads)
+    .slice(0, 6)
+    .map(s => ({ name: s.source, לידים: s.leads, רוכשים: s.buyers }));
+
+  const RANGE_OPTS = [
+    { v: 'today', l: 'היום' },
+    { v: '7d',   l: '7 ימים' },
+    { v: '30d',  l: '30 ימים' },
+    { v: '90d',  l: '90 ימים' },
+  ];
 
   return (
-    <div>
-      <PageHeader
-        title="רכישת לקוחות"
-        titleEn="Acquisition & Attribution"
-        subtitle="מקורות תנועה, ביצועי קמפיינים וייחוס הכנסות"
-        actions={<DateRangePicker value={dateRange} onChange={setDateRange} />}
-      />
+    <div style={{ fontFamily: "'Assistant', sans-serif", direction: 'rtl' }}>
 
-      {/* API Status Banners */}
-      <ApiStatusBanner name="Meta Ads" configured={metaAds.configured} />
-      <ApiStatusBanner name="Google Ads" configured={googleAds.configured} />
-      <ApiStatusBanner name="GA4" configured={ga4.configured} />
+      {/* ── Header ──────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.fg, margin: 0, display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            רכישת לקוחות
+            <span style={{ fontSize: 13, fontWeight: 400, color: C.muted, fontFamily: 'system-ui' }}>Acquisition & Attribution</span>
+          </h1>
+          <p style={{ fontSize: 13, color: C.muted, margin: '4px 0 0' }}>מקורות תנועה, ביצועי קמפיינים וייחוס הכנסות</p>
+        </div>
 
-      <KpiGrid cols={5}>
-        <KpiCard label="סה״כ לידים" value={totalLeads.toLocaleString()} icon="👤" />
-        <KpiCard label="רוכשים" value={totalBuyers.toLocaleString()} icon="🛒" variant="success" />
-        <KpiCard label="המרה כוללת" value={`${overallCR}%`} icon="📈" variant="gold" />
-        <KpiCard label="הכנסה מלידים" value={`₪${totalRevenue.toLocaleString()}`} icon="💰" />
-        <KpiCard
-          label="הוצאה על מדיה (Meta)"
-          value={metaSpend > 0 ? `₪${Math.round(metaSpend).toLocaleString()}` : 'לא מחובר'}
-          icon="📢"
-          variant={metaSpend > 0 ? 'info' : 'default'}
-        />
-      </KpiGrid>
-
-      {/* Charts row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        <SectionCard title="הכנסות לפי מקור" titleEn="Revenue by Source">
-          {sources.length === 0 ? (
-            <div style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 13 }}>אין נתונים</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie
-                  data={sources.sort((a, b) => b.revenue - a.revenue).slice(0, 6).map(s => ({ name: s.source, value: s.revenue }))}
-                  cx="50%" cy="45%" outerRadius={80} innerRadius={45}
-                  dataKey="value" paddingAngle={3}
-                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                  labelLine={false}
-                >
-                  {sources.slice(0, 6).map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                </Pie>
-                <Tooltip {...TT} formatter={(v: any) => [`₪${Number(v).toLocaleString()}`, 'הכנסה']} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </SectionCard>
-
-        <SectionCard title="לידים מול רוכשים לפי מקור" titleEn="Leads vs Buyers">
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={sources.sort((a, b) => b.leads - a.leads).slice(0, 6).map(s => ({ name: s.source, לידים: s.leads, רוכשים: s.buyers }))} margin={{ right: 8, left: 0 }}>
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <Tooltip {...TT} />
-              <Bar dataKey="לידים" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="רוכשים" fill="#c9a84c" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </SectionCard>
+        {/* Date range picker */}
+        <div style={{ display: 'flex', gap: 2, background: C.soft, borderRadius: 8, padding: 3 }}>
+          {RANGE_OPTS.map(opt => (
+            <button
+              key={opt.v}
+              onClick={() => setRange(opt.v)}
+              style={{
+                background: dateRange === opt.v ? C.card : 'transparent',
+                border: `1px solid ${dateRange === opt.v ? C.border : 'transparent'}`,
+                color: dateRange === opt.v ? C.gold : C.muted,
+                fontSize: 12,
+                fontWeight: dateRange === opt.v ? 600 : 400,
+                padding: '5px 14px',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontFamily: "'Assistant', sans-serif",
+                transition: 'all 0.15s',
+              }}
+            >
+              {opt.l}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Source breakdown */}
-      <SectionCard title="ביצועים לפי מקור" titleEn="Performance by Source" noPadding>
-        <DataTable
-          columns={[
-            { key: 'source', label: 'מקור', width: '20%' },
-            { key: 'leads', label: 'לידים', align: 'center' },
-            { key: 'buyers', label: 'רוכשים', align: 'center' },
-            { key: 'cr', label: 'המרה', align: 'center' },
-            { key: 'revenue', label: 'הכנסה', align: 'center' },
-            { key: 'roas', label: 'ROAS', align: 'center' },
-            { key: 'bar', label: '', width: '15%' },
-          ]}
-          rows={sources
-            .sort((a, b) => b.revenue - a.revenue)
-            .map((s) => ({
-              source: <span style={{ fontWeight: 500, color: '#111827' }}>{s.source}</span>,
-              leads: s.leads.toLocaleString(),
-              buyers: s.buyers.toLocaleString(),
-              cr: (
-                <Badge variant={s.conversionRate >= 5 ? 'success' : s.conversionRate >= 2 ? 'warning' : 'danger'}>
-                  {s.conversionRate}%
-                </Badge>
-              ),
-              revenue: `₪${s.revenue.toLocaleString()}`,
-              roas: '-',
-              bar: <PercentBar value={totalRevenue > 0 ? (s.revenue / totalRevenue) * 100 : 0} color="#c9a84c" />,
-            }))}
-        />
-      </SectionCard>
-
-      {/* GA4 overview */}
-      {ga4.configured && ga4.data && (
-        <>
-          <KpiGrid cols={4}>
-            <KpiCard label="סשנים (GA4)" value={(ga4.data.overview?.sessions ?? 0).toLocaleString()} icon="📊" variant="info" />
-            <KpiCard label="משתמשים (GA4)" value={(ga4.data.overview?.users ?? 0).toLocaleString()} icon="👥" />
-            <KpiCard label="Bounce Rate" value={`${((ga4.data.overview?.bounceRate ?? 0) * 100).toFixed(1)}%`} icon="↩️" />
-            <KpiCard label="זמן סשן ממוצע" value={`${Math.round((ga4.data.overview?.avgSessionDuration ?? 0) / 60)}m`} icon="⏱️" />
-          </KpiGrid>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            <SectionCard title="ערוצי תנועה (GA4)" titleEn="Traffic Channels" noPadding>
-              <DataTable
-                columns={[
-                  { key: 'channel', label: 'ערוץ', width: '40%' },
-                  { key: 'sessions', label: 'סשנים', align: 'center' },
-                  { key: 'users', label: 'משתמשים', align: 'center' },
-                ]}
-                rows={(ga4.data.channels ?? []).map((c: any) => ({
-                  channel: <span style={{ fontWeight: 500 }}>{c.channel}</span>,
-                  sessions: c.sessions.toLocaleString(),
-                  users: c.users.toLocaleString(),
-                }))}
-              />
-            </SectionCard>
-
-            <SectionCard title="אירועים (GA4)" titleEn="Key Events">
-              {(ga4.data.events ?? []).map((e: any) => (
-                <div key={e.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6', fontSize: 13 }}>
-                  <span style={{ color: '#374151' }}>{e.name}</span>
-                  <span style={{ fontWeight: 600, color: '#111827' }}>{e.count.toLocaleString()}</span>
-                </div>
-              ))}
-            </SectionCard>
-          </div>
-        </>
+      {/* ── API banners ──────────────────────────────────────────────── */}
+      {!metaAds.configured && (
+        <div style={{ padding: '10px 16px', background: 'rgba(201,150,74,0.08)', border: '1px solid rgba(201,150,74,0.2)', borderRadius: 8, marginBottom: 12, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+          <span style={{ color: C.gold }}>⚠ Meta Ads לא מחובר</span>
+          <span style={{ color: C.muted }}>META_ADS_ACCESS_TOKEN, META_AD_ACCOUNT_ID</span>
+        </div>
+      )}
+      {!googleAds.configured && (
+        <div style={{ padding: '10px 16px', background: 'rgba(201,150,74,0.08)', border: '1px solid rgba(201,150,74,0.2)', borderRadius: 8, marginBottom: 12, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+          <span style={{ color: C.gold }}>⚠ Google Ads לא מחובר</span>
+          <span style={{ color: C.muted }}>GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_DEVELOPER_TOKEN</span>
+        </div>
       )}
 
-      {/* Meta Ads campaigns */}
-      <SectionCard
-        title="קמפיינים - Meta Ads"
-        titleEn="Meta Campaigns"
-        actions={!metaAds.configured && <Badge variant="warning">לא מחובר</Badge>}
-        noPadding
-      >
-        {metaAds.configured && metaAds.data ? (
-          <DataTable
-            columns={[
-              { key: 'name', label: 'קמפיין', width: '25%' },
-              { key: 'impressions', label: 'חשיפות', align: 'center' },
-              { key: 'clicks', label: 'קליקים', align: 'center' },
-              { key: 'ctr', label: 'CTR', align: 'center' },
-              { key: 'spend', label: 'הוצאה', align: 'center' },
-              { key: 'conversions', label: 'המרות', align: 'center' },
-              { key: 'cpa', label: 'CPA', align: 'center' },
-            ]}
-            rows={metaAds.data.map((c: any) => ({
-              name: <span style={{ fontWeight: 500, color: '#111827' }}>{c.name}</span>,
-              impressions: c.impressions.toLocaleString(),
-              clicks: c.clicks.toLocaleString(),
-              ctr: `${c.ctr.toFixed(2)}%`,
-              spend: `₪${Math.round(c.spend).toLocaleString()}`,
-              conversions: c.conversions,
-              cpa: c.costPerConversion > 0 ? `₪${Math.round(c.costPerConversion)}` : '-',
-            }))}
-          />
-        ) : (
-          <EmptyState
-            icon="📢"
-            title="Meta Ads לא מחובר"
-            description="הוסף META_ADS_ACCESS_TOKEN ו-META_AD_ACCOUNT_ID לקובץ .env"
-          />
+      {/* ── GA4 Overview KPIs ───────────────────────────────────────── */}
+      {ga4.configured && ov && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
+          <Kpi label="סשנים (GA4)" value={(ov.sessions ?? 0).toLocaleString()} accent={C.blue} />
+          <Kpi label="משתמשים (GA4)" value={(ov.users ?? 0).toLocaleString()} accent={C.purple} />
+          <Kpi label="Bounce Rate" value={`${((ov.bounceRate ?? 0) * 100).toFixed(1)}%`} accent={C.muted} />
+          <Kpi label="זמן סשן ממוצע" value={`${Math.round((ov.avgSessionDuration ?? 0) / 60)}m`} />
+        </div>
+      )}
+
+      {/* ── Business KPIs ───────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+        <Kpi label="לידים" value={totalLeads.toLocaleString()} />
+        <Kpi label="רוכשים" value={totalBuyers.toLocaleString()} accent={C.gold} />
+        <Kpi label="המרה כוללת" value={`${overallCR}%`} accent={C.gold} />
+        <Kpi label="הכנסה" value={`₪${totalRevenue.toLocaleString()}`} accent={C.green} />
+      </div>
+
+      {/* ── Conversion Funnel ────────────────────────────────────────── */}
+      {funnelSteps.length >= 2 && (
+        <Card style={{ marginBottom: 24 }}>
+          <CardHeader title="פאנל המרה" sub="Conversion Funnel" />
+          <div style={{ padding: 24 }}>
+            <Funnel steps={funnelSteps} />
+          </div>
+        </Card>
+      )}
+
+      {/* ── Charts row ───────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+
+        {/* Traffic channels */}
+        <Card>
+          <CardHeader title="ערוצי תנועה" sub="Traffic Channels (GA4)" />
+          <div style={{ padding: 20 }}>
+            {channels.length > 0 ? (
+              <HBar data={channels} valueKey="sessions" labelKey="channel" />
+            ) : (
+              <div style={{ textAlign: 'center', color: C.muted, fontSize: 13, padding: '32px 0' }}>אין נתונים</div>
+            )}
+          </div>
+        </Card>
+
+        {/* Leads vs Buyers bar chart */}
+        <Card>
+          <CardHeader title="לידים מול רוכשים" sub="Leads vs Buyers by Source" />
+          <div style={{ padding: '12px 8px 12px 0' }}>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={leadsBarData} margin={{ right: 8, left: -12 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: C.muted }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: C.muted }} axisLine={false} tickLine={false} />
+                <Tooltip {...TT} />
+                <Bar dataKey="לידים" fill={C.blue} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="רוכשים" fill={C.gold} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
+
+      {/* ── Key Events + Revenue donut row ──────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+
+        {/* Key Events tiles */}
+        {events.length > 0 && (
+          <Card>
+            <CardHeader title="אירועי מפתח" sub="Key Events (GA4)" />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: C.border }}>
+              {events.map((e: any) => {
+                const eventColors: Record<string, string> = {
+                  purchase: C.gold,
+                  generate_lead: C.green,
+                  begin_checkout: C.purple,
+                  sign_up: C.blue,
+                };
+                const accent = eventColors[e.name] || C.muted;
+                return (
+                  <div key={e.name} style={{ background: C.card, padding: '20px 22px' }}>
+                    <div style={{ fontSize: 11, color: C.muted, fontFamily: 'system-ui', marginBottom: 8 }}>{e.name}</div>
+                    <div style={{ fontSize: 30, fontWeight: 700, color: accent, fontFamily: 'system-ui', letterSpacing: '-0.02em' }}>
+                      {e.count.toLocaleString()}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
         )}
-      </SectionCard>
+
+        {/* Revenue donut */}
+        <Card>
+          <CardHeader title="הכנסות לפי מקור" sub="Revenue by Source" />
+          <div style={{ padding: 12 }}>
+            {sourceRevChart.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={sourceRevChart}
+                    cx="50%" cy="45%"
+                    outerRadius={80} innerRadius={48}
+                    dataKey="value" paddingAngle={3}
+                    label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                    labelLine={{ stroke: C.border }}
+                  >
+                    {sourceRevChart.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip {...TT} formatter={(v: any) => [`₪${Number(v).toLocaleString()}`, 'הכנסה']} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ textAlign: 'center', color: C.muted, fontSize: 13, padding: '60px 0' }}>אין הכנסות להצגה</div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* ── Source Performance Table ─────────────────────────────────── */}
+      <Card style={{ marginBottom: 24 }}>
+        <CardHeader title="ביצועים לפי מקור" sub="Performance by Source" />
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: C.soft }}>
+                {[
+                  { l: 'מקור', w: '22%' },
+                  { l: 'לידים' }, { l: 'רוכשים' }, { l: 'המרה' },
+                  { l: 'הכנסה' }, { l: 'ROAS' }, { l: '', w: '12%' },
+                ].map((h, i) => (
+                  <th key={i} style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, width: h.w }}>
+                    {h.l}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sources.sort((a, b) => b.revenue - a.revenue).map((s, i) => {
+                const barPct = totalRevenue > 0 ? (s.revenue / totalRevenue) * 100 : 0;
+                return (
+                  <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: C.fg }}>{s.source}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{s.leads.toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{s.buyers.toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                      <CrBadge value={parseFloat(String(s.conversionRate))} />
+                    </td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>
+                      {s.revenue > 0 ? `₪${s.revenue.toLocaleString()}` : '—'}
+                    </td>
+                    <td style={{ padding: '12px 16px', color: C.muted, textAlign: 'right' }}>—</td>
+                    <td style={{ padding: '12px 20px' }}>
+                      <div style={{ height: 4, background: C.soft, borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ width: `${barPct}%`, height: '100%', background: `linear-gradient(90deg, ${C.goldL}, ${C.gold})`, borderRadius: 2 }} />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* ── Meta Ads ─────────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader
+          title="קמפיינים — Meta Ads"
+          sub="Meta Campaigns"
+          action={!metaAds.configured ? (
+            <span style={{ fontSize: 11, color: C.gold, background: 'rgba(201,150,74,0.12)', padding: '3px 10px', borderRadius: 6 }}>לא מחובר</span>
+          ) : undefined}
+        />
+        {metaAds.configured && metaAds.data ? (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: C.soft }}>
+                  {['קמפיין', 'חשיפות', 'קליקים', 'CTR', 'הוצאה', 'המרות', 'CPA'].map(h => (
+                    <th key={h} style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {metaAds.data.map((camp: any, i: number) => (
+                  <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: C.fg }}>{camp.name}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{camp.impressions.toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{camp.clicks.toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right' }}>{camp.ctr.toFixed(2)}%</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>₪{Math.round(camp.spend).toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{camp.conversions}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{camp.costPerConversion > 0 ? `₪${Math.round(camp.costPerConversion)}` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📢</div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: C.muted, marginBottom: 6 }}>Meta Ads לא מחובר</div>
+            <div style={{ fontSize: 13, color: `${C.muted}88` }}>הוסף META_ADS_ACCESS_TOKEN ו-META_AD_ACCOUNT_ID לקובץ .env</div>
+          </div>
+        )}
+      </Card>
+
     </div>
   );
 }
