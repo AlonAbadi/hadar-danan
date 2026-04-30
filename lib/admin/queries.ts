@@ -529,6 +529,47 @@ export async function getCalendlyData() {
   }
 }
 
+// ─── Training Video Stats for Acquisition Page ────────
+export async function getTrainingVideoStats(dateRange?: string) {
+  const supabase = createServerClient();
+  const VIDEO_ID = '1178865564';
+  const since = getDateFilter(dateRange);
+
+  const { data: events, error } = await supabase
+    .from('video_events')
+    .select('anon_id, user_email, event_type, percent_watched, created_at')
+    .eq('video_id', VIDEO_ID)
+    .gte('created_at', since)
+    .limit(10000);
+
+  const empty = { totalPlays: 0, uniqueViewers: 0, reached25: 0, reached50: 0, reached75: 0, reached100: 0 };
+  if (error || !events || events.length === 0) return empty;
+
+  const viewerKey = (e: { anon_id: string | null; user_email: string | null }) =>
+    e.anon_id ?? e.user_email ?? null;
+
+  const playEvents = events.filter(e => e.event_type === 'play');
+  const allViewers = new Set(events.map(viewerKey).filter(Boolean));
+
+  const viewerMax: Record<string, number> = {};
+  for (const e of events) {
+    const key = viewerKey(e);
+    if (!key) continue;
+    const pct = e.event_type === 'completed' ? 100 : (e.percent_watched ?? 0);
+    if (pct > (viewerMax[key] ?? 0)) viewerMax[key] = pct;
+  }
+  const maxes = Object.values(viewerMax);
+
+  return {
+    totalPlays: playEvents.length,
+    uniqueViewers: allViewers.size,
+    reached25:  maxes.filter(p => p >= 25).length,
+    reached50:  maxes.filter(p => p >= 50).length,
+    reached75:  maxes.filter(p => p >= 75).length,
+    reached100: maxes.filter(p => p >= 100).length,
+  };
+}
+
 // ─── Video Event Stats (Supabase) ─────────────────────
 export async function getVideoEventStats() {
   const supabase = createServerClient();

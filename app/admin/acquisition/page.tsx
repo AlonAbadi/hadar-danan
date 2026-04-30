@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
-import { getSourceAnalytics, getMetaAdsData, getGoogleAdsData, getQuizStats } from '@/lib/admin/queries';
+import { getSourceAnalytics, getMetaAdsData, getGoogleAdsData, getQuizStats, getTrainingVideoStats } from '@/lib/admin/queries';
 import { getGA4Data } from '@/lib/admin/ga4-server';
 import AcquisitionClient from './client';
 
@@ -13,12 +13,13 @@ export default async function AcquisitionPage({
   const { range } = await searchParams;
   const dateRange = range || '30d';
 
-  const [sources, metaAds, googleAds, ga4, quiz] = await Promise.all([
+  const [sources, metaAds, googleAds, ga4, quiz, trainingVideo] = await Promise.all([
     getSourceAnalytics(dateRange),
     getMetaAdsData(dateRange),
     getGoogleAdsData(dateRange),
     getGA4Data(dateRange),
     getQuizStats(dateRange),
+    getTrainingVideoStats(dateRange),
   ]);
 
   return (
@@ -29,6 +30,7 @@ export default async function AcquisitionPage({
         googleAds={googleAds}
         ga4={ga4}
         quiz={quiz}
+        trainingVideo={trainingVideo}
         dateRange={dateRange}
       />
     </Suspense>
