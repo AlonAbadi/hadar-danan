@@ -57,23 +57,27 @@ function formatPrice(n: number): string {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  lead: 'ליד',
-  engaged: 'מעורב',
-  high_intent: 'כוונה גבוהה',
-  buyer: 'קונה',
-  booked: 'פגישה',
-  premium_lead: 'פרמיום',
+  lead:             'ליד',
+  engaged:          'מעורב',
+  high_intent:      'כוונה גבוהה',
+  buyer:            'קונה',
+  booked:           'פגישה',
+  premium_lead:     'פרמיום',
   partnership_lead: 'שותפות',
+  handled:          'טופל',
+  not_relevant:     'לא רלוונטי',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  lead: '#9E9990',
-  engaged: '#4285F4',
-  high_intent: '#C9964A',
-  buyer: '#34A853',
-  booked: '#34A853',
-  premium_lead: '#E8B94A',
+  lead:             '#9E9990',
+  engaged:          '#4285F4',
+  high_intent:      '#C9964A',
+  buyer:            '#34A853',
+  booked:           '#34A853',
+  premium_lead:     '#E8B94A',
   partnership_lead: '#E8B94A',
+  handled:          '#34A853',
+  not_relevant:     '#9E9990',
 };
 
 const PRODUCT_LABELS: Record<string, string> = {
@@ -906,27 +910,30 @@ function PriorityLeadCard({ lead, onAnalyze }: { lead: PriorityLead; onAnalyze: 
 // ── Priority Leads Tab ────────────────────────────────────────────────────────
 
 function PriorityLeadsTab() {
-  const [leads, setLeads]       = useState<PriorityLead[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [activeLead, setActive] = useState<PriorityLead | null>(null);
+  const [leads, setLeads]           = useState<PriorityLead[]>([]);
+  const [archivedCount, setArchived] = useState(0);
+  const [loading, setLoading]        = useState(true);
+  const [activeLead, setActive]      = useState<PriorityLead | null>(null);
+  const [showArchive, setShowArchive] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/admin/priority-leads')
+  function load(archived: boolean) {
+    setLoading(true);
+    const url = archived ? '/api/admin/priority-leads?archived=true' : '/api/admin/priority-leads';
+    fetch(url)
       .then(r => r.json())
-      .then(d => setLeads(d.leads ?? []))
+      .then(d => {
+        setLeads(d.leads ?? []);
+        if (!archived) setArchived(d.archivedCount ?? 0);
+      })
       .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return <div style={{ ...cardStyle, color: '#9E9990', fontSize: 13 }}>טוען לידים...</div>;
   }
 
-  if (leads.length === 0) {
-    return (
-      <div style={{ ...cardStyle, textAlign: 'center', color: '#9E9990', padding: 40 }}>
-        אין לידים בעדיפות גבוהה
-      </div>
-    );
+  useEffect(() => { load(false); }, []);
+
+  function toggleArchive() {
+    const next = !showArchive;
+    setShowArchive(next);
+    load(next);
   }
 
   return (
@@ -936,23 +943,69 @@ function PriorityLeadsTab() {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <div style={{ fontSize: 13, color: '#9E9990' }}>{leads.length} לידים לטיפול</div>
 
-        {PRIORITY_TIERS.map(tier => {
+        {/* Header row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 13, color: '#9E9990' }}>
+            {loading ? 'טוען...' : showArchive
+              ? `${leads.length} לידים בארכיון`
+              : `${leads.length} לידים לטיפול`}
+          </div>
+          <button
+            onClick={toggleArchive}
+            style={{
+              padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+              cursor: 'pointer', border: '1px solid #2C323E',
+              background: showArchive ? '#2C323E' : 'transparent',
+              color: showArchive ? '#EDE9E1' : '#9E9990',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            {showArchive ? '← חזור לרשימה' : (
+              <>
+                ארכיון
+                {archivedCount > 0 && (
+                  <span style={{
+                    background: '#2C323E', color: '#9E9990', borderRadius: 10,
+                    fontSize: 11, padding: '1px 6px', fontWeight: 700,
+                  }}>
+                    {archivedCount}
+                  </span>
+                )}
+              </>
+            )}
+          </button>
+        </div>
+
+        {loading && (
+          <div style={{ ...cardStyle, color: '#9E9990', fontSize: 13 }}>טוען...</div>
+        )}
+
+        {!loading && leads.length === 0 && (
+          <div style={{ ...cardStyle, textAlign: 'center', color: '#9E9990', padding: 40 }}>
+            {showArchive ? 'אין לידים בארכיון' : 'אין לידים בעדיפות גבוהה'}
+          </div>
+        )}
+
+        {!loading && leads.length > 0 && PRIORITY_TIERS.map(tier => {
           const tierLeads = leads.filter(l => l.quiz_product === tier.product);
           if (tierLeads.length === 0) return null;
           return (
             <div key={tier.product}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: tier.color, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: tier.color, letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: showArchive ? '#9E9990' : tier.color, letterSpacing: '0.05em' }}>
                   {tier.label.toUpperCase()} · {tierLeads.length}
                 </span>
-                <div style={{ flex: 1, height: 1, background: tier.color + '33' }} />
+                <div style={{ flex: 1, height: 1, background: (showArchive ? '#9E9990' : tier.color) + '33' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {tierLeads.map(l => (
-                  <PriorityLeadCard key={l.id} lead={l} onAnalyze={() => setActive(l)} />
+                  <PriorityLeadCard
+                    key={l.id}
+                    lead={l}
+                    onAnalyze={() => setActive(l)}
+                  />
                 ))}
               </div>
             </div>

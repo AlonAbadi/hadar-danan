@@ -15,6 +15,7 @@ function isAdminAuthorized(req: NextRequest): boolean {
 
 const VALID_STATUSES: UserStatus[] = [
   'lead', 'engaged', 'high_intent', 'buyer', 'booked', 'premium_lead', 'partnership_lead',
+  'handled', 'not_relevant',
 ];
 
 // GET /api/admin/pipeline

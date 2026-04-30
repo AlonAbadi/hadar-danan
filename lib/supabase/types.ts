@@ -2,7 +2,7 @@
 // Conforms to the GenericTable / GenericSchema shape that @supabase/supabase-js v2 expects.
 // Regenerate automatically with: npx supabase gen types typescript --project-id <ref>
 
-export type UserStatus = "lead" | "engaged" | "high_intent" | "buyer" | "booked" | "premium_lead" | "partnership_lead";
+export type UserStatus = "lead" | "engaged" | "high_intent" | "buyer" | "booked" | "premium_lead" | "partnership_lead" | "handled" | "not_relevant";
 export type ProductType = "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000";
 export type PurchaseStatus = "pending" | "completed" | "failed" | "refunded";
 export type JobStatus = "pending" | "running" | "done" | "failed";

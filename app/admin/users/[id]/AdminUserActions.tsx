@@ -4,7 +4,7 @@ import { useTransition, useState } from "react";
 import { changeUserStatus, sendManualEmail } from "./actions";
 import type { UserStatus } from "@/lib/supabase/types";
 
-const STATUSES: { value: UserStatus; label: string }[] = [
+const STATUSES: { value: UserStatus; label: string; dividerBefore?: boolean }[] = [
   { value: "lead",             label: "ליד" },
   { value: "engaged",          label: "מעורב" },
   { value: "high_intent",      label: "כוונה גבוהה" },
@@ -12,6 +12,8 @@ const STATUSES: { value: UserStatus; label: string }[] = [
   { value: "booked",           label: "הזמין שיחה" },
   { value: "premium_lead",     label: "ליד פרמיום" },
   { value: "partnership_lead", label: "ליד שותפות" },
+  { value: "handled",          label: "טופל ✓",      dividerBefore: true },
+  { value: "not_relevant",     label: "לא רלוונטי ✕" },
 ];
 
 const TEMPLATES = [
@@ -146,20 +148,27 @@ export function AdminUserActions({ userId, currentStatus, phone }: Props) {
                 boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
               }}>
                 {STATUSES.map((s, i) => (
-                  <button
-                    key={s.value}
-                    onClick={() => handleStatusPick(s.value)}
-                    style={{
-                      display: "block", width: "100%", padding: "9px 14px",
-                      textAlign: "right", fontSize: 13, cursor: "pointer",
-                      background: s.value === selectedStatus ? "rgba(232,185,74,0.1)" : "transparent",
-                      color: s.value === selectedStatus ? "#E8B94A" : "#EDE9E1",
-                      border: "none", fontFamily: "Assistant, sans-serif",
-                      borderBottom: i < STATUSES.length - 1 ? "1px solid rgba(44,50,62,0.5)" : "none",
-                    }}
-                  >
-                    {s.label}
-                  </button>
+                  <div key={s.value}>
+                    {s.dividerBefore && (
+                      <div style={{ height: 1, background: '#2C323E', margin: '4px 0' }} />
+                    )}
+                    <button
+                      onClick={() => handleStatusPick(s.value)}
+                      style={{
+                        display: "block", width: "100%", padding: "9px 14px",
+                        textAlign: "right", fontSize: 13, cursor: "pointer",
+                        background: s.value === selectedStatus ? "rgba(232,185,74,0.1)" : "transparent",
+                        color: s.value === selectedStatus ? "#E8B94A"
+                          : s.value === "handled" ? "#4CAF82"
+                          : s.value === "not_relevant" ? "#9E9990"
+                          : "#EDE9E1",
+                        border: "none", fontFamily: "Assistant, sans-serif",
+                        borderBottom: i < STATUSES.length - 1 ? "1px solid rgba(44,50,62,0.5)" : "none",
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  </div>
                 ))}
               </div>
             </>
@@ -169,7 +178,7 @@ export function AdminUserActions({ userId, currentStatus, phone }: Props) {
         {/* Mark irrelevant */}
         <button
           style={{ ...BASE_BTN, color: "#9E9990", borderColor: "rgba(44,50,62,0.5)" }}
-          onClick={() => showToast("בפיתוח")}
+          onClick={() => handleStatusPick("not_relevant")}
         >
           סמן לא רלוונטי
         </button>

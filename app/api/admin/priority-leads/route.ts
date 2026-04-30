@@ -33,12 +33,16 @@ export interface PriorityLead {
   priority: number;
 }
 
+const ARCHIVE_STATUSES = new Set(['handled', 'not_relevant']);
+const ALWAYS_EXCLUDE   = new Set(['buyer', 'booked']);
+
 export async function GET(req: NextRequest) {
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: 'אין הרשאה' }, { status: 401 });
   }
 
   const supabase = createServerClient();
+  const showArchived = new URL(req.url).searchParams.get('archived') === 'true';
 
   try {
     const [{ data: quizRows }, { data: specialStatusUsers }] = await Promise.all([
@@ -54,7 +58,6 @@ export async function GET(req: NextRequest) {
         .in('status', ['premium_lead', 'partnership_lead']),
     ]);
 
-    // user_id -> quiz product (first/highest match wins since ordered by created_at desc)
     const quizProductMap: Record<string, { product: string; match_percent: number | null }> = {};
     for (const qr of quizRows ?? []) {
       if (qr.user_id && !quizProductMap[qr.user_id]) {
@@ -65,12 +68,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const quizUserIds = (quizRows ?? []).map(q => q.user_id as string);
+    const quizUserIds   = (quizRows ?? []).map(q => q.user_id as string);
     const specialUserIds = (specialStatusUsers ?? []).map(u => u.id);
-    const allUserIds = [...new Set([...quizUserIds, ...specialUserIds])];
+    const allUserIds    = [...new Set([...quizUserIds, ...specialUserIds])];
 
     if (allUserIds.length === 0) {
-      return NextResponse.json({ leads: [] });
+      return NextResponse.json({ leads: [], archivedCount: 0 });
     }
 
     const [{ data: users }, { data: purchases }] = await Promise.all([
@@ -86,14 +89,13 @@ export async function GET(req: NextRequest) {
     ]);
 
     const buyerIds = new Set((purchases ?? []).map(p => p.user_id));
-    const excludeStatuses = new Set(['buyer', 'booked']);
 
-    const leads: PriorityLead[] = (users ?? [])
-      .filter(u => !buyerIds.has(u.id) && !excludeStatuses.has(u.status))
+    const mapped: PriorityLead[] = (users ?? [])
+      .filter(u => !buyerIds.has(u.id) && !ALWAYS_EXCLUDE.has(u.status))
       .map(u => {
         let product = quizProductMap[u.id]?.product ?? null;
         if (!product) {
-          if (u.status === 'premium_lead')     product = 'premium';
+          if (u.status === 'premium_lead')          product = 'premium';
           else if (u.status === 'partnership_lead') product = 'partnership';
         }
         return {
@@ -108,14 +110,22 @@ export async function GET(req: NextRequest) {
           priority:      PRIORITY[product ?? ''] ?? 0,
         };
       })
-      .filter(u => u.priority > 0)
-      .sort((a, b) => {
+      .filter(u => u.priority > 0);
+
+    const active   = mapped.filter(u => !ARCHIVE_STATUSES.has(u.status));
+    const archived = mapped.filter(u =>  ARCHIVE_STATUSES.has(u.status));
+
+    const sort = (arr: PriorityLead[]) =>
+      arr.sort((a, b) => {
         if (b.priority !== a.priority) return b.priority - a.priority;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
 
-    return NextResponse.json({ leads });
+    return NextResponse.json({
+      leads:         sort(showArchived ? archived : active),
+      archivedCount: archived.length,
+    });
   } catch (error) {
-    return NextResponse.json({ leads: [], error: String(error) });
+    return NextResponse.json({ leads: [], archivedCount: 0, error: String(error) });
   }
 }
