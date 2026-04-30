@@ -624,45 +624,56 @@ function PriorityLeadCard({ lead }: { lead: PriorityLead }) {
   const tierColor = PRIORITY_TIERS.find(t => t.product === lead.quiz_product)?.color ?? '#9E9990';
 
   return (
-    <div style={{
-      ...cardStyle,
-      borderRight: `3px solid ${tierColor}`,
-      padding: '14px 18px',
-      display: 'flex',
-      gap: 12,
-      alignItems: 'flex-start',
-    }}>
-      {/* Main info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <Link href={`/admin/users/${lead.id}`} style={{ textDecoration: 'none' }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>
-              {lead.name ?? '—'}
-            </span>
-          </Link>
-          <StatusBadge status={lead.status} />
-          {lead.match_percent != null && (
-            <span style={{
-              fontSize: 11, fontWeight: 700,
-              color: tierColor,
-              background: tierColor + '18',
-              border: `1px solid ${tierColor}33`,
-              borderRadius: 6,
-              padding: '1px 7px',
-            }}>
-              {lead.match_percent}% התאמה
-            </span>
-          )}
-        </div>
-        <div style={{ fontSize: 13, color: '#9E9990', marginBottom: 2 }}>{lead.email}</div>
-        <div style={{ fontSize: 12, color: '#9E9990' }}>{relativeTime(lead.created_at)}</div>
-      </div>
+    <div style={{ position: 'relative' }}>
+      <Link href={`/admin/users/${lead.id}`} style={{ textDecoration: 'none', display: 'block' }}>
+        <div style={{
+          ...cardStyle,
+          borderRight: `3px solid ${tierColor}`,
+          padding: '14px 18px',
+          display: 'flex',
+          gap: 12,
+          alignItems: 'flex-start',
+          cursor: 'pointer',
+          transition: 'border-color 0.15s, background 0.15s',
+        }}
+          onMouseEnter={e => (e.currentTarget.style.background = '#1D2430')}
+          onMouseLeave={e => (e.currentTarget.style.background = '#141820')}
+        >
+          {/* Main info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>
+                {lead.name ?? '—'}
+              </span>
+              <StatusBadge status={lead.status} />
+              {lead.match_percent != null && (
+                <span style={{
+                  fontSize: 11, fontWeight: 700,
+                  color: tierColor,
+                  background: tierColor + '18',
+                  border: `1px solid ${tierColor}33`,
+                  borderRadius: 6,
+                  padding: '1px 7px',
+                }}>
+                  {lead.match_percent}% התאמה
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 13, color: '#9E9990', marginBottom: 2 }}>{lead.email}</div>
+            <div style={{ fontSize: 12, color: '#9E9990' }}>{relativeTime(lead.created_at)}</div>
+          </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
-        {lead.phone && (
+          {/* Spacer for phone button area */}
+          <div style={{ width: lead.phone ? 140 : 60, flexShrink: 0 }} />
+        </div>
+      </Link>
+
+      {/* Phone button — outside the Link so it doesn't navigate */}
+      <div style={{ position: 'absolute', top: '50%', left: 18, transform: 'translateY(-50%)' }}>
+        {lead.phone ? (
           <a
             href={`tel:${lead.phone}`}
+            onClick={e => e.stopPropagation()}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
               padding: '6px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700,
@@ -672,8 +683,7 @@ function PriorityLeadCard({ lead }: { lead: PriorityLead }) {
           >
             📞 {lead.phone}
           </a>
-        )}
-        {!lead.phone && (
+        ) : (
           <span style={{ fontSize: 12, color: '#9E9990' }}>אין טלפון</span>
         )}
       </div>
