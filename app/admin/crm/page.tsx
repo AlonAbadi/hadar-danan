@@ -128,7 +128,7 @@ function DashboardTab() {
   useEffect(() => {
     Promise.all([
       fetch('/api/admin/stats').then(r => r.json()).catch(() => ({})),
-      fetch('/api/admin/pipeline?limit=10').then(r => r.json()).catch(() => ({ users: [] })),
+      fetch('/api/admin/pipeline?limit=200').then(r => r.json()).catch(() => ({ users: [] })),
     ]).then(([s, p]) => {
       setStats({
         leads_today:      s?.leads_today      ?? 0,
@@ -162,23 +162,37 @@ function DashboardTab() {
         }
       </div>
 
-      {/* Recent activity */}
+      {/* All leads */}
       <div style={cardStyle}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1', marginBottom: 16 }}>פעילות אחרונה</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>כל הלידים</div>
+          {!loading && <div style={{ fontSize: 12, color: '#9E9990' }}>{recent.length} רשומות</div>}
+        </div>
         {loading && <div style={{ color: '#9E9990', fontSize: 13 }}>טוען...</div>}
         {recent.map(u => (
           <Link key={u.id} href={`/admin/users/${u.id}`} style={{ textDecoration: 'none' }}>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 0', borderBottom: '1px solid #2C323E',
+              padding: '10px 0', borderBottom: '1px solid #2C323E', gap: 8,
             }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: '#EDE9E1' }}>{u.name ?? u.email}</span>
-                <span style={{ fontSize: 12, color: '#9E9990' }}>{u.email}</span>
+                <div style={{ fontSize: 12, color: '#9E9990', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                {u.quiz_product && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700,
+                    color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
+                    background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
+                    border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
+                    borderRadius: 6, padding: '2px 8px', whiteSpace: 'nowrap',
+                  }}>
+                    🎯 {PRODUCT_LABELS[u.quiz_product] ?? u.quiz_product}
+                  </span>
+                )}
                 <StatusBadge status={u.status} />
-                <span style={{ fontSize: 12, color: '#9E9990' }}>{relativeTime(u.created_at)}</span>
+                <span style={{ fontSize: 11, color: '#9E9990', whiteSpace: 'nowrap' }}>{relativeTime(u.created_at)}</span>
               </div>
             </div>
           </Link>
