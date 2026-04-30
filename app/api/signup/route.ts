@@ -66,33 +66,59 @@ export async function POST(req: NextRequest) {
   const supabase = createServerClient();
 
   try {
-    // ── Upsert user (idempotent on email) ───────────────────
-    const { data: user, error: upsertErr } = await supabase
+    // ── Find-or-create user (avoids relying on a unique constraint) ──────────
+    const { data: existing } = await supabase
       .from("users")
-      .upsert(
-        {
+      .select("id, status")
+      .eq("email", email)
+      .maybeSingle();
+
+    let user: { id: string; status: string };
+
+    if (existing) {
+      // Update mutable fields; preserve status if already advanced beyond 'lead'
+      const { data: updated, error: updateErr } = await supabase
+        .from("users")
+        .update({
+          name,
+          phone,
+          last_seen_at: new Date().toISOString(),
+          ...(utm_source   ? { utm_source }   : {}),
+          ...(utm_campaign ? { utm_campaign } : {}),
+          ...(utm_adset    ? { utm_adset }    : {}),
+          ...(utm_ad       ? { utm_ad }       : {}),
+          ...(click_id     ? { click_id }     : {}),
+          ...(ab_variant   ? { ab_variant }   : {}),
+          ...(marketing_consent ? { marketing_consent: true, consent_at: new Date().toISOString() } : {}),
+        })
+        .eq("id", existing.id)
+        .select("id, status")
+        .single();
+      if (updateErr) throw new Error(updateErr.message);
+      user = updated!;
+    } else {
+      // New user
+      const { data: inserted, error: insertErr } = await supabase
+        .from("users")
+        .insert({
           email,
           name,
           phone,
-          ab_variant: ab_variant ?? null,
-          utm_source: utm_source ?? null,
+          ab_variant:   ab_variant   ?? null,
+          utm_source:   utm_source   ?? null,
           utm_campaign: utm_campaign ?? null,
-          utm_adset: utm_adset ?? null,
-          utm_ad: utm_ad ?? null,
-          click_id: click_id ?? null,
+          utm_adset:    utm_adset    ?? null,
+          utm_ad:       utm_ad       ?? null,
+          click_id:     click_id     ?? null,
           status: "lead",
           last_seen_at: new Date().toISOString(),
           ...(marketing_consent ? { marketing_consent: true, consent_at: new Date().toISOString() } : {}),
-        },
-        {
-          onConflict: "email",
-          ignoreDuplicates: false, // update name/phone if they changed
-        }
-      )
-      .select("id, status")
-      .single();
-
-    if (upsertErr) throw upsertErr;
+        })
+        .select("id, status")
+        .single();
+      if (insertErr) throw new Error(insertErr.message);
+      user = inserted!;
+    }
 
     // ── Merge anonymous identity → user ─────────────────────
     if (anonymous_id) {
@@ -194,7 +220,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, user_id: user.id }, { status: 201 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = err instanceof Error
+      ? err.message
+      : (err && typeof err === "object" ? JSON.stringify(err) : String(err));
 
     try {
       await supabase.from("error_logs").insert({
