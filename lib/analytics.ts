@@ -90,6 +90,8 @@ export function trackQuizRecommended(productId: string, matchPercent: number) {
       currency:      "ILS",
       match_percent: matchPercent,
     });
+    // GA4: one named event per product so dashboard can query distribution by event name
+    gtag("event", `quiz_result_${productId}`, { match_percent: matchPercent });
   } catch {}
 }
 

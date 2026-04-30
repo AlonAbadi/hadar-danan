@@ -35,7 +35,7 @@ export async function getGA4Data(dateRange?: string) {
     };
     const baseUrl = `https://analyticsdata.googleapis.com/v1beta/${propertyId}`;
 
-    const [summaryRes, channelsRes, eventsRes, quizRes] = await Promise.all([
+    const [summaryRes, channelsRes, eventsRes, quizRes, quizRecRes] = await Promise.all([
       fetch(`${baseUrl}:runReport`, {
         method: 'POST', headers,
         body: JSON.stringify({
@@ -87,13 +87,38 @@ export async function getGA4Data(dateRange?: string) {
           },
         }),
       }),
+      // Quiz recommendation distribution — one event per product type
+      fetch(`${baseUrl}:runReport`, {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          dateRanges: [{ startDate: since, endDate: until }],
+          dimensions: [{ name: 'eventName' }],
+          metrics: [{ name: 'eventCount' }],
+          dimensionFilter: {
+            filter: {
+              fieldName: 'eventName',
+              inListFilter: {
+                values: [
+                  'quiz_result_challenge',
+                  'quiz_result_workshop',
+                  'quiz_result_course',
+                  'quiz_result_strategy',
+                  'quiz_result_premium',
+                ],
+              },
+            },
+          },
+          orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+        }),
+      }),
     ]);
 
-    const [summary, channels, events, quiz] = await Promise.all([
+    const [summary, channels, events, quiz, quizRec] = await Promise.all([
       summaryRes.json(),
       channelsRes.json(),
       eventsRes.json(),
       quizRes.json(),
+      quizRecRes.json(),
     ]);
 
     const row = summary.rows?.[0];
@@ -119,6 +144,12 @@ export async function getGA4Data(dateRange?: string) {
         })),
         quizViews: Number(quiz.rows?.[0]?.metricValues?.[0]?.value ?? 0),
         quizUsers: Number(quiz.rows?.[0]?.metricValues?.[1]?.value ?? 0),
+        quizByProduct: Object.fromEntries(
+          (quizRec.rows ?? []).map((r: any) => [
+            (r.dimensionValues?.[0]?.value ?? '').replace('quiz_result_', ''),
+            Number(r.metricValues?.[0]?.value ?? 0),
+          ])
+        ) as Record<string, number>,
       },
     };
   } catch (error) {

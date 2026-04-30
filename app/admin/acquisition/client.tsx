@@ -346,11 +346,17 @@ export default function AcquisitionClient({
               <div style={{ textAlign: 'center', color: C.muted, fontSize: 13, padding: '32px 0' }}>אין נתונים בטווח זה</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {/* Column headers */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 20, fontSize: 10, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: -4 }}>
+                  <span style={{ minWidth: 32, textAlign: 'center' }}>DB</span>
+                  <span style={{ minWidth: 32, textAlign: 'center' }}>GA4</span>
+                </div>
                 {Object.entries(quiz.byProduct)
                   .sort(([, a], [, b]) => b - a)
                   .map(([product, count]) => {
                     const meta = PRODUCT_LABELS[product] ?? { label: product, color: C.muted };
                     const pct = quiz.total > 0 ? (count / quiz.total) * 100 : 0;
+                    const ga4Count = (ga4.data?.quizByProduct ?? {})[product] ?? 0;
                     return (
                       <div key={product}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -358,9 +364,11 @@ export default function AcquisitionClient({
                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color, flexShrink: 0 }} />
                             <span style={{ fontSize: 13, color: C.fg }}>{meta.label}</span>
                           </div>
-                          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                            <span style={{ fontSize: 12, color: C.muted }}>{pct.toFixed(0)}%</span>
-                            <span style={{ fontSize: 15, fontWeight: 700, color: meta.color, fontFamily: 'system-ui', minWidth: 28, textAlign: 'right' }}>{count}</span>
+                          <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+                            <span style={{ fontSize: 15, fontWeight: 700, color: meta.color, fontFamily: 'system-ui', minWidth: 32, textAlign: 'center' }}>{count}</span>
+                            <span style={{ fontSize: 15, fontWeight: 700, color: ga4Count > 0 ? meta.color : C.muted, fontFamily: 'system-ui', minWidth: 32, textAlign: 'center', opacity: ga4Count > 0 ? 1 : 0.4 }}>
+                              {ga4Count > 0 ? ga4Count : '—'}
+                            </span>
                           </div>
                         </div>
                         <div style={{ height: 6, background: C.soft, borderRadius: 3, overflow: 'hidden' }}>
