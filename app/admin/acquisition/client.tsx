@@ -252,19 +252,6 @@ export default function AcquisitionClient({
         </div>
       </div>
 
-      {/* ── API banners ──────────────────────────────────────────────── */}
-      {!metaAds.configured && (
-        <div style={{ padding: '10px 16px', background: 'rgba(201,150,74,0.08)', border: '1px solid rgba(201,150,74,0.2)', borderRadius: 8, marginBottom: 12, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-          <span style={{ color: C.gold }}>⚠ Meta Ads לא מחובר</span>
-          <span style={{ color: C.muted }}>META_ADS_ACCESS_TOKEN, META_AD_ACCOUNT_ID</span>
-        </div>
-      )}
-      {!googleAds.configured && (
-        <div style={{ padding: '10px 16px', background: 'rgba(201,150,74,0.08)', border: '1px solid rgba(201,150,74,0.2)', borderRadius: 8, marginBottom: 12, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-          <span style={{ color: C.gold }}>⚠ Google Ads לא מחובר</span>
-          <span style={{ color: C.muted }}>GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_DEVELOPER_TOKEN</span>
-        </div>
-      )}
 
       {/* ── GA4 Overview KPIs ───────────────────────────────────────── */}
       {ga4.configured && ov && (
