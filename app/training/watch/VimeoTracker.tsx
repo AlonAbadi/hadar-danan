@@ -9,6 +9,10 @@ function fbq(...args: unknown[]) {
   if (typeof window !== "undefined") (window as unknown as Record<string, (...a: unknown[]) => void>).fbq?.(...args);
 }
 
+function gtag(...args: unknown[]) {
+  if (typeof window !== "undefined") (window as unknown as Record<string, (...a: unknown[]) => void>).gtag?.(...args);
+}
+
 function getCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
   return document.cookie.split("; ").find((c) => c.startsWith(`${name}=`))?.split("=")[1];
@@ -53,6 +57,7 @@ export function VimeoTracker({ iframeId }: { iframeId: string }) {
       // play - fired when user starts or resumes watching
       p.on("play", () => {
         postEvent({ event_type: "play" });
+        gtag("event", "training_video_play");
       });
 
       // timeupdate - milestones + every 15 seconds
@@ -67,6 +72,7 @@ export function VimeoTracker({ iframeId }: { iframeId: string }) {
             firedMilestones.current.add(milestone);
             postEvent({ event_type: "watch_progress", percent_watched: milestone, drop_off_second: Math.floor(data.seconds) });
             fbq("trackCustom", `VideoWatched${milestone}`, { video_id: VIDEO_ID, percent: milestone });
+            gtag("event", `training_video_${milestone}`);
           }
         }
 
@@ -96,6 +102,7 @@ export function VimeoTracker({ iframeId }: { iframeId: string }) {
         firedMilestones.current.add(100);
         postEvent({ event_type: "completed", percent_watched: 100 });
         fbq("trackCustom", "VideoCompleted", { video_id: VIDEO_ID });
+        gtag("event", "training_video_complete");
       });
     }
 

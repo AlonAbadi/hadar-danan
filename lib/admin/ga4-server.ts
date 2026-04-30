@@ -35,7 +35,7 @@ export async function getGA4Data(dateRange?: string) {
     };
     const baseUrl = `https://analyticsdata.googleapis.com/v1beta/${propertyId}`;
 
-    const [summaryRes, channelsRes, eventsRes, quizRes, quizRecRes] = await Promise.all([
+    const [summaryRes, channelsRes, eventsRes, quizRes, quizRecRes, trainingRes] = await Promise.all([
       fetch(`${baseUrl}:runReport`, {
         method: 'POST', headers,
         body: JSON.stringify({
@@ -71,6 +71,44 @@ export async function getGA4Data(dateRange?: string) {
             },
           },
           orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+        }),
+      }),
+      // Training funnel — all named events in one request
+      fetch(`${baseUrl}:runReport`, {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          dateRanges: [{ startDate: since, endDate: until }],
+          dimensions: [{ name: 'eventName' }, { name: 'pagePath' }],
+          metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
+          dimensionFilter: {
+            orGroup: {
+              expressions: [
+                {
+                  filter: {
+                    fieldName: 'eventName',
+                    inListFilter: {
+                      values: [
+                        'training_video_play',
+                        'training_video_25', 'training_video_50', 'training_video_75',
+                        'training_video_complete',
+                        'training_quiz_cta_click',
+                        'training_click_challenge', 'training_click_workshop',
+                        'training_click_course', 'training_click_strategy',
+                        'training_click_premium', 'training_click_partnership',
+                        'training_click_hive',
+                      ],
+                    },
+                  },
+                },
+                {
+                  filter: {
+                    fieldName: 'pagePath',
+                    inListFilter: { values: ['/training', '/training/watch'] },
+                  },
+                },
+              ],
+            },
+          },
         }),
       }),
       // Quiz page visitors
@@ -113,10 +151,11 @@ export async function getGA4Data(dateRange?: string) {
       }),
     ]);
 
-    const [summary, channels, events, quiz, quizRec] = await Promise.all([
+    const [summary, channels, events, training, quiz, quizRec] = await Promise.all([
       summaryRes.json(),
       channelsRes.json(),
       eventsRes.json(),
+      trainingRes.json(),
       quizRes.json(),
       quizRecRes.json(),
     ]);
@@ -142,6 +181,30 @@ export async function getGA4Data(dateRange?: string) {
           name:  r.dimensionValues?.[0]?.value ?? '',
           count: Number(r.metricValues?.[0]?.value ?? 0),
         })),
+        training: (() => {
+          const rows: any[] = training.rows ?? [];
+          const byEvent: Record<string, number> = {};
+          const byPage: Record<string, number> = {};
+          const byPageUsers: Record<string, number> = {};
+          const productClicks: Record<string, number> = {};
+          rows.forEach((r: any) => {
+            const event = r.dimensionValues?.[0]?.value ?? '';
+            const page  = r.dimensionValues?.[1]?.value ?? '';
+            const count = Number(r.metricValues?.[0]?.value ?? 0);
+            const users = Number(r.metricValues?.[1]?.value ?? 0);
+            if (event === 'page_view' || event === '(not set)') {
+              byPage[page] = (byPage[page] ?? 0) + count;
+              byPageUsers[page] = (byPageUsers[page] ?? 0) + users;
+            } else {
+              byEvent[event] = (byEvent[event] ?? 0) + count;
+              if (event.startsWith('training_click_')) {
+                const product = event.replace('training_click_', '');
+                productClicks[product] = (productClicks[product] ?? 0) + count;
+              }
+            }
+          });
+          return { byEvent, byPage, byPageUsers, productClicks };
+        })(),
         quizViews: Number(quiz.rows?.[0]?.metricValues?.[0]?.value ?? 0),
         quizUsers: Number(quiz.rows?.[0]?.metricValues?.[1]?.value ?? 0),
         quizByProduct: Object.fromEntries(

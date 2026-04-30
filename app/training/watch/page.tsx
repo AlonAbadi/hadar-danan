@@ -7,6 +7,7 @@ import { WatchGreeting } from "./WatchPersonalized";
 import { ViewTracker } from "./ViewTracker";
 import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import { QuizCTABanner } from "./QuizCTABanner";
+import { TrainingProductTracker } from "./TrainingProductTracker";
 
 export const metadata: Metadata = {
   title: "הדרכה חינמית - צפייה | הדר דנן",
@@ -71,7 +72,9 @@ export default function TrainingWatchPage() {
       {/* ══════════════════════════════════════════════════════
           3. ALL PRODUCTS
       ══════════════════════════════════════════════════════ */}
-      <ProductsSection excludeTraining={true} />
+      <TrainingProductTracker>
+        <ProductsSection excludeTraining={true} />
+      </TrainingProductTracker>
 
       <VimeoTracker iframeId="vimeo-training" />
       <Script src="https://player.vimeo.com/api/player.js" />

@@ -281,6 +281,122 @@ export default function AcquisitionClient({
         </Card>
       )}
 
+      {/* ── Training Funnel ─────────────────────────────────────────── */}
+      {ga4.configured && (() => {
+        const t = ga4.data?.training;
+        const e = t?.byEvent ?? {};
+        const trainingVisitors  = t?.byPageUsers?.['/training'] ?? 0;
+        const watchVisitors     = t?.byPageUsers?.['/training/watch'] ?? 0;
+        const videoPlay         = e['training_video_play'] ?? 0;
+        const v25               = e['training_video_25'] ?? 0;
+        const v50               = e['training_video_50'] ?? 0;
+        const v75               = e['training_video_75'] ?? 0;
+        const vComplete         = e['training_video_complete'] ?? 0;
+        const quizClick         = e['training_quiz_cta_click'] ?? 0;
+        const productClicks: Record<string, number>     = t?.productClicks ?? {};
+        const totalProductClicks: number = Object.values(productClicks).reduce((s, v) => s + v, 0);
+
+        const PRODUCT_LABELS_TRAINING: Record<string, string> = {
+          challenge: 'אתגר 7 ימים', workshop: 'סדנה', course: 'קורס',
+          strategy: 'פגישת אסטרטגיה', premium: 'יום צילום', partnership: 'שותפות', hive: 'הכוורת',
+        };
+
+        const funnelData = [
+          { label: 'נכנסו לעמוד ההדרכה',      value: trainingVisitors,  color: C.blue,   sub: '/training — GA4 users' },
+          { label: 'צפו בהדרכה (watch)',         value: watchVisitors,    color: C.purple, sub: '/training/watch — GA4 users' },
+          { label: 'הפעילו את הסרטון',          value: videoPlay,        color: C.gold,   sub: 'training_video_play' },
+          { label: 'לחצו על קוויז',             value: quizClick,        color: C.green,  sub: 'training_quiz_cta_click' },
+          { label: 'לחצו על מוצר',              value: totalProductClicks, color: C.goldL, sub: 'training_click_* — כלל המוצרים' },
+        ];
+        const maxVal = funnelData[0]?.value || 1;
+
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+            {/* Training funnel */}
+            <Card>
+              <CardHeader title="פאנל הדרכה חינמית" sub="Training Funnel (GA4)" />
+              <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {funnelData.map((step, i) => {
+                  const barPct = maxVal > 0 ? (step.value / maxVal) * 100 : 0;
+                  const prev = funnelData[i - 1];
+                  const convPct = prev && prev.value > 0 ? ((step.value / prev.value) * 100).toFixed(0) : null;
+                  return (
+                    <div key={step.label}>
+                      {convPct && (
+                        <div style={{ textAlign: 'center', fontSize: 10, color: C.muted, marginBottom: 6 }}>↓ {convPct}%</div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: C.fg }}>{step.label}</div>
+                          <div style={{ fontSize: 10, color: C.muted }}>{step.sub}</div>
+                        </div>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: step.color, fontFamily: 'system-ui', letterSpacing: '-0.02em' }}>{step.value.toLocaleString()}</div>
+                      </div>
+                      <div style={{ height: 5, background: C.soft, borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ width: `${barPct}%`, height: '100%', background: step.color, borderRadius: 3, opacity: 0.8 }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {/* Video engagement + product clicks */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Video milestones */}
+              <Card>
+                <CardHeader title="צפייה בסרטון" sub="Video Engagement (GA4)" />
+                <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+                  {[
+                    { label: '25%', value: v25,      color: C.blue },
+                    { label: '50%', value: v50,      color: C.purple },
+                    { label: '75%', value: v75,      color: C.gold },
+                    { label: '100%', value: vComplete, color: C.green },
+                  ].map(m => (
+                    <div key={m.label} style={{ textAlign: 'center', background: C.soft, borderRadius: 10, padding: '12px 8px' }}>
+                      <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{m.label}</div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: m.value > 0 ? m.color : C.muted, fontFamily: 'system-ui' }}>{m.value > 0 ? m.value : '—'}</div>
+                      {videoPlay > 0 && m.value > 0 && (
+                        <div style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>{((m.value / videoPlay) * 100).toFixed(0)}%</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Product clicks */}
+              <Card style={{ flex: 1 }}>
+                <CardHeader title="קליקים על מוצרים" sub="Post-Training Product Clicks" />
+                <div style={{ padding: '12px 20px' }}>
+                  {Object.keys(productClicks).length === 0 ? (
+                    <div style={{ textAlign: 'center', color: C.muted, fontSize: 12, padding: '16px 0' }}>
+                      יתאכלס לאחר שמשתמשים יצפו בהדרכה
+                    </div>
+                  ) : (
+                    Object.entries(productClicks)
+                      .sort(([, a], [, b]) => (b as number) - (a as number))
+                      .map(([product, count]) => {
+                        const meta = PRODUCT_LABELS[product] ?? { label: PRODUCT_LABELS_TRAINING[product] ?? product, color: C.muted };
+                        const pct = totalProductClicks > 0 ? ((count as number) / totalProductClicks) * 100 : 0;
+                        return (
+                          <div key={product} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color, flexShrink: 0 }} />
+                            <span style={{ fontSize: 12, color: C.fg, flex: 1 }}>{meta.label}</span>
+                            <div style={{ width: 80, background: C.soft, borderRadius: 3, overflow: 'hidden', height: 4 }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: meta.color, opacity: 0.8 }} />
+                            </div>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: meta.color, fontFamily: 'system-ui', minWidth: 24, textAlign: 'right' }}>{count as number}</span>
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
+              </Card>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Quiz Section ─────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
 

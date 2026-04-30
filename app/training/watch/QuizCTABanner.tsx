@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 import { getQuizSession } from '@/lib/quiz-session';
 
+function gtag(...args: unknown[]) {
+  if (typeof window !== 'undefined') (window as unknown as Record<string, (...a: unknown[]) => void>).gtag?.(...args);
+}
+
 export function QuizCTABanner() {
   const [show, setShow] = useState(false);
 
@@ -40,6 +44,7 @@ export function QuizCTABanner() {
         </p>
         <a
           href="/quiz"
+          onClick={() => gtag('event', 'training_quiz_cta_click')}
           style={{
             display: 'inline-block',
             background: 'linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)',
