@@ -620,8 +620,213 @@ const PRIORITY_TIERS = [
   { product: 'course',      label: 'קורס דיגיטלי',    color: '#C9964A' },
 ];
 
-function PriorityLeadCard({ lead }: { lead: PriorityLead }) {
-  const tierColor = PRIORITY_TIERS.find(t => t.product === lead.quiz_product)?.color ?? '#9E9990';
+// Diagnosis popup uses these to render product names
+const DIAG_PRODUCT_NAMES: Record<string, string> = {
+  challenge_197:  "צ'אלנג' 7 ימים",
+  workshop_1080:  'סדנה יום אחד',
+  course_1800:    'קורס דיגיטלי',
+  strategy_4000:  'פגישת אסטרטגיה',
+  premium_14000:  'יום צילום פרמיום',
+};
+
+// ── Diagnosis Popup ───────────────────────────────────────────────────────────
+
+interface DiagMatch {
+  product_key: string;
+  match_pct: number;
+  recommendation: 'yes' | 'maybe_later' | 'no';
+  reason: string;
+}
+interface DiagData {
+  synthesis: string;
+  product_matches: DiagMatch[];
+  suggested_whatsapp: string;
+  generated_at?: string;
+}
+
+function DiagnosisPopup({ lead, onClose }: { lead: PriorityLead; onClose: () => void }) {
+  const [data, setData]       = useState<DiagData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+  const [copied, setCopied]   = useState(false);
+
+  useEffect(() => {
+    async function run() {
+      // Check cache first
+      try {
+        const cache = await fetch(`/api/admin/truesignal-diagnosis?userId=${lead.id}`).then(r => r.json());
+        if (cache.cached) {
+          setData({ synthesis: cache.synthesis, product_matches: cache.product_matches, suggested_whatsapp: cache.suggested_whatsapp, generated_at: cache.generated_at });
+          setLoading(false);
+          return;
+        }
+      } catch { /* fall through to fresh run */ }
+
+      // Auto-run fresh diagnosis
+      try {
+        const res  = await fetch('/api/admin/truesignal-diagnosis', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: lead.id }),
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error ?? 'ניתוח נכשל');
+        setData({ synthesis: d.synthesis, product_matches: d.product_matches, suggested_whatsapp: d.suggested_whatsapp, generated_at: d.generated_at });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'שגיאה');
+      } finally {
+        setLoading(false);
+      }
+    }
+    run();
+  }, [lead.id]);
+
+  async function copyWA() {
+    if (!data) return;
+    await navigator.clipboard.writeText(data.suggested_whatsapp);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  const REC: Record<string, { color: string; icon: string; border: string; bg: string }> = {
+    yes:         { color: '#4ade80', icon: '✓', border: 'rgba(74,222,128,0.3)',  bg: 'rgba(74,222,128,0.05)' },
+    maybe_later: { color: '#fbbf24', icon: '~', border: '#2C323E',               bg: 'transparent' },
+    no:          { color: '#f87171', icon: '✗', border: '#2C323E',               bg: 'transparent' },
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(8,12,20,0.88)', backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 24,
+      }}
+    >
+      <div
+        dir="rtl"
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: '#141820', border: '1px solid #2C323E', borderRadius: 16,
+          width: '100%', maxWidth: 640, maxHeight: '90vh', overflowY: 'auto',
+          padding: 28, display: 'flex', flexDirection: 'column', gap: 20,
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#EDE9E1' }}>{lead.name ?? lead.email}</div>
+            <div style={{ fontSize: 12, color: '#9E9990', marginTop: 3 }}>{lead.email}</div>
+            <div style={{ fontSize: 13, color: '#E8B94A', marginTop: 6, fontWeight: 700 }}>
+              ✦ תיק אבחון <span dir="ltr" style={{ unicodeBidi: 'embed' }}>TrueSignal©</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <Link href={`/admin/users/${lead.id}`} style={{
+              fontSize: 12, color: '#9E9990', textDecoration: 'none',
+              padding: '5px 10px', borderRadius: 7, border: '1px solid #2C323E',
+            }}>
+              פרופיל מלא ↗
+            </Link>
+            <button onClick={onClose} style={{
+              background: 'transparent', border: 'none', color: '#9E9990',
+              fontSize: 22, cursor: 'pointer', lineHeight: 1, padding: '0 4px',
+            }}>×</button>
+          </div>
+        </div>
+
+        {/* Loading */}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '40px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <div style={{
+              width: 22, height: 22, borderRadius: '50%',
+              border: '2px solid rgba(232,185,74,0.2)', borderTopColor: '#E8B94A',
+              animation: 'spin 0.8s linear infinite',
+            }} />
+            <div style={{ fontSize: 14, color: '#9E9990' }}>מנתח את הליד...</div>
+            <div style={{ fontSize: 12, color: '#6B7280' }}>זה עשוי לקחת כ-15 שניות</div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !loading && (
+          <div style={{ padding: '12px 16px', borderRadius: 8, background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', fontSize: 13 }}>
+            {error}
+          </div>
+        )}
+
+        {/* Results */}
+        {data && !loading && (
+          <>
+            {/* Synthesis */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#9E7C3A', letterSpacing: '0.07em', marginBottom: 10, textTransform: 'uppercase' }}>Synthesis</div>
+              <p style={{ fontSize: 14, lineHeight: 1.75, color: '#EDE9E1', margin: 0, borderRight: '2px solid rgba(232,185,74,0.4)', paddingRight: 14 }}>
+                {data.synthesis}
+              </p>
+            </div>
+
+            {/* Product matches */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#9E7C3A', letterSpacing: '0.07em', marginBottom: 10, textTransform: 'uppercase' }}>התאמת מוצר</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {data.product_matches.map(pm => {
+                  const s = REC[pm.recommendation] ?? REC.maybe_later;
+                  return (
+                    <div key={pm.product_key} style={{
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      border: `1px solid ${s.border}`, background: s.bg,
+                      borderRadius: 8, padding: '9px 12px',
+                    }}>
+                      <div style={{ fontSize: 18, fontWeight: 900, color: s.color, width: 46, textAlign: 'center', flexShrink: 0 }}>
+                        {pm.match_pct}%
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#EDE9E1' }}>
+                          {DIAG_PRODUCT_NAMES[pm.product_key] ?? pm.product_key}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#9E9990', marginTop: 2, lineHeight: 1.4 }}>{pm.reason}</div>
+                      </div>
+                      <div style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, background: `${s.color}20`, color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900 }}>
+                        {s.icon}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* WhatsApp opener */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#9E7C3A', letterSpacing: '0.07em', marginBottom: 10, textTransform: 'uppercase' }}>פתיחת שיחה בוואטסאפ</div>
+              <div style={{ position: 'relative', background: 'rgba(0,0,0,0.3)', borderRadius: 10, border: '1px solid #2C323E', padding: '12px 14px' }}>
+                <button onClick={copyWA} style={{
+                  position: 'absolute', top: 8, left: 10,
+                  background: copied ? 'rgba(74,222,128,0.15)' : 'rgba(44,50,62,0.8)',
+                  color: copied ? '#4ade80' : '#9E9990',
+                  border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : '#2C323E'}`,
+                  borderRadius: 6, padding: '3px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                }}>
+                  {copied ? 'הועתק ✓' : 'העתק'}
+                </button>
+                <p style={{ fontSize: 13, lineHeight: 1.8, color: '#EDE9E1', margin: 0, paddingLeft: 60, whiteSpace: 'pre-wrap' }}>
+                  {data.suggested_whatsapp}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Lead Card ─────────────────────────────────────────────────────────────────
+
+function PriorityLeadCard({ lead, onAnalyze }: { lead: PriorityLead; onAnalyze: () => void }) {
+  const tierColor  = PRIORITY_TIERS.find(t => t.product === lead.quiz_product)?.color ?? '#9E9990';
+  const showAnalyze = lead.priority >= 2; // strategy / premium / partnership
 
   return (
     <div style={{ position: 'relative' }}>
@@ -630,30 +835,21 @@ function PriorityLeadCard({ lead }: { lead: PriorityLead }) {
           ...cardStyle,
           borderRight: `3px solid ${tierColor}`,
           padding: '14px 18px',
-          display: 'flex',
-          gap: 12,
-          alignItems: 'flex-start',
-          cursor: 'pointer',
-          transition: 'border-color 0.15s, background 0.15s',
+          display: 'flex', gap: 12, alignItems: 'flex-start',
+          cursor: 'pointer', transition: 'background 0.15s',
         }}
           onMouseEnter={e => (e.currentTarget.style.background = '#1D2430')}
           onMouseLeave={e => (e.currentTarget.style.background = '#141820')}
         >
-          {/* Main info */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>
-                {lead.name ?? '—'}
-              </span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>{lead.name ?? '—'}</span>
               <StatusBadge status={lead.status} />
               {lead.match_percent != null && (
                 <span style={{
-                  fontSize: 11, fontWeight: 700,
-                  color: tierColor,
-                  background: tierColor + '18',
-                  border: `1px solid ${tierColor}33`,
-                  borderRadius: 6,
-                  padding: '1px 7px',
+                  fontSize: 11, fontWeight: 700, color: tierColor,
+                  background: tierColor + '18', border: `1px solid ${tierColor}33`,
+                  borderRadius: 6, padding: '1px 7px',
                 }}>
                   {lead.match_percent}% התאמה
                 </span>
@@ -662,28 +858,44 @@ function PriorityLeadCard({ lead }: { lead: PriorityLead }) {
             <div style={{ fontSize: 13, color: '#9E9990', marginBottom: 2 }}>{lead.email}</div>
             <div style={{ fontSize: 12, color: '#9E9990' }}>{relativeTime(lead.created_at)}</div>
           </div>
-
-          {/* Spacer for phone button area */}
-          <div style={{ width: lead.phone ? 140 : 60, flexShrink: 0 }} />
+          {/* Spacer to keep content away from action buttons */}
+          <div style={{ width: showAnalyze ? 240 : (lead.phone ? 150 : 60), flexShrink: 0 }} />
         </div>
       </Link>
 
-      {/* Phone button — outside the Link so it doesn't navigate */}
-      <div style={{ position: 'absolute', top: '50%', left: 18, transform: 'translateY(-50%)' }}>
-        {lead.phone ? (
+      {/* Action buttons — absolutely positioned, outside Link */}
+      <div style={{
+        position: 'absolute', top: '50%', left: 18, transform: 'translateY(-50%)',
+        display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start',
+      }}>
+        {lead.phone && (
           <a
             href={`tel:${lead.phone}`}
             onClick={e => e.stopPropagation()}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '6px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+              padding: '5px 11px', borderRadius: 7, fontSize: 13, fontWeight: 700,
               background: '#1D2430', border: '1px solid #2C323E',
               color: '#34A853', textDecoration: 'none',
             }}
           >
             📞 {lead.phone}
           </a>
-        ) : (
+        )}
+        {showAnalyze && (
+          <button
+            onClick={e => { e.preventDefault(); e.stopPropagation(); onAnalyze(); }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '5px 11px', borderRadius: 7, fontSize: 12, fontWeight: 700,
+              background: 'linear-gradient(135deg, #E8B94A, #C9964A)',
+              color: '#1A1206', border: 'none', cursor: 'pointer',
+            }}
+          >
+            ✦ קבל ניתוח
+          </button>
+        )}
+        {!lead.phone && !showAnalyze && (
           <span style={{ fontSize: 12, color: '#9E9990' }}>אין טלפון</span>
         )}
       </div>
@@ -691,9 +903,12 @@ function PriorityLeadCard({ lead }: { lead: PriorityLead }) {
   );
 }
 
+// ── Priority Leads Tab ────────────────────────────────────────────────────────
+
 function PriorityLeadsTab() {
-  const [leads, setLeads]     = useState<PriorityLead[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [leads, setLeads]       = useState<PriorityLead[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [activeLead, setActive] = useState<PriorityLead | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/priority-leads')
@@ -715,30 +930,36 @@ function PriorityLeadsTab() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ fontSize: 13, color: '#9E9990' }}>{leads.length} לידים לטיפול</div>
+    <>
+      {activeLead && (
+        <DiagnosisPopup lead={activeLead} onClose={() => setActive(null)} />
+      )}
 
-      {PRIORITY_TIERS.map(tier => {
-        const tierLeads = leads.filter(l => l.quiz_product === tier.product);
-        if (tierLeads.length === 0) return null;
-        return (
-          <div key={tier.product}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
-            }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: tier.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: tier.color, letterSpacing: '0.05em' }}>
-                {tier.label.toUpperCase()} · {tierLeads.length}
-              </span>
-              <div style={{ flex: 1, height: 1, background: tier.color + '33' }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ fontSize: 13, color: '#9E9990' }}>{leads.length} לידים לטיפול</div>
+
+        {PRIORITY_TIERS.map(tier => {
+          const tierLeads = leads.filter(l => l.quiz_product === tier.product);
+          if (tierLeads.length === 0) return null;
+          return (
+            <div key={tier.product}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: tier.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: tier.color, letterSpacing: '0.05em' }}>
+                  {tier.label.toUpperCase()} · {tierLeads.length}
+                </span>
+                <div style={{ flex: 1, height: 1, background: tier.color + '33' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {tierLeads.map(l => (
+                  <PriorityLeadCard key={l.id} lead={l} onAnalyze={() => setActive(l)} />
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {tierLeads.map(l => <PriorityLeadCard key={l.id} lead={l} />)}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
