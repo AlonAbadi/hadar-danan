@@ -6,6 +6,7 @@ import { VimeoTracker } from "./VimeoTracker";
 import { WatchGreeting } from "./WatchPersonalized";
 import { ViewTracker } from "./ViewTracker";
 import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
+import { QuizCTABanner } from "./QuizCTABanner";
 
 export const metadata: Metadata = {
   title: "הדרכה חינמית - צפייה | הדר דנן",
@@ -63,7 +64,12 @@ export default function TrainingWatchPage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════
-          2. ALL PRODUCTS
+          2. QUIZ CTA — only for users who haven't done the quiz
+      ══════════════════════════════════════════════════════ */}
+      <QuizCTABanner />
+
+      {/* ══════════════════════════════════════════════════════
+          3. ALL PRODUCTS
       ══════════════════════════════════════════════════════ */}
       <ProductsSection excludeTraining={true} />
 
