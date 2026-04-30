@@ -183,7 +183,7 @@ export default function TeamPage() {
                       className="text-5xl font-black"
                       style={{ color: "rgba(201,150,74,0.4)" }}
                     >
-                      {member.initials}
+                      {member.name.charAt(0)}
                     </span>
                   </div>
                 )}
