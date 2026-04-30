@@ -346,20 +346,26 @@ export async function getSourceAnalytics(dateRange?: string) {
     revenue: number;
   }> = {};
 
+  // Leads = users who signed up in the date range
   users?.forEach((u) => {
     const src = u.utm_source || 'direct';
     if (!sources[src]) sources[src] = { leads: 0, buyers: 0, revenue: 0 };
     sources[src].leads += 1;
-    if (u.status === 'buyer' || u.status === 'booked') {
-      sources[src].buyers += 1;
-    }
   });
 
+  // Buyers + revenue = based on purchases completed in the date range
+  // (buyer may have signed up outside the range — use purchase date, not signup date)
+  const uniqueBuyersPerSource: Record<string, Set<string>> = {};
   purchases?.forEach((p) => {
     const src = buyerSourceMap[p.user_id] || 'direct';
-    if (sources[src]) {
-      sources[src].revenue += p.amount || 0;
-    }
+    if (!sources[src]) sources[src] = { leads: 0, buyers: 0, revenue: 0 };
+    if (!uniqueBuyersPerSource[src]) uniqueBuyersPerSource[src] = new Set();
+    uniqueBuyersPerSource[src].add(p.user_id);
+    sources[src].revenue += p.amount || 0;
+  });
+
+  Object.entries(uniqueBuyersPerSource).forEach(([src, buyerSet]) => {
+    sources[src].buyers = buyerSet.size;
   });
 
   return Object.entries(sources).map(([source, stats]) => ({
