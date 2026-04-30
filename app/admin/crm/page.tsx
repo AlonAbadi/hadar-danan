@@ -599,6 +599,139 @@ function QuizDistribution() {
   );
 }
 
+// ── Tab: Priority Leads ───────────────────────────────────────────────────────
+
+interface PriorityLead {
+  id: string;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  status: string;
+  created_at: string;
+  quiz_product: string | null;
+  match_percent: number | null;
+  priority: number;
+}
+
+const PRIORITY_TIERS = [
+  { product: 'partnership', label: 'שותפות אסטרטגית', color: '#9C27B0' },
+  { product: 'premium',     label: 'יום צילום פרמיום', color: '#EA4335' },
+  { product: 'strategy',    label: 'פגישת אסטרטגיה',  color: '#E8B94A' },
+  { product: 'course',      label: 'קורס דיגיטלי',    color: '#C9964A' },
+];
+
+function PriorityLeadCard({ lead }: { lead: PriorityLead }) {
+  const tierColor = PRIORITY_TIERS.find(t => t.product === lead.quiz_product)?.color ?? '#9E9990';
+
+  return (
+    <div style={{
+      ...cardStyle,
+      borderRight: `3px solid ${tierColor}`,
+      padding: '14px 18px',
+      display: 'flex',
+      gap: 12,
+      alignItems: 'flex-start',
+    }}>
+      {/* Main info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <Link href={`/admin/users/${lead.id}`} style={{ textDecoration: 'none' }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>
+              {lead.name ?? '—'}
+            </span>
+          </Link>
+          <StatusBadge status={lead.status} />
+          {lead.match_percent != null && (
+            <span style={{
+              fontSize: 11, fontWeight: 700,
+              color: tierColor,
+              background: tierColor + '18',
+              border: `1px solid ${tierColor}33`,
+              borderRadius: 6,
+              padding: '1px 7px',
+            }}>
+              {lead.match_percent}% התאמה
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: 13, color: '#9E9990', marginBottom: 2 }}>{lead.email}</div>
+        <div style={{ fontSize: 12, color: '#9E9990' }}>{relativeTime(lead.created_at)}</div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+        {lead.phone && (
+          <a
+            href={`tel:${lead.phone}`}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '6px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+              background: '#1D2430', border: '1px solid #2C323E',
+              color: '#34A853', textDecoration: 'none',
+            }}
+          >
+            📞 {lead.phone}
+          </a>
+        )}
+        {!lead.phone && (
+          <span style={{ fontSize: 12, color: '#9E9990' }}>אין טלפון</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PriorityLeadsTab() {
+  const [leads, setLeads]     = useState<PriorityLead[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/priority-leads')
+      .then(r => r.json())
+      .then(d => setLeads(d.leads ?? []))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div style={{ ...cardStyle, color: '#9E9990', fontSize: 13 }}>טוען לידים...</div>;
+  }
+
+  if (leads.length === 0) {
+    return (
+      <div style={{ ...cardStyle, textAlign: 'center', color: '#9E9990', padding: 40 }}>
+        אין לידים בעדיפות גבוהה
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ fontSize: 13, color: '#9E9990' }}>{leads.length} לידים לטיפול</div>
+
+      {PRIORITY_TIERS.map(tier => {
+        const tierLeads = leads.filter(l => l.quiz_product === tier.product);
+        if (tierLeads.length === 0) return null;
+        return (
+          <div key={tier.product}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
+            }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: tier.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: tier.color, letterSpacing: '0.05em' }}>
+                {tier.label.toUpperCase()} · {tierLeads.length}
+              </span>
+              <div style={{ flex: 1, height: 1, background: tier.color + '33' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {tierLeads.map(l => <PriorityLeadCard key={l.id} lead={l} />)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Shared styles ──────────────────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
@@ -618,6 +751,7 @@ const inputStyle: React.CSSProperties = {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 const TABS = [
+  { id: 'priority',   label: 'עדיפות 🔥' },
   { id: 'dashboard',  label: 'דאשבורד' },
   { id: 'pipeline',   label: 'פייפליין' },
   { id: 'reminders',  label: 'תזכורות' },
@@ -625,7 +759,7 @@ const TABS = [
 type TabId = typeof TABS[number]['id'];
 
 export default function CrmPage() {
-  const [tab, setTab] = useState<TabId>('dashboard');
+  const [tab, setTab] = useState<TabId>('priority');
 
   return (
     <div dir="rtl" style={{ fontFamily: 'var(--font-assistant), Assistant, sans-serif', minHeight: '100vh', background: '#0D1018', padding: 24 }}>
@@ -658,6 +792,7 @@ export default function CrmPage() {
       </div>
 
       {/* Tab content */}
+      {tab === 'priority'   && <PriorityLeadsTab />}
       {tab === 'dashboard'  && <DashboardTab />}
       {tab === 'pipeline'   && <PipelineTab />}
       {tab === 'reminders'  && <RemindersTab />}
