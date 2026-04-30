@@ -1,20 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { PageHeader, KpiCard, KpiGrid, SectionCard, DateRangePicker, Badge } from '@/components/admin/ui';
 
-const STAGE_COLORS = ['#c9a84c', '#d4a54c', '#3b82f6', '#22c55e', '#8b5cf6'];
-const TT = { contentStyle: { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 12 }, labelStyle: { color: '#111827', fontWeight: 600 } };
+const STAGE_COLORS = ['#C9964A', '#E8B94A', '#4285F4', '#34A853', '#9C27B0'];
 
-export default function FunnelClient({ funnel, timeToConversion }: { funnel: any; timeToConversion: any }) {
-  const [dateRange, setDateRange] = useState('30d');
+const TT = {
+  contentStyle: { background: '#141820', border: '1px solid #2C323E', borderRadius: 8, fontSize: 12, color: '#EDE9E1' },
+  labelStyle: { color: '#9E9990', fontWeight: 600 },
+  cursor: { fill: 'rgba(201,150,74,0.06)' },
+};
 
-  const totalLeads = funnel[0]?.count || 0;
-  const totalBuyers = funnel.find((f: any) => f.stage === 'buyer')?.count || 0;
-  const overallConversion = totalLeads > 0 ? ((totalBuyers / totalLeads) * 100).toFixed(1) : '0';
+interface FunnelStage {
+  stage: string;
+  label: string;
+  count: number;
+  conversionRate: number;
+}
 
-  // Find biggest drop-off
+interface TimeToConversion {
+  avgDays: number;
+  medianDays: number;
+  count: number;
+}
+
+export default function FunnelClient() {
+  const [range, setRange]   = useState('30d');
+  const [funnel, setFunnel] = useState<FunnelStage[]>([]);
+  const [ttc, setTtc]       = useState<TimeToConversion>({ avgDays: 0, medianDays: 0, count: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/admin/funnel?dateRange=${range}`)
+      .then(r => r.json())
+      .then(d => { setFunnel(d.funnel ?? []); setTtc(d.timeToConversion ?? {}); })
+      .finally(() => setLoading(false));
+  }, [range]);
+
+  const totalLeads  = funnel[0]?.count ?? 0;
+  const totalBuyers = funnel.find(f => f.stage === 'buyer')?.count ?? 0;
+  const overallConv = totalLeads > 0 ? ((totalBuyers / totalLeads) * 100).toFixed(1) : '0';
+
   let biggestDrop = { from: '', to: '', dropPct: 0 };
   for (let i = 1; i < funnel.length; i++) {
     const drop = 100 - funnel[i].conversionRate;
@@ -24,110 +52,113 @@ export default function FunnelClient({ funnel, timeToConversion }: { funnel: any
   }
 
   return (
-    <div>
+    <div dir="rtl" style={{ fontFamily: 'var(--font-assistant), Assistant, sans-serif', color: '#EDE9E1', display: 'flex', flexDirection: 'column', gap: 0 }}>
       <PageHeader
         title="פאנל מכירות"
         titleEn="Sales Funnel"
-        subtitle="ניתוח מלא של הפאנל - מנרשם ועד רוכש"
-        actions={<DateRangePicker value={dateRange} onChange={setDateRange} />}
+        subtitle="ניתוח מלא של הפאנל — מנרשם ועד רוכש"
+        actions={<DateRangePicker value={range} onChange={setRange} />}
       />
 
       <KpiGrid cols={4}>
-        <KpiCard label="סה״כ נרשמים" value={totalLeads.toLocaleString()} icon="👤" />
-        <KpiCard label="רוכשים" value={totalBuyers.toLocaleString()} icon="🛒" variant="success" />
-        <KpiCard label="המרה כוללת" value={`${overallConversion}%`} icon="📈" variant="gold" />
-        <KpiCard label="זמן ממוצע להמרה" value={`${timeToConversion.avgDays} ימים`} icon="⏱️" variant="info" />
+        <KpiCard label="סה״כ נרשמים" value={loading ? '...' : totalLeads.toLocaleString('he-IL')} icon="👤" />
+        <KpiCard label="רוכשים"       value={loading ? '...' : totalBuyers.toLocaleString('he-IL')} icon="🛒" variant="success" />
+        <KpiCard label="המרה כוללת"   value={loading ? '...' : `${overallConv}%`} icon="📈" variant="gold" />
+        <KpiCard label="זמן ממוצע להמרה" value={loading ? '...' : `${ttc.avgDays} ימים`} icon="⏱️" variant="info" />
       </KpiGrid>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 24, marginBottom: 24 }}>
+        {/* Funnel chart */}
         <SectionCard title="ויזואליזציית פאנל" titleEn="Funnel Visualization">
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart
-              data={funnel.map((f: any) => ({ name: f.label, ערך: f.count }))}
-              layout="vertical"
-              margin={{ right: 24, left: 8 }}
-            >
-              <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#374151' }} axisLine={false} tickLine={false} width={100} />
-              <Tooltip {...TT} />
-              <Bar dataKey="ערך" radius={[0, 6, 6, 0]}>
-                {funnel.map((_: any, i: number) => <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {loading
+            ? <div style={{ color: '#9E9990', fontSize: 13 }}>טוען...</div>
+            : (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart
+                  data={funnel.map(f => ({ name: f.label, ערך: f.count }))}
+                  layout="vertical"
+                  margin={{ right: 24, left: 8 }}
+                >
+                  <XAxis type="number" tick={{ fontSize: 11, fill: '#9E9990' }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#9E9990' }} axisLine={false} tickLine={false} width={90} />
+                  <Tooltip {...TT} />
+                  <Bar dataKey="ערך" radius={[0, 6, 6, 0]}>
+                    {funnel.map((_f, i) => <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )
+          }
         </SectionCard>
 
+        {/* Drop-off analysis */}
         <SectionCard title="ניתוח נשירה" titleEn="Drop-off Analysis">
-          {biggestDrop.dropPct > 0 && (
-            <div style={{
-              padding: '16px',
-              background: '#fef2f2',
-              borderRadius: '8px',
-              border: '1px solid #fecaca',
-              marginBottom: '16px',
-            }}>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>
-                נקודת הנשירה הגדולה
-              </div>
-              <div style={{ fontSize: '18px', fontWeight: 600, color: '#dc2626', fontFamily: 'system-ui' }}>
-                {biggestDrop.dropPct}% נשירה
-              </div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                בין {biggestDrop.from} → {biggestDrop.to}
-              </div>
-            </div>
-          )}
-
-          {/* Stage-by-stage breakdown */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {funnel.slice(1).map((f: any, i: number) => {
-              const drop = 100 - f.conversionRate;
-              return (
-                <div key={f.stage} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '8px 12px',
-                  background: '#f9fafb',
-                  borderRadius: '6px',
-                }}>
-                  <span style={{ fontSize: '12px', color: '#374151' }}>
-                    {funnel[i].label} → {f.label}
-                  </span>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <Badge variant="success">{f.conversionRate}% המרה</Badge>
-                    <Badge variant="danger">{drop}% נשירה</Badge>
+          {loading
+            ? <div style={{ color: '#9E9990', fontSize: 13 }}>טוען...</div>
+            : (
+              <>
+                {biggestDrop.dropPct > 0 && (
+                  <div style={{
+                    padding: '14px 16px',
+                    background: 'rgba(234,67,53,0.08)',
+                    border: '1px solid rgba(234,67,53,0.25)',
+                    borderRadius: 10, marginBottom: 16,
+                  }}>
+                    <div style={{ fontSize: 11, color: '#9E9990', marginBottom: 4 }}>נקודת הנשירה הגדולה</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#EA4335' }}>
+                      {biggestDrop.dropPct}% נשירה
+                    </div>
+                    <div style={{ fontSize: 12, color: '#9E9990', marginTop: 4 }}>
+                      בין {biggestDrop.from} → {biggestDrop.to}
+                    </div>
                   </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {funnel.slice(1).map((f, i) => {
+                    const drop = 100 - f.conversionRate;
+                    return (
+                      <div key={f.stage} style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '9px 12px', background: '#1D2430',
+                        borderRadius: 8, border: '1px solid #2C323E',
+                      }}>
+                        <span style={{ fontSize: 12, color: '#9E9990' }}>
+                          {funnel[i].label} → {f.label}
+                        </span>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <Badge variant="success">{f.conversionRate}% המרה</Badge>
+                          <Badge variant="danger">{drop}% נשירה</Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+              </>
+            )
+          }
         </SectionCard>
       </div>
 
+      {/* Velocity */}
       <SectionCard title="מדדי מהירות פאנל" titleEn="Funnel Velocity">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-          <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '8px' }}>ממוצע</div>
-            <div style={{ fontSize: '24px', fontWeight: 600, color: '#111827', fontFamily: 'system-ui' }}>
-              {timeToConversion.avgDays}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          {[
+            { label: 'ממוצע', value: ttc.avgDays, unit: 'ימים' },
+            { label: 'חציון', value: ttc.medianDays, unit: 'ימים' },
+            { label: 'מדגם', value: ttc.count, unit: 'המרות' },
+          ].map(item => (
+            <div key={item.label} style={{
+              padding: '16px', background: '#1D2430',
+              borderRadius: 10, border: '1px solid #2C323E', textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 11, color: '#9E9990', marginBottom: 8 }}>{item.label}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: '#E8B94A' }}>
+                {loading ? '...' : item.value}
+              </div>
+              <div style={{ fontSize: 11, color: '#9E9990', marginTop: 4 }}>{item.unit}</div>
             </div>
-            <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>ימים</div>
-          </div>
-          <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '8px' }}>חציון</div>
-            <div style={{ fontSize: '24px', fontWeight: 600, color: '#111827', fontFamily: 'system-ui' }}>
-              {timeToConversion.medianDays}
-            </div>
-            <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>ימים</div>
-          </div>
-          <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '8px', textAlign: 'center' }}>
-            <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '8px' }}>מדגם</div>
-            <div style={{ fontSize: '24px', fontWeight: 600, color: '#111827', fontFamily: 'system-ui' }}>
-              {timeToConversion.count}
-            </div>
-            <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>המרות</div>
-          </div>
+          ))}
         </div>
       </SectionCard>
     </div>
