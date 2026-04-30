@@ -657,6 +657,35 @@ export async function getVimeoAnalytics() {
 }
 
 
+// ─── Quiz Stats ───────────────────────────────────────
+export async function getQuizStats(dateRange?: string) {
+  const supabase = createServerClient();
+  const dateFilter = getDateFilter(dateRange);
+
+  const [{ count: total }, { count: leads }, { data: rows }] = await Promise.all([
+    supabase
+      .from('quiz_results')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', dateFilter),
+    supabase
+      .from('quiz_results')
+      .select('*', { count: 'exact', head: true })
+      .not('user_id', 'is', null)
+      .gte('created_at', dateFilter),
+    supabase
+      .from('quiz_results')
+      .select('recommended_product')
+      .gte('created_at', dateFilter),
+  ]);
+
+  const byProduct: Record<string, number> = {};
+  rows?.forEach(r => {
+    byProduct[r.recommended_product] = (byProduct[r.recommended_product] || 0) + 1;
+  });
+
+  return { total: total || 0, leads: leads || 0, byProduct };
+}
+
 // ════════════════════════════════════════════════════════
 // UTILITY FUNCTIONS
 // ════════════════════════════════════════════════════════

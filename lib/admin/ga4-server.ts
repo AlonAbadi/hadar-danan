@@ -35,7 +35,7 @@ export async function getGA4Data(dateRange?: string) {
     };
     const baseUrl = `https://analyticsdata.googleapis.com/v1beta/${propertyId}`;
 
-    const [summaryRes, channelsRes, eventsRes] = await Promise.all([
+    const [summaryRes, channelsRes, eventsRes, quizRes] = await Promise.all([
       fetch(`${baseUrl}:runReport`, {
         method: 'POST', headers,
         body: JSON.stringify({
@@ -73,12 +73,27 @@ export async function getGA4Data(dateRange?: string) {
           orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
         }),
       }),
+      // Quiz page visitors
+      fetch(`${baseUrl}:runReport`, {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          dateRanges: [{ startDate: since, endDate: until }],
+          metrics: [{ name: 'screenPageViews' }, { name: 'totalUsers' }],
+          dimensionFilter: {
+            filter: {
+              fieldName: 'pagePath',
+              stringFilter: { matchType: 'BEGINS_WITH', value: '/quiz' },
+            },
+          },
+        }),
+      }),
     ]);
 
-    const [summary, channels, events] = await Promise.all([
+    const [summary, channels, events, quiz] = await Promise.all([
       summaryRes.json(),
       channelsRes.json(),
       eventsRes.json(),
+      quizRes.json(),
     ]);
 
     const row = summary.rows?.[0];
@@ -102,6 +117,8 @@ export async function getGA4Data(dateRange?: string) {
           name:  r.dimensionValues?.[0]?.value ?? '',
           count: Number(r.metricValues?.[0]?.value ?? 0),
         })),
+        quizViews: Number(quiz.rows?.[0]?.metricValues?.[0]?.value ?? 0),
+        quizUsers: Number(quiz.rows?.[0]?.metricValues?.[1]?.value ?? 0),
       },
     };
   } catch (error) {

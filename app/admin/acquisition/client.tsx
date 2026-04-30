@@ -147,18 +147,28 @@ function CrBadge({ value }: { value: number }) {
   );
 }
 
+const PRODUCT_LABELS: Record<string, { label: string; color: string }> = {
+  challenge: { label: 'אתגר 7 ימים',      color: C.blue },
+  workshop:  { label: 'סדנה יום אחד',     color: C.purple },
+  course:    { label: 'קורס דיגיטלי',      color: C.green },
+  strategy:  { label: 'פגישת אסטרטגיה',   color: C.gold },
+  premium:   { label: 'יום צילום פרמיום', color: C.goldL },
+};
+
 // ── Main component ─────────────────────────────────────────────────────────
 export default function AcquisitionClient({
   sources,
   metaAds,
   googleAds,
   ga4,
+  quiz,
   dateRange,
 }: {
   sources: any[];
   metaAds: any;
   googleAds: any;
   ga4: any;
+  quiz: { total: number; leads: number; byProduct: Record<string, number> };
   dateRange: string;
 }) {
   const router = useRouter();
@@ -283,6 +293,91 @@ export default function AcquisitionClient({
           </div>
         </Card>
       )}
+
+      {/* ── Quiz Section ─────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+
+        {/* Quiz funnel */}
+        <Card>
+          <CardHeader title="פאנל הקוויז" sub="Quiz Funnel" />
+          <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {(() => {
+              const quizViews = ga4.data?.quizUsers ?? 0;
+              const quizCompleted = quiz.total;
+              const quizLeads = quiz.leads;
+              const completionPct = quizViews > 0 ? ((quizCompleted / quizViews) * 100).toFixed(0) : '—';
+              const leadPct = quizCompleted > 0 ? ((quizLeads / quizCompleted) * 100).toFixed(0) : '—';
+
+              const steps = [
+                { label: 'ביקרו בקוויז',   value: quizViews,     sub: 'GA4 — משתמשים ייחודיים', color: C.blue },
+                { label: 'סיימו את הקוויז', value: quizCompleted, sub: `${completionPct}% מהמבקרים`, color: C.purple },
+                { label: 'השאירו ליד',      value: quizLeads,     sub: `${leadPct}% מהמסיימים`,   color: C.gold },
+              ];
+
+              return steps.map((step, i) => {
+                const maxVal = steps[0].value || 1;
+                const barPct = (step.value / maxVal) * 100;
+                return (
+                  <div key={step.label} style={{ paddingBottom: 16, borderBottom: i < steps.length - 1 ? `1px solid ${C.border}` : 'none', marginBottom: i < steps.length - 1 ? 16 : 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.fg, marginBottom: 2 }}>{step.label}</div>
+                        <div style={{ fontSize: 11, color: C.muted }}>{step.sub}</div>
+                      </div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: step.color, fontFamily: 'system-ui', letterSpacing: '-0.02em' }}>
+                        {step.value.toLocaleString()}
+                      </div>
+                    </div>
+                    <div style={{ height: 6, background: C.soft, borderRadius: 3, overflow: 'hidden' }}>
+                      <div style={{ width: `${barPct}%`, height: '100%', background: step.color, borderRadius: 3, opacity: 0.8, transition: 'width 0.5s ease' }} />
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </Card>
+
+        {/* Recommendation distribution */}
+        <Card>
+          <CardHeader title="התפלגות המלצות" sub="Quiz Recommendations" />
+          <div style={{ padding: '20px 24px' }}>
+            {quiz.total === 0 ? (
+              <div style={{ textAlign: 'center', color: C.muted, fontSize: 13, padding: '32px 0' }}>אין נתונים בטווח זה</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {Object.entries(quiz.byProduct)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([product, count]) => {
+                    const meta = PRODUCT_LABELS[product] ?? { label: product, color: C.muted };
+                    const pct = quiz.total > 0 ? (count / quiz.total) * 100 : 0;
+                    return (
+                      <div key={product}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color, flexShrink: 0 }} />
+                            <span style={{ fontSize: 13, color: C.fg }}>{meta.label}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: C.muted }}>{pct.toFixed(0)}%</span>
+                            <span style={{ fontSize: 15, fontWeight: 700, color: meta.color, fontFamily: 'system-ui', minWidth: 28, textAlign: 'right' }}>{count}</span>
+                          </div>
+                        </div>
+                        <div style={{ height: 6, background: C.soft, borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: meta.color, borderRadius: 3, opacity: 0.75, transition: 'width 0.5s ease' }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                <div style={{ marginTop: 8, paddingTop: 12, borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', fontSize: 12, color: C.muted }}>
+                  <span>סה״כ ניסיונות קוויז</span>
+                  <span style={{ fontWeight: 600, color: C.fg }}>{quiz.total.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
 
       {/* ── Charts row ───────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
