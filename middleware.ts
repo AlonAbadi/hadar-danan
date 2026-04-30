@@ -82,10 +82,10 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // A/B/C variant — ~33% each
+  // A/B variant — 50% each
   if (!request.cookies.get("ab_variant")) {
     const r = Math.random();
-    const variant = r < 1 / 3 ? "A" : r < 2 / 3 ? "B" : "C";
+    const variant = r < 0.5 ? "A" : "B";
     response.cookies.set("ab_variant", variant, {
       httpOnly: false,
       maxAge: 60 * 60 * 24 * 30,

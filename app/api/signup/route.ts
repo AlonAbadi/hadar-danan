@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
     name,
     email,
     phone,
-    ab_variant,
     utm_source,
     utm_campaign,
     utm_adset,
@@ -62,6 +61,10 @@ export async function POST(req: NextRequest) {
     anonymous_id,
     marketing_consent,
   } = parsed.data;
+
+  // Sanitize ab_variant — DB constraint only allows 'A' or 'B'
+  const raw_variant = parsed.data.ab_variant;
+  const ab_variant = (raw_variant === "A" || raw_variant === "B") ? raw_variant : null;
 
   const supabase = createServerClient();
 
