@@ -123,8 +123,30 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | `/workshop/success` | Post-workshop-purchase | - | Upsell to `/course` |
 | `/course/success` | Post-course-purchase | - | - |
 | `/members` | Legacy members area | - | Secret token gate (`?t=` or cookie) — kept for backward compat |
+| `/atelier` | Atelier influencer program | - | Lead capture for influencer-to-cultural-leader service; form saves to `atelier_applications` with UTM |
+| `/binge` | Content binge page | - | Video/content series page |
+| `/method` | TrueSignal method page | - | Explains TrueSignal© methodology |
+| `/press` | Press page | - | Media / press kit |
+| `/onboarding` | Client onboarding | - | Token-gated onboarding form for atelier clients |
+| `/unsubscribe` | Email unsubscribe | - | Unsubscribe from email sequences |
 | `/admin` | CRM dashboard | - | Basic Auth, full analytics + hive section |
-| `/admin/users/[id]` | Individual user profile | - | Notes, reminders, event timeline |
+| `/admin/users/[id]` | Individual user profile | - | Notes, reminders, event timeline, TrueSignal AI diagnosis |
+| `/admin/atelier` | Atelier leads CRM | - | Cards with fit-score, UTM chips, status filter; links to `/admin/atelier/[id]` |
+| `/admin/atelier/[id]` | Atelier onboarding workbench | - | AI analysis, content generation, ProjectManagerAgent orchestrator, deploy pipeline |
+| `/admin/acquisition` | UTM acquisition analytics | - | Full utm_source → utm_medium → utm_campaign → utm_adset → utm_ad breakdown |
+| `/admin/email` | Email stats | - | Send/open/click stats from `email_logs` |
+| `/admin/funnel` | Funnel analytics | - | Conversion funnel visualization |
+| `/admin/leads` | Leads table | - | Filterable leads list with UTM columns |
+| `/admin/deals` | Deals CRM | - | Brand deals tracking from `deals` table |
+| `/admin/sales` | Sales / revenue | - | Revenue bar chart |
+| `/admin/products` | Products analytics | - | Per-product performance |
+| `/admin/video` | Video analytics | - | Drop-off + completion stats from `video_events` |
+| `/admin/training` | Training stats | - | Free training page analytics |
+| `/admin/community` | Community (Hive) admin | - | Hive membership analytics (pie charts) |
+| `/admin/crm` | CRM overview | - | UTM + status breakdown |
+| `/admin/mmm` | MMM (Media Mix Modeling) | - | Channel attribution modeling |
+| `/admin/system` | System logs | - | Error logs, cron status |
+| `/admin/bookings` | Bookings (legacy Calendly) | - | Dead code — kept, not actively used |
 | `/test` | ₪1 test product | ₪1 | Cardcom testing; subtle footer link from /challenge |
 | `/accessibility` | Accessibility statement | - | Static, Hebrew WCAG 2.1 AA |
 | `/privacy` | Privacy policy | - | Updated April 2026 — full content |
@@ -153,26 +175,43 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 014 | `014_auth.sql` | Applied — auth_id + email_verified on users; RLS policies |
 | 015 | `015_hive_content.sql` | Applied — hive_content table (tier-gated curated content) |
 | 016 | `016_amount_paid.sql` | Applied — amount_paid column on purchases |
+| 017a | `017_user_insights.sql` | Applied — user_insights table for TrueSignal AI diagnosis caching |
+| 017b | `017_remove_cart_abandon.sql` | Applied — removed cart_abandon email sequences |
+| 018 | `018_invoice_number.sql` | Applied — invoice_number column on purchases |
+| 019 | `019_invoice_link.sql` | Applied — invoice_link (PDF URL) column on purchases |
+| 020 | `020_atelier_applications.sql` | Applied — atelier_applications table with source_utm JSONB |
+| 021 | `021_atelier_onboarding.sql` | Applied — onboarding fields on atelier_applications (niche, audience, tone, products…) |
+| 022 | `022_atelier_modules.sql` | Applied — modules text[] on atelier_applications |
+| 023 | `023_atelier_onboarding_token.sql` | Applied — email + onboarding_token for client self-fill flow |
+| 024 | `024_deals.sql` | Applied — deals table for brand deals CRM |
+| 025 | `025_atelier_deploy.sql` | Applied — preview_url + deploy metadata on atelier_applications |
+| 026 | `026_atelier_og_image.sql` | Applied — og_image_url on atelier_applications |
+| 027 | `027_orchestration.sql` | Applied — pipeline_status, generated_client_ts, orchestration_log on atelier_applications |
+| 028 | `028_user_status_archive.sql` | Applied — `handled` + `not_relevant` values added to user_status enum |
+| 029 | `029_utm_extended.sql` | Applied — utm_medium, utm_content, utm_term columns on users |
 
-### Tables (16 total)
+### Tables (19 total)
 
 | Table | Purpose |
 |---|---|
-| `users` | Core CRM. `status` state machine, UTM params, A/B variant, hive fields, `auth_id` (FK to auth.users), `email_verified`, `last_activity_at` |
+| `users` | Core CRM. `status` state machine (`lead/engaged/high_intent/buyer/booked/handled/not_relevant`), UTM params (source/medium/campaign/adset/ad/content/term), A/B variant, hive fields, `auth_id` (FK to auth.users), `email_verified`, `last_activity_at` |
 | `identities` | Links anonymous `anon_id` cookies to identified users |
-| `purchases` | One row per payment attempt. `cardcom_ref` UNIQUE. `is_recurring` for hive. `amount_paid` for actual amount after discounts. Status: `pending → completed / failed / refunded` |
+| `purchases` | One row per payment attempt. `cardcom_ref` UNIQUE. `is_recurring` for hive. `amount_paid` for actual amount. `invoice_number` + `invoice_link` from Cardcom. Status: `pending → completed / failed / refunded` |
 | `events` | Immutable event log — drives state machine + A/B counters |
 | `experiments` | A/B test registry — atomic visitor/conversion counters |
 | `jobs` | Outbox/job queue — processed by cron every 5 min |
 | `email_sequences` | Drip email definitions — trigger_event, delay_hours, template_key |
-| `email_logs` | One per sent email. UNIQUE `(user_id, sequence_id)` prevents doubles |
-| `error_logs` | Server error log — visible in `/admin` |
+| `email_logs` | One per sent email. UNIQUE `(user_id, sequence_id)` prevents doubles. status: sent/opened (updated on first CTA click) |
+| `error_logs` | Server error log — visible in `/admin/system` |
 | `video_events` | Vimeo video analytics — watch_progress, drop_off, completed events per video_id |
 | `ab_proposals` | AI-generated A/B test proposals — category, hypothesis, variants, status, live counters |
 | `quiz_results` | Quiz answers + scores + recommended product per session/user |
 | `notes` | CRM admin notes on users — author, content, created_at |
 | `reminders` | CRM task reminders — assigned_to, due_at, completed_at |
 | `hive_content` | Curated content for hive members — tier_required (starter/pro/elite), content_type (article/pdf/video) |
+| `user_insights` | TrueSignal AI diagnosis cache per user — avoids re-calling Claude API on every `/admin/users/[id]` load |
+| `atelier_applications` | Atelier lead applications — full onboarding pipeline state: `status` (lead funnel), `pipeline_status` (site creation), `source_utm` JSONB, AI analysis, generated content, deploy metadata |
+| `deals` | Brand deals CRM — brand_name, logo, category, deal value, status |
 
 **Key DB patterns:**
 - All server-side DB access: `createServerClient()` from `lib/supabase/server.ts` (service-role key, bypasses RLS)
@@ -195,7 +234,7 @@ lead → engaged → high_intent → buyer → booked
 | `PURCHASE_COMPLETED` | high_intent → buyer |
 | `CALL_BOOKED` | buyer → booked |
 
-Special statuses (set directly, not via state machine): `premium_lead`, `partnership_lead`
+Special statuses (set directly, not via state machine): `premium_lead`, `partnership_lead`, `handled`, `not_relevant`
 
 Hive membership is tracked via separate `hive_status` column (`active` / `cancelled` / `expired`) — independent of main funnel status.
 
@@ -207,8 +246,8 @@ Hive membership is tracked via separate `hive_status` column (`active` / `cancel
 |---|---|---|
 | `PAGE_VIEW` | `PageTracker` component | A/B visitor count |
 | `USER_SIGNED_UP` | `/api/signup` | Triggers welcome sequence |
-| `EMAIL_OPENED` | Email tracking pixel | State machine |
-| `LINK_CLICKED` | Email CTA click | State machine |
+| `EMAIL_OPENED` | Email CTA click (click implies open — no pixel) | State machine |
+| `LINK_CLICKED` | Email CTA click via `/api/email/click` tracker | State machine |
 | `CHECKOUT_STARTED` | CTAs + forms | Triggers cart-abandon sequence |
 | `PURCHASE_COMPLETED` | Cardcom webhook | State machine → buyer |
 | `CHALLENGE_PURCHASED` | Cardcom webhook | Triggers challenge sequence |
@@ -244,7 +283,9 @@ Hive membership is tracked via separate `hive_status` column (`active` / `cancel
 | `HIVE_JOINED` | 168h | `hive_day7` | Week-1 check-in |
 | `HIVE_CANCELLED` | 0h | `hive_cancelled` | Cancellation confirmation + refund info |
 
-All templates: `lib/email/templates.ts` → `TEMPLATES` map.
+All templates: `lib/email/templates.ts` → `TEMPLATES` map. Style: Ben Settle (short `<p>` lines, personal voice, signed "צוות beegood"). No "השב על המייל הזה" — all reply CTAs link to WhatsApp (`wa.me/972539566961`).
+
+**Click tracking:** All CTA `href` links in sent emails are wrapped through `/api/email/click?uid=&sid=&url=` by `lib/jobs/handlers/send-email.ts`. On first click: updates `email_logs.status` to `opened` + fires `EMAIL_OPENED` event. Always fires `LINK_CLICKED` event. Excluded from wrapping: `/unsubscribe`, `wa.me`, `mailto:`. Pixel tracking NOT used (emails are text-only — Apple Mail Privacy Protection pre-fetches pixels).
 
 ---
 
@@ -467,7 +508,7 @@ WHATSAPP_GROUP_URL=
 - **Vercel cron** (`vercel.json`): `0 22 * * *` — daily at 22:00 UTC
 - **External cron:** cron-job.org hits `GET /api/cron/jobs` every 5 min with `Authorization: Bearer <CRON_SECRET>`
 
-**Current status (April 8, 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-016) applied. A/B test `landing_headline` running live. Course content player built. Challenge content player built. Account page + credit system live. Hive members area live. Email sending live from `noreply@beegood.online`. Quiz skip logic for logged-in users live. Account communication preferences section live.
+**Current status (May 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-029) applied. A/B test `landing_headline` running live. Course content player built. Challenge content (days 0–7 live, day 8 PLACEHOLDER). Hive members area live. Email sending live from `noreply@beegood.online` with click-based open tracking. Full UTM chain (source/medium/campaign/adset/ad) tracked and displayed in admin. Atelier influencer program live with full AI onboarding pipeline + orchestrator. Deals CRM live.
 
 ---
 
@@ -529,7 +570,16 @@ WHATSAPP_GROUP_URL=
 - **Discounts + popups fully removed (April 2026)** — `AbandonCheckoutPopup` removed from all product pages (/challenge, /workshop, /course, /strategy). `PERMANENT_DISCOUNTS` map removed from `/api/checkout`. Credit system disabled sitewide — all checkouts charge full list price. `lib/credit.ts` still exists but is unused.
 - **`vimeoId` prop on `ProductLandingPage`** — optional `vimeoId?: string` prop renders a 9:16 portrait Vimeo embed (maxWidth: 260px) in the VSL slot. Used on: /strategy (`1183710499`), /challenge (`1183365127`), /training (`1182657741`).
 - **Mobile navbar logo** — `beegoodtxt.png` centered in mobile top bar (`MobileNav.tsx`) with gold glow filter. Desktop nav has no logo image.
-- **Challenge day videos (1–7) live** — all 7 daily Reels videos populated in `lib/challenge-config.ts` with real Vimeo IDs. Portrait 9:16 sizing fixed in `ChallengePlayer` with `maxWidth: 340px` wrapper.
+- **Challenge day videos (0–7) live** — day 0 (`1185862328`) + days 1–7 all have real Vimeo IDs in `lib/challenge-config.ts`. Only day 8 (closing session) is still PLACEHOLDER. Portrait 9:16 sizing for days 1–7, 16:9 for days 0 + 8.
+- **Email templates rewritten (Ben Settle style)** — all 12 active templates in `lib/email/templates.ts` rewritten: short `<p>` lines, personal Hebrew voice, signed "צוות beegood". All reply CTAs link to WhatsApp, not email. Dynamic workshop date via `getNextWorkshopDate()`.
+- **Click-based email open tracking** — `/api/email/click` endpoint wraps all CTA links; records `EMAIL_OPENED` + `LINK_CLICKED` events and updates `email_logs.status`. No pixel tracking.
+- **Full UTM chain in admin** — `/admin/users/[id]` shows utm_source/medium/campaign/adset/ad/content + click_id. `/admin/acquisition` campaign table shows 6-column breakdown including אד-סט and אד (קריאייטיב) in gold.
+- **Atelier influencer program** — `/atelier` landing page with application form. Full CRM at `/admin/atelier` with fit-score algorithm, UTM chips, status filter. Detail view at `/admin/atelier/[id]` with AI analysis (Claude), content generation, ProjectManagerAgent orchestrator, preview deploy pipeline.
+- **Atelier UTM tracking** — form reads all UTM cookies and saves as `source_utm` JSONB in `atelier_applications`. Admin list + detail view display the full chain.
+- **TrueSignal AI diagnosis** — `/admin/users/[id]` has `TrueSignalCard` component that calls Claude API to generate per-user business diagnosis. Results cached in `user_insights` table.
+- **Invoice tracking** — Cardcom webhook saves `invoice_number` + `invoice_link` (PDF URL) on `purchases` rows.
+- **User status archive** — `handled` and `not_relevant` added to user_status enum (migration 028) for CRM cleanup.
+- **Deals CRM** — `deals` table (migration 024) + `/admin/deals` page for tracking brand deals.
 
 ---
 
@@ -538,10 +588,10 @@ WHATSAPP_GROUP_URL=
 | Item | Blocker | How to activate |
 |---|---|---|
 | Cardcom recurring (Hive) | Need Cardcom recurring setup | Configure recurring billing once standard payments confirmed |
-| WhatsApp group link for Hive | Need group URL | Update placeholder in hive_welcome email template |
-| Hive Zoom link | Content | Update placeholder in hive_welcome email template |
+| WhatsApp group link for Hive | Need group URL | Update placeholder in `hive_welcome` email template |
+| Hive Zoom link | Content | Update placeholder in `hive_welcome` email template |
 | Real course video links | Content production | Replace Vimeo placeholders in `CoursePlayer` with real lesson IDs |
-| Challenge day 0 + day 8 videos | Content production | Replace PLACEHOLDER videoId in `lib/challenge-config.ts` for opening + closing sessions |
+| Challenge day 8 video | Content production | Replace PLACEHOLDER in `lib/challenge-config.ts` day 8 entry |
 | Real hive_content rows | Content | Insert rows into `hive_content` table via Supabase dashboard |
 | Hive AI matching system | Future feature | Designed as "בקרוב" placeholder on /hive page |
 | WhatsApp API for cart abandonment | Provider selection needed | Choose from: Twilio, Green API, Infobip, or Meta direct. Connect to `CHECKOUT_STARTED` event sequence. |
@@ -553,11 +603,21 @@ WHATSAPP_GROUP_URL=
 Admin dashboard at `/admin` and individual user profiles at `/admin/users/[id]`.
 
 **Admin dashboard sections:**
-- Overview stats: total users, buyers, revenue, conversion rate
-- User table: filterable by status, sortable, search by name/email
+- Overview stats + user table: `/admin` — filterable by status, search by name/email
 - A/B testing: `/admin/abtesting` — live experiments + AI proposals
-- Hive section: active members, tier breakdown, MRR, refund alerts
-- Error logs: recent server errors from `error_logs` table
+- Acquisition: `/admin/acquisition` — full UTM breakdown (source → medium → campaign → adset → ad)
+- Atelier CRM: `/admin/atelier` + `/admin/atelier/[id]` — lead pipeline + AI onboarding workbench
+- Email stats: `/admin/email` — send/open/click rates from `email_logs`
+- Funnel: `/admin/funnel` — conversion funnel
+- Leads: `/admin/leads` — filterable leads list with UTM columns
+- Community (Hive): `/admin/community` — membership analytics
+- Deals: `/admin/deals` — brand deals CRM
+- Sales: `/admin/sales` — revenue bar chart
+- Products: `/admin/products` — per-product performance
+- Video: `/admin/video` — Vimeo drop-off + completion stats
+- MMM: `/admin/mmm` — media mix modeling
+- CRM: `/admin/crm` — status + UTM breakdown
+- System: `/admin/system` — error logs, cron status
 
 **User profile (`/admin/users/[id]`):**
 - Header: name, email, status badge, UTM source, A/B variant, signup date
@@ -676,7 +736,7 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
-- Next migration number: 017
+- Next migration number: 030
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes
