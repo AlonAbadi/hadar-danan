@@ -5,6 +5,8 @@
  * Design: dark header (#0a0a0f), white body, blue CTAs (#2563eb).
  */
 
+import { getNextWorkshopDate, formatHebrew } from "@/lib/products";
+
 const APP_URL  = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 const FROM_NAME = "הדר דנן";
 

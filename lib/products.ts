@@ -4,13 +4,47 @@
  */
 
 export const CHALLENGE_DATES = ["2026-04-16", "2026-05-14", "2026-06-11"] as const;
-export const WORKSHOP_DATES  = ["2026-04-30", "2026-05-28", "2026-06-25"] as const;
 
 /** Returns the first date in the array that hasn't passed yet (YYYY-MM-DD). */
 export function getNextDate(dates: readonly string[]): string | null {
   const today = new Date().toISOString().split("T")[0];
   return dates.find((d) => d >= today) ?? null;
 }
+
+// ── Workshop dates — auto-computed: last Thursday of each month ───────────
+
+/** Returns YYYY-MM-DD of the last Thursday of the given month. */
+function lastThursdayOfMonth(year: number, month: number): string {
+  const lastDay = new Date(year, month, 0); // day 0 of next month = last day of this month
+  const daysBack = (lastDay.getDay() + 3) % 7; // days to subtract to reach Thursday
+  lastDay.setDate(lastDay.getDate() - daysBack);
+  return lastDay.toISOString().slice(0, 10);
+}
+
+/** Returns the next `count` workshop dates (last Thursday of each month) from today. */
+export function getWorkshopDates(count = 12): string[] {
+  const today = new Date().toISOString().slice(0, 10);
+  const dates: string[] = [];
+  const now = new Date();
+  let year  = now.getFullYear();
+  let month = now.getMonth() + 1; // 1–12
+
+  while (dates.length < count) {
+    const date = lastThursdayOfMonth(year, month);
+    if (date >= today) dates.push(date);
+    month++;
+    if (month > 12) { month = 1; year++; }
+  }
+  return dates;
+}
+
+/** Returns the next upcoming workshop date, or null if none computed. */
+export function getNextWorkshopDate(): string | null {
+  return getWorkshopDates(1)[0] ?? null;
+}
+
+/** Backward-compat: static-looking export that is actually dynamic. */
+export const WORKSHOP_DATES = getWorkshopDates(12);
 
 /** "2026-04-16" → "16.4" */
 export function formatShort(d: string): string {

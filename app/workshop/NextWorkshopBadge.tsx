@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { WORKSHOP_DATES, getNextDate, formatHebrew } from "@/lib/products";
+import { getNextWorkshopDate, formatHebrew } from "@/lib/products";
 
 function getDaysUntil(dateStr: string): number {
   const target = new Date(dateStr);
@@ -16,7 +16,7 @@ export function NextWorkshopBadge() {
   const [days, setDays]         = useState(0);
 
   useEffect(() => {
-    const d = getNextDate(WORKSHOP_DATES);
+    const d = getNextWorkshopDate();
     if (d) {
       setNextDate(d);
       setDays(getDaysUntil(d));
