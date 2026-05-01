@@ -546,12 +546,15 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
 
               <Card title="מקור ושיווק">
                 <InfoRow label="פלטפורמה" value={platform} />
+                <InfoRow label="מדיום"    value={user.utm_medium} />
                 <InfoRow label="קמפיין"   value={user.utm_campaign} />
                 <InfoRow label="אד-סט"    value={user.utm_adset} />
+                <InfoRow label="אד"       value={user.utm_ad} />
+                <InfoRow label="תוכן"     value={user.utm_content} />
                 <InfoRow label="גרסת A/B" value={user.ab_variant} />
                 <InfoRow label="click_id" ltr
                   value={user.click_id
-                    ? user.click_id.slice(0, 20) + (user.click_id.length > 20 ? "..." : "")
+                    ? user.click_id.slice(0, 20) + (user.click_id.length > 20 ? "…" : "")
                     : null}
                 />
               </Card>

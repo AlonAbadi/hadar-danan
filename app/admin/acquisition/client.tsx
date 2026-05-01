@@ -169,6 +169,8 @@ type CampaignRow = {
   source: string;
   medium: string;
   campaign: string;
+  adset: string;
+  ad: string;
   content: string;
   leads: number;
 };
@@ -666,17 +668,18 @@ export default function AcquisitionClient({
       {/* ── Campaign Breakdown ──────────────────────────────────────── */}
       {campaigns.length > 0 && (
         <Card style={{ marginBottom: 24 }}>
-          <CardHeader title="ביצועים לפי קמפיין" sub="UTM Campaign Breakdown" />
+          <CardHeader title="ביצועים לפי קמפיין" sub="UTM Campaign Breakdown — מקור ← מדיום ← קמפיין ← אד-סט ← אד" />
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: C.soft }}>
                   {[
-                    { l: 'מקור', w: '14%' },
-                    { l: 'מדיום', w: '12%' },
-                    { l: 'קמפיין', w: '26%' },
-                    { l: 'תוכן / אד', w: '26%' },
-                    { l: 'לידים' },
+                    { l: 'מקור',   w: '10%' },
+                    { l: 'מדיום',  w: '10%' },
+                    { l: 'קמפיין', w: '22%' },
+                    { l: 'אד-סט',  w: '22%' },
+                    { l: 'אד (קריאייטיב)', w: '22%' },
+                    { l: 'לידים',  w: '7%'  },
                   ].map((h, i) => (
                     <th key={i} style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, width: h.w }}>
                       {h.l}
@@ -690,7 +693,13 @@ export default function AcquisitionClient({
                     <td style={{ padding: '10px 16px', fontWeight: 600, color: C.gold }}>{c.source}</td>
                     <td style={{ padding: '10px 16px', color: C.muted }}>{c.medium || '—'}</td>
                     <td style={{ padding: '10px 16px', color: C.fg }}>{c.campaign || '—'}</td>
-                    <td style={{ padding: '10px 16px', color: C.muted, fontSize: 12 }}>{c.content || '—'}</td>
+                    <td style={{ padding: '10px 16px', color: C.muted, fontSize: 12 }}>{c.adset || '—'}</td>
+                    <td style={{ padding: '10px 16px', fontSize: 12 }}>
+                      {c.ad
+                        ? <span style={{ color: C.goldL, fontWeight: 600 }}>{c.ad}</span>
+                        : <span style={{ color: C.muted }}>—</span>
+                      }
+                    </td>
                     <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: C.fg, fontFamily: 'system-ui' }}>{c.leads}</td>
                   </tr>
                 ))}

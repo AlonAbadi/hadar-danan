@@ -340,7 +340,7 @@ export async function getSourceAnalytics(dateRange?: string) {
 
   const { data: users } = await supabase
     .from('users')
-    .select('id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, created_at, status')
+    .select('id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, utm_adset, utm_ad, created_at, status')
     .gte('created_at', dateFilter);
 
   const { data: purchases } = await supabase
@@ -383,16 +383,27 @@ export async function getSourceAnalytics(dateRange?: string) {
   });
   Object.entries(uniqueBuyersPerSource).forEach(([src, s]) => { sources[src].buyers = s.size; });
 
-  // Campaign breakdown: group by source+medium+campaign+content
-  const campaignMap: Record<string, { leads: number; source: string; medium: string; campaign: string; content: string }> = {};
+  // Campaign breakdown: group by source → medium → campaign → adset → ad
+  const campaignMap: Record<string, {
+    leads: number; source: string; medium: string;
+    campaign: string; adset: string; ad: string; content: string;
+  }> = {};
   users?.forEach((u) => {
     if (!u.utm_campaign && !u.utm_source) return;
-    const key = [u.utm_source || 'direct', u.utm_medium || '', u.utm_campaign || '', u.utm_content || ''].join('||');
+    const key = [
+      u.utm_source   || 'direct',
+      u.utm_medium   || '',
+      u.utm_campaign || '',
+      u.utm_adset    || '',
+      u.utm_ad       || '',
+    ].join('||');
     if (!campaignMap[key]) campaignMap[key] = {
-      leads: 0,
+      leads:    0,
       source:   u.utm_source   || 'direct',
       medium:   u.utm_medium   || '',
       campaign: u.utm_campaign || '',
+      adset:    u.utm_adset    || '',
+      ad:       u.utm_ad       || '',
       content:  u.utm_content  || '',
     };
     campaignMap[key].leads += 1;
