@@ -4,6 +4,7 @@ import { renderTemplate, FROM_NAME } from "@/lib/email/templates";
 import type { Database } from "@/lib/supabase/types";
 
 const FROM_ADDRESS = process.env.NEXT_PUBLIC_FROM_EMAIL ?? "onboarding@resend.dev";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
 export interface SendEmailPayload {
   user_id: string;
@@ -36,6 +37,26 @@ export async function handleSendEmail(
   const rendered = renderTemplate(template_key, { ...payload, name, email });
   if (!rendered) throw new Error(`Unknown template key: ${template_key}`);
 
+  // ── Wrap all links through click tracker ─────────────────
+  // Click = confirmed open. More reliable than pixel for text-only emails.
+  const uid = encodeURIComponent(user_id);
+  const sid = encodeURIComponent(sequence_id);
+  const trackedHtml = rendered.html.replace(
+    /href="(https?:\/\/[^"]+)"/g,
+    (_, href: string) => {
+      // Don't wrap unsubscribe, WhatsApp, or mailto links
+      if (
+        href.includes("/unsubscribe") ||
+        href.includes("wa.me") ||
+        href.startsWith("mailto:")
+      ) {
+        return `href="${href}"`;
+      }
+      const clickUrl = `${APP_URL}/api/email/click?uid=${uid}&sid=${sid}&url=${encodeURIComponent(href)}`;
+      return `href="${clickUrl}"`;
+    }
+  );
+
   // ── Send via Resend ───────────────────────────────────────
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("RESEND_API_KEY is not set");
@@ -45,7 +66,7 @@ export async function handleSendEmail(
     from: `${FROM_NAME} <${FROM_ADDRESS}>`,
     to: email,
     subject: rendered.subject,
-    html: rendered.html,
+    html: trackedHtml,
   });
 
   if (error) throw new Error(`Resend error: ${error.message}`);

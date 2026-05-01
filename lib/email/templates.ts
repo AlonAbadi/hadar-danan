@@ -46,7 +46,7 @@ function base(content: string): string {
     .header p  { font-size: 14px; color: #9ca3af; margin-top: 6px; }
     .header-accent { color: #4ade80; }
     .body { padding: 32px; }
-    .body p  { font-size: 16px; line-height: 1.75; color: #374151; margin-bottom: 16px; }
+    .body p  { font-size: 16px; line-height: 1.75; color: #374151; margin-bottom: 14px; }
     .body h2 { font-size: 20px; font-weight: 800; color: #111827; margin-bottom: 12px; }
     .cta {
       display: inline-block;
@@ -182,456 +182,462 @@ export interface RenderedEmail {
 }
 
 // ─────────────────────────────────────────────────────────────
-// SEQUENCE 1 - Welcome (USER_SIGNED_UP)
+// SEQUENCE 1 - Welcome (USER_SIGNED_UP · 0h)
 // ─────────────────────────────────────────────────────────────
 
-// Email 1 (immediate): Welcome + free training link
 function welcome(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
   return {
-    subject: `ברוכ/ה הבא/ה ${firstName}! ההדרכה החינמית מחכה לך 🎬`,
+    subject: `ברוכ/ה הבא/ה, ${firstName}`,
     html: base(`
       <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>ברוכ/ה הבא/ה, <span class="header-accent">${firstName}</span> 🎉</h1>
-        <p>ביצעת את הצעד הראשון - ועכשיו הגיע הזמן לפעולה</p>
+        <div class="header-logo">beegood</div>
+        <h1>ברוכ/ה הבא/ה, <span class="header-accent">${firstName}</span></h1>
       </div>
       <div class="body">
-        <p>שלום ${firstName},</p>
-        <p>שמחה שהצטרפת! קיבלת גישה חינמית להדרכה שמלמדת איך לייצר סרטונים שמביאים לקוחות - בלי ציוד יקר ובלי ניסיון קודם.</p>
-
-        <div class="highlight-box">
-          <p>📹 ההדרכה החינמית שלך מוכנה לצפייה עכשיו</p>
-        </div>
-
-        <p><strong>מה תלמד:</strong></p>
-        <p>
-          ✅ איך לזהות את הלקוח האידיאלי שלך ולדבר אליו ישר<br/>
-          ✅ ליצור תוכן שמושך תשומת לב - בלי תקציב פרסום<br/>
-          ✅ לסגור עסקאות דרך WhatsApp תוך 7 ימים
-        </p>
-
-        <br/>
-        <a class="cta" href="${APP_URL}">לצפייה בהדרכה ←</a>
-
-        <hr class="divider" />
-        <p style="font-size:14px;color:#6b7280">
-          מחר אשלח לך משהו שיעזור לך לקחת את זה צעד קדימה.<br/>
-          בינתיים - צפה בהדרכה לפחות פעם אחת.
-        </p>
+        <p>${firstName},</p>
+        <p>ברוכ/ה הבא/ה לעולם של TrueSignal©.</p>
+        <p>שמי הדר דנן.</p>
+        <p>אני עובדת עם בעלי עסקים שיש להם משהו אמיתי לתת לעולם —</p>
+        <p>אבל השיווק שלהם לא משקף את זה.</p>
+        <p>כבר 4 שנים אני עוזרת לעסקים לא רק לשווק —</p>
+        <p>אלא לבנות מערכת שיווק שעובדת בשבילם.</p>
+        <p>מ-197 שקל ועד 14,000 שקל —</p>
+        <p>כמעט 4,000 עסקים כבר עשו את המסע.</p>
+        <p>חלקם הגיעו אלינו בלי ניסיון בשיווק.</p>
+        <p>חלקם הגיעו עם ניסיון — אבל בלי כיוון.</p>
+        <p>כולם יצאו עם משהו שלא היה להם לפני.</p>
+        <p>ואת/ה עכשיו חלק מזה.</p>
+        <p>בימים הקרובים תקבל/י ממני עוד תוכן.</p>
+        <p>בינתיים — אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#2563eb">צרו קשר בוואטסאפ</a>.</p>
+        <p>אנחנו כאן.</p>
+        <p>צוות beegood</p>
       </div>
     `),
   };
 }
 
-// Email 2 (24h): Introduce the 7-day challenge ₪197
+// ─────────────────────────────────────────────────────────────
+// SEQUENCE 1 cont. - Followup 24h (USER_SIGNED_UP · 24h)
+// ─────────────────────────────────────────────────────────────
+
 function followup24h(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
   const ep = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
   return {
-    subject: `${firstName}, יש לי הצעה בשבילך - ₪197 שיכולים לשנות הכל`,
+    subject: `${firstName}, מה שמייחד אותך — זה לא מה שאתה חושב`,
     html: base(`
       <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>הצעד הבא שלך, <span class="header-accent">${firstName}</span></h1>
-        <p>ההדרכה החינמית היא רק ההתחלה</p>
+        <div class="header-logo">beegood</div>
+        <h1>הבידול שלך, <span class="header-accent">${firstName}</span></h1>
       </div>
       <div class="body">
-        <p>היי ${firstName},</p>
-        <p>אני מקווה שצפית בהדרכה. עכשיו אני רוצה להציע לך משהו שיקח אותך מידע → תוצאות.</p>
-
-        <div class="highlight-box">
-          <p>🔥 אתגר 7 הימים - ₪197 בלבד</p>
-        </div>
-
-        <p><strong>מה קורה בצ׳אלנג׳:</strong></p>
-        <p>
-          📹 יום 1: צולמים את הסרטון הראשון<br/>
-          💬 יום 2-4: מפרסמים ומקבלים פידבק אישי ממני<br/>
-          💰 יום 5-7: לקוחות אמיתיים או כסף חזרה
-        </p>
-
-        <p>250+ בעלי עסקים עשו את זה ושינו את הדרך שבה הם משווקים את עצמם.</p>
-
-        <a class="cta" href="${APP_URL}/challenge${ep}">אני רוצה להצטרף לצ׳אלנג׳ ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          יש שאלות? פשוט השב לאימייל הזה - אני קורא הכל.
-        </p>
+        <p>${firstName},</p>
+        <p>רוב בעלי העסקים משווקים את הכישורים שלהם.</p>
+        <p>אבל זה לא מה שגורם ללקוחות לבחור בהם.</p>
+        <p>מה שגורם ללקוחות לבחור —</p>
+        <p>זה הסיפור.</p>
+        <p>הדמות.</p>
+        <p>האדם שמאחורי השירות.</p>
+        <p>האתגר 7 הימים בנוי בדיוק לזה.</p>
+        <p>7 סרטונים.</p>
+        <p>כל אחד חושף שכבה נוספת של מי שאתה.</p>
+        <p>ביחד הם יוצרים סיפור שלם —</p>
+        <p>שגורם ללקוחות להתאהב בך לפני שדיברתם.</p>
+        <p>זה לא שיווק.</p>
+        <p>זה בניית דמות עגולה שאנשים בוחרים בה.</p>
+        <p>500+ עסקים כבר עשו את זה.</p>
+        <p>₪197 בלבד.</p>
+        <a class="cta" href="${APP_URL}/challenge${ep}">להצטרפות לאתגר ←</a>
+        <p>צוות beegood</p>
       </div>
     `),
   };
 }
 
 // ─────────────────────────────────────────────────────────────
-// SEQUENCE 2 - Challenge buyers (CHALLENGE_PURCHASED)
-// ─────────────────────────────────────────────────────────────
-
-// Email 1 (immediate): Access details + how to start
-function challengeAccess(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
-  return {
-    subject: `${firstName} - הגישה שלך לצ׳אלנג׳ 7 הימים מוכנה! 🚀`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן · אתגר 7 הימים</div>
-        <h1>ברוכ/ה הבא/ה לצ׳אלנג׳, <span class="header-accent">${firstName}</span>!</h1>
-        <p>הרכישה אושרה - הנה כל מה שצריך כדי להתחיל</p>
-      </div>
-      <div class="body">
-        <p>היי ${firstName},</p>
-        <p>כל הכבוד על ההחלטה! זה הצעד שמבדיל בין מי שמדבר על שיווק לבין מי שעושה אותו.</p>
-
-        <div class="highlight-box-green">
-          <p>✅ הרכישה אושרה בהצלחה</p>
-        </div>
-
-        <p><strong>איך מתחילים - 3 צעדים:</strong></p>
-
-        <div class="step-row">
-          <div class="step-num">1</div>
-          <div class="step-text"><strong>הצטרף לקבוצת הוואצאפ</strong> - שם מתרחש הקסם. תקבל קישור בהודעה נפרדת.</div>
-        </div>
-        <div class="step-row">
-          <div class="step-num">2</div>
-          <div class="step-text"><strong>צפה במשימה של יום 1</strong> - זמין מיד לאחר ההצטרפות לקבוצה.</div>
-        </div>
-        <div class="step-row">
-          <div class="step-num">3</div>
-          <div class="step-text"><strong>צלם את הסרטון הראשון שלך</strong> - 60 שניות, טלפון ישר, לא צריך כלום אחר.</div>
-        </div>
-
-        <br/>
-        <a class="cta" href="${APP_URL}/members">כניסה לאזור החברים ←</a>
-
-        <hr class="divider"/>
-        <div class="highlight-box-yellow">
-          <p>⏱️ הצ׳אלנג׳ מתחיל מהיום - אל תדחה ליום ראשון "שיהיה נוח"</p>
-        </div>
-        <p style="font-size:14px;color:#6b7280">
-          שאלות? השב לאימייל הזה ואחזור אליך תוך שעה.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// Email 2 (day 7): Upsell to workshop ₪1,080
-function challengeUpsellWorkshop(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
-  const ep = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
-  return {
-    subject: `${firstName} - יום 7 הסתיים. מה עכשיו? 🎯`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>שבוע שלם, <span class="header-accent">${firstName}</span>! 🏆</h1>
-        <p>סיימת את הצ׳אלנג׳ - הגיע הזמן לשלב הבא</p>
-      </div>
-      <div class="body">
-        <p>היי ${firstName},</p>
-        <p>שבוע עבר מאז שהצטרפת לצ׳אלנג׳. אני מקווה שיש לך כבר סרטונים בחוץ ואנשים שמגיבים.</p>
-        <p>עכשיו השאלה הגדולה: <strong>איך הופכים את זה למערכת שרצה לבד?</strong></p>
-
-        <div class="highlight-box">
-          <p>⚡ הסדנה יום אחד - המשך ישיר מהצ׳אלנג׳</p>
-        </div>
-
-        <p><strong>מה הסדנה עושה שהצ׳אלנג׳ לא:</strong></p>
-        <p>
-          📐 בונה לך אסטרטגיית תוכן ל-12 חודשים קדימה<br/>
-          🔄 מגדיר משפך מכירות אוטומטי מקצה לקצה<br/>
-          📊 מלמד איך למדוד ולשפר - לא רק לפרסם ולקוות
-        </p>
-
-        <p style="font-size:15px;"><strong>₪1,080</strong> <span style="color:#6b7280;text-decoration:line-through">₪1,980</span> - מחיר מיוחד לבוגרי הצ׳אלנג׳</p>
-
-        <a class="cta" href="${APP_URL}/workshop${ep}">לרכישה עם הזיכוי שלך ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          לא מוכן עדיין? גם בסדר - מחכה לך כשתהיה מוכן.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// ─────────────────────────────────────────────────────────────
-// SEQUENCE 3 - Workshop buyers (WORKSHOP_PURCHASED)
-// ─────────────────────────────────────────────────────────────
-
-// Email 1 (immediate): Confirmation + date + Zoom placeholder
-function workshopConfirmation(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
-  return {
-    subject: `${firstName} - ההרשמה לסדנה אושרה! הנה כל הפרטים 📅`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן · סדנה יום אחד</div>
-        <h1>ההרשמה אושרה, <span class="header-accent">${firstName}</span>!</h1>
-        <p>הנה כל מה שצריך לדעת לפני הסדנה</p>
-      </div>
-      <div class="body">
-        <p>היי ${firstName},</p>
-        <p>כל הכבוד! קיבלת מקום בסדנה - זה ההשקעה הכי חכמה שתעשה לעסק שלך השנה.</p>
-
-        <div class="highlight-box-green">
-          <p>✅ מקומך שמור - ההרשמה אושרה בהצלחה</p>
-        </div>
-
-        <p><strong>פרטי הסדנה:</strong></p>
-        <p>
-          📅 <strong>תאריך:</strong> יתואם ויישלח בהודעה נפרדת<br/>
-          ⏰ <strong>שעה:</strong> 09:00-15:00<br/>
-          💻 <strong>פלטפורמה:</strong> Zoom (קישור יישלח יום לפני)<br/>
-          📋 <strong>מה להכין:</strong> מחשב נייד, פנקס, קפה ☕
-        </p>
-
-        <div class="highlight-box">
-          <p>📌 הכנה מוקדמת: חשוב על 3 האתגרים השיווקיים הכי גדולים שלך - נטפל בהם בסדנה</p>
-        </div>
-
-        <a class="cta" href="${APP_URL}/workshop">חזרה לדף הסדנה ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          שאלות לפני הסדנה? השב לאימייל הזה - אני כאן.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// Email 2 (day 7): Upsell to digital course ₪1,800
-function workshopUpsellStrategy(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
-  const ep = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
-  return {
-    subject: `${firstName} - שבוע אחרי הסדנה. הצעד הבא שלך 🎓`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>שבוע עבר, <span class="header-accent">${firstName}</span></h1>
-        <p>הגיע הזמן לעמיק את הידע</p>
-      </div>
-      <div class="body">
-        <p>היי ${firstName},</p>
-        <p>עבר שבוע מהסדנה. אני מקווה שהתחלת ליישם - אפילו דבר אחד קטן שעבד.</p>
-        <p>לאלה שרוצים לקחת את הידע לעומק - יש לי בדיוק מה שצריך:</p>
-
-        <div class="highlight-box">
-          <p>🎓 קורס דיגיטלי - 16 שיעורים, 8 שעות, שיטה מלאה לשיווק דיגיטלי</p>
-        </div>
-
-        <p><strong>מה כלול בקורס:</strong></p>
-        <p>
-          📚 16 שיעורים מוקלטים - לומדים בקצב שלך<br/>
-          🎯 4 מודולים: יסודות, תוכן, משפך מכירות, מדידה<br/>
-          ♾️ גישה לנצח - חוזרים כשצריך<br/>
-          📋 תרגילים מעשיים אחרי כל שיעור
-        </p>
-
-        <p style="font-size:15px;"><strong>₪1,800</strong> · גישה מיידית</p>
-
-        <a class="cta" href="${APP_URL}/course${ep}">לרכישה עם הזיכוי שלך ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          לא בשלב הזה? גם בסדר. אשמח לשמוע מה עבד מהסדנה.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// ─────────────────────────────────────────────────────────────
-// SEQUENCE 4b - Course buyers (COURSE_PURCHASED)
-// ─────────────────────────────────────────────────────────────
-
-// Email 1 (immediate): Course access details
-function courseAccess(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
-  return {
-    subject: `${firstName} - הגישה לקורס מוכנה! 16 שיעורים מחכים לך 🎓`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>ברוכ/ה הבא/ה לקורס, <span class="header-accent">${firstName}</span>! 🎉</h1>
-        <p>16 שיעורים · 8 שעות · שיטה מלאה</p>
-      </div>
-      <div class="body">
-        <p>שלום ${firstName},</p>
-        <p>תודה על הרכישה! הגישה שלך לקורס פעילה עכשיו.</p>
-
-        <div class="highlight-box-green">
-          <p>✅ גישה לנצח - חוזרים מתי שרוצים</p>
-        </div>
-
-        <p><strong>3 צעדים לתחילת הקורס:</strong></p>
-        <div class="step-row">
-          <div class="step-num">1</div>
-          <div class="step-text">כנסו לאזור הלומדים - קישור בכפתור למטה</div>
-        </div>
-        <div class="step-row">
-          <div class="step-num">2</div>
-          <div class="step-text">התחילו מהמודול הראשון - יסודות השיווק הדיגיטלי</div>
-        </div>
-        <div class="step-row">
-          <div class="step-num">3</div>
-          <div class="step-text">השלימו את התרגיל בסוף כל שיעור - זה המפתח לתוצאות</div>
-        </div>
-
-        <a class="cta" href="${APP_URL}/course/content">כניסה לקורס ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          שאלות? השב לאימייל הזה - אני קורא הכל ועונה תוך 24 שעות.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// Email 2 (day 7): Upsell to strategy session ₪4,000
-function courseUpsellStrategy(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
-  const ep = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
-  return {
-    subject: `${firstName} - שבוע בקורס. מוכן/ה לצעד הבא? 🚀`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>שבוע בקורס, <span class="header-accent">${firstName}</span></h1>
-        <p>הגיע הזמן לבנות את האסטרטגיה שלך</p>
-      </div>
-      <div class="body">
-        <p>היי ${firstName},</p>
-        <p>עבר שבוע מאז שהתחלת את הקורס. אם יישמת - כבר רואים תוצאות ראשונות.</p>
-        <p>לאלה שמוכנים לקחת את כל מה שלמדו ולהפוך אותו לתוכנית פעולה אישית:</p>
-
-        <div class="highlight-box">
-          <p>🎯 פגישת אסטרטגיה אישית - 90 דקות, תוכנית שנה קדימה</p>
-        </div>
-
-        <p><strong>מה שונה בפגישת אסטרטגיה:</strong></p>
-        <p>
-          🔍 ניתוח מעמיק של העסק שלך ספציפית<br/>
-          📐 בניית משפך מותאם אישית מ-A עד ת׳<br/>
-          📝 יוצאים עם מסמך כתוב + תוכנית פעולה מיידית
-        </p>
-
-        <p style="font-size:15px;"><strong>₪4,000</strong> לשיחה אחת · ערבות תוצאה מלאה</p>
-
-        <a class="cta" href="${APP_URL}/strategy${ep}">לרכישה עם הזיכוי שלך ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          לא בשלב הזה? ממשיך/ה בקורס - אני כאן אם יש שאלות.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// ─────────────────────────────────────────────────────────────
-// SEQUENCE 5 - Re-engagement (INACTIVE_3_DAYS)
-// ─────────────────────────────────────────────────────────────
-
-function reengagement(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
-  return {
-    subject: `${firstName}, התגעגענו אליך 👋`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>היי <span class="header-accent">${firstName}</span>, הכל בסדר?</h1>
-        <p>שלושה ימים עברו מאז ההרשמה - בדקנו מה קרה</p>
-      </div>
-      <div class="body">
-        <p>היי ${firstName},</p>
-        <p>עברו כמה ימים מאז שנרשמת, ואני רוצה לבדוק - <strong>הגעת לצפות בהדרכה?</strong></p>
-        <p>אם לא, אני מבין לגמרי. החיים עמוסים. אבל בדיוק בגלל זה ההדרכה קצרה ומעשית.</p>
-
-        <div class="highlight-box">
-          <p>🎬 ההדרכה החינמית עדיין מחכה לך - לוקחת פחות מ-20 דקות</p>
-        </div>
-
-        <p><strong>מה תרוויח מ-20 דקות:</strong></p>
-        <p>
-          ✅ בהירות מוחלטת על מי הלקוח שלך<br/>
-          ✅ שיטה ליצור תוכן שעובד - ללא עריכה וציוד<br/>
-          ✅ הצעד הראשון שאפשר לעשות כבר היום
-        </p>
-
-        <a class="cta" href="${APP_URL}">חזרה להדרכה ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          אם ברגע זה זה לא רלוונטי - אין בעיה בכלל.<br/>
-          אבל אם יש משהו שעוצר אותך, השב לאימייל הזה ואעזור.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// ─────────────────────────────────────────────────────────────
-// Legacy / generic templates (kept for backward compat)
+// SEQUENCE 1 cont. - Followup 72h (USER_SIGNED_UP · 72h)
 // ─────────────────────────────────────────────────────────────
 
 function followup72h(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
+  const ep = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
   return {
-    subject: `3 ימים ואתה עדיין כאן, ${firstName} - זה אומר משהו`,
+    subject: `${firstName}, בזמן שאתה מחכה לרגע המתאים`,
     html: base(`
       <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>אתה לא כמו כולם, <span class="header-accent">${firstName}</span></h1>
-        <p>רוב האנשים נרשמים ונעלמים. אתה נשארת.</p>
+        <div class="header-logo">beegood</div>
+        <h1>הרגע המתאים, <span class="header-accent">${firstName}</span></h1>
       </div>
       <div class="body">
-        <p>היי ${firstName},</p>
-        <p>עברו 3 ימים מאז שנרשמת. זה הזמן שבו רוב האנשים מפסיקים לפתוח אימיילים.</p>
-        <p>אז אני רוצה לתת לך עוד משהו - <strong>בחינם</strong>.</p>
-        <div class="highlight-box">
-          <p>🎯 הצ׳אלנג׳ של 7 הימים - ₪197 בלבד</p>
-        </div>
-        <p>7 משימות יומיות. קהילה תומכת. פידבק אישי. תוצאות אמיתיות.</p>
-        <a class="cta" href="${APP_URL}/challenge">הצטרף לצ׳אלנג׳ ←</a>
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">יש שאלות? השב לאימייל הזה - אני קורא הכל.</p>
+        <p>${firstName},</p>
+        <p>"אני אתחיל כשיהיה לי זמן."</p>
+        <p>"אני אתחיל כשיהיה לי מה להגיד."</p>
+        <p>"אני אתחיל כשאני מוכן."</p>
+        <p>בינתיים —</p>
+        <p>המתחרים שלך לא מחכים.</p>
+        <p>הם בונים נוכחות.</p>
+        <p>הם מספרים את הסיפור שלהם.</p>
+        <p>הם תופסים את הקהל שמחפש בדיוק מה שיש לך להציע.</p>
+        <p>האתגר 7 הימים הוא 7 ימים.</p>
+        <p>לא 7 חודשים.</p>
+        <p>לא 7 שעות ביום.</p>
+        <p>7 ימים של תוכן שבונה את הבידול שלך.</p>
+        <p>מחר — מישהו אחר יחליט להתחיל.</p>
+        <p>השאלה היא אם זה יהיה אתה.</p>
+        <a class="cta" href="${APP_URL}/challenge${ep}">להצטרפות לאתגר ←</a>
+        <p>צוות beegood</p>
       </div>
     `),
   };
 }
 
-function purchaseConfirmation(ctx: EmailTemplateContext): RenderedEmail {
+// ─────────────────────────────────────────────────────────────
+// SEQUENCE 2 - Challenge access (CHALLENGE_PURCHASED · 0h)
+// ─────────────────────────────────────────────────────────────
+
+function challengeAccess(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
-  const amount    = ctx.amount as number | undefined;
   return {
-    subject: `✅ הרכישה אושרה - ברוכ/ה הבא/ה, ${firstName}!`,
+    subject: `${firstName} — הגישה שלך לאתגר מוכנה`,
     html: base(`
       <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>הרכישה אושרה! 🎉</h1>
-        <p>תודה ${firstName} - ביצעת השקעה חכמה</p>
+        <div class="header-logo">beegood · אתגר 7 הימים</div>
+        <h1>הגישה מוכנה, <span class="header-accent">${firstName}</span></h1>
       </div>
       <div class="body">
-        ${amount ? `<p><strong>סכום שולם:</strong> ₪${amount}</p>` : ""}
-        <div class="highlight-box-green">
-          <p>✅ הגישה שלך פעילה</p>
-        </div>
-        <a class="cta" href="${APP_URL}/members">כניסה לאזור החברים ←</a>
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          שמור אימייל זה כאסמכתא לרכישתך.
-        </p>
+        <p>${firstName},</p>
+        <p>קיבלנו.</p>
+        <p>האתגר 7 הימים שלך מוכן.</p>
+        <p>כמה דברים שחשוב לדעת:</p>
+        <p>האתגר דיגיטלי לחלוטין.</p>
+        <p>הסרטונים נפתחים יום אחרי יום —</p>
+        <p>כי ככה זה עובד.</p>
+        <p>לא מדלגים.</p>
+        <p>לא צופים מראש.</p>
+        <p>יום 0 פתוח עכשיו — התחל שם.</p>
+        <p>הוא מסביר את כל השיטה לפני שמתחילים.</p>
+        <a class="cta" href="${APP_URL}/challenge/content">לאתגר ←</a>
+        <p>מחר ייפתח יום 1.</p>
+        <p>אנחנו מחכים לראות אותך מתחיל.</p>
+        <p>צוות beegood</p>
       </div>
     `),
   };
 }
+
+// ─────────────────────────────────────────────────────────────
+// SEQUENCE 2 cont. - Challenge upsell workshop (CHALLENGE_PURCHASED · 168h)
+// ─────────────────────────────────────────────────────────────
+
+function challengeUpsellWorkshop(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  const ep = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
+  return {
+    subject: `${firstName}, שבוע עבר. מה עכשיו?`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>שבוע עבר, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>עבר שבוע מאז שהתחלת את האתגר.</p>
+        <p>7 ימים.</p>
+        <p>7 סרטונים.</p>
+        <p>7 שכבות של הסיפור שלך.</p>
+        <p>עכשיו השאלה האמיתית:</p>
+        <p>מה אתה עושה עם זה?</p>
+        <p>כי תוכן בלי מערכת —</p>
+        <p>זה כמו מנוע בלי מכונית.</p>
+        <p>הסדנה יום אחד היא המערכת.</p>
+        <p>5 שעות שבונות את תשתית השיווק של העסק שלך —</p>
+        <p>מאסטרטגיה ועד אוטומציה.</p>
+        <p>יוצאים עם לוח שנה מלא ל-12 חודשים.</p>
+        <p>עם משפך שעובד בשבילך.</p>
+        <p>עם מסר שברור לשוק.</p>
+        <p>₪1,080.</p>
+        <a class="cta" href="${APP_URL}/workshop${ep}">לסדנה ←</a>
+        <p>צוות beegood</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// SEQUENCE 3 - Workshop confirmation (WORKSHOP_PURCHASED · 0h)
+// ─────────────────────────────────────────────────────────────
+
+function workshopConfirmation(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  const nextDate = getNextWorkshopDate();
+  const dateStr = nextDate ? formatHebrew(nextDate) : "יום חמישי הקרוב";
+  return {
+    subject: `${firstName} — ההרשמה לסדנה אושרה`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood · סדנה יום אחד</div>
+        <h1>זה קבוע, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>זה קבוע.</p>
+        <p>הסדנה יום אחד — מקומך שמור.</p>
+        <p>הפרטים:</p>
+        <p><strong>${dateStr} — יום חמישי</strong></p>
+        <p>09:00–15:00</p>
+        <p>בית ציוני אמריקה, תל אביב</p>
+        <p>5 שעות של עבודה אמיתית.</p>
+        <p>לא הרצאה.</p>
+        <p>לא "קח השראה הביתה".</p>
+        <p>בונים ביחד, בזמן אמת, את מערכת השיווק של העסק שלך.</p>
+        <p>כדי להגיע מוכן/ת —</p>
+        <p>חשוב/י על 3 לקוחות אידיאליים שלך:</p>
+        <p>מי הם?</p>
+        <p>מה הם קיבלו ממך?</p>
+        <p>ומה הם אמרו עליך?</p>
+        <p>זה יהיה הבסיס לעבודה בסדנה.</p>
+        <p>מחכים לך.</p>
+        <p>צוות beegood</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// SEQUENCE 3 cont. - Workshop upsell course (WORKSHOP_PURCHASED · 168h)
+// ─────────────────────────────────────────────────────────────
+
+function workshopUpsellStrategy(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  const ep = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
+  return {
+    subject: `${firstName}, מה עשית עם מה שיצאת ממנו?`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>שבוע אחרי הסדנה, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>עבר שבוע מאז הסדנה.</p>
+        <p>שאלה אחת ישירה:</p>
+        <p>יישמת משהו?</p>
+        <p>אפילו דבר אחד קטן שהפעלת —</p>
+        <p>זה מספיק להתחיל לראות תוצאות.</p>
+        <p>אבל אם אתה רוצה ללכת עמוק יותר —</p>
+        <p>הקורס הדיגיטלי הוא הצעד הבא.</p>
+        <p>16 שיעורים.</p>
+        <p>8 שעות.</p>
+        <p>אותה שיטה —</p>
+        <p>רק עמוק יותר, מפורט יותר, עם תרגול.</p>
+        <p>לומדים בקצב שלך.</p>
+        <p>חוזרים כשצריך.</p>
+        <p>גישה לנצח.</p>
+        <p>₪1,800.</p>
+        <a class="cta" href="${APP_URL}/course${ep}">לקורס ←</a>
+        <p>צוות beegood</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// SEQUENCE 4 - Course access (COURSE_PURCHASED · 0h)
+// ─────────────────────────────────────────────────────────────
+
+function courseAccess(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  return {
+    subject: `${firstName} — הקורס שלך מוכן`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood · קורס דיגיטלי</div>
+        <h1>הקורס מוכן, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>קיבלנו.</p>
+        <p>הקורס הדיגיטלי שלך פעיל.</p>
+        <p>16 שיעורים.</p>
+        <p>8 שעות של שיטה מלאה.</p>
+        <p>גישה לנצח — חוזרים מתי שרוצים.</p>
+        <p>לומדים בקצב שלך.</p>
+        <p>אין לחץ.</p>
+        <p>אין מועד אחרון.</p>
+        <p>רק אתה, השיטה, והעסק שלך.</p>
+        <p>תתחיל מהשיעור הראשון.</p>
+        <p>לא מדלגים —</p>
+        <p>כל שיעור בנוי על הקודם.</p>
+        <a class="cta" href="${APP_URL}/course/content">לקורס ←</a>
+        <p>מחכים לשמוע מה אתה לוקח ממנו.</p>
+        <p>צוות beegood</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// SEQUENCE 4 cont. - Course upsell strategy (COURSE_PURCHASED · 168h)
+// ─────────────────────────────────────────────────────────────
+
+function courseUpsellStrategy(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  const ep = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
+  return {
+    subject: `${firstName}, שבוע בקורס. הגיע הזמן לדבר.`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>שבוע בקורס, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>עבר שבוע מאז שהתחלת את הקורס.</p>
+        <p>בשלב הזה יש לך כבר כלים.</p>
+        <p>יש לך שפה.</p>
+        <p>יש לך הבנה של מה צריך לקרות.</p>
+        <p>יש רק דבר אחד שהקורס לא יכול לעשות בשבילך:</p>
+        <p>להסתכל על העסק שלך ספציפית.</p>
+        <p>לשאול את השאלות שרק מישהו שמכיר אותך יכול לשאול.</p>
+        <p>לבנות איתך מפה שמותאמת לך — לא לאדם ממוצע.</p>
+        <p>לזה יש פגישת אסטרטגיה.</p>
+        <p>90 דקות עם הדר.</p>
+        <p>1 על 1.</p>
+        <p>יוצאים עם תוכנית.</p>
+        <p>לא מושגים.</p>
+        <p>תוכנית.</p>
+        <p>ואם לא פיצחנו בפגישה הראשונה —</p>
+        <p>יש פגישה שנייה. עלינו.</p>
+        <p>₪4,000.</p>
+        <a class="cta" href="${APP_URL}/strategy${ep}">לפגישת אסטרטגיה ←</a>
+        <p>צוות beegood</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// SEQUENCE 5 - Re-engagement (INACTIVE_3_DAYS · 0h)
+// ─────────────────────────────────────────────────────────────
+
+function reengagement(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  const ep = ctx.email ? `?email=${encodeURIComponent(String(ctx.email))}` : "";
+  return {
+    subject: `לא ראינו אותך 3 ימים`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>היי <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>3 ימים עברו מאז שנרשמת.</p>
+        <p>לא שמנו לב?</p>
+        <p>שמנו לב.</p>
+        <p>זה קורה לכולם —</p>
+        <p>החיים מתערבים,</p>
+        <p>העסק לא מחכה,</p>
+        <p>האימייל יורד.</p>
+        <p>אבל אנחנו רוצים שתדע:</p>
+        <p>הדרך שלך ל-Signal עדיין כאן.</p>
+        <p>7 ימים.</p>
+        <p>7 סרטונים.</p>
+        <p>מערכת שיווק שבנויה סביב מי שאתה.</p>
+        <p>לא סביב האלגוריתם.</p>
+        <p>לא סביב הטרנד.</p>
+        <p>סביב הבידול שלך.</p>
+        <p>500+ עסקים כבר עשו את זה.</p>
+        <p>חלקם היססו 3 שבועות לפני שהתחילו.</p>
+        <p>חלקם התחילו ביום השני אחרי ההרשמה.</p>
+        <p>אלה שהתחילו מוקדם?</p>
+        <p>הם כבר מרגישים את זה.</p>
+        <a class="cta" href="${APP_URL}/challenge${ep}">להצטרפות לאתגר ←</a>
+        <p>צוות beegood</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Booking confirmation (CALL_BOOKED · 0h)
+// ─────────────────────────────────────────────────────────────
+
+function bookingConfirmation(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  return {
+    subject: `זו לא עוד פגישה`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood · פגישת אסטרטגיה</div>
+        <h1>הבקשה התקבלה, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>רוב בעלי העסקים לא יעשו מה שעשית עכשיו.</p>
+        <p>הם ימשיכו להסתדר.</p>
+        <p>לנחש.</p>
+        <p>לעבוד קשה ולקוות שמשהו ישתנה.</p>
+        <p>אתה החלטת אחרת.</p>
+        <p>90 דקות עם הדר —</p>
+        <p>לא כדי לשמוע עוד טיפים.</p>
+        <p>כדי לפצח.</p>
+        <p>את הבידול האמיתי שלך.</p>
+        <p>את המסר שגורם לאנשים הנכונים לרצות אותך.</p>
+        <p>את המערכת שתגרום לעסק לעבוד בשבילך.</p>
+        <p>הדר עובדת עם עסקים מכל הגדלים.</p>
+        <p>היא ראתה הכל.</p>
+        <p>היא יודעת לשאול את השאלות שאתה לא שואל את עצמך.</p>
+        <p>ובסוף ה-90 דקות —</p>
+        <p>תצא עם מפה.</p>
+        <p>לא מושגים כלליים.</p>
+        <p>לא "תחשוב על זה".</p>
+        <p>מפה.</p>
+        <p>בימים הקרובים יחזרו אליך לתאם תאריך.</p>
+        <p>תהיה מוכן.</p>
+        <p>צוות beegood</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Purchase confirmation — generic fallback
+// ─────────────────────────────────────────────────────────────
+
+function purchaseConfirmation(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  return {
+    subject: `הרכישה אושרה`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>הרכישה אושרה, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>זה עבר.</p>
+        <p>הרכישה שלך אושרה ואנחנו שמחים שאתה איתנו.</p>
+        <p>מה שקנית —</p>
+        <p>זה לא עוד קורס שנשכח בתיקיה.</p>
+        <p>זו החלטה לבנות משהו אמיתי.</p>
+        <p>כמעט 4,000 בעלי עסקים כבר עשו את הצעד הזה.</p>
+        <p>חלקם הגיעו עם ספקות.</p>
+        <p>חלקם לא ידעו מה לצפות.</p>
+        <p>כולם יצאו עם משהו שלא היה להם לפני.</p>
+        <p>אם יש שאלות —</p>
+        <p>אנחנו כאן.</p>
+        <p><a href="https://wa.me/972539566961" style="color:#2563eb">כתבו לנו בוואטסאפ</a> — אנחנו עונים.</p>
+        <p>צוות beegood</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Post-purchase 48h check-in
+// ─────────────────────────────────────────────────────────────
 
 function postPurchase48h(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
@@ -639,7 +645,7 @@ function postPurchase48h(ctx: EmailTemplateContext): RenderedEmail {
     subject: `${firstName}, יומיים אחרי - איך מתקדמים? + בונוס בפנים`,
     html: base(`
       <div class="header">
-        <div class="header-logo">הדר דנן</div>
+        <div class="header-logo">beegood</div>
         <h1>יומיים אחרי - מה קרה? 💪</h1>
         <p>בדיקת מצב + בונוס בלעדי</p>
       </div>
@@ -651,85 +657,23 @@ function postPurchase48h(ctx: EmailTemplateContext): RenderedEmail {
         </div>
         <a class="cta" href="${APP_URL}/members">לממש את הבונוס ←</a>
         <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">השב לאימייל עם השאלות שלך - אני עונה לכולם.</p>
+        <p style="font-size:14px;color:#6b7280">שאלות? <a href="https://wa.me/972539566961" style="color:#6b7280">כתבו לנו בוואטסאפ</a>.</p>
       </div>
     `),
   };
 }
 
 // ─────────────────────────────────────────────────────────────
-// Booking confirmation (CALL_BOOKED)
+// Premium lead confirmation (PREMIUM_LEAD · 0h)
 // ─────────────────────────────────────────────────────────────
-function bookingConfirmation(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName      = ctx.name.split(" ")[0];
-  const slotDate       = String(ctx.slot_date ?? "");
-  const slotTime       = String(ctx.slot_time ?? "");
-  const slotFormatted  = slotDate
-    ? new Intl.DateTimeFormat("he-IL", {
-        weekday: "long",
-        year:    "numeric",
-        month:   "long",
-        day:     "numeric",
-      }).format(new Date(slotDate + "T12:00:00"))
-    : slotDate;
 
-  return {
-    subject: `✅ הפגישה נקבעה! ${slotFormatted} בשעה ${slotTime}`,
-    html: base(`
-      <div class="header">
-        <div class="header-logo">הדר דנן</div>
-        <h1>הפגישה קבועה, <span class="header-accent">${firstName}</span>! 🎯</h1>
-        <p>פגישת אסטרטגיה אישית · 90 דקות</p>
-      </div>
-      <div class="body">
-        <p>שלום ${firstName},</p>
-        <p>אישרתי את הפגישה שלך. הנה הפרטים:</p>
-
-        <div class="highlight-box-green">
-          <p>📅 ${slotFormatted}</p>
-          <p>🕙 ${slotTime} - ${slotTime.replace(/(\d+):00/, (_, h) => `${Number(h)+1}:30`)} (90 דקות)</p>
-        </div>
-
-        <p><strong>איך להתחבר:</strong></p>
-        <div class="step-row">
-          <div class="step-num">1</div>
-          <div class="step-text">קישור ל-Zoom ישלח אליך 24 שעות לפני הפגישה</div>
-        </div>
-        <div class="step-row">
-          <div class="step-num">2</div>
-          <div class="step-text">הכן/י 2-3 שאלות מרכזיות על העסק שלך</div>
-        </div>
-        <div class="step-row">
-          <div class="step-num">3</div>
-          <div class="step-text">הביא/י מספרים בסיסיים: כמה לקוחות יש לך, מה מחיר הממוצע, מה עיקר ההכנסה</div>
-        </div>
-
-        <hr class="divider"/>
-
-        <p><strong>צריך לשנות מועד?</strong></p>
-        <p>ניתן לבטל או לשנות מועד עד 24 שעות לפני הפגישה.</p>
-
-        <a class="cta" href="${APP_URL}/strategy/book">שנה מועד ←</a>
-
-        <hr class="divider"/>
-        <p style="font-size:14px;color:#6b7280">
-          יש שאלה לפני הפגישה? השב לאימייל הזה - אני קורא ועונה.
-        </p>
-      </div>
-    `),
-  };
-}
-
-// ─────────────────────────────────────────────────────────────
-// Premium lead confirmation (PREMIUM_LEAD)
-// ─────────────────────────────────────────────────────────────
 function premiumLeadConfirmation(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
   return {
     subject: `${firstName}, קיבלנו את הבקשה - ניצור קשר תוך 24 שעות`,
     html: base(`
       <div class="header">
-        <div class="header-logo">הדר דנן</div>
+        <div class="header-logo">beegood</div>
         <h1>הבקשה שלך התקבלה, <span class="header-accent">${firstName}</span> ✨</h1>
         <p>יום צילום מקצועי + אסטרטגיה תוכן</p>
       </div>
@@ -766,7 +710,7 @@ function premiumLeadConfirmation(ctx: EmailTemplateContext): RenderedEmail {
         </div>
 
         <p style="font-size:14px;color:#6b7280">
-          מחיר: ₪14,000 + מע״מ · 3,500+ עסקים כבר צמחו עם השיטה הזו.
+          מחיר: ₪14,000 + מע״מ · כמעט 4,000 עסקים כבר צמחו עם השיטה הזו.
         </p>
       </div>
     `),
@@ -774,8 +718,9 @@ function premiumLeadConfirmation(ctx: EmailTemplateContext): RenderedEmail {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Partnership lead confirmation (PARTNERSHIP_LEAD)
+// Partnership lead confirmation (PARTNERSHIP_LEAD · 0h)
 // ─────────────────────────────────────────────────────────────
+
 function partnershipConfirmation(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
   const business  = String(ctx.business ?? "");
@@ -783,7 +728,7 @@ function partnershipConfirmation(ctx: EmailTemplateContext): RenderedEmail {
     subject: `${firstName}, קיבלנו את הבקשה שלך - הדר תחזור אליך בקרוב`,
     html: base(`
       <div class="header" style="background:#080808;border-bottom:2px solid rgba(201,168,76,0.4)">
-        <div class="header-logo" style="color:#C9A84C">הדר דנן · שותפות אסטרטגית</div>
+        <div class="header-logo" style="color:#C9A84C">beegood · שותפות אסטרטגית</div>
         <h1 style="color:#ffffff">קיבלנו, <span style="color:#C9A84C">${firstName}</span> ✨</h1>
         <p style="color:rgba(255,255,255,0.6)">הדר תקרא את זה אישית ותחזור אליך</p>
       </div>
@@ -811,7 +756,7 @@ function partnershipConfirmation(ctx: EmailTemplateContext): RenderedEmail {
 
         <hr class="divider"/>
         <p style="font-size:14px;color:#6b7280">
-          יש משהו שרצית להוסיף? השב לאימייל הזה - אני קוראת הכל.
+          יש משהו שרצית להוסיף? <a href="https://wa.me/972539566961" style="color:#6b7280">כתוב לנו בוואטסאפ</a>.
         </p>
       </div>
     `),
@@ -822,7 +767,6 @@ function partnershipConfirmation(ctx: EmailTemplateContext): RenderedEmail {
 // SEQUENCE 6 - Hive membership (HIVE_JOINED / HIVE_CANCELLED)
 // ─────────────────────────────────────────────────────────────
 
-// Email 1 (immediate): Welcome to the Hive
 function hiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
   const tier      = String(ctx.tier ?? "basic_97");
@@ -831,7 +775,7 @@ function hiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
     subject: "ברוך הבא לכוורת 🐝",
     html: base(`
       <div class="header">
-        <div class="header-logo">הדר דנן · הכוורת</div>
+        <div class="header-logo">beegood · הכוורת</div>
         <h1>🐝 ברוך הבא לכוורת, <span class="header-accent">${firstName}</span></h1>
         <p>אתה עכשיו חלק ממשהו מיוחד</p>
       </div>
@@ -870,14 +814,13 @@ function hiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
   };
 }
 
-// Email 2 (day 7): One-week check-in
 function hiveDay7(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
   return {
     subject: "שבוע בכוורת - איך הולך? 🐝",
     html: base(`
       <div class="header">
-        <div class="header-logo">הדר דנן · הכוורת</div>
+        <div class="header-logo">beegood · הכוורת</div>
         <h1>🐝 שבוע בכוורת, <span class="header-accent">${firstName}</span></h1>
         <p>מקווים שאתה נהנה</p>
       </div>
@@ -894,14 +837,13 @@ function hiveDay7(ctx: EmailTemplateContext): RenderedEmail {
 
         <hr class="divider"/>
         <p style="font-size:14px;color:#6b7280">
-          יש שאלות? השב לאימייל הזה - אני קורא הכל.
+          שאלות? <a href="https://wa.me/972539566961" style="color:#6b7280">כתוב לנו בוואטסאפ</a>.
         </p>
       </div>
     `),
   };
 }
 
-// Email 3 (immediate): Cancellation confirmation
 function hiveCancelled(ctx: EmailTemplateContext): RenderedEmail {
   const firstName      = ctx.name.split(" ")[0];
   const refundEligible = Boolean(ctx.refund_eligible);
@@ -909,7 +851,7 @@ function hiveCancelled(ctx: EmailTemplateContext): RenderedEmail {
     subject: "אישור ביטול מנוי הכוורת",
     html: base(`
       <div class="header">
-        <div class="header-logo">הדר דנן · הכוורת</div>
+        <div class="header-logo">beegood · הכוורת</div>
         <h1>אישור ביטול מנוי הכוורת</h1>
         <p>שלום ${firstName}, קיבלנו את בקשתך</p>
       </div>
@@ -930,7 +872,7 @@ function hiveCancelled(ctx: EmailTemplateContext): RenderedEmail {
 
         <hr class="divider"/>
         <p style="font-size:14px;color:#6b7280">
-          יש שאלות? השב לאימייל הזה - אנחנו כאן.
+          שאלות? <a href="https://wa.me/972539566961" style="color:#6b7280">כתבו לנו בוואטסאפ</a>.
         </p>
       </div>
     `),
@@ -948,7 +890,7 @@ export function adminAlert(ctx: {
     subject: `🚨 [Marketing OS] Job failed permanently - ${ctx.jobType}`,
     html: base(`
       <div class="header" style="background:#7f1d1d">
-        <div class="header-logo" style="color:#fca5a5">הדר דנן · Admin Alert</div>
+        <div class="header-logo" style="color:#fca5a5">beegood · Admin Alert</div>
         <h1>⚠️ Job Failed Permanently</h1>
         <p>דרושה בדיקה ידנית</p>
       </div>
@@ -978,11 +920,12 @@ const TEMPLATES: Record<string, TemplateFn> = {
   // Sequence 3 - workshop buyers
   workshop_confirmation:       workshopConfirmation,
   workshop_upsell_strategy:    workshopUpsellStrategy,
-  // Sequence 5 - re-engagement
-  reengagement,
-  // Sequence 4b - course buyers
+  workshop_upsell_course:      workshopUpsellStrategy,
+  // Sequence 4 - course buyers
   course_access:               courseAccess,
   course_upsell_strategy:      courseUpsellStrategy,
+  // Sequence 5 - re-engagement
+  reengagement,
   // Booking
   booking_confirmation:        bookingConfirmation,
   // Premium
@@ -993,7 +936,7 @@ const TEMPLATES: Record<string, TemplateFn> = {
   hive_welcome:                hiveWelcome,
   hive_day7:                   hiveDay7,
   hive_cancelled:              hiveCancelled,
-  // Legacy / generic
+  // Generic fallback
   purchase_confirmation:       purchaseConfirmation,
   post_purchase_48h:           postPurchase48h,
 };

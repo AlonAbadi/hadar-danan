@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מערכת האימיילים — beegood.online</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Assistant', Arial, sans-serif;
+      direction: rtl;
+      text-align: right;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+
+    /* Cover */
+    .cover {
+      background: #0a0a0f;
+      color: #fff;
+      border-radius: 16px;
+      padding: 56px 48px;
+      margin-bottom: 48px;
+    }
+    .cover-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #4ade80;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .cover h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .cover-sub {
+      font-size: 16px;
+      color: #9ca3af;
+      margin-bottom: 32px;
+    }
+    .cover-meta {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .cover-meta-item label {
+      display: block;
+      font-size: 11px;
+      color: #6b7280;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .cover-meta-item span {
+      font-size: 15px;
+      font-weight: 700;
+      color: #e5e7eb;
+    }
+
+    /* Section headers */
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0a0a0f;
+      margin: 48px 0 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #0a0a0f;
+    }
+
+    /* Logic overview */
+    .logic-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .logic-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      border: 1px solid #e5e7eb;
+    }
+    .logic-card h3 {
+      font-size: 14px;
+      font-weight: 800;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .logic-card p {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    .logic-card .tag {
+      display: inline-block;
+      background: #f3f4f6;
+      color: #374151;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      margin-bottom: 8px;
+    }
+    .logic-card.green { border-right: 4px solid #16a34a; }
+    .logic-card.blue  { border-right: 4px solid #2563eb; }
+    .logic-card.gold  { border-right: 4px solid #d97706; }
+    .logic-card.red   { border-right: 4px solid #dc2626; }
+
+    /* Flow diagram */
+    .flow {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 32px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 32px;
+    }
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .flow-event {
+      background: #0a0a0f;
+      color: #4ade80;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+      font-family: monospace;
+    }
+    .flow-arrow {
+      color: #9ca3af;
+      font-size: 18px;
+    }
+    .flow-email {
+      background: #eff6ff;
+      color: #1e40af;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+    .flow-delay {
+      background: #f3f4f6;
+      color: #6b7280;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    /* Email cards */
+    .email-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 28px;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+    .email-header {
+      background: #0a0a0f;
+      padding: 20px 28px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .email-num {
+      background: #4ade80;
+      color: #0a0a0f;
+      font-size: 13px;
+      font-weight: 800;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .email-header-info h2 {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .email-header-info .subject-line {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    .email-header-info .subject-line strong {
+      color: #e5e7eb;
+    }
+    .email-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .meta-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+    .meta-badge.trigger {
+      background: rgba(74,222,128,0.15);
+      color: #4ade80;
+      font-family: monospace;
+    }
+    .meta-badge.delay {
+      background: rgba(255,255,255,0.08);
+      color: #9ca3af;
+    }
+    .meta-badge.status-active {
+      background: rgba(74,222,128,0.2);
+      color: #4ade80;
+    }
+    .meta-badge.status-frozen {
+      background: rgba(239,68,68,0.15);
+      color: #f87171;
+    }
+
+    .email-body {
+      padding: 24px 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .email-content h4 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .email-text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #374151;
+      white-space: pre-line;
+    }
+
+    .email-logic h4 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .logic-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .logic-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .logic-text {
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.5;
+    }
+
+    .divider-row {
+      border: none;
+      border-top: 1px solid #f3f4f6;
+      margin: 0;
+    }
+
+    /* Status table */
+    .status-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 32px;
+    }
+    .status-table th {
+      background: #0a0a0f;
+      color: #9ca3af;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: right;
+    }
+    .status-table td {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+      vertical-align: middle;
+    }
+    .status-table tr:last-child td { border-bottom: none; }
+    .status-table tr:hover td { background: #f9fafb; }
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-left: 6px;
+    }
+    .dot-active { background: #16a34a; }
+    .dot-frozen { background: #ef4444; }
+    .dot-pending { background: #d97706; }
+
+    .key-mono {
+      font-family: monospace;
+      font-size: 12px;
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #1e40af;
+    }
+
+    /* Notes */
+    .note-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-right: 4px solid #d97706;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #92400e;
+      line-height: 1.6;
+    }
+    .note-box strong { font-weight: 800; }
+
+    .info-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-right: 4px solid #2563eb;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #1e40af;
+      line-height: 1.6;
+    }
+
+    /* Print */
+    @media print {
+      body { background: #fff; font-size: 13px; }
+      .page { padding: 20px 16px 40px; }
+      .cover { border-radius: 8px; padding: 36px 32px; }
+      .email-card { page-break-inside: avoid; }
+      .section-title { page-break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-label">beegood.online · מסמך פנימי</div>
+    <h1>מערכת האימיילים האוטומטית</h1>
+    <div class="cover-sub">סטטוס פרויקט, לוגיקה, וטקסט כל האימיילים — מעודכן מאי 2026</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <label>אימיילים פעילים</label>
+        <span>12 אימיילים</span>
+      </div>
+      <div class="cover-meta-item">
+        <label>סקוונסים</label>
+        <span>5 רצפים + fallback</span>
+      </div>
+      <div class="cover-meta-item">
+        <label>ספק שליחה</label>
+        <span>Resend · noreply@beegood.online</span>
+      </div>
+      <div class="cover-meta-item">
+        <label>עדכון אחרון</label>
+        <span>מאי 2026</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: Logic Overview -->
+  <div class="section-title">איך המערכת עובדת</div>
+
+  <div class="info-box">
+    <strong>חשוב להבין:</strong> האימיילים לא נשלחים ישירות — הם נכנסים לתור עבודות (<code>jobs</code> table) ומשם מעובדים כל 5 דקות על ידי cron חיצוני. כל אימייל בעל delay_hours גורם לקביעת <code>run_at</code> בעתיד. מנגנון זה מונע כפילויות (unique index per user+sequence).
+  </div>
+
+  <div class="logic-grid">
+    <div class="logic-card blue">
+      <div class="tag">שלב 1</div>
+      <h3>טריגר אירוע</h3>
+      <p>כל פעולת משתמש (הרשמה, רכישה, אי-פעילות) יוצרת event ב-DB. הוובהוק של Cardcom מוסיף event ישירות לאחר תשלום.</p>
+    </div>
+    <div class="logic-card green">
+      <div class="tag">שלב 2</div>
+      <h3>אחזור רצפים</h3>
+      <p>המערכת מחפשת את כל ה-email_sequences שמוגדרות ל-trigger_event זה ומסמנות כ-active=true.</p>
+    </div>
+    <div class="logic-card gold">
+      <div class="tag">שלב 3</div>
+      <h3>קביעת jobs</h3>
+      <p>לכל sequence נוצר job עם run_at = עכשיו + delay_hours. ה-job מכיל subject, template_key, user_id, email, name.</p>
+    </div>
+    <div class="logic-card red">
+      <div class="tag">שלב 4</div>
+      <h3>שליחה ב-Resend</h3>
+      <p>Cron-job.org מריץ את התור כל 5 דקות. לכל job שהגיע זמנו — renderTemplate() + Resend API. 3 נסיונות לפני כישלון.</p>
+    </div>
+  </div>
+
+  <!-- Flow diagram -->
+  <div class="section-title">מפת הרצפים</div>
+  <div class="flow">
+
+    <div class="flow-row">
+      <div class="flow-event">USER_SIGNED_UP</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">welcome</div>
+      <div class="flow-delay">0h</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">followup_24h</div>
+      <div class="flow-delay">24h</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">followup_72h</div>
+      <div class="flow-delay">72h</div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-event">CHALLENGE_PURCHASED</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">challenge_access</div>
+      <div class="flow-delay">0h</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">challenge_upsell_workshop</div>
+      <div class="flow-delay">168h (7 ימים)</div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-event">WORKSHOP_PURCHASED</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">workshop_confirmation</div>
+      <div class="flow-delay">0h</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">workshop_upsell_course</div>
+      <div class="flow-delay">168h (7 ימים)</div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-event">COURSE_PURCHASED</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">course_access</div>
+      <div class="flow-delay">0h</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">course_upsell_strategy</div>
+      <div class="flow-delay">168h (7 ימים)</div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-event">CALL_BOOKED</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">booking_confirmation</div>
+      <div class="flow-delay">0h</div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-event">INACTIVE_3_DAYS</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">reengagement</div>
+      <div class="flow-delay">0h</div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-event">כל רכישה (fallback)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">purchase_confirmation</div>
+      <div class="flow-delay">0h</div>
+    </div>
+
+    <div class="flow-row" style="opacity:0.45">
+      <div class="flow-event">HIVE_JOINED</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">hive_welcome · hive_day7</div>
+      <div class="flow-delay">🔒 בהקפאה</div>
+    </div>
+
+    <div class="flow-row" style="opacity:0.45">
+      <div class="flow-event">HIVE_CANCELLED</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-email">hive_cancelled</div>
+      <div class="flow-delay">🔒 בהקפאה</div>
+    </div>
+
+  </div>
+
+  <!-- Status table -->
+  <div class="section-title">טבלת סטטוס — כל האימיילים</div>
+  <table class="status-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Template Key</th>
+        <th>טריגר</th>
+        <th>עיכוב</th>
+        <th>נושא</th>
+        <th>סטטוס</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><span class="key-mono">welcome</span></td>
+        <td>USER_SIGNED_UP</td>
+        <td>0h</td>
+        <td>ברוכ/ה הבא/ה, [שם]</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><span class="key-mono">followup_24h</span></td>
+        <td>USER_SIGNED_UP</td>
+        <td>24h</td>
+        <td>[שם], מה שמייחד אותך — זה לא מה שאתה חושב</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><span class="key-mono">followup_72h</span></td>
+        <td>USER_SIGNED_UP</td>
+        <td>72h</td>
+        <td>[שם], בזמן שאתה מחכה לרגע המתאים</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><span class="key-mono">challenge_access</span></td>
+        <td>CHALLENGE_PURCHASED</td>
+        <td>0h</td>
+        <td>[שם] — הגישה שלך לאתגר מוכנה</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><span class="key-mono">challenge_upsell_workshop</span></td>
+        <td>CHALLENGE_PURCHASED</td>
+        <td>168h</td>
+        <td>[שם], שבוע עבר. מה עכשיו?</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><span class="key-mono">workshop_confirmation</span></td>
+        <td>WORKSHOP_PURCHASED</td>
+        <td>0h</td>
+        <td>[שם] — ההרשמה לסדנה אושרה</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><span class="key-mono">workshop_upsell_course</span></td>
+        <td>WORKSHOP_PURCHASED</td>
+        <td>168h</td>
+        <td>[שם], מה עשית עם מה שיצאת ממנו?</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td><span class="key-mono">course_access</span></td>
+        <td>COURSE_PURCHASED</td>
+        <td>0h</td>
+        <td>[שם] — הקורס שלך מוכן</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td><span class="key-mono">course_upsell_strategy</span></td>
+        <td>COURSE_PURCHASED</td>
+        <td>168h</td>
+        <td>[שם], שבוע בקורס. הגיע הזמן לדבר.</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td><span class="key-mono">reengagement</span></td>
+        <td>INACTIVE_3_DAYS</td>
+        <td>0h</td>
+        <td>לא ראינו אותך 3 ימים</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td><span class="key-mono">booking_confirmation</span></td>
+        <td>CALL_BOOKED</td>
+        <td>0h</td>
+        <td>זו לא עוד פגישה</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td><span class="key-mono">purchase_confirmation</span></td>
+        <td>fallback</td>
+        <td>0h</td>
+        <td>הרכישה אושרה</td>
+        <td><span class="status-dot dot-active"></span>פעיל</td>
+      </tr>
+      <tr style="opacity:0.5">
+        <td>—</td>
+        <td><span class="key-mono">hive_welcome</span></td>
+        <td>HIVE_JOINED</td>
+        <td>0h</td>
+        <td>ברוך הבא לכוורת</td>
+        <td><span class="status-dot dot-frozen"></span>הקפאה</td>
+      </tr>
+      <tr style="opacity:0.5">
+        <td>—</td>
+        <td><span class="key-mono">hive_day7</span></td>
+        <td>HIVE_JOINED</td>
+        <td>168h</td>
+        <td>שבוע בכוורת - איך הולך?</td>
+        <td><span class="status-dot dot-frozen"></span>הקפאה</td>
+      </tr>
+      <tr style="opacity:0.5">
+        <td>—</td>
+        <td><span class="key-mono">hive_cancelled</span></td>
+        <td>HIVE_CANCELLED</td>
+        <td>0h</td>
+        <td>אישור ביטול מנוי הכוורת</td>
+        <td><span class="status-dot dot-frozen"></span>הקפאה</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION: Email content -->
+  <div class="section-title">תוכן האימיילים</div>
+
+  <div class="note-box">
+    <strong>שיטת הכתיבה:</strong> כל האימיילים כתובים בסגנון Ben Settle — שורות קצרות, הרבה רווח, קול אישי, ללא headers ארגוניים. החתימה הקבועה בכל האימיילים היא "צוות beegood". האימיילים נכתבו בעברית RTL.
+  </div>
+
+  <!-- Email 1 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">1</div>
+        <div class="email-header-info">
+          <h2>ברוכ/ה הבא/ה — Welcome</h2>
+          <div class="subject-line">נושא: <strong>ברוכ/ה הבא/ה, [שם]</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">USER_SIGNED_UP</span>
+        <span class="meta-badge delay">נשלח מיד · 0h</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+ברוכ/ה הבא/ה לעולם של TrueSignal©.
+
+שמי הדר דנן.
+
+אני עובדת עם בעלי עסקים שיש להם משהו אמיתי לתת לעולם —
+
+אבל השיווק שלהם לא משקף את זה.
+
+כבר 4 שנים אני עוזרת לעסקים לא רק לשווק —
+
+אלא לבנות מערכת שיווק שעובדת בשבילם.
+
+מ-197 שקל ועד 14,000 שקל —
+
+כמעט 4,000 עסקים כבר עשו את המסע.
+
+חלקם הגיעו אלינו בלי ניסיון בשיווק.
+
+חלקם הגיעו עם ניסיון — אבל בלי כיוון.
+
+כולם יצאו עם משהו שלא היה להם לפני.
+
+ואת/ה עכשיו חלק מזה.
+
+בימים הקרובים תקבל/י ממני עוד תוכן.
+
+בינתיים — אם יש שאלה, כתבו לנו בוואטסאפ.
+
+אנחנו כאן.
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">🎯</div><div class="logic-text"><strong>מטרה:</strong> יצירת חיבור ראשוני. זה המייל הראשון שהלקוח מקבל — חייב להיות כללי מספיק לכל סוג לקוח (עסקים קטנים, בינוניים, תחומים שונים).</div></div>
+        <div class="logic-item"><div class="logic-icon">✅</div><div class="logic-text"><strong>טריגר:</strong> USER_SIGNED_UP — נשלח לכל מי שנרשם, בין אם דרך הדרכה חינמית, קוויז, עמוד נחיתה כלשהו.</div></div>
+        <div class="logic-item"><div class="logic-icon">📝</div><div class="logic-text"><strong>תוכן:</strong> הצגת הדר, מספר 4,000 כדי לבנות אמינות, ופתיחת ערוץ תקשורת (וואטסאפ).</div></div>
+        <div class="logic-item"><div class="logic-icon">⚡</div><div class="logic-text"><strong>ללא CTA:</strong> בכוונה — לא מוכרים כלום במייל הראשון. בונים אמון.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 2 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">2</div>
+        <div class="email-header-info">
+          <h2>Followup 24h — הצעד הבא</h2>
+          <div class="subject-line">נושא: <strong>[שם], מה שמייחד אותך — זה לא מה שאתה חושב</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">USER_SIGNED_UP</span>
+        <span class="meta-badge delay">24 שעות אחרי הרשמה</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+רוב בעלי העסקים משווקים את הכישורים שלהם.
+
+אבל זה לא מה שגורם ללקוחות לבחור בהם.
+
+מה שגורם ללקוחות לבחור —
+
+זה הסיפור.
+
+הדמות.
+
+האדם שמאחורי השירות.
+
+האתגר 7 הימים בנוי בדיוק לזה.
+
+7 סרטונים.
+
+כל אחד חושף שכבה נוספת של מי שאתה.
+
+ביחד הם יוצרים סיפור שלם —
+
+שגורם ללקוחות להתאהב בך לפני שדיברתם.
+
+זה לא שיווק.
+
+זה בניית דמות עגולה שאנשים בוחרים בה.
+
+500+ עסקים כבר עשו את זה.
+
+₪197 בלבד.
+
+[CTA: להצטרפות לאתגר]
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">🎯</div><div class="logic-text"><strong>מטרה:</strong> הצגת האתגר 7 הימים כמוצר הכניסה לסולם הערך. ₪197.</div></div>
+        <div class="logic-item"><div class="logic-icon">💡</div><div class="logic-text"><strong>הודעה מרכזית:</strong> "הלקוחות לא בוחרים בכישורים — הם בוחרים בדמות." זה הבידול של שיטת TrueSignal©.</div></div>
+        <div class="logic-item"><div class="logic-icon">🔢</div><div class="logic-text"><strong>מספרים:</strong> 500+ עסקים (ספציפי לאתגר), ₪197. מציג ערך נגד מחיר.</div></div>
+        <div class="logic-item"><div class="logic-icon">🔗</div><div class="logic-text"><strong>CTA:</strong> לינק לעמוד האתגר עם email pre-fill.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 3 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">3</div>
+        <div class="email-header-info">
+          <h2>Followup 72h — הרגע המתאים</h2>
+          <div class="subject-line">נושא: <strong>[שם], בזמן שאתה מחכה לרגע המתאים</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">USER_SIGNED_UP</span>
+        <span class="meta-badge delay">72 שעות אחרי הרשמה</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+"אני אתחיל כשיהיה לי זמן."
+
+"אני אתחיל כשיהיה לי מה להגיד."
+
+"אני אתחיל כשאני מוכן."
+
+בינתיים —
+
+המתחרים שלך לא מחכים.
+
+הם בונים נוכחות.
+
+הם מספרים את הסיפור שלהם.
+
+הם תופסים את הקהל שמחפש
+בדיוק מה שיש לך להציע.
+
+האתגר 7 הימים הוא 7 ימים.
+
+לא 7 חודשים.
+
+לא 7 שעות ביום.
+
+7 ימים של תוכן שבונה את הבידול שלך.
+
+מחר — מישהו אחר יחליט להתחיל.
+
+השאלה היא אם זה יהיה אתה.
+
+[CTA: להצטרפות לאתגר]
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">🎯</div><div class="logic-text"><strong>מטרה:</strong> push אחרון לאתגר לפני שמפסיקים לשלוח. נוסח "הרגע המתאים" מדבר לדחיינות.</div></div>
+        <div class="logic-item"><div class="logic-icon">😰</div><div class="logic-text"><strong>טקטיקה:</strong> FOMO עדין — "המתחרים שלך לא מחכים." לא פחד, אלא מציאות.</div></div>
+        <div class="logic-item"><div class="logic-icon">📏</div><div class="logic-text"><strong>עיגון:</strong> "7 ימים, לא 7 חודשים" — מוריד את המחסום הנתפס.</div></div>
+        <div class="logic-item"><div class="logic-icon">🔚</div><div class="logic-text"><strong>זהו האימייל האחרון</strong> ברצף ה-welcome לפני שהמשתמש הופך ל-inactive.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 4 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">4</div>
+        <div class="email-header-info">
+          <h2>Challenge Access — גישה לאתגר</h2>
+          <div class="subject-line">נושא: <strong>[שם] — הגישה שלך לאתגר מוכנה</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">CHALLENGE_PURCHASED</span>
+        <span class="meta-badge delay">נשלח מיד · 0h</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+קיבלנו.
+
+האתגר 7 הימים שלך מוכן.
+
+כמה דברים שחשוב לדעת:
+
+האתגר דיגיטלי לחלוטין.
+
+הסרטונים נפתחים יום אחרי יום —
+
+כי ככה זה עובד.
+
+לא מדלגים.
+
+לא צופים מראש.
+
+יום 0 פתוח עכשיו — התחל שם.
+
+הוא מסביר את כל השיטה לפני שמתחילים.
+
+[CTA: לאתגר]
+
+מחר ייפתח יום 1.
+
+אנחנו מחכים לראות אותך מתחיל.
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">✅</div><div class="logic-text"><strong>טריגר:</strong> CHALLENGE_PURCHASED — רכישת אתגר 7 הימים ב-₪197.</div></div>
+        <div class="logic-item"><div class="logic-icon">📱</div><div class="logic-text"><strong>דיגיטלי בלבד:</strong> האתגר מתנהל בפלטפורמה דיגיטלית. אין Zoom, אין קבוצת WhatsApp נכון להיום.</div></div>
+        <div class="logic-item"><div class="logic-icon">🔓</div><div class="logic-text"><strong>מנגנון unlock:</strong> כל יום נפתח רק אחרי שהיום הקודם עבר. יום 0 פתוח מיד לכולם. המערכת בודקת purchaseDate + day &lt;= today.</div></div>
+        <div class="logic-item"><div class="logic-icon">📹</div><div class="logic-text"><strong>תוכן:</strong> 8 סרטונים (יום 0 + 7 ימים). יום 8 (סיכום) עדיין בהמתנה לתוכן.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 5 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">5</div>
+        <div class="email-header-info">
+          <h2>Challenge Upsell Workshop — שבוע עבר</h2>
+          <div class="subject-line">נושא: <strong>[שם], שבוע עבר. מה עכשיו?</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">CHALLENGE_PURCHASED</span>
+        <span class="meta-badge delay">7 ימים אחרי הרכישה</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+עבר שבוע מאז שהתחלת את האתגר.
+
+7 ימים.
+
+7 סרטונים.
+
+7 שכבות של הסיפור שלך.
+
+עכשיו השאלה האמיתית:
+
+מה אתה עושה עם זה?
+
+כי תוכן בלי מערכת —
+
+זה כמו מנוע בלי מכונית.
+
+הסדנה יום אחד היא המערכת.
+
+5 שעות שבונות את תשתית השיווק
+של העסק שלך — מאסטרטגיה ועד אוטומציה.
+
+יוצאים עם לוח שנה מלא ל-12 חודשים.
+
+עם משפך שעובד בשבילך.
+
+עם מסר שברור לשוק.
+
+₪1,080.
+
+[CTA: לסדנה]
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">🎯</div><div class="logic-text"><strong>מטרה:</strong> העלאה ל-₪1,080 — סדנת יום אחד. שלב 2 בסולם הערך.</div></div>
+        <div class="logic-item"><div class="logic-icon">🔗</div><div class="logic-text"><strong>גשר:</strong> "תוכן בלי מערכת = מנוע בלי מכונית." מחבר את מה שלמדו באתגר לצורך בסדנה.</div></div>
+        <div class="logic-item"><div class="logic-icon">⏱️</div><div class="logic-text"><strong>תזמון:</strong> 168 שעות = בדיוק 7 ימים אחרי הרכישה. נשלח גם אם לא סיימו את האתגר.</div></div>
+        <div class="logic-item"><div class="logic-icon">💰</div><div class="logic-text"><strong>מחיר:</strong> ₪1,080 (מחיר מלא). הזיכוי מ-₪197 מקוזז אוטומטית בקופה.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 6 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">6</div>
+        <div class="email-header-info">
+          <h2>Workshop Confirmation — אישור סדנה</h2>
+          <div class="subject-line">נושא: <strong>[שם] — ההרשמה לסדנה אושרה</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">WORKSHOP_PURCHASED</span>
+        <span class="meta-badge delay">נשלח מיד · 0h</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+זה קבוע.
+
+הסדנה יום אחד — מקומך שמור.
+
+הפרטים:
+
+[תאריך דינמי] — יום חמישי
+
+09:00–15:00
+
+בית ציוני אמריקה, תל אביב
+
+5 שעות של עבודה אמיתית.
+
+לא הרצאה.
+
+לא "קח השראה הביתה".
+
+בונים ביחד, בזמן אמת, את מערכת
+השיווק של העסק שלך.
+
+כדי להגיע מוכן/ת —
+
+חשוב/י על 3 לקוחות אידיאליים שלך:
+
+מי הם?
+
+מה הם קיבלו ממך?
+
+ומה הם אמרו עליך?
+
+זה יהיה הבסיס לעבודה בסדנה.
+
+מחכים לך.
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">📅</div><div class="logic-text"><strong>תאריך דינמי:</strong> מחושב אוטומטית — יום חמישי האחרון של כל חודש. פונקציה lastThursdayOfMonth() ב-lib/products.ts.</div></div>
+        <div class="logic-item"><div class="logic-icon">📍</div><div class="logic-text"><strong>מיקום:</strong> בית ציוני אמריקה, תל אביב. לא Zoom — פיזי בלבד.</div></div>
+        <div class="logic-item"><div class="logic-icon">🏠</div><div class="logic-text"><strong>הכנה:</strong> מבקשים מהמשתתפים לחשוב על 3 לקוחות אידיאליים. זה מגביר את האיכות של הסדנה עצמה.</div></div>
+        <div class="logic-item"><div class="logic-icon">⏰</div><div class="logic-text"><strong>שעות:</strong> 09:00–15:00 (5 שעות + הפסקות). יש לוודא שמתעדכן אם שעות משתנות.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 7 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">7</div>
+        <div class="email-header-info">
+          <h2>Workshop Upsell Course — שבוע אחרי</h2>
+          <div class="subject-line">נושא: <strong>[שם], מה עשית עם מה שיצאת ממנו?</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">WORKSHOP_PURCHASED</span>
+        <span class="meta-badge delay">7 ימים אחרי הרכישה</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+עבר שבוע מאז הסדנה.
+
+שאלה אחת ישירה:
+
+יישמת משהו?
+
+אפילו דבר אחד קטן שהפעלת —
+
+זה מספיק להתחיל לראות תוצאות.
+
+אבל אם אתה רוצה ללכת עמוק יותר —
+
+הקורס הדיגיטלי הוא הצעד הבא.
+
+16 שיעורים.
+
+8 שעות.
+
+אותה שיטה —
+
+רק עמוק יותר, מפורט יותר, עם תרגול.
+
+לומדים בקצב שלך.
+
+חוזרים כשצריך.
+
+גישה לנצח.
+
+₪1,800.
+
+[CTA: לקורס]
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">🎯</div><div class="logic-text"><strong>מטרה:</strong> העלאה ל-₪1,800 — הקורס הדיגיטלי. שלב 3 בסולם הערך.</div></div>
+        <div class="logic-item"><div class="logic-icon">❓</div><div class="logic-text"><strong>פתיחה:</strong> שאלה ישירה — "יישמת משהו?" לא מאשימה, אלא מזמינה לרפלקציה.</div></div>
+        <div class="logic-item"><div class="logic-icon">📚</div><div class="logic-text"><strong>הצעת הקורס:</strong> "אותה שיטה, רק עמוק יותר." בונה על מה שכבר יודעים מהסדנה.</div></div>
+        <div class="logic-item"><div class="logic-icon">⚠️</div><div class="logic-text"><strong>שים לב:</strong> ה-template key בקוד הוא workshop_upsell_strategy אבל ב-DB צריך להיות workshop_upsell_course. קיים alias לשניהם.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 8 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">8</div>
+        <div class="email-header-info">
+          <h2>Course Access — גישה לקורס</h2>
+          <div class="subject-line">נושא: <strong>[שם] — הקורס שלך מוכן</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">COURSE_PURCHASED</span>
+        <span class="meta-badge delay">נשלח מיד · 0h</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+קיבלנו.
+
+הקורס הדיגיטלי שלך פעיל.
+
+16 שיעורים.
+
+8 שעות של שיטה מלאה.
+
+גישה לנצח — חוזרים מתי שרוצים.
+
+לומדים בקצב שלך.
+
+אין לחץ.
+
+אין מועד אחרון.
+
+רק אתה, השיטה, והעסק שלך.
+
+תתחיל מהשיעור הראשון.
+
+לא מדלגים —
+
+כל שיעור בנוי על הקודם.
+
+[CTA: לקורס]
+
+מחכים לשמוע מה אתה לוקח ממנו.
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">✅</div><div class="logic-text"><strong>טריגר:</strong> COURSE_PURCHASED — רכישת קורס דיגיטלי ב-₪1,800.</div></div>
+        <div class="logic-item"><div class="logic-icon">🆓</div><div class="logic-text"><strong>הורדת לחץ:</strong> "אין מועד אחרון, לומדים בקצב שלך." חשוב ללקוחות עסוקים.</div></div>
+        <div class="logic-item"><div class="logic-icon">🎓</div><div class="logic-text"><strong>16 שיעורים / 8 שעות:</strong> 8 מודולים, 2 שיעורים כל מודול. גישה דרך /course/content (auth-gated).</div></div>
+        <div class="logic-item"><div class="logic-icon">🔢</div><div class="logic-text"><strong>סדר חשוב:</strong> "לא מדלגים — כל שיעור בנוי על הקודם." מגדיל completion rate.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 9 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">9</div>
+        <div class="email-header-info">
+          <h2>Course Upsell Strategy — שבוע בקורס</h2>
+          <div class="subject-line">נושא: <strong>[שם], שבוע בקורס. הגיע הזמן לדבר.</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">COURSE_PURCHASED</span>
+        <span class="meta-badge delay">7 ימים אחרי הרכישה</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+עבר שבוע מאז שהתחלת את הקורס.
+
+בשלב הזה יש לך כבר כלים.
+
+יש לך שפה.
+
+יש לך הבנה של מה צריך לקרות.
+
+יש רק דבר אחד שהקורס לא יכול לעשות בשבילך:
+
+להסתכל על העסק שלך ספציפית.
+
+לשאול את השאלות שרק מישהו
+שמכיר אותך יכול לשאול.
+
+לבנות איתך מפה שמותאמת לך —
+לא לאדם ממוצע.
+
+לזה יש פגישת אסטרטגיה.
+
+90 דקות עם הדר.
+
+1 על 1.
+
+יוצאים עם תוכנית.
+
+לא מושגים.
+
+תוכנית.
+
+ואם לא פיצחנו בפגישה הראשונה —
+
+יש פגישה שנייה. עלינו.
+
+₪4,000.
+
+[CTA: לפגישת אסטרטגיה]
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">🎯</div><div class="logic-text"><strong>מטרה:</strong> העלאה ל-₪4,000 — פגישת אסטרטגיה 1:1 עם הדר. שלב 4 בסולם הערך.</div></div>
+        <div class="logic-item"><div class="logic-icon">🔑</div><div class="logic-text"><strong>הבידול:</strong> "הקורס לא יכול להסתכל על העסק שלך ספציפית." מציב 1:1 כהמשך טבעי, לא כתחרות.</div></div>
+        <div class="logic-item"><div class="logic-icon">🛡️</div><div class="logic-text"><strong>ערבות:</strong> "לא פיצחנו בפגישה הראשונה? פגישה שנייה עלינו." מוריד סיכון נתפס.</div></div>
+        <div class="logic-item"><div class="logic-icon">📞</div><div class="logic-text"><strong>תיאום:</strong> הפגישה לא נקבעת בלינק — הצוות מתקשר לתאם. CTA מוביל לעמוד /strategy.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 10 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">10</div>
+        <div class="email-header-info">
+          <h2>Reengagement — 3 ימים של שקט</h2>
+          <div class="subject-line">נושא: <strong>לא ראינו אותך 3 ימים</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">INACTIVE_3_DAYS</span>
+        <span class="meta-badge delay">נשלח מיד · 0h</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+3 ימים עברו מאז שנרשמת.
+
+לא שמנו לב?
+
+שמנו לב.
+
+זה קורה לכולם —
+
+החיים מתערבים,
+
+העסק לא מחכה,
+
+האימייל יורד.
+
+אבל אנחנו רוצים שתדע:
+
+הדרך שלך ל-Signal עדיין כאן.
+
+7 ימים.
+
+7 סרטונים.
+
+מערכת שיווק שבנויה סביב מי שאתה.
+
+לא סביב האלגוריתם.
+
+לא סביב הטרנד.
+
+סביב הבידול שלך.
+
+500+ עסקים כבר עשו את זה.
+
+חלקם היססו 3 שבועות לפני שהתחילו.
+
+חלקם התחילו ביום השני אחרי ההרשמה.
+
+אלה שהתחילו מוקדם?
+
+הם כבר מרגישים את זה.
+
+[CTA: להצטרפות לאתגר]
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">😴</div><div class="logic-text"><strong>טריגר:</strong> INACTIVE_3_DAYS — מופעל על ידי job runner כשמשתמש לא פתח אימייל / לא התחבר 3 ימים.</div></div>
+        <div class="logic-item"><div class="logic-icon">🤝</div><div class="logic-text"><strong>גישה:</strong> לא אשמה — הבנה. "זה קורה לכולם." שומר על טון חיובי.</div></div>
+        <div class="logic-item"><div class="logic-icon">📊</div><div class="logic-text"><strong>Social proof:</strong> "חלקם היססו 3 שבועות" — נורמליזציה של ההיסוס עצמו.</div></div>
+        <div class="logic-item"><div class="logic-icon">🔗</div><div class="logic-text"><strong>CTA:</strong> לאתגר 7 הימים. אם כבר רכשו — לא אמור לקבל מייל זה (הטריגר אמור להיות מנוהל בהתאם).</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 11 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">11</div>
+        <div class="email-header-info">
+          <h2>Booking Confirmation — פגישת אסטרטגיה</h2>
+          <div class="subject-line">נושא: <strong>זו לא עוד פגישה</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">CALL_BOOKED</span>
+        <span class="meta-badge delay">נשלח מיד · 0h</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+רוב בעלי העסקים לא יעשו
+מה שעשית עכשיו.
+
+הם ימשיכו להסתדר.
+
+לנחש.
+
+לעבוד קשה ולקוות שמשהו ישתנה.
+
+אתה החלטת אחרת.
+
+90 דקות עם הדר —
+
+לא כדי לשמוע עוד טיפים.
+
+כדי לפצח.
+
+את הבידול האמיתי שלך.
+
+את המסר שגורם לאנשים הנכונים לרצות אותך.
+
+את המערכת שתגרום לעסק לעבוד בשבילך.
+
+הדר עובדת עם עסקים מכל הגדלים.
+
+היא ראתה הכל.
+
+היא יודעת לשאול את השאלות
+שאתה לא שואל את עצמך.
+
+ובסוף ה-90 דקות —
+
+תצא עם מפה.
+
+לא מושגים כלליים.
+
+לא "תחשוב על זה".
+
+מפה.
+
+בימים הקרובים יחזרו אליך לתאם תאריך.
+
+תהיה מוכן.
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">📞</div><div class="logic-text"><strong>חשוב:</strong> הפגישה לא נקבעת אוטומטית — הצוות מתקשר לתאם. המייל מאשר שהבקשה התקבלה, לא שיש תאריך.</div></div>
+        <div class="logic-item"><div class="logic-icon">🌟</div><div class="logic-text"><strong>טון:</strong> "זו לא עוד פגישה" — מעלה את חשיבות הרגע. מחזק את ההחלטה שהלקוח כבר קיבל.</div></div>
+        <div class="logic-item"><div class="logic-icon">🔥</div><div class="logic-text"><strong>בניית ציפייה:</strong> מדגיש מה תהיה הפגישה (מפה, לא מושגים) כדי שהלקוח יגיע מוכן ומחויב.</div></div>
+        <div class="logic-item"><div class="logic-icon">⚙️</div><div class="logic-text"><strong>מתי מופעל:</strong> בפועל — הצוות מפעיל ידנית לאחר אישור הבקשה. אוטומציה עתידית: לאחר תשלום ב-/strategy/book.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email 12 -->
+  <div class="email-card">
+    <div class="email-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="email-num">12</div>
+        <div class="email-header-info">
+          <h2>Purchase Confirmation — Fallback גנרי</h2>
+          <div class="subject-line">נושא: <strong>הרכישה אושרה</strong></div>
+        </div>
+      </div>
+      <div class="email-meta">
+        <span class="meta-badge trigger">fallback</span>
+        <span class="meta-badge delay">נשלח מיד · 0h</span>
+        <span class="meta-badge status-active">פעיל</span>
+      </div>
+    </div>
+    <div class="email-body">
+      <div class="email-content">
+        <h4>תוכן האימייל</h4>
+        <div class="email-text">[שם],
+
+זה עבר.
+
+הרכישה שלך אושרה ואנחנו שמחים שאתה איתנו.
+
+מה שקנית —
+
+זה לא עוד קורס שנשכח בתיקיה.
+
+זו החלטה לבנות משהו אמיתי.
+
+כמעט 4,000 בעלי עסקים כבר עשו את הצעד הזה.
+
+חלקם הגיעו עם ספקות.
+
+חלקם לא ידעו מה לצפות.
+
+כולם יצאו עם משהו שלא היה להם לפני.
+
+אם יש שאלות —
+
+אנחנו כאן.
+
+כתבו לנו בוואטסאפ.
+
+צוות beegood</div>
+      </div>
+      <div class="email-logic">
+        <h4>לוגיקה ומטרה</h4>
+        <div class="logic-item"><div class="logic-icon">🔄</div><div class="logic-text"><strong>Fallback:</strong> נשלח רק אם אין sequence ספציפי לטריגר הרכישה. בפועל אמור להיות נדיר.</div></div>
+        <div class="logic-item"><div class="logic-icon">4️⃣</div><div class="logic-text"><strong>מספר:</strong> "כמעט 4,000 בעלי עסקים" — המספר הכולל של כל הלקוחות (לא ספציפי למוצר).</div></div>
+        <div class="logic-item"><div class="logic-icon">💬</div><div class="logic-text"><strong>ערוץ פתוח:</strong> לינק לוואטסאפ — מזמין תקשורת ישירה אם משהו אינו ברור. (noreply — לא ניתן להשיב למייל).</div></div>
+        <div class="logic-item"><div class="logic-icon">⚠️</div><div class="logic-text"><strong>אחריות:</strong> אם רכישה לא מקבלת מייל ספציפי — לבדוק ב-DB שה-email_sequences מוגדרות נכון לטריגר.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frozen section -->
+  <div class="section-title">אימיילי הכוורת — בהקפאה</div>
+  <div class="note-box">
+    <strong>סטטוס:</strong> מוצר הכוורת (מנוי חודשי) נמצא בהקפאה. האימיילים קיימים בקוד ומוכנים לפעולה, אך לא פעילים. יופעלו כשהמוצר יחזור לפעילות.
+    <br/><br/>
+    <strong>מה מוכן:</strong> hive_welcome (מיד), hive_day7 (7 ימים), hive_cancelled (מיד עם הגיון החזר 14 יום). הטמפלייטים קיימים ב-lib/email/templates.ts.
+  </div>
+
+  <!-- What's pending -->
+  <div class="section-title">מה עדיין פתוח</div>
+  <table class="status-table">
+    <thead>
+      <tr>
+        <th>פריט</th>
+        <th>סטטוס</th>
+        <th>מה נדרש</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>אימיילי הכוורת (3 אימיילים)</td>
+        <td><span class="status-dot dot-frozen"></span>הקפאה</td>
+        <td>הפעלת מוצר הכוורת מחדש</td>
+      </tr>
+      <tr>
+        <td>יום 8 באתגר (סיכום)</td>
+        <td><span class="status-dot dot-pending"></span>ממתין</td>
+        <td>העלאת סרטון הסיכום לVimeo ועדכון challenge-config.ts</td>
+      </tr>
+      <tr>
+        <td>יום 0 באתגר (פתיחה)</td>
+        <td><span class="status-dot dot-pending"></span>ממתין</td>
+        <td>החלפת PLACEHOLDER ב-Vimeo ID אמיתי</td>
+      </tr>
+      <tr>
+        <td>WhatsApp לנטישת עגלה</td>
+        <td><span class="status-dot dot-pending"></span>עתידי</td>
+        <td>בחירת ספק (Twilio / Green API / Meta)</td>
+      </tr>
+      <tr>
+        <td>Cardcom Recurring (הכוורת)</td>
+        <td><span class="status-dot dot-frozen"></span>הקפאה</td>
+        <td>הגדרת recurring billing עם Cardcom</td>
+      </tr>
+      <tr>
+        <td>cart_abandon_1h / cart_abandon_24h</td>
+        <td><span class="status-dot dot-pending"></span>לא קיים</td>
+        <td>כתיבת templates + הוספה ל-email_sequences ב-DB</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Technical notes -->
+  <div class="section-title">הערות טכניות</div>
+  <div class="info-box" style="margin-bottom:12px">
+    <strong>המאגר של האימיילים:</strong> lib/email/templates.ts — פונקציה renderTemplate(key, ctx) מחזירה { subject, html }. כל template רשום ב-TEMPLATES map בסוף הקובץ.
+  </div>
+  <div class="info-box" style="margin-bottom:12px">
+    <strong>רישום sequences ב-DB:</strong> טבלת email_sequences — כל שורה מכילה trigger_event, delay_hours, template_key, subject, active. להוספת אימייל חדש: migration SQL + רישום בקוד.
+  </div>
+  <div class="info-box" style="margin-bottom:12px">
+    <strong>מניעת כפילויות:</strong> טבלת email_logs עם UNIQUE(user_id, sequence_id). אותו אימייל לאותו משתמש לא יישלח פעמיים.
+  </div>
+  <div class="info-box">
+    <strong>ספק שליחה:</strong> Resend — noreply@beegood.online. Domain verified. DNS מוגדר ב-Vercel. לא למחוק רשומות DNS של Resend (SPF, DKIM, MX).
+  </div>
+
+  <div style="margin-top:48px; text-align:center; color:#9ca3af; font-size:12px; padding-top:24px; border-top:1px solid #e5e7eb;">
+    beegood.online · מסמך פנימי · מעודכן מאי 2026 · לא להפצה
+  </div>
+
+</div>
+</body>
+</html>
