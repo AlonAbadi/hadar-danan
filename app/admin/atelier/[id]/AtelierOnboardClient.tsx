@@ -451,6 +451,27 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
           <span style={{ color: "#2C323E" }}>·</span>
           <span>{app.phone}</span>
         </div>
+        {/* UTM / marketing source */}
+        {app.source_utm && Object.keys(app.source_utm).length > 0 && (
+          <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <span style={{ fontSize: 11, color: "#9E9990", fontWeight: 600 }}>מקור:</span>
+            {[
+              { key: "utm_source",   label: "מקור",        color: "#C9964A" },
+              { key: "utm_medium",   label: "מדיום",        color: "#4285F4" },
+              { key: "utm_campaign", label: "קמפיין",       color: "#4285F4" },
+              { key: "utm_adset",    label: "אד-סט",        color: "#E8B94A" },
+              { key: "utm_ad",       label: "אד",           color: "#E8B94A" },
+              { key: "utm_content",  label: "תוכן",         color: "#9E9990" },
+              { key: "click_id",     label: "click_id",     color: "#9E9990" },
+            ].map(({ key, label, color }) =>
+              app.source_utm[key] ? (
+                <span key={key} style={{ fontSize: 11, padding: "2px 9px", borderRadius: 9999, background: color + "15", color, border: `1px solid ${color}30` }}>
+                  {label}: {key === "click_id" ? (app.source_utm[key] as string).slice(0, 16) + "…" : app.source_utm[key]}
+                </span>
+              ) : null
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Orchestrator Panel ──────────────────────────────────────────── */}

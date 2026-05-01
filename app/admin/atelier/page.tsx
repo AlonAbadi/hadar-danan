@@ -9,6 +9,7 @@ interface AtelierApplication {
   instagram: string;
   story: string;
   status: string;
+  source_utm: Record<string, string> | null;
   created_at: string;
 }
 
@@ -181,6 +182,27 @@ export default function AtelierAdminPage() {
                 }}>
                   {app.story}
                 </div>
+
+                {/* UTM chip */}
+                {app.source_utm && (
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {app.source_utm.utm_source && (
+                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 9999, background: "rgba(201,150,74,0.12)", color: "#C9964A", border: "1px solid rgba(201,150,74,0.25)" }}>
+                        {app.source_utm.utm_source}
+                      </span>
+                    )}
+                    {app.source_utm.utm_campaign && (
+                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 9999, background: "rgba(66,133,244,0.1)", color: "#4285F4", border: "1px solid rgba(66,133,244,0.25)" }}>
+                        {app.source_utm.utm_campaign}
+                      </span>
+                    )}
+                    {app.source_utm.utm_ad && (
+                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 9999, background: "rgba(232,185,74,0.1)", color: "#E8B94A", border: "1px solid rgba(232,185,74,0.25)" }}>
+                        {app.source_utm.utm_ad}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Bottom row: fit score + time */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

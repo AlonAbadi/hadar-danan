@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 import { trackProductLead } from "@/lib/analytics";
 
+function getCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  return document.cookie
+    .split("; ")
+    .find((c) => c.startsWith(`${name}=`))
+    ?.split("=")[1];
+}
+
 interface FAQ {
   question: string;
   answer: string;
@@ -24,6 +32,17 @@ export function AtelierLandingClient({ faqs }: Props) {
   const [loading,   setLoading]   = useState(false);
   const [success,   setSuccess]   = useState(false);
   const [error,     setError]     = useState<string | null>(null);
+  const [utmData,   setUtmData]   = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "utm_adset", "utm_ad", "fbclid", "gclid"];
+    const data: Record<string, string> = {};
+    for (const key of keys) {
+      const val = getCookie(key);
+      if (val) data[key === "fbclid" || key === "gclid" ? "click_id" : key] = val;
+    }
+    setUtmData(data);
+  }, []);
 
   // Fire ATELIER_VIEW + ViewContent on mount
   useEffect(() => {
@@ -54,7 +73,7 @@ export function AtelierLandingClient({ faqs }: Props) {
       const res = await fetch("/api/atelier/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, instagram, story }),
+        body: JSON.stringify({ name, phone, instagram, story, source_utm: Object.keys(utmData).length ? utmData : undefined }),
       });
 
       const data = await res.json();

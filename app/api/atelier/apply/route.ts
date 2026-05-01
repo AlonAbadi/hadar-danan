@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
   const phone     = typeof body.phone     === "string" ? body.phone.trim()     : "";
   const instagram = typeof body.instagram === "string" ? body.instagram.trim() : "";
   const story     = typeof body.story     === "string" ? body.story.trim()     : "";
+  const sourceUtm = body.source_utm && typeof body.source_utm === "object" ? body.source_utm : null;
 
   // Validation
   if (!name || !phone || !instagram || !story) {
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
       phone,
       instagram,
       story,
+      source_utm: sourceUtm,
       ip_address: ip,
       user_agent: req.headers.get("user-agent") ?? null,
     })

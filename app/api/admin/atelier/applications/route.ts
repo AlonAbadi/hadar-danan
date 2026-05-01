@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
   }
 
   const { data, error } = await safeFrom(supabase, "atelier_applications")
-    .select("id, name, phone, instagram, story, status, created_at")
+    .select("id, name, phone, instagram, story, status, source_utm, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
