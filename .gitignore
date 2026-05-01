@@ -9,3 +9,7 @@ node_modules/
 tsconfig.tsbuildinfo
 .claude/settings.local.json
 atelier-planning/
+.env.local.vercel
+prelaunch-check.sh
+scripts/add-ga4-service-account.mjs
+scripts/grant-ga4.mjs

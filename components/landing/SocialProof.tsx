@@ -44,7 +44,7 @@ const ALUMNI = [
 ];
 
 export function SocialProof({ count, light = false }: SocialProofProps) {
-  const displayCount = Math.max(count + 250, 250);
+  const displayCount = Math.max(count + 250, 500);
   const animated = useCountUp(displayCount);
 
   const counterColor = light ? "#2563eb" : "#4ade80";
@@ -72,7 +72,7 @@ export function SocialProof({ count, light = false }: SocialProofProps) {
           {animated.toLocaleString("he-IL")}+
         </span>
         <p className={`font-bold text-xl ${headingColor}`}>בעלי עסקים כבר עשו את זה</p>
-        <p className={`text-sm ${subColor}`}>מעל 250 בעלי עסקים השיגו לקוחות חדשים דרך תוכן וידאו</p>
+        <p className={`text-sm ${subColor}`}>מעל 500 בעלי עסקים השיגו לקוחות חדשים דרך תוכן וידאו</p>
       </div>
 
       {/* Stars */}

@@ -58,7 +58,7 @@ export default async function TrainingPage() {
       whoText="יצרתי את ההדרכה הזו כנקודת כניסה לשיטת TrueSignal. 20 דקות שמראות למה רוב השיווק מרגיש מזויף - ואיך לתקן את זה."
 
       proofStats={[
-        { val: "250+", label: "עסקים" },
+        { val: "500+", label: "עסקים" },
         { val: "97%",  label: "ממליצים" },
       ]}
       testimonials={[
