@@ -56,7 +56,6 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
     setPhase("loading");
     setErrorMsg(null);
     try {
-      trackInitiateCheckout("workshop_1080", toPay);
       fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,7 +74,8 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
 
       if (checkoutRes.status === 503) { fallbackWhatsapp(); return; }
       if (checkoutRes.ok) {
-        const { url } = await checkoutRes.json();
+        const { url, purchase_id } = await checkoutRes.json();
+        trackInitiateCheckout("workshop_1080", toPay, "ILS", purchase_id ? `ic_${purchase_id}` : undefined);
         if (url) { window.location.href = url; return; }
       }
 
@@ -131,7 +131,6 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
         if (userId) saveUserDetails({ name: form.name, email: form.email, phone: form.phone, userId });
       }
 
-      trackInitiateCheckout("workshop_1080", toPay);
       fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -159,7 +158,8 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
       }
 
       if (checkoutRes.ok) {
-        const { url } = await checkoutRes.json();
+        const { url, purchase_id } = await checkoutRes.json();
+        trackInitiateCheckout("workshop_1080", toPay, "ILS", purchase_id ? `ic_${purchase_id}` : undefined);
         if (url) { window.location.href = url; return; }
       }
 

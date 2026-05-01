@@ -214,6 +214,7 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
-    url: `https://secure.cardcom.solutions/External/lowProfileClearing/${terminal}.aspx?LowProfileCode=${lowProfileCode}`,
+    url:         `https://secure.cardcom.solutions/External/lowProfileClearing/${terminal}.aspx?LowProfileCode=${lowProfileCode}`,
+    purchase_id: purchase.id,
   });
 }

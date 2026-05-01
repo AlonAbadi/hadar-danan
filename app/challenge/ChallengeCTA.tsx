@@ -83,7 +83,6 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
     setPhase("loading");
     setErrorMsg(null);
     try {
-      trackInitiateCheckout("challenge_197", toPay);
       fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,7 +101,9 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
 
       if (checkoutRes.status === 503) { fallbackWhatsapp(); return; }
       if (checkoutRes.ok) {
-        const { url } = await checkoutRes.json();
+        const { url, purchase_id } = await checkoutRes.json();
+        // Fire IC after getting purchase_id so eventID matches CAPI ic_${purchase_id}
+        trackInitiateCheckout("challenge_197", toPay, "ILS", purchase_id ? `ic_${purchase_id}` : undefined);
         if (url) { window.location.href = url; return; }
       }
 
@@ -158,7 +159,6 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
         if (userId) saveUserDetails({ name: form.name, email: form.email, phone: form.phone, userId });
       }
 
-      trackInitiateCheckout("challenge_197", toPay); // single IC — not duplicated
       fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -186,7 +186,8 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
       }
 
       if (checkoutRes.ok) {
-        const { url } = await checkoutRes.json();
+        const { url, purchase_id } = await checkoutRes.json();
+        trackInitiateCheckout("challenge_197", toPay, "ILS", purchase_id ? `ic_${purchase_id}` : undefined);
         if (url) { window.location.href = url; return; }
       }
 

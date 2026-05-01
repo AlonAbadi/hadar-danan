@@ -53,8 +53,6 @@ export function PremiumBookingFlow({ price, whatsappPhone }: Props) {
 
       const { user_id } = await signupRes.json();
 
-      trackInitiateCheckout("premium_14000", priceWithVat);
-
       fetch("/api/events", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,7 +76,8 @@ export function PremiumBookingFlow({ price, whatsappPhone }: Props) {
       }
 
       if (checkoutRes.ok) {
-        const { url } = await checkoutRes.json();
+        const { url, purchase_id } = await checkoutRes.json();
+        trackInitiateCheckout("premium_14000", priceWithVat, "ILS", purchase_id ? `ic_${purchase_id}` : undefined);
         if (url) { window.location.href = url; return; }
       }
 

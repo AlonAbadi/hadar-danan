@@ -50,7 +50,6 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
     setPhase("loading");
     setErrorMsg(null);
     try {
-      trackInitiateCheckout("course_1800", toPay);
       fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -69,7 +68,8 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
 
       if (checkoutRes.status === 503) { fallbackWhatsapp(); return; }
       if (checkoutRes.ok) {
-        const { url } = await checkoutRes.json();
+        const { url, purchase_id } = await checkoutRes.json();
+        trackInitiateCheckout("course_1800", toPay, "ILS", purchase_id ? `ic_${purchase_id}` : undefined);
         if (url) { window.location.href = url; return; }
       }
 
@@ -126,8 +126,6 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
         if (userId) saveUserDetails({ name: form.name, email: form.email, phone: form.phone, userId });
       }
 
-      // Fire CHECKOUT_STARTED event
-      trackInitiateCheckout("course_1800", 1800);
       fetch("/api/events", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -139,12 +137,10 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
       }).catch(() => {});
 
       if (!userId) {
-        // Signup failed - WhatsApp fallback
         fallbackWhatsapp();
         return;
       }
 
-      // 2. Create Cardcom payment
       const checkoutRes = await fetch("/api/checkout", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -152,13 +148,13 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
       });
 
       if (checkoutRes.status === 503) {
-        // Cardcom not configured - WhatsApp fallback
         fallbackWhatsapp();
         return;
       }
 
       if (checkoutRes.ok) {
-        const { url } = await checkoutRes.json();
+        const { url, purchase_id } = await checkoutRes.json();
+        trackInitiateCheckout("course_1800", 1800, "ILS", purchase_id ? `ic_${purchase_id}` : undefined);
         if (url) { window.location.href = url; return; }
       }
 

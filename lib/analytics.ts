@@ -95,10 +95,10 @@ export function trackQuizRecommended(productId: string, matchPercent: number) {
   } catch {}
 }
 
-/** CTA clicked (WhatsApp / checkout) → InitiateCheckout */
-export function trackInitiateCheckout(product: string, value: number, currency = "ILS") {
+/** CTA clicked → InitiateCheckout. Pass eventId for CAPI deduplication. */
+export function trackInitiateCheckout(product: string, value: number, currency = "ILS", eventId?: string) {
   try {
-    fbq("track", "InitiateCheckout", { content_name: product, value, currency });
+    fbq("track", "InitiateCheckout", { content_name: product, value, currency }, eventId ? { eventID: eventId } : undefined);
     gtag("event", "begin_checkout", { currency, value, items: [{ item_id: product }] });
   } catch {}
 }
