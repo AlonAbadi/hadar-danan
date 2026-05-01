@@ -9,23 +9,25 @@ const TT = {
   cursor: { fill: 'rgba(201,150,74,0.06)' },
 };
 
-const SEQUENCE_NAMES: Record<string, string> = {
-  welcome:                'ברוכים הבאים',
-  free_training_followup: 'מעקב שיעור במתנה',
-  challenge_nurture:      'נרטורינג אתגר',
-  challenge_upsell:       'אפסייל מאתגר',
-  workshop_invite:        'הזמנה לסדנה',
-  workshop_reminder:      'תזכורת סדנה',
-  course_onboard:         'הצטרפות לקורס',
-  course_completion:      'סיום קורס',
-  strategy_booking:       'הזמנת פגישת אסטרטגיה',
-  strategy_followup:      'מעקב אסטרטגיה',
-  premium_intro:          'היכרות פרמיום',
-  partnership_outreach:   'פנייה לשותפות',
-  hive_welcome:           'ברוכים הבאים לכוורת',
-  hive_engagement:        'מעורבות כוורת',
-  reengagement:           'הפעלה מחדש',
-  cart_abandonment:       'נטישת עגלה',
+const TEMPLATE_NAMES: Record<string, string> = {
+  welcome:                    'ברוכים הבאים + הדרכה חינמית',
+  followup_24h:               'מעקב 24 שעות — אתגר',
+  followup_72h:               'מעקב 72 שעות — אתגר',
+  challenge_access:           'גישה לאתגר 7 ימים',
+  challenge_upsell_workshop:  'אפסייל לסדנה (יום 7)',
+  workshop_confirmation:      'אישור הרשמה לסדנה',
+  workshop_upsell_strategy:   'אפסייל לאסטרטגיה (שבוע)',
+  course_access:              'גישה לקורס הדיגיטלי',
+  course_upsell_strategy:     'אפסייל לאסטרטגיה (שבוע)',
+  reengagement:               'הפעלה מחדש — 3 ימים',
+  purchase_confirmation:      'אישור רכישה',
+  post_purchase_48h:          'מעקב 48 שעות אחרי רכישה',
+  booking_confirmation:       'אישור פגישת אסטרטגיה',
+  premium_lead_confirmation:  'אישור ליד פרמיום',
+  partnership_confirmation:   'אישור בקשת שותפות',
+  hive_welcome:               'ברוכים הבאים לכוורת',
+  hive_day7:                  'שבוע בכוורת — מעקב',
+  hive_cancelled:             'אישור ביטול כוורת',
 };
 
 export default function EmailClient({ stats }: { stats: any[] }) {
@@ -70,7 +72,7 @@ export default function EmailClient({ stats }: { stats: any[] }) {
         <ResponsiveContainer width="100%" height={280}>
           <BarChart
             data={stats.sort((a, b) => b.sent - a.sent).slice(0, 8).map(s => ({
-              name: (SEQUENCE_NAMES[s.sequenceId] ?? s.sequenceId).slice(0, 8),
+              name: (TEMPLATE_NAMES[s.templateKey] ?? s.templateKey).slice(0, 8),
               'Open Rate': s.openRate,
               'CTR': s.ctr,
             }))}
@@ -106,10 +108,10 @@ export default function EmailClient({ stats }: { stats: any[] }) {
               name: (
                 <div>
                   <div style={{ fontWeight: 600, color: '#EDE9E1' }}>
-                    {SEQUENCE_NAMES[s.sequenceId] ?? s.sequenceId}
+                    {TEMPLATE_NAMES[s.templateKey] ?? s.templateKey}
                   </div>
-                  <div style={{ fontSize: 10, color: '#9E9990', fontFamily: 'monospace' }}>
-                    {s.sequenceId}
+                  <div style={{ fontSize: 10, color: '#9E9990' }}>
+                    {s.trigger}{s.delayHours > 0 ? ` · +${s.delayHours}ש׳` : ''}
                   </div>
                 </div>
               ),

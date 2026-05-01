@@ -81,37 +81,66 @@ async function fulfillPurchase(
     },
   });
 
-  // Fire product-specific event so per-product email sequences trigger
+  // Determine product-specific trigger event
   const productEvent =
     purchase.product === "challenge_197" ? "CHALLENGE_PURCHASED" :
     purchase.product === "workshop_1080" ? "WORKSHOP_PURCHASED"  :
     purchase.product === "course_1800"   ? "COURSE_PURCHASED"    : null;
 
+  // Fetch user data once (shared by all email enqueuing below)
+  const { data: user } = await supabase
+    .from("users")
+    .select("email, name")
+    .eq("id", purchase.user_id)
+    .single();
+
   if (productEvent) {
+    // Insert product-specific event into event log
     await supabase.from("events").insert({
       user_id:  purchase.user_id,
       type:     productEvent,
       metadata: { product: purchase.product, amount: purchase.amount },
     });
-  }
 
-  // Enqueue purchase confirmation email (delay_hours=0, trigger=PURCHASE_COMPLETED)
-  const { data: confirmSeq } = await supabase
-    .from("email_sequences")
-    .select("id, subject, template_key")
-    .eq("trigger_event", "PURCHASE_COMPLETED")
-    .eq("delay_hours", 0)
-    .eq("active", true)
-    .maybeSingle();
-
-  if (confirmSeq) {
-    const { data: user } = await supabase
-      .from("users")
-      .select("email, name")
-      .eq("id", purchase.user_id)
-      .single();
-
+    // Enqueue all product-specific email sequences (immediate access email + timed upsell)
     if (user) {
+      const { data: productSeqs } = await supabase
+        .from("email_sequences")
+        .select("id, delay_hours, subject, template_key")
+        .eq("trigger_event", productEvent)
+        .eq("active", true);
+
+      if (productSeqs?.length) {
+        await supabase.from("jobs").insert(
+          productSeqs.map(seq => ({
+            type:    "SEND_EMAIL",
+            payload: {
+              user_id:      purchase.user_id,
+              email:        user.email,
+              name:         user.name ?? "",
+              sequence_id:  seq.id,
+              subject:      seq.subject,
+              template_key: seq.template_key,
+              product:      purchase.product,
+              amount:       purchase.amount,
+            },
+            run_at: new Date(Date.now() + seq.delay_hours * 60 * 60 * 1000).toISOString(),
+            status: "pending" as const,
+          }))
+        );
+      }
+    }
+  } else {
+    // No product-specific sequence: send generic purchase confirmation
+    const { data: confirmSeq } = await supabase
+      .from("email_sequences")
+      .select("id, subject, template_key")
+      .eq("trigger_event", "PURCHASE_COMPLETED")
+      .eq("delay_hours", 0)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (confirmSeq && user) {
       await supabase.from("jobs").insert({
         type:    "SEND_EMAIL",
         payload: {
@@ -125,7 +154,7 @@ async function fulfillPurchase(
           amount:       purchase.amount,
         },
         run_at: new Date().toISOString(),
-        status: "pending",
+        status: "pending" as const,
       });
     }
   }

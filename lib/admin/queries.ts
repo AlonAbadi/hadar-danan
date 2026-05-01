@@ -133,32 +133,54 @@ function getLeadScore(status: string): number {
 export async function getEmailStats() {
   const supabase = createServerClient();
 
-  const { data } = await supabase
-    .from('email_logs')
-    .select('sequence_id, status');
+  const [logsRes, seqsRes] = await Promise.all([
+    supabase.from('email_logs').select('sequence_id, status'),
+    supabase.from('email_sequences').select('id, template_key, trigger_event, delay_hours'),
+  ]);
+
+  // Build lookup: sequence UUID → { template_key, trigger_event, delay_hours }
+  const seqMeta: Record<string, { templateKey: string; trigger: string; delayHours: number }> = {};
+  for (const s of seqsRes.data ?? []) {
+    seqMeta[s.id] = { templateKey: s.template_key, trigger: s.trigger_event, delayHours: s.delay_hours };
+  }
 
   const sequences: Record<string, {
+    templateKey: string;
+    trigger: string;
+    delayHours: number;
     sent: number;
     opened: number;
     clicked: number;
     bounced: number;
   }> = {};
 
-  data?.forEach((log) => {
-    const seq = log.sequence_id || 'unknown';
-    if (!sequences[seq]) {
-      sequences[seq] = { sent: 0, opened: 0, clicked: 0, bounced: 0 };
+  for (const log of logsRes.data ?? []) {
+    const id = log.sequence_id || 'unknown';
+    if (!sequences[id]) {
+      const meta = seqMeta[id];
+      sequences[id] = {
+        templateKey: meta?.templateKey ?? id,
+        trigger:     meta?.trigger     ?? '',
+        delayHours:  meta?.delayHours  ?? 0,
+        sent: 0, opened: 0, clicked: 0, bounced: 0,
+      };
     }
-    sequences[seq].sent += 1;
-    if (log.status === 'opened') sequences[seq].opened += 1;
-    if (log.status === 'clicked') sequences[seq].clicked += 1;
-  });
+    sequences[id].sent += 1;
+    if (log.status === 'opened')  sequences[id].opened  += 1;
+    if (log.status === 'clicked') sequences[id].clicked += 1;
+  }
 
-  return Object.entries(sequences).map(([id, stats]) => ({
-    sequenceId: id,
-    ...stats,
-    openRate: stats.sent > 0 ? Math.round((stats.opened / stats.sent) * 100) : 0,
-    ctr: stats.opened > 0 ? Math.round((stats.clicked / stats.opened) * 100) : 0,
+  return Object.entries(sequences).map(([id, s]) => ({
+    sequenceId:  id,
+    templateKey: s.templateKey,
+    trigger:     s.trigger,
+    delayHours:  s.delayHours,
+    sent:        s.sent,
+    opened:      s.opened,
+    clicked:     s.clicked,
+    bounced:     s.bounced,
+    openRate: s.sent > 0 ? Math.round((s.opened / s.sent) * 100) : 0,
+    ctr:      s.opened > 0 ? Math.round((s.clicked / s.opened) * 100) : 0,
   }));
 }
 
