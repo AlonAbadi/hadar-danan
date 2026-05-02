@@ -61,9 +61,7 @@ function notifyNewLead(p: NewLeadParams) {
     <p style="margin:4px 0"><strong>סרטון:</strong> ✅ צפה בהדרכה החינמית</p>
   ` : "";
 
-  const to: string[] = isHot
-    ? [ALON_EMAIL, HADAR_EMAIL]
-    : [ALON_EMAIL];
+  const to: string[] = [ALON_EMAIL, HADAR_EMAIL];
 
   new Resend(process.env.RESEND_API_KEY).emails.send({
     from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
