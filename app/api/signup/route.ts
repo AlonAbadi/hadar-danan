@@ -12,6 +12,15 @@ const PRODUCT_NAME: Record<string, string> = {
   strategy_4000:  "פגישת אסטרטגיה (₪4,000)",
   premium_14000:  "יום צילום פרמיום (₪14,000)",
 };
+// quiz_results.recommended_product stores short keys — normalize to full product keys
+const QUIZ_KEY_MAP: Record<string, string> = {
+  challenge:  "challenge_197",
+  workshop:   "workshop_1080",
+  course:     "course_1800",
+  strategy:   "strategy_4000",
+  premium:    "premium_14000",
+  partnership: "partnership",
+};
 const HOT_PRODUCTS = new Set(["strategy_4000", "premium_14000", "partnership"]);
 const HADAR_EMAIL  = "hadard1113@gmail.com";
 const ALON_EMAIL   = "alonabadi9@gmail.com";
@@ -314,6 +323,9 @@ export async function POST(req: NextRequest) {
           : Promise.resolve({ data: null }),
       ]);
 
+      const rawProduct = quizRes.data?.recommended_product ?? null;
+      const quizProduct = rawProduct ? (QUIZ_KEY_MAP[rawProduct] ?? rawProduct) : null;
+
       notifyNewLead({
         userId: user.id,
         name,
@@ -324,8 +336,8 @@ export async function POST(req: NextRequest) {
         utmCampaign: utm_campaign ?? null,
         utmAdset:    utm_adset    ?? null,
         utmAd:       utm_ad       ?? null,
-        quizProduct: quizRes.data?.recommended_product ?? null,
-        quizMatch:   quizRes.data?.match_percent       ?? null,
+        quizProduct,
+        quizMatch:   quizRes.data?.match_percent ?? null,
         watchedVideo: !!videoRes.data,
       });
     }
