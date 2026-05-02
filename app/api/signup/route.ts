@@ -5,6 +5,15 @@ import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendCapiEvent } from "@/lib/meta-capi";
 import { Resend } from "resend";
 
+const PRODUCT_NAME: Record<string, string> = {
+  challenge_197:  "אתגר 7 ימים (₪197)",
+  workshop_1080:  "סדנה יום אחד (₪1,080)",
+  course_1800:    "קורס דיגיטלי (₪1,800)",
+  strategy_4000:  "פגישת אסטרטגיה (₪4,000)",
+  premium_14000:  "יום צילום פרמיום (₪14,000)",
+};
+const HOT_PRODUCTS = new Set(["strategy_4000", "premium_14000"]);
+
 interface NewLeadParams {
   userId: string;
   name: string;
@@ -16,6 +25,9 @@ interface NewLeadParams {
   utmAdset?: string | null;
   utmAd?: string | null;
   abVariant?: string | null;
+  quizProduct?: string | null;
+  quizMatch?: number | null;
+  watchedVideo?: boolean;
 }
 
 function utmRow(label: string, value: string | null | undefined) {
@@ -23,19 +35,37 @@ function utmRow(label: string, value: string | null | undefined) {
 }
 
 function notifyNewLead(p: NewLeadParams) {
-  const adminUrl = `https://www.beegood.online/admin/users/${p.userId}`;
-  const hasUtm = p.utmSource || p.utmMedium || p.utmCampaign || p.utmAdset || p.utmAd;
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  resend.emails.send({
+  const adminUrl  = `https://www.beegood.online/admin/users/${p.userId}`;
+  const hasUtm    = p.utmSource || p.utmMedium || p.utmCampaign || p.utmAdset || p.utmAd;
+  const isHot     = !!p.quizProduct && HOT_PRODUCTS.has(p.quizProduct);
+  const productHe = p.quizProduct ? (PRODUCT_NAME[p.quizProduct] ?? p.quizProduct) : null;
+
+  const subject = isHot
+    ? `🔥 ליד חם: ${p.name} — ${productHe}`
+    : `🎯 ליד חדש: ${p.name}`;
+
+  const quizSection = p.quizProduct ? `
+    <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+    <p style="margin:4px 0;font-size:13px;color:#888">קוויז:</p>
+    <p style="margin:4px 0"><strong>מוצר מומלץ:</strong> <span style="color:${isHot ? "#e05555" : "#C9964A"};font-weight:bold">${productHe}</span></p>
+    ${p.quizMatch ? `<p style="margin:4px 0"><strong>התאמה:</strong> ${p.quizMatch}%</p>` : ""}
+    ${p.watchedVideo ? `<p style="margin:4px 0"><strong>סרטון:</strong> ✅ צפה בהדרכה החינמית</p>` : ""}
+  ` : p.watchedVideo ? `
+    <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+    <p style="margin:4px 0"><strong>סרטון:</strong> ✅ צפה בהדרכה החינמית</p>
+  ` : "";
+
+  new Resend(process.env.RESEND_API_KEY).emails.send({
     from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
     to: "alonabadi9@gmail.com",
-    subject: `🎯 ליד חדש: ${p.name}`,
+    subject,
     html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
-      <h2 style="color:#C9964A;margin-bottom:16px">ליד חדש נכנס 🎯</h2>
+      <h2 style="color:${isHot ? "#e05555" : "#C9964A"};margin-bottom:16px">${isHot ? "🔥 ליד חם!" : "ליד חדש נכנס 🎯"}</h2>
       <p style="margin:4px 0"><strong>שם:</strong> ${p.name}</p>
       <p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${p.email}" style="color:#4285F4">${p.email}</a></p>
       ${p.phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${p.phone}" style="color:#4285F4">${p.phone}</a></p>` : ""}
       ${p.abVariant ? `<p style="margin:4px 0"><strong>וריאנט A/B:</strong> ${p.abVariant}</p>` : ""}
+      ${quizSection}
       ${hasUtm ? `<hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
       <p style="margin:4px 0;font-size:13px;color:#888">מקורות:</p>
       ${utmRow("מקור", p.utmSource)}
@@ -44,7 +74,7 @@ function notifyNewLead(p: NewLeadParams) {
       ${utmRow("אד-סט", p.utmAdset)}
       ${utmRow("אד", p.utmAd)}` : ""}
       <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
-      <a href="${adminUrl}" style="display:inline-block;background:#C9964A;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח פרופיל באדמין ←</a>
+      <a href="${adminUrl}" style="display:inline-block;background:${isHot ? "#e05555" : "#C9964A"};color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח פרופיל באדמין ←</a>
     </div>`,
   }).catch(() => {});
 }
@@ -246,18 +276,44 @@ export async function POST(req: NextRequest) {
     const fbc = req.cookies.get("_fbc")?.value;
     const ua  = req.headers.get("user-agent") ?? undefined;
 
-    if (isNewUser) notifyNewLead({
-      userId: user.id,
-      name,
-      email,
-      phone,
-      utmSource:   utm_source   ?? null,
-      utmMedium:   utm_medium   ?? null,
-      utmCampaign: utm_campaign ?? null,
-      utmAdset:    utm_adset    ?? null,
-      utmAd:       utm_ad       ?? null,
-      abVariant:   ab_variant   ?? null,
-    });
+    if (isNewUser) {
+      // Fetch quiz result + video watch in parallel (fire-and-forget context)
+      const [quizRes, videoRes] = await Promise.all([
+        anonymous_id
+          ? supabase.from("quiz_results")
+              .select("recommended_product, match_percent")
+              .eq("anonymous_id", anonymous_id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        anonymous_id
+          ? supabase.from("video_events")
+              .select("id")
+              .eq("anon_id", anonymous_id)
+              .in("event_type", ["watch_progress", "completed"])
+              .gte("percent_watched", 0.3)
+              .limit(1)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+
+      notifyNewLead({
+        userId: user.id,
+        name,
+        email,
+        phone,
+        utmSource:   utm_source   ?? null,
+        utmMedium:   utm_medium   ?? null,
+        utmCampaign: utm_campaign ?? null,
+        utmAdset:    utm_adset    ?? null,
+        utmAd:       utm_ad       ?? null,
+        abVariant:   ab_variant   ?? null,
+        quizProduct: quizRes.data?.recommended_product ?? null,
+        quizMatch:   quizRes.data?.match_percent       ?? null,
+        watchedVideo: !!videoRes.data,
+      });
+    }
 
     await sendCapiEvent({
       eventName: "Lead",
