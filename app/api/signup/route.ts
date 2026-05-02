@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     let user: { id: string; status: string };
+    let isNewUser = false;
 
     if (existing) {
       // Update mutable fields; preserve status if already advanced beyond 'lead'
@@ -130,6 +131,7 @@ export async function POST(req: NextRequest) {
         .single();
       if (insertErr) throw new Error(insertErr.message);
       user = inserted!;
+      isNewUser = true;
     }
 
     // ── Merge anonymous identity → user ─────────────────────
@@ -216,7 +218,7 @@ export async function POST(req: NextRequest) {
     const fbc = req.cookies.get("_fbc")?.value;
     const ua  = req.headers.get("user-agent") ?? undefined;
 
-    notifyNewLead(name, email, phone, utm_source);
+    if (isNewUser) notifyNewLead(name, email, phone, utm_source);
 
     await sendCapiEvent({
       eventName: "Lead",
