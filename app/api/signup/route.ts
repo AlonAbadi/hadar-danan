@@ -284,20 +284,29 @@ export async function POST(req: NextRequest) {
     const ua  = req.headers.get("user-agent") ?? undefined;
 
     if (isNewUser) {
-      // Fetch quiz result + video watch in parallel (fire-and-forget context)
+      // Collect ALL anonymous_ids linked to this user (quiz may have been taken in a different session)
+      const { data: linkedIdentities } = await supabase
+        .from("identities")
+        .select("anonymous_id")
+        .eq("user_id", user.id);
+      const anonIds = [...new Set([
+        ...(anonymous_id ? [anonymous_id] : []),
+        ...(linkedIdentities?.map((i) => i.anonymous_id) ?? []),
+      ])];
+
       const [quizRes, videoRes] = await Promise.all([
-        anonymous_id
+        anonIds.length
           ? supabase.from("quiz_results")
               .select("recommended_product, match_percent")
-              .eq("anonymous_id", anonymous_id)
+              .in("anonymous_id", anonIds)
               .order("created_at", { ascending: false })
               .limit(1)
               .maybeSingle()
           : Promise.resolve({ data: null }),
-        anonymous_id
+        anonIds.length
           ? supabase.from("video_events")
               .select("id")
-              .eq("anon_id", anonymous_id)
+              .in("anon_id", anonIds)
               .in("event_type", ["watch_progress", "completed"])
               .gte("percent_watched", 0.3)
               .limit(1)
