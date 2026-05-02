@@ -3,7 +3,7 @@
  * All product pages import from here — never hardcode prices or dates.
  */
 
-export const CHALLENGE_DATES = ["2026-04-16", "2026-05-14", "2026-06-11"] as const;
+export const CHALLENGE_DATES = ["2026-04-16", "2026-05-20", "2026-06-11"] as const;
 
 /** Returns the first date in the array that hasn't passed yet (YYYY-MM-DD). */
 export function getNextDate(dates: readonly string[]): string | null {
