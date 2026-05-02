@@ -24,7 +24,6 @@ interface NewLeadParams {
   utmCampaign?: string | null;
   utmAdset?: string | null;
   utmAd?: string | null;
-  abVariant?: string | null;
   quizProduct?: string | null;
   quizMatch?: number | null;
   watchedVideo?: boolean;
@@ -64,7 +63,6 @@ function notifyNewLead(p: NewLeadParams) {
       <p style="margin:4px 0"><strong>שם:</strong> ${p.name}</p>
       <p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${p.email}" style="color:#4285F4">${p.email}</a></p>
       ${p.phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${p.phone}" style="color:#4285F4">${p.phone}</a></p>` : ""}
-      ${p.abVariant ? `<p style="margin:4px 0"><strong>וריאנט A/B:</strong> ${p.abVariant}</p>` : ""}
       ${quizSection}
       ${hasUtm ? `<hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
       <p style="margin:4px 0;font-size:13px;color:#888">מקורות:</p>
@@ -308,7 +306,6 @@ export async function POST(req: NextRequest) {
         utmCampaign: utm_campaign ?? null,
         utmAdset:    utm_adset    ?? null,
         utmAd:       utm_ad       ?? null,
-        abVariant:   ab_variant   ?? null,
         quizProduct: quizRes.data?.recommended_product ?? null,
         quizMatch:   quizRes.data?.match_percent       ?? null,
         watchedVideo: !!videoRes.data,
