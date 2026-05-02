@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { sendCapiEvent } from "@/lib/meta-capi";
+import { Resend } from "resend";
 
 const BodySchema = z.object({
   name:               z.string().min(2),
@@ -96,6 +97,26 @@ export async function POST(req: NextRequest) {
       status: "pending",
     });
   }
+
+  // Admin notification — partnership leads always go to both
+  const partnerWa = phone.replace(/\D/g, "").replace(/^0/, "972");
+  new Resend(process.env.RESEND_API_KEY).emails.send({
+    from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
+    to: ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
+    subject: `🤝 ליד חם — שותפות: ${name}`,
+    html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
+      <h2 style="color:#e05555;margin-bottom:16px">🤝 בקשת שותפות אסטרטגית</h2>
+      <p style="margin:4px 0"><strong>שם:</strong> ${name}</p>
+      <p style="margin:4px 0"><strong>עסק:</strong> ${business}</p>
+      <p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${email}" style="color:#4285F4">${email}</a></p>
+      <p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${phone}" style="color:#4285F4">📞 ${phone}</a> &nbsp;·&nbsp; <a href="https://wa.me/${partnerWa}" style="color:#25D366">💬 WhatsApp</a></p>
+      <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+      <p style="margin:4px 0;font-size:13px;color:#888">האתגר שלהם:</p>
+      <p style="margin:8px 0;color:#333;line-height:1.6">${challenge}</p>
+      <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+      <a href="https://www.beegood.online/admin/users/${user.id}" style="display:inline-block;background:#e05555;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח פרופיל באדמין ←</a>
+    </div>`,
+  }).catch(() => {});
 
   await sendCapiEvent({
     eventName: "Lead",

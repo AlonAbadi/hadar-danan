@@ -17,6 +17,11 @@ const STATUS_LABEL: Record<string, string> = {
 };
 const NOTIFY_ON_TRANSITION = new Set(["high_intent", "buyer", "booked"]);
 
+function phoneLinks(phone: string): string {
+  const wa = phone.replace(/\D/g, "").replace(/^0/, "972");
+  return `<a href="tel:${phone}" style="color:#4285F4">📞 ${phone}</a> &nbsp;·&nbsp; <a href="https://wa.me/${wa}" style="color:#25D366">💬 WhatsApp</a>`;
+}
+
 function notifyStatusChange(
   userId: string,
   name: string,
@@ -26,8 +31,8 @@ function notifyStatusChange(
   newStatus: string,
   triggerEvent: string,
 ) {
-  const emoji = STATUS_EMOJI[newStatus] ?? "📌";
-  const label = STATUS_LABEL[newStatus] ?? newStatus;
+  const emoji    = STATUS_EMOJI[newStatus] ?? "📌";
+  const label    = STATUS_LABEL[newStatus] ?? newStatus;
   const adminUrl = `https://www.beegood.online/admin/users/${userId}`;
   new Resend(process.env.RESEND_API_KEY).emails.send({
     from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
@@ -37,7 +42,7 @@ function notifyStatusChange(
       <h2 style="color:#C9964A;margin-bottom:16px">${emoji} שינוי סטטוס</h2>
       <p style="margin:4px 0"><strong>שם:</strong> ${name}</p>
       <p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${email}" style="color:#4285F4">${email}</a></p>
-      ${phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${phone}" style="color:#4285F4">${phone}</a></p>` : ""}
+      ${phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> ${phoneLinks(phone)}</p>` : ""}
       <p style="margin:4px 0"><strong>סטטוס חדש:</strong> <span style="color:#C9964A;font-weight:bold">${label}</span></p>
       <p style="margin:4px 0"><strong>טריגר:</strong> ${triggerEvent}</p>
       ${utmSource ? `<p style="margin:4px 0"><strong>מקור:</strong> ${utmSource}</p>` : ""}

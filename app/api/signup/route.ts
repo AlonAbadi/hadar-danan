@@ -12,7 +12,14 @@ const PRODUCT_NAME: Record<string, string> = {
   strategy_4000:  "פגישת אסטרטגיה (₪4,000)",
   premium_14000:  "יום צילום פרמיום (₪14,000)",
 };
-const HOT_PRODUCTS = new Set(["strategy_4000", "premium_14000"]);
+const HOT_PRODUCTS = new Set(["strategy_4000", "premium_14000", "partnership"]);
+const HADAR_EMAIL  = "hadard1113@gmail.com";
+const ALON_EMAIL   = "alonabadi9@gmail.com";
+
+function phoneLinks(phone: string): string {
+  const wa = phone.replace(/\D/g, "").replace(/^0/, "972");
+  return `<a href="tel:${phone}" style="color:#4285F4">📞 ${phone}</a> &nbsp;·&nbsp; <a href="https://wa.me/${wa}" style="color:#25D366">💬 WhatsApp</a>`;
+}
 
 interface NewLeadParams {
   userId: string;
@@ -54,15 +61,19 @@ function notifyNewLead(p: NewLeadParams) {
     <p style="margin:4px 0"><strong>סרטון:</strong> ✅ צפה בהדרכה החינמית</p>
   ` : "";
 
+  const to: string[] = isHot
+    ? [ALON_EMAIL, HADAR_EMAIL]
+    : [ALON_EMAIL];
+
   new Resend(process.env.RESEND_API_KEY).emails.send({
     from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
-    to: ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
+    to,
     subject,
     html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
       <h2 style="color:${isHot ? "#e05555" : "#C9964A"};margin-bottom:16px">${isHot ? "🔥 ליד חם!" : "ליד חדש נכנס 🎯"}</h2>
       <p style="margin:4px 0"><strong>שם:</strong> ${p.name}</p>
       <p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${p.email}" style="color:#4285F4">${p.email}</a></p>
-      ${p.phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${p.phone}" style="color:#4285F4">${p.phone}</a></p>` : ""}
+      ${p.phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> ${phoneLinks(p.phone)}</p>` : ""}
       ${quizSection}
       ${hasUtm ? `<hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
       <p style="margin:4px 0;font-size:13px;color:#888">מקורות:</p>

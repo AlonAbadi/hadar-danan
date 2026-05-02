@@ -89,17 +89,22 @@ export async function POST(req: NextRequest) {
 
   console.info("[atelier/apply] New application #" + data.id + "\n" + waMessage);
 
-  // Email notification to Hadar
+  // Email notification to Hadar + Alon
+  const atelierWa = phone.replace(/\D/g, "").replace(/^0/, "972");
   new Resend(process.env.RESEND_API_KEY).emails.send({
     from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
-    to: "alonabadi9@gmail.com",
-    subject: `בקשת atelier חדשה: ${name}`,
-    html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6">
-      <h2 style="color:#C9964A">בקשת atelier חדשה ✨</h2>
-      <p><strong>שם:</strong> ${name}</p>
-      <p><strong>טלפון:</strong> ${phone}</p>
-      <p><strong>אינסטגרם:</strong> ${instagram}</p>
-      <p><strong>סיפור:</strong><br/>${story.replace(/\n/g, "<br/>")}</p>
+    to: ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
+    subject: `✨ ליד חם — atelier: ${name}`,
+    html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
+      <h2 style="color:#e05555;margin-bottom:16px">✨ בקשת atelier חדשה</h2>
+      <p style="margin:4px 0"><strong>שם:</strong> ${name}</p>
+      <p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${phone}" style="color:#4285F4">📞 ${phone}</a> &nbsp;·&nbsp; <a href="https://wa.me/${atelierWa}" style="color:#25D366">💬 WhatsApp</a></p>
+      <p style="margin:4px 0"><strong>אינסטגרם:</strong> <a href="https://instagram.com/${instagram.replace("@","")}" style="color:#4285F4">@${instagram.replace("@","")}</a></p>
+      <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+      <p style="margin:4px 0;font-size:13px;color:#888">הסיפור שלהם:</p>
+      <p style="margin:8px 0;color:#333;line-height:1.6">${story.replace(/\n/g, "<br/>")}</p>
+      <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+      <a href="https://www.beegood.online/admin/atelier/${data.id}" style="display:inline-block;background:#e05555;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח בCRM אטלייר ←</a>
     </div>`,
   }).catch(() => {});
 
