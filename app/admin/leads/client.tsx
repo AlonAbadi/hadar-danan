@@ -6,10 +6,7 @@ import { PageHeader, KpiGrid, KpiCard, SectionCard, DataTable, Badge, PercentBar
 export default function LeadsClient({ initialLeads, quizData }: { initialLeads: any; quizData: any }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [page, setPage] = useState(1);
-
   const { leads, total } = initialLeads;
-  const totalPages = Math.ceil(total / 20);
 
   const filteredLeads = leads.filter((l: any) => {
     if (search) {
@@ -150,35 +147,6 @@ export default function LeadsClient({ initialLeads, quizData }: { initialLeads: 
           emptyMessage="לא נמצאו לידים"
         />
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div style={{
-            padding: '12px 16px',
-            borderTop: '1px solid #e5e7eb',
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '4px',
-          }}>
-            {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: page === i + 1 ? '#fffbf0' : 'transparent',
-                  color: page === i + 1 ? '#c9a84c' : '#6b7280',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontFamily: 'system-ui',
-                }}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-        )}
       </SectionCard>
 
       {/* Quiz distribution */}
