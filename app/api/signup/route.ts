@@ -5,18 +5,46 @@ import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendCapiEvent } from "@/lib/meta-capi";
 import { Resend } from "resend";
 
-function notifyNewLead(name: string, email: string, phone?: string | null, utmSource?: string | null) {
+interface NewLeadParams {
+  userId: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmAdset?: string | null;
+  utmAd?: string | null;
+  abVariant?: string | null;
+}
+
+function utmRow(label: string, value: string | null | undefined) {
+  return value ? `<p style="margin:4px 0"><strong>${label}:</strong> <span style="color:#C9964A">${value}</span></p>` : "";
+}
+
+function notifyNewLead(p: NewLeadParams) {
+  const adminUrl = `https://www.beegood.online/admin/users/${p.userId}`;
+  const hasUtm = p.utmSource || p.utmMedium || p.utmCampaign || p.utmAdset || p.utmAd;
   const resend = new Resend(process.env.RESEND_API_KEY);
   resend.emails.send({
     from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
     to: "alonabadi9@gmail.com",
-    subject: `ליד חדש: ${name}`,
-    html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6">
-      <h2 style="color:#C9964A">ליד חדש נכנס 🎯</h2>
-      <p><strong>שם:</strong> ${name}</p>
-      <p><strong>אימייל:</strong> ${email}</p>
-      ${phone ? `<p><strong>טלפון:</strong> ${phone}</p>` : ""}
-      ${utmSource ? `<p><strong>מקור:</strong> ${utmSource}</p>` : ""}
+    subject: `🎯 ליד חדש: ${p.name}`,
+    html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
+      <h2 style="color:#C9964A;margin-bottom:16px">ליד חדש נכנס 🎯</h2>
+      <p style="margin:4px 0"><strong>שם:</strong> ${p.name}</p>
+      <p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${p.email}" style="color:#4285F4">${p.email}</a></p>
+      ${p.phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${p.phone}" style="color:#4285F4">${p.phone}</a></p>` : ""}
+      ${p.abVariant ? `<p style="margin:4px 0"><strong>וריאנט A/B:</strong> ${p.abVariant}</p>` : ""}
+      ${hasUtm ? `<hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+      <p style="margin:4px 0;font-size:13px;color:#888">מקורות:</p>
+      ${utmRow("מקור", p.utmSource)}
+      ${utmRow("מדיום", p.utmMedium)}
+      ${utmRow("קמפיין", p.utmCampaign)}
+      ${utmRow("אד-סט", p.utmAdset)}
+      ${utmRow("אד", p.utmAd)}` : ""}
+      <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+      <a href="${adminUrl}" style="display:inline-block;background:#C9964A;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח פרופיל באדמין ←</a>
     </div>`,
   }).catch(() => {});
 }
@@ -218,7 +246,18 @@ export async function POST(req: NextRequest) {
     const fbc = req.cookies.get("_fbc")?.value;
     const ua  = req.headers.get("user-agent") ?? undefined;
 
-    if (isNewUser) notifyNewLead(name, email, phone, utm_source);
+    if (isNewUser) notifyNewLead({
+      userId: user.id,
+      name,
+      email,
+      phone,
+      utmSource:   utm_source   ?? null,
+      utmMedium:   utm_medium   ?? null,
+      utmCampaign: utm_campaign ?? null,
+      utmAdset:    utm_adset    ?? null,
+      utmAd:       utm_ad       ?? null,
+      abVariant:   ab_variant   ?? null,
+    });
 
     await sendCapiEvent({
       eventName: "Lead",

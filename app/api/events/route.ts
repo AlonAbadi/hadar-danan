@@ -2,7 +2,50 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { EventSchema } from "@/lib/validations";
 import { rateLimit } from "@/lib/rate-limit";
+import { Resend } from "resend";
 import type { UserStatus } from "@/lib/supabase/types";
+
+const STATUS_EMOJI: Record<string, string> = {
+  high_intent: "🔥",
+  buyer:       "💰",
+  booked:      "📅",
+};
+const STATUS_LABEL: Record<string, string> = {
+  high_intent: "כוונה גבוהה — התחיל checkout",
+  buyer:       "רכישה הושלמה!",
+  booked:      "פגישה נקבעה",
+};
+const NOTIFY_ON_TRANSITION = new Set(["high_intent", "buyer", "booked"]);
+
+function notifyStatusChange(
+  userId: string,
+  name: string,
+  email: string,
+  phone: string | null,
+  utmSource: string | null,
+  newStatus: string,
+  triggerEvent: string,
+) {
+  const emoji = STATUS_EMOJI[newStatus] ?? "📌";
+  const label = STATUS_LABEL[newStatus] ?? newStatus;
+  const adminUrl = `https://www.beegood.online/admin/users/${userId}`;
+  new Resend(process.env.RESEND_API_KEY).emails.send({
+    from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
+    to: "alonabadi9@gmail.com",
+    subject: `${emoji} ${name} — ${label}`,
+    html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
+      <h2 style="color:#C9964A;margin-bottom:16px">${emoji} שינוי סטטוס</h2>
+      <p style="margin:4px 0"><strong>שם:</strong> ${name}</p>
+      <p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${email}" style="color:#4285F4">${email}</a></p>
+      ${phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${phone}" style="color:#4285F4">${phone}</a></p>` : ""}
+      <p style="margin:4px 0"><strong>סטטוס חדש:</strong> <span style="color:#C9964A;font-weight:bold">${label}</span></p>
+      <p style="margin:4px 0"><strong>טריגר:</strong> ${triggerEvent}</p>
+      ${utmSource ? `<p style="margin:4px 0"><strong>מקור:</strong> ${utmSource}</p>` : ""}
+      <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+      <a href="${adminUrl}" style="display:inline-block;background:#C9964A;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח פרופיל באדמין ←</a>
+    </div>`,
+  }).catch(() => {});
+}
 
 // ── State machine ────────────────────────────────────────────
 // Maps event type → { required current status → new status }
@@ -100,14 +143,19 @@ export async function POST(req: NextRequest) {
     // ── State machine transition ─────────────────────────────
     if (resolvedUserId && TRANSITIONS[type]) {
       const { from, to } = TRANSITIONS[type];
-      const query = supabase
+      const baseQuery = supabase
         .from("users")
         .update({ status: to })
-        .eq("id", resolvedUserId);
-      if (Array.isArray(from)) {
-        await query.in("status", from);
-      } else {
-        await query.eq("status", from);
+        .eq("id", resolvedUserId)
+        .select("id, name, email, phone, utm_source");
+      const { data: transitioned } = Array.isArray(from)
+        ? await baseQuery.in("status", from)
+        : await baseQuery.eq("status", from);
+
+      // Notify admin when user reaches a high-value status
+      if (transitioned?.length && NOTIFY_ON_TRANSITION.has(to)) {
+        const u = transitioned[0];
+        notifyStatusChange(u.id, u.name ?? u.email ?? "", u.email, u.phone ?? null, u.utm_source ?? null, to, type);
       }
     }
 
