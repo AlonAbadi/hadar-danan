@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { trackPurchase } from "@/lib/analytics";
+import { trackPurchase, trackProductPurchase } from "@/lib/analytics";
 
 export function PurchaseTracker({ product, value }: { product: string; value: number }) {
   const searchParams = useSearchParams();
@@ -12,6 +12,7 @@ export function PurchaseTracker({ product, value }: { product: string; value: nu
     sessionStorage.setItem(key, "1");
     const eventId = searchParams.get("oid") ?? undefined;
     trackPurchase(product, value, "ILS", eventId);
+    trackProductPurchase(product, value, "ILS", eventId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return null;

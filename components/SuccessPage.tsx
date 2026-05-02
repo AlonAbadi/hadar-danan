@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { trackPurchase, trackProductPurchase } from "@/lib/analytics";
+import { trackPurchase, trackProductPurchase, PRODUCT_CUSTOM_EVENT } from "@/lib/analytics";
 import { getSessionUser } from "@/lib/quiz-session";
 
 interface SuccessPageProps {
@@ -59,7 +59,8 @@ export function SuccessPage({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        eventName:   "Purchase",
+        eventName:        "Purchase",
+        productEventName: PRODUCT_CUSTOM_EVENT[trackingProduct ?? ""],
         eventId,
         email:       user?.email,
         phone:       user?.phone,

@@ -111,7 +111,7 @@ export function trackBooking(eventId?: string) {
   } catch {}
 }
 
-const PRODUCT_CUSTOM_EVENT: Record<string, string> = {
+export const PRODUCT_CUSTOM_EVENT: Record<string, string> = {
   challenge_197:  "PurchaseChallenge",
   workshop_1080:  "PurchaseWorkshop",
   course_1800:    "PurchaseCourse",
