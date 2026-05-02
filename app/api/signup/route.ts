@@ -56,7 +56,7 @@ function notifyNewLead(p: NewLeadParams) {
 
   new Resend(process.env.RESEND_API_KEY).emails.send({
     from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
-    to: "alonabadi9@gmail.com",
+    to: ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
     subject,
     html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
       <h2 style="color:${isHot ? "#e05555" : "#C9964A"};margin-bottom:16px">${isHot ? "🔥 ליד חם!" : "ליד חדש נכנס 🎯"}</h2>
