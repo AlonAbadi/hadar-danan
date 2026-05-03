@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
+import Link from "next/link";
 import { parseVariant, AB_CONTENT } from "@/lib/ab";
 import { createServerClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/landing/PageTracker";
@@ -319,8 +320,9 @@ export default async function LandingPage() {
               5. BINGE CTA
           ══════════════════════════════════════════════════════ */}
           <section style={{ background: "#080C14", padding: "40px 24px" }}>
-            <div
-              className="rounded-2xl"
+            <Link
+              href="/binge"
+              className="rounded-2xl binge-cta-card"
               style={{
                 maxWidth: 480,
                 margin: "0 auto",
@@ -332,23 +334,22 @@ export default async function LandingPage() {
                 flexDirection: "column",
                 alignItems: "center",
                 gap: 12,
-                opacity: 0.55,
                 position: "relative",
+                textDecoration: "none",
+                transition: "border-color 200ms, box-shadow 200ms",
               }}
             >
-              {/* Coming soon sticker */}
-              <div style={{
-                position: "absolute", top: -12, right: 20,
-                background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)",
-                color: "#1A1206", fontWeight: 800, fontSize: 12,
-                padding: "5px 13px", borderRadius: 6,
-                boxShadow: "0 4px 14px rgba(0,0,0,0.45)",
-                transform: "rotate(2deg)",
-                letterSpacing: "0.05em",
-                zIndex: 1,
-              }}>
-                🔜 בקרוב
-              </div>
+              <style>{`
+                .binge-cta-card:hover {
+                  border-color: #C9964A !important;
+                  box-shadow: 0 0 32px rgba(201,150,74,0.15);
+                }
+                .binge-cta-card:hover .binge-cta-btn {
+                  background: linear-gradient(135deg,#E8B94A,#9E7C3A) !important;
+                  color: #080C14 !important;
+                  border-color: transparent !important;
+                }
+              `}</style>
               <Image src="/beegood_logo.png" alt="Bee Good" width={36} height={28} />
               <p style={{
                 margin: 0,
@@ -367,22 +368,23 @@ export default async function LandingPage() {
                 כל התכנים של הדר במקום אחד
               </p>
               <span
+                className="binge-cta-btn"
                 style={{
                   marginTop: 4,
                   display: "inline-block",
-                  border: "1px solid rgba(158,153,144,0.3)",
-                  color: "#9E9990",
+                  border: "1px solid rgba(201,150,74,0.4)",
+                  color: "#C9964A",
                   fontSize: 14,
                   fontWeight: 800,
                   padding: "10px 28px",
                   borderRadius: 24,
                   fontFamily: "var(--font-assistant), Assistant, sans-serif",
-                  cursor: "default",
+                  transition: "all 200ms",
                 }}
               >
-                בקרוב ←
+                כניסה לבינג׳ ←
               </span>
-            </div>
+            </Link>
           </section>
 
           {/* ══════════════════════════════════════════════════════
