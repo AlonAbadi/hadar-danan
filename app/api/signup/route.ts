@@ -235,6 +235,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // ── Track A/B conversion ─────────────────────────────────
+    if (ab_variant === "A" || ab_variant === "B") {
+      const col = ab_variant === "A" ? "conversions_a" : "conversions_b";
+      await supabase.rpc("increment_experiment", {
+        p_name: "landing_headline",
+        p_column: col,
+      }).catch(() => {});
+    }
+
     // ── Enqueue welcome email job (immediate) ────────────────
     // Find the welcome sequence step
     const { data: welcomeSeq } = await supabase
