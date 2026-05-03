@@ -11,6 +11,10 @@ const UNAUTHORIZED = new Response("Unauthorized", {
   headers: { "WWW-Authenticate": 'Basic realm="Admin", charset="UTF-8"' },
 });
 
+function timingSafeEqual(a: string, b: string): boolean {
+  return a.length === b.length && a.split("").every((c, i) => c === b[i]);
+}
+
 function checkBasicAuth(request: NextRequest): boolean {
   const header = request.headers.get("authorization") ?? "";
   if (!header.startsWith("Basic ")) return false;
@@ -27,17 +31,17 @@ function checkBasicAuth(request: NextRequest): boolean {
   const username = decoded.slice(0, colon);
   const password = decoded.slice(colon + 1);
 
-  const validUser = process.env.ADMIN_USERNAME ?? "admin";
-  const validPass = process.env.ADMIN_PASSWORD ?? "";
+  const accounts = [
+    { user: process.env.ADMIN_USERNAME ?? "admin", pass: process.env.ADMIN_PASSWORD ?? "" },
+    { user: process.env.ADMIN_USERNAME_2 ?? "",    pass: process.env.ADMIN_PASSWORD_2 ?? "" },
+  ];
 
-  const userOk =
-    username.length === validUser.length &&
-    username.split("").every((c, i) => c === validUser[i]);
-  const passOk =
-    password.length === validPass.length &&
-    password.split("").every((c, i) => c === validPass[i]);
-
-  return userOk && passOk;
+  return accounts.some(
+    ({ user, pass }) =>
+      user.length > 0 &&
+      timingSafeEqual(username, user) &&
+      timingSafeEqual(password, pass)
+  );
 }
 
 export async function middleware(request: NextRequest) {
