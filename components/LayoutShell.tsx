@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-const FULL_SCREEN_ROUTES = ["/binge"];
+const FULL_SCREEN_ROUTES: string[] = [];
 
 export function LayoutShell({
   nav,

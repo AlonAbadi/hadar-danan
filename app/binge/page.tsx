@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -277,25 +275,22 @@ export default function BingePage() {
 
       {playing && <VimeoModal video={playing} onClose={() => setPlaying(null)} />}
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
+      {/* ── Sub-header ─────────────────────────────────────────────── */}
       <div style={{
-        position: "sticky", top: 0, zIndex: 30,
+        position: "sticky", top: 64, zIndex: 30,
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "0 20px", height: 52,
+        height: 48,
         background: "rgba(13,16,24,0.95)", backdropFilter: "blur(12px)",
         borderBottom: "1px solid #1E2430",
       }}>
-        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-          <Image src="/beegood_logo.png" alt="Bee Good" width={30} height={24} />
-          <span style={{
-            fontSize: 26, fontWeight: 900, letterSpacing: "-0.5px",
-            background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-            fontFamily: "var(--font-assistant), Assistant, sans-serif", lineHeight: 1,
-          }}>
-            בינג׳
-          </span>
-        </Link>
+        <span style={{
+          fontSize: 22, fontWeight: 900, letterSpacing: "-0.5px",
+          background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+          fontFamily: "var(--font-assistant), Assistant, sans-serif", lineHeight: 1,
+        }}>
+          בינג׳
+        </span>
       </div>
 
       {/* ── Featured ───────────────────────────────────────────────── */}
