@@ -383,10 +383,10 @@ export async function getSourceAnalytics(dateRange?: string) {
   });
   Object.entries(uniqueBuyersPerSource).forEach(([src, s]) => { sources[src].buyers = s.size; });
 
-  // Campaign breakdown: group by source → medium → campaign → adset → ad
+  // Campaign breakdown: group by source → medium → campaign → adset → ad → content → term
   const campaignMap: Record<string, {
     leads: number; source: string; medium: string;
-    campaign: string; adset: string; ad: string; content: string;
+    campaign: string; adset: string; ad: string; content: string; term: string;
   }> = {};
   users?.forEach((u) => {
     if (!u.utm_campaign && !u.utm_source) return;
@@ -396,6 +396,8 @@ export async function getSourceAnalytics(dateRange?: string) {
       u.utm_campaign || '',
       u.utm_adset    || '',
       u.utm_ad       || '',
+      u.utm_content  || '',
+      u.utm_term     || '',
     ].join('||');
     if (!campaignMap[key]) campaignMap[key] = {
       leads:    0,
@@ -405,6 +407,7 @@ export async function getSourceAnalytics(dateRange?: string) {
       adset:    u.utm_adset    || '',
       ad:       u.utm_ad       || '',
       content:  u.utm_content  || '',
+      term:     u.utm_term     || '',
     };
     campaignMap[key].leads += 1;
   });

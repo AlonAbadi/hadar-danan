@@ -172,6 +172,7 @@ type CampaignRow = {
   adset: string;
   ad: string;
   content: string;
+  term: string;
   leads: number;
 };
 
@@ -668,18 +669,20 @@ export default function AcquisitionClient({
       {/* ── Campaign Breakdown ──────────────────────────────────────── */}
       {campaigns.length > 0 && (
         <Card style={{ marginBottom: 24 }}>
-          <CardHeader title="ביצועים לפי קמפיין" sub="UTM Campaign Breakdown — מקור ← מדיום ← קמפיין ← אד-סט ← אד" />
+          <CardHeader title="ביצועים לפי קמפיין" sub="UTM Campaign Breakdown — מקור ← מדיום ← קמפיין ← אד-סט ← אד ← קונטנט ← טרם" />
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: C.soft }}>
                   {[
-                    { l: 'מקור',   w: '10%' },
-                    { l: 'מדיום',  w: '10%' },
-                    { l: 'קמפיין', w: '22%' },
-                    { l: 'אד-סט',  w: '22%' },
-                    { l: 'אד (קריאייטיב)', w: '22%' },
-                    { l: 'לידים',  w: '7%'  },
+                    { l: 'מקור',              w: '9%'  },
+                    { l: 'מדיום',             w: '9%'  },
+                    { l: 'קמפיין',            w: '18%' },
+                    { l: 'אד-סט',             w: '14%' },
+                    { l: 'אד (קריאייטיב)',    w: '14%' },
+                    { l: 'content',           w: '14%' },
+                    { l: 'term',              w: '14%' },
+                    { l: 'לידים',             w: '6%'  },
                   ].map((h, i) => (
                     <th key={i} style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, width: h.w }}>
                       {h.l}
@@ -700,6 +703,8 @@ export default function AcquisitionClient({
                         : <span style={{ color: C.muted }}>—</span>
                       }
                     </td>
+                    <td style={{ padding: '10px 16px', color: C.muted, fontSize: 12 }}>{c.content || '—'}</td>
+                    <td style={{ padding: '10px 16px', color: C.muted, fontSize: 12 }}>{c.term || '—'}</td>
                     <td style={{ padding: '10px 16px', textAlign: 'right', fontWeight: 700, color: C.fg, fontFamily: 'system-ui' }}>{c.leads}</td>
                   </tr>
                 ))}
