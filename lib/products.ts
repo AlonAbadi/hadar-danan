@@ -6,8 +6,15 @@
 export const CHALLENGE_DATES = ["2026-04-16", "2026-05-20", "2026-06-11"] as const;
 
 /** Returns the first date in the array that hasn't passed yet (YYYY-MM-DD). */
+function localDateStr(d = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
 export function getNextDate(dates: readonly string[]): string | null {
-  const today = new Date().toISOString().split("T")[0];
+  const today = localDateStr();
   return dates.find((d) => d >= today) ?? null;
 }
 
@@ -18,12 +25,16 @@ function lastThursdayOfMonth(year: number, month: number): string {
   const lastDay = new Date(year, month, 0); // day 0 of next month = last day of this month
   const daysBack = (lastDay.getDay() + 3) % 7; // days to subtract to reach Thursday
   lastDay.setDate(lastDay.getDate() - daysBack);
-  return lastDay.toISOString().slice(0, 10);
+  // Use local date parts — toISOString() converts to UTC and shifts the date in UTC+X timezones
+  const y = lastDay.getFullYear();
+  const m = String(lastDay.getMonth() + 1).padStart(2, "0");
+  const d = String(lastDay.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 /** Returns the next `count` workshop dates (last Thursday of each month) from today. */
 export function getWorkshopDates(count = 12): string[] {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateStr();
   const dates: string[] = [];
   const now = new Date();
   let year  = now.getFullYear();
