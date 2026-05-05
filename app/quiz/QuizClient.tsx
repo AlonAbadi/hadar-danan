@@ -1028,6 +1028,10 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
         <div style={{ margin: "12px 16px 0", ...fadeUp(0.7, resultReady) }}>
           {PRODUCT_VIMEO[winner.id] ? (
             <div style={{ maxWidth: 220, margin: "0 auto" }}>
+              <div style={{ marginBottom: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>{winner.name}</div>
+                <div style={{ fontSize: 14, color: C.gold, fontWeight: 700, marginTop: 4 }}>{winner.price}</div>
+              </div>
               <div style={{ position: "relative", paddingTop: "177.78%", borderRadius: 14, overflow: "hidden", background: "#141820" }}>
                 <iframe
                   src={`https://player.vimeo.com/video/${PRODUCT_VIMEO[winner.id]}?badge=0&autopause=0&loop=0&player_id=0&app_id=58479&cc=0`}
