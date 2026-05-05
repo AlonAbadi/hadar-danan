@@ -34,7 +34,53 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Server error' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, updated_count: (data ?? []).length });
+    const updatedCount = (data ?? []).length;
+
+    // Enqueue WhatsApp quiz-result message (fire & forget)
+    if (process.env.UCHAT_API_KEY && updatedCount > 0) {
+      const WA_LABELS: Record<string, string> = {
+        challenge:   'אתגר 7 ימים',
+        workshop:    'סדנה יום אחד',
+        course:      'קורס דיגיטלי',
+        strategy:    'פגישת אסטרטגיה',
+        premium:     'יום צילום פרמיום',
+        partnership: 'שותפות אסטרטגית',
+      };
+
+      try {
+        const [{ data: qr }, { data: user }] = await Promise.all([
+          supabase.from('quiz_results')
+            .select('recommended_product')
+            .eq('user_id', user_id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase.from('users')
+            .select('name, phone')
+            .eq('id', user_id)
+            .single(),
+        ]);
+
+        const label = qr?.recommended_product ? WA_LABELS[qr.recommended_product] : null;
+        if (label && user?.phone) {
+          const firstName = user.name?.trim().split(/\s+/)[0] ?? '';
+          await supabase.from('jobs').insert({
+            type:    'SEND_WHATSAPP',
+            payload: {
+              user_id,
+              phone:           user.phone,
+              name:            firstName,
+              template_name:   'hadar_quiz_result',
+              template_params: [firstName, label],
+            },
+            run_at: new Date().toISOString(),
+            status: 'pending',
+          });
+        }
+      } catch {}
+    }
+
+    return NextResponse.json({ success: true, updated_count: updatedCount });
   } catch (err) {
     const supabase = createServerClient();
     await supabase.from('error_logs').insert({
