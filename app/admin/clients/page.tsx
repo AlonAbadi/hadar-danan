@@ -14,7 +14,7 @@ export default async function ClientsPage() {
   // Get all completed purchases
   const { data: purchases } = await supabase
     .from("purchases")
-    .select("user_id, amount_paid, product, created_at")
+    .select("user_id, amount_paid, amount, product, created_at")
     .eq("status", "completed")
     .order("created_at", { ascending: false });
 
@@ -31,7 +31,7 @@ export default async function ClientsPage() {
   for (const p of purchases) {
     if (!p.user_id) continue;
     if (!userMap[p.user_id]) userMap[p.user_id] = { total: 0, products: [], lastPurchase: p.created_at, count: 0 };
-    userMap[p.user_id].total += p.amount_paid ?? 0;
+    userMap[p.user_id].total += p.amount_paid ?? p.amount ?? 0;
     userMap[p.user_id].count += 1;
     const label = PRODUCT_LABELS[p.product as string] ?? p.product;
     if (!userMap[p.user_id].products.includes(label)) userMap[p.user_id].products.push(label);
