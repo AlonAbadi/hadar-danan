@@ -67,26 +67,8 @@ export async function handleSendWhatsapp(
   const to = normalizePhone(phone);
   if (!to) throw new Error(`Cannot normalize phone to E.164: ${phone}`);
 
-  // Fetch template namespace from UChat template list
-  // UChat docs spell it "whatapp" (missing s) — try both
-  let namespace: string | null = null;
-  for (const path of ["whatsapp-template", "whatapp-template"]) {
-    const listRes = await fetch(`https://www.uchat.com.au/api/${path}/list`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
-    const text = await listRes.text();
-    if (!text.trim().startsWith("<")) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const templates = JSON.parse(text) as any[];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const tmpl = Array.isArray(templates) ? templates.find((t: any) => t.name === template_name) : null;
-        namespace = tmpl?.namespace ?? null;
-        if (namespace) break;
-      } catch {}
-    }
-  }
-  if (!namespace) throw new Error(`Template "${template_name}" namespace not found — check /api/whatsapp-template/list`);
+  // UChat Cloud API does not require a namespace — pass empty string
+  const namespace = "";
 
   // Build params as flat object: BODY_{{1}}, BODY_{{2}}, ...
   const params: Record<string, string> = {};
