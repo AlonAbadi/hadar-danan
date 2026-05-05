@@ -67,8 +67,8 @@ export async function handleSendWhatsapp(
   const to = normalizePhone(phone);
   if (!to) throw new Error(`Cannot normalize phone to E.164: ${phone}`);
 
-  // UChat Cloud API does not require a namespace — pass empty string
-  const namespace = "";
+  // WABA-level namespace (same for all templates in this account)
+  const namespace = "a01b08e8_1852_422e_bba2_25f0d05dcafa";
 
   // Build params as flat object: BODY_{{1}}, BODY_{{2}}, ...
   const params: Record<string, string> = {};
