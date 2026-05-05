@@ -176,28 +176,29 @@ export async function POST(req: NextRequest) {
     "InvoiceLines.IsVatFree":    "false",
   });
 
-  // Fire InitiateCheckout to Meta CAPI — fires when user lands on Cardcom payment page
-  await sendCapiEvent({
-    eventName:  "InitiateCheckout",
-    eventId:    `ic_${purchase.id}`,
-    userData:   {
-      email:            userRow?.email   ?? undefined,
-      phone:            userRow?.phone   ?? undefined,
-      fbp:              req.cookies.get("_fbp")?.value,
-      fbc:              req.cookies.get("_fbc")?.value,
-      clientUserAgent:  req.headers.get("user-agent") ?? undefined,
-    },
-    customData: { value: amount, currency: "ILS", contentName: product, contentIds: [product] },
-  });
-
-  const cardcomRes = await fetch(
-    "https://secure.cardcom.solutions/Interface/LowProfile.aspx",
-    {
-      method:  "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body:    params.toString(),
-    }
-  );
+  // Fire CAPI + Cardcom in parallel — both are independent external calls
+  const [, cardcomRes] = await Promise.all([
+    sendCapiEvent({
+      eventName:  "InitiateCheckout",
+      eventId:    `ic_${purchase.id}`,
+      userData:   {
+        email:            userRow?.email   ?? undefined,
+        phone:            userRow?.phone   ?? undefined,
+        fbp:              req.cookies.get("_fbp")?.value,
+        fbc:              req.cookies.get("_fbc")?.value,
+        clientUserAgent:  req.headers.get("user-agent") ?? undefined,
+      },
+      customData: { value: amount, currency: "ILS", contentName: product, contentIds: [product] },
+    }),
+    fetch(
+      "https://secure.cardcom.solutions/Interface/LowProfile.aspx",
+      {
+        method:  "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body:    params.toString(),
+      }
+    ),
+  ]);
 
   const text         = await cardcomRes.text();
   const resultParams = new URLSearchParams(text);
