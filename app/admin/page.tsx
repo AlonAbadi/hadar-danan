@@ -50,15 +50,16 @@ async function getHubKPIs() {
 }
 
 const NAV_CARDS = [
+  { title: 'לקוחות',          desc: 'היסטוריה, רכישות, צפיות, מיילים',        href: '/admin/clients',     group: 'ראשי',     icon: '⭐' },
+  { title: 'ניהול לידים CRM', desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',   href: '/admin/crm',         group: 'ראשי',     icon: '👥' },
+  { title: 'רכישת לקוחות',   desc: 'מקורות תנועה, CAC, ROAS',                href: '/admin/acquisition', group: 'ראשי',     icon: '🎯' },
   { title: 'סקירה כללית',     desc: 'הכנסות, גרפים, conversion funnel',        href: '/admin/sales',       group: 'מכירות',   icon: '📊' },
   { title: 'פאנל מכירות',     desc: 'מסלול רכישה, שלבים, נטישות',             href: '/admin/funnel',      group: 'מכירות',   icon: '🌊' },
   { title: 'מוצרים',          desc: 'ניהול מוצרים, מחירים, רכישות',           href: '/admin/products',    group: 'מכירות',   icon: '📦' },
   { title: 'פגישות',          desc: 'ניהול פגישות אסטרטגיה',                  href: '/admin/bookings',    group: 'מכירות',   icon: '📅' },
   { title: 'קופונים ודילים',  desc: 'קודי הנחה, מותגים, תאריכי תפוגה',        href: '/admin/deals',       group: 'מכירות',   icon: '🎟️' },
-  { title: 'ניהול לידים CRM', desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',   href: '/admin/crm',         group: 'לידים',    icon: '👥' },
   { title: 'atelier — לידים', desc: 'טפסי הצטרפות, ניתוח AI, אונבורדינג',     href: '/admin/atelier',     group: 'לידים',    icon: '🎨' },
   { title: 'אימיילים',        desc: 'רצפי אימייל, open rate, שליחה ידנית',   href: '/admin/email',       group: 'שיווק',    icon: '📧' },
-  { title: 'רכישת לקוחות',   desc: 'מקורות תנועה, CAC, ROAS',                href: '/admin/acquisition', group: 'שיווק',    icon: '🎯' },
   { title: 'A/B Testing',     desc: 'ניסויים פעילים, תוצאות',                 href: '/admin/abtesting',   group: 'שיווק',    icon: '🧪' },
   { title: 'שיעור במתנה',     desc: 'נרשמים, צפייה, השלמה, המרה למוצרים',   href: '/admin/training',    group: 'תוכן',     icon: '🎓' },
   { title: 'וידאו ואנליטיקס', desc: 'מעקב צפיות, milestones, נשירה',          href: '/admin/video',       group: 'תוכן',     icon: '🎬' },
@@ -67,7 +68,7 @@ const NAV_CARDS = [
   { title: 'לוגים ומערכת',    desc: 'שגיאות, אירועים, מעקב מערכת',           href: '/admin/system',      group: 'מערכת',    icon: '⚙️' },
 ];
 
-const GROUPS = ['מכירות', 'לידים', 'שיווק', 'תוכן', 'קהילה', 'אנליטיקה', 'מערכת'];
+const GROUPS = ['ראשי', 'מכירות', 'לידים', 'שיווק', 'תוכן', 'קהילה', 'אנליטיקה', 'מערכת'];
 
 function relTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
