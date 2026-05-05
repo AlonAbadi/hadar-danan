@@ -1091,7 +1091,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
         <p style={{ textAlign: "center", fontSize: 13, color: C.textMuted, padding: "8px 16px 0", ...fadeIn(0.9, resultReady) }}>
           {winner.id === "course" && "אפשר לשלם עד 4 תשלומים ללא ריבית"}
           {winner.id === "free_training" && "בלי כרטיס אשראי, בלי התחייבות"}
-          {winner.id === "strategy" && "שיחה ראשונית ללא עלות"}
+          {winner.id === "strategy" && "4 מקומות בחודש בלבד"}
         </p>
 
         {/* Soft consent ask */}
