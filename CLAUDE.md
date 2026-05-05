@@ -189,8 +189,9 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 027 | `027_orchestration.sql` | Applied — pipeline_status, generated_client_ts, orchestration_log on atelier_applications |
 | 028 | `028_user_status_archive.sql` | Applied — `handled` + `not_relevant` values added to user_status enum |
 | 029 | `029_utm_extended.sql` | Applied — utm_medium, utm_content, utm_term columns on users |
+| 030 | `030_whatsapp_logs.sql` | **Run in Supabase** — whatsapp_logs table for dedup |
 
-### Tables (19 total)
+### Tables (20 total)
 
 | Table | Purpose |
 |---|---|
@@ -494,6 +495,7 @@ MEMBERS_SECRET=
 WHATSAPP_PHONE=972539566961       # set in Vercel
 NEXT_PUBLIC_WHATSAPP_PHONE=972539566961  # set in Vercel
 WHATSAPP_GROUP_URL=
+UCHAT_API_KEY=                    # UChat Settings → API Keys → create new key for beegood
 ```
 
 ---
@@ -508,7 +510,7 @@ WHATSAPP_GROUP_URL=
 - **Vercel cron** (`vercel.json`): `0 22 * * *` — daily at 22:00 UTC
 - **External cron:** cron-job.org hits `GET /api/cron/jobs` every 5 min with `Authorization: Bearer <CRON_SECRET>`
 
-**Current status (May 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-029) applied. A/B test `landing_headline` running live. Course content player built. Challenge content (days 0–7 live, day 8 PLACEHOLDER). Hive members area live. Email sending live from `noreply@beegood.online` with click-based open tracking. Full UTM chain (source/medium/campaign/adset/ad) tracked and displayed in admin. Atelier influencer program live with full AI onboarding pipeline + orchestrator. Deals CRM live.
+**Current status (May 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-029) applied. Migration 030 (whatsapp_logs) written — pending Supabase run. WhatsApp cart-abandon infrastructure built (SEND_WHATSAPP job type) — pending template approval + env vars in Vercel. A/B test `landing_headline` running live. Course content player built. Challenge content (days 0–7 live, day 8 PLACEHOLDER). Hive members area live. Email sending live from `noreply@beegood.online` with click-based open tracking. Full UTM chain (source/medium/campaign/adset/ad) tracked and displayed in admin. Atelier influencer program live with full AI onboarding pipeline + orchestrator. Deals CRM live.
 
 ---
 
@@ -594,7 +596,7 @@ WHATSAPP_GROUP_URL=
 | Challenge day 8 video | Content production | Replace PLACEHOLDER in `lib/challenge-config.ts` day 8 entry |
 | Real hive_content rows | Content | Insert rows into `hive_content` table via Supabase dashboard |
 | Hive AI matching system | Future feature | Designed as "בקרוב" placeholder on /hive page |
-| WhatsApp API for cart abandonment | Provider selection needed | Choose from: Twilio, Green API, Infobip, or Meta direct. Connect to `CHECKOUT_STARTED` event sequence. |
+| WhatsApp cart-abandon templates | Require UChat template approval | 1) Run migration 030 in Supabase. 2) Create API key in UChat → Settings → API Keys → save as `UCHAT_API_KEY` in Vercel. 3) Create templates `hadar_cart_1h` + `hadar_cart_24h` in UChat → Templates → WhatsApp Templates (both take `{{1}}` = first name, language `he`). |
 
 ---
 
@@ -736,7 +738,7 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
-- Next migration number: 030
+- Next migration number: 031
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes

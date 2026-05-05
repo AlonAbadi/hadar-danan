@@ -18,6 +18,10 @@ import {
   handleNotifyAdmin,
   type NotifyAdminPayload,
 } from "@/lib/jobs/handlers/notify-admin";
+import {
+  handleSendWhatsapp,
+  type SendWhatsappPayload,
+} from "@/lib/jobs/handlers/send-whatsapp";
 
 const MAX_ATTEMPTS = 3;
 
@@ -212,6 +216,10 @@ async function executeJob(
 
     case "NOTIFY_ADMIN":
       await handleNotifyAdmin(payload as unknown as NotifyAdminPayload);
+      break;
+
+    case "SEND_WHATSAPP":
+      await handleSendWhatsapp(payload as SendWhatsappPayload, supabase);
       break;
 
     default:

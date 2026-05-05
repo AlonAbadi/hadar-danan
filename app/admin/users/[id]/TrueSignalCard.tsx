@@ -385,20 +385,22 @@ export function TrueSignalCard({ userId }: { userId: string }) {
             border: "1px solid #2C323E", padding: "14px 16px",
             marginTop: 10, position: "relative",
           }}>
-            <button
-              onClick={copyWhatsApp}
-              style={{
-                position: "absolute", top: 10, left: 12,
-                background: copied ? "rgba(74,222,128,0.15)" : "rgba(44,50,62,0.8)",
-                color: copied ? "#4ade80" : "#9E9990",
-                border: `1px solid ${copied ? "rgba(74,222,128,0.4)" : "#2C323E"}`,
-                borderRadius: 6, padding: "4px 10px",
-                fontSize: 11, fontWeight: 700, cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              {copied ? "הועתק ✓" : "העתק"}
-            </button>
+            {/* action buttons */}
+            <div style={{ position: "absolute", top: 10, left: 12, display: "flex", gap: 6 }}>
+              <button
+                onClick={copyWhatsApp}
+                style={{
+                  background: copied ? "rgba(74,222,128,0.15)" : "rgba(44,50,62,0.8)",
+                  color: copied ? "#4ade80" : "#9E9990",
+                  border: `1px solid ${copied ? "rgba(74,222,128,0.4)" : "#2C323E"}`,
+                  borderRadius: 6, padding: "4px 10px",
+                  fontSize: 11, fontWeight: 700, cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                {copied ? "הועתק ✓" : "העתק"}
+              </button>
+            </div>
             <p style={{
               fontSize: 14, lineHeight: 1.8, color: "#EDE9E1",
               margin: 0, paddingLeft: 70, whiteSpace: "pre-wrap",
