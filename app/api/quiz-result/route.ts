@@ -119,6 +119,39 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Enqueue WhatsApp quiz-result message when user is already known (logged-in flow)
+    if (!error && user_id && process.env.UCHAT_API_KEY) {
+      const WA_LABELS: Record<string, string> = {
+        challenge:   'אתגר 7 ימים',
+        workshop:    'סדנה יום אחד',
+        course:      'קורס דיגיטלי',
+        strategy:    'פגישת אסטרטגיה',
+        premium:     'יום צילום פרמיום',
+        partnership: 'שותפות אסטרטגית',
+      };
+      const label = WA_LABELS[recommended_product];
+      if (label) {
+        try {
+          const { data: user } = await supabase.from('users').select('name, phone').eq('id', user_id).single();
+          if (user?.phone) {
+            const firstName = user.name?.trim().split(/\s+/)[0] ?? '';
+            await supabase.from('jobs').insert({
+              type:    'SEND_WHATSAPP',
+              payload: {
+                user_id,
+                phone:           user.phone,
+                name:            firstName,
+                template_name:   'hadar_quiz_result',
+                template_params: [firstName, label],
+              },
+              run_at: new Date().toISOString(),
+              status: 'pending',
+            });
+          }
+        } catch {}
+      }
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     const supabase = createServerClient();
