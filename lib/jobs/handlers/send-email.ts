@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { renderTemplate, FROM_NAME } from "@/lib/email/templates";
+import { generateMagicLink, magicLinkFooterHtml } from "@/lib/email/magic-link";
 import type { Database } from "@/lib/supabase/types";
 
 const FROM_ADDRESS = process.env.NEXT_PUBLIC_FROM_EMAIL ?? "onboarding@resend.dev";
@@ -37,6 +38,11 @@ export async function handleSendEmail(
   const rendered = renderTemplate(template_key, { ...payload, name, email });
   if (!rendered) throw new Error(`Unknown template key: ${template_key}`);
 
+  // ── Inject magic link footer ──────────────────────────────
+  const magicLink = await generateMagicLink(email, supabase);
+  const footer = magicLinkFooterHtml(magicLink);
+  rendered.html = rendered.html.replace("</body>", `${footer}</body>`);
+
   // ── Wrap all links through click tracker ─────────────────
   // Click = confirmed open. More reliable than pixel for text-only emails.
   const uid = encodeURIComponent(user_id);
@@ -48,7 +54,8 @@ export async function handleSendEmail(
       if (
         href.includes("/unsubscribe") ||
         href.includes("wa.me") ||
-        href.startsWith("mailto:")
+        href.startsWith("mailto:") ||
+        href.includes("supabase.co/auth")
       ) {
         return `href="${href}"`;
       }
