@@ -166,7 +166,7 @@ const GoogleLogo = () => (
 );
 
 // ── Component ─────────────────────────────────────────────────
-type Phase = "idle" | "loading" | "found_lead";
+type Phase = "idle" | "loading" | "found_lead" | "magic_sending" | "magic_sent";
 type ErrorType = "wrong_password" | "unverified" | "rate_limit" | "network" | "auth_failed" | "generic";
 
 interface LeadInfo {
@@ -284,34 +284,79 @@ function LoginPageInner() {
     await supabase.auth.resend({ type: "signup", email });
   }
 
+  // ── Found-lead: magic link sent ───────────────────────────
+  if (phase === "magic_sent") {
+    return (
+      <div style={S.page} dir="rtl" lang="he">
+        <div style={S.card}>
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(109,184,109,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6db86d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div style={S.title}>הקישור בדרך</div>
+            <p style={{ ...S.subtitle, margin: "8px 0 0" }}>
+              שלחנו קישור כניסה ל-<br />
+              <strong style={{ color: "#E8B94A" }}>{email}</strong>
+            </p>
+            <p style={{ fontSize: 12, color: "#9E9990", marginTop: 16, lineHeight: 1.6 }}>
+              הקישור בתוקף ל-24 שעות. לא קיבלת? בדקי גם ב-spam.
+            </p>
+            <button
+              onClick={() => { setPhase("found_lead"); }}
+              style={{ marginTop: 16, background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 13, fontFamily: "Assistant, sans-serif", textDecoration: "underline" }}
+            >
+              לא הגיע? שלחי שוב
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Found-lead screen ──────────────────────────────────────
-  if (phase === "found_lead" && leadInfo) {
+  if ((phase === "found_lead" || phase === "magic_sending") && leadInfo) {
     const joined = new Date(leadInfo.created_at).toLocaleDateString("he-IL");
+
+    async function handleMagicLink() {
+      setPhase("magic_sending");
+      const res = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setPhase("magic_sent");
+      } else {
+        setPhase("found_lead");
+      }
+    }
+
     return (
       <div style={S.page} dir="rtl" lang="he">
         <div style={S.card}>
           <div style={S.title}>מצאנו אותך</div>
           <div style={S.subtitle}>
-            {leadInfo.name ? `שלום ${leadInfo.name},` : ""} אתה אצלנו מ-{joined}.
-            כדי להיכנס, צור סיסמה או המשך עם Google.
+            {leadInfo.name ? `שלום ${leadInfo.name},` : ""} את אצלנו מ-{joined}.
+            כדי להיכנס, שלחי לעצמך קישור ישיר או המשיכי עם Google.
           </div>
           <button
-            style={S.googleBtn}
-            onClick={handleGoogle}
+            style={{ ...S.submitBtn, opacity: phase === "magic_sending" ? 0.6 : 1, cursor: phase === "magic_sending" ? "not-allowed" : "pointer" }}
+            onClick={handleMagicLink}
+            disabled={phase === "magic_sending"}
           >
-            <GoogleLogo />
-            המשך עם Google
+            {phase === "magic_sending" ? "שולח..." : "שלחי לי קישור כניסה"}
           </button>
           <div style={S.divider}>
             <div style={S.dividerLine} />
             <span style={S.dividerText}>או</span>
             <div style={S.dividerLine} />
           </div>
-          <Link href={`/signup?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirect)}`}
-            style={{ ...S.submitBtn, display: "block", textAlign: "center", textDecoration: "none", lineHeight: "1.4" }}
-          >
-            צור סיסמה לחשבון שלך
-          </Link>
+          <button style={S.googleBtn} onClick={handleGoogle}>
+            <GoogleLogo />
+            המשך עם Google
+          </button>
           <div style={S.bottomLink}>
             <button
               onClick={() => { setPhase("idle"); setErrorType(null); setWrongCount(0); setLeadInfo(null); }}

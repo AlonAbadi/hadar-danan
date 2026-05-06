@@ -11,7 +11,7 @@ export async function generateMagicLink(
     type: "magiclink",
     email,
     options: {
-      redirectTo: `${APP_URL}/account`,
+      redirectTo: `${APP_URL}/access`,
     },
   });
 
