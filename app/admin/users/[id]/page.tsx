@@ -346,12 +346,13 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const supabase = createServerClient();
   const { id } = await params;
 
-  const [userRes, eventsRes, purchasesRes, notesRes, quizRes] = await Promise.all([
+  const [userRes, eventsRes, purchasesRes, notesRes, quizRes, inboundRes] = await Promise.all([
     supabase.from("users").select("*").eq("id", id).single(),
     supabase.from("events").select("*").eq("user_id", id).order("created_at", { ascending: false }).limit(100),
     supabase.from("purchases").select("*").eq("user_id", id).order("created_at", { ascending: false }),
     safeFrom(supabase, "notes").select("id, author, content, created_at").eq("user_id", id).order("created_at", { ascending: false }),
     supabase.from("quiz_results").select("recommended_product, second_product, match_percent, scores, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(1),
+    safeFrom(supabase, "whatsapp_inbound").select("id, type, content, sentiment, score_delta, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(20),
   ]);
 
   const user = userRes.data;
@@ -368,10 +369,15 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const notes       = notesRes.data       ?? [];
   const quizResult  = (quizRes.data ?? [])[0] ?? null;
   const videoEvents = (videoEventsRes.data ?? []) as VideoEventRow[];
+  const inboundSignals = (inboundRes.data ?? []) as Array<{
+    id: string; type: string; content: string | null;
+    sentiment: string; score_delta: number; created_at: string;
+  }>;
 
   // ── Derived ──────────────────────────────────────────────
   const initials  = getInitials(user.name, user.email);
-  const leadScore = LEAD_SCORE[user.status] ?? 0;
+  const waBonus   = inboundSignals.reduce((sum, s) => sum + (s.score_delta ?? 0), 0);
+  const leadScore = Math.min(100, (LEAD_SCORE[user.status] ?? 0) + waBonus);
   const sc        = scoreColor(leadScore);
   const ss        = STATUS_STYLE[user.status] ?? STATUS_STYLE.lead;
 
@@ -712,6 +718,61 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               </Card>
             </div>
           </div>
+
+          {/* ── WhatsApp Inbound Signals ──────────────────────────────── */}
+          {inboundSignals.length > 0 && (
+            <Card
+              title="תגובות WhatsApp"
+              badge={
+                <span style={{
+                  fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 4,
+                  background: "rgba(76,175,130,0.15)", color: "#4CAF82",
+                }}>
+                  {inboundSignals.length}
+                </span>
+              }
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {inboundSignals.map((sig) => {
+                  const isPositive = sig.sentiment === "positive";
+                  const isNegative = sig.sentiment === "negative";
+                  const dotColor   = isPositive ? "#4CAF82" : isNegative ? "#E05555" : "#9E9990";
+                  const deltaLabel = sig.score_delta > 0 ? `+${sig.score_delta}` : `${sig.score_delta}`;
+                  const typeLabel  = sig.type === "reaction" ? "תגובה" : "הודעה";
+                  return (
+                    <div key={sig.id} style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "8px 0", borderBottom: "1px solid rgba(44,50,62,0.4)",
+                    }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
+                      <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{sig.content ?? "-"}</span>
+                      <span style={{ fontSize: 12, color: "#9E9990", flexShrink: 0 }}>{typeLabel}</span>
+                      <span style={{ fontSize: 12, color: "#EDE9E1", flex: 1 }}>
+                        {new Date(sig.created_at).toLocaleString("he-IL", {
+                          day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+                        })}
+                      </span>
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, padding: "2px 6px", borderRadius: 4,
+                        background: isPositive ? "rgba(76,175,130,0.15)" : isNegative ? "rgba(224,85,85,0.15)" : "rgba(158,153,144,0.15)",
+                        color: dotColor, flexShrink: 0,
+                      }}>
+                        {deltaLabel}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              {waBonus !== 0 && (
+                <div style={{ marginTop: 12, fontSize: 12, color: "#9E9990", textAlign: "left" }}>
+                  סה"כ תוספת ניקוד מ-WhatsApp:{" "}
+                  <span style={{ color: waBonus > 0 ? "#4CAF82" : "#E05555", fontWeight: 700 }}>
+                    {waBonus > 0 ? `+${waBonus}` : waBonus}
+                  </span>
+                </div>
+              )}
+            </Card>
+          )}
 
           {/* ── Automations ───────────────────────────────────────────── */}
           <Card
