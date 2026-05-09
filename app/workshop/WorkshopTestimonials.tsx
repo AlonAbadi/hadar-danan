@@ -87,6 +87,7 @@ export function WorkshopTestimonials() {
             background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.3)",
             color: "#C9964A", fontSize: 20, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
+            WebkitTapHighlightColor: "transparent", WebkitAppearance: "none",
           }}
         >‹</button>
 
@@ -129,6 +130,8 @@ export function WorkshopTestimonials() {
                   boxShadow: hovered === t.id
                     ? "0 8px 28px rgba(0,0,0,0.7)"
                     : "0 2px 8px rgba(0,0,0,0.4)",
+                  WebkitTapHighlightColor: "transparent",
+                  WebkitAppearance: "none",
                 }}
               >
                 {/* Thumbnail */}
@@ -209,6 +212,7 @@ export function WorkshopTestimonials() {
             background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.3)",
             color: "#C9964A", fontSize: 20, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
+            WebkitTapHighlightColor: "transparent", WebkitAppearance: "none",
           }}
         >›</button>
       </div>

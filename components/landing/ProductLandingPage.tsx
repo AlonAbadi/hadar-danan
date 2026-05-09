@@ -786,7 +786,14 @@ export default function ProductLandingPage({
             <div className="lp-eyebrow">הוכחה</div>
             <h2 className="lp-section-title">מה אומרים לאחר ההצטרפות</h2>
             {proofStats && proofStats.length > 0 && (
-              <div className="proof-grid">
+              <div
+                className="proof-grid"
+                style={{
+                  gridTemplateColumns: `repeat(${proofStats.length}, 1fr)`,
+                  maxWidth: proofStats.length < 3 ? `${proofStats.length * 280}px` : undefined,
+                  margin: proofStats.length < 3 ? "0 auto 16px" : undefined,
+                }}
+              >
                 {proofStats.map((s, i) => (
                   <div key={i} className="proof-card">
                     <div className="proof-val">{s.val}</div>
