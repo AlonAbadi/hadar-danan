@@ -165,7 +165,14 @@ export default function ChallengePlayer({
               )}
             </div>
 
-            {isDone ? (
+            {locked ? (
+              <span style={{
+                flexShrink: 0, fontSize: 18,
+                lineHeight: 1,
+              }}>
+                🔒
+              </span>
+            ) : isDone ? (
               <span style={{
                 flexShrink: 0, fontSize: 11, fontWeight: 700,
                 padding: "3px 8px", borderRadius: 12,
