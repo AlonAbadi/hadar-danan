@@ -2,17 +2,18 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { parseVariant, AB_CONTENT } from "@/lib/ab";
 import { createServerClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/landing/PageTracker";
-import { CarouselWithDots } from "@/components/landing/CarouselWithDots";
-import { PhilosophySection } from "@/components/landing/PhilosophySection";
-import { StatsSection } from "@/components/landing/StatsSection";
 import { ProductsSection } from "@/components/ProductsSection";
-import HomeStickyBar from "@/components/home/HomeStickyBar";
-import SocialProofStrip from "@/components/SocialProofStrip";
-import { WorkshopTestimonials } from "@/app/workshop/WorkshopTestimonials";
-import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Star, Sparkles } from "lucide-react";
+import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Sparkles } from "lucide-react";
+
+const StatsSection       = dynamic(() => import("@/components/landing/StatsSection").then(m => ({ default: m.StatsSection })));
+const SocialProofStrip   = dynamic(() => import("@/components/SocialProofStrip"));
+const PhilosophySection  = dynamic(() => import("@/components/landing/PhilosophySection").then(m => ({ default: m.PhilosophySection })));
+const WorkshopTestimonials = dynamic(() => import("@/app/workshop/WorkshopTestimonials").then(m => ({ default: m.WorkshopTestimonials })));
+const HomeStickyBar      = dynamic(() => import("@/components/home/HomeStickyBar"), { ssr: false });
 
 export const metadata: Metadata = {
   title: "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
@@ -320,71 +321,145 @@ export default async function LandingPage() {
           {/* ══════════════════════════════════════════════════════
               5. BINGE CTA
           ══════════════════════════════════════════════════════ */}
-          <section style={{ background: "#080C14", padding: "40px 24px" }}>
-            <Link
-              href="/binge"
-              className="rounded-2xl binge-cta-card"
-              style={{
-                maxWidth: 480,
-                margin: "0 auto",
-                background: "#141820",
-                border: "1px solid #2C323E",
-                padding: "32px 28px",
-                textAlign: "center",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 12,
-                position: "relative",
-                textDecoration: "none",
-                transition: "border-color 200ms, box-shadow 200ms",
-              }}
-            >
-              <style>{`
-                .binge-cta-card:hover {
-                  border-color: #C9964A !important;
-                  box-shadow: 0 0 32px rgba(201,150,74,0.15);
-                }
-                .binge-cta-card:hover .binge-cta-btn {
-                  background: linear-gradient(135deg,#E8B94A,#9E7C3A) !important;
-                  color: #080C14 !important;
-                  border-color: transparent !important;
-                }
-              `}</style>
-              <Image src="/beegood_logo.png" alt="Bee Good" width={36} height={28} />
-              <p style={{
-                margin: 0,
-                fontSize: 30,
-                fontWeight: 700,
-                lineHeight: 1,
-                background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                fontFamily: "var(--font-assistant), Assistant, sans-serif",
-              }}>
-                בינג׳
-              </p>
-              <p style={{ margin: 0, fontSize: 15, color: "#9E9990", fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
-                כל התכנים של הדר במקום אחד
-              </p>
-              <span
-                className="binge-cta-btn"
-                style={{
-                  marginTop: 4,
-                  display: "inline-block",
-                  border: "1px solid rgba(201,150,74,0.4)",
-                  color: "#C9964A",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  padding: "10px 28px",
-                  borderRadius: 24,
+          <section style={{ background: "#080C14", padding: "48px 20px" }}>
+            <style>{`
+              .binge-card {
+                display: block;
+                max-width: 860px;
+                margin: 0 auto;
+                border-radius: 20px;
+                overflow: hidden;
+                text-decoration: none;
+                border: 1px solid rgba(201,150,74,0.2);
+                box-shadow: 0 8px 48px rgba(0,0,0,0.45);
+                transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+                background: #0A0E18;
+                position: relative;
+              }
+              .binge-card:hover {
+                border-color: rgba(201,150,74,0.55);
+                box-shadow: 0 0 80px rgba(201,150,74,0.14), 0 24px 64px rgba(0,0,0,0.55);
+                transform: translateY(-3px);
+              }
+              .binge-card:hover .binge-thumb-img {
+                transform: scale(1.07);
+              }
+              .binge-card:hover .binge-play {
+                background: rgba(201,150,74,0.92) !important;
+                color: #080C14 !important;
+              }
+              .binge-card:hover .binge-enter-btn {
+                background: linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A) !important;
+                color: #080C14 !important;
+                border-color: transparent !important;
+              }
+              .binge-thumb-img {
+                transition: transform 0.5s ease;
+              }
+              .binge-play {
+                transition: background 0.2s ease, color 0.2s ease;
+              }
+            `}</style>
+            <Link href="/binge" className="binge-card">
+
+              {/* ── Thumbnail strip ─────────────────────────── */}
+              <div style={{ display: "flex", height: 220, position: "relative", overflow: "hidden" }}>
+                {[
+                  { src: "https://i.vimeocdn.com/video/2153151890-8e7a70d2ddab4ee1e253e06a69db11e3c8575e13cfb18ee1b2d6631e4f29815d-d_640x360?&r=pad&region=us", mobileHide: false },
+                  { src: "https://i.vimeocdn.com/video/2153148315-1a053bf671a4af54ec57a9a43271b6db0acdcae7066c0564da52f081c77544f0-d_640x360?&r=pad&region=us", mobileHide: false },
+                  { src: "https://i.vimeocdn.com/video/2153147710-6fe1753b3439622ea3d24b037d1bb5e0ebc718eac24b56464a0551af09372d23-d_640x360?&r=pad&region=us", mobileHide: true },
+                  { src: "https://i.vimeocdn.com/video/2153153525-777573a5f129e2ecea1e05fbf334c1ccbe937d959ac0d72f3a5036ea076ca655-d_640x360?&r=pad&region=us", mobileHide: true },
+                  { src: "https://i.vimeocdn.com/video/2153153469-e3d1f9a5ba2e65cb2c4b116246fd505e0324e7844f77e3c4f4d46cce682a3373-d_640x360?&r=pad&region=us", mobileHide: true },
+                ].map(({ src, mobileHide }, i) => (
+                  <div key={i} className={mobileHide ? "hidden md:block" : ""} style={{ flex: 1, overflow: "hidden", position: "relative", borderLeft: i > 0 ? "1px solid rgba(0,0,0,0.4)" : "none" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={src}
+                      alt=""
+                      loading="lazy"
+                      className="binge-thumb-img"
+                      style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }}
+                    />
+                    {/* Per-thumb dark overlay */}
+                    <div style={{ position: "absolute", inset: 0, background: "rgba(8,12,20,0.28)" }} />
+                    {/* Play icon */}
+                    <div className="binge-play" style={{
+                      position: "absolute", top: "50%", left: "50%",
+                      transform: "translate(-50%,-50%)",
+                      width: 32, height: 32, borderRadius: "50%",
+                      background: "rgba(255,255,255,0.18)",
+                      backdropFilter: "blur(4px)",
+                      border: "1px solid rgba(255,255,255,0.22)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 11, color: "#fff",
+                    }}>▶</div>
+                  </div>
+                ))}
+                {/* Heavy bottom gradient to blend into card body */}
+                <div style={{
+                  position: "absolute", bottom: 0, left: 0, right: 0, height: "65%",
+                  background: "linear-gradient(to top, #0A0E18 0%, rgba(10,14,24,0.7) 50%, transparent 100%)",
+                  pointerEvents: "none",
+                }} />
+                {/* Badge top-right */}
+                <div style={{
+                  position: "absolute", top: 14, right: 16,
+                  background: "rgba(10,14,24,0.82)",
+                  border: "1px solid rgba(201,150,74,0.35)",
+                  color: "#C9964A", fontSize: 11, fontWeight: 700,
+                  padding: "4px 12px", borderRadius: 20,
+                  backdropFilter: "blur(6px)",
                   fontFamily: "var(--font-assistant), Assistant, sans-serif",
-                  transition: "all 200ms",
-                }}
-              >
-                כניסה לבינג׳ ←
-              </span>
+                }}>80+ סרטונים</div>
+              </div>
+
+              {/* ── Card body ───────────────────────────────── */}
+              <div style={{ padding: "18px 24px 26px", direction: "rtl" }}>
+                {/* Title row */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <p style={{
+                    margin: 0, fontSize: 32, fontWeight: 900, lineHeight: 1,
+                    background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+                    fontFamily: "var(--font-assistant), Assistant, sans-serif",
+                  }}>בינג׳</p>
+                  <span style={{ fontSize: 13, color: "#6B7480", fontWeight: 400, fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
+                    — ספריית התוכן של הדר דנן
+                  </span>
+                </div>
+
+                {/* Description */}
+                <p style={{
+                  margin: "0 0 14px", fontSize: 14, color: "#9E9990", lineHeight: 1.6,
+                  fontFamily: "var(--font-assistant), Assistant, sans-serif",
+                }}>
+                  רילס, תהליכים מהסדנה, עדויות לקוחות — הכל במקום אחד, בחינם.
+                </p>
+
+                {/* Category chips */}
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
+                  {["רילס של הדר", "תהליכים מלאים", "לקוחות מדברים"].map(tag => (
+                    <span key={tag} style={{
+                      background: "rgba(44,50,62,0.7)", color: "#9E9990",
+                      fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 12,
+                      fontFamily: "var(--font-assistant), Assistant, sans-serif",
+                    }}>{tag}</span>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <span className="binge-enter-btn" style={{
+                  display: "inline-block",
+                  border: "1px solid rgba(201,150,74,0.45)",
+                  color: "#C9964A",
+                  fontSize: 14, fontWeight: 800,
+                  padding: "11px 30px", borderRadius: 24,
+                  fontFamily: "var(--font-assistant), Assistant, sans-serif",
+                  transition: "all 0.2s ease",
+                }}>
+                  ▶ כניסה לבינג׳
+                </span>
+              </div>
             </Link>
           </section>
 
