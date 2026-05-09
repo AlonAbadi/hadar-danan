@@ -71,6 +71,9 @@ export default function RootLayout({
       className={`${assistant.variable} h-full`}
     >
       <meta name="facebook-domain-verification" content="remqmo1rv45m6h18tkiu3r15mki3bs" />
+      {/* LCP preload — mobile hero image must be discovered before JS runs */}
+      <link rel="preload" as="image" href="/_next/image?url=%2Fhadar1.jpg&w=828&q=80" media="(max-width: 767px)" fetchPriority="high" />
+      <link rel="preload" as="image" href="/_next/image?url=%2Fhadar1.jpg&w=1080&q=80" media="(min-width: 768px)" fetchPriority="high" />
       {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
         <>
           <Script id="meta-pixel" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('set','autoConfig',false,'${process.env.NEXT_PUBLIC_META_PIXEL_ID}');fbq('init','${process.env.NEXT_PUBLIC_META_PIXEL_ID}');fbq('track','PageView');`}</Script>

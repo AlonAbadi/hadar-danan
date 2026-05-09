@@ -597,13 +597,13 @@ export default async function LandingPage() {
             </nav>
 
             {/* Legal */}
-            <div className="flex flex-col items-center gap-2 text-xs" style={{ color: "rgba(158,153,144,0.5)" }}>
+            <div className="flex flex-col items-center gap-2 text-xs" style={{ color: "#9E9990" }}>
               <div className="flex gap-4">
                 <a href="/privacy" className="hover:text-white transition">מדיניות פרטיות</a>
                 <a href="/terms" className="hover:text-white transition">תנאי שימוש</a>
                 <a href="/accessibility" className="hover:text-white transition">הצהרת נגישות</a>
               </div>
-              <p className="font-medium" style={{ color: "rgba(158,153,144,0.6)" }}>אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{unicodeBidi:"embed"}}>TrueSignal©</span></p>
+              <p className="font-medium">אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{unicodeBidi:"embed"}}>TrueSignal©</span></p>
               <p>© 2026 הדר דנן בע״מ | ח.פ. 516791555 · כל הזכויות שמורות</p>
               <p>החילזון 5, רמת גן | 053-9566961</p>
               <p className="mt-1">
