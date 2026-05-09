@@ -367,11 +367,11 @@ export default async function LandingPage() {
                 {[
                   { src: "https://i.vimeocdn.com/video/2153151890-8e7a70d2ddab4ee1e253e06a69db11e3c8575e13cfb18ee1b2d6631e4f29815d-d_640x360?&r=pad&region=us", mobileHide: false },
                   { src: "https://i.vimeocdn.com/video/2153148315-1a053bf671a4af54ec57a9a43271b6db0acdcae7066c0564da52f081c77544f0-d_640x360?&r=pad&region=us", mobileHide: false },
-                  { src: "https://i.vimeocdn.com/video/2153147710-6fe1753b3439622ea3d24b037d1bb5e0ebc718eac24b56464a0551af09372d23-d_640x360?&r=pad&region=us", mobileHide: true },
+                  { src: "https://i.vimeocdn.com/video/2153147710-6fe1753b3439622ea3d24b037d1bb5e0ebc718eac24b56464a0551af09372d23-d_640x360?&r=pad&region=us", mobileHide: false },
                   { src: "https://i.vimeocdn.com/video/2153153525-777573a5f129e2ecea1e05fbf334c1ccbe937d959ac0d72f3a5036ea076ca655-d_640x360?&r=pad&region=us", mobileHide: true },
                   { src: "https://i.vimeocdn.com/video/2153153469-e3d1f9a5ba2e65cb2c4b116246fd505e0324e7844f77e3c4f4d46cce682a3373-d_640x360?&r=pad&region=us", mobileHide: true },
                 ].map(({ src, mobileHide }, i) => (
-                  <div key={i} className={mobileHide ? "hidden md:block" : ""} style={{ flex: 1, overflow: "hidden", position: "relative", borderLeft: i > 0 ? "1px solid rgba(0,0,0,0.4)" : "none" }}>
+                  <div key={i} className={mobileHide ? "hidden md:flex" : ""} style={{ flex: 1, overflow: "hidden", position: "relative", borderLeft: i > 0 ? "1px solid rgba(0,0,0,0.4)" : "none" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={src}
