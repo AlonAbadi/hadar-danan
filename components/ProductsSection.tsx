@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
-  CHALLENGE_DATES,
   WORKSHOP_DATES,
   getNextDate,
   formatHebrew,
@@ -75,8 +74,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
     });
   }
 
-  const nextChallenge = getNextDate(CHALLENGE_DATES);
-  const nextWorkshop  = getNextDate(WORKSHOP_DATES);
+  const nextWorkshop = getNextDate(WORKSHOP_DATES);
 
   // ─── Product definitions ─────────────────────────────────────────────────
 
@@ -108,8 +106,8 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       name:     "אתגר 7 ימים",
       tag:      null,
       outcome:  "7 סרטונים שמשנים את הדרך",
-      scarcity: nextChallenge ? `מחזור הבא: ${formatHebrew(nextChallenge)}` : "On-demand",
-      scIcon:   "📅",
+      scarcity: "התחל עכשיו — גישה מידית",
+      scIcon:   "⚡",
       ctas: [{ label: "להצטרף לאתגר ←", href: "/challenge", primary: true }],
       bullets: [
         "7 ימים, 7 שיעורים — כל יום שלב אחד בסיסטם",
