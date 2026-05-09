@@ -13,7 +13,7 @@ const StatsSection       = dynamic(() => import("@/components/landing/StatsSecti
 const SocialProofStrip   = dynamic(() => import("@/components/SocialProofStrip"));
 const PhilosophySection  = dynamic(() => import("@/components/landing/PhilosophySection").then(m => ({ default: m.PhilosophySection })));
 const WorkshopTestimonials = dynamic(() => import("@/app/workshop/WorkshopTestimonials").then(m => ({ default: m.WorkshopTestimonials })));
-const HomeStickyBar      = dynamic(() => import("@/components/home/HomeStickyBar"), { ssr: false });
+const HomeStickyBar      = dynamic(() => import("@/components/home/HomeStickyBar"));
 
 export const metadata: Metadata = {
   title: "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
