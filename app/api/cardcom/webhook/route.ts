@@ -94,7 +94,10 @@ async function fulfillPurchase(
     .eq("id", purchase.user_id)
     .single();
 
-  // Create challenge enrollment immediately on purchase
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.beegood.online";
+
+  // Create challenge enrollment + auth account immediately on purchase
+  let challengeMagicLink: string | null = null;
   if (purchase.product === "challenge_197") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
@@ -103,6 +106,22 @@ async function fulfillPurchase(
         { user_id: purchase.user_id, enrolled_at: new Date().toISOString(), current_day: 0 },
         { onConflict: "user_id", ignoreDuplicates: true }
       );
+
+    // Generate a magic link so the buyer can access challenge content without
+    // manually creating a password. generateLink auto-creates the auth.users row
+    // if the email isn't registered yet.
+    if (user?.email) {
+      try {
+        const { data: linkData } = await supabase.auth.admin.generateLink({
+          type:    "magiclink",
+          email:   user.email,
+          options: { redirectTo: `${appUrl}/challenge/content` },
+        });
+        challengeMagicLink = linkData?.properties?.action_link ?? null;
+      } catch {
+        // non-fatal — email will fall back to static link
+      }
+    }
   }
 
   if (productEvent) {
@@ -134,6 +153,10 @@ async function fulfillPurchase(
               template_key: seq.template_key,
               product:      purchase.product,
               amount:       purchase.amount,
+              // Inject magic link only into the immediate challenge access email
+              ...(challengeMagicLink && seq.delay_hours === 0
+                ? { access_link: challengeMagicLink }
+                : {}),
             },
             run_at: new Date(Date.now() + seq.delay_hours * 60 * 60 * 1000).toISOString(),
             status: "pending" as const,

@@ -297,7 +297,9 @@ function followup72h(ctx: EmailTemplateContext): RenderedEmail {
 // ─────────────────────────────────────────────────────────────
 
 function challengeAccess(ctx: EmailTemplateContext): RenderedEmail {
-  const firstName = ctx.name.split(" ")[0];
+  const firstName  = ctx.name.split(" ")[0];
+  const accessLink = (ctx.access_link as string | undefined) ?? `${APP_URL}/challenge/content`;
+  const isMagic    = accessLink.includes("token=") || accessLink.includes("supabase");
   return {
     subject: `${firstName} — הגישה שלך לאתגר מוכנה`,
     html: base(`
@@ -317,7 +319,8 @@ function challengeAccess(ctx: EmailTemplateContext): RenderedEmail {
         <p>לא צופים מראש.</p>
         <p>יום 0 פתוח עכשיו — התחל שם.</p>
         <p>הוא מסביר את כל השיטה לפני שמתחילים.</p>
-        <a class="cta" href="${APP_URL}/challenge/content">לאתגר ←</a>
+        <a class="cta" href="${accessLink}">כניסה לאתגר ←</a>
+        ${isMagic ? `<p style="font-size:13px;color:#6b7280;margin-top:8px;">הלינק מחבר אותך ישירות — ללא צורך בסיסמה. תקף ל-24 שעות.</p>` : ""}
         <p>מחר ייפתח יום 1.</p>
         <p>אנחנו מחכים לראות אותך מתחיל.</p>
         <p>צוות beegood</p>
