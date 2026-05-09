@@ -21,6 +21,7 @@ export default function ChallengePlayer({
   const [reported, setReported]         = useState<Set<number>>(new Set(completedDayNumbers));
   const [marking, setMarking]           = useState(false);
   const [lockedPopup, setLockedPopup]   = useState(false);
+  const [expanded, setExpanded]         = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Day 8 unlocks once day 7 is accessible
@@ -317,6 +318,9 @@ export default function ChallengePlayer({
     );
   };
 
+  // collapse expanded panel when switching days
+  useEffect(() => { setExpanded(false); }, [activeDay]);
+
   // ── Day meta + description ───────────────────────────────
   const DayMeta = () => (
     <>
@@ -348,15 +352,63 @@ export default function ChallengePlayer({
 
       <div style={{
         background: "#0D1219", border: "1px solid #2C323E",
-        borderRadius: 10, padding: "14px 16px", marginBottom: 16,
-        textAlign: "right",
+        borderRadius: 10, marginBottom: 16, textAlign: "right", overflow: "hidden",
       }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1", marginBottom: 6 }}>
-          {dayData.title}
+        {/* Header row */}
+        <div style={{ padding: "14px 16px" }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1", marginBottom: 6 }}>
+            {dayData.title}
+          </div>
+          <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.7 }}>
+            {dayData.description}
+          </div>
         </div>
-        <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.7 }}>
-          {dayData.description}
-        </div>
+
+        {/* Expand button — only if bullets exist */}
+        {dayData.bullets.length > 0 && (
+          <>
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              style={{
+                width: "100%", padding: "10px 16px",
+                background: expanded ? "rgba(201,150,74,0.06)" : "transparent",
+                border: "none", borderTop: "1px solid #1D2430",
+                color: "#C9964A", fontSize: 12, fontWeight: 700,
+                cursor: "pointer", textAlign: "right", direction: "rtl",
+                fontFamily: "Assistant, sans-serif",
+                display: "flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <span style={{
+                display: "inline-block",
+                transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s",
+                fontSize: 10,
+              }}>▼</span>
+              {expanded ? "הסתר" : "עוד על הסרטון הזה"}
+            </button>
+
+            {expanded && (
+              <div style={{
+                padding: "4px 16px 16px",
+                borderTop: "1px solid #1D2430",
+              }}>
+                <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                  {dayData.bullets.map((b, i) => (
+                    <li key={i} style={{
+                      display: "flex", gap: 10, alignItems: "flex-start",
+                      padding: "8px 0",
+                      borderBottom: i < dayData.bullets.length - 1 ? "1px solid #1D2430" : "none",
+                    }}>
+                      <span style={{ color: "#C9964A", fontSize: 14, flexShrink: 0, marginTop: 2 }}>◆</span>
+                      <span style={{ fontSize: 13, color: "#EDE9E1", lineHeight: 1.7 }}>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Show next-day unlock hint for unlocked, incomplete days */}
