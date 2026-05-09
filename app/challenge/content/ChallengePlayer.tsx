@@ -385,7 +385,7 @@ export default function ChallengePlayer({
                 transition: "transform 0.2s",
                 fontSize: 10,
               }}>▼</span>
-              {expanded ? "הסתר" : "עוד על הסרטון הזה"}
+              {expanded ? "הסתר" : "נקודות מפתח"}
             </button>
 
             {expanded && (
