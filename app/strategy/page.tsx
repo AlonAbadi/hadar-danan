@@ -53,7 +53,7 @@ export default async function StrategyPage() {
         definitionBlock="אסטרטגיה עסקית קודמת לאסטרטגיה שיווקית. לפני שמחליטים מה לפרסם — צריך לדעת לאן העסק הולך. הפגישה היא חשיבה יצירתית בלייב: לא שיעורי בית, לא תבנית גנרית. אנחנו יודעים מה אנחנו רוצים — אבל לא תמיד מה אנחנו צריכים. הדר עוזרת למצוא את ההבדל."
         stats={[
           { val: "90",    label: "דקות ריכוז" },
-          { val: "4",     label: "מקומות בחודש" },
+          { val: "36",    label: "מקומות בשנה" },
           { val: "24h",   label: "תיאום תוך" },
         ]}
 
@@ -129,7 +129,7 @@ export default async function StrategyPage() {
         faqs={STRATEGY_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
         finalTitle="שמור/י את המקום שלך"
-        finalSub="4 מקומות בחודש. מי שפועל ראשון - מקבל מועד."
+        finalSub="36 מקומות בשנה. מי שפועל ראשון - מקבל מועד."
 
         ctaSlot={
           <Link
