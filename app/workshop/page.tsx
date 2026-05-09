@@ -2,6 +2,7 @@ import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { WorkshopCTA } from "./WorkshopCTA";
 import { NextWorkshopBadge } from "./NextWorkshopBadge";
+import { WorkshopTestimonials } from "./WorkshopTestimonials";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
@@ -101,11 +102,8 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
           { val: "40%",  label: "גידול ממוצע בהכנסה" },
           { val: "97%",  label: "ממליצים" },
         ]}
-        testimonials={[
-          { text: "יצאתי מהסדנה עם מערכת שיווק שלמה. תוך שבועיים הכנסה גדלה ב-40%.", author: "רחל א.", role: "מאמנת אישית" },
-          { text: "השקעתי יום אחד וחסכתי חצי שנה של ניסוי וטעייה. הכי שווה שהשקעתי בעסק.", author: "עמית ס.", role: "מעצב פנים" },
-          { text: "באתי לסדנה כדי לשווק את העסק ומצאתי את עצמי במסע ותהליך פנימי מטורף.", author: "משתתפת", role: "⭐⭐⭐⭐⭐" },
-        ]}
+        testimonials={[]}
+        proofSlot={<WorkshopTestimonials />}
 
         anchorItems={[
           { val: "5,000+",    label: "ייעוץ שיווקי פרטי (3 מפגשים)" },

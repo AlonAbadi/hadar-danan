@@ -52,6 +52,7 @@ export interface ProductLandingPageProps {
 
   proofStats?:  { val: string; label: string }[];
   testimonials: { text: React.ReactNode; author: string; role: string; photoSrc?: string }[];
+  proofSlot?:   React.ReactNode;
   logoSrcs?:    string[];
 
   anchorItems?: { val: string; label: string }[];
@@ -521,7 +522,7 @@ export default function ProductLandingPage({
   solutionTitle, solutionDesc, solutionItems,
   notForItems, forItems,
   whoName, whoRole, whoText, whoPhotoSrc,
-  proofStats, testimonials, logoSrcs,
+  proofStats, testimonials, proofSlot, logoSrcs,
   anchorItems, anchorTotal,
   questions = [], resultMessages = {}, hideMicroCommitment,
   creditNote,
@@ -778,7 +779,7 @@ export default function ProductLandingPage({
       </div>
 
       {/* ── Proof / Testimonials ────────────────────────────────── */}
-      {testimonials.length > 0 && (
+      {(testimonials.length > 0 || proofSlot) && (
         <>
           <div className="lp-divider" />
           <div className="lp-section">
@@ -794,24 +795,26 @@ export default function ProductLandingPage({
                 ))}
               </div>
             )}
-            <div className="testimonials-list">
-              {testimonials.map((t, i) => (
-                <div key={i} className="testimonial-card">
-                  <Stars />
-                  <div className="testimonial-text">&quot;{t.text}&quot;</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {t.photoSrc
-                      ? <img src={t.photoSrc} alt={t.author} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                      : <PhotoPlaceholder size={34} />
-                    }
-                    <div>
-                      <div className="testimonial-author">{t.author}</div>
-                      <div className="testimonial-role">{t.role}</div>
+            {proofSlot ? proofSlot : (
+              <div className="testimonials-list">
+                {testimonials.map((t, i) => (
+                  <div key={i} className="testimonial-card">
+                    <Stars />
+                    <div className="testimonial-text">&quot;{t.text}&quot;</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {t.photoSrc
+                        ? <img src={t.photoSrc} alt={t.author} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                        : <PhotoPlaceholder size={34} />
+                      }
+                      <div>
+                        <div className="testimonial-author">{t.author}</div>
+                        <div className="testimonial-role">{t.role}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
             {logoSrcs && logoSrcs.length > 0 && (
               <div style={{ marginTop: 24, display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', opacity: 0.45 }}>
                 {logoSrcs.map((src, i) => (
