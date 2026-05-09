@@ -94,6 +94,17 @@ async function fulfillPurchase(
     .eq("id", purchase.user_id)
     .single();
 
+  // Create challenge enrollment immediately on purchase
+  if (purchase.product === "challenge_197") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("challenge_enrollments")
+      .upsert(
+        { user_id: purchase.user_id, enrolled_at: new Date().toISOString(), current_day: 0 },
+        { onConflict: "user_id", ignoreDuplicates: true }
+      );
+  }
+
   if (productEvent) {
     // Insert product-specific event into event log
     await supabase.from("events").insert({

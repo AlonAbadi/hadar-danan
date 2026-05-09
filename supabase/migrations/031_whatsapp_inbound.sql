@@ -15,7 +15,6 @@ CREATE TABLE whatsapp_inbound (
 
 CREATE INDEX ON whatsapp_inbound (user_id);
 CREATE INDEX ON whatsapp_inbound (phone);
--- Prevent double-processing the same event (same subscriber + same content within 10 seconds)
 CREATE UNIQUE INDEX whatsapp_inbound_dedup
-  ON whatsapp_inbound (uchat_uid, type, content, date_trunc('minute', created_at))
+  ON whatsapp_inbound (uchat_uid, type, content)
   WHERE uchat_uid IS NOT NULL;

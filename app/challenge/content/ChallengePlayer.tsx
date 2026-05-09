@@ -5,98 +5,78 @@ import Link from "next/link";
 import { CHALLENGE_DAYS, dayVideoId, isSessionDay } from "@/lib/challenge-config";
 
 interface Props {
-  completedVideoIds: string[];
-  unlockedDays: number[];
-  nextUnlockDate: string | null; // YYYY-MM-DD
-  userEmail: string;
-}
-
-function fmtCountdown(ms: number): string {
-  if (ms <= 0) return "00:00:00";
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
-}
-
-/** ms until midnight Israel time on the given YYYY-MM-DD date */
-function msUntilIsraelDate(dateStr: string): number {
-  // Midnight Israel time = 21:00 UTC previous day (UTC+3, no DST adjustment needed for estimate)
-  // More precisely: parse the date as start of day in Asia/Jerusalem
-  const target = new Date(`${dateStr}T00:00:00+03:00`);
-  return target.getTime() - Date.now();
+  enrollmentId:       string;
+  maxUnlockedDay:     number;   // current_day from enrollment — the next day to work on
+  completedDayNumbers: number[];
 }
 
 export default function ChallengePlayer({
-  completedVideoIds,
-  unlockedDays,
-  nextUnlockDate,
-  userEmail,
+  enrollmentId,
+  maxUnlockedDay: initialMaxUnlocked,
+  completedDayNumbers,
 }: Props) {
-  const initialCompleted = new Set(completedVideoIds);
-
-  // Start on first uncompleted unlocked day
-  const firstActive =
-    unlockedDays.find((d) => !initialCompleted.has(dayVideoId(d))) ??
-    unlockedDays[unlockedDays.length - 1] ??
-    0;
-
-  const [activeDay, setActiveDay]   = useState(firstActive);
-  const [completed, setCompleted]   = useState<Set<string>>(initialCompleted);
-  const [reported, setReported]     = useState<Set<string>>(initialCompleted);
-  const [countdown, setCountdown]   = useState<string>("");
+  const [maxUnlocked, setMaxUnlocked] = useState(initialMaxUnlocked);
+  const [completed, setCompleted]     = useState<Set<number>>(new Set(completedDayNumbers));
+  const [reported, setReported]       = useState<Set<number>>(new Set(completedDayNumbers));
+  const [marking, setMarking]         = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const dayData    = CHALLENGE_DAYS.find((d) => d.day === activeDay)!;
-  const isLocked   = !unlockedDays.includes(activeDay);
-  const isPlaceholder = dayData.videoId === "PLACEHOLDER";
-  const dayDone    = completed.has(dayVideoId(activeDay));
-  const completedCount = completed.size;
-  const totalDays  = CHALLENGE_DAYS.length;
-  const progressPct = (completedCount / totalDays) * 100;
-  const is916      = dayData.aspectRatio === "9:16";
-
-  // Day 8 is locked until day 7 is completed
-  const day8Locked = activeDay === 8 && !completed.has(dayVideoId(7)) && !completedVideoIds.includes(dayVideoId(7));
-
-  // Countdown timer
-  useEffect(() => {
-    if (!nextUnlockDate) return;
-    function tick() {
-      const ms = msUntilIsraelDate(nextUnlockDate!);
-      if (ms > 0) setCountdown(fmtCountdown(ms));
-      else setCountdown("");
+  // Start on the current active day (first uncompleted unlocked day)
+  const firstActive = (() => {
+    for (let d = 0; d <= maxUnlocked; d++) {
+      if (!completed.has(d)) return d;
     }
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [nextUnlockDate]);
+    return maxUnlocked;
+  })();
+  const [activeDay, setActiveDay] = useState(firstActive);
 
-  // Vimeo Player API - mark complete at 90%
+  const dayData        = CHALLENGE_DAYS.find((d) => d.day === activeDay)!;
+  const isLocked       = activeDay > maxUnlocked;
+  const isPlaceholder  = dayData.videoId === "PLACEHOLDER";
+  const dayDone        = completed.has(activeDay);
+  const completedCount = completed.size;
+  const totalDays      = CHALLENGE_DAYS.length;
+  const progressPct    = (completedCount / totalDays) * 100;
+  const is916          = dayData.aspectRatio === "9:16";
+
+  // Day 8 (closing session) only unlocks after day 7 is completed
+  const day8Locked = activeDay === 8 && !completed.has(7);
+
+  // Vimeo Player API — mark complete at 90%
   useEffect(() => {
-    if (isPlaceholder || isLocked || !iframeRef.current) return;
+    if (isPlaceholder || isLocked || day8Locked || !iframeRef.current) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const win = window as any;
     if (!win.Vimeo) return;
     const player = new win.Vimeo.Player(iframeRef.current);
-    const vid = dayVideoId(activeDay);
     player.on("timeupdate", (data: { percent: number }) => {
-      if (data.percent >= 0.9 && !reported.has(vid)) markComplete(activeDay);
+      if (data.percent >= 0.9 && !reported.has(activeDay)) markComplete(activeDay);
     });
     return () => { player.off("timeupdate"); };
-  }, [activeDay, isPlaceholder, isLocked]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeDay, isPlaceholder, isLocked, day8Locked]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function markComplete(day: number) {
-    const vid = dayVideoId(day);
-    if (reported.has(vid)) return;
-    setReported((prev) => new Set(prev).add(vid));
-    setCompleted((prev) => new Set(prev).add(vid));
-    fetch("/api/video-event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ video_id: vid, event_type: "completed", percent_watched: 90, email: userEmail }),
-    }).catch(() => {});
+  async function markComplete(day: number) {
+    if (reported.has(day) || marking) return;
+    setReported((prev) => new Set(prev).add(day));
+    setMarking(true);
+
+    try {
+      const res = await fetch("/api/challenge/complete-day", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ day_number: day }),
+      });
+      if (res.ok) {
+        const { maxUnlockedDay } = await res.json();
+        setCompleted((prev) => new Set(prev).add(day));
+        setMaxUnlocked(maxUnlockedDay);
+      }
+    } catch {
+      // silent — user can try the button again
+      setReported((prev) => { const s = new Set(prev); s.delete(day); return s; });
+    } finally {
+      setMarking(false);
+    }
   }
 
   function goTo(day: number) {
@@ -106,10 +86,10 @@ export default function ChallengePlayer({
 
   // ── Day circle color ─────────────────────────────────────
   function circleStyle(day: number) {
-    const isDone   = completed.has(dayVideoId(day));
+    const isDone   = completed.has(day);
     const isActive = day === activeDay;
-    const locked   = !unlockedDays.includes(day);
-    const special  = isSessionDay(day); // day 0 or 8
+    const locked   = day > maxUnlocked || (day === 8 && !completed.has(7));
+    const special  = isSessionDay(day);
 
     if (isDone)   return { bg: "rgba(52,168,83,0.15)",    color: "#34A853",  border: "rgba(52,168,83,0.4)" };
     if (isActive) return { bg: "rgba(232,185,74,0.18)",   color: "#E8B94A",  border: "rgba(232,185,74,0.5)" };
@@ -122,10 +102,10 @@ export default function ChallengePlayer({
   const DayList = () => (
     <>
       {CHALLENGE_DAYS.map((d) => {
-        const isDone   = completed.has(dayVideoId(d.day));
-        const isActive = d.day === activeDay;
-        const locked   = !unlockedDays.includes(d.day);
-        const cs       = circleStyle(d.day);
+        const isDone    = completed.has(d.day);
+        const isActive  = d.day === activeDay;
+        const locked    = d.day > maxUnlocked || (d.day === 8 && !completed.has(7));
+        const cs        = circleStyle(d.day);
         const isSpecial = isSessionDay(d.day);
         const formatLabel = d.aspectRatio === "9:16" ? "ריל" : "וידאו";
 
@@ -144,7 +124,6 @@ export default function ChallengePlayer({
               opacity: locked ? 0.5 : 1,
             }}
           >
-            {/* RIGHT: day circle */}
             <span style={{
               width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
               display: "flex", alignItems: "center", justifyContent: "center",
@@ -155,7 +134,6 @@ export default function ChallengePlayer({
               {isDone ? "✓" : isSpecial ? (d.day === 0 ? "★" : "✦") : d.day}
             </span>
 
-            {/* MIDDLE: title + format/duration */}
             <div style={{ flex: 1, textAlign: "right" }}>
               <div style={{
                 fontSize: 13, fontWeight: 700,
@@ -169,7 +147,6 @@ export default function ChallengePlayer({
               </div>
             </div>
 
-            {/* LEFT: status badge */}
             {locked ? (
               <span style={{
                 flexShrink: 0, fontSize: 11, fontWeight: 700,
@@ -205,12 +182,11 @@ export default function ChallengePlayer({
   const NavButtons = () => {
     const prevDay = CHALLENGE_DAYS.find((d) => d.day === activeDay - 1);
     const nextDay = CHALLENGE_DAYS.find((d) => d.day === activeDay + 1);
-    const canNext = nextDay && unlockedDays.includes(nextDay.day) && !(nextDay.day === 8 && !completed.has(dayVideoId(7)));
-    const canPrev = prevDay && unlockedDays.includes(prevDay.day);
+    const canNext = nextDay && nextDay.day <= maxUnlocked && !(nextDay.day === 8 && !completed.has(7));
+    const canPrev = prevDay && prevDay.day <= maxUnlocked;
 
     return (
       <div style={{ display: "flex", gap: 10 }}>
-        {/* RIGHT: הבא (gold) */}
         <button
           onClick={() => canNext && goTo(nextDay!.day)}
           disabled={!canNext}
@@ -225,7 +201,6 @@ export default function ChallengePlayer({
         >
           היום הבא
         </button>
-        {/* LEFT: קודם (ghost) */}
         <button
           onClick={() => canPrev && goTo(prevDay!.day)}
           disabled={!canPrev}
@@ -246,8 +221,6 @@ export default function ChallengePlayer({
 
   // ── Video area ───────────────────────────────────────────
   const VideoArea = () => {
-    // Portrait (9:16) reels are capped at 340px wide so they don't fill the whole viewport.
-    // Landscape (16:9) session videos fill the full content column.
     const paddingTop  = is916 ? "177.78%" : "56.25%";
     const outerStyle: React.CSSProperties = is916
       ? { maxWidth: 340, margin: "0 auto", width: "100%" }
@@ -264,26 +237,14 @@ export default function ChallengePlayer({
             <div style={{
               position: "absolute", inset: 0,
               display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center", gap: 12,
+              alignItems: "center", justifyContent: "center", gap: 12, padding: "0 20px",
             }}>
               <span style={{ fontSize: 28 }}>🔒</span>
-              {day8Locked ? (
-                <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700, textAlign: "center", padding: "0 16px" }}>
-                  מפגש הסיום יפתח לאחר שתסיים את יום 7
-                </div>
-              ) : countdown ? (
-                <>
-                  <div style={{ fontSize: 13, color: "#9E9990", fontWeight: 700 }}>נפתח בעוד</div>
-                  <div style={{
-                    fontSize: 24, fontWeight: 800, color: "#E8B94A",
-                    fontVariantNumeric: "tabular-nums", direction: "ltr",
-                  }}>
-                    {countdown}
-                  </div>
-                </>
-              ) : (
-                <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>היום נעול</div>
-              )}
+              <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700, textAlign: "center" }}>
+                {day8Locked
+                  ? "מפגש הסיום יפתח לאחר שתסיים את יום 7"
+                  : `סמן את יום ${activeDay - 1} כהושלם כדי לפתוח יום זה`}
+              </div>
             </div>
           </div>
         </div>
@@ -321,7 +282,7 @@ export default function ChallengePlayer({
     );
   };
 
-  // ── Progress bar (below video) ───────────────────────────
+  // ── Progress bar ─────────────────────────────────────────
   const DayProgressBar = () => (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
       <span style={{ fontSize: 12, color: "#9E9990", whiteSpace: "nowrap" }}>
@@ -344,19 +305,22 @@ export default function ChallengePlayer({
   // ── Day meta + description ───────────────────────────────
   const DayMeta = () => (
     <>
-      {/* "סמן כהושלם" button */}
       {!dayDone && !isLocked && !day8Locked && (
         <div style={{ textAlign: "center", marginTop: 14, marginBottom: 4 }}>
           <button
             onClick={() => markComplete(activeDay)}
+            disabled={marking}
             style={{
               padding: "9px 24px", borderRadius: 8, border: "none",
-              background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
-              color: "#080C14", fontSize: 13, fontWeight: 800,
-              cursor: "pointer", fontFamily: "Assistant, sans-serif",
+              background: marking ? "#2C323E" : "linear-gradient(135deg, #E8B94A, #9E7C3A)",
+              color: marking ? "#9E9990" : "#080C14",
+              fontSize: 13, fontWeight: 800,
+              cursor: marking ? "not-allowed" : "pointer",
+              fontFamily: "Assistant, sans-serif",
+              transition: "all 0.2s",
             }}
           >
-            סמן כהושלם
+            {marking ? "שומר..." : "סמן כהושלם ← פתח יום הבא"}
           </button>
         </div>
       )}
@@ -380,23 +344,48 @@ export default function ChallengePlayer({
         </div>
       </div>
 
-      {/* Countdown box — show when there are locked future days */}
-      {countdown && !isLocked && (
+      {/* Hint: how to unlock next day */}
+      {!dayDone && !isLocked && !day8Locked && activeDay < 7 && (
         <div style={{
-          background: "rgba(201,150,74,0.06)", border: "1px solid rgba(201,150,74,0.2)",
-          borderRadius: 10, padding: "12px 16px", marginBottom: 16, textAlign: "center",
+          background: "rgba(201,150,74,0.05)", border: "1px solid rgba(201,150,74,0.15)",
+          borderRadius: 10, padding: "10px 14px", marginBottom: 16,
+          fontSize: 12, color: "#9E9990", textAlign: "center",
         }}>
-          <div style={{ fontSize: 12, color: "#9E9990", marginBottom: 4 }}>היום הבא נפתח בעוד</div>
-          <div style={{
-            fontSize: 22, fontWeight: 800, color: "#E8B94A",
-            fontVariantNumeric: "tabular-nums", direction: "ltr",
-          }}>
-            {countdown}
-          </div>
+          צפה בסרטון ולחץ "סמן כהושלם" — יום {activeDay + 1} ייפתח מיד
         </div>
       )}
     </>
   );
+
+  // ── Live meeting block (shown after day 7 completion) ────
+  const LiveMeetingBlock = () => {
+    if (!completed.has(7)) return null;
+    return (
+      <div style={{
+        background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.25)",
+        borderRadius: 12, padding: "20px 24px", textAlign: "center", marginTop: 16,
+        marginBottom: 16,
+      }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: "#A78BFA", marginBottom: 6 }}>
+          🎉 סיימת את 7 הימים!
+        </div>
+        <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 16, lineHeight: 1.6 }}>
+          מפגש הסיום עם הדר מחכה לך — צפה בסרטון הסיום ביום הבא
+        </div>
+        <button
+          onClick={() => goTo(8)}
+          style={{
+            padding: "10px 24px", borderRadius: 8, border: "none",
+            background: "linear-gradient(135deg, #A78BFA, #7C3AED)",
+            color: "#fff", fontSize: 14, fontWeight: 800,
+            cursor: "pointer", fontFamily: "Assistant, sans-serif",
+          }}
+        >
+          למפגש הסיום ←
+        </button>
+      </div>
+    );
+  };
 
   // ── Completion banner ────────────────────────────────────
   const CompletionBanner = () => (
@@ -464,8 +453,6 @@ export default function ChallengePlayer({
 
       {/* LAYOUT */}
       <div className="ch-layout">
-
-        {/* SIDEBAR - desktop right column */}
         <aside className="ch-sidebar">
           <div style={{
             padding: "14px 16px", borderBottom: "1px solid #2C323E",
@@ -477,19 +464,16 @@ export default function ChallengePlayer({
           <DayList />
         </aside>
 
-        {/* MAIN CONTENT */}
         <main className="ch-main">
           <VideoArea />
           {!isLocked && !day8Locked && <DayProgressBar />}
           <DayMeta />
-
+          {completed.has(7) && activeDay !== 8 && <LiveMeetingBlock />}
           <div style={{ marginBottom: 24 }}>
             <NavButtons />
           </div>
-
           {completedCount === totalDays && <CompletionBanner />}
 
-          {/* MOBILE DAY LIST */}
           <div className="ch-mob-list">
             <div style={{
               fontSize: 13, fontWeight: 800, color: "#EDE9E1",
@@ -504,62 +488,33 @@ export default function ChallengePlayer({
         </main>
       </div>
 
-      {/* Vimeo SDK */}
       {CHALLENGE_DAYS.some((d) => d.videoId !== "PLACEHOLDER") && (
         // eslint-disable-next-line @next/next/no-sync-scripts
         <script src="https://player.vimeo.com/api/player.js" />
       )}
 
       <style>{`
-        /* ── Mobile (default) ── */
         .ch-mob-hdr {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 12px 16px;
-          background: #141820;
-          border-bottom: 1px solid #2C323E;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 12px 16px; background: #141820; border-bottom: 1px solid #2C323E;
         }
         .ch-desk-hdr { display: none; }
-        .ch-layout {
-          display: flex;
-          flex-direction: row;
-          max-width: 1280px;
-          margin: 0 auto;
-        }
+        .ch-layout { display: flex; flex-direction: row; max-width: 1280px; margin: 0 auto; }
         .ch-sidebar { display: none; }
-        .ch-main {
-          flex: 1;
-          min-width: 0;
-          padding: 16px;
-          padding-bottom: 48px;
-        }
+        .ch-main { flex: 1; min-width: 0; padding: 16px; padding-bottom: 48px; }
         .ch-mob-list { display: block; margin-top: 8px; }
-
-        /* ── Desktop (768px+) ── */
         @media (min-width: 768px) {
           .ch-mob-hdr { display: none; }
           .ch-desk-hdr {
-            display: block;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: rgba(8,12,20,0.96);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #2C323E;
-            padding: 0 24px;
+            display: block; position: sticky; top: 0; z-index: 50;
+            background: rgba(8,12,20,0.96); backdrop-filter: blur(12px);
+            border-bottom: 1px solid #2C323E; padding: 0 24px;
           }
           .ch-sidebar {
-            display: block;
-            width: 280px;
-            flex-shrink: 0;
-            background: #141820;
-            border-left: 1px solid #2C323E;
-            position: sticky;
-            top: 6rem;
-            max-height: calc(100vh - 6rem);
-            overflow-y: auto;
-            align-self: flex-start;
+            display: block; width: 280px; flex-shrink: 0;
+            background: #141820; border-left: 1px solid #2C323E;
+            position: sticky; top: 6rem; max-height: calc(100vh - 6rem);
+            overflow-y: auto; align-self: flex-start;
           }
           .ch-main { padding: 24px 28px 64px; }
           .ch-mob-list { display: none; }

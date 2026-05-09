@@ -6,22 +6,6 @@ import { dayVideoId, TOTAL_DAYS } from "@/lib/challenge-config";
 import ChallengePlayer from "./ChallengePlayer";
 import type { Database } from "@/lib/supabase/types";
 
-/** Returns today's date string in Israel timezone (UTC+3), e.g. "2026-04-07" */
-function israelToday(): string {
-  return new Date(
-    new Date().toLocaleString("en-CA", { timeZone: "Asia/Jerusalem" }).split(",")[0]
-  )
-    .toISOString()
-    .slice(0, 10);
-}
-
-/** Returns YYYY-MM-DD string offset by `days` calendar days */
-function addDays(dateStr: string, days: number): string {
-  const d = new Date(`${dateStr}T00:00:00`);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
 export default async function ChallengeContentPage() {
   const cookieStore = await cookies();
 
@@ -43,7 +27,8 @@ export default async function ChallengeContentPage() {
   const db = createServerClient();
 
   // 2. Get CRM user row
-  const { data: userData } = await db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: userData } = await (db as any)
     .from("users")
     .select("id, email")
     .eq("auth_id", user.id)
@@ -64,45 +49,81 @@ export default async function ChallengeContentPage() {
 
   if (!purchase) redirect("/challenge?access=denied");
 
-  // 4. Compute which days are unlocked based on purchase date (Israel timezone)
-  const purchaseDateStr = new Date(purchase.created_at)
-    .toLocaleString("en-CA", { timeZone: "Asia/Jerusalem" })
-    .split(",")[0];
-  const today = israelToday();
+  // 4. Find or create enrollment
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let { data: enrollment } = await (db as any)
+    .from("challenge_enrollments")
+    .select("id, current_day")
+    .eq("user_id", userData.id)
+    .maybeSingle();
 
-  // dayX unlocks when purchaseDate + X <= today
-  const unlockedDays = Array.from({ length: TOTAL_DAYS }, (_, i) => i).filter(
-    (day) => addDays(purchaseDateStr, day) <= today
+  if (!enrollment) {
+    // Auto-create enrollment for existing buyers (backward compat).
+    // Seed completions from video_events so returning users don't lose progress.
+    const allVideoIds = Array.from({ length: TOTAL_DAYS }, (_, i) => dayVideoId(i));
+    const { data: videoEvents } = await db
+      .from("video_events")
+      .select("video_id")
+      .eq("user_email", userData.email)
+      .eq("event_type", "completed")
+      .in("video_id", allVideoIds);
+
+    const completedDays = (videoEvents ?? [])
+      .map((e) => allVideoIds.indexOf(e.video_id))
+      .filter((i) => i >= 0);
+
+    const maxCompletedDay = completedDays.length > 0 ? Math.max(...completedDays) : -1;
+    const currentDay = maxCompletedDay + 1; // next day to unlock
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: newEnrollment } = await (db as any)
+      .from("challenge_enrollments")
+      .insert({
+        user_id:     userData.id,
+        current_day: currentDay,
+        enrolled_at: purchase.created_at,
+      })
+      .select("id, current_day")
+      .single();
+
+    // Seed completed days
+    if (newEnrollment && completedDays.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (db as any)
+        .from("challenge_day_completions")
+        .insert(
+          completedDays.map((d) => ({
+            enrollment_id: newEnrollment.id,
+            day_number:    d,
+          }))
+        );
+    }
+
+    enrollment = newEnrollment;
+  }
+
+  if (!enrollment) redirect("/challenge?access=denied");
+
+  // 5. Fetch completed days from challenge_day_completions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: completions } = await (db as any)
+    .from("challenge_day_completions")
+    .select("day_number")
+    .eq("enrollment_id", enrollment.id);
+
+  const completedDayNumbers: number[] = (completions ?? []).map(
+    (c: { day_number: number }) => c.day_number
   );
 
-  // 5. Fetch completed days from video_events
-  const allVideoIds = Array.from({ length: TOTAL_DAYS }, (_, i) => dayVideoId(i));
-
-  const { data: videoEvents } = await db
-    .from("video_events")
-    .select("video_id")
-    .eq("user_email", userData.email)
-    .eq("event_type", "completed")
-    .in("video_id", allVideoIds);
-
-  const completedVideoIds = (videoEvents ?? []).map((e) => e.video_id);
-
-  // 6. Next unlock date (for countdown timer): earliest locked day's unlock date
-  const nextUnlockDate = (() => {
-    for (let day = 0; day < TOTAL_DAYS; day++) {
-      if (!unlockedDays.includes(day)) {
-        return addDays(purchaseDateStr, day);
-      }
-    }
-    return null;
-  })();
+  // maxUnlockedDay = current_day (the day they're allowed to work on next)
+  // Day 0 is always accessible once purchased.
+  const maxUnlockedDay: number = enrollment.current_day;
 
   return (
     <ChallengePlayer
-      completedVideoIds={completedVideoIds}
-      unlockedDays={unlockedDays}
-      nextUnlockDate={nextUnlockDate}
-      userEmail={userData.email}
+      enrollmentId={enrollment.id}
+      maxUnlockedDay={maxUnlockedDay}
+      completedDayNumbers={completedDayNumbers}
     />
   );
 }

@@ -16,6 +16,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/admin/abtesting':   'A/B Testing',
   '/admin/training':    'שיעור במתנה',
   '/admin/video':       'סרטונים ואנליטיקס',
+  '/admin/challenge':   'אתגר 7 הימים',
   '/admin/community':   'הכוורת',
   '/admin/mmm':         'מודל MMM',
   '/admin/system':      'מערכת ולוגים',
