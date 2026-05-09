@@ -11,6 +11,7 @@ import { StatsSection } from "@/components/landing/StatsSection";
 import { ProductsSection } from "@/components/ProductsSection";
 import HomeStickyBar from "@/components/home/HomeStickyBar";
 import SocialProofStrip from "@/components/SocialProofStrip";
+import { WorkshopTestimonials } from "@/app/workshop/WorkshopTestimonials";
 import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Star, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -475,6 +476,18 @@ export default async function LandingPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Video testimonials carousel */}
+              <div>
+                <p style={{
+                  fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em",
+                  color: "#C9964A", textTransform: "uppercase", textAlign: "center",
+                  marginBottom: 16,
+                }}>
+                  מה אומרים עליה בוידאו
+                </p>
+                <WorkshopTestimonials />
               </div>
 
             </div>

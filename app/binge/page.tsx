@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { WorkshopTestimonials } from "@/app/workshop/WorkshopTestimonials";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -367,6 +368,17 @@ export default function BingePage() {
         {showClients && (
           <ScrollRow title="לקוחות מדברים"      videos={CLIENT_VIDEOS} onPlay={setPlaying} />
         )}
+
+        {/* Testimonials carousel */}
+        <div className="px-5 lg:px-0">
+          <p style={{
+            fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em",
+            color: "#C9964A", textTransform: "uppercase", marginBottom: 16,
+          }}>
+            מה אומרים עליה
+          </p>
+          <WorkshopTestimonials />
+        </div>
       </div>
     </div>
   );
