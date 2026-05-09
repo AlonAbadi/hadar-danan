@@ -21,6 +21,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendCapiEvent } from "@/lib/meta-capi";
+import { sendChallengeWhatsApp } from "@/lib/challenge-whatsapp";
 
 // ── Shared fulfillment logic ───────────────────────────────────────────────
 
@@ -98,6 +99,7 @@ async function fulfillPurchase(
 
   // Create challenge enrollment + auth account immediately on purchase
   let challengeMagicLink: string | null = null;
+  let challengeEnrollmentId: string | null = null;
   if (purchase.product === "challenge_197") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
@@ -106,6 +108,15 @@ async function fulfillPurchase(
         { user_id: purchase.user_id, enrolled_at: new Date().toISOString(), current_day: 0 },
         { onConflict: "user_id", ignoreDuplicates: true }
       );
+
+    // Fetch enrollment ID for WhatsApp log dedup
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: enrollRow } = await (supabase as any)
+      .from("challenge_enrollments")
+      .select("id")
+      .eq("user_id", purchase.user_id)
+      .maybeSingle();
+    challengeEnrollmentId = enrollRow?.id ?? null;
 
     // Generate a magic link so the buyer can access challenge content without
     // manually creating a password. generateLink auto-creates the auth.users row
@@ -258,6 +269,23 @@ async function fulfillPurchase(
         userData:   sharedUserData,
         customData: sharedCustomData,
       });
+    }
+
+    // Send opening-session WhatsApp immediately on challenge purchase
+    if (purchase.product === "challenge_197" && challengeEnrollmentId && userForCapi.phone) {
+      const waStatus = await sendChallengeWhatsApp(
+        userForCapi.phone,
+        userForCapi.name ?? "",
+        0,
+      ).then(() => "sent" as const).catch(() => "failed" as const);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from("challenge_whatsapp_logs")
+        .upsert(
+          { enrollment_id: challengeEnrollmentId, day_number: 0, status: waStatus },
+          { onConflict: "enrollment_id,day_number", ignoreDuplicates: false }
+        );
     }
   }
 
