@@ -12,7 +12,7 @@ export const CHALLENGE_DAYS: ChallengeDay[] = [
     day: 0,
     videoId: "1185862328",
     title: "מפגש פתיחה",
-    duration: 12,
+    duration: 120,
     aspectRatio: "16:9",
     description: "ברוכים הבאים לאתגר 7 הימים! במפגש הפתיחה נבין מה אנחנו הולכים לבנות יחד, איך תעבוד המסגרת ומה תצאו איתו בסוף השבוע.",
   },
@@ -46,7 +46,7 @@ export const CHALLENGE_DAYS: ChallengeDay[] = [
     title: "הסיפור שמחבר",
     duration: 7,
     aspectRatio: "9:16",
-    description: "יום רביעי: נלמד לספר את הסיפור שלך בצורה שיוצרת חיבור רגשי מיידי. הסיפור הנכון הופך אותך ממוכר לאדם שאנשים רוצים לעשות איתו עסקים.",
+    description: "יום רביעי: נלמד לספר את הסיפור שלך בצורה שיוצרת חיבור רגשי מיידי. הסיפור הנכון הופך אותך ממוכר לאדם שאנשים רוצים לעשות איתם עסקים.",
   },
   {
     day: 5,
@@ -76,7 +76,7 @@ export const CHALLENGE_DAYS: ChallengeDay[] = [
     day: 8,
     videoId: "PLACEHOLDER",
     title: "מפגש סיום",
-    duration: 18,
+    duration: 120,
     aspectRatio: "16:9",
     description: "מפגש הסיום המיוחד: נסכם את השבוע, נחגוג את ההישגים, ונדבר על הצעדים הבאים — איך להמשיך לבנות את המותג שלך מכאן.",
   },
@@ -91,4 +91,48 @@ export function dayVideoId(day: number): string {
 /** Returns true if the given day is a "session" day (16:9 format) */
 export function isSessionDay(day: number): boolean {
   return day === 0 || day === 8;
+}
+
+/**
+ * Time-based unlock: days 1–7 open every 24 h after enrollment, skipping Saturday.
+ * Day 0 is always available. Day 8 becomes visible once day 7 is unlocked.
+ */
+export function computeMaxUnlockedDay(enrolledAt: string): number {
+  const start = new Date(enrolledAt);
+  const now = new Date();
+  let unlocked = 0;
+  let prevUnlock = start;
+
+  for (let day = 1; day <= 7; day++) {
+    let nextUnlock = new Date(prevUnlock.getTime() + 24 * 60 * 60 * 1000);
+    // Skip Saturday (getDay() === 6)
+    while (nextUnlock.getDay() === 6) {
+      nextUnlock = new Date(nextUnlock.getTime() + 24 * 60 * 60 * 1000);
+    }
+    if (now >= nextUnlock) {
+      unlocked = day;
+      prevUnlock = nextUnlock;
+    } else {
+      break;
+    }
+  }
+
+  return unlocked;
+}
+
+/**
+ * Closing live meeting: 15th of the current (or next) month.
+ * If the 15th falls on Friday (5) or Saturday (6), moves to Sunday.
+ */
+export function computeNextLiveMeetingDate(): Date {
+  const now = new Date();
+  let d = new Date(now.getFullYear(), now.getMonth(), 15);
+  // If 15th already passed this month, use next month
+  if (d <= now) {
+    d = new Date(now.getFullYear(), now.getMonth() + 1, 15);
+  }
+  const dow = d.getDay();
+  if (dow === 5) d.setDate(d.getDate() + 2); // Friday → Sunday
+  if (dow === 6) d.setDate(d.getDate() + 1); // Saturday → Sunday
+  return d;
 }

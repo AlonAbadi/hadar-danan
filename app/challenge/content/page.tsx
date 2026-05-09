@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
-import { dayVideoId, TOTAL_DAYS } from "@/lib/challenge-config";
+import { dayVideoId, TOTAL_DAYS, computeMaxUnlockedDay, computeNextLiveMeetingDate } from "@/lib/challenge-config";
 import ChallengePlayer from "./ChallengePlayer";
 import type { Database } from "@/lib/supabase/types";
 
@@ -53,7 +53,7 @@ export default async function ChallengeContentPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let { data: enrollment } = await (db as any)
     .from("challenge_enrollments")
-    .select("id, current_day")
+    .select("id, current_day, enrolled_at")
     .eq("user_id", userData.id)
     .maybeSingle();
 
@@ -83,7 +83,7 @@ export default async function ChallengeContentPage() {
         current_day: currentDay,
         enrolled_at: purchase.created_at,
       })
-      .select("id, current_day")
+      .select("id, current_day, enrolled_at")
       .single();
 
     // Seed completed days
@@ -115,15 +115,19 @@ export default async function ChallengeContentPage() {
     (c: { day_number: number }) => c.day_number
   );
 
-  // maxUnlockedDay = current_day (the day they're allowed to work on next)
-  // Day 0 is always accessible once purchased.
-  const maxUnlockedDay: number = enrollment.current_day;
+  // maxUnlockedDay is time-based: one new day every 24h from enrollment (skipping Saturday).
+  // Day 0 is always accessible; day 8 becomes visible once day 7 is unlocked.
+  const maxUnlockedDay: number = computeMaxUnlockedDay(enrollment.enrolled_at);
+
+  // Next live closing meeting date (15th of month, Fri/Sat → Sun)
+  const liveMeetingDate: string = computeNextLiveMeetingDate().toISOString();
 
   return (
     <ChallengePlayer
       enrollmentId={enrollment.id}
       maxUnlockedDay={maxUnlockedDay}
       completedDayNumbers={completedDayNumbers}
+      liveMeetingDate={liveMeetingDate}
     />
   );
 }

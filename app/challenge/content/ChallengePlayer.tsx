@@ -2,36 +2,41 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { CHALLENGE_DAYS, dayVideoId, isSessionDay } from "@/lib/challenge-config";
+import { CHALLENGE_DAYS, isSessionDay } from "@/lib/challenge-config";
 
 interface Props {
-  enrollmentId:       string;
-  maxUnlockedDay:     number;   // current_day from enrollment — the next day to work on
+  enrollmentId:        string;
+  maxUnlockedDay:      number;   // time-based — highest day currently accessible
   completedDayNumbers: number[];
+  liveMeetingDate:     string;   // ISO string of next closing live meeting
 }
 
 export default function ChallengePlayer({
   enrollmentId,
-  maxUnlockedDay: initialMaxUnlocked,
+  maxUnlockedDay,
   completedDayNumbers,
+  liveMeetingDate,
 }: Props) {
-  const [maxUnlocked, setMaxUnlocked] = useState(initialMaxUnlocked);
-  const [completed, setCompleted]     = useState<Set<number>>(new Set(completedDayNumbers));
-  const [reported, setReported]       = useState<Set<number>>(new Set(completedDayNumbers));
-  const [marking, setMarking]         = useState(false);
+  const [completed, setCompleted]       = useState<Set<number>>(new Set(completedDayNumbers));
+  const [reported, setReported]         = useState<Set<number>>(new Set(completedDayNumbers));
+  const [marking, setMarking]           = useState(false);
+  const [lockedPopup, setLockedPopup]   = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Start on the current active day (first uncompleted unlocked day)
+  // Day 8 unlocks once day 7 is accessible
+  const day8Accessible = maxUnlockedDay >= 7;
+
+  // Start on the current active day (first uncompleted within unlocked range)
   const firstActive = (() => {
-    for (let d = 0; d <= maxUnlocked; d++) {
+    for (let d = 0; d <= maxUnlockedDay; d++) {
       if (!completed.has(d)) return d;
     }
-    return maxUnlocked;
+    return maxUnlockedDay;
   })();
   const [activeDay, setActiveDay] = useState(firstActive);
 
   const dayData        = CHALLENGE_DAYS.find((d) => d.day === activeDay)!;
-  const isLocked       = activeDay > maxUnlocked;
+  const isLocked       = activeDay > maxUnlockedDay || (activeDay === 8 && !day8Accessible);
   const isPlaceholder  = dayData.videoId === "PLACEHOLDER";
   const dayDone        = completed.has(activeDay);
   const completedCount = completed.size;
@@ -39,23 +44,28 @@ export default function ChallengePlayer({
   const progressPct    = (completedCount / totalDays) * 100;
   const is916          = dayData.aspectRatio === "9:16";
 
-  // Day 8 (closing session) only unlocks after day 7 is completed
-  const day8Locked = activeDay === 8 && !completed.has(7);
+  // Format live meeting date in Hebrew
+  const liveMeetingLabel = (() => {
+    const d = new Date(liveMeetingDate);
+    return d.toLocaleDateString("he-IL", {
+      weekday: "long", day: "numeric", month: "long",
+    });
+  })();
 
-  // Vimeo Player API — mark complete at 90%
+  // Vimeo Player API — auto-mark watched at 90%
   useEffect(() => {
-    if (isPlaceholder || isLocked || day8Locked || !iframeRef.current) return;
+    if (isPlaceholder || isLocked || !iframeRef.current) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const win = window as any;
     if (!win.Vimeo) return;
     const player = new win.Vimeo.Player(iframeRef.current);
     player.on("timeupdate", (data: { percent: number }) => {
-      if (data.percent >= 0.9 && !reported.has(activeDay)) markComplete(activeDay);
+      if (data.percent >= 0.9 && !reported.has(activeDay)) markWatched(activeDay);
     });
     return () => { player.off("timeupdate"); };
-  }, [activeDay, isPlaceholder, isLocked, day8Locked]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeDay, isPlaceholder, isLocked]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function markComplete(day: number) {
+  async function markWatched(day: number) {
     if (reported.has(day) || marking) return;
     setReported((prev) => new Set(prev).add(day));
     setMarking(true);
@@ -67,12 +77,9 @@ export default function ChallengePlayer({
         body:    JSON.stringify({ day_number: day }),
       });
       if (res.ok) {
-        const { maxUnlockedDay } = await res.json();
         setCompleted((prev) => new Set(prev).add(day));
-        setMaxUnlocked(maxUnlockedDay);
       }
     } catch {
-      // silent — user can try the button again
       setReported((prev) => { const s = new Set(prev); s.delete(day); return s; });
     } finally {
       setMarking(false);
@@ -84,11 +91,20 @@ export default function ChallengePlayer({
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function handleDayClick(day: number) {
+    const locked = day > maxUnlockedDay || (day === 8 && !day8Accessible);
+    if (locked) {
+      setLockedPopup(true);
+    } else {
+      goTo(day);
+    }
+  }
+
   // ── Day circle color ─────────────────────────────────────
   function circleStyle(day: number) {
     const isDone   = completed.has(day);
     const isActive = day === activeDay;
-    const locked   = day > maxUnlocked || (day === 8 && !completed.has(7));
+    const locked   = day > maxUnlockedDay || (day === 8 && !day8Accessible);
     const special  = isSessionDay(day);
 
     if (isDone)   return { bg: "rgba(52,168,83,0.15)",    color: "#34A853",  border: "rgba(52,168,83,0.4)" };
@@ -104,21 +120,20 @@ export default function ChallengePlayer({
       {CHALLENGE_DAYS.map((d) => {
         const isDone    = completed.has(d.day);
         const isActive  = d.day === activeDay;
-        const locked    = d.day > maxUnlocked || (d.day === 8 && !completed.has(7));
+        const locked    = d.day > maxUnlockedDay || (d.day === 8 && !day8Accessible);
         const cs        = circleStyle(d.day);
         const isSpecial = isSessionDay(d.day);
-        const formatLabel = d.aspectRatio === "9:16" ? "ריל" : "וידאו";
 
         return (
           <button
             key={d.day}
-            onClick={() => !locked && goTo(d.day)}
+            onClick={() => handleDayClick(d.day)}
             style={{
               display: "flex", alignItems: "center", gap: 12,
               padding: "12px 16px", width: "100%",
               background: isActive ? "rgba(201,150,74,0.07)" : "transparent",
               border: "none", borderBottom: "1px solid #1D2430",
-              cursor: locked ? "not-allowed" : "pointer",
+              cursor: "pointer",
               fontFamily: "Assistant, sans-serif",
               textAlign: "right", direction: "rtl",
               opacity: locked ? 0.5 : 1,
@@ -131,7 +146,7 @@ export default function ChallengePlayer({
               background: cs.bg, color: cs.color,
               border: `1px solid ${cs.border}`,
             }}>
-              {isDone ? "✓" : isSpecial ? (d.day === 0 ? "★" : "✦") : d.day}
+              {isDone ? "✓" : locked ? "🔒" : isSpecial ? (d.day === 0 ? "★" : "✦") : d.day}
             </span>
 
             <div style={{ flex: 1, textAlign: "right" }}>
@@ -142,18 +157,19 @@ export default function ChallengePlayer({
               }}>
                 {d.day === 0 ? "פתיחה" : d.day === 8 ? "סיום" : `יום ${d.day}`} — {d.title}
               </div>
-              <div style={{ fontSize: 11, color: "#9E9990" }}>
-                {formatLabel} · {d.duration} דקות
-              </div>
+              {d.day === 8 && (
+                <div style={{ fontSize: 11, color: "#A78BFA" }}>
+                  מפגש חי עם הדר — {liveMeetingLabel}
+                </div>
+              )}
             </div>
 
             {locked ? (
               <span style={{
-                flexShrink: 0, fontSize: 11, fontWeight: 700,
-                padding: "3px 8px", borderRadius: 12,
-                background: "rgba(255,255,255,0.05)", color: "#4A5060",
+                flexShrink: 0, fontSize: 18,
+                lineHeight: 1,
               }}>
-                נעול
+                🔒
               </span>
             ) : isDone ? (
               <span style={{
@@ -182,8 +198,8 @@ export default function ChallengePlayer({
   const NavButtons = () => {
     const prevDay = CHALLENGE_DAYS.find((d) => d.day === activeDay - 1);
     const nextDay = CHALLENGE_DAYS.find((d) => d.day === activeDay + 1);
-    const canNext = nextDay && nextDay.day <= maxUnlocked && !(nextDay.day === 8 && !completed.has(7));
-    const canPrev = prevDay && prevDay.day <= maxUnlocked;
+    const canNext = nextDay && nextDay.day <= maxUnlockedDay && !(nextDay.day === 8 && !day8Accessible);
+    const canPrev = prevDay && prevDay.day <= maxUnlockedDay;
 
     return (
       <div style={{ display: "flex", gap: 10 }}>
@@ -226,7 +242,7 @@ export default function ChallengePlayer({
       ? { maxWidth: 340, margin: "0 auto", width: "100%" }
       : {};
 
-    if (isLocked || day8Locked) {
+    if (isLocked) {
       return (
         <div style={outerStyle}>
           <div style={{
@@ -239,13 +255,42 @@ export default function ChallengePlayer({
               display: "flex", flexDirection: "column",
               alignItems: "center", justifyContent: "center", gap: 12, padding: "0 20px",
             }}>
-              <span style={{ fontSize: 28 }}>🔒</span>
+              <span style={{ fontSize: 36 }}>🔒</span>
               <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700, textAlign: "center" }}>
-                {day8Locked
-                  ? "מפגש הסיום יפתח לאחר שתסיים את יום 7"
-                  : `סמן את יום ${activeDay - 1} כהושלם כדי לפתוח יום זה`}
+                {activeDay === 8
+                  ? "מפגש הסיום יפתח לאחר שיום 7 יהיה זמין"
+                  : "יום זה ייפתח מחר בבוקר"}
+              </div>
+              <div style={{ fontSize: 12, color: "#4A5060", textAlign: "center" }}>
+                תקבל הודעה בווצאפ כשיגיע הזמן
               </div>
             </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Day 8 is accessible but has no video yet — show live meeting info instead
+    if (activeDay === 8 && isPlaceholder) {
+      return (
+        <div style={{
+          borderRadius: 12, border: "1px solid rgba(139,92,246,0.3)",
+          background: "rgba(139,92,246,0.06)",
+          padding: "40px 24px", textAlign: "center",
+        }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>🎯</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#A78BFA", marginBottom: 8 }}>
+            מפגש חי עם הדר
+          </div>
+          <div style={{ fontSize: 15, color: "#EDE9E1", fontWeight: 700, marginBottom: 8 }}>
+            {liveMeetingLabel}
+          </div>
+          <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.7, maxWidth: 400, margin: "0 auto" }}>
+            מפגש הסיום יתקיים ב-Zoom עם הדר.
+            נסכם את השבוע, נחגוג את ההישגים, ונדבר על הצעדים הבאים.
+          </div>
+          <div style={{ marginTop: 16, fontSize: 12, color: "#4A5060" }}>
+            קישור ה-Zoom יישלח לפני המפגש
           </div>
         </div>
       );
@@ -258,57 +303,27 @@ export default function ChallengePlayer({
           border: "1px solid #2C323E", background: "#000",
           position: "relative", paddingTop,
         }}>
-          {isPlaceholder ? (
-            <div style={{
-              position: "absolute", inset: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              background: "#0D1219",
-            }}>
-              <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>הסרטון יעלה בקרוב</div>
-            </div>
-          ) : (
-            <iframe
-              ref={iframeRef}
-              key={activeDay}
-              src={`https://player.vimeo.com/video/${dayData.videoId}?badge=0&autopause=0&loop=0&player_id=0&app_id=58479`}
-              allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-              referrerPolicy="strict-origin-when-cross-origin"
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-              title={dayData.title}
-            />
-          )}
+          <iframe
+            ref={iframeRef}
+            key={activeDay}
+            src={`https://player.vimeo.com/video/${dayData.videoId}?badge=0&autopause=0&loop=0&player_id=0&app_id=58479`}
+            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+            referrerPolicy="strict-origin-when-cross-origin"
+            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+            title={dayData.title}
+          />
         </div>
       </div>
     );
   };
 
-  // ── Progress bar ─────────────────────────────────────────
-  const DayProgressBar = () => (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-      <span style={{ fontSize: 12, color: "#9E9990", whiteSpace: "nowrap" }}>
-        {String(dayData.duration).padStart(2, "0")}:00
-      </span>
-      <div style={{ flex: 1, height: 4, background: "#2C323E", borderRadius: 2, position: "relative" }}>
-        <div style={{
-          position: "absolute", top: 0, right: 0, height: 4, borderRadius: 2,
-          background: "linear-gradient(270deg, #E8B94A, #C9964A)",
-          width: dayDone ? "100%" : "0%",
-          transition: "width 0.4s",
-        }} />
-      </div>
-      <span style={{ fontSize: 12, whiteSpace: "nowrap", color: dayDone ? "#34A853" : "#9E9990" }}>
-        {dayDone ? "הושלם" : "0:00"}
-      </span>
-    </div>
-  );
-
   // ── Day meta + description ───────────────────────────────
   const DayMeta = () => (
     <>
-      {!dayDone && !isLocked && !day8Locked && (
+      {!dayDone && !isLocked && activeDay !== 8 && (
         <div style={{ textAlign: "center", marginTop: 14, marginBottom: 4 }}>
           <button
-            onClick={() => markComplete(activeDay)}
+            onClick={() => markWatched(activeDay)}
             disabled={marking}
             style={{
               padding: "9px 24px", borderRadius: 8, border: "none",
@@ -320,7 +335,7 @@ export default function ChallengePlayer({
               transition: "all 0.2s",
             }}
           >
-            {marking ? "שומר..." : "סמן כהושלם ← פתח יום הבא"}
+            {marking ? "שומר..." : "סמן כנצפה ✓"}
           </button>
         </div>
       )}
@@ -328,7 +343,7 @@ export default function ChallengePlayer({
       <div style={{ fontSize: 12, fontWeight: 700, color: "#9E9990", textAlign: "right", marginTop: 14, marginBottom: 4 }}>
         {activeDay === 0 ? "מפגש פתיחה" : activeDay === 8 ? "מפגש סיום" : `יום ${activeDay} מתוך 7`}
         {" · "}
-        {dayData.aspectRatio === "9:16" ? "ריל" : "וידאו"} · {dayData.duration} דקות
+        {dayData.aspectRatio === "9:16" ? "ריל" : "וידאו"}
       </div>
 
       <div style={{
@@ -344,22 +359,23 @@ export default function ChallengePlayer({
         </div>
       </div>
 
-      {/* Hint: how to unlock next day */}
-      {!dayDone && !isLocked && !day8Locked && activeDay < 7 && (
+      {/* Show next-day unlock hint for unlocked, incomplete days */}
+      {!dayDone && !isLocked && activeDay < 7 && activeDay > 0 && (
         <div style={{
           background: "rgba(201,150,74,0.05)", border: "1px solid rgba(201,150,74,0.15)",
           borderRadius: 10, padding: "10px 14px", marginBottom: 16,
           fontSize: 12, color: "#9E9990", textAlign: "center",
         }}>
-          צפה בסרטון ולחץ "סמן כהושלם" — יום {activeDay + 1} ייפתח מיד
+          יום {activeDay + 1} ייפתח מחר בבוקר אוטומטית
         </div>
       )}
     </>
   );
 
-  // ── Live meeting block (shown after day 7 completion) ────
+  // ── Live meeting block (shown after day 7 is unlocked) ───
   const LiveMeetingBlock = () => {
-    if (!completed.has(7)) return null;
+    if (maxUnlockedDay < 7) return null;
+    if (activeDay === 8) return null;
     return (
       <div style={{
         background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.25)",
@@ -369,8 +385,11 @@ export default function ChallengePlayer({
         <div style={{ fontSize: 16, fontWeight: 800, color: "#A78BFA", marginBottom: 6 }}>
           🎉 סיימת את 7 הימים!
         </div>
-        <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 16, lineHeight: 1.6 }}>
-          מפגש הסיום עם הדר מחכה לך — צפה בסרטון הסיום ביום הבא
+        <div style={{ fontSize: 13, color: "#EDE9E1", fontWeight: 700, marginBottom: 4 }}>
+          מפגש חי עם הדר — {liveMeetingLabel}
+        </div>
+        <div style={{ fontSize: 12, color: "#9E9990", marginBottom: 16, lineHeight: 1.6 }}>
+          מפגש הסיום בזום מחכה לך — קישור ישלח לפני המפגש
         </div>
         <button
           onClick={() => goTo(8)}
@@ -381,7 +400,7 @@ export default function ChallengePlayer({
             cursor: "pointer", fontFamily: "Assistant, sans-serif",
           }}
         >
-          למפגש הסיום ←
+          לפרטי מפגש הסיום ←
         </button>
       </div>
     );
@@ -410,9 +429,53 @@ export default function ChallengePlayer({
     </div>
   );
 
+  // ── Locked popup ─────────────────────────────────────────
+  const LockedPopup = () => (
+    <div
+      onClick={() => setLockedPopup(false)}
+      style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "0 20px",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#141820", border: "1px solid #2C323E",
+          borderRadius: 16, padding: "32px 28px", textAlign: "center",
+          maxWidth: 320, width: "100%",
+        }}
+      >
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+        <div style={{ fontSize: 17, fontWeight: 800, color: "#EDE9E1", marginBottom: 8 }}>
+          היום נעול
+        </div>
+        <div style={{ fontSize: 14, color: "#9E9990", lineHeight: 1.7, marginBottom: 20 }}>
+          תגיע מחר — תשלח לך הודעה בווצאפ 📱
+        </div>
+        <button
+          onClick={() => setLockedPopup(false)}
+          style={{
+            padding: "10px 28px", borderRadius: 8, border: "none",
+            background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
+            color: "#080C14", fontSize: 14, fontWeight: 800,
+            cursor: "pointer", fontFamily: "Assistant, sans-serif",
+          }}
+        >
+          הבנתי
+        </button>
+      </div>
+    </div>
+  );
+
   // ── Render ───────────────────────────────────────────────
   return (
     <div dir="rtl" lang="he" style={{ minHeight: "100vh", background: "#080C14", color: "#EDE9E1", fontFamily: "Assistant, sans-serif" }}>
+
+      {/* Locked day popup */}
+      {lockedPopup && <LockedPopup />}
 
       {/* MOBILE HEADER */}
       <div className="ch-mob-hdr">
@@ -466,9 +529,8 @@ export default function ChallengePlayer({
 
         <main className="ch-main">
           <VideoArea />
-          {!isLocked && !day8Locked && <DayProgressBar />}
           <DayMeta />
-          {completed.has(7) && activeDay !== 8 && <LiveMeetingBlock />}
+          <LiveMeetingBlock />
           <div style={{ marginBottom: 24 }}>
             <NavButtons />
           </div>

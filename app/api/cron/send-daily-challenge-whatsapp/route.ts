@@ -11,12 +11,13 @@
  *   {{4}} = link to challenge content
  *
  * Dedup: challenge_whatsapp_logs UNIQUE (enrollment_id, day_number)
- * Skip: enrollments completed, no phone, already sent today, current_day = 0.
+ * Skip Saturday: computeMaxUnlockedDay returns same value as Friday on Saturday,
+ *   so nothing new is sent (deduped by the log table).
  * Batch: 20 concurrent sends to stay under Vercel Hobby 10s limit.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
-import { CHALLENGE_DAYS } from "@/lib/challenge-config";
+import { CHALLENGE_DAYS, computeMaxUnlockedDay } from "@/lib/challenge-config";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.beegood.online";
 const CHALLENGE_URL = `${APP_URL}/challenge/content`;
@@ -26,7 +27,7 @@ const BATCH_SIZE = 20;
 
 interface Enrollment {
   id:          string;
-  current_day: number;
+  enrolled_at: string;
   user_id:     string;
   name:        string | null;
   phone:       string | null;
@@ -79,19 +80,17 @@ export async function GET(req: NextRequest) {
 
   const db = createServerClient();
 
-  // Fetch active enrollments (not completed, current_day 1-7)
+  // Fetch all active enrollments (not completed yet)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: enrollments, error } = await (db as any)
     .from("challenge_enrollments")
     .select(`
       id,
-      current_day,
+      enrolled_at,
       user_id,
       users!inner ( name, phone )
     `)
-    .is("completed_at", null)
-    .gte("current_day", 1)
-    .lte("current_day", 7);
+    .is("completed_at", null);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -99,20 +98,39 @@ export async function GET(req: NextRequest) {
 
   const flat: Enrollment[] = (enrollments ?? []).map((e: Record<string, unknown>) => {
     const u = e.users as { name: string | null; phone: string | null };
-    return { id: e.id as string, current_day: e.current_day as number, user_id: e.user_id as string, name: u?.name ?? null, phone: u?.phone ?? null };
+    return {
+      id:          e.id as string,
+      enrolled_at: e.enrolled_at as string,
+      user_id:     e.user_id as string,
+      name:        u?.name ?? null,
+      phone:       u?.phone ?? null,
+    };
   });
 
-  // Filter: skip already-sent today
+  // Compute today's unlocked day for each enrollment (time-based, Saturday skipped)
+  const withDay = flat
+    .map((e) => ({ ...e, todayDay: computeMaxUnlockedDay(e.enrolled_at) }))
+    .filter((e) => e.todayDay >= 1 && e.todayDay <= 7 && e.phone);
+
+  if (withDay.length === 0) {
+    return NextResponse.json({ ok: true, sent: 0, failed: 0, skipped: 0, total: 0 });
+  }
+
+  // Filter: skip already-sent for this (enrollment, day) pair
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: alreadySent } = await (db as any)
     .from("challenge_whatsapp_logs")
-    .select("enrollment_id")
-    .in("enrollment_id", flat.map((e) => e.id))
-    .eq("status", "sent")
-    .in("day_number", flat.map((e) => e.current_day));
+    .select("enrollment_id, day_number")
+    .in("enrollment_id", withDay.map((e) => e.id))
+    .eq("status", "sent");
 
-  const sentIds = new Set((alreadySent ?? []).map((r: { enrollment_id: string }) => r.enrollment_id));
-  const toSend = flat.filter((e) => !sentIds.has(e.id) && e.phone);
+  const sentSet = new Set(
+    (alreadySent ?? []).map((r: { enrollment_id: string; day_number: number }) =>
+      `${r.enrollment_id}:${r.day_number}`
+    )
+  );
+
+  const toSend = withDay.filter((e) => !sentSet.has(`${e.id}:${e.todayDay}`));
 
   let sent = 0, failed = 0, skipped = 0;
 
@@ -124,13 +142,13 @@ export async function GET(req: NextRequest) {
       const phone = normalizePhone(enrollment.phone!);
       if (!phone) { skipped++; return; }
 
-      const dayInfo = CHALLENGE_DAYS.find((d) => d.day === enrollment.current_day);
+      const dayInfo = CHALLENGE_DAYS.find((d) => d.day === enrollment.todayDay);
       if (!dayInfo) { skipped++; return; }
 
       const firstName = (enrollment.name ?? "").split(" ")[0] || "שלום";
       const params = [
         firstName,
-        String(enrollment.current_day),
+        String(enrollment.todayDay),
         dayInfo.title,
         CHALLENGE_URL,
       ];
@@ -149,7 +167,7 @@ export async function GET(req: NextRequest) {
       await (db as any)
         .from("challenge_whatsapp_logs")
         .upsert(
-          { enrollment_id: enrollment.id, day_number: enrollment.current_day, status },
+          { enrollment_id: enrollment.id, day_number: enrollment.todayDay, status },
           { onConflict: "enrollment_id,day_number", ignoreDuplicates: false }
         );
     }));
