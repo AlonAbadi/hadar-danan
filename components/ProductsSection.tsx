@@ -140,7 +140,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       name:     "פגישת אסטרטגיה",
       tag:      "מומלץ",
       outcome:  "90 דקות שבונות תכנית ל-90 יום",
-      scarcity: "36 מקומות בשנה בלבד",
+      scarcity: "מספר מקומות מוגבל בכל חודש",
       scIcon:   "🔒",
       ctas: [{ label: "קבע פגישה ←", href: "/strategy", primary: true }],
       bullets: [
