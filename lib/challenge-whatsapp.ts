@@ -11,6 +11,14 @@ const CHALLENGE_URL = `${APP_URL}/challenge/content`;
 const TEMPLATE_NAME = "hadar_challenge_daily";
 const NAMESPACE     = "a01b08e8_1852_422e_bba2_25f0d05dcafa";
 
+/** Returns time-appropriate Hebrew greeting based on Israel time (UTC+3). */
+function hebrewGreeting(): string {
+  const hour = new Date(Date.now() + 3 * 60 * 60 * 1000).getUTCHours();
+  if (hour >= 5  && hour < 12) return "בוקר טוב";
+  if (hour >= 12 && hour < 18) return "צהריים טובים";
+  return "ערב טוב";
+}
+
 export function normalizePhone(phone: string): string | null {
   const d = phone.replace(/\D/g, "");
   if (d.startsWith("972") && d.length === 12) return d;
@@ -34,9 +42,11 @@ export async function sendChallengeWhatsApp(
 
   const firstName = (name ?? "").trim().split(" ")[0] || "שלום";
   const dayParam  = dayNumber === 0 ? "פתיחה" : String(dayNumber);
+  // {{1}} = "ברכה, שם" — template body starts with {{1}} 👋 (no hardcoded "בוקר טוב")
+  const greeting  = `${hebrewGreeting()}, ${firstName}`;
 
   const paramMap: Record<string, string> = {
-    "BODY_{{1}}": firstName,
+    "BODY_{{1}}": greeting,
     "BODY_{{2}}": dayParam,
     "BODY_{{3}}": dayInfo.title,
     "BODY_{{4}}": CHALLENGE_URL,
