@@ -292,9 +292,10 @@ function MicroCommitment({
     return Object.values(resultMessages)[0] ?? '';
   }, [answers, resultMessages]);
 
-  const handleNext = () => {
-    if (!selected) return;
-    const newAnswers = { ...answers, [qIdx]: selected };
+  const handleNext = (answer?: string) => {
+    const ans = answer ?? selected;
+    if (!ans) return;
+    const newAnswers = { ...answers, [qIdx]: ans };
     setAnswers(newAnswers);
     setSelected(null);
     if (qIdx + 1 >= questions.length) {
@@ -342,7 +343,7 @@ function MicroCommitment({
             {currentQ.options.map((opt, i) => (
               <button
                 key={i}
-                onClick={() => setSelected(opt)}
+                onClick={() => { setSelected(opt); handleNext(opt); }}
                 style={{
                   background: selected === opt ? `rgba(201,150,74,0.12)` : CARD,
                   border: `1px solid ${selected === opt ? GOLD : BORDER}`,
@@ -355,26 +356,12 @@ function MicroCommitment({
               </button>
             ))}
           </div>
-          {/* המשך button - hidden until option selected */}
-          <button
-            onClick={handleNext}
-            disabled={!selected}
-            style={{
-              display: selected ? 'block' : 'none',
-              width: '100%', padding: '13px',
-              background: `linear-gradient(135deg, ${GOLD_L}, ${GOLD}, ${GOLD_D})`,
-              color: '#1A1206', fontWeight: 800, fontSize: 16,
-              border: 'none', borderRadius: 10, cursor: 'pointer', marginBottom: 8,
-            }}
-          >
-            המשך
-          </button>
           <button
             onClick={skipToCheckout}
             style={{
               background: 'none', border: 'none', color: FG_M,
-              fontSize: 13, cursor: 'pointer', textDecoration: 'underline',
-              display: 'block', margin: '8px auto 0',
+              fontSize: 15, cursor: 'pointer', textDecoration: 'underline',
+              display: 'block', margin: '4px auto 0',
             }}
           >
             דלג על השאלות
