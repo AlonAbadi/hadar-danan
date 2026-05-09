@@ -99,7 +99,6 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
 
         proofStats={[
           { val: "600+", label: "עסקים" },
-          { val: "40%",  label: "גידול ממוצע בהכנסה" },
           { val: "97%",  label: "ממליצים" },
         ]}
         testimonials={[]}
