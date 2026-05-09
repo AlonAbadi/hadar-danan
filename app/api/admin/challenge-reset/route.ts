@@ -2,16 +2,16 @@
  * POST /api/admin/challenge-reset
  *
  * Resets challenge progress for a list of emails and re-simulates purchase.
- * Sends the opening-session WhatsApp immediately.
+ * Idempotent — safe to call multiple times: will not resend WhatsApp if already sent.
  *
  * Body: { emails: string[] }
  *
  * Per email:
  *  1. Find public.users row
- *  2. Delete challenge_enrollments (CASCADE → completions + whatsapp_logs)
- *  3. Ensure a completed challenge_197 purchase exists (creates one if needed)
- *  4. Create fresh enrollment (enrolled_at = now)
- *  5. Send WhatsApp for day 0 + log result
+ *  2. Delete challenge_day_completions (resets progress badges)
+ *  3. UPSERT enrollment with enrolled_at = now() (preserves ID → preserves wa log dedup)
+ *  4. Ensure a completed challenge_197 purchase exists
+ *  5. Send WhatsApp for day 0 only if not already sent (checked via challenge_whatsapp_logs)
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
@@ -24,13 +24,15 @@ export async function POST(req: NextRequest) {
   }
 
   const db = createServerClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const d = db as any;
   const results: Record<string, string> = {};
+  const now = new Date().toISOString();
 
   for (const email of emails as string[]) {
     try {
       // 1. Find user
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: userData } = await (db as any)
+      const { data: userData } = await d
         .from("users")
         .select("id, name, phone")
         .eq("email", email.toLowerCase().trim())
@@ -40,14 +42,36 @@ export async function POST(req: NextRequest) {
 
       const userId: string = userData.id;
 
-      // 2. Delete existing enrollment (CASCADE removes completions + whatsapp_logs)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (db as any)
+      // 2. Get existing enrollment (to clear completions without losing the ID)
+      const { data: existing } = await d
         .from("challenge_enrollments")
-        .delete()
-        .eq("user_id", userId);
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-      // 3. Ensure completed challenge_197 purchase exists
+      if (existing) {
+        await d.from("challenge_day_completions").delete().eq("enrollment_id", existing.id);
+        // Do NOT delete whatsapp_logs — they protect against double-send
+      }
+
+      // 3. UPSERT enrollment with enrolled_at = now() (resets 24h unlock clock)
+      const { data: enrollment } = await d
+        .from("challenge_enrollments")
+        .upsert(
+          { user_id: userId, enrolled_at: now, current_day: 0, completed_at: null, last_activity_at: now },
+          { onConflict: "user_id", ignoreDuplicates: false }
+        )
+        .select("id")
+        .maybeSingle();
+
+      // Fallback: re-fetch if upsert didn't return row
+      const enrollmentId: string =
+        enrollment?.id ??
+        (await d.from("challenge_enrollments").select("id").eq("user_id", userId).maybeSingle()).data?.id;
+
+      if (!enrollmentId) { results[email] = "enrollment upsert failed"; continue; }
+
+      // 4. Ensure completed purchase
       const { data: existingPurchase } = await db
         .from("purchases")
         .select("id")
@@ -57,44 +81,44 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (!existingPurchase) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (db as any)
-          .from("purchases")
-          .insert({
-            user_id:     userId,
-            product:     "challenge_197",
-            status:      "completed",
-            amount:      0,
-            cardcom_ref: `admin_reset_${Date.now()}_${userId.slice(0, 8)}`,
-          });
+        await d.from("purchases").insert({
+          user_id:     userId,
+          product:     "challenge_197",
+          status:      "completed",
+          amount:      0,
+          cardcom_ref: `admin_reset_${Date.now()}_${userId.slice(0, 8)}`,
+        });
       }
 
-      // 4. Create fresh enrollment
-      const enrolledAt = new Date().toISOString();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: newEnrollment } = await (db as any)
-        .from("challenge_enrollments")
-        .insert({ user_id: userId, enrolled_at: enrolledAt, current_day: 0 })
-        .select("id")
-        .single();
-
-      if (!newEnrollment) { results[email] = "enrollment create failed"; continue; }
-
-      // 5. Send WhatsApp for opening session
-      if (userData.phone) {
-        const waStatus = await sendChallengeWhatsApp(userData.phone, userData.name ?? "", 0)
-          .then(() => "sent" as const)
-          .catch(() => "failed" as const);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (db as any)
-          .from("challenge_whatsapp_logs")
-          .insert({ enrollment_id: newEnrollment.id, day_number: 0, status: waStatus });
-
-        results[email] = `reset ok — whatsapp day0: ${waStatus}`;
-      } else {
+      // 5. Send WhatsApp only if not already sent for day 0
+      if (!userData.phone) {
         results[email] = "reset ok — no phone, whatsapp skipped";
+        continue;
       }
+
+      const { data: alreadySent } = await d
+        .from("challenge_whatsapp_logs")
+        .select("id")
+        .eq("enrollment_id", enrollmentId)
+        .eq("day_number", 0)
+        .eq("status", "sent")
+        .maybeSingle();
+
+      if (alreadySent) {
+        results[email] = "reset ok — whatsapp day0: already sent (skipped)";
+        continue;
+      }
+
+      const waStatus = await sendChallengeWhatsApp(userData.phone, userData.name ?? "", 0)
+        .then(() => "sent" as const)
+        .catch(() => "failed" as const);
+
+      await d.from("challenge_whatsapp_logs").upsert(
+        { enrollment_id: enrollmentId, day_number: 0, status: waStatus },
+        { onConflict: "enrollment_id,day_number", ignoreDuplicates: false }
+      );
+
+      results[email] = `reset ok — whatsapp day0: ${waStatus}`;
     } catch (e) {
       results[email] = `error: ${String(e)}`;
     }
