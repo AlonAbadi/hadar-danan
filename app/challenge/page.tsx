@@ -2,7 +2,6 @@ import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
-import { NextChallengeBadge } from "./NextChallengeBadge";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
@@ -62,12 +61,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
           { val: "500+", label: "בעלי עסקים" },
           { val: "97%",  label: "ממליצים" },
         ]}
-        heroExtra={
-          <>
-            <ChallengeGreeting />
-            <NextChallengeBadge />
-          </>
-        }
+        heroExtra={<ChallengeGreeting />}
 
         problemItems={[
           { icon: "📢", text: "מרגיש/ת שעידן השיווק מיצה את עצמו מכל הכיוונים — רעש בכל מקום, וקשה לדעת מה באמת עובד." },
