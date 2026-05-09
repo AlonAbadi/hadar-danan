@@ -20,7 +20,7 @@ const FAQS = [
   { q: 'לא בטוח שזה מתאים לתחום שלי', a: 'הקורס עבר עם יותר מ-3,500 עסקים - רופאים, עורכי דין, מאמנים, יועצים, בעלי מקצוע. הבידול רלוונטי לכל מי שמוכר את עצמו ואת הידע שלו.' },
   { q: 'כמה זמן לוקח לסיים את הקורס?', a: '16 שיעורים של כחצי שעה - סה"כ כ-8 שעות. אפשר שיעור ביום ולסיים תוך שבועיים, או לרוץ על זה בסוף שבוע. הגישה שלך לנצח.' },
   { q: 'ניסיתי קורסים בעבר ולא יצא לי כלום', a: 'רוב הקורסים נותנים תיאוריה. הקורס הזה בנוי על שיטה שהדר יישמה בשטח עם 3,500 עסקים - כל שיעור נגמר עם משימה אחת ברורה שמיישמים מיד.' },
-  { q: 'מה קורה אם אני לא מרוצה?', a: 'צור קשר ונטפל בזה. ערבות תוצאה - עברת את כל 8 המודולים ולא יצאת עם מסר ברור, נחזיר לך את הכסף.' },
+  { q: 'מה קורה אם יש לי שאלה תוך כדי הקורס?', a: 'ניתן לפנות דרך וואטסאפ לתמיכה ישירה. הקורס מלווה בדוגמאות, תרגילים ותמיכה לאורך כל הדרך.' },
   { q: 'האם הקורס מתעדכן?', a: 'כן. כשהדר מוסיפה תכנים - אתה מקבל אותם ללא עלות נוספת. קנית פעם אחת, מרוויח לאורך זמן.' },
 ];
 
@@ -138,7 +138,7 @@ export function CourseLandingClient({ credit, whatsappPhone, email }: Props) {
       <CreditBanner credit={credit} listPrice={price} productName="הקורס הדיגיטלי" dark />
       <CourseCTA whatsappPhone={whatsappPhone} credit={credit} initialEmail={email} />
       <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap', padding: '4px 0', marginTop: 8 }}>
-        {['🔒 תשלום מאובטח', '⚡ גישה מיידית', '↩️ ביטול תוך 48 שעות'].map(t => (
+        {['🔒 תשלום מאובטח', '⚡ גישה מיידית', '🛡 SSL מוצפן'].map(t => (
           <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: 'var(--fg-muted)' }}>{t}</div>
         ))}
       </div>
@@ -150,10 +150,10 @@ export function CourseLandingClient({ credit, whatsappPhone, email }: Props) {
         הקרדיט מצטבר - <strong style={{ color: 'var(--gold)' }}>₪{price.toLocaleString('he-IL')} שתשלם היום</strong> יצטברו לקראת פגישת האסטרטגיה, הסדנה, או יום הצילום הבא שלך.
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, paddingTop: 14, borderTop: '1px solid rgba(44,50,62,0.5)', marginTop: 8 }}>
-        <div style={{ fontSize: 24, flexShrink: 0 }}>🛡️</div>
+        <div style={{ fontSize: 24, flexShrink: 0 }}>💬</div>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--fg)', marginBottom: 3 }}>ערבות תוצאה</div>
-          <div style={{ fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.5 }}>עברת את כל 8 המודולים ולא יצאת עם מסר ברור - נחזיר לך את הכסף. בלי שאלות.</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--fg)', marginBottom: 3 }}>תמיכה ישירה</div>
+          <div style={{ fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.5 }}>שאלות? פניות? מגיעים דרך וואטסאפ ומקבלים מענה ישיר.</div>
         </div>
       </div>
     </div>

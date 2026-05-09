@@ -429,7 +429,7 @@ function PriceCard({
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 24, textAlign: 'right' }}>
-        {[`גישה מיידית ל${productName}`, 'תמיכה ישירה מהדר', 'ערבות - תוצאות או כסף חזרה'].map((item, i) => (
+        {[`גישה מיידית ל${productName}`, 'תמיכה ישירה מהדר', 'תשלום מאובטח SSL'].map((item, i) => (
           <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'center', fontSize: 14, color: FG }}>
             <span style={{ color: GREEN_TEXT, flexShrink: 0, fontSize: 16 }}>✓</span>
             {item}
@@ -460,7 +460,7 @@ function PriceCard({
       }}>
         <ShieldIcon />
         <span style={{ fontSize: 12, color: FG_M, lineHeight: 1.5 }}>
-          ערבות מלאה - לא מרוצה? קבל/י החזר מלא תוך 14 ימים, ללא שאלות
+          תשלום מאובטח · Cardcom · SSL מוצפן
         </span>
       </div>
 
