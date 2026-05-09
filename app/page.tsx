@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { parseVariant, AB_CONTENT } from "@/lib/ab";
 import { createServerClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/landing/PageTracker";
-import { ProductsSection } from "@/components/ProductsSection";
+const ProductsSection = dynamic(() => import("@/components/ProductsSection").then(m => ({ default: m.ProductsSection })));
 import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Sparkles } from "lucide-react";
 
 const StatsSection       = dynamic(() => import("@/components/landing/StatsSection").then(m => ({ default: m.StatsSection })));
