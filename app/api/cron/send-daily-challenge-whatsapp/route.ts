@@ -78,6 +78,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "UCHAT_API_KEY not configured" }, { status: 503 });
   }
 
+  // Skip Saturday — no challenge messages on Shabbat
+  if (new Date().getDay() === 6) {
+    return NextResponse.json({ ok: true, sent: 0, skipped: 0, total: 0, note: "Saturday" });
+  }
+
   const db = createServerClient();
 
   // Fetch all active enrollments (not completed yet)
@@ -107,10 +112,11 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  // Compute today's unlocked day for each enrollment (time-based, Saturday skipped)
+  // Compute today's unlocked day for each enrollment (time-based, Saturday skipped above)
+  // Include day 0 (opening session) — sent on the first morning after enrollment
   const withDay = flat
     .map((e) => ({ ...e, todayDay: computeMaxUnlockedDay(e.enrolled_at) }))
-    .filter((e) => e.todayDay >= 1 && e.todayDay <= 7 && e.phone);
+    .filter((e) => e.todayDay >= 0 && e.todayDay <= 7 && e.phone);
 
   if (withDay.length === 0) {
     return NextResponse.json({ ok: true, sent: 0, failed: 0, skipped: 0, total: 0 });
@@ -146,9 +152,11 @@ export async function GET(req: NextRequest) {
       if (!dayInfo) { skipped++; return; }
 
       const firstName = (enrollment.name ?? "").split(" ")[0] || "שלום";
+      // Day 0 = opening session — pass "פתיחה" so the template reads "יום פתיחה של האתגר"
+      const dayParam = enrollment.todayDay === 0 ? "פתיחה" : String(enrollment.todayDay);
       const params = [
         firstName,
-        String(enrollment.todayDay),
+        dayParam,
         dayInfo.title,
         CHALLENGE_URL,
       ];
