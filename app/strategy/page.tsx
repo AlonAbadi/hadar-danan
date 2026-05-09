@@ -34,7 +34,7 @@ export default async function StrategyPage() {
         description="פגישת אסטרטגיה אחד-על-אחד עם הדר דנן — חשיבה יצירתית בלייב שמביאה בהירות מלאה לאן העסק הולך."
         url={`${APP_URL}/strategy`}
         price={4000}
-        imageUrl={`${APP_URL}/strategymeeting.png`}
+        imageUrl={`${APP_URL}/strategymeeting.jpg`}
       />
       <BreadcrumbSchema crumbs={[
         { name: "דף הבית", url: APP_URL },

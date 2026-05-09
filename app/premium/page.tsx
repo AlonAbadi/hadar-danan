@@ -35,7 +35,7 @@ export default async function PremiumPage() {
         description="יום צילום מקצועי עם הצוות של BeeGood. יוצאים עם 14 סרטונים ערוכים ואסטרטגיה עסקית ושיווקית לשנה שלמה."
         url={`${APP_URL}/premium`}
         price={14000}
-        imageUrl={`${APP_URL}/shooting.png`}
+        imageUrl={`${APP_URL}/shooting.jpg`}
       />
       <FAQSchema items={PREMIUM_FAQS} />
       <BreadcrumbSchema crumbs={[

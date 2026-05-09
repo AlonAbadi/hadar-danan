@@ -40,7 +40,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         description="סדנת עומק פעילה בלייב — יכולות ביטוי, השפעה וכריזמה מול מצלמה וקהל. 600+ בעלי עסקים כבר עברו אותה."
         url={`${APP_URL}/workshop`}
         price={1080}
-        imageUrl={`${APP_URL}/sadna.png`}
+        imageUrl={`${APP_URL}/sadna.jpg`}
       />
       <FAQSchema items={WORKSHOP_FAQS} />
       <BreadcrumbSchema crumbs={[

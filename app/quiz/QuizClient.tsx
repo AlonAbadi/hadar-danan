@@ -836,7 +836,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
  // ── Result page (Netflix style + Narrative Engine) ───────────────
   if (!winner || !scores || !narrative) return null;
 
-  const heroImage = PRODUCT_IMAGE[winner.id] ?? "/hadar.png";
+  const heroImage = PRODUCT_IMAGE[winner.id] ?? "/hadar.jpg";
   const ctaText = CTA_TEXT[winner.id] ?? "להתחיל עכשיו";
   const metaText = PRODUCT_META[winner.id] ?? "";
   const firstName = leadForm.name.trim().split(" ")[0];
@@ -1147,7 +1147,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
                 return (
                   <button key={p.id} onClick={() => handleCTAClick(p.id, p.href)} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", cursor: "pointer", textAlign: "right" }}>
                     <div style={{ height: 120, overflow: "hidden" }}>
-                      <img src={PRODUCT_IMAGE[p.id] ?? "/hadar.png"} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
+                      <img src={PRODUCT_IMAGE[p.id] ?? "/hadar.jpg"} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
                     </div>
                     <div style={{ padding: "10px 10px 12px" }}>
                       <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, marginBottom: 4 }}>התאמה {pMatch}%</div>

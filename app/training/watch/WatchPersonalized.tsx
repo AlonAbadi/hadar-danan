@@ -86,7 +86,7 @@ export function WatchNextStep() {
             {/* Image */}
             <div style={{ position: "relative", height: 220 }}>
               <img
-                src="/etgar.png"
+                src="/etgar.jpg"
                 alt="אתגר 7 הימים"
                 style={{
                   width: "100%",

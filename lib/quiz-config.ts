@@ -8,13 +8,13 @@ export type BulletRule = { q: number; a: Answer; text: string };
 // ── Product display metadata ──────────────────────────────────────
 
 export const PRODUCT_IMAGE: Record<string, string> = {
-  free_training: "/hadarlesson.png",
-  challenge:     "/etgar.png",
-  workshop:      "/sadna.png",
-  course:        "/coursehadar.png",
-  strategy:      "/strategymeeting.png",
-  premium:       "/shooting.png",
-  partnership:   "/hadar.png",
+  free_training: "/hadarlesson.jpg",
+  challenge:     "/etgar.jpg",
+  workshop:      "/sadna.jpg",
+  course:        "/coursehadar.jpg",
+  strategy:      "/strategymeeting.jpg",
+  premium:       "/shooting.jpg",
+  partnership:   "/hadar.jpg",
 };
 
 export const PRODUCT_META: Record<string, string> = {

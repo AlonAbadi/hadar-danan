@@ -39,7 +39,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         description="7 ימים, 7 סרטונים שמייצרים מכירות. קורס on-demand עם הדרכה יומיומית מהדר דנן."
         url={`${APP_URL}/challenge`}
         price={197}
-        imageUrl={`${APP_URL}/etgar.png`}
+        imageUrl={`${APP_URL}/etgar.jpg`}
       />
       <FAQSchema items={CHALLENGE_FAQS} />
       <BreadcrumbSchema crumbs={[
