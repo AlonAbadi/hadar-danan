@@ -322,138 +322,169 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           })}
         </div>
 
-        {/* ── Premium section ────────────────────────────────────────────── */}
-        <div style={{ marginBottom: 48 }}>
+        {/* ── Premium section — V3 Editorial ────────────────────────────── */}
+        <div style={{ marginBottom: 48, position: "relative" }}>
 
-          {/* Editorial header */}
-          <div style={{ textAlign: "center", padding: "8px 0 28px" }}>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".24em", color: "#9E7C3A", marginBottom: 14 }}>◆ PREMIUM</div>
-            <h2 style={{ margin: "0 0 10px", fontSize: "clamp(1.6rem,3.5vw,2rem)", fontWeight: 800, lineHeight: 1.15, color: "#EDE9E1", letterSpacing: "-0.01em" }}>
-              לעסקים שמוכנים<br />
-              <span style={{ fontStyle: "italic", fontWeight: 500, color: "#E8B94A" }}>לקפיצה הבאה</span>
+          {/* Ambient gradient */}
+          <div style={{
+            position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5,
+            background: "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201,150,74,0.08), transparent 60%), radial-gradient(ellipse 60% 40% at 50% 100%, rgba(201,150,74,0.06), transparent 60%)",
+          }} />
+
+          {/* Header */}
+          <div style={{ padding: "56px 0 36px", textAlign: "center", position: "relative" }}>
+            <div style={{ width: 32, height: 1, background: "#9E7C3A", margin: "0 auto 20px", opacity: 0.5 }} />
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".32em", color: "#9E7C3A", marginBottom: 18 }}>PREMIUM</div>
+            <h2 style={{ margin: "0 auto 12px", maxWidth: 340, fontSize: 30, fontWeight: 300, lineHeight: 1.2, color: "#f6f1e6", letterSpacing: "-0.01em" }}>
+              לעסקים שמוכנים<br/>
+              <em style={{ fontStyle: "italic", fontWeight: 400, color: "#E8B94A" }}>לקפיצה הבאה.</em>
             </h2>
-            <p style={{ margin: "0 auto", maxWidth: 320, fontSize: 13, color: "#9E9990", lineHeight: 1.6 }}>
-              שלוש דרכים לעבוד איתנו לעומק. כל אחת מתחילה בשיחה.
+            <p style={{ margin: "0 auto", maxWidth: 300, fontSize: 13, color: "#8e887e", lineHeight: 1.65 }}>
+              שלוש דרכים לעבוד איתנו לעומק.<br/>כל אחת מתחילה בשיחה.
             </p>
           </div>
 
-          {/* Cards */}
-          <div className="ps-prem-grid">
+          {/* Top border */}
+          <div style={{ borderTop: "1px solid rgba(201,150,74,0.28)" }} />
 
-            {/* PRODUCTION — יום צילום פרמיום */}
-            <article style={{ borderRadius: 16, overflow: "hidden", border: "1px solid rgba(201,150,74,0.16)", background: "#0F1623" }}>
-              <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
-                <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 30% 30%, rgba(232,185,74,0.18), transparent 55%), radial-gradient(ellipse at 80% 70%, rgba(232,185,74,0.10), transparent 50%), linear-gradient(135deg, #1a2238, #0F1623)" }}>
-                  <div style={{ position: "absolute", bottom: 18, right: 18, display: "flex", gap: 4 }}>
-                    {[0,1,2,3].map(i => <div key={i} style={{ width: 18, height: 24, border: "1px solid rgba(232,185,74,0.35)", borderRadius: 2 }} />)}
-                  </div>
+          {/* Items */}
+          {([
+            {
+              num: "I",
+              kind: "PRODUCTION DAY",
+              pull: "יום אחד.\nארבע-עשר סרטונים.",
+              body: "מסירה מהקלטה, יום צילום מלא עם צוות הפקה, עריכה. את התוצאה מקבלים עם 14 סרטונים מוכנים לפרסום.",
+              meta: [
+                { k: "משך",           v: "יום אחד"            },
+                { k: "תוצר",          v: "14 סרטונים מוכנים"  },
+                { k: "עלייה לאוויר",  v: "14 ימים"            },
+              ],
+              price: "₪14,000", priceNote: "+ מע״מ",
+              quote: "השקעה שמחזירה את עצמה תוך 6 שבועות.",
+              quoteBy: "נועה · יועצת ניהל",
+              href: "/premium",
+            },
+            {
+              num: "II",
+              kind: "STRATEGIC PARTNERSHIP",
+              pull: "שותף אמיתי —\nלא ספק שירותים.",
+              body: "נוכחות מלאה בשותף שלווה: אסטרטגיה, נוכחות תוכן, פתיחת צנרת הזדמנויות. לעסקים שרוצים שמישהו ייקח את הסיפור שלהם, בתמונה הגדולה.",
+              meta: [
+                { k: "מין",         v: "חודשי, מתמשך"         },
+                { k: "היקף",        v: "עד 30 שעות / חודש"    },
+                { k: "פנוי ל-Q3",   v: "2 מקומות"             },
+              ],
+              price: "₪10k–30k", priceNote: "/ חודש",
+              quote: "זה כמו לקבל CMO במשרה חלקית — בלי overhead.",
+              quoteBy: "רן · רשת עסקאות",
+              href: "/partnership",
+            },
+            {
+              num: "III",
+              kind: "BY INVITATION",
+              pull: "תוכן סוקרטי,\nמתמשך, בדיבור שלהם.",
+              body: "מלווה 1-on-1, הפקות תכנים מותאמות, ביטוי מותג שהם רוצים. מיועד להזמנה בלבד.",
+              meta: [
+                { k: "מותג",     v: "אישי, כבראנד בלוד"  },
+                { k: "תוצרים",   v: "ממותג"               },
+                { k: "ליווי",    v: "מיועד להזמנה"        },
+              ],
+              price: "בהתאמה אישית", priceNote: "",
+              quote: "", quoteBy: "",
+              href: "/atelier",
+            },
+          ] as const).map((item, i, arr) => (
+            <article key={item.num} style={{
+              padding: "28px 24px 32px",
+              borderBottom: i < arr.length - 1 ? "1px solid rgba(201,150,74,0.14)" : "none",
+              position: "relative",
+            }}>
+              {/* Roman numeral + kind */}
+              <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 18 }}>
+                <div aria-hidden="true" style={{ fontSize: 34, fontWeight: 400, fontStyle: "italic", color: "#9E7C3A", lineHeight: 1, minWidth: 24 }}>
+                  {item.num}
                 </div>
-                <div style={{ position: "absolute", top: 14, right: 14, fontSize: 10, fontWeight: 800, letterSpacing: ".18em", color: "#E8B94A", background: "rgba(8,12,20,0.75)", padding: "4px 10px", borderRadius: 3, border: "1px solid rgba(232,185,74,0.30)" }}>PRODUCTION</div>
+                <div style={{ flex: 1, paddingTop: 4 }}>
+                  <div style={{ height: 1, background: "rgba(201,150,74,0.14)", marginBottom: 8 }} />
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".24em", color: "#C9964A" }}>{item.kind}</div>
+                </div>
               </div>
-              <div style={{ padding: "20px 18px 22px" }}>
-                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#EDE9E1", lineHeight: 1.15 }}>יום צילום פרמיום</h3>
-                  <div style={{ textAlign: "left", flexShrink: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: "#E8B94A", whiteSpace: "nowrap" }}>₪14,000</div>
-                    <div style={{ fontSize: 10, color: "#9E9990", marginTop: 3 }}>+ מע״מ</div>
+
+              {/* Pull quote */}
+              <div style={{
+                margin: "0 0 18px",
+                fontSize: 28, fontWeight: 300, fontStyle: "italic",
+                color: "#f6f1e6", lineHeight: 1.18, letterSpacing: "-0.01em",
+                whiteSpace: "pre-line",
+              }}>{item.pull}</div>
+
+              {/* Body */}
+              <p style={{ margin: "0 0 24px", fontSize: 14, lineHeight: 1.7, color: "#8e887e", maxWidth: 340 }}>
+                {item.body}
+              </p>
+
+              {/* Meta table */}
+              <div style={{ marginBottom: item.quote ? 22 : 26, borderTop: "1px solid rgba(201,150,74,0.14)" }}>
+                {item.meta.map((m, mi) => (
+                  <div key={mi} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                    padding: "11px 2px", borderBottom: "1px solid rgba(201,150,74,0.14)", fontSize: 12,
+                  }}>
+                    <span style={{ color: "#8e887e", letterSpacing: ".02em" }}>{m.k}</span>
+                    <span style={{ color: "#f6f1e6", fontWeight: 500 }}>{m.v}</span>
                   </div>
+                ))}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "14px 2px 0" }}>
+                  <span style={{ fontSize: 12, color: "#8e887e", letterSpacing: ".02em" }}>השקעה</span>
+                  <span style={{ display: "inline-flex", alignItems: "baseline", gap: 6 }}>
+                    {item.priceNote && <span style={{ fontSize: 11, color: "#8e887e", order: 2 }}>{item.priceNote}</span>}
+                    <span style={{ fontSize: 20, fontWeight: 600, color: "#E8B94A", letterSpacing: ".01em", order: 1 }}>{item.price}</span>
+                  </span>
                 </div>
-                <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.5, color: "#EDE9E1", fontWeight: 500 }}>יום אחד · 14 סרטונים · ביד.</p>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#C9964A", marginBottom: 14, letterSpacing: ".02em" }}>◆ 14 ימים מהצילום לאוויר</div>
-                <ul style={{ margin: "0 0 16px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-                  {["אסטרטגיה מקדימה (90 דק׳)", "יום צילום מלא + צוות", "14 סרטונים ערוכים"].map((d, i) => (
-                    <li key={i} style={{ fontSize: 12, color: "#9E9990", lineHeight: 1.5, position: "relative", paddingRight: 14 }}>
-                      <span style={{ position: "absolute", right: 0, top: "0.45em", width: 4, height: 4, borderRadius: "50%", background: "#9E7C3A", display: "inline-block" }} />{d}
-                    </li>
-                  ))}
-                </ul>
-                <div style={{ padding: "10px 12px", marginBottom: 16, background: "rgba(0,0,0,0.25)", borderRight: "2px solid #9E7C3A", borderRadius: "0 6px 6px 0", fontSize: 12, fontStyle: "italic", color: "#EDE9E1", lineHeight: 1.5 }}>
-                  ״השקעה שמחזירה את עצמה תוך 6 שבועות.״
-                  <div style={{ fontStyle: "normal", fontSize: 10, color: "#9E7C3A", marginTop: 4 }}>— נועה · יועצת ניהל</div>
-                </div>
-                <a href="/premium" onClick={dismissSticky} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 999, border: "1px solid #C9964A", color: "#E8B94A", fontSize: 12, fontWeight: 800, textDecoration: "none", letterSpacing: ".02em" }}>
-                  פנה ליצירת קשר ←
-                </a>
               </div>
+
+              {/* Quote */}
+              {item.quote && (
+                <div style={{ marginBottom: 24, paddingRight: 14, borderRight: "1px solid #9E7C3A" }}>
+                  <div style={{ fontStyle: "italic", fontSize: 15, color: "#f6f1e6", lineHeight: 1.5, marginBottom: 6 }}>
+                    ״{item.quote}״
+                  </div>
+                  <div style={{ fontSize: 11, color: "#8e887e", letterSpacing: ".04em" }}>— {item.quoteBy}</div>
+                </div>
+              )}
+
+              {/* CTA — typographic link */}
+              <a href={item.href} onClick={dismissSticky} aria-label={`פנה ליצירת קשר — ${item.kind}`} style={{
+                display: "inline-flex", alignItems: "center", gap: 10,
+                fontSize: 12, fontWeight: 600, letterSpacing: ".06em",
+                color: "#E8B94A", textDecoration: "none",
+                borderBottom: "1px solid #9E7C3A", paddingBottom: 4,
+              }}>
+                <span>פנה ליצירת קשר</span>
+                <span style={{ fontSize: 11, opacity: 0.7 }}>←</span>
+              </a>
             </article>
+          ))}
 
-            {/* PARTNERSHIP — שותפות אסטרטגית */}
-            <article style={{ borderRadius: 16, overflow: "hidden", border: "1px solid rgba(201,150,74,0.16)", background: "#0F1623" }}>
-              <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(155deg, #131C2E 0%, #0F1623 100%)" }}>
-                  <div style={{ position: "absolute", inset: "20% 25%", background: "linear-gradient(135deg, rgba(232,185,74,0.10), transparent 60%)", border: "1px solid rgba(232,185,74,0.20)", borderRadius: 4 }} />
-                  <div style={{ position: "absolute", top: "30%", right: "30%", width: 1, height: "40%", background: "linear-gradient(180deg, rgba(232,185,74,0.4), transparent)" }} />
-                </div>
-                <div style={{ position: "absolute", top: 14, right: 14, fontSize: 10, fontWeight: 800, letterSpacing: ".18em", color: "#E8B94A", background: "rgba(8,12,20,0.75)", padding: "4px 10px", borderRadius: 3, border: "1px solid rgba(232,185,74,0.30)" }}>PARTNERSHIP</div>
-                <div style={{ position: "absolute", bottom: 14, right: 14, fontSize: 10, fontWeight: 700, color: "#E8B94A", background: "rgba(232,185,74,0.12)", padding: "4px 10px", borderRadius: 999, border: "1px solid rgba(232,185,74,0.35)" }}>← 2 מקומות פנויים</div>
-              </div>
-              <div style={{ padding: "20px 18px 22px" }}>
-                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#EDE9E1", lineHeight: 1.15 }}>שותפות אסטרטגית</h3>
-                  <div style={{ textAlign: "left", flexShrink: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: "#E8B94A", whiteSpace: "nowrap" }}>₪10k–30k</div>
-                    <div style={{ fontSize: 10, color: "#9E9990", marginTop: 3 }}>/ חודש</div>
-                  </div>
-                </div>
-                <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.5, color: "#EDE9E1", fontWeight: 500 }}>שותף אמיתי, לא ספק שירות.</p>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#C9964A", marginBottom: 14, letterSpacing: ".02em" }}>◆ ROI x4 בשנה הראשונה (ממוצע)</div>
-                <ul style={{ margin: "0 0 16px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-                  {["שותף אסטרטגי קבוע", "נוכחות תוכן שוטפת", "פתיחת צנרת הזדמנויות"].map((d, i) => (
-                    <li key={i} style={{ fontSize: 12, color: "#9E9990", lineHeight: 1.5, position: "relative", paddingRight: 14 }}>
-                      <span style={{ position: "absolute", right: 0, top: "0.45em", width: 4, height: 4, borderRadius: "50%", background: "#9E7C3A", display: "inline-block" }} />{d}
-                    </li>
-                  ))}
-                </ul>
-                <div style={{ padding: "10px 12px", marginBottom: 16, background: "rgba(0,0,0,0.25)", borderRight: "2px solid #9E7C3A", borderRadius: "0 6px 6px 0", fontSize: 12, fontStyle: "italic", color: "#EDE9E1", lineHeight: 1.5 }}>
-                  ״זה כמו לקבל CMO במשרה חלקית — בלי overhead.״
-                  <div style={{ fontStyle: "normal", fontSize: 10, color: "#9E7C3A", marginTop: 4 }}>— רן · רשת עסקאות</div>
-                </div>
-                <a href="/partnership" onClick={dismissSticky} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 999, border: "1px solid #C9964A", color: "#E8B94A", fontSize: 12, fontWeight: 800, textDecoration: "none", letterSpacing: ".02em" }}>
-                  פנה ליצירת קשר ←
-                </a>
-              </div>
-            </article>
-
-            {/* ATELIER · BY INVITATION */}
-            <article style={{ borderRadius: 16, overflow: "hidden", border: "1px solid rgba(201,150,74,0.16)", background: "#0F1623" }}>
-              <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, #0a0e18 0%, #131C2E 100%)" }}>
-                  <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 50% 110%, rgba(232,185,74,0.20), transparent 55%)" }} />
-                  <div style={{ position: "absolute", top: "45%", left: "50%", transform: "translate(-50%,-50%)", fontStyle: "italic", fontSize: 42, fontWeight: 400, color: "rgba(232,185,74,0.18)", letterSpacing: ".04em", userSelect: "none" }}>atelier</div>
-                </div>
-                <div style={{ position: "absolute", top: 14, right: 14, fontSize: 10, fontWeight: 800, letterSpacing: ".14em", color: "#E8B94A", background: "rgba(8,12,20,0.75)", padding: "4px 10px", borderRadius: 3, border: "1px solid rgba(232,185,74,0.30)" }}>ATELIER · BY INVITATION</div>
-              </div>
-              <div style={{ padding: "20px 18px 22px" }}>
-                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 22, fontWeight: 500, fontStyle: "italic", color: "#EDE9E1", lineHeight: 1.15 }}>beegood atelier</h3>
-                  <div style={{ textAlign: "left", flexShrink: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: "#E8B94A", whiteSpace: "nowrap" }}>בהתאמה אישית</div>
-                  </div>
-                </div>
-                <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.5, color: "#EDE9E1", fontWeight: 500 }}>עבור משפיעניות שעוברות לשכבת מנהיגות תרבותית.</p>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#C9964A", marginBottom: 14, letterSpacing: ".02em" }}>◆ מותג נישה משכנת בלבד</div>
-                <ul style={{ margin: "0 0 24px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-                  {["ליווי 1-on-1 ארוך טווח", "הפקת תכנים בעולם שלך", "Personal branding מלא"].map((d, i) => (
-                    <li key={i} style={{ fontSize: 12, color: "#9E9990", lineHeight: 1.5, position: "relative", paddingRight: 14 }}>
-                      <span style={{ position: "absolute", right: 0, top: "0.45em", width: 4, height: 4, borderRadius: "50%", background: "#9E7C3A", display: "inline-block" }} />{d}
-                    </li>
-                  ))}
-                </ul>
-                <a href="/atelier" onClick={dismissSticky} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px", borderRadius: 999, border: "1px solid #C9964A", color: "#E8B94A", fontSize: 12, fontWeight: 800, textDecoration: "none", letterSpacing: ".02em" }}>
-                  פנה ליצירת קשר ←
-                </a>
-              </div>
-            </article>
-
-          </div>
+          {/* Bottom border */}
+          <div style={{ borderTop: "1px solid rgba(201,150,74,0.28)" }} />
 
           {/* Closing */}
-          <div style={{ marginTop: 28, padding: "24px 18px", textAlign: "center", borderTop: "1px solid rgba(201,150,74,0.16)" }}>
-            <p style={{ margin: "0 0 6px", fontSize: 13, color: "#9E9990" }}>כל פרויקט פרימיום מתחיל בשיחה.</p>
-            <p style={{ margin: "0 0 18px", fontSize: 14, color: "#EDE9E1", fontWeight: 600 }}>השלב הראשון — בלי עלות, בלי התחייבות.</p>
-            <a href="/strategy" onClick={dismissSticky} style={{ ...ctaGold, padding: "12px 28px", fontSize: 13, letterSpacing: ".02em" }}>
-              קבע שיחת היכרות →
-            </a>
+          <div style={{ padding: "40px 24px 56px", textAlign: "center", position: "relative" }}>
+            <div style={{ width: 32, height: 1, background: "#9E7C3A", margin: "0 auto 24px", opacity: 0.5 }} />
+            <p style={{ margin: "0 auto 8px", maxWidth: 280, fontStyle: "italic", fontSize: 18, fontWeight: 400, color: "#f6f1e6", lineHeight: 1.4 }}>
+              כל פרויקט פרימיום<br/>מתחיל בשיחה.
+            </p>
+            <p style={{ margin: "0 0 24px", fontSize: 12, color: "#8e887e", lineHeight: 1.6 }}>בלי עלות. בלי התחייבות.</p>
+            <a href="/strategy" onClick={dismissSticky} style={{
+              display: "inline-block", padding: "14px 32px",
+              border: "1px solid #C9964A", color: "#E8B94A",
+              fontWeight: 600, fontSize: 12, letterSpacing: ".14em",
+              textDecoration: "none", textTransform: "uppercase",
+            }}>קבע שיחת היכרות</a>
+            <div style={{ marginTop: 24, fontSize: 11, color: "#8e887e", letterSpacing: ".04em" }}>
+              או: <span style={{ color: "#C9964A" }}>premium@beegood.co.il</span>
+            </div>
           </div>
         </div>
 
@@ -533,11 +564,6 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       )}
 
       <style>{`
-        .ps-prem-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 14px;
-        }
         .ps-soon-rail {
           display: flex;
           gap: 12px;
