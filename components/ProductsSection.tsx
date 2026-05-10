@@ -160,17 +160,20 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
 
   const isHL = (i: number) => stage === "הכל" || effectiveHL.includes(i);
 
+  // Fix 2 — CTA hierarchy: primary 44px filled, secondary 32px quiet outline
   const ctaGold: React.CSSProperties = {
-    display: "inline-block", padding: "9px 20px", borderRadius: 9999,
-    fontSize: 13, fontWeight: 700, textDecoration: "none",
-    background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)",
-    color: "#1A1206", border: "none",
+    display: "inline-flex", alignItems: "center",
+    padding: "0 22px", height: 44, borderRadius: 9999,
+    fontSize: 12, fontWeight: 800, textDecoration: "none",
+    background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
+    color: "#1A1206", border: "none", whiteSpace: "nowrap" as const,
   };
   const ctaOutline: React.CSSProperties = {
-    display: "inline-block", padding: "9px 20px", borderRadius: 9999,
-    fontSize: 13, fontWeight: 700, textDecoration: "none",
-    background: "transparent", color: "#EDE9E1",
-    border: "1px solid rgba(201,150,74,0.4)",
+    display: "inline-flex", alignItems: "center",
+    padding: "0 14px", height: 32, borderRadius: 9999,
+    fontSize: 11, fontWeight: 600, textDecoration: "none",
+    background: "transparent", color: "#C9964A",
+    border: "1px solid rgba(201,150,74,0.30)", whiteSpace: "nowrap" as const,
   };
 
   return (
@@ -219,7 +222,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         )}
 
         {/* ── Core ladder panel ─────────────────────────────────────────── */}
-        <div style={{ background: "#0F1523", border: "1px solid #1C2638", borderRadius: 20, overflow: "hidden", marginBottom: 48 }}>
+        <div className="ps-ladder" style={{ background: "#0F1523", border: "1px solid #1C2638", borderRadius: 20, overflow: "hidden", marginBottom: 48 }}>
           {products.map((p, i) => {
             const highlighted = isHL(i);
             const dimmed      = stage !== "הכל" && !highlighted;
@@ -233,20 +236,23 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
 
                   {/* Top line: badge · name · tag · price */}
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 8 }}>
-                    <div style={{
-                      flexShrink: 0, width: 38, height: 38, borderRadius: 10,
-                      background: highlighted && stage !== "הכל" ? "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)" : "rgba(201,150,74,0.1)",
-                      border: "1px solid rgba(201,150,74,0.25)",
+                    {/* Fix 5 — 32×32 circle step number */}
+                    <div className="ps-step" style={{
+                      flexShrink: 0, width: 32, height: 32, borderRadius: "50%",
+                      background:  highlighted && stage !== "הכל" ? "linear-gradient(135deg,#E8B94A,#9E7C3A)" : "#131C2E",
+                      border:      highlighted && stage !== "הכל" ? "none"                                     : "1px solid rgba(201,150,74,0.30)",
+                      boxShadow:   highlighted && stage !== "הכל" ? "0 0 24px rgba(232,185,74,0.35)"          : "none",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 11, fontWeight: 800, letterSpacing: "0.04em",
+                      fontFamily: "monospace", fontSize: 12, fontWeight: 800,
                       color: highlighted && stage !== "הכל" ? "#1A1206" : "#C9964A",
                     }}>{p.badge}</div>
 
                     <div style={{ flex: 1 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
                         <span style={{ fontSize: 18, fontWeight: 800, color: "#EDE9E1" }}>{p.name}</span>
+                        {/* Fix 4 — outline badge, not filled */}
                         {p.tag && (
-                          <span style={{ fontSize: 10, fontWeight: 700, background: "linear-gradient(135deg,#E8B94A,#C9964A)", color: "#1A1206", padding: "2px 8px", borderRadius: 4 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, background: "transparent", color: "#E8B94A", padding: "2px 8px", borderRadius: 4, border: "1px solid #9E7C3A", opacity: 0.85, letterSpacing: "0.06em" }}>
                             {p.tag}
                           </span>
                         )}
@@ -263,13 +269,13 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                     </div>
                   </div>
 
-                  {/* Scarcity bar */}
+                  {/* Scarcity bar — Fix 1: ⚡→✦ gold glyph, 📅 dropped */}
                   <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", background: "rgba(201,150,74,0.05)", borderRadius: 6, marginBottom: 14 }}>
-                    <span style={{ fontSize: 13 }}>{p.scIcon}</span>
+                    {p.scIcon === "⚡" && <span style={{ fontSize: 11, color: "#C9964A", lineHeight: 1 }}>✦</span>}
                     <span style={{ fontSize: 12, color: "#9E9990" }}>{p.scarcity}</span>
                   </div>
 
-                  {/* CTAs + expand chevron */}
+                  {/* CTAs + Fix 3: disclosure "פרטים" text link, not pill button */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     {p.ctas.map((cta, ci) => (
                       <a key={ci} href={cta.href} onClick={dismissSticky} style={cta.primary ? ctaGold : ctaOutline}>
@@ -279,15 +285,15 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                     <button
                       onClick={() => toggleExpand(i)}
                       style={{
-                        marginRight: "auto", background: "none",
-                        border: "1px solid rgba(201,150,74,0.2)", borderRadius: 8,
-                        padding: "7px 12px", cursor: "pointer", color: "#9E9990",
-                        fontSize: 13, display: "flex", alignItems: "center", gap: 4,
-                        fontFamily: "inherit", transition: "all 0.2s",
+                        marginRight: "auto", background: "none", border: "none",
+                        borderBottom: "1px solid rgba(201,150,74,0.20)",
+                        padding: "0 0 2px", cursor: "pointer", color: "#9E9990",
+                        fontSize: 11, fontWeight: 600, fontFamily: "inherit",
+                        display: "flex", alignItems: "center", gap: 3,
                       }}
                     >
-                      <span>{isExp ? "פחות" : "קרא עוד"}</span>
-                      <span style={{ display: "inline-block", transform: isExp ? "rotate(180deg)" : "none", transition: "transform 0.25s" }}>⌄</span>
+                      <span>{isExp ? "פחות" : "פרטים"}</span>
+                      <span style={{ fontSize: 10, display: "inline-block", transform: isExp ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
                     </button>
                   </div>
                 </div>
@@ -564,6 +570,18 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       )}
 
       <style>{`
+        /* Fix 5 — vertical connector line behind step circles */
+        .ps-ladder { position: relative; }
+        .ps-ladder::before {
+          content: '';
+          position: absolute;
+          top: 0; bottom: 0;
+          right: 40px;
+          width: 1px;
+          background: linear-gradient(to bottom, transparent, rgba(201,150,74,0.16) 8%, rgba(201,150,74,0.16) 92%, transparent);
+          pointer-events: none;
+        }
+        .ps-step { position: relative; z-index: 1; }
         .ps-soon-rail {
           display: flex;
           gap: 12px;
