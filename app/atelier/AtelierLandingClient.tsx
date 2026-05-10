@@ -365,7 +365,7 @@ export function AtelierLandingClient({ faqs }: Props) {
           <div className="team-card">
             <div className="team-duo">
               <div className="team-person">
-                <div className="team-photo-placeholder" style={{ padding: 0, overflow: "hidden" }}>
+                <div className="team-photo-placeholder" style={{ padding: 0, overflow: "hidden", borderRadius: "50%" }}>
                   <img src="/alonimage.jpg" alt="אלון עבדי" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 </div>
                 <div className="team-name">אלון עבדי</div>
@@ -375,7 +375,7 @@ export function AtelierLandingClient({ faqs }: Props) {
                 </div>
               </div>
               <div className="team-person">
-                <div className="team-photo-placeholder" style={{ padding: 0, overflow: "hidden" }}>
+                <div className="team-photo-placeholder" style={{ padding: 0, overflow: "hidden", borderRadius: "50%" }}>
                   <img src="/hadarprotrait.jpg" alt="הדר דנן" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 </div>
                 <div className="team-name">הדר דנן</div>
