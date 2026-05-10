@@ -9,14 +9,14 @@ import {
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Stage = "כל" | "מתחיל" | "מייצר תוכן" | "רוצה לגדול";
+type Stage = "הכל" | "מתחיל" | "מייצר תוכן" | "רוצה לגדול";
 
 // ─── Stage config ────────────────────────────────────────────────────────────
 
-const STAGES: Stage[] = ["כל", "מתחיל", "מייצר תוכן", "רוצה לגדול"];
+const STAGES: Stage[] = ["הכל", "מתחיל", "מייצר תוכן", "רוצה לגדול"];
 
 const HEADLINE: Record<Stage, { h: string; sub: string }> = {
-  "כל":          { h: "כל אחד נמצא במקום אחר",              sub: "כשהאות שלך ברור — הלקוחות הנכונים מגיעים מאליהם" },
+  "הכל":         { h: "כל אחד נמצא במקום אחר",              sub: "כשהאות שלך ברור — הלקוחות הנכונים מגיעים מאליהם" },
   "מתחיל":       { h: "מתחיל מאפס? התחל כאן",               sub: "הדרכה חינמית שמסבירה בדיוק מאיפה להתחיל" },
   "מייצר תוכן":  { h: "כבר מייצר תוכן? הגיע הזמן לתוצאות", sub: "יש לך תוכן — נשתמש בו נכון כדי שיביא לקוחות" },
   "רוצה לגדול":  { h: "מוכן לצמיחה אמיתית?",               sub: "הצמיחה מגיעה עם בהירות. בנה אסטרטגיה מדויקת" },
@@ -24,7 +24,7 @@ const HEADLINE: Record<Stage, { h: string; sub: string }> = {
 
 // Indices of recommended products per stage (0=training,1=challenge,2=workshop,3=strategy)
 const HIGHLIGHT: Record<Stage, number[]> = {
-  "כל":          [0, 1, 2, 3],
+  "הכל":         [0, 1, 2, 3],
   "מתחיל":       [0],
   "מייצר תוכן":  [1],
   "רוצה לגדול":  [2, 3],
@@ -33,7 +33,7 @@ const HIGHLIGHT: Record<Stage, number[]> = {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function ProductsSection({ excludeTraining = false }: { excludeTraining?: boolean }) {
-  const [stage, setStage]           = useState<Stage>("כל");
+  const [stage, setStage]           = useState<Stage>("הכל");
   const [expanded, setExpanded]     = useState<Set<number>>(new Set());
   const [showNudge, setShowNudge]   = useState(false);
   const [showSticky, setShowSticky] = useState(false);
@@ -158,7 +158,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
     ? highlighted.filter(i => i > 0).map(i => i - 1)
     : highlighted;
 
-  const isHL = (i: number) => stage === "כל" || effectiveHL.includes(i);
+  const isHL = (i: number) => stage === "הכל" || effectiveHL.includes(i);
 
   const ctaGold: React.CSSProperties = {
     display: "inline-block", padding: "9px 20px", borderRadius: 9999,
@@ -211,7 +211,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         </div>
 
         {/* ── Nudge bar (returning visitors) ────────────────────────────── */}
-        {showNudge && stage === "כל" && (
+        {showNudge && stage === "הכל" && (
           <div style={{ background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.2)", borderRadius: 10, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
             <span style={{ fontSize: 13, color: "#C9964A" }}>👋 חזרת! בחר שלב שמתאים לך לחוויה ממוקדת יותר</span>
             <button onClick={() => setShowNudge(false)} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 16, padding: 0 }}>✕</button>
@@ -222,24 +222,24 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         <div style={{ background: "#0F1523", border: "1px solid #1C2638", borderRadius: 20, overflow: "hidden", marginBottom: 48 }}>
           {products.map((p, i) => {
             const highlighted = isHL(i);
-            const dimmed      = stage !== "כל" && !highlighted;
+            const dimmed      = stage !== "הכל" && !highlighted;
             const isExp       = expanded.has(i);
             const isLast      = i === products.length - 1;
 
             return (
               <div key={p.badge}>
                 {/* Product row */}
-                <div style={{ padding: "20px 24px", opacity: dimmed ? 0.4 : 1, transition: "opacity 0.25s", borderRight: highlighted && stage !== "כל" ? "3px solid #C9964A" : "3px solid transparent" }}>
+                <div style={{ padding: "20px 24px", opacity: dimmed ? 0.4 : 1, transition: "opacity 0.25s", borderRight: highlighted && stage !== "הכל" ? "3px solid #C9964A" : "3px solid transparent" }}>
 
                   {/* Top line: badge · name · tag · price */}
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 8 }}>
                     <div style={{
                       flexShrink: 0, width: 38, height: 38, borderRadius: 10,
-                      background: highlighted && stage !== "כל" ? "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)" : "rgba(201,150,74,0.1)",
+                      background: highlighted && stage !== "הכל" ? "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)" : "rgba(201,150,74,0.1)",
                       border: "1px solid rgba(201,150,74,0.25)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: 11, fontWeight: 800, letterSpacing: "0.04em",
-                      color: highlighted && stage !== "כל" ? "#1A1206" : "#C9964A",
+                      color: highlighted && stage !== "הכל" ? "#1A1206" : "#C9964A",
                     }}>{p.badge}</div>
 
                     <div style={{ flex: 1 }}>
