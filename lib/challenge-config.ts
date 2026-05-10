@@ -157,29 +157,30 @@ export function isSessionDay(day: number): boolean {
 }
 
 /**
- * Time-based unlock: days 1–7 open every 24 h after enrollment, skipping Saturday.
+ * Calendar-day unlock: days 1–7 open one per calendar day in Israel time,
+ * skipping Saturday. Enrollment on any day before midnight counts as day 0.
  * Day 0 is always available. Day 8 becomes visible once day 7 is unlocked.
  */
 export function computeMaxUnlockedDay(enrolledAt: string): number {
-  const start = new Date(enrolledAt);
-  const now = new Date();
-  let unlocked = 0;
-  let prevUnlock = start;
-
-  for (let day = 1; day <= 7; day++) {
-    let nextUnlock = new Date(prevUnlock.getTime() + 24 * 60 * 60 * 1000);
-    // Skip Saturday (getDay() === 6)
-    while (nextUnlock.getDay() === 6) {
-      nextUnlock = new Date(nextUnlock.getTime() + 24 * 60 * 60 * 1000);
-    }
-    if (now >= nextUnlock) {
-      unlocked = day;
-      prevUnlock = nextUnlock;
-    } else {
-      break;
-    }
+  function toIsraelDateStr(d: Date): string {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Jerusalem",
+      year:     "numeric",
+      month:    "2-digit",
+      day:      "2-digit",
+    }).format(d);
   }
 
+  const enrollDayStr = toIsraelDateStr(new Date(enrolledAt));
+  const todayStr     = toIsraelDateStr(new Date());
+
+  const enrollEpochDay = Math.floor(new Date(enrollDayStr + "T00:00:00Z").getTime() / 86400000);
+  const todayEpochDay  = Math.floor(new Date(todayStr     + "T00:00:00Z").getTime() / 86400000);
+
+  let unlocked = 0;
+  for (let d = enrollEpochDay + 1; d <= todayEpochDay && unlocked < 7; d++) {
+    if (new Date(d * 86400000).getUTCDay() !== 6) unlocked++; // skip Saturday
+  }
   return unlocked;
 }
 
