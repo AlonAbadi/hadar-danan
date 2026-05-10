@@ -137,7 +137,7 @@ export function PremiumBookingFlow({ price, whatsappPhone }: Props) {
           סה״כ לתשלום כולל מע״מ: <span style={{ color: "#EDE9E1", fontWeight: 700 }}>₪{priceWithVat.toLocaleString("he-IL")}</span>
         </p>
         <ul className="flex flex-col gap-1 text-sm" style={{ color: "#9E9990" }}>
-          {["אסטרטגיה עסקית ושיווקית לפני הצילום", "צוות מקצועי (צלם + במאי + מפיקה)", "14 סרטונים ערוכים תוך שבועיים", "3 חודשי ליווי אחרי"].map((item) => (
+          {["אסטרטגיה עסקית ושיווקית לפני הצילום", "צוות מקצועי (צלם + במאי) — אצלך או אצלנו", "14 סרטונים ערוכים תוך שבועיים", "3 חודשי ליווי אחרי"].map((item) => (
             <li key={item} className="flex items-center gap-2">
               <span style={{ color: "#C9964A" }}>✓</span> {item}
             </li>
