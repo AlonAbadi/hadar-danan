@@ -189,7 +189,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 027 | `027_orchestration.sql` | Applied — pipeline_status, generated_client_ts, orchestration_log on atelier_applications |
 | 028 | `028_user_status_archive.sql` | Applied — `handled` + `not_relevant` values added to user_status enum |
 | 029 | `029_utm_extended.sql` | Applied — utm_medium, utm_content, utm_term columns on users |
-| 030 | `030_whatsapp_logs.sql` | **Run in Supabase** — whatsapp_logs table for dedup |
+| 030 | `030_whatsapp_logs.sql` | Applied — whatsapp_logs table for dedup |
 
 ### Tables (20 total)
 
@@ -422,7 +422,7 @@ Processed by `lib/jobs/runner.ts` via `/api/cron/jobs`.
 | Type | Handler | Payload |
 |---|---|---|
 | `SEND_EMAIL` | `lib/jobs/handlers/send-email.ts` | `{ user_id, email, name, sequence_id, subject, template_key, ...ctx }` |
-| `SEND_WHATSAPP` | `lib/jobs/handlers/send-whatsapp.ts` | `{ user_id, phone, template_name, params }` — built, pending UChat template approval |
+| `SEND_WHATSAPP` | `lib/jobs/handlers/send-whatsapp.ts` | `{ user_id, phone, template_name, params }` — built, templates created, verify Meta approval before going live |
 | `NOTIFY_ADMIN` | `lib/jobs/handlers/notify-admin.ts` | `{ job_id, job_type, error, attempts }` |
 
 Max 3 attempts. After 3 failures → `failed_permanently = true` + admin alert.
@@ -509,7 +509,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 - **Vercel cron** (`vercel.json`): `0 22 * * *` — daily at 22:00 UTC
 - **External cron:** cron-job.org hits `GET /api/cron/jobs` every 5 min with `Authorization: Bearer <CRON_SECRET>`
 
-**Current status (May 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-029) applied. Migration 030 (whatsapp_logs) written — pending Supabase run. WhatsApp cart-abandon infrastructure built (SEND_WHATSAPP job type) — pending template approval + env vars in Vercel. A/B test `landing_headline` running live. Course content player built. Challenge content (days 0–7 live, day 8 = live Zoom session — URL updated by team before each session). Hive members area live. Email sending live from `noreply@beegood.online` with click-based open tracking. Full UTM chain (source/medium/campaign/adset/ad) tracked and displayed in admin. Atelier influencer program live with full AI onboarding pipeline + orchestrator. Deals CRM live.
+**Current status (May 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-029) applied. All DB migrations (001-030) applied. WhatsApp cart-abandon infrastructure complete — migration 030 applied, `UCHAT_API_KEY` set in Vercel, templates created in UChat (verify Meta approval before going live). A/B test `landing_headline` running live. Course content player built. Challenge content (days 0–7 live, day 8 = live Zoom session — URL updated by team before each session). Hive members area live. Email sending live from `noreply@beegood.online` with click-based open tracking. Full UTM chain (source/medium/campaign/adset/ad) tracked and displayed in admin. Atelier influencer program live with full AI onboarding pipeline + orchestrator. Deals CRM live.
 
 ---
 
@@ -595,7 +595,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 | Challenge day 8 Zoom URL | Before each live session (15th/month) | Update `videoId` field on day 8 entry in `lib/challenge-config.ts` with the Zoom meeting link |
 | Real hive_content rows | Content | Insert rows into `hive_content` table via Supabase dashboard |
 | Hive AI matching system | Future feature | Designed as "בקרוב" placeholder on /hive page |
-| WhatsApp cart-abandon templates | Require UChat template approval | 1) Run migration 030 in Supabase. 2) Create API key in UChat → Settings → API Keys → save as `UCHAT_API_KEY` in Vercel. 3) Create templates `hadar_cart_1h` + `hadar_cart_24h` in UChat → Templates → WhatsApp Templates (both take `{{1}}` = first name, language `he`). |
+| WhatsApp cart-abandon | ✅ Infrastructure complete | Migration 030 applied, `UCHAT_API_KEY` set in Vercel, templates `hadar_cart_1h` + `hadar_cart_24h` created in UChat — verify Meta approval status before going live |
 
 ---
 

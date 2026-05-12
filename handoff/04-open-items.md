@@ -5,28 +5,18 @@
 
 ## A — פעולות טכניות שממתינות לביצוע
 
-### A1. הרצת Migration 030
-**קובץ:** `supabase/migrations/030_whatsapp_logs.sql`  
-**פעולה:** להריץ ידנית ב-Supabase SQL Editor  
-**תלות:** נדרש כדי ש-WhatsApp cart-abandon לא ישלח הודעות כפולות  
-**סטטוס:** הקוד מוכן, רק ה-DB migration חסר
+### ~~A1. הרצת Migration 030~~ ✅ בוצע
+`030_whatsapp_logs.sql` הורץ ב-Supabase.
 
 ---
 
-### A2. הגדרת UChat API Key
-**פעולה:** Vercel → Environment Variables → `UCHAT_API_KEY`  
-**מקור:** UChat dashboard → Settings → API Keys → Create  
-**תלות:** נדרש להפעלת WhatsApp cart-abandon  
-**סטטוס:** הקוד קיים, הkey לא הוגדר
+### ~~A2. הגדרת UChat API Key~~ ✅ בוצע
+`UCHAT_API_KEY` מוגדר ב-Vercel.
 
 ---
 
-### A3. יצירת WhatsApp Templates ב-UChat
-**שמות:** `hadar_cart_1h` ו-`hadar_cart_24h`  
-**איך:** UChat → Templates → WhatsApp Templates  
-**פרמטר:** `{{1}}` = שם פרטי של המשתמש, שפה: `he`  
-**תלות:** אישור Meta (לוקח 1-7 ימים)  
-**סטטוס:** ממתין לאישור
+### ~~A3. יצירת WhatsApp Templates ב-UChat~~ ✅ בוצע
+Templates `hadar_cart_1h` + `hadar_cart_24h` נוצרו. יש לוודא שאישור Meta הושלם לפני הפעלת cart-abandon.
 
 ---
 
