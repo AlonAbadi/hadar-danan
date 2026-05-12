@@ -103,7 +103,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | `/strategy` | Strategy session (90 min) | ₪4,000 | Info page — CTA links to `/strategy/book` |
 | `/strategy/book` | Full booking + payment flow | ₪4,000 | 2-step: BookingForm → Cardcom (`StrategyBookFlow`) |
 | `/strategy/success` | Post-payment confirmation | - | Payment confirmed, Zoom link sent within 24h |
-| `/premium` | Premium shoot day — 16 videos | ₪14,000 | 2-step: BookingForm → Cardcom (`PremiumBookingFlow`) |
+| `/premium` | Premium shoot day — 14 videos | ₪14,000 | 2-step: BookingForm → Cardcom (`PremiumBookingFlow`) |
 | `/premium/success` | Post-premium-payment | - | Shared `SuccessPage` component |
 | `/partnership` | Strategic partnership retainer | ₪10k-30k/mo | 2-step: lead form → BookingForm discovery call (`PartnershipBookingFlow`) |
 | `/hive` | הכוורת — monthly membership community | ₪29-₪97/mo | `HivePricingSection` client component |
@@ -263,7 +263,7 @@ Hive membership is tracked via separate `hive_status` column (`active` / `cancel
 
 ---
 
-## Email sequences — 16 emails total
+## Email sequences — 14 emails total
 
 | Trigger event | Delay | Template key | Content |
 |---|---|---|---|
@@ -275,8 +275,6 @@ Hive membership is tracked via separate `hive_status` column (`active` / `cancel
 | `WORKSHOP_PURCHASED` | 168h | `workshop_upsell_course` | Week-1 upsell to course |
 | `COURSE_PURCHASED` | 0h | `course_access` | Course access details |
 | `COURSE_PURCHASED` | 168h | `course_upsell_strategy` | Week-1 upsell to strategy |
-| `CHECKOUT_STARTED` | 1h | `cart_abandon_1h` | "You left something behind" |
-| `CHECKOUT_STARTED` | 24h | `cart_abandon_24h` | + coupon **HADAR10** (10% off) |
 | `INACTIVE_3_DAYS` | 0h | `reengagement` | "We miss you" |
 | `PREMIUM_LEAD` | 0h | `premium_lead_confirmation` | Confirmation |
 | `PARTNERSHIP_LEAD` | 0h | `partnership_confirmation` | Confirmation |
@@ -424,6 +422,7 @@ Processed by `lib/jobs/runner.ts` via `/api/cron/jobs`.
 | Type | Handler | Payload |
 |---|---|---|
 | `SEND_EMAIL` | `lib/jobs/handlers/send-email.ts` | `{ user_id, email, name, sequence_id, subject, template_key, ...ctx }` |
+| `SEND_WHATSAPP` | `lib/jobs/handlers/send-whatsapp.ts` | `{ user_id, phone, template_name, params }` — built, pending UChat template approval |
 | `NOTIFY_ADMIN` | `lib/jobs/handlers/notify-admin.ts` | `{ job_id, job_type, error, attempts }` |
 
 Max 3 attempts. After 3 failures → `failed_permanently = true` + admin alert.
@@ -510,7 +509,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 - **Vercel cron** (`vercel.json`): `0 22 * * *` — daily at 22:00 UTC
 - **External cron:** cron-job.org hits `GET /api/cron/jobs` every 5 min with `Authorization: Bearer <CRON_SECRET>`
 
-**Current status (May 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-029) applied. Migration 030 (whatsapp_logs) written — pending Supabase run. WhatsApp cart-abandon infrastructure built (SEND_WHATSAPP job type) — pending template approval + env vars in Vercel. A/B test `landing_headline` running live. Course content player built. Challenge content (days 0–7 live, day 8 PLACEHOLDER). Hive members area live. Email sending live from `noreply@beegood.online` with click-based open tracking. Full UTM chain (source/medium/campaign/adset/ad) tracked and displayed in admin. Atelier influencer program live with full AI onboarding pipeline + orchestrator. Deals CRM live.
+**Current status (May 2026):** Site live at beegood.online. Supabase Auth live with Google OAuth. Cardcom payments active (CARDCOM_TERMINAL=143422). WhatsApp active (972539566961). All DB migrations (001-029) applied. Migration 030 (whatsapp_logs) written — pending Supabase run. WhatsApp cart-abandon infrastructure built (SEND_WHATSAPP job type) — pending template approval + env vars in Vercel. A/B test `landing_headline` running live. Course content player built. Challenge content (days 0–7 live, day 8 = live Zoom session — URL updated by team before each session). Hive members area live. Email sending live from `noreply@beegood.online` with click-based open tracking. Full UTM chain (source/medium/campaign/adset/ad) tracked and displayed in admin. Atelier influencer program live with full AI onboarding pipeline + orchestrator. Deals CRM live.
 
 ---
 
@@ -524,7 +523,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 - Nav: server-rendered auth state (DesktopNavServer / MobileNavServer), logged-in user shown as hollow gold capsule with first name
 - Font: Assistant only (Cormorant/DM Sans experiment fully reverted)
 - TrueSignal© branding integrated site-wide (hero sections + all footers); always wrapped in `<span dir="ltr">`
-- Complete backend: signup, events, job queue, 16 email sequences, admin dashboard
+- Complete backend: signup, events, job queue, 14 email sequences, admin dashboard
 - **Cardcom payments LIVE** — LowProfile API, `POST` to `https://secure.cardcom.solutions/Interface/LowProfile.aspx` with URLSearchParams (not JSON). Fields: `TerminalNumber`, `UserName` (not ApiName), `SumToBill`, `SuccessRedirectUrl`, `ErrorRedirectUrl`, `IndicatorUrl`. Response is text/URLSearchParams — parse `ResponseCode` ("0"=success) + `LowProfileCode`
 - **Supabase Auth LIVE** — email/password + Google OAuth. Pages: /login, /signup, /forgot-password, /reset-password. Session via `@supabase/ssr` cookies. `lib/auth/link-user.ts` links auth.users to public.users
 - A/B testing infrastructure + AI proposals in `ab_proposals` table
