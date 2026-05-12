@@ -553,7 +553,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 - **/training/watch** — free training watch page with Vimeo embed, PageViewTracker, ProductsSection (excludeTraining=true)
 - **/test** — ₪1 test product for Cardcom testing; subtle footer link from /challenge; product_type `test_1` in DB
 - **Course content page** — `/course/content` fully implemented with `CoursePlayer` — 8 modules, 16 lessons, Vimeo embed, video event tracking, auth-gated
-- **Challenge content page** — `/challenge/content` implemented with `ChallengePlayer` — 7-day Reels content, auth-gated. Days 1–7 have real Vimeo IDs in `lib/challenge-config.ts`; day 0 (opening) and day 8 (closing) are still PLACEHOLDER.
+- **Challenge content page** — `/challenge/content` implemented with `ChallengePlayer` — 7-day Reels content, auth-gated. Day 0 (opening) and days 1–7 all have real Vimeo IDs in `lib/challenge-config.ts`. Day 8 is NOT a video — it is a live Zoom session held on the 15th of each month (`computeNextLiveMeetingDate()` calculates the date). The `videoId` field on day 8 holds the Zoom meeting URL; the team updates it manually before each live session.
 - **Account page** — `/account` replaces `/my` (which now redirects). Shows purchases, hive status. Auth-gated via Supabase session.
 - **Hive members area** — `/hive/members` gated by auth + `hive_status=active`. Tier-appropriate content from `hive_content` table. Upgrade prompts for lower tiers.
 - **Stats section** — homepage social proof strip ("250+ עסקים", "4 שנים", "97% ממליצים") with gold animated counters
@@ -572,7 +572,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 - **Discounts + popups fully removed (April 2026)** — `AbandonCheckoutPopup` removed from all product pages (/challenge, /workshop, /course, /strategy). `PERMANENT_DISCOUNTS` map removed from `/api/checkout`. Credit system disabled sitewide — all checkouts charge full list price. `lib/credit.ts` still exists but is unused.
 - **`vimeoId` prop on `ProductLandingPage`** — optional `vimeoId?: string` prop renders a 9:16 portrait Vimeo embed (maxWidth: 260px) in the VSL slot. Used on: /strategy (`1183710499`), /challenge (`1183365127`), /training (`1182657741`).
 - **Mobile navbar logo** — `beegoodtxt.png` centered in mobile top bar (`MobileNav.tsx`) with gold glow filter. Desktop nav has no logo image.
-- **Challenge day videos (0–7) live** — day 0 (`1185862328`) + days 1–7 all have real Vimeo IDs in `lib/challenge-config.ts`. Only day 8 (closing session) is still PLACEHOLDER. Portrait 9:16 sizing for days 1–7, 16:9 for days 0 + 8.
+- **Challenge day videos (0–7) live** — day 0 (`1185862328`) + days 1–7 all have real Vimeo IDs in `lib/challenge-config.ts`. Day 8 is a live Zoom session (not a Vimeo video) — `videoId` holds the Zoom URL, updated by the team before each session. Portrait 9:16 sizing for days 1–7, 16:9 for days 0 + 8.
 - **Email templates rewritten (Ben Settle style)** — all 12 active templates in `lib/email/templates.ts` rewritten: short `<p>` lines, personal Hebrew voice, signed "צוות beegood". All reply CTAs link to WhatsApp, not email. Dynamic workshop date via `getNextWorkshopDate()`.
 - **Click-based email open tracking** — `/api/email/click` endpoint wraps all CTA links; records `EMAIL_OPENED` + `LINK_CLICKED` events and updates `email_logs.status`. No pixel tracking.
 - **Full UTM chain in admin** — `/admin/users/[id]` shows utm_source/medium/campaign/adset/ad/content + click_id. `/admin/acquisition` campaign table shows 6-column breakdown including אד-סט and אד (קריאייטיב) in gold.
@@ -593,7 +593,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 | WhatsApp group link for Hive | Need group URL | Update placeholder in `hive_welcome` email template |
 | Hive Zoom link | Content | Update placeholder in `hive_welcome` email template |
 | Real course video links | Content production | Replace Vimeo placeholders in `CoursePlayer` with real lesson IDs |
-| Challenge day 8 video | Content production | Replace PLACEHOLDER in `lib/challenge-config.ts` day 8 entry |
+| Challenge day 8 Zoom URL | Before each live session (15th/month) | Update `videoId` field on day 8 entry in `lib/challenge-config.ts` with the Zoom meeting link |
 | Real hive_content rows | Content | Insert rows into `hive_content` table via Supabase dashboard |
 | Hive AI matching system | Future feature | Designed as "בקרוב" placeholder on /hive page |
 | WhatsApp cart-abandon templates | Require UChat template approval | 1) Run migration 030 in Supabase. 2) Create API key in UChat → Settings → API Keys → save as `UCHAT_API_KEY` in Vercel. 3) Create templates `hadar_cart_1h` + `hadar_cart_24h` in UChat → Templates → WhatsApp Templates (both take `{{1}}` = first name, language `he`). |
