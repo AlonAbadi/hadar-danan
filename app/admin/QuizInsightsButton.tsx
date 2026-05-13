@@ -35,7 +35,7 @@ export function QuizInsightsButton() {
     fetch("/api/admin/quiz-analysis")
       .then(r => r.json())
       .then((json: SavedResponse) => {
-        if (json.saved) {
+        if (json.saved?.analysis && json.saved?.meta) {
           setData({ analysis: json.saved.analysis, meta: json.saved.meta });
           setSavedAt(json.saved.created_at);
           setOpen(true);
@@ -145,7 +145,7 @@ export function QuizInsightsButton() {
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
             <span style={tag}>{data.meta.total} קוויזים</span>
             <span style={tag}>{data.meta.avgMatchPct}% התאמה ממוצעת</span>
-            {data.meta.productSummary.slice(0, 3).map(p => (
+            {(data.meta.productSummary ?? []).slice(0, 3).map(p => (
               <span key={p.product} style={tag}>{p.product} — {p.pct}%</span>
             ))}
           </div>
@@ -171,7 +171,7 @@ export function QuizInsightsButton() {
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: "#9E7C3A", letterSpacing: "0.12em", marginBottom: 8 }}>כאבים מרכזיים</div>
               <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-                {data.analysis.top_pains.map((p, i) => (
+                {(data.analysis.top_pains as string[] ?? []).map((p, i) => (
                   <li key={i} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13, color: "rgba(237,233,225,0.85)" }}>
                     <span style={{ color: "#C9964A", fontWeight: 700, flexShrink: 0 }}>✓</span>
                     {p}
@@ -184,7 +184,7 @@ export function QuizInsightsButton() {
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: "#9E7C3A", letterSpacing: "0.12em", marginBottom: 8 }}>הזדמנויות</div>
               <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-                {data.analysis.opportunities.map((o, i) => (
+                {(data.analysis.opportunities as string[] ?? []).map((o, i) => (
                   <li key={i} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13, color: "rgba(237,233,225,0.85)" }}>
                     <span style={{ color: "#34A853", fontWeight: 700, flexShrink: 0 }}>→</span>
                     {o}
