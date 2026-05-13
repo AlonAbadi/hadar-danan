@@ -236,6 +236,13 @@ ${dataBlock}
   }
   const analysis = toolBlock.input as Record<string, unknown>;
 
+  // Debug: log the raw tool input so we can inspect it in /admin/system
+  await supabase.from("error_logs").insert({
+    context: "api/admin/quiz-analysis/debug",
+    error:   "tool_use input dump",
+    payload: { keys: Object.keys(analysis), content_angle: analysis.content_angle, watch_out: analysis.watch_out },
+  });
+
   const payload = {
     analysis,
     meta: { total, period: `${fromDate} – ${toDate}`, avgMatchPct, productSummary },
