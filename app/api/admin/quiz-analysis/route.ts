@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const maxDuration = 30;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -206,7 +208,7 @@ ${dataBlock}
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const message = await client.messages.create({
-    model:      "claude-opus-4-7",
+    model:      "claude-sonnet-4-6",
     max_tokens: 1024,
     messages: [{ role: "user", content: userPrompt }],
     system: systemPrompt,
