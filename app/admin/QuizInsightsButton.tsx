@@ -50,7 +50,7 @@ export function QuizInsightsButton() {
     try {
       const res = await fetch("/api/admin/quiz-analysis", { method: "POST" });
       const json = await res.json();
-      if (!res.ok) { setError(json.error ?? "שגיאה"); setLoading(false); return; }
+      if (!res.ok) { setError(`שגיאה (${res.status}): ${json.error ?? "לא ידוע"}`); setLoading(false); return; }
       setData(json);
       setSavedAt(new Date().toISOString());
     } catch {

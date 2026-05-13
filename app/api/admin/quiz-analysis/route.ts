@@ -113,6 +113,8 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServerClient();
 
+  try {
+
   const { data: results, error } = await supabase
     .from("quiz_results")
     .select("answers, recommended_product, second_product, match_percent, created_at")
@@ -243,4 +245,14 @@ ${dataBlock}
   await safeFrom(supabase, "quiz_insights").insert({ analysis, meta: payload.meta });
 
   return NextResponse.json(payload);
+
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    await supabase.from("error_logs").insert({
+      context: "api/admin/quiz-analysis",
+      error:   "Unhandled error in POST",
+      payload: { message },
+    });
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
