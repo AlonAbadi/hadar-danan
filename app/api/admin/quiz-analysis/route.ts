@@ -214,13 +214,20 @@ ${dataBlock}
 
   const raw = message.content[0].type === "text" ? message.content[0].text.trim() : "";
 
-  // Strip markdown code fences if present
-  const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  // Extract the first {...} block regardless of surrounding text or markdown fences
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  const cleaned = jsonMatch ? jsonMatch[0] : raw;
 
   let analysis: Record<string, unknown>;
   try {
     analysis = JSON.parse(cleaned);
   } catch {
+    // Log full raw response to error_logs for debugging
+    await supabase.from("error_logs").insert({
+      context: "api/admin/quiz-analysis",
+      error:   "JSON parse failed",
+      payload: { raw: raw.slice(0, 2000) },
+    });
     return NextResponse.json({ error: "שגיאה בפרסור תשובת Claude", raw }, { status: 500 });
   }
 
