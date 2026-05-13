@@ -195,17 +195,16 @@ export async function POST(req: NextRequest) {
 
 ${dataBlock}
 
-תנתח את הנתונים ותחזיר JSON בפורמט הבא בלבד, ללא טקסט נוסף, ללא markdown:
+החזר אובייקט JSON בלבד — ללא שום טקסט לפני או אחרי, ללא markdown, ללא הסברים. הפלט חייב להתחיל ב-{ ולסיים ב-} ותו לא.
 
-{
-  "headline": "משפט אחד שמסכם את הממצא המרכזי",
-  "audience_profile": "פסקה 3-4 שורות: מי הם האנשים שמגיעים, מה מאפיין אותם, מה שלב העסק שלהם",
-  "top_pains": ["כאב מרכזי 1", "כאב מרכזי 2", "כאב מרכזי 3"],
-  "product_fit": "פסקה על האם המוצרים שמקבלים הכי הרבה המלצות תואמים את רצון ההשקעה של הקהל — ואיפה יש חוסר תאימות",
-  "opportunities": ["הזדמנות עסקית 1", "הזדמנות עסקית 2", "הזדמנות עסקית 3"],
-  "content_angle": "מה הפחד / חסם המרכזי שכדאי לדבר עליו בתוכן השיווקי",
-  "watch_out": "אזהרה אחת - משהו בנתונים שדורש תשומת לב"
-}`;
+שדות חובה:
+- headline: string — משפט אחד שמסכם את הממצא המרכזי
+- audience_profile: string — פסקה 3-4 שורות על מי האנשים שמגיעים
+- top_pains: array of 3 strings — שלושה כאבים מרכזיים
+- product_fit: string — האם ההמלצות תואמות לרצון ההשקעה
+- opportunities: array of 3 strings — שלוש הזדמנויות עסקיות
+- content_angle: string — הפחד/חסם המרכזי לדבר עליו בתוכן
+- watch_out: string — אזהרה אחת מהנתונים`;
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -218,9 +217,12 @@ ${dataBlock}
 
   const raw = message.content[0].type === "text" ? message.content[0].text.trim() : "";
 
-  // Extract the first {...} block regardless of surrounding text or markdown fences
-  const jsonMatch = raw.match(/\{[\s\S]*\}/);
-  const cleaned = jsonMatch ? jsonMatch[0] : raw;
+  // Extract from first { to last } — avoids greedy-regex issues with nested braces
+  const firstBrace = raw.indexOf("{");
+  const lastBrace  = raw.lastIndexOf("}");
+  const cleaned = firstBrace !== -1 && lastBrace > firstBrace
+    ? raw.slice(firstBrace, lastBrace + 1)
+    : raw;
 
   let analysis: Record<string, unknown>;
   try {
