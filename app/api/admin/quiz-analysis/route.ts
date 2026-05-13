@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
