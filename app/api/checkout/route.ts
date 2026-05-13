@@ -20,6 +20,7 @@ const INVOICE_DESCRIPTIONS: Record<string, string> = {
   course_1800:    "קורס דיגיטלי - הדר דנן",
   strategy_4000:  "פגישת אסטרטגיה - הדר דנן",
   premium_14000:  "יום צילום פרמיום - הדר דנן",
+  sadna_500:      "סדנת פרימיום 20.5 - הדר דנן",
   test_1:         "מוצר טסט - הדר דנן",
 };
 
@@ -44,6 +45,7 @@ const BodySchema = z.object({
     "course_1800",
     "strategy_4000",
     "premium_14000",
+    "sadna_500",
     "test_1",
   ]),
   user_id: z.string().uuid(),
@@ -95,7 +97,7 @@ export async function POST(req: NextRequest) {
     .from("purchases")
     .insert({
       user_id,
-      product: product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000",
+      product: product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000" | "sadna_500",
       amount,
       currency: "ILS",
       status: "pending",

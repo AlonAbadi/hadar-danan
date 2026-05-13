@@ -77,6 +77,7 @@ export const PRODUCT_MAP = {
   course_1800:    { name: "קורס דיגיטלי",         price: 1800  },
   strategy_4000:  { name: "פגישת אסטרטגיה",      price: 4000  },
   premium_14000:  { name: "יום צילום פרמיום",    price: 14000 },
+  sadna_500:      { name: "סדנת פרימיום 20.5",   price: 500   },
 } as const;
 
 export type ProductKey = keyof typeof PRODUCT_MAP;

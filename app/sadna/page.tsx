@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
+import { SadnaCheckout } from "./SadnaCheckout";
 
 export const metadata: Metadata = {
-  title: "סדנת פרימיום | הדר דנן — 21 במאי",
-  description: "סדנה קטנה ואינטימית — תרגול פרקטי של הגדרה עצמית והעמקת המסר. 21 במאי, 17:00–20:00, משרדי BeeGood. עד 20 משתתפים.",
+  title: "סדנת פרימיום | הדר דנן — 20 במאי",
+  description: "סדנה קטנה ואינטימית — תרגול פרקטי של הגדרה עצמית, העמקת המסר, והטמעה נכונה בוידאו. 20 במאי, 17:00–20:00, רחוב החילזון 5 רמת גן. עד 20 משתתפים.",
   alternates: { canonical: "/sadna" },
 };
-
-const WA = "https://wa.me/972539566961?text=" + encodeURIComponent("היי, אני רוצה להירשם לסדנת הפרימיום ב-21 במאי 🙏");
 
 export default function SadnaPage() {
   return (
@@ -22,9 +21,9 @@ export default function SadnaPage() {
         </div>
 
         {/* Date strip */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 0, marginBottom: 36 }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 36, flexWrap: "wrap" }}>
           {[
-            { val: "21.5",    label: "תאריך"  },
+            { val: "20.5",    label: "תאריך"  },
             { val: "17–20",   label: "שעות"   },
             { val: "20",      label: "מקומות" },
             { val: "₪500",    label: "השקעה"  },
@@ -42,34 +41,23 @@ export default function SadnaPage() {
 
         {/* Headline */}
         <h1 style={{ fontSize: "clamp(2rem,5vw,3rem)", fontWeight: 800, lineHeight: 1.15, marginBottom: 20, letterSpacing: "-0.01em" }}>
-          לדעת מי את —<br />
+          לדעת מי אתם —<br />
           <span style={{ background: "linear-gradient(135deg,#E8B94A,#9E7C3A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
             ולהגיד את זה נכון.
           </span>
         </h1>
 
-        <p style={{ fontSize: "1.05rem", color: "#9E9990", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 36px" }}>
-          שלוש שעות של תרגול פרקטי — להטמיע את ההגדרה העצמית שלך ולחדד את המסר שיגרום ללקוחות הנכונים להגיע אליך.
+        <p style={{ fontSize: "1.05rem", color: "#9E9990", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 40px" }}>
+          שלוש שעות של תרגול פרקטי — להטמיע את ההגדרה העצמית שלכם, לחדד את המסר, ולדעת בדיוק איך להטמיע את זה נכון בוידאו.
         </p>
 
-        {/* CTA */}
-        <a
-          href={WA}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 10,
-            background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
-            color: "#1A1206", fontWeight: 800, fontSize: 16,
-            padding: "16px 40px", borderRadius: 9999,
-            textDecoration: "none", letterSpacing: "0.02em",
-          }}
-        >
-          אני רוצה מקום ←
-        </a>
+        {/* Checkout form */}
+        <div style={{ maxWidth: 380, margin: "0 auto" }}>
+          <SadnaCheckout />
+        </div>
 
         <div style={{ marginTop: 14, fontSize: 12, color: "#9E9990" }}>
-          נותרו מקומות ספורים · תגובה תוך שעה
+          נותרו מקומות ספורים
         </div>
       </section>
 
@@ -78,23 +66,23 @@ export default function SadnaPage() {
 
       {/* ── What you'll do ────────────────────────────────────────── */}
       <section style={{ maxWidth: 640, margin: "0 auto", padding: "56px 24px" }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".28em", color: "#9E7C3A", marginBottom: 20, textAlign: "center" }}>מה עושים בשלוש השעות</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".28em", color: "#9E7C3A", marginBottom: 32, textAlign: "center" }}>מה עושים בשלוש השעות</div>
 
         {[
           {
             num: "01",
             title: "הגדרה עצמית",
-            body: "מזהים בדיוק מה שמבדיל אותך — ומתרגלים לומר את זה בצורה שנוגעת, ולא מסבירה.",
+            body: "מזהים בדיוק מה שמבדיל אתכם — ומתרגלים לומר את זה בצורה שנוגעת, ולא מסבירה.",
           },
           {
             num: "02",
             title: "העמקת המסר",
-            body: "לוקחים את מה שאת יודעת להגיד — ומחדדים אותו כדי שיגע בדיוק למי שצריך לשמוע.",
+            body: "לוקחים את מה שאתם יודעים להגיד — ומחדדים אותו כדי שיגע בדיוק למי שצריך לשמוע.",
           },
           {
             num: "03",
-            title: "תרגול אמיתי",
-            body: "יוצאים עם ניסוח שעובד, שעברת דרכו בפועל — לא תיאוריה שצריך ליישם אחר כך בבית.",
+            title: "הטמעה נכונה בוידאו",
+            body: "יוצאים עם ניסוח שעובד ויודעים בדיוק איך להעביר אותו מול המצלמה — לא תיאוריה שצריך ליישם אחר כך בבית.",
           },
         ].map((item) => (
           <div key={item.num} style={{ display: "flex", gap: 20, marginBottom: 32 }}>
@@ -120,11 +108,11 @@ export default function SadnaPage() {
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".28em", color: "#9E7C3A", marginBottom: 20, textAlign: "center" }}>פרטי האירוע</div>
 
         {[
-          { k: "תאריך",    v: "יום רביעי, 21 במאי 2025"     },
-          { k: "שעות",     v: "17:00 – 20:00"               },
-          { k: "מיקום",    v: "משרדי BeeGood, תל אביב"      },
-          { k: "גודל קבוצה", v: "עד 20 משתתפים בלבד"       },
-          { k: "השקעה",    v: "₪500 לאדם"                   },
+          { k: "תאריך",       v: "יום שלישי, 20 במאי 2025"          },
+          { k: "שעות",        v: "17:00 – 20:00"                    },
+          { k: "מיקום",       v: "רחוב החילזון 5, רמת גן"           },
+          { k: "גודל קבוצה",  v: "עד 20 משתתפים בלבד"              },
+          { k: "השקעה",       v: "₪500 לאדם"                        },
         ].map((row) => (
           <div key={row.k} style={{
             display: "flex", justifyContent: "space-between", alignItems: "baseline",
@@ -144,8 +132,8 @@ export default function SadnaPage() {
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".28em", color: "#9E7C3A", marginBottom: 20, textAlign: "center" }}>למי זה מתאים</div>
         {[
           "בעלי עסקים שיודעים מה הם עושים — אבל מתקשים לתאר את זה בצורה שנוגעת",
-          "מי שכבר עשה עבודה על המסר שלו ורוצה לחדד ולתרגל אותו עם קבוצה",
-          "מי שרוצה לצאת מהסדנה עם ניסוח שעובד — לא עם עוד מסגרת לחשוב בה",
+          "מי שכבר עשה עבודה על המסר שלו ורוצה לחדד ולתרגל אותו בקבוצה קטנה",
+          "מי שרוצה לדעת בדיוק איך להטמיע את המסר שלו בוידאו ולא רק בכתב",
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", gap: 12, marginBottom: 16, alignItems: "flex-start" }}>
             <span style={{ color: "#C9964A", fontWeight: 700, fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>
@@ -155,32 +143,16 @@ export default function SadnaPage() {
       </section>
 
       {/* ── Bottom CTA ───────────────────────────────────────────── */}
-      <section style={{ maxWidth: 640, margin: "0 auto", padding: "48px 24px 80px", textAlign: "center" }}>
+      <section style={{ maxWidth: 640, margin: "0 auto", padding: "48px 24px 80px" }}>
         <div style={{ background: "rgba(201,150,74,0.06)", border: "1px solid rgba(201,150,74,0.20)", borderRadius: 20, padding: "40px 32px" }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".28em", color: "#9E7C3A", marginBottom: 16 }}>21 במאי · 17:00–20:00</div>
-          <p style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.3, marginBottom: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".28em", color: "#9E7C3A", marginBottom: 16, textAlign: "center" }}>20 במאי · 17:00–20:00 · רמת גן</div>
+          <p style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.3, marginBottom: 8, textAlign: "center" }}>
             20 מקומות בלבד.
           </p>
-          <p style={{ fontSize: 14, color: "#9E9990", marginBottom: 28 }}>
+          <p style={{ fontSize: 14, color: "#9E9990", marginBottom: 28, textAlign: "center" }}>
             הסדנה לא תחזור על עצמה בפורמט הזה.
           </p>
-          <a
-            href={WA}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 10,
-              background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
-              color: "#1A1206", fontWeight: 800, fontSize: 15,
-              padding: "15px 36px", borderRadius: 9999,
-              textDecoration: "none",
-            }}
-          >
-            שמור לי מקום ←
-          </a>
-          <div style={{ marginTop: 16, fontSize: 12, color: "#9E9990" }}>
-            ₪500 · תשלום לאחר אישור הרישום
-          </div>
+          <SadnaCheckout />
         </div>
       </section>
 

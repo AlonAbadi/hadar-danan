@@ -86,7 +86,8 @@ async function fulfillPurchase(
   const productEvent =
     purchase.product === "challenge_197" ? "CHALLENGE_PURCHASED" :
     purchase.product === "workshop_1080" ? "WORKSHOP_PURCHASED"  :
-    purchase.product === "course_1800"   ? "COURSE_PURCHASED"    : null;
+    purchase.product === "course_1800"   ? "COURSE_PURCHASED"    :
+    purchase.product === "sadna_500"     ? "SADNA_PURCHASED"     : null;
 
   // Fetch user data once (shared by all email enqueuing below)
   const { data: user } = await supabase
