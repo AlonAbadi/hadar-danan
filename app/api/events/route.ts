@@ -72,66 +72,6 @@ const SEQUENCE_TRIGGERS = new Set([
   "INACTIVE_3_DAYS",
 ]);
 
-// ── WhatsApp cart-abandon helper ─────────────────────────────
-// Enqueues two SEND_WHATSAPP jobs (1h and 24h) when CHECKOUT_STARTED fires.
-// Silently skips if: WhatsApp creds missing, user has no phone, or jobs already
-// enqueued for this user in the last 24 hours (dedup at enqueue time).
-async function enqueueWhatsappCartAbandon(
-  userId: string,
-  supabase: ReturnType<typeof createServerClient>
-): Promise<void> {
-  if (!process.env.UCHAT_API_KEY) return;
-
-  const { data: user } = await supabase
-    .from("users")
-    .select("name, phone")
-    .eq("id", userId)
-    .single();
-
-  if (!user?.phone) return;
-
-  // Dedup: skip if we already queued WhatsApp for this user in the last 24h.
-  const { data: existingJob } = await supabase
-    .from("jobs")
-    .select("id")
-    .eq("type", "SEND_WHATSAPP")
-    .in("status", ["pending", "running", "done"])
-    .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-    .filter("payload->user_id", "eq", userId)
-    .limit(1)
-    .maybeSingle();
-
-  if (existingJob) return;
-
-  const firstName = user.name?.trim().split(/\s+/)[0] ?? user.name ?? "";
-
-  await supabase.from("jobs").insert([
-    {
-      type: "SEND_WHATSAPP",
-      payload: {
-        user_id:         userId,
-        phone:           user.phone,
-        name:            firstName,
-        template_name:   "hadar_cart_1h",
-        template_params: [firstName],
-      },
-      run_at: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(),
-      status: "pending" as const,
-    },
-    {
-      type: "SEND_WHATSAPP",
-      payload: {
-        user_id:         userId,
-        phone:           user.phone,
-        name:            firstName,
-        template_name:   "hadar_cart_24h",
-        template_params: [firstName],
-      },
-      run_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      status: "pending" as const,
-    },
-  ]);
-}
 
 export async function POST(req: NextRequest) {
   // ── Parse body ───────────────────────────────────────────
@@ -223,11 +163,6 @@ export async function POST(req: NextRequest) {
         const u = transitioned[0];
         notifyStatusChange(u.id, u.name ?? u.email ?? "", u.email, u.phone ?? null, u.utm_source ?? null, to, type);
       }
-    }
-
-    // ── WhatsApp cart-abandon (1h + 24h after CHECKOUT_STARTED) ─
-    if (type === "CHECKOUT_STARTED" && resolvedUserId) {
-      await enqueueWhatsappCartAbandon(resolvedUserId, supabase);
     }
 
     // ── Trigger email sequences ──────────────────────────────
