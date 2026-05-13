@@ -196,9 +196,12 @@ ${dataBlock}
 
   const raw = message.content[0].type === "text" ? message.content[0].text.trim() : "";
 
+  // Strip markdown code fences if present
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+
   let analysis: Record<string, unknown>;
   try {
-    analysis = JSON.parse(raw);
+    analysis = JSON.parse(cleaned);
   } catch {
     return NextResponse.json({ error: "שגיאה בפרסור תשובת Claude", raw }, { status: 500 });
   }
