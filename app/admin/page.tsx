@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createServerClient } from '@/lib/supabase/server';
+import { QuizInsightsButton } from './QuizInsightsButton';
 
 async function getHubKPIs() {
   const supabase = createServerClient();
@@ -200,6 +201,9 @@ export default async function AdminHubPage() {
         </div>
 
         <div className="divider" />
+
+        {/* Quiz insights AI analysis */}
+        <QuizInsightsButton />
 
         {/* Nav cards by group — skip ראשי (shown above) */}
         {GROUPS.filter(g => g !== 'ראשי').map(group => {
