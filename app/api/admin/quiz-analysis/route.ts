@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (supabase as any).from(table);
+}
+
+export async function GET(req: NextRequest) {
+  if (!isAdminAuthorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createServerClient();
+  const { data } = await safeFrom(supabase, "quiz_insights")
+    .select("analysis, meta, created_at")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return NextResponse.json({ saved: null });
+  return NextResponse.json({ saved: data });
+}
+
 function isAdminAuthorized(req: NextRequest): boolean {
   const auth = req.headers.get("Authorization") || req.headers.get("authorization");
   if (!auth?.startsWith("Basic ")) return false;
@@ -206,8 +224,14 @@ ${dataBlock}
     return NextResponse.json({ error: "שגיאה בפרסור תשובת Claude", raw }, { status: 500 });
   }
 
-  return NextResponse.json({
+  const payload = {
     analysis,
     meta: { total, period: `${fromDate} – ${toDate}`, avgMatchPct, productSummary },
-  });
+  };
+
+  // Persist — keep only the latest row (delete old, insert new)
+  await safeFrom(supabase, "quiz_insights").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await safeFrom(supabase, "quiz_insights").insert({ analysis, meta: payload.meta });
+
+  return NextResponse.json(payload);
 }

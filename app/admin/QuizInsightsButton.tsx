@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ProductStat { product: string; count: number; pct: number; }
 
@@ -19,11 +19,31 @@ interface ApiResponse {
   meta: { total: number; period: string; avgMatchPct: number; productSummary: ProductStat[] };
 }
 
+interface SavedResponse {
+  saved: { analysis: Analysis; meta: ApiResponse["meta"]; created_at: string } | null;
+}
+
 export function QuizInsightsButton() {
-  const [loading, setLoading]   = useState(false);
-  const [data,    setData]      = useState<ApiResponse | null>(null);
-  const [error,   setError]     = useState("");
-  const [open,    setOpen]      = useState(false);
+  const [loading,     setLoading]     = useState(false);
+  const [data,        setData]        = useState<ApiResponse | null>(null);
+  const [error,       setError]       = useState("");
+  const [open,        setOpen]        = useState(false);
+  const [savedAt,     setSavedAt]     = useState<string | null>(null);
+  const [initLoading, setInitLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/quiz-analysis")
+      .then(r => r.json())
+      .then((json: SavedResponse) => {
+        if (json.saved) {
+          setData({ analysis: json.saved.analysis, meta: json.saved.meta });
+          setSavedAt(json.saved.created_at);
+          setOpen(true);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setInitLoading(false));
+  }, []);
 
   async function run() {
     setLoading(true); setError(""); setOpen(true);
@@ -32,6 +52,7 @@ export function QuizInsightsButton() {
       const json = await res.json();
       if (!res.ok) { setError(json.error ?? "שגיאה"); setLoading(false); return; }
       setData(json);
+      setSavedAt(new Date().toISOString());
     } catch {
       setError("שגיאת רשת");
     }
@@ -58,10 +79,12 @@ export function QuizInsightsButton() {
     letterSpacing: "0.06em",
   };
 
+  if (initLoading) return null;
+
   return (
     <div style={{ marginBottom: 32 }}>
       {/* Header row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: open ? 16 : 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: open ? 16 : 0 }}>
         <button
           onClick={run}
           disabled={loading}
@@ -76,11 +99,16 @@ export function QuizInsightsButton() {
             transition: "all 0.18s",
           }}
         >
-          {loading ? "מנתח..." : "ניתוח תוצאות קוויז"}
+          {loading ? "מנתח..." : data ? "רענן ניתוח" : "ניתוח תוצאות קוויז"}
         </button>
         {data && !loading && (
           <span style={{ fontSize: 12, color: "#9E9990" }}>
             {data.meta.total} תוצאות · {data.meta.period}
+          </span>
+        )}
+        {savedAt && !loading && (
+          <span style={{ fontSize: 11, color: "#6B7280" }}>
+            נותח {new Date(savedAt).toLocaleDateString("he-IL", { day: "numeric", month: "short" })} בשעה {new Date(savedAt).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
           </span>
         )}
         {data && (
