@@ -211,31 +211,33 @@ ${dataBlock}
   const message = await client.messages.create({
     model:      "claude-sonnet-4-6",
     max_tokens: 1024,
+    tools: [{
+      name: "quiz_analysis",
+      description: "מחזיר ניתוח מובנה של תוצאות הקוויז",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          headline:         { type: "string", description: "משפט אחד שמסכם את הממצא המרכזי" },
+          audience_profile: { type: "string", description: "פסקה 3-4 שורות: מי הם האנשים, מה שלב העסק שלהם" },
+          top_pains:        { type: "array", items: { type: "string" }, description: "שלושה כאבים מרכזיים" },
+          product_fit:      { type: "string", description: "האם המוצרים המומלצים תואמים לרצון ההשקעה" },
+          opportunities:    { type: "array", items: { type: "string" }, description: "שלוש הזדמנויות עסקיות" },
+          content_angle:    { type: "string", description: "הפחד/חסם המרכזי לדבר עליו בתוכן" },
+          watch_out:        { type: "string", description: "אזהרה אחת מהנתונים שדורשת תשומת לב" },
+        },
+        required: ["headline","audience_profile","top_pains","product_fit","opportunities","content_angle","watch_out"],
+      },
+    }],
+    tool_choice: { type: "tool" as const, name: "quiz_analysis" },
     messages: [{ role: "user", content: userPrompt }],
     system: systemPrompt,
   });
 
-  const raw = message.content[0].type === "text" ? message.content[0].text.trim() : "";
-
-  // Extract from first { to last } — avoids greedy-regex issues with nested braces
-  const firstBrace = raw.indexOf("{");
-  const lastBrace  = raw.lastIndexOf("}");
-  const cleaned = firstBrace !== -1 && lastBrace > firstBrace
-    ? raw.slice(firstBrace, lastBrace + 1)
-    : raw;
-
-  let analysis: Record<string, unknown>;
-  try {
-    analysis = JSON.parse(cleaned);
-  } catch {
-    // Log full raw response to error_logs for debugging
-    await supabase.from("error_logs").insert({
-      context: "api/admin/quiz-analysis",
-      error:   "JSON parse failed",
-      payload: { raw: raw.slice(0, 2000) },
-    });
-    return NextResponse.json({ error: "שגיאה בפרסור תשובת Claude", raw }, { status: 500 });
+  const toolBlock = message.content.find(b => b.type === "tool_use");
+  if (!toolBlock || toolBlock.type !== "tool_use") {
+    return NextResponse.json({ error: "Claude לא החזיר תוצאה מובנית" }, { status: 500 });
   }
+  const analysis = toolBlock.input as Record<string, unknown>;
 
   const payload = {
     analysis,
