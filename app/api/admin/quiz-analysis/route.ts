@@ -207,7 +207,7 @@ ${dataBlock}
 
   const message = await client.messages.create({
     model:      "claude-sonnet-4-6",
-    max_tokens: 1024,
+    max_tokens: 2048,
     tools: [{
       name: "quiz_analysis",
       description: "מחזיר ניתוח מובנה של תוצאות הקוויז",
@@ -252,7 +252,7 @@ ${dataBlock}
   await safeFrom(supabase, "quiz_insights").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await safeFrom(supabase, "quiz_insights").insert({ analysis, meta: payload.meta });
 
-  return NextResponse.json(payload);
+  return NextResponse.json({ ...payload, _debug: { content_angle: analysis.content_angle, watch_out: analysis.watch_out, keys: Object.keys(analysis) } });
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
