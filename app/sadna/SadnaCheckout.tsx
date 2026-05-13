@@ -47,7 +47,7 @@ export function SadnaCheckout() {
         body: JSON.stringify({ product: "sadna_500", user_id: signupData.user_id }),
       });
       const checkoutData = await checkoutRes.json();
-      if (!checkoutRes.ok || !checkoutData.url) throw new Error("שגיאה ביצירת דף תשלום");
+      if (!checkoutRes.ok || !checkoutData.url) throw new Error(`שגיאה ביצירת דף תשלום (${checkoutData.error ?? checkoutRes.status})`);
 
       window.location.href = checkoutData.url;
     } catch (err) {
