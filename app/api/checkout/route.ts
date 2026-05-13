@@ -110,6 +110,11 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (purchaseErr) {
+    await supabase.from("error_logs").insert({
+      context: "api/checkout",
+      error:   "Purchase insert failed",
+      payload: { product, user_id, message: purchaseErr.message, code: purchaseErr.code },
+    });
     return NextResponse.json({ error: "DB error" }, { status: 500 });
   }
 
