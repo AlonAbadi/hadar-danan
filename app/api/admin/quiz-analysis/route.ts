@@ -207,20 +207,20 @@ ${dataBlock}
 
   const message = await client.messages.create({
     model:      "claude-sonnet-4-6",
-    max_tokens: 2048,
+    max_tokens: 1024,
     tools: [{
       name: "quiz_analysis",
       description: "מחזיר ניתוח מובנה של תוצאות הקוויז",
       input_schema: {
         type: "object" as const,
         properties: {
-          headline:         { type: "string", description: "משפט אחד שמסכם את הממצא המרכזי" },
-          audience_profile: { type: "string", description: "פסקה 3-4 שורות: מי הם האנשים, מה שלב העסק שלהם" },
-          top_pains:        { type: "array", items: { type: "string" }, description: "שלושה כאבים מרכזיים" },
-          product_fit:      { type: "string", description: "האם המוצרים המומלצים תואמים לרצון ההשקעה" },
-          opportunities:    { type: "array", items: { type: "string" }, description: "שלוש הזדמנויות עסקיות" },
-          content_angle:    { type: "string", description: "הפחד/חסם המרכזי לדבר עליו בתוכן" },
-          watch_out:        { type: "string", description: "אזהרה אחת מהנתונים שדורשת תשומת לב" },
+          headline:         { type: "string", description: "משפט אחד (עד 20 מילה) שמסכם את הממצא המרכזי" },
+          audience_profile: { type: "string", description: "2-3 משפטים קצרים: מי הם, מה שלב העסק שלהם" },
+          top_pains:        { type: "array", items: { type: "string", maxLength: 80 }, description: "3 כאבים — כל אחד עד 15 מילה" },
+          product_fit:      { type: "string", description: "2-3 משפטים: התאמה בין המלצות לרצון ההשקעה" },
+          opportunities:    { type: "array", items: { type: "string", maxLength: 80 }, description: "3 הזדמנויות — כל אחת עד 15 מילה" },
+          content_angle:    { type: "string", description: "משפט אחד: הפחד/חסם המרכזי לתוכן שיווקי" },
+          watch_out:        { type: "string", description: "משפט אחד: אזהרה ספציפית מהנתונים" },
         },
         required: ["headline","audience_profile","top_pains","product_fit","opportunities","content_angle","watch_out"],
       },
