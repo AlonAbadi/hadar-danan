@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { SuccessPage } from "@/components/SuccessPage";
 
 export default function SadnaSuccessPage() {
   return (
+    <Suspense>
     <SuccessPage
       productName="סדנת פרימיום"
       emoji="✨"
@@ -14,5 +16,6 @@ export default function SadnaSuccessPage() {
       trackingProduct="sadna_500"
       trackingValue={500}
     />
+    </Suspense>
   );
 }
