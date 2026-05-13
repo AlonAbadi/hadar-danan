@@ -150,6 +150,9 @@ export async function POST(req: NextRequest) {
     // wt= is a shared secret that validates the call came from Cardcom
     IndicatorUrl: `${appUrl}/api/cardcom/webhook?order=${purchase.id}&wt=${process.env.CARDCOM_WEBHOOK_TOKEN ?? ""}`,
 
+    // Product name shown on the Cardcom payment page
+    ProductName: invoiceDesc,
+
     // Customer details — pre-fills the Cardcom payment form
     CardOwnerName:       customerName,
     CardOwnerEmail:      customerEmail,
