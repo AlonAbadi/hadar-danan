@@ -257,6 +257,7 @@ async function fulfillPurchase(
     const PRODUCT_CUSTOM_EVENT: Record<string, string> = {
       challenge_197:  "PurchaseChallenge",
       workshop_1080:  "PurchaseWorkshop",
+      challenge_197:  "PurchaseChallenge",
       course_1800:    "PurchaseCourse",
       strategy_4000:  "PurchaseStrategy",
       premium_14000:  "PurchasePremium",
