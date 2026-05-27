@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Plan — Replicate to Many Customers</title>
+<style>
+  :root{
+    --bg:#0D1018; --bg-dark:#080C14; --card:#141820; --card-soft:#1D2430;
+    --border:#2C323E; --gold:#C9964A; --gold-light:#E8B94A; --gold-dark:#9E7C3A;
+    --fg:#EDE9E1; --muted:#9E9990; --green:#4ade80; --red:#f87171;
+    --grad-gold:linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.65; font-size:16px;}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 24px 96px}
+  header.hero{background:radial-gradient(1200px 500px at 70% -10%, rgba(201,150,74,.18), transparent), var(--bg-dark);
+    border-bottom:1px solid var(--border); padding:56px 24px 48px;}
+  .hero .kicker{color:var(--gold); letter-spacing:.16em; text-transform:uppercase; font-size:12px; font-weight:700}
+  .hero h1{font-size:38px; margin:12px 0 8px; line-height:1.15}
+  .grad{background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .hero p.sub{color:var(--muted); max-width:760px; margin:0; font-size:17px}
+  .badges{margin-top:20px; display:flex; gap:10px; flex-wrap:wrap}
+  .pill{border:1px solid var(--border); background:var(--card); border-radius:999px; padding:6px 14px; font-size:13px; color:var(--muted)}
+  .pill b{color:var(--fg)}
+
+  nav.toc{position:sticky; top:0; z-index:5; background:rgba(13,16,24,.94); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border); padding:12px 24px; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; font-size:13.5px;}
+  nav.toc a{color:var(--muted); text-decoration:none}
+  nav.toc a:hover{color:var(--gold-light)}
+
+  section{margin-top:52px; scroll-margin-top:60px}
+  h2{font-size:25px; margin:0 0 6px; display:flex; align-items:center; gap:12px; line-height:1.2}
+  h2 .num{font-size:13px; color:var(--bg); background:var(--grad-gold); min-width:30px; height:30px; padding:0 8px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-weight:800; flex:none}
+  h2 + .lede{color:var(--muted); margin:0 0 18px; font-size:16px}
+  h3{font-size:18px; margin:24px 0 8px; color:var(--gold-light)}
+  p{margin:10px 0}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px 22px; margin:14px 0}
+  .card.gold{border-color:var(--gold-dark); background:linear-gradient(145deg,#1D2430,#111620)}
+  .grid{display:grid; gap:14px}
+  .g2{grid-template-columns:1fr 1fr}
+  @media(max-width:760px){.g2{grid-template-columns:1fr}}
+
+  .callout{border-inline-start:4px solid var(--gold); background:rgba(201,150,74,.07); border-radius:0 12px 12px 0; padding:13px 18px; margin:16px 0}
+  .callout.warn{border-color:var(--red); background:rgba(248,113,113,.07)}
+  .callout.tip{border-color:var(--green); background:rgba(74,222,128,.06)}
+  .callout b{color:var(--gold-light)}
+  .callout.warn b{color:var(--red)}
+
+  table{width:100%; border-collapse:collapse; margin:12px 0; font-size:14px}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{color:var(--gold); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em}
+  code{background:var(--card-soft); border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:12.5px; color:var(--gold-light)}
+  .new{color:var(--green); font-weight:700; font-size:11px; border:1px solid var(--green); border-radius:5px; padding:1px 6px; margin-inline-start:6px}
+  .mod{color:var(--gold-light); font-weight:700; font-size:11px; border:1px solid var(--gold-dark); border-radius:5px; padding:1px 6px; margin-inline-start:6px}
+
+  ul.clean{margin:8px 0; padding-inline-start:22px}
+  ul.clean li{margin:6px 0}
+  ul.clean li b{color:var(--gold-light)}
+  ol.phase{counter-reset:p; list-style:none; padding:0; margin:14px 0}
+  ol.phase>li{position:relative; padding:16px 20px 16px 60px; border:1px solid var(--border); border-radius:12px; margin:12px 0; background:var(--card)}
+  ol.phase>li::before{counter-increment:p; content:counter(p); position:absolute; left:16px; top:16px; width:30px; height:30px; border-radius:8px; background:var(--grad-gold); color:var(--bg); font-weight:800; display:flex; align-items:center; justify-content:center}
+  ol.phase>li h3{margin:0 0 6px}
+  ol.steps{margin:8px 0; padding-inline-start:20px}
+  ol.steps li{margin:5px 0}
+  .muted{color:var(--muted)}
+  .small{font-size:13px}
+  .repo-this{color:var(--green)} .repo-tpl{color:var(--gold-light)}
+  hr{border:none; border-top:1px solid var(--border); margin:24px 0}
+  footer{margin-top:64px; padding-top:22px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; text-align:center}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap" style="padding-bottom:0">
+    <div class="kicker">Implementation Plan · Architecture</div>
+    <h1>Replicate the solution to <span class="grad">many customers</span></h1>
+    <p class="sub">Custom-looking commercial sites, shared feature engine. Approach: evolve the existing Atelier provisioner from a <i>preview demo generator</i> into a <i>live-business provisioner</i> for isolated per-customer instances.</p>
+    <div class="badges">
+      <span class="pill"><b>Model:</b> isolated instance / customer</span>
+      <span class="pill"><b>Onboarding:</b> done-for-you</span>
+      <span class="pill"><b>Payments/leads:</b> separate per customer</span>
+      <span class="pill"><b>Domains:</b> platform subdomain</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#context">Context</a>
+  <a href="#arch">Architecture</a>
+  <a href="#why">Why this model</a>
+  <a href="#phases">Phases</a>
+  <a href="#where">What lands where</a>
+  <a href="#files">Critical files</a>
+  <a href="#verify">Verification</a>
+</nav>
+
+<div class="wrap">
+
+<section id="context">
+  <h2><span class="num">Goal</span> Context</h2>
+  <p class="lede">Sell this product (funnel + CRM + memberships + payments) to many customers. Each gets a marketing site that <b>looks custom-made</b> while the <b>underlying feature engine stays the same</b>.</p>
+  <div class="callout tip"><b>Head start:</b> the codebase already has a per-customer site generator — the <b>Atelier deploy pipeline</b> (<code>app/api/admin/atelier/deploy/route.ts</code>). It forks a template repo, injects a generated <code>lib/client.ts</code> config (brand, colors, copy, products, pages, feature-flag modules), creates a Vercel project, sets env vars, and deploys. It just stops at a <b>preview demo</b> — Step 5 injects <code>PREVIEW_MODE=true</code> with placeholder Supabase/Cardcom/Resend keys. The whole job is promoting that to <b>live</b>.</div>
+  <h3>Decisions locked with you</h3>
+  <ul class="clean">
+    <li><b>Isolated instance per customer</b> — own repo fork + own Vercel project + own Supabase project + own <code>lib/client.ts</code>. Not a shared multi-tenant DB.</li>
+    <li><b>Done-for-you onboarding</b> — extend the existing Atelier admin workflow; no self-serve portal.</li>
+    <li><b>Separate payments/leads</b> — each customer is a distinct business with its own Cardcom, Resend from-email, WhatsApp number, and data → per-customer real secrets.</li>
+    <li><b>Platform subdomain</b> — <code>{slug}.PLATFORM_DOMAIN</code> attached per Vercel project (no custom-domain automation in v1).</li>
+  </ul>
+</section>
+
+<section id="arch">
+  <h2><span class="num">Map</span> Architecture</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">Control plane</h3>
+      <p class="small">This app (<code>beegood.online</code>) + its Supabase. Runs the Atelier admin, holds the customer registry, and orchestrates provisioning.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Customer instance</h3>
+      <p class="small">A fork of <code>atelier-client-template</code> on its own Vercel project + own Supabase + own real secrets. The custom look comes entirely from <code>lib/client.ts</code> + <code>public/*</code> assets in that fork.</p>
+    </div>
+  </div>
+  <div class="callout warn"><b>Known structural risk — engine drift:</b> every customer is a <i>fork</i> of the engine, so bug fixes / new features don't propagate automatically. Addressed in Phase 5.</div>
+</section>
+
+<section id="why">
+  <h2><span class="num">Why</span> Why isolated-instance, not a shared multi-tenant DB</h2>
+  <ul class="clean">
+    <li>Each customer collects their <b>own</b> leads and takes their <b>own</b> payments → they need their own Cardcom/Resend/WhatsApp and their own data store anyway.</li>
+    <li>A shared DB would force per-row tenant isolation + strict RLS for no benefit here.</li>
+    <li>Isolated forks make the "custom look" trivial — it's just a different <code>client.ts</code>.</li>
+  </ul>
+</section>
+
+<section id="phases">
+  <h2><span class="num">Plan</span> Phased implementation</h2>
+  <p class="lede">v1 = minimal done-for-you provisioning. Later phases automate. Legend: <span class="new">NEW</span> new file · <span class="mod">MOD</span> modified file.</p>
+
+  <ol class="phase">
+    <li>
+      <h3>Customer registry + secrets-safe bookkeeping <span class="repo-this small">· this repo</span></h3>
+      <p class="small">Track many live customers; capture go-live inputs <b>without persisting secrets</b>.</p>
+      <ul class="clean small">
+        <li><code>supabase/migrations/034_customers.sql</code> <span class="new">NEW</span> — <code>customers</code> table: <code>slug</code> (unique), <code>subdomain</code>, <code>status</code> (provisioning/preview/live/suspended/error), non-secret infra refs (<code>supabase_project_ref</code>, <code>supabase_url</code>, <code>vercel_project_id</code>, <code>github_repo</code>, <code>production_deployment_id</code>), checklist booleans (<code>supabase_schema_applied</code>, <code>cardcom_set</code>, <code>resend_set</code>, <code>whatsapp_set</code>, <code>subdomain_attached</code>), <code>went_live_at</code>. RLS on (service-role only). <b>No secret columns ever.</b></li>
+        <li><code>app/api/admin/atelier/customers/route.ts</code> <span class="new">NEW</span> — CRUD mirroring <code>applications/route.ts</code> (reuse <code>isAdminAuthorized</code> + <code>safeFrom</code>).</li>
+        <li><b>Relationship:</b> lead/onboarding funnel stays in <code>atelier_applications</code>; <code>customers</code> is the ops record created at go-live, back-referencing the application.</li>
+      </ul>
+    </li>
+
+    <li>
+      <h3>The <code>go-live</code> route — real Supabase + per-customer secrets <span class="repo-this small">· this repo</span></h3>
+      <p class="small">A "Promote to Live" action that replaces preview stubs with real infra. Keep <code>/deploy</code> (preview) untouched and separate.</p>
+      <p class="small"><code>app/api/admin/atelier/go-live/route.ts</code> <span class="new">NEW</span> — copy scaffolding from <code>deploy/route.ts</code>. Body carries pasted real secrets (Supabase URL/anon/service-role, Resend key + from-email, Cardcom terminal/name/<b>password</b>, WhatsApp). Steps:</p>
+      <ol class="steps small">
+        <li>Validate the <code>customers</code> row exists and is preview-deployed (has <code>vercel_project_id</code>).</li>
+        <li>Generate <code>CRON_SECRET</code>/<code>MEMBERS_SECRET</code>/<code>ADMIN_PASSWORD</code> via <code>crypto.randomUUID()</code>; return once; never persist.</li>
+        <li>Upsert Vercel env (reuse shape at <code>deploy/route.ts:337-345</code> with <code>?upsert=true</code>): <code>PREVIEW_MODE=false</code>, real Supabase keys, real Resend, real Cardcom (incl. password), <code>NEXT_PUBLIC_APP_URL=https://{slug}.{PLATFORM_DOMAIN}</code>, generated secrets, real WhatsApp. Prefer Vercel <i>encrypted</i> env type for secrets.</li>
+        <li>Attach subdomain (Phase 3).</li>
+        <li>Trigger fresh production deploy (env only applies on next build) — reuse <code>deploy/route.ts:351-362</code>.</li>
+        <li>Update <code>customers</code>: <code>status='live'</code>, checklist booleans, <code>went_live_at</code>, new <code>production_deployment_id</code>.</li>
+      </ol>
+      <p class="small"><b>Fresh customer DB:</b> use the existing consolidated <code>supabase/schema.sql</code> (single paste) instead of replaying 33 migrations. Gate go-live on the <code>supabase_schema_applied</code> checkbox.</p>
+      <div class="callout warn small"><b>Latent bug to fix:</b> the current Step 5 sets <code>CARDCOM_TERMINAL</code> + <code>CARDCOM_API_NAME</code> but never <code>CARDCOM_API_PASSWORD</code> — live checkout fails Cardcom auth without it.</div>
+      <div class="callout small"><b>Secret-safety:</b> never log the request body (existing routes log only <code>err.message</code> — keep that); never write Cardcom/Resend/service-role values to the DB; secrets travel admin→route→Vercel over TLS only.</div>
+    </li>
+
+    <li>
+      <h3>Subdomain attach <span class="repo-this small">· this repo, inside go-live</span></h3>
+      <ul class="clean small">
+        <li>New control-plane env <code>PLATFORM_DOMAIN</code> (e.g. <code>sites.beegood.online</code>).</li>
+        <li>Attach: <code>POST /v10/projects/{id}/domains</code> body <code>{"name":"{slug}.{PLATFORM_DOMAIN}"}</code>; verify via <code>GET /v9/projects/{id}/domains/{domain}</code> (poll for <code>verified:true</code>, don't hard-fail on lag).</li>
+        <li><b>One-time manual setup:</b> wildcard <code>*.{PLATFORM_DOMAIN}</code> on the Vercel team + DNS <code>CNAME * → cname.vercel-dns.com</code> so per-customer verification is automatic.</li>
+        <li>Note: <code>NEXT_PUBLIC_FROM_EMAIL</code> uses the customer's verified Resend domain — independent of the subdomain.</li>
+      </ul>
+    </li>
+
+    <li>
+      <h3>Admin UX integration <span class="repo-this small">· this repo</span></h3>
+      <ul class="clean small">
+        <li><code>app/admin/atelier/[id]/AtelierOnboardClient.tsx</code> <span class="mod">MOD</span> — Go-Live panel near <code>handleDeploy</code> (line 302): password inputs (never pre-filled), <code>handleGoLive()</code>, display one-time generated secrets. Provisioning checklist bound to the <code>customers</code> row.</li>
+        <li><code>app/admin/clients/page.tsx</code> <span class="mod">MOD</span> (exists) — render the <code>customers</code> registry (slug, subdomain, status) for fleet visibility.</li>
+        <li><code>app/api/admin/atelier/orchestrate/route.ts</code> — keep go-live <b>human-gated</b> in v1 (agent must not inject secrets).</li>
+      </ul>
+    </li>
+
+    <li>
+      <h3>Engine drift fix <span class="repo-tpl small">· separate template repo — NOT this repo</span></h3>
+      <p class="small"><b>Do this AFTER live provisioning works</b> — largest workstream, out of v1.</p>
+      <ul class="clean small">
+        <li><b>Recommended:</b> extract the shared engine into a versioned private npm package (<code>@beegood/engine</code>) imported by both this repo and the template. Forks then hold only <code>lib/client.ts</code> + assets + a thin <code>package.json</code>; updates ship via <code>npm update</code> + redeploy.</li>
+        <li><b>v1 interim (optional):</b> a <code>gh</code> script that opens PRs across all <code>customers.github_repo</code> to pull template <code>main</code>.</li>
+      </ul>
+    </li>
+  </ol>
+</section>
+
+<section id="where">
+  <h2><span class="num">Scope</span> What lands where</h2>
+  <table>
+    <tr><th>Work</th><th>Repo</th></tr>
+    <tr><td><code>customers</code> table (migration 034) + CRUD route</td><td class="repo-this">this repo</td></tr>
+    <tr><td><code>go-live</code> route (real keys, secrets, subdomain, deploy)</td><td class="repo-this">this repo</td></tr>
+    <tr><td>Subdomain attach via Vercel domains API</td><td class="repo-this">this repo</td></tr>
+    <tr><td>Admin UI: Go-Live panel + checklist + clients registry</td><td class="repo-this">this repo</td></tr>
+    <tr><td><code>supabase/schema.sql</code> fresh-DB bootstrap</td><td class="repo-this">this repo (already exists)</td></tr>
+    <tr><td>Supabase Management API automation (later)</td><td class="repo-this">this repo</td></tr>
+    <tr><td>Making the customer site fully <code>client.ts</code>-driven (remove hardcoded brand)</td><td class="repo-tpl">atelier-client-template</td></tr>
+    <tr><td>Engine extraction to <code>@beegood/engine</code> (drift fix)</td><td class="repo-tpl">template + new package repo</td></tr>
+  </table>
+  <p class="small muted">Note: the generated <code>client.ts</code> already models brand/colors/copy/products/pages/modules; the template repo must consume it everywhere any <code>beegood</code> / <code>הדר דנן</code> / WhatsApp number / color is still hardcoded.</p>
+</section>
+
+<section id="files">
+  <h2><span class="num">Refs</span> Critical files (this repo)</h2>
+  <table>
+    <tr><th>File</th><th>Role</th></tr>
+    <tr><td><code>app/api/admin/atelier/deploy/route.ts</code></td><td>Pattern source; reuse env-set (<code>:337-345</code>) + deploy trigger (<code>:351-362</code>); missing <code>CARDCOM_API_PASSWORD</code> in Step 5</td></tr>
+    <tr><td><code>app/api/admin/atelier/applications/route.ts</code></td><td>Pattern for the new <code>customers</code> CRUD (<code>isAdminAuthorized</code>, <code>safeFrom</code>)</td></tr>
+    <tr><td><code>app/api/admin/atelier/orchestrate/route.ts</code></td><td>State machine; keep go-live human-gated</td></tr>
+    <tr><td><code>app/admin/atelier/[id]/AtelierOnboardClient.tsx</code></td><td><code>handleDeploy</code> (line 302) is the UI pattern</td></tr>
+    <tr><td><code>supabase/schema.sql</code></td><td>Single-paste bootstrap for each customer's fresh Supabase</td></tr>
+    <tr><td><code>lib/supabase/server.ts</code></td><td><code>createServerClient()</code> throws on missing keys → real keys mandatory at go-live</td></tr>
+    <tr><td><code>app/api/checkout/route.ts</code></td><td>Returns 503 on empty Cardcom creds (graceful preview behavior)</td></tr>
+  </table>
+  <p class="small"><b>New files:</b> <code>supabase/migrations/034_customers.sql</code> · <code>app/api/admin/atelier/customers/route.ts</code> · <code>app/api/admin/atelier/go-live/route.ts</code></p>
+</section>
+
+<section id="verify">
+  <h2><span class="num">Test</span> Verification — onboard one real test customer</h2>
+  <ol class="steps">
+    <li>Apply migration 034 in control-plane Supabase; confirm via the <code>migrate</code> route probe.</li>
+    <li><b>Preview path unchanged:</b> run the pipeline to <code>awaiting_approval</code>, click Deploy, confirm <code>{slug}.vercel.app</code> loads in PREVIEW_MODE (checkout 503s, no DB writes).</li>
+    <li>Create the customer's Supabase project; paste <code>supabase/schema.sql</code>; run <code>scripts/verify-schema.mjs</code> against it; tick <code>supabase_schema_applied</code>.</li>
+    <li>Create the <code>customers</code> row from the application (POST <code>/customers</code>).</li>
+    <li>Set up the customer's Resend (verified from-email) + a real Cardcom terminal.</li>
+    <li><b>Go-Live:</b> paste Supabase + Resend + Cardcom (incl. password) + WhatsApp. Route generates admin/cron/members secrets, upserts all Vercel envs (PREVIEW_MODE=false), attaches subdomain, triggers production deploy. Save the one-time admin password.</li>
+    <li>Verify <code>https://{slug}.{PLATFORM_DOMAIN}</code>: loads with valid SSL; auth/magic-link works (real Supabase → <code>users</code> row in customer DB); checkout no longer 503s — complete a ₪1 <code>test_1</code> purchase, webhook writes to customer DB, Resend sends a receipt from the verified from-email; WhatsApp CTA real; <code>/admin</code> accepts the generated password.</li>
+    <li>Registry: <code>customers</code> row shows <code>status='live'</code>, all checklist booleans true, <code>went_live_at</code> + <code>production_deployment_id</code> set.</li>
+    <li><b>Secret-safety audit:</b> grep control-plane logs + the <code>customers</code> row — confirm NO Cardcom/Resend/service-role values were persisted or logged.</li>
+  </ol>
+</section>
+
+<footer>
+  Implementation plan · multi-customer replication · beegood.online<br/>
+  Full plan file: <code>~/.claude/plans/if-we-want-to-magical-ritchie.md</code>
+</footer>
+
+</div>
+</body>
+</html>

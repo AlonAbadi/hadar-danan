@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>beegood.online — Detailed Product Guide</title>
+<style>
+  :root{
+    --bg:#0D1018; --bg-dark:#080C14; --card:#141820; --card-soft:#1D2430;
+    --border:#2C323E; --gold:#C9964A; --gold-light:#E8B94A; --gold-dark:#9E7C3A;
+    --fg:#EDE9E1; --muted:#9E9990; --green:#4ade80;
+    --grad-gold:linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.65; font-size:16px;}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 24px 96px}
+  header.hero{background:radial-gradient(1200px 500px at 70% -10%, rgba(201,150,74,.18), transparent), var(--bg-dark);
+    border-bottom:1px solid var(--border); padding:64px 24px 56px; text-align:center;}
+  .hero .kicker{color:var(--gold); letter-spacing:.18em; text-transform:uppercase; font-size:12px; font-weight:700}
+  .hero h1{font-size:44px; margin:14px 0 8px; line-height:1.1}
+  .grad{background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .hero p.sub{color:var(--muted); max-width:680px; margin:0 auto; font-size:18px}
+  .hero .meta{margin-top:22px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+  .pill{border:1px solid var(--border); background:var(--card); border-radius:999px; padding:6px 14px; font-size:13px; color:var(--muted)}
+  .pill b{color:var(--fg)}
+
+  nav.toc{position:sticky; top:0; z-index:5; background:rgba(13,16,24,.94); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border); padding:12px 24px; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; font-size:13.5px;}
+  nav.toc a{color:var(--muted); text-decoration:none}
+  nav.toc a:hover{color:var(--gold-light)}
+
+  section{margin-top:60px; scroll-margin-top:60px}
+  h2{font-size:28px; margin:0 0 6px; display:flex; align-items:center; gap:12px; line-height:1.2}
+  h2 .num{font-size:14px; color:var(--bg); background:var(--grad-gold); width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-weight:800; flex:none}
+  h2 + .lede{color:var(--muted); margin:0 0 22px; font-size:17px}
+  h3{font-size:19px; margin:30px 0 10px; color:var(--gold-light)}
+  h4{font-size:16px; margin:18px 0 6px}
+  p{margin:10px 0}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px 24px; margin:14px 0}
+  .card.soft{background:var(--card-soft)}
+  .card.gold{border-color:var(--gold-dark); background:linear-gradient(145deg,#1D2430,#111620)}
+  .grid{display:grid; gap:14px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:760px){.g2,.g3{grid-template-columns:1fr}}
+
+  .callout{border-inline-start:4px solid var(--gold); background:rgba(201,150,74,.07); border-radius:0 12px 12px 0; padding:14px 20px; margin:16px 0}
+  .callout.tip{border-color:var(--green); background:rgba(74,222,128,.06)}
+  .callout b{color:var(--gold-light)}
+
+  .ladder-step{display:flex; gap:18px; align-items:flex-start; padding:18px 20px; border:1px solid var(--border); border-radius:14px; margin:10px 0; background:linear-gradient(145deg,#1D2430,#111620)}
+  .ladder-step .rung{flex:none; width:44px; height:44px; border-radius:12px; background:var(--card); border:1px solid var(--gold-dark); color:var(--gold-light); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px}
+  .ladder-step h4{margin:0 0 3px; font-size:18px}
+  .he{direction:rtl; unicode-bidi:embed}
+  .ladder-step .price{margin-inline-start:auto; flex:none; color:var(--gold-light); font-weight:800; font-size:18px; white-space:nowrap}
+  .ladder-step p{margin:4px 0 0; color:var(--muted); font-size:14px}
+
+  table{width:100%; border-collapse:collapse; margin:12px 0; font-size:14px}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{color:var(--gold); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.05em}
+  td.he{direction:rtl}
+  td.num,th.num{text-align:center; width:42px}
+  code{background:var(--card-soft); border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:13px; color:var(--gold-light)}
+
+  .flow{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:16px 0}
+  .flow .node{background:var(--card-soft); border:1px solid var(--border); border-radius:10px; padding:8px 14px; font-size:14px; font-weight:600}
+  .flow .node.start{border-color:var(--green); color:var(--green)}
+  .flow .node.end{border-color:var(--gold); color:var(--gold-light)}
+  .flow .arrow{color:var(--gold); font-weight:800; font-size:18px}
+
+  .quote{border-inline-start:3px solid var(--gold); padding:8px 18px; margin:14px 0; color:var(--fg); direction:rtl; font-size:18px}
+  .quote small{display:block; color:var(--muted); direction:ltr; font-size:13px; margin-top:4px}
+
+  ul.clean{margin:8px 0; padding-inline-start:22px}
+  ul.clean li{margin:7px 0}
+  ul.clean li b{color:var(--gold-light)}
+  ol.steps{counter-reset:s; list-style:none; padding:0; margin:16px 0}
+  ol.steps>li{position:relative; padding:14px 18px 14px 58px; border:1px solid var(--border); border-radius:12px; margin:10px 0; background:var(--card)}
+  ol.steps>li::before{counter-increment:s; content:counter(s); position:absolute; left:14px; top:14px; width:30px; height:30px; border-radius:8px; background:var(--grad-gold); color:var(--bg); font-weight:800; display:flex; align-items:center; justify-content:center}
+  ol.steps>li b{color:var(--gold-light)}
+  .muted{color:var(--muted)}
+  .tag{display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; background:rgba(201,150,74,.15); color:var(--gold-light); border:1px solid var(--gold-dark)}
+  .small{font-size:13px}
+  hr{border:none; border-top:1px solid var(--border); margin:26px 0}
+  footer{margin-top:72px; padding-top:24px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; text-align:center}
+  .legend{display:flex; gap:8px; align-items:baseline}
+  .legend .he{flex:none; min-width:120px; color:var(--fg); font-weight:600}
+  .legend .en{color:var(--muted); font-size:14px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">Detailed Product Guide · Onboarding</div>
+  <h1>הדר דנן · <span class="grad">beegood.online</span></h1>
+  <p class="sub">A deep, plain-English walkthrough of what this product is, who it's for, every offer it sells, and the automated machine that turns a stranger into a ₪30k/month client — built on the proprietary <b>TrueSignal©</b> method.</p>
+  <div class="meta">
+    <span class="pill"><b>Live:</b> beegood.online</span>
+    <span class="pill"><b>Language:</b> Hebrew (RTL)</span>
+    <span class="pill"><b>Audience:</b> business owners</span>
+    <span class="pill"><b>Model:</b> free lead magnet → value ladder → retainer</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#read">How to read this</a>
+  <a href="#what">What it is</a>
+  <a href="#who">Who it's for</a>
+  <a href="#promise">The promise</a>
+  <a href="#journey">Customer journey</a>
+  <a href="#quiz">The quiz</a>
+  <a href="#ladder">Value ladder</a>
+  <a href="#products">Product details</a>
+  <a href="#emails">Email automation</a>
+  <a href="#funnel">Funnel mechanics</a>
+  <a href="#hive">Membership</a>
+  <a href="#atelier">Atelier</a>
+  <a href="#crm">Admin & CRM</a>
+  <a href="#glossary">Glossary</a>
+</nav>
+
+<div class="wrap">
+
+<section id="read">
+  <h2><span class="num">0</span> How to read this guide</h2>
+  <p class="lede">Read it top to bottom — each section builds on the last.</p>
+  <p>The product mixes Hebrew marketing language with technical machinery. To keep it understandable, this guide uses a simple rule: <b>the Hebrew term appears in gold</b> with a plain-English explanation next to it. You don't need Hebrew to follow along.</p>
+  <div class="callout tip"><b>One sentence summary:</b> beegood.online is a marketing consultancy's website that <b>also runs the entire sales process by itself</b> — it finds out what each visitor needs, recommends the right product, takes payment, follows up by email and WhatsApp, and reports everything to the team.</div>
+</section>
+
+<section id="what">
+  <h2><span class="num">1</span> What this product actually is</h2>
+  <p class="lede">One website doing two jobs.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">① The public business</h3>
+      <p>A Hebrew, right-to-left marketing site (~40 pages) for <b>Hadar Danan</b> — a content-marketing expert. The pitch: most business owners produce videos/content but don't get clients from it, because their marketing doesn't reflect who they really are. Hadar's products fix that.</p>
+      <p class="small muted">Visitors browse, take a quiz, watch a free training, and can buy anything from a ₪197 challenge up to a ₪30,000/month partnership.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">② The growth machine</h3>
+      <p>Underneath, the site is a <b>self-running sales funnel</b>. It captures every visitor, remembers which ad brought them, scores how "hot" they are, sends automated emails and WhatsApp messages, takes card payments, and shows the team a live CRM of the whole pipeline.</p>
+      <p class="small muted">The goal: move someone from "never heard of Hadar" to "paying client" with minimal manual work.</p>
+    </div>
+  </div>
+</section>
+
+<section id="who">
+  <h2><span class="num">2</span> Who it's for</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">End customers</h3>
+      <p>Hebrew-speaking <b>business owners and solopreneurs</b>. The quiz sorts them into four maturity levels:</p>
+      <ul class="clean small">
+        <li><b>Just starting</b> — still building the basics</li>
+        <li><b>Active business</b> — wants more clients</li>
+        <li><b>Established</b> — wants to grow big</li>
+        <li><b>Company / brand</b> — looking for a strategic partner</li>
+      </ul>
+      <p class="small muted">Each level maps to a different rung on the ladder.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">The internal team</h3>
+      <p>Hadar and her team operate the business through the <b>admin CRM</b>: watching leads, following up with hot ones, tracking revenue, running A/B tests on the homepage, and running the AI-assisted "Atelier" onboarding for influencer clients.</p>
+    </div>
+  </div>
+</section>
+
+<section id="promise">
+  <h2><span class="num">3</span> The promise — the one idea behind everything</h2>
+  <p class="lede">Every product, email, and quiz answer ladders back to a single diagnosis.</p>
+  <div class="quote">
+    "המצלמה דולקת. התוכן עולה. הלקוחות לא מגיעים. יש סיבה לזה — ואנחנו יודעים מה היא."
+    <small>"The camera's on. The content goes up. The clients don't come. There's a reason — and we know what it is."</small>
+  </div>
+  <p>The argument: your content isn't failing because of <i>the videos</i>. It's failing because your marketing doesn't broadcast the real, differentiated <b>you</b>. Fix the signal, and the content starts working.</p>
+  <div class="card gold">
+    <h4 style="margin-top:0"><span class="tag">TrueSignal©</span> — the branded method</h4>
+    <p style="margin-bottom:0">A named methodology that runs through the whole site: a <b>precise diagnosis</b> of where a business is genuinely strong, then turning that into strategy and content. It's the hook for the quiz, the spine of the course curriculum, and even powers an AI "diagnosis" of each lead inside the CRM. Always written <code>TrueSignal©</code> (the © is part of the brand).</p>
+  </div>
+</section>
+
+<section id="journey">
+  <h2><span class="num">4</span> The customer journey — one person, start to finish</h2>
+  <p class="lede">Here's the path the whole system is designed to push someone along.</p>
+  <ol class="steps">
+    <li><b>Clicks an ad</b> → lands on the homepage. The system silently records which ad/campaign brought them (UTM tracking) and assigns an A/B test version of the headline.</li>
+    <li><b>Takes the quiz</b> (6 questions) or watches the <b>free training</b>. Either way they hand over an email — now they're a <span class="tag">lead</span>.</li>
+    <li><b>Gets a welcome email</b> instantly, then a follow-up 24h later pitching the ₪197 challenge. If they go quiet for 3 days, a "we miss you" email fires automatically.</li>
+    <li><b>Buys the ₪197 challenge</b> → status jumps to <span class="tag">buyer</span>. They get access details and start the 7-day program.</li>
+    <li><b>On day 7</b>, an automated email upsells the ₪1,080 workshop. After the workshop, another email upsells the ₪1,800 course. Each purchase teases the next rung.</li>
+    <li><b>Books a ₪4,000 strategy session</b> → status becomes <span class="tag">booked</span>. From here the team may pitch the ₪14,000 shoot day or a monthly partnership.</li>
+    <li><b>Joins הכוורת (the Hive)</b> — a monthly membership — for ongoing recurring revenue, and possibly becomes a long-term retainer client.</li>
+  </ol>
+  <p class="muted">Throughout, the team watches each person move through these stages in the CRM and can step in manually for high-value leads. Most of the nurturing, though, happens on autopilot.</p>
+</section>
+
+<section id="quiz">
+  <h2><span class="num">5</span> The diagnostic quiz — the smart router</h2>
+  <p class="lede">The quiz (<code>/quiz</code>) is the heart of the funnel: it diagnoses the visitor and recommends exactly one product, with personalized reasons.</p>
+  <p>It asks <b>6 questions</b>. Each answer adds points to different products; the product with the highest total wins and is shown as the recommendation (with a "match %" and 2 runners-up to "also consider").</p>
+  <table>
+    <tr><th class="num">#</th><th>Question (translated)</th><th>The four answer choices</th></tr>
+    <tr><td class="num">1</td><td>Where is your business right now?</td><td>Just starting · Active, wants clients · Established, wants to grow big · Company seeking a strategic partner</td></tr>
+    <tr><td class="num">2</td><td>What stops you most in marketing?</td><td>Don't know what to say on camera · Make content but no results · No time to do it all alone · Marketing doesn't reflect my real quality</td></tr>
+    <tr><td class="num">3</td><td>What's your relationship with content now?</td><td>Don't make any · Try here and there, inconsistent · Make it but unhappy with quality · Want pro-level content</td></tr>
+    <tr><td class="num">4</td><td>How do you learn best?</td><td>Short video + immediate action · Structured course at my pace · Personal guidance with feedback · Someone who just does it for me</td></tr>
+    <tr><td class="num">5</td><td>How urgent is it?</td><td>Want to understand first · Ready to start in 1–2 weeks · Urgent, want results now · Have a specific project</td></tr>
+    <tr><td class="num">6</td><td>What investment is comfortable?</td><td>Prefer to start free · Up to ₪2,000 · ₪2,000–15,000 · Over ₪15,000 (results &gt; cost)</td></tr>
+  </table>
+  <div class="callout"><b>Why it's clever:</b> Question 6 (budget) and Question 4 (learning style) effectively pre-qualify how much someone will spend and which format they want — so the recommendation is both a good fit <i>and</i> commercially smart. The quiz also captures the lead and the ad attribution at the same time.</div>
+</section>
+
+<section id="ladder">
+  <h2><span class="num">6</span> The value ladder — 8 offers at a glance</h2>
+  <p class="lede">A classic ascending ladder: a free entry point builds trust, then each step costs more and delivers more. Details for each are in the next section.</p>
+
+  <div class="ladder-step">
+    <div class="rung">0</div><div><h4 class="he">הדרכה חינמית <span class="muted small">· Free training</span></h4><p>90-min lead-magnet video — "understand why your marketing isn't working before you spend a shekel."</p></div><div class="price">Free</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">1</div><div><h4 class="he">צ׳אלנג׳ 7 הימים <span class="muted small">· 7-day challenge</span></h4><p>7 days, 7 short videos. First paid commitment; sold via WhatsApp.</p></div><div class="price">₪197</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">2</div><div><h4 class="he">סדנה יום אחד <span class="muted small">· One-day workshop</span></h4><p>Full day, small live group, direct feedback from Hadar.</p></div><div class="price">₪1,080</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">3</div><div><h4 class="he">קורס דיגיטלי <span class="muted small">· Digital course</span></h4><p>16 self-paced video lessons across 8 modules.</p></div><div class="price">₪1,800</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">4</div><div><h4 class="he">פגישת אסטרטגיה <span class="muted small">· Strategy session</span></h4><p>90 min one-on-one with Hadar. Second session free if the first doesn't crack it.</p></div><div class="price">₪4,000</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">5</div><div><h4 class="he">יום צילום פרמיום <span class="muted small">· Premium shoot day</span></h4><p>Done-for-you: a full day with the production team → 14 finished videos.</p></div><div class="price">₪14,000</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">6</div><div><h4 class="he">שותפות אסטרטגית <span class="muted small">· Strategic partnership</span></h4><p>Long-term monthly retainer. Lead form → discovery call, no instant checkout.</p></div><div class="price">₪10k–30k/mo</div>
+  </div>
+  <div class="ladder-step" style="border-color:var(--gold-dark)">
+    <div class="rung">★</div><div><h4 class="he">הכוורת — "The Hive" <span class="muted small">· Membership</span></h4><p>Recurring monthly community, runs beside the ladder. 3 tiers.</p></div><div class="price">₪29–197/mo</div>
+  </div>
+  <div class="callout"><b>The mechanic that makes it a ladder:</b> every purchase auto-triggers an upsell to the next rung (buy the challenge → day-7 email pitches the workshop → workshop email pitches the course, etc.). Prices live in one file so they're consistent everywhere.</div>
+</section>
+
+<section id="products">
+  <h2><span class="num">7</span> Product details — what each one actually contains</h2>
+  <p class="lede">The three "content" products have real, structured curricula. Here they are.</p>
+
+  <h3>צ׳אלנג׳ 7 הימים — the 7-day challenge (₪197)</h3>
+  <p>A daily video program. Day 0 sets the scene, days 1–7 each teach one content type, and day 8 is a <b>live Zoom session</b> (held on the 15th of each month — not a recorded video).</p>
+  <table>
+    <tr><th class="num">Day</th><th>Theme (translated)</th></tr>
+    <tr><td class="num">0</td><td>What's changing in marketing for 2026</td></tr>
+    <tr><td class="num">1</td><td>"Problem" videos — speaking to the heart</td></tr>
+    <tr><td class="num">2</td><td>"Story" videos — the message wins</td></tr>
+    <tr><td class="num">3</td><td>Your zone of genius</td></tr>
+    <tr><td class="num">4</td><td>"Opinion / critique" videos — your point of view</td></tr>
+    <tr><td class="num">5</td><td>Dismantling objections on video</td></tr>
+    <tr><td class="num">6</td><td>Story + opinion = strong content</td></tr>
+    <tr><td class="num">7</td><td>Testimonials that sell for you</td></tr>
+    <tr><td class="num">8</td><td>Live closing session (Zoom)</td></tr>
+  </table>
+
+  <h3>קורס דיגיטלי — the digital course (₪1,800)</h3>
+  <p>16 lessons across 8 modules — the complete TrueSignal© method, self-paced, in an auth-gated player that tracks progress and video drop-off.</p>
+  <table>
+    <tr><th class="num">Module</th><th>Title (translated)</th><th>Lessons</th></tr>
+    <tr><td class="num">1</td><td>Why you're truly different</td><td>Your TrueSignal · Differentiation in practice</td></tr>
+    <tr><td class="num">2</td><td>The ideal client</td><td>Mapping the client · Buying psychology</td></tr>
+    <tr><td class="num">3</td><td>The message that sells</td><td>Your differentiation sentence · Phrasing &amp; testing</td></tr>
+    <tr><td class="num">4</td><td>The story that connects</td><td>Story structure · Story on social</td></tr>
+    <tr><td class="num">5</td><td>Content that brings leads</td><td>Content strategy · Formats that work</td></tr>
+    <tr><td class="num">6</td><td>Pricing that reflects value</td><td>Pricing right · Presenting the price</td></tr>
+    <tr><td class="num">7</td><td>Referrals that come on their own</td><td>Referral mechanism · Client retention</td></tr>
+    <tr><td class="num">8</td><td>The next growth</td><td>90-day action plan · Measuring &amp; improving</td></tr>
+  </table>
+  <p class="small muted">Lesson videos run 24–33 min each. (Video IDs are currently placeholders pending content production.)</p>
+
+  <h3>The high-ticket / service products</h3>
+  <div class="grid g2">
+    <div class="card soft"><h4 style="margin-top:0">פגישת אסטרטגיה — Strategy session (₪4,000)</h4><p class="small">90 minutes one-on-one with Hadar. Sold as: "one hour will clarify more than months of solo experimentation." A two-step flow: pick a date/time → pay → confirmation. Guarantee: a free second session if the first doesn't crack the problem.</p></div>
+    <div class="card soft"><h4 style="margin-top:0">יום צילום פרמיום — Premium shoot (₪14,000)</h4><p class="small">A full filming day with the production team; the client leaves with <b>14 ready-to-publish videos</b>. Fully done-for-you. Two-step booking → payment flow.</p></div>
+    <div class="card soft"><h4 style="margin-top:0">סדנה — Workshop (₪1,080)</h4><p class="small">One full day in a small live group. Breaks down personal blocks and builds a complete strategy, with direct feedback. Workshop dates auto-compute to the last Thursday of each month.</p></div>
+    <div class="card soft"><h4 style="margin-top:0">שותפות — Partnership (₪10k–30k/mo)</h4><p class="small">A monthly retainer — "not a vendor, a strategic growth partner." Doesn't sell via instant checkout: a lead form → discovery call → human close.</p></div>
+  </div>
+</section>
+
+<section id="emails">
+  <h2><span class="num">8</span> The email automation — 14 sequences</h2>
+  <p class="lede">This is the engine that nurtures leads without anyone lifting a finger. Each email is triggered by an event and (sometimes) a delay.</p>
+  <p>The tone is deliberate: short one-line paragraphs, personal voice, signed "צוות beegood" (the beegood team). No "reply to this email" — every call-to-action links to WhatsApp instead.</p>
+  <table>
+    <tr><th>Trigger</th><th>When</th><th>Email (translated subject)</th></tr>
+    <tr><td>Signs up</td><td>instant</td><td class="he">"ברוכ/ה הבא/ה" — Welcome + free training</td></tr>
+    <tr><td>Signs up</td><td>+24h</td><td class="he">"What makes you unique isn't what you think" — pitches the challenge</td></tr>
+    <tr><td>Buys challenge</td><td>instant</td><td class="he">"Your challenge access is ready"</td></tr>
+    <tr><td>Buys challenge</td><td>+7 days</td><td class="he">"A week passed. What now?" — upsell to workshop</td></tr>
+    <tr><td>Buys workshop</td><td>instant</td><td class="he">"Your workshop is confirmed" + Zoom</td></tr>
+    <tr><td>Buys workshop</td><td>+7 days</td><td class="he">"What did you do with it?" — upsell to course</td></tr>
+    <tr><td>Buys course</td><td>instant</td><td class="he">"Your course is ready"</td></tr>
+    <tr><td>Buys course</td><td>+7 days</td><td class="he">"A week in the course. Time to talk." — upsell to strategy</td></tr>
+    <tr><td>Inactive 3 days</td><td>instant</td><td class="he">"We haven't seen you in 3 days" — re-engagement</td></tr>
+    <tr><td>Premium lead</td><td>instant</td><td class="he">"We got your request — we'll reach out within 24h"</td></tr>
+    <tr><td>Partnership lead</td><td>instant</td><td class="he">"We got your request — Hadar will be in touch"</td></tr>
+    <tr><td>Joins Hive</td><td>instant</td><td class="he">"Welcome to the Hive 🐝"</td></tr>
+    <tr><td>Joins Hive</td><td>+7 days</td><td class="he">"A week in the Hive — how's it going? 🐝"</td></tr>
+    <tr><td>Cancels Hive</td><td>instant</td><td class="he">"Hive cancellation confirmed" + refund info</td></tr>
+  </table>
+  <div class="callout"><b>How "opens" are tracked:</b> there's no tracking pixel (Apple Mail blocks those). Instead, every link in an email is wrapped so that when the reader <i>clicks</i>, the system records both an open and a click — and advances their funnel status. Sending happens via a background job that runs every 5 minutes.</div>
+</section>
+
+<section id="funnel">
+  <h2><span class="num">9</span> Funnel mechanics — how the machine works under the hood</h2>
+  <p class="lede">Four systems run continuously to move and measure every lead. You don't need to be technical to grasp them.</p>
+
+  <h3>a) The lead "status" ladder</h3>
+  <p>Every contact has a status that <b>advances automatically</b> based on what they do:</p>
+  <div class="flow">
+    <span class="node start">lead</span><span class="arrow">→</span>
+    <span class="node">engaged</span><span class="arrow">→</span>
+    <span class="node">high intent</span><span class="arrow">→</span>
+    <span class="node">buyer</span><span class="arrow">→</span>
+    <span class="node end">booked</span>
+  </div>
+  <ul class="clean small">
+    <li>Opens/clicks an email → <b>engaged</b></li>
+    <li>Starts a checkout → <b>high intent</b></li>
+    <li>Completes a payment → <b>buyer</b></li>
+    <li>Books a session → <b>booked</b></li>
+  </ul>
+  <p class="small muted">Every action is written to a permanent event log, and that log is what drives the status changes — so the team can always see exactly how "hot" each lead is.</p>
+
+  <h3>b) Ad attribution (UTM tracking)</h3>
+  <p>The moment someone arrives from an ad, the system records the full chain — <b>source → medium → campaign → ad set → ad</b> — plus Facebook/Google click IDs. This sticks to the lead forever, so the team can see which exact ad creative produced which paying customer. Server-side events are also sent to Meta and Google to improve ad targeting.</p>
+
+  <h3>c) Payments &amp; accounts</h3>
+  <p>Live card payments run through <b>Cardcom</b> (an Israeli processor); invoices are saved back onto each purchase. Customers sign in with email/password or Google, and get a personal area to view purchases, resume an unpaid payment, or update preferences.</p>
+
+  <h3>d) The background worker</h3>
+  <p>An external scheduler hits the site every 5 minutes and triggers a <b>job queue</b> — that's what actually sends the queued emails and WhatsApp messages, fires re-engagement emails, etc. It retries up to 3 times and alerts the admin if something fails permanently.</p>
+</section>
+
+<section id="hive">
+  <h2><span class="num">10</span> Membership — הכוורת ("The Hive")</h2>
+  <p class="lede">A recurring-revenue community that sits beside the ladder, with its own members area and tiered pricing.</p>
+  <table>
+    <tr><th>Tier</th><th>Price</th><th>Who can join</th></tr>
+    <tr><td class="he">Starter (מוזל)</td><td>₪29/mo</td><td>Existing customers only — eligibility is checked</td></tr>
+    <tr><td class="he">Pro (בסיסי)</td><td>₪97/mo</td><td>Open to everyone</td></tr>
+    <tr><td class="he">Elite</td><td>₪197/mo</td><td>Premium tier</td></tr>
+  </table>
+  <p>Joining requires a legal disclosure + consent checkbox. Members then see <b>tier-appropriate content</b> (articles, PDFs, videos). Cancellation is self-serve and automatically detects whether the member is inside the 14-day refund window. The admin tracks monthly recurring revenue, tier mix, new joins, and cancellations.</p>
+  <p class="small muted">Note: recurring billing through Cardcom is the main pending item before the Hive is fully live.</p>
+</section>
+
+<section id="atelier">
+  <h2><span class="num">11</span> The Atelier program — an AI production line</h2>
+  <p class="lede">A distinct offering aimed at influencers ("turn influence into cultural leadership"), and the most technically ambitious part of the platform.</p>
+  <ol class="steps">
+    <li><b>Public application</b> at <code>/atelier</code> — a lead form (with full ad attribution) that lands in a dedicated CRM.</li>
+    <li><b>AI analysis</b> — the team opens an applicant and Claude analyzes their business, audience, and fit, producing a structured diagnosis.</li>
+    <li><b>Content generation</b> — the system generates marketing copy/content for that client.</li>
+    <li><b>Automated site build &amp; deploy</b> — a pipeline generates and deploys a preview microsite for the client; an orchestrator ("ProjectManagerAgent") coordinates the analyze → generate → deploy steps and tracks status per applicant.</li>
+  </ol>
+  <p class="muted">This is where the platform stops being just a funnel and becomes an AI-assisted delivery engine for client work.</p>
+</section>
+
+<section id="crm">
+  <h2><span class="num">12</span> Admin &amp; CRM — the team's cockpit</h2>
+  <p class="lede">A password-protected back office with ~20 dashboards that make the whole funnel visible and actionable.</p>
+  <div class="grid g3">
+    <div class="card"><h4 style="margin-top:0">See</h4><p class="small">Leads, conversion funnel, sales/revenue charts, per-product performance, video drop-off analytics, email open/click rates.</p></div>
+    <div class="card"><h4 style="margin-top:0">Attribute</h4><p class="small">Full UTM breakdown of where customers come from, plus media-mix modeling to weigh which channels actually drive revenue.</p></div>
+    <div class="card"><h4 style="margin-top:0">Act</h4><p class="small">Per-user profiles with a plain-Hebrew activity timeline, notes, task reminders, and an AI "TrueSignal diagnosis" of each lead's business.</p></div>
+  </div>
+  <p>There's also a live <b>A/B-testing console</b> (currently testing three different homepage headlines, with AI-suggested new tests), a brand-<b>deals CRM</b>, the <b>Atelier</b> workbench, and a <b>system-health/error log</b>.</p>
+  <div class="callout"><b>Per-user timeline example:</b> instead of raw data, the team sees human sentences like "viewed the pricing page," "started a purchase," "purchase completed" (highlighted green), "session booked" (highlighted gold) — with relative timestamps like "2 hours ago."</div>
+</section>
+
+<section id="glossary">
+  <h2><span class="num">13</span> Glossary &amp; key Hebrew terms</h2>
+  <div class="card">
+    <div class="legend"><span class="he">TrueSignal©</span><span class="en">The branded method: diagnosing a business's real strength and turning it into strategy + content. The intellectual core of everything.</span></div><hr>
+    <div class="legend"><span class="he">הכוורת</span><span class="en">"The Hive" — the recurring monthly membership community.</span></div><hr>
+    <div class="legend"><span class="he">צ׳אלנג׳</span><span class="en">"Challenge" — the 7-day video program (₪197).</span></div><hr>
+    <div class="legend"><span class="he">סדנה</span><span class="en">"Workshop" — the one-day live group session (₪1,080).</span></div><hr>
+    <div class="legend"><span class="he">קורס</span><span class="en">"Course" — the 16-lesson self-paced digital course (₪1,800).</span></div><hr>
+    <div class="legend"><span class="he">פגישת אסטרטגיה</span><span class="en">"Strategy session" — 90-min one-on-one (₪4,000).</span></div><hr>
+    <div class="legend"><span class="he">Value ladder</span><span class="en">The sequence of offers from free to ₪30k/mo, each upselling to the next.</span></div><hr>
+    <div class="legend"><span class="he">Lead status</span><span class="en">The auto-advancing pipeline: lead → engaged → high_intent → buyer → booked.</span></div><hr>
+    <div class="legend"><span class="he">UTM chain</span><span class="en">The ad-attribution trail (source/medium/campaign/adset/ad) captured on every lead.</span></div><hr>
+    <div class="legend"><span class="he">Cardcom</span><span class="en">The Israeli payment processor handling live checkout.</span></div><hr>
+    <div class="legend"><span class="he">Atelier</span><span class="en">The influencer program with an AI onboarding + site-build pipeline.</span></div>
+  </div>
+</section>
+
+<footer>
+  Detailed product guide for onboarding · beegood.online · הדר דנן בע״מ<br/>
+  Technical source of truth: <code>CLAUDE.md</code> in the repo root. Grounded in the live code (quiz, products, email templates, course &amp; challenge config).
+</footer>
+
+</div>
+</body>
+</html>

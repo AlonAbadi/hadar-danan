@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>beegood.online — מדריך מוצר מפורט</title>
+<style>
+  :root{
+    --bg:#0D1018; --bg-dark:#080C14; --card:#141820; --card-soft:#1D2430;
+    --border:#2C323E; --gold:#C9964A; --gold-light:#E8B94A; --gold-dark:#9E7C3A;
+    --fg:#EDE9E1; --muted:#9E9990; --green:#4ade80;
+    --grad-gold:linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--fg); direction:rtl; text-align:right;
+    font-family:"Assistant",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    line-height:1.7; font-size:16px;}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 24px 96px}
+  header.hero{background:radial-gradient(1200px 500px at 30% -10%, rgba(201,150,74,.18), transparent), var(--bg-dark);
+    border-bottom:1px solid var(--border); padding:64px 24px 56px; text-align:center;}
+  .hero .kicker{color:var(--gold); letter-spacing:.12em; font-size:13px; font-weight:700}
+  .hero h1{font-size:44px; margin:14px 0 8px; line-height:1.1}
+  .grad{background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .hero p.sub{color:var(--muted); max-width:700px; margin:0 auto; font-size:18px}
+  .hero .meta{margin-top:22px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+  .pill{border:1px solid var(--border); background:var(--card); border-radius:999px; padding:6px 14px; font-size:13px; color:var(--muted)}
+  .pill b{color:var(--fg)}
+
+  nav.toc{position:sticky; top:0; z-index:5; background:rgba(13,16,24,.94); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border); padding:12px 24px; display:flex; gap:16px; flex-wrap:wrap; justify-content:center; font-size:14px;}
+  nav.toc a{color:var(--muted); text-decoration:none}
+  nav.toc a:hover{color:var(--gold-light)}
+
+  section{margin-top:60px; scroll-margin-top:60px}
+  h2{font-size:28px; margin:0 0 6px; display:flex; align-items:center; gap:12px; line-height:1.2}
+  h2 .num{font-size:14px; color:var(--bg); background:var(--grad-gold); width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-weight:800; flex:none}
+  h2 + .lede{color:var(--muted); margin:0 0 22px; font-size:17px}
+  h3{font-size:20px; margin:30px 0 10px; color:var(--gold-light)}
+  h4{font-size:16px; margin:18px 0 6px}
+  p{margin:10px 0}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px 24px; margin:14px 0}
+  .card.soft{background:var(--card-soft)}
+  .card.gold{border-color:var(--gold-dark); background:linear-gradient(145deg,#1D2430,#111620)}
+  .grid{display:grid; gap:14px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:760px){.g2,.g3{grid-template-columns:1fr}}
+
+  .callout{border-inline-start:4px solid var(--gold); background:rgba(201,150,74,.07); border-radius:12px 0 0 12px; padding:14px 20px; margin:16px 0}
+  .callout.tip{border-color:var(--green); background:rgba(74,222,128,.06)}
+  .callout b{color:var(--gold-light)}
+
+  .ladder-step{display:flex; gap:18px; align-items:flex-start; padding:18px 20px; border:1px solid var(--border); border-radius:14px; margin:10px 0; background:linear-gradient(145deg,#1D2430,#111620)}
+  .ladder-step .rung{flex:none; width:44px; height:44px; border-radius:12px; background:var(--card); border:1px solid var(--gold-dark); color:var(--gold-light); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px}
+  .ladder-step h4{margin:0 0 3px; font-size:18px}
+  .en{direction:ltr; unicode-bidi:embed; display:inline-block}
+  .ladder-step .price{margin-inline-start:auto; flex:none; color:var(--gold-light); font-weight:800; font-size:18px; white-space:nowrap; direction:ltr}
+  .ladder-step p{margin:4px 0 0; color:var(--muted); font-size:14px}
+
+  table{width:100%; border-collapse:collapse; margin:12px 0; font-size:14px}
+  th,td{text-align:right; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{color:var(--gold); font-weight:700; font-size:12px; letter-spacing:.03em}
+  td.num,th.num{text-align:center; width:48px}
+  code{background:var(--card-soft); border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:13px; color:var(--gold-light); direction:ltr; display:inline-block}
+
+  .flow{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:16px 0; direction:rtl}
+  .flow .node{background:var(--card-soft); border:1px solid var(--border); border-radius:10px; padding:8px 14px; font-size:14px; font-weight:600}
+  .flow .node.start{border-color:var(--green); color:var(--green)}
+  .flow .node.end{border-color:var(--gold); color:var(--gold-light)}
+  .flow .arrow{color:var(--gold); font-weight:800; font-size:18px}
+
+  .quote{border-inline-start:3px solid var(--gold); padding:8px 18px; margin:14px 0; color:var(--fg); font-size:18px}
+  .quote small{display:block; color:var(--muted); font-size:14px; margin-top:4px}
+
+  ul.clean{margin:8px 0; padding-inline-start:22px}
+  ul.clean li{margin:7px 0}
+  ul.clean li b{color:var(--gold-light)}
+  ol.steps{counter-reset:s; list-style:none; padding:0; margin:16px 0}
+  ol.steps>li{position:relative; padding:14px 58px 14px 18px; border:1px solid var(--border); border-radius:12px; margin:10px 0; background:var(--card)}
+  ol.steps>li::before{counter-increment:s; content:counter(s); position:absolute; right:14px; top:14px; width:30px; height:30px; border-radius:8px; background:var(--grad-gold); color:var(--bg); font-weight:800; display:flex; align-items:center; justify-content:center}
+  ol.steps>li b{color:var(--gold-light)}
+  .muted{color:var(--muted)}
+  .tag{display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; background:rgba(201,150,74,.15); color:var(--gold-light); border:1px solid var(--gold-dark)}
+  .small{font-size:13px}
+  hr{border:none; border-top:1px solid var(--border); margin:26px 0}
+  footer{margin-top:72px; padding-top:24px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; text-align:center}
+  .legend{display:flex; gap:8px; align-items:baseline}
+  .legend .term{flex:none; min-width:150px; color:var(--fg); font-weight:600}
+  .legend .def{color:var(--muted); font-size:14px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">מדריך מוצר מפורט · אונבורדינג</div>
+  <h1>הדר דנן · <span class="grad">beegood.online</span></h1>
+  <p class="sub">סקירה מעמיקה ובשפה פשוטה: מה המוצר הזה, למי הוא מיועד, אילו הצעות הוא מוכר, והמכונה האוטומטית שהופכת אדם זר ללקוח של ₪30,000 בחודש — הכול מבוסס על שיטת <b>TrueSignal©</b> הקניינית.</p>
+  <div class="meta">
+    <span class="pill"><b>אונליין:</b> beegood.online</span>
+    <span class="pill"><b>שפה:</b> עברית (RTL)</span>
+    <span class="pill"><b>קהל יעד:</b> בעלי עסקים</span>
+    <span class="pill"><b>מודל:</b> מוצר חינמי → סולם ערך → ריטיינר</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#read">איך לקרוא</a>
+  <a href="#what">מה זה</a>
+  <a href="#who">למי זה מיועד</a>
+  <a href="#promise">ההבטחה</a>
+  <a href="#journey">מסע הלקוח</a>
+  <a href="#quiz">השאלון</a>
+  <a href="#ladder">סולם הערך</a>
+  <a href="#products">פירוט המוצרים</a>
+  <a href="#emails">אוטומציית מיילים</a>
+  <a href="#funnel">מנגנון המשפך</a>
+  <a href="#hive">מנוי קהילה</a>
+  <a href="#atelier">אטלייה</a>
+  <a href="#crm">ניהול ו-CRM</a>
+  <a href="#glossary">מילון מונחים</a>
+</nav>
+
+<div class="wrap">
+
+<section id="read">
+  <h2><span class="num">0</span> איך לקרוא את המדריך</h2>
+  <p class="lede">כדאי לקרוא מההתחלה לסוף — כל פרק נבנה על הקודם.</p>
+  <p>המוצר משלב שפה שיווקית עם מנגנון טכני. כדי לשמור על בהירות, מונחים טכניים באנגלית (כמו UTM, Cardcom, A/B) נשארים באנגלית כפי שהם מוכרים בתחום, ומוסבר לידם בעברית פשוטה. אין צורך ברקע טכני כדי לעקוב.</p>
+  <div class="callout tip"><b>סיכום במשפט אחד:</b> beegood.online הוא אתר של יועצת שיווק שגם <b>מנהל את כל תהליך המכירה בעצמו</b> — מזהה מה כל מבקר צריך, ממליץ על המוצר הנכון, גובה תשלום, עוקב במייל ובוואטסאפ, ומדווח הכול לצוות.</div>
+</section>
+
+<section id="what">
+  <h2><span class="num">1</span> מה המוצר הזה באמת</h2>
+  <p class="lede">אתר אחד שעושה שתי עבודות.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">① העסק הפומבי</h3>
+      <p>אתר שיווקי בעברית (כ-40 עמודים) של <b>הדר דנן</b> — מומחית לשיווק תוכן. המסר: רוב בעלי העסקים מייצרים סרטונים ותוכן אבל לא מקבלים מזה לקוחות, כי השיווק שלהם לא משקף מי הם באמת. המוצרים של הדר פותרים את זה.</p>
+      <p class="small muted">מבקרים גולשים, עונים על שאלון, צופים בהדרכה חינמית, ויכולים לקנות הכול — מצ׳אלנג׳ ב-₪197 ועד שותפות של ₪30,000 בחודש.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">② מכונת הצמיחה</h3>
+      <p>מתחת לפני השטח, האתר הוא <b>משפך מכירות שמנהל את עצמו</b>. הוא קולט כל מבקר, זוכר איזו פרסומת הביאה אותו, מדרג כמה הוא "חם", שולח מיילים והודעות וואטסאפ אוטומטיים, גובה תשלומים בכרטיס, ומציג לצוות מערכת CRM חיה של כל המשפך.</p>
+      <p class="small muted">המטרה: להעביר אדם מ"מעולם לא שמע על הדר" ל"לקוח משלם", עם מינימום עבודה ידנית.</p>
+    </div>
+  </div>
+</section>
+
+<section id="who">
+  <h2><span class="num">2</span> למי זה מיועד</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">לקוחות הקצה</h3>
+      <p><b>בעלי עסקים ועצמאים</b> דוברי עברית. השאלון ממיין אותם לארבע רמות בשלות:</p>
+      <ul class="clean small">
+        <li><b>רק מתחיל</b> — עדיין בונה את הבסיס</li>
+        <li><b>עסק פעיל</b> — רוצה יותר לקוחות</li>
+        <li><b>עסק מבוסס</b> — רוצה לצמוח בגדול</li>
+        <li><b>חברה / מותג</b> — מחפש שותף אסטרטגי</li>
+      </ul>
+      <p class="small muted">כל רמה ממופה לשלב אחר בסולם.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">הצוות הפנימי</h3>
+      <p>הדר והצוות מנהלים את העסק דרך מערכת ה-<b>CRM</b>: מעקב אחרי לידים, פולואפ ללידים החמים, מעקב הכנסות, הרצת בדיקות A/B בעמוד הבית, וניהול האונבורדינג מבוסס-ה-AI של תוכנית ה"אטלייה" ללקוחות משפיענים.</p>
+    </div>
+  </div>
+</section>
+
+<section id="promise">
+  <h2><span class="num">3</span> ההבטחה — הרעיון האחד שמאחורי הכול</h2>
+  <p class="lede">כל מוצר, כל מייל וכל תשובה בשאלון מתחברים לאבחנה אחת.</p>
+  <div class="quote">
+    "המצלמה דולקת. התוכן עולה. הלקוחות לא מגיעים. יש סיבה לזה — ואנחנו יודעים מה היא."
+    <small>אחד הניסוחים של הכותרת בעמוד הבית (וריאנט C).</small>
+  </div>
+  <p>הטענה: התוכן שלך לא נכשל בגלל <i>הסרטונים</i>. הוא נכשל כי השיווק שלך לא משדר את ה<b>אני</b> האמיתי והמובחן שלך. תתקן את האות (signal) — והתוכן יתחיל לעבוד.</p>
+  <div class="card gold">
+    <h4 style="margin-top:0"><span class="tag">TrueSignal©</span> — השיטה הממותגת</h4>
+    <p style="margin-bottom:0">מתודולוגיה בעלת שם שעוברת כחוט השני בכל האתר: <b>אבחון מדויק</b> של היכן העסק חזק באמת, ואז תרגום של זה לאסטרטגיה ולתוכן. זהו הקרס של השאלון, עמוד השדרה של תוכנית הקורס, ואפילו מנוע ל"אבחון" מבוסס-AI של כל ליד בתוך ה-CRM. תמיד נכתב <code>TrueSignal©</code> (ה-© הוא חלק מהמותג).</p>
+  </div>
+</section>
+
+<section id="journey">
+  <h2><span class="num">4</span> מסע הלקוח — אדם אחד, מההתחלה ועד הסוף</h2>
+  <p class="lede">זה המסלול שכל המערכת מתוכננת להזרים אליו אדם.</p>
+  <ol class="steps">
+    <li><b>לוחץ על פרסומת</b> ← מגיע לעמוד הבית. המערכת מתעדת בשקט איזו פרסומת/קמפיין הביאו אותו (מעקב UTM) ומשייכת לו גרסת A/B של הכותרת.</li>
+    <li><b>עונה על השאלון</b> (6 שאלות) או צופה ב<b>הדרכה החינמית</b>. כך או כך הוא מוסר אימייל — וכעת הוא <span class="tag">ליד</span>.</li>
+    <li><b>מקבל מייל ברוכים הבאים</b> מיידית, ואז פולואפ אחרי 24 שעות שמציע את הצ׳אלנג׳ ב-₪197. אם הוא נעלם ל-3 ימים, מייל "התגעגענו" נשלח אוטומטית.</li>
+    <li><b>קונה את הצ׳אלנג׳ ב-₪197</b> ← הסטטוס מזנק ל<span class="tag">קונה</span>. הוא מקבל פרטי גישה ומתחיל את התוכנית בת 7 הימים.</li>
+    <li><b>ביום 7</b> מייל אוטומטי מציע שדרוג לסדנה ב-₪1,080. אחרי הסדנה, מייל נוסף מציע את הקורס ב-₪1,800. כל רכישה רומזת על השלב הבא.</li>
+    <li><b>קובע פגישת אסטרטגיה ב-₪4,000</b> ← הסטטוס הופך ל<span class="tag">קבע פגישה</span>. מכאן הצוות עשוי להציע יום צילום ב-₪14,000 או שותפות חודשית.</li>
+    <li><b>מצטרף ל"הכוורת"</b> — מנוי חודשי — להכנסה חוזרת, ואולי הופך ללקוח ריטיינר לטווח ארוך.</li>
+  </ol>
+  <p class="muted">לאורך כל הדרך הצוות רואה כל אדם מתקדם בין השלבים ב-CRM, ויכול להתערב ידנית בלידים בעלי ערך גבוה. רוב הטיפוח, עם זאת, קורה על טייס אוטומטי.</p>
+</section>
+
+<section id="quiz">
+  <h2><span class="num">5</span> השאלון המאבחן — הנתב החכם</h2>
+  <p class="lede">השאלון (<code>/quiz</code>) הוא לב המשפך: הוא מאבחן את המבקר וממליץ על מוצר אחד בדיוק, עם נימוקים מותאמים אישית.</p>
+  <p>הוא שואל <b>6 שאלות</b>. כל תשובה מוסיפה נקודות למוצרים שונים; המוצר עם הסכום הגבוה ביותר מנצח ומוצג כהמלצה (עם "אחוז התאמה" ועוד 2 מוצרים "כדאי לשקול").</p>
+  <table>
+    <tr><th class="num">#</th><th>שאלה</th><th>ארבע אפשרויות התשובה</th></tr>
+    <tr><td class="num">1</td><td>איפה העסק שלך עכשיו?</td><td>רק מתחיל · עסק פעיל, רוצה לקוחות · מבוסס, רוצה לצמוח בגדול · חברה שמחפשת שותף אסטרטגי</td></tr>
+    <tr><td class="num">2</td><td>מה הכי עוצר אותך בשיווק?</td><td>לא יודע מה לומר מול המצלמה · מייצר תוכן בלי תוצאות · אין זמן לעשות הכול לבד · השיווק לא משקף את האיכות האמיתית שלי</td></tr>
+    <tr><td class="num">3</td><td>מה הקשר שלך לתוכן כרגע?</td><td>לא מייצר בכלל · מנסה פה ושם, לא עקבי · מייצר אבל לא מרוצה מהאיכות · רוצה תוכן ברמה מקצועית</td></tr>
+    <tr><td class="num">4</td><td>איך אתה לומד הכי טוב?</td><td>סרטון קצר + פעולה מיידית · קורס מובנה בקצב שלי · ליווי אישי עם פידבק · מישהו שפשוט עושה את זה בשבילי</td></tr>
+    <tr><td class="num">5</td><td>מה רמת הדחיפות שלך?</td><td>רוצה להבין קודם · מוכן להתחיל בעוד שבוע-שבועיים · דחוף, רוצה תוצאות עכשיו · יש לי פרויקט ספציפי</td></tr>
+    <tr><td class="num">6</td><td>מה ההשקעה שנוחה לך?</td><td>מעדיף להתחיל חינם · עד ₪2,000 · ₪2,000–15,000 · מעל ₪15,000 (תוצאות חשובות מעלות)</td></tr>
+  </table>
+  <div class="callout"><b>למה זה חכם:</b> שאלה 6 (תקציב) ושאלה 4 (סגנון למידה) למעשה מסננות מראש כמה אדם יוציא ובאיזה פורמט הוא רוצה — כך שההמלצה גם מתאימה לו <i>וגם</i> חכמה מסחרית. בנוסף, השאלון קולט את הליד ואת שיוך הפרסומת באותו רגע.</div>
+</section>
+
+<section id="ladder">
+  <h2><span class="num">6</span> סולם הערך — 8 הצעות במבט מהיר</h2>
+  <p class="lede">סולם עולה קלאסי: נקודת כניסה חינמית בונה אמון, ואז כל שלב עולה יותר ונותן יותר. פירוט של כל אחד בפרק הבא.</p>
+
+  <div class="ladder-step">
+    <div class="rung">0</div><div><h4>הדרכה חינמית</h4><p>סרטון לכידת לידים של 90 דק׳ — "להבין למה השיווק שלך לא עובד עוד לפני שהוצאת שקל."</p></div><div class="price">חינם</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">1</div><div><h4>צ׳אלנג׳ 7 הימים</h4><p>7 ימים, 7 סרטונים קצרים. ההתחייבות הראשונה בתשלום; נמכר דרך וואטסאפ.</p></div><div class="price">₪197</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">2</div><div><h4>סדנה יום אחד</h4><p>יום שלם, קבוצה קטנה וחיה, פידבק ישיר מהדר.</p></div><div class="price">₪1,080</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">3</div><div><h4>קורס דיגיטלי</h4><p>16 שיעורי וידאו בקצב עצמי, ב-8 מודולים.</p></div><div class="price">₪1,800</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">4</div><div><h4>פגישת אסטרטגיה</h4><p>90 דק׳ אחד-על-אחד עם הדר. פגישה שנייה חינם אם הראשונה לא פיצחה.</p></div><div class="price">₪4,000</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">5</div><div><h4>יום צילום פרמיום</h4><p>נעשה-עבורך: יום שלם עם צוות ההפקה ← 14 סרטונים מוכנים.</p></div><div class="price">₪14,000</div>
+  </div>
+  <div class="ladder-step">
+    <div class="rung">6</div><div><h4>שותפות אסטרטגית</h4><p>ריטיינר חודשי לטווח ארוך. טופס ליד ← שיחת היכרות, ללא תשלום מיידי.</p></div><div class="price">₪10k–30k/חו׳</div>
+  </div>
+  <div class="ladder-step" style="border-color:var(--gold-dark)">
+    <div class="rung">★</div><div><h4>הכוורת</h4><p>קהילת מנוי חודשית, רצה לצד הסולם. 3 רמות.</p></div><div class="price">₪29–197/חו׳</div>
+  </div>
+  <div class="callout"><b>המנגנון שהופך את זה לסולם:</b> כל רכישה מפעילה אוטומטית הצעת שדרוג לשלב הבא (קונים צ׳אלנג׳ ← מייל ביום 7 מציע סדנה ← מייל הסדנה מציע קורס, וכן הלאה). המחירים שמורים בקובץ אחד כדי שיהיו עקביים בכל מקום.</div>
+</section>
+
+<section id="products">
+  <h2><span class="num">7</span> פירוט המוצרים — מה כל אחד באמת כולל</h2>
+  <p class="lede">לשלושת מוצרי ה"תוכן" יש תוכניות לימוד אמיתיות ומובנות. הנה הן.</p>
+
+  <h3>צ׳אלנג׳ 7 הימים — האתגר (₪197)</h3>
+  <p>תוכנית וידאו יומית. יום 0 מכין את הקרקע, ימים 1–7 כל אחד מלמד סוג תוכן אחד, ויום 8 הוא <b>מפגש זום חי</b> (נערך ב-15 בכל חודש — לא סרטון מוקלט).</p>
+  <table>
+    <tr><th class="num">יום</th><th>נושא</th></tr>
+    <tr><td class="num">0</td><td>מה משתנה בשיווק 2026</td></tr>
+    <tr><td class="num">1</td><td>סרטוני בעיה — לדבר ללב</td></tr>
+    <tr><td class="num">2</td><td>סרטוני סיפור — המסר מנצח</td></tr>
+    <tr><td class="num">3</td><td>אזור הגאונות שלכם</td></tr>
+    <tr><td class="num">4</td><td>סרטוני ביקורת — הדעה שלכם</td></tr>
+    <tr><td class="num">5</td><td>לפרק התנגדויות בווידאו</td></tr>
+    <tr><td class="num">6</td><td>סיפור + דעה = תוכן חזק</td></tr>
+    <tr><td class="num">7</td><td>עדויות שמוכרות במקומכם</td></tr>
+    <tr><td class="num">8</td><td>מפגש סיום חי (זום)</td></tr>
+  </table>
+
+  <h3>קורס דיגיטלי — הקורס (₪1,800)</h3>
+  <p>16 שיעורים ב-8 מודולים — שיטת TrueSignal© המלאה, בקצב עצמי, בנגן מאובטח-גישה שעוקב אחר התקדמות ונקודות נטישת וידאו.</p>
+  <table>
+    <tr><th class="num">מודול</th><th>כותרת</th><th>שיעורים</th></tr>
+    <tr><td class="num">1</td><td>למה אתה באמת שונה</td><td>ה-TrueSignal שלך · הבידול בשטח</td></tr>
+    <tr><td class="num">2</td><td>הלקוח האידיאלי</td><td>מיפוי הלקוח · פסיכולוגיית הקנייה</td></tr>
+    <tr><td class="num">3</td><td>המסר שמוכר</td><td>משפט הבידול · ניסוח ובדיקה</td></tr>
+    <tr><td class="num">4</td><td>הסיפור שמחבר</td><td>מבנה הסיפור · הסיפור ברשתות</td></tr>
+    <tr><td class="num">5</td><td>תוכן שמביא לידים</td><td>אסטרטגיית תוכן · פורמטים שעובדים</td></tr>
+    <tr><td class="num">6</td><td>המחיר שמשקף ערך</td><td>תמחור נכון · הצגת המחיר</td></tr>
+    <tr><td class="num">7</td><td>הפניות שמגיעות לבד</td><td>מנגנון הפניות · שימור לקוחות</td></tr>
+    <tr><td class="num">8</td><td>הצמיחה הבאה</td><td>תוכנית פעולה · מדידה ושיפור</td></tr>
+  </table>
+  <p class="small muted">כל שיעור באורך 24–33 דק׳. (מזהי הווידאו כרגע זמניים, בהמתנה להפקת התוכן.)</p>
+
+  <h3>מוצרי השירות / הכרטיס הגבוה</h3>
+  <div class="grid g2">
+    <div class="card soft"><h4 style="margin-top:0">פגישת אסטרטגיה (₪4,000)</h4><p class="small">90 דק׳ אחד-על-אחד עם הדר. נמכרת כך: "שעה אחת תבהיר יותר מחודשים של ניסוי וטעייה עצמאי." זרימה בשני שלבים: בחירת תאריך/שעה ← תשלום ← אישור. אחריות: פגישה שנייה חינם אם הראשונה לא פיצחה את הבעיה.</p></div>
+    <div class="card soft"><h4 style="margin-top:0">יום צילום פרמיום (₪14,000)</h4><p class="small">יום צילום מלא עם צוות ההפקה; הלקוח יוצא עם <b>14 סרטונים מוכנים לפרסום</b>. נעשה-עבורך לחלוטין. זרימת הזמנה ← תשלום בשני שלבים.</p></div>
+    <div class="card soft"><h4 style="margin-top:0">סדנה (₪1,080)</h4><p class="small">יום שלם בקבוצה קטנה וחיה. מפרקת חסמים אישיים ובונה אסטרטגיה שלמה, עם פידבק ישיר. תאריכי הסדנה מחושבים אוטומטית ליום חמישי האחרון בכל חודש.</p></div>
+    <div class="card soft"><h4 style="margin-top:0">שותפות (₪10k–30k/חו׳)</h4><p class="small">ריטיינר חודשי — "לא ספק, שותף אסטרטגי לצמיחה". לא נמכר בתשלום מיידי: טופס ליד ← שיחת היכרות ← סגירה אנושית.</p></div>
+  </div>
+</section>
+
+<section id="emails">
+  <h2><span class="num">8</span> אוטומציית המיילים — 14 רצפים</h2>
+  <p class="lede">זה המנוע שמטפח לידים בלי שאף אחד יזיז אצבע. כל מייל מופעל על ידי אירוע ו(לעיתים) השהיה.</p>
+  <p>הטון מכוון: פסקאות קצרות בשורה אחת, קול אישי, וחתימה "צוות beegood". אין "השב על המייל הזה" — כל קריאה לפעולה מקשרת לוואטסאפ במקום.</p>
+  <table>
+    <tr><th>טריגר</th><th>מתי</th><th>המייל (כותרת)</th></tr>
+    <tr><td>נרשם</td><td>מיידי</td><td>"ברוכ/ה הבא/ה" — ברכה + הדרכה חינמית</td></tr>
+    <tr><td>נרשם</td><td>+24 שעות</td><td>"מה שמייחד אותך — זה לא מה שאתה חושב" — מציע את הצ׳אלנג׳</td></tr>
+    <tr><td>קנה צ׳אלנג׳</td><td>מיידי</td><td>"הגישה שלך לאתגר מוכנה"</td></tr>
+    <tr><td>קנה צ׳אלנג׳</td><td>+7 ימים</td><td>"שבוע עבר. מה עכשיו?" — שדרוג לסדנה</td></tr>
+    <tr><td>קנה סדנה</td><td>מיידי</td><td>"ההרשמה לסדנה אושרה" + זום</td></tr>
+    <tr><td>קנה סדנה</td><td>+7 ימים</td><td>"מה עשית עם זה?" — שדרוג לקורס</td></tr>
+    <tr><td>קנה קורס</td><td>מיידי</td><td>"הקורס שלך מוכן"</td></tr>
+    <tr><td>קנה קורס</td><td>+7 ימים</td><td>"שבוע בקורס. הגיע הזמן לדבר." — שדרוג לאסטרטגיה</td></tr>
+    <tr><td>לא פעיל 3 ימים</td><td>מיידי</td><td>"לא ראינו אותך 3 ימים" — חזרה למעורבות</td></tr>
+    <tr><td>ליד פרמיום</td><td>מיידי</td><td>"קיבלנו את הבקשה — ניצור קשר תוך 24 שעות"</td></tr>
+    <tr><td>ליד שותפות</td><td>מיידי</td><td>"קיבלנו את הבקשה — הדר תחזור אליך"</td></tr>
+    <tr><td>הצטרף לכוורת</td><td>מיידי</td><td>"ברוך הבא לכוורת 🐝"</td></tr>
+    <tr><td>הצטרף לכוורת</td><td>+7 ימים</td><td>"שבוע בכוורת — איך הולך? 🐝"</td></tr>
+    <tr><td>ביטל כוורת</td><td>מיידי</td><td>"אישור ביטול מנוי" + פרטי החזר</td></tr>
+  </table>
+  <div class="callout"><b>איך נמדדות "פתיחות":</b> אין פיקסל מעקב (אפל מייל חוסמת אותם). במקום זאת, כל קישור במייל עטוף כך שכאשר הקורא <i>לוחץ</i>, המערכת מתעדת גם פתיחה וגם קליק — ומקדמת את סטטוס המשפך שלו. השליחה מתבצעת דרך משימת רקע שרצה כל 5 דקות.</div>
+</section>
+
+<section id="funnel">
+  <h2><span class="num">9</span> מנגנון המשפך — איך המכונה עובדת מתחת למכסה המנוע</h2>
+  <p class="lede">ארבע מערכות רצות ברציפות כדי להזיז ולמדוד כל ליד. לא צריך להיות טכני כדי להבין אותן.</p>
+
+  <h3>א) סולם ה"סטטוס" של הליד</h3>
+  <p>לכל איש קשר יש סטטוס ש<b>מתקדם אוטומטית</b> לפי מה שהוא עושה:</p>
+  <div class="flow" dir="ltr">
+    <span class="node start">lead</span><span class="arrow">→</span>
+    <span class="node">engaged</span><span class="arrow">→</span>
+    <span class="node">high intent</span><span class="arrow">→</span>
+    <span class="node">buyer</span><span class="arrow">→</span>
+    <span class="node end">booked</span>
+  </div>
+  <ul class="clean small">
+    <li>פותח/לוחץ על מייל ← <b>engaged</b> (מעורב)</li>
+    <li>מתחיל תהליך רכישה ← <b>high intent</b> (כוונה גבוהה)</li>
+    <li>משלים תשלום ← <b>buyer</b> (קונה)</li>
+    <li>קובע פגישה ← <b>booked</b> (קבע פגישה)</li>
+  </ul>
+  <p class="small muted">כל פעולה נרשמת ביומן אירועים קבוע, והיומן הזה הוא מה שמניע את שינויי הסטטוס — כך שהצוות תמיד רואה בדיוק כמה "חם" כל ליד.</p>
+
+  <h3>ב) שיוך פרסומות (מעקב UTM)</h3>
+  <p>ברגע שמישהו מגיע מפרסומת, המערכת רושמת את כל השרשרת — <b>מקור ← מדיום ← קמפיין ← קבוצת מודעות ← מודעה</b> — בתוספת מזהי קליק של פייסבוק/גוגל. זה נדבק לליד לתמיד, כך שהצוות רואה איזו מודעה ספציפית הניבה איזה לקוח משלם. בנוסף נשלחים אירועים בצד-שרת ל-Meta ול-Google כדי לשפר את מיקוד הפרסום.</p>
+
+  <h3>ג) תשלומים וחשבונות</h3>
+  <p>תשלומי כרטיס חיים רצים דרך <b>Cardcom</b> (סולק ישראלי); חשבוניות נשמרות בחזרה על כל רכישה. לקוחות מתחברים עם אימייל/סיסמה או Google, ומקבלים אזור אישי לצפייה ברכישות, השלמת תשלום שלא הסתיים, או עדכון העדפות.</p>
+
+  <h3>ד) עובד הרקע</h3>
+  <p>מתזמן חיצוני פונה לאתר כל 5 דקות ומפעיל <b>תור משימות</b> — זה מה שבאמת שולח את המיילים והודעות הוואטסאפ הממתינים, מפעיל מיילי החזרה-למעורבות וכו׳. הוא מנסה עד 3 פעמים ומתריע למנהל אם משהו נכשל לצמיתות.</p>
+</section>
+
+<section id="hive">
+  <h2><span class="num">10</span> מנוי קהילה — הכוורת</h2>
+  <p class="lede">קהילה בעלת הכנסה חוזרת שיושבת לצד הסולם, עם אזור חברים משלה ותמחור מדורג.</p>
+  <table>
+    <tr><th>רמה</th><th>מחיר</th><th>מי יכול להצטרף</th></tr>
+    <tr><td>Starter (מוזל)</td><td>₪29/חו׳</td><td>לקוחות קיימים בלבד — הזכאות נבדקת</td></tr>
+    <tr><td>Pro (בסיסי)</td><td>₪97/חו׳</td><td>פתוח לכולם</td></tr>
+    <tr><td>Elite</td><td>₪197/חו׳</td><td>רמת פרימיום</td></tr>
+  </table>
+  <p>ההצטרפות דורשת גילוי משפטי + תיבת הסכמה. החברים רואים אז <b>תוכן מותאם-רמה</b> (מאמרים, PDF, סרטונים). הביטול הוא בשירות-עצמי ומזהה אוטומטית אם החבר בתוך חלון ההחזר של 14 יום. ה-CRM עוקב אחר הכנסה חוזרת חודשית (MRR), תמהיל הרמות, הצטרפויות חדשות וביטולים.</p>
+  <p class="small muted">לתשומת לב: חיוב חוזר דרך Cardcom הוא הפריט המרכזי שנותר לפני שהכוורת תהיה חיה לגמרי.</p>
+</section>
+
+<section id="atelier">
+  <h2><span class="num">11</span> תוכנית האטלייה — קו ייצור מבוסס-AI</h2>
+  <p class="lede">הצעה נפרדת המכוונת למשפיענים ("להפוך השפעה למנהיגות תרבותית"), והחלק השאפתני ביותר מבחינה טכנית בפלטפורמה.</p>
+  <ol class="steps">
+    <li><b>הגשה פומבית</b> ב-<code>/atelier</code> — טופס ליד (עם שיוך פרסומות מלא) שנוחת ב-CRM ייעודי.</li>
+    <li><b>ניתוח AI</b> — הצוות פותח מועמד ו-Claude מנתח את העסק, הקהל וההתאמה שלו, ומפיק אבחנה מובנית.</li>
+    <li><b>יצירת תוכן</b> — המערכת מייצרת קופי/תוכן שיווקי עבור אותו לקוח.</li>
+    <li><b>בנייה ופריסה אוטומטית של אתר</b> — צינור (pipeline) מייצר ופורס מיני-אתר תצוגה מקדימה ללקוח; מתזמר ("ProjectManagerAgent") מתאם את שלבי הניתוח ← יצירה ← פריסה ועוקב אחר הסטטוס לכל מועמד.</li>
+  </ol>
+  <p class="muted">כאן הפלטפורמה מפסיקה להיות רק משפך והופכת למנוע אספקה מבוסס-AI לעבודת לקוחות.</p>
+</section>
+
+<section id="crm">
+  <h2><span class="num">12</span> ניהול ו-CRM — תא הטייס של הצוות</h2>
+  <p class="lede">מערכת ניהול (back office) מוגנת-סיסמה עם כ-20 דשבורדים שהופכים את כל המשפך לגלוי וניתן לפעולה.</p>
+  <div class="grid g3">
+    <div class="card"><h4 style="margin-top:0">לראות</h4><p class="small">לידים, משפך המרות, גרפי מכירות/הכנסות, ביצועים לכל מוצר, אנליטיקת נטישת וידאו, שיעורי פתיחה/קליק של מיילים.</p></div>
+    <div class="card"><h4 style="margin-top:0">לשייך</h4><p class="small">פירוק UTM מלא של מאיפה מגיעים הלקוחות, בתוספת מידול תמהיל-מדיה כדי לשקלל אילו ערוצים באמת מניבים הכנסה.</p></div>
+    <div class="card"><h4 style="margin-top:0">לפעול</h4><p class="small">פרופילים פר-משתמש עם ציר זמן פעילות בעברית פשוטה, הערות, תזכורות משימה, ו"אבחון TrueSignal" מבוסס-AI של העסק של כל ליד.</p></div>
+  </div>
+  <p>יש גם <b>קונסולת בדיקות A/B</b> חיה (כרגע בודקת שלוש כותרות שונות בעמוד הבית, עם בדיקות חדשות שמוצעות ע"י AI), <b>CRM לדילים</b> מותגיים, סדנת ה<b>אטלייה</b>, ו<b>יומן תקלות/בריאות מערכת</b>.</p>
+  <div class="callout"><b>דוגמה לציר הזמן פר-משתמש:</b> במקום נתונים גולמיים, הצוות רואה משפטים אנושיים כמו "צפה בעמוד התמחור", "התחיל רכישה", "רכישה הושלמה" (מודגש בירוק), "נקבעה פגישה" (מודגש בזהב) — עם חותמות זמן יחסיות כמו "לפני שעתיים".</div>
+</section>
+
+<section id="glossary">
+  <h2><span class="num">13</span> מילון מונחים ומונחי מפתח</h2>
+  <div class="card">
+    <div class="legend"><span class="term">TrueSignal©</span><span class="def">השיטה הממותגת: אבחון החוזק האמיתי של עסק ותרגומו לאסטרטגיה + תוכן. הליבה הרעיונית של הכול.</span></div><hr>
+    <div class="legend"><span class="term">הכוורת</span><span class="def">קהילת המנוי החודשית בעלת ההכנסה החוזרת.</span></div><hr>
+    <div class="legend"><span class="term">צ׳אלנג׳</span><span class="def">תוכנית הווידאו בת 7 הימים (₪197).</span></div><hr>
+    <div class="legend"><span class="term">סדנה</span><span class="def">מפגש הקבוצה החי בן יום אחד (₪1,080).</span></div><hr>
+    <div class="legend"><span class="term">קורס</span><span class="def">הקורס הדיגיטלי בקצב עצמי, 16 שיעורים (₪1,800).</span></div><hr>
+    <div class="legend"><span class="term">פגישת אסטרטגיה</span><span class="def">פגישת 90 דק׳ אחד-על-אחד (₪4,000).</span></div><hr>
+    <div class="legend"><span class="term">סולם ערך</span><span class="def">רצף ההצעות מחינם ועד ₪30k/חו׳, כשכל אחת משדרגת לבאה.</span></div><hr>
+    <div class="legend"><span class="term">סטטוס ליד</span><span class="def">הצינור שמתקדם אוטומטית: lead ← engaged ← high_intent ← buyer ← booked.</span></div><hr>
+    <div class="legend"><span class="term">שרשרת UTM</span><span class="def">עקבות שיוך הפרסום (מקור/מדיום/קמפיין/קבוצת מודעות/מודעה) שנקלטות בכל ליד.</span></div><hr>
+    <div class="legend"><span class="term">Cardcom</span><span class="def">סולק התשלומים הישראלי שמטפל בגבייה החיה.</span></div><hr>
+    <div class="legend"><span class="term">אטלייה</span><span class="def">תוכנית המשפיענים עם צינור אונבורדינג ובניית אתרים מבוסס-AI.</span></div>
+  </div>
+</section>
+
+<footer>
+  מדריך מוצר מפורט לאונבורדינג · beegood.online · הדר דנן בע״מ<br/>
+  מקור האמת הטכני: <code>CLAUDE.md</code> בשורש הריפו. מבוסס על הקוד החי (שאלון, מוצרים, תבניות מייל, קונפיגורציית קורס וצ׳אלנג׳).
+</footer>
+
+</div>
+</body>
+</html>
