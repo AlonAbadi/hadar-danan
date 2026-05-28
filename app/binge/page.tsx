@@ -361,12 +361,12 @@ export default function BingePage() {
       <div className="lg:px-5" style={{ display: "flex", flexDirection: "column", gap: 28, paddingBottom: 48 }}>
         {showHadar && (
           <>
-            <ScrollRow title="רילס של הדר"      videos={HADAR_REELS} onPlay={setPlaying} />
+            <ScrollRow title="קצת ממני אליכם"      videos={HADAR_REELS} onPlay={setPlaying} />
             <ScrollRow title="תהליכים מלאים"    videos={HADAR_LONG}  onPlay={setPlaying} />
           </>
         )}
         {showClients && (
-          <ScrollRow title="לקוחות מדברים"      videos={CLIENT_VIDEOS} onPlay={setPlaying} />
+          <ScrollRow title="הלקוחות שלנו"      videos={CLIENT_VIDEOS} onPlay={setPlaying} />
         )}
 
         {/* Testimonials carousel */}
@@ -375,7 +375,7 @@ export default function BingePage() {
             fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em",
             color: "#C9964A", textTransform: "uppercase", marginBottom: 16,
           }}>
-            מה אומרים עליה
+            מה אומרים עלינו
           </p>
           <WorkshopTestimonials />
         </div>
