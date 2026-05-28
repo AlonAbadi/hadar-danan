@@ -142,5 +142,22 @@ export async function POST(req: NextRequest) {
     customData: sharedCustomData,
   });
 
+  // Send to Make webhook
+  fetch("https://hook.eu1.make.com/rmw23usw8k9l4oooc573epuwh2skcbil", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name,
+      phone,
+      instagram,
+      story,
+      recommended_product: "אטלייר",
+      source: "atelier",
+      utm_source:   (sourceUtm as Record<string,string>)?.utm_source   ?? "",
+      utm_medium:   (sourceUtm as Record<string,string>)?.utm_medium   ?? "",
+      utm_campaign: (sourceUtm as Record<string,string>)?.utm_campaign ?? "",
+    }),
+  }).catch(() => {});
+
   return NextResponse.json({ success: true, id: data.id });
 }

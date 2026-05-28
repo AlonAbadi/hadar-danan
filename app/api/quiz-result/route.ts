@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 
+const MAKE_WEBHOOK = "https://hook.eu1.make.com/rmw23usw8k9l4oooc573epuwh2skcbil";
+
+const HIGH_VALUE_PRODUCTS = new Set(["strategy", "premium", "partnership"]);
+
+const PRODUCT_LABELS: Record<string, string> = {
+  challenge:   "אתגר 7 ימים",
+  workshop:    "סדנה יום אחד",
+  course:      "קורס דיגיטלי",
+  strategy:    "פגישת אסטרטגיה",
+  premium:     "יום צילום פרמיום",
+  partnership: "שותפות אסטרטגית",
+};
+
+async function sendToMake(payload: Record<string, unknown>) {
+  try {
+    await fetch(MAKE_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {}
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Link anonymous quiz results to a newly authenticated user.
@@ -50,13 +73,13 @@ export async function PATCH(req: NextRequest) {
       try {
         const [{ data: qr }, { data: user }] = await Promise.all([
           supabase.from('quiz_results')
-            .select('recommended_product')
+            .select('recommended_product, second_product, match_percent, answers')
             .eq('user_id', user_id)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle(),
           supabase.from('users')
-            .select('name, phone')
+            .select('name, email, phone, utm_source, utm_medium, utm_campaign')
             .eq('id', user_id)
             .single(),
         ]);
@@ -75,6 +98,23 @@ export async function PATCH(req: NextRequest) {
             },
             run_at: new Date().toISOString(),
             status: 'pending',
+          });
+        }
+
+        // Send high-value leads to Make webhook
+        if (qr?.recommended_product && HIGH_VALUE_PRODUCTS.has(qr.recommended_product)) {
+          await sendToMake({
+            name:                user?.name ?? "",
+            email:               user?.email ?? "",
+            phone:               user?.phone ?? "",
+            recommended_product: PRODUCT_LABELS[qr.recommended_product] ?? qr.recommended_product,
+            second_product:      qr.second_product ? (PRODUCT_LABELS[qr.second_product] ?? qr.second_product) : "",
+            match_percent:       qr.match_percent ?? 0,
+            answers:             qr.answers ?? {},
+            utm_source:          user?.utm_source ?? "",
+            utm_medium:          user?.utm_medium ?? "",
+            utm_campaign:        user?.utm_campaign ?? "",
+            source:              "quiz",
           });
         }
       } catch {}
@@ -132,7 +172,7 @@ export async function POST(req: NextRequest) {
       const label = WA_LABELS[recommended_product];
       if (label) {
         try {
-          const { data: user } = await supabase.from('users').select('name, phone').eq('id', user_id).single();
+          const { data: user } = await supabase.from('users').select('name, email, phone, utm_source, utm_medium, utm_campaign').eq('id', user_id).single();
           if (user?.phone) {
             const firstName = user.name?.trim().split(/\s+/)[0] ?? '';
             await supabase.from('jobs').insert({
@@ -146,6 +186,23 @@ export async function POST(req: NextRequest) {
               },
               run_at: new Date().toISOString(),
               status: 'pending',
+            });
+          }
+
+          // Send high-value leads to Make webhook
+          if (HIGH_VALUE_PRODUCTS.has(recommended_product) && user) {
+            await sendToMake({
+              name:                user.name ?? "",
+              email:               user.email ?? "",
+              phone:               user.phone ?? "",
+              recommended_product: PRODUCT_LABELS[recommended_product] ?? recommended_product,
+              second_product:      second_product ? (PRODUCT_LABELS[second_product] ?? second_product) : "",
+              match_percent:       match_percent ?? 0,
+              answers:             answers ?? {},
+              utm_source:          user.utm_source ?? "",
+              utm_medium:          user.utm_medium ?? "",
+              utm_campaign:        user.utm_campaign ?? "",
+              source:              "quiz",
             });
           }
         } catch {}
