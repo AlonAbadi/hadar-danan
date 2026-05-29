@@ -124,26 +124,32 @@ export async function POST(req: NextRequest) {
     });
 
     // ── A/B experiment visitor/conversion tracking ───────────
-    if (type === "PAGE_VIEW" && metadata?.ab_variant) {
-      const col =
-        metadata.ab_variant === "A" ? "visitors_a" : "visitors_b";
-      // Non-fatal - RPC may not exist until increment_experiment.sql is applied
-      try {
-        await supabase.rpc("increment_experiment", {
-          p_name: "landing_headline",
-          p_column: col,
-        });
-      } catch {}
-    }
-    if (type === "USER_SIGNED_UP" && metadata?.ab_variant) {
-      const col =
-        metadata.ab_variant === "A" ? "conversions_a" : "conversions_b";
-      try {
-        await supabase.rpc("increment_experiment", {
-          p_name: "landing_headline",
-          p_column: col,
-        });
-      } catch {}
+    // Each PAGE_VIEW counts as a visitor for its experiment.
+    // Conversion events vary by experiment (default: USER_SIGNED_UP).
+    // experiment_name from metadata; defaults to "landing_headline" for
+    // backward compatibility with PageTracker calls that pre-date the
+    // multi-experiment refactor.
+    if (metadata?.ab_variant) {
+      const experimentName =
+        typeof metadata.experiment_name === "string"
+          ? metadata.experiment_name
+          : "landing_headline";
+
+      const isVisitor = type === "PAGE_VIEW";
+      // Conversion events: signup for landing tests, QUIZ_LEAD for quiz tests
+      const isConversion =
+        type === "USER_SIGNED_UP" || type === "QUIZ_LEAD";
+
+      if (isVisitor || isConversion) {
+        const variantSuffix = metadata.ab_variant === "A" ? "_a" : "_b";
+        const col = (isVisitor ? "visitors" : "conversions") + variantSuffix;
+        try {
+          await supabase.rpc("increment_experiment", {
+            p_name: experimentName,
+            p_column: col,
+          });
+        } catch {}
+      }
     }
 
     // ── State machine transition ─────────────────────────────

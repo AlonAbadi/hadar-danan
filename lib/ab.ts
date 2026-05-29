@@ -35,3 +35,24 @@ export function parseVariant(value: string | undefined): AbVariant {
   if (value === "A" || value === "B" || value === "C") return value;
   return "A";
 }
+
+// ── Quiz Q1 A/B test: "quiz_q1_framing" ──────────────────────────
+// Reframes the first quiz question from status ("where are you?")
+// to pain ("what's stopping you?") for campaign visitors who arrive
+// with an existing pain. Variant C falls back to A (2-variant test).
+export const QUIZ_Q1_AB: Record<AbVariant, { title: string; subtitle: string }> = {
+  A: {
+    title: "איפה העסק שלך עכשיו?",
+    subtitle: "ענה בכנות - זה יעזור לנו למצוא את הצעד הנכון",
+  },
+  B: {
+    title: "מה עוצר אותך מלצמוח בשיווק?",
+    subtitle: "6 שאלות. 2 דקות. תשובה מדויקת לעסק שלך.",
+  },
+  C: {
+    title: "איפה העסק שלך עכשיו?",
+    subtitle: "ענה בכנות - זה יעזור לנו למצוא את הצעד הנכון",
+  },
+};
+
+export const QUIZ_Q1_EXPERIMENT = "quiz_q1_framing";

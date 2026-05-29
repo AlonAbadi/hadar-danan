@@ -6,7 +6,7 @@ import {
 } from '@/components/admin/ui';
 import type { ABProposal } from '@/lib/admin/ab-agent';
 import { bayesianStats } from '@/lib/admin/ab-agent';
-import { AB_CONTENT } from '@/lib/ab';
+import { AB_CONTENT, QUIZ_Q1_AB } from '@/lib/ab';
 
 // ── Live experiment (experiments table) ────────────────────────────────────────
 
@@ -24,13 +24,34 @@ interface LiveTest {
 }
 
 // Human-readable metadata for known live tests
-const LIVE_TEST_META: Record<string, { label: string; a: string; b: string; aCta: string; bCta: string }> = {
+// `subLabel` controls the prefix shown above the secondary text
+// (e.g. "CTA" for landing tests, "כותרת משנה" for the quiz Q1 test).
+const LIVE_TEST_META: Record<string, {
+  label: string;
+  metric: string;
+  a: string;
+  b: string;
+  aSub: string;
+  bSub: string;
+  subLabel: string;
+}> = {
   landing_headline: {
     label: 'כותרת הירו — עמוד הבית',
+    metric: 'שיעור הרשמה · מעקב דרך טבלת experiments',
     a: AB_CONTENT.A.headline,
     b: AB_CONTENT.B.headline,
-    aCta: AB_CONTENT.A.cta,
-    bCta: AB_CONTENT.B.cta,
+    aSub: AB_CONTENT.A.cta,
+    bSub: AB_CONTENT.B.cta,
+    subLabel: 'CTA',
+  },
+  quiz_q1_framing: {
+    label: 'שאלה 1 בקוויז — מסגור זהות מול כאב',
+    metric: 'אחוז המשלימים את הקוויז (QUIZ_LEAD / PAGE_VIEW)',
+    a: QUIZ_Q1_AB.A.title,
+    b: QUIZ_Q1_AB.B.title,
+    aSub: QUIZ_Q1_AB.A.subtitle,
+    bSub: QUIZ_Q1_AB.B.subtitle,
+    subLabel: 'כותרת משנה',
   },
 };
 
@@ -509,7 +530,7 @@ function LiveTestCard({ test }: { test: LiveTest }) {
             {meta?.label ?? test.name}
           </div>
           <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '2px' }}>
-            מדד: שיעור הרשמה · מעקב דרך טבלת experiments
+            מדד: {meta?.metric ?? 'שיעור המרה · מעקב דרך טבלת experiments'}
           </div>
         </div>
       </div>
@@ -520,12 +541,12 @@ function LiveTestCard({ test }: { test: LiveTest }) {
           <div style={{ padding: '12px 14px', background: '#1D2430', borderRadius: '8px', border: '1px solid #2C323E' }}>
             <div style={{ fontSize: '10px', fontWeight: 700, color: '#9E9990', marginBottom: '6px', letterSpacing: '0.04em' }}>גרסה A — נוכחית</div>
             <div style={{ fontSize: '13px', color: '#EDE9E1', lineHeight: '1.5' }}>{meta.a}</div>
-            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>CTA: {meta.aCta}</div>
+            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>{meta.subLabel}: {meta.aSub}</div>
           </div>
           <div style={{ padding: '12px 14px', background: 'rgba(201,150,74,0.08)', borderRadius: '8px', border: '1px solid rgba(201,150,74,0.30)' }}>
             <div style={{ fontSize: '10px', fontWeight: 700, color: '#C9964A', marginBottom: '6px', letterSpacing: '0.04em' }}>גרסה B — מאתגר</div>
             <div style={{ fontSize: '13px', color: '#EDE9E1', lineHeight: '1.5' }}>{meta.b}</div>
-            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>CTA: {meta.bCta}</div>
+            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>{meta.subLabel}: {meta.bSub}</div>
           </div>
         </div>
       )}

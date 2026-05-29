@@ -5,6 +5,7 @@ import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { saveQuizSession, getQuizSession, getSessionUser } from "@/lib/quiz-session";
 import { trackProductLead, trackQuizRecommended, trackViewContent, trackInitiateCheckout, productLeadEventName, LEAD_VALUE_ILS } from "@/lib/analytics";
 import { buildNarrative } from "@/lib/quiz-narrative";
+import { type AbVariant, QUIZ_Q1_AB, QUIZ_Q1_EXPERIMENT } from "@/lib/ab";
 import {
   type Answer,
   type BulletRule,
@@ -243,7 +244,7 @@ type InitialQuizResult = {
 // ── Component ─────────────────────────────────────────────────────
 // Steps: -1 = checking session, 0-5 = questions, 6 = lead gate, 7 = result
 
-export function QuizClient({ initialUser = null, initialQuizResult = null }: { initialUser?: InitialUser; initialQuizResult?: InitialQuizResult }) {
+export function QuizClient({ initialUser = null, initialQuizResult = null, abVariant = "A" }: { initialUser?: InitialUser; initialQuizResult?: InitialQuizResult; abVariant?: AbVariant }) {
   const hasServerResult = !!initialQuizResult;
   const serverAnswers: Answer[] = hasServerResult
     ? ["q1","q2","q3","q4","q5","q6"].map(k => (initialQuizResult!.answers[k] as Answer) ?? "A")
@@ -302,8 +303,17 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
     if (startedRef.current) return;
     startedRef.current = true;
     postEvent({ type: "QUIZ_STARTED" });
+    // A/B: count this visitor for the quiz_q1_framing experiment
+    postEvent({
+      type: "PAGE_VIEW",
+      metadata: {
+        page: "/quiz",
+        ab_variant: abVariant,
+        experiment_name: QUIZ_Q1_EXPERIMENT,
+      },
+    });
     if (typeof window !== "undefined") window.fbq?.("trackCustom", "QuizStart");
-  }, []);
+  }, [abVariant]);
 
   // Detect prior quiz session in localStorage (anonymous users / new device)
   useEffect(() => {
@@ -508,7 +518,15 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
       if (res.ok) {
         const data = await res.json();
         const userId = (data as Record<string, unknown>).user_id as string | undefined;
-        postEvent({ type: "QUIZ_LEAD", user_id: userId, metadata: { email: leadForm.email } });
+        postEvent({
+          type: "QUIZ_LEAD",
+          user_id: userId,
+          metadata: {
+            email: leadForm.email,
+            ab_variant: abVariant,
+            experiment_name: QUIZ_Q1_EXPERIMENT,
+          },
+        });
         const leadEventId = typeof crypto !== "undefined" ? crypto.randomUUID() : undefined;
         const nameParts = leadForm.name.trim().split(" ");
         const scoresNow = computeScores(answers);
@@ -691,11 +709,11 @@ export function QuizClient({ initialUser = null, initialQuizResult = null }: { i
                     שאלה {step + 1} מתוך {QUESTIONS.length}
                   </p>
                   <h1 className="font-black leading-snug" style={{ fontSize: "22px" }}>
-                    {QUESTIONS[step].title}
+                    {step === 0 ? QUIZ_Q1_AB[abVariant].title : QUESTIONS[step].title}
                   </h1>
-                  {QUESTIONS[step].subtitle && (
+                  {(step === 0 ? QUIZ_Q1_AB[abVariant].subtitle : QUESTIONS[step].subtitle) && (
                     <p style={{ fontSize: "13px", color: C.quizMuted, lineHeight: 1.6 }}>
-                      {QUESTIONS[step].subtitle}
+                      {step === 0 ? QUIZ_Q1_AB[abVariant].subtitle : QUESTIONS[step].subtitle}
                     </p>
                   )}
                 </div>
