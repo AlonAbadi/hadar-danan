@@ -134,10 +134,21 @@ export default function ConversionsClient({ data, dateRange }: Props) {
       </SectionCard>
 
       <div style={{ marginTop: 24, padding: '14px 18px', background: '#141820', border: '1px solid #2C323E', borderRadius: 10, fontSize: 12, color: '#9E9990', lineHeight: 1.7 }}>
-        <strong style={{ color: '#E8B94A' }}>איך להשתמש בנתונים האלה ב-Meta Ads Manager:</strong><br />
-        בעת יצירת קמפיין → Conversion Event → בחר את האירוע הספציפי שמתאים למטרה (למשל
-        {' '}<code style={{ fontFamily: 'monospace', color: '#E8B94A' }}>PurchaseChallenge</code> לקמפיין שמכוון לרוכשי אתגר).
-        {' '}האלגוריתם של מטא יאמן את עצמו לחפש לקוחות שדומים למי שכבר ביצע את האירוע אצלנו.
+        <strong style={{ color: '#E8B94A' }}>איך לבחור את אירוע האופטימיזציה לקמפיין:</strong><br />
+        <strong style={{ color: '#EDE9E1' }}>הכלל:</strong> צריך 50+ אירועים בשבוע ל-ad set כדי לצאת מ-Learning Limited.
+        אם אין נפח באירוע הסופי — עלה במשפך לאירוע <em>של אותו קהל</em> שיש לו נפח.<br /><br />
+        <strong style={{ color: '#EDE9E1' }}>פר מוצר/קהל:</strong>
+        <ul style={{ marginTop: 6, marginBottom: 0, paddingRight: 18, listStyle: 'disc' }}>
+          <li><strong>אטלייר</strong> → <code style={{ color: '#E8B94A' }}>AtelierLead</code> (קהל אטלייר נקי)</li>
+          <li><strong>שותפות</strong> → <code style={{ color: '#E8B94A' }}>PartnershipLead</code></li>
+          <li><strong>פרמיום ₪14k</strong> → <code style={{ color: '#E8B94A' }}>InitiatePremiumCheckout</code> → כשיש 50+/שבוע: <code style={{ color: '#E8B94A' }}>PurchasePremium</code></li>
+          <li><strong>אסטרטגיה ₪4k</strong> → <code style={{ color: '#E8B94A' }}>InitiateStrategyCheckout</code> → <code style={{ color: '#E8B94A' }}>PurchaseStrategy</code></li>
+          <li><strong>קורס/סדנה/אתגר</strong> → <code style={{ color: '#E8B94A' }}>InitiateXCheckout</code> → <code style={{ color: '#E8B94A' }}>PurchaseX</code></li>
+          <li><strong>קמפיין רחב</strong> → <code style={{ color: '#E8B94A' }}>Purchase</code> או <code style={{ color: '#E8B94A' }}>InitiateCheckout</code> הגנרי (אגרגציה)</li>
+        </ul>
+        <div style={{ marginTop: 10, color: `${'#9E9990'}aa` }}>
+          הימנע מ-Lead הגנרי בקמפיין ממוקד-מוצר — הוא מערבב בין קהלים ומלמד את האלגוריתם דמוגרפיה שגויה.
+        </div>
       </div>
     </div>
   );

@@ -21,6 +21,14 @@ const PRODUCT_CUSTOM_EVENT: Record<string, string> = {
   test_1:         'PurchaseTest',
 };
 
+const PRODUCT_IC_EVENT: Record<string, string> = {
+  challenge_197:  'InitiateChallengeCheckout',
+  workshop_1080:  'InitiateWorkshopCheckout',
+  course_1800:    'InitiateCourseCheckout',
+  strategy_4000:  'InitiateStrategyCheckout',
+  premium_14000:  'InitiatePremiumCheckout',
+};
+
 function rangeToFilter(range: string): { since: string; until?: string } {
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -61,19 +69,20 @@ async function getConversionsData(range: string) {
     withRange(sb.from('events').select('created_at').eq('type', 'USER_SIGNED_UP')),
     withRange(sb.from('events').select('created_at').eq('type', 'PARTNERSHIP_LEAD')),
     withRange(sb.from('atelier_applications').select('created_at')),
-    withRange(sb.from('events').select('created_at').eq('type', 'CHECKOUT_STARTED')),
+    withRange(sb.from('events').select('created_at, metadata').eq('type', 'CHECKOUT_STARTED')),
     withRange(sb.from('events').select('created_at').eq('type', 'CALL_BOOKED')),
     withRange(sb.from('events').select('created_at').eq('type', 'HIVE_JOINED')),
   ]);
 
   type Row = { created_at: string };
   type PurchaseRow = Row & { product: string; amount: number | null; amount_paid: number | null };
+  type CheckoutRow = Row & { metadata: { product?: string } | null };
 
   const purchases: PurchaseRow[] = purchasesRes.data ?? [];
   const signups:   Row[]         = signupsRes.data   ?? [];
   const partners:  Row[]         = partnerRes.data   ?? [];
   const ateliers:  Row[]         = atelierRes.data   ?? [];
-  const checkouts: Row[]         = checkoutsRes.data ?? [];
+  const checkouts: CheckoutRow[] = checkoutsRes.data ?? [];
   const schedules: Row[]         = schedulesRes.data ?? [];
   const subscribes: Row[]        = subscribesRes.data ?? [];
 
@@ -108,6 +117,17 @@ async function getConversionsData(range: string) {
   const leadCount = signups.length + ateliers.length + partners.length;
   const allLeadRows = [...signups, ...ateliers, ...partners];
 
+  // Per-product InitiateCheckout breakdown from CHECKOUT_STARTED metadata
+  const productCheckoutRows: EventRow[] = Object.entries(PRODUCT_IC_EVENT).map(([productKey, eventName]) => {
+    const rows = checkouts.filter((c) => c.metadata?.product === productKey);
+    return {
+      eventName,
+      source:    PRODUCT_LABELS[productKey] ?? productKey,
+      count:     rows.length,
+      lastFired: newest(rows),
+    };
+  }).filter((r) => r.count > 0);
+
   const engagementRows: EventRow[] = [
     {
       eventName: 'Lead',
@@ -129,13 +149,14 @@ async function getConversionsData(range: string) {
     },
     {
       eventName: 'InitiateCheckout',
-      source:    'התחלת רכישה',
+      source:    'התחלת רכישה (כל המוצרים)',
       count:     checkouts.length,
       lastFired: newest(checkouts),
     },
+    ...productCheckoutRows,
     {
       eventName: 'Schedule',
-      source:    'הזמנת פגישה (אסטרטגיה/פרמיום/שותפות)',
+      source:    'הזמנת פגישה',
       count:     schedules.length,
       lastFired: newest(schedules),
     },

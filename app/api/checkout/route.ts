@@ -38,6 +38,17 @@ const NAMES: Record<string, string> = {
   test_1: "מוצר טסט",
 };
 
+// Per-product custom InitiateCheckout event names — let Meta optimize each
+// product campaign on its own audience signal (different price points,
+// different audiences, would otherwise dilute each other).
+const PRODUCT_IC_EVENT: Record<string, string> = {
+  challenge_197:  "InitiateChallengeCheckout",
+  workshop_1080:  "InitiateWorkshopCheckout",
+  course_1800:    "InitiateCourseCheckout",
+  strategy_4000:  "InitiateStrategyCheckout",
+  premium_14000:  "InitiatePremiumCheckout",
+};
+
 const BodySchema = z.object({
   product: z.enum([
     "challenge_197",
@@ -187,19 +198,31 @@ export async function POST(req: NextRequest) {
   });
 
   // Fire CAPI + Cardcom in parallel — both are independent external calls
-  const [, cardcomRes] = await Promise.all([
+  const icUserData = {
+    email:            userRow?.email   ?? undefined,
+    phone:            userRow?.phone   ?? undefined,
+    fbp:              req.cookies.get("_fbp")?.value,
+    fbc:              req.cookies.get("_fbc")?.value,
+    clientUserAgent:  req.headers.get("user-agent") ?? undefined,
+  };
+  const icCustomData = { value: amount, currency: "ILS", contentName: product, contentIds: [product] };
+  const productIcEvent = PRODUCT_IC_EVENT[product];
+
+  const [, , cardcomRes] = await Promise.all([
     sendCapiEvent({
       eventName:  "InitiateCheckout",
       eventId:    `ic_${purchase.id}`,
-      userData:   {
-        email:            userRow?.email   ?? undefined,
-        phone:            userRow?.phone   ?? undefined,
-        fbp:              req.cookies.get("_fbp")?.value,
-        fbc:              req.cookies.get("_fbc")?.value,
-        clientUserAgent:  req.headers.get("user-agent") ?? undefined,
-      },
-      customData: { value: amount, currency: "ILS", contentName: product, contentIds: [product] },
+      userData:   icUserData,
+      customData: icCustomData,
     }),
+    productIcEvent
+      ? sendCapiEvent({
+          eventName:  productIcEvent,
+          eventId:    `${productIcEvent.toLowerCase()}_${purchase.id}`,
+          userData:   icUserData,
+          customData: icCustomData,
+        })
+      : Promise.resolve(),
     fetch(
       "https://secure.cardcom.solutions/Interface/LowProfile.aspx",
       {
