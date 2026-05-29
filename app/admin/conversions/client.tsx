@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { PageHeader, KpiGrid, KpiCard, SectionCard, DataTable, Badge, DateRangePicker } from '@/components/admin/ui';
 import type { EventRow } from './page';
@@ -37,12 +38,22 @@ function relTime(iso: string | null): string {
 export default function ConversionsClient({ data, dateRange }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
+  const [pendingValue, setPendingValue] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pendingValue && dateRange === pendingValue) setPendingValue(null);
+  }, [dateRange, pendingValue]);
 
   const updateRange = (newRange: string) => {
+    if (newRange === dateRange) return;
+    setPendingValue(newRange);
     const params = new URLSearchParams();
     if (newRange !== '30d') params.set('range', newRange);
     const qs = params.toString();
-    router.push(`${pathname}${qs ? `?${qs}` : ''}`);
+    startTransition(() => {
+      router.push(`${pathname}${qs ? `?${qs}` : ''}`);
+    });
   };
 
   const purchaseRow = (r: EventRow) => ({
@@ -67,7 +78,7 @@ export default function ConversionsClient({ data, dateRange }: Props) {
         title="אירועי CAPI"
         titleEn="Meta Conversions API Events"
         subtitle="כל מה שהשרת שלך שולח למטא — מהנתונים האמיתיים ב-Supabase. ללא קריאה למטא."
-        actions={<DateRangePicker value={dateRange} onChange={updateRange} />}
+        actions={<DateRangePicker value={dateRange} onChange={updateRange} pending={isPending} pendingValue={pendingValue} />}
       />
 
       <KpiGrid cols={4}>

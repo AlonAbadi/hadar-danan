@@ -21,10 +21,21 @@ const PRODUCT_CUSTOM_EVENT: Record<string, string> = {
   test_1:         'PurchaseTest',
 };
 
-function rangeToSince(range: string): string {
+function rangeToFilter(range: string): { since: string; until?: string } {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (range === 'today') {
+    return { since: startOfToday.toISOString() };
+  }
+  if (range === 'yesterday') {
+    const startOfYesterday = new Date(startOfToday.getTime() - 24 * 60 * 60 * 1000);
+    return { since: startOfYesterday.toISOString(), until: startOfToday.toISOString() };
+  }
+
   const days = range === '7d' ? 7 : range === '30d' ? 30 : range === '90d' ? 90 : 365;
-  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  return since.toISOString();
+  const since = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  return { since: since.toISOString() };
 }
 
 export type EventRow = {
@@ -40,43 +51,19 @@ async function getConversionsData(range: string) {
   const supabase = createServerClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sb = supabase as any;
-  const since = rangeToSince(range);
+  const { since, until } = rangeToFilter(range);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const withRange = (q: any) => (until ? q.gte('created_at', since).lt('created_at', until) : q.gte('created_at', since));
 
   const [purchasesRes, signupsRes, partnerRes, atelierRes, checkoutsRes, schedulesRes, subscribesRes] = await Promise.all([
-    sb
-      .from('purchases')
-      .select('product, amount, amount_paid, created_at')
-      .eq('status', 'completed')
-      .gte('created_at', since),
-    sb
-      .from('events')
-      .select('created_at')
-      .eq('type', 'USER_SIGNED_UP')
-      .gte('created_at', since),
-    sb
-      .from('events')
-      .select('created_at')
-      .eq('type', 'PARTNERSHIP_LEAD')
-      .gte('created_at', since),
-    sb
-      .from('atelier_applications')
-      .select('created_at')
-      .gte('created_at', since),
-    sb
-      .from('events')
-      .select('created_at')
-      .eq('type', 'CHECKOUT_STARTED')
-      .gte('created_at', since),
-    sb
-      .from('events')
-      .select('created_at')
-      .eq('type', 'CALL_BOOKED')
-      .gte('created_at', since),
-    sb
-      .from('events')
-      .select('created_at')
-      .eq('type', 'HIVE_JOINED')
-      .gte('created_at', since),
+    withRange(sb.from('purchases').select('product, amount, amount_paid, created_at').eq('status', 'completed')),
+    withRange(sb.from('events').select('created_at').eq('type', 'USER_SIGNED_UP')),
+    withRange(sb.from('events').select('created_at').eq('type', 'PARTNERSHIP_LEAD')),
+    withRange(sb.from('atelier_applications').select('created_at')),
+    withRange(sb.from('events').select('created_at').eq('type', 'CHECKOUT_STARTED')),
+    withRange(sb.from('events').select('created_at').eq('type', 'CALL_BOOKED')),
+    withRange(sb.from('events').select('created_at').eq('type', 'HIVE_JOINED')),
   ]);
 
   type Row = { created_at: string };

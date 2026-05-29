@@ -293,16 +293,21 @@ export function PercentBar({
 export function DateRangePicker({
   value,
   onChange,
+  pending = false,
+  pendingValue = null,
 }: {
   value: string;
   onChange: (v: string) => void;
+  pending?: boolean;
+  pendingValue?: string | null;
 }) {
   const options = [
-    { value: 'today', label: 'היום' },
-    { value: '7d',   label: '7 ימים' },
-    { value: '30d',  label: '30 ימים' },
-    { value: '90d',  label: '90 ימים' },
-    { value: 'all',  label: 'הכל' },
+    { value: 'today',     label: 'היום' },
+    { value: 'yesterday', label: 'אתמול' },
+    { value: '7d',        label: '7 ימים' },
+    { value: '30d',       label: '30 ימים' },
+    { value: '90d',       label: '90 ימים' },
+    { value: 'all',       label: 'הכל' },
   ];
 
   return (
@@ -310,22 +315,40 @@ export function DateRangePicker({
       display: 'flex', gap: 4,
       background: '#141820', border: '1px solid #2C323E',
       borderRadius: 10, padding: 4,
+      position: 'relative',
+      transition: 'opacity 0.15s',
+      opacity: pending ? 0.85 : 1,
     }}>
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onChange(opt.value)}
-          style={{
-            padding: '6px 14px', borderRadius: 7, fontSize: 13, fontWeight: 600,
-            border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-            background: value === opt.value ? '#C9964A' : 'transparent',
-            color: value === opt.value ? '#1A1206' : '#9E9990',
-            fontFamily: "'Assistant', sans-serif",
-          }}
-        >
-          {opt.label}
-        </button>
-      ))}
+      <style>{`
+        @keyframes adminRangePulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(232,185,74,0.55); }
+          50%      { box-shadow: 0 0 0 6px rgba(232,185,74,0); }
+        }
+      `}</style>
+      {options.map((opt) => {
+        const isSelected = value === opt.value;
+        const isPending = pending && pendingValue === opt.value;
+        const showActive = isSelected || isPending;
+        return (
+          <button
+            key={opt.value}
+            onClick={() => !pending && onChange(opt.value)}
+            disabled={pending}
+            style={{
+              padding: '6px 14px', borderRadius: 7, fontSize: 13, fontWeight: 600,
+              border: 'none', cursor: pending ? 'wait' : 'pointer',
+              transition: 'background 0.12s, color 0.12s, transform 0.08s',
+              background: isPending ? '#E8B94A' : showActive ? '#C9964A' : 'transparent',
+              color: showActive ? '#1A1206' : '#9E9990',
+              fontFamily: "'Assistant', sans-serif",
+              transform: isPending ? 'scale(0.97)' : 'scale(1)',
+              animation: isPending ? 'adminRangePulse 0.9s ease-out infinite' : 'none',
+            }}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
