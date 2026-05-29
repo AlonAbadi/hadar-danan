@@ -723,7 +723,18 @@ export default function AcquisitionClient({
             <span style={{ fontSize: 11, color: C.gold, background: 'rgba(201,150,74,0.12)', padding: '3px 10px', borderRadius: 6 }}>לא מחובר</span>
           ) : undefined}
         />
-        {metaAds.configured && metaAds.data ? (
+        {metaAds.configured && metaAds.error ? (
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: '#e05555', marginBottom: 8 }}>שגיאה מ-Meta API</div>
+            <div style={{ fontSize: 12, color: C.muted, fontFamily: 'monospace', maxWidth: 600, margin: '0 auto', wordBreak: 'break-word' }}>{metaAds.error}</div>
+            {metaAds.dateRange && (
+              <div style={{ fontSize: 11, color: `${C.muted}88`, marginTop: 12 }}>
+                טווח: {metaAds.dateRange.since} → {metaAds.dateRange.until}
+              </div>
+            )}
+          </div>
+        ) : metaAds.configured && metaAds.data && metaAds.data.length > 0 ? (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
@@ -748,11 +759,22 @@ export default function AcquisitionClient({
               </tbody>
             </table>
           </div>
+        ) : metaAds.configured && metaAds.data && metaAds.data.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: C.muted, marginBottom: 6 }}>אין קמפיינים פעילים בטווח</div>
+            {metaAds.dateRange && (
+              <div style={{ fontSize: 12, color: `${C.muted}88` }}>
+                טווח: {metaAds.dateRange.since} → {metaAds.dateRange.until}
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: `${C.muted}66`, marginTop: 8 }}>החיבור עובד — פשוט אין נתונים להציג</div>
+          </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '48px 24px' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>📢</div>
             <div style={{ fontSize: 15, fontWeight: 500, color: C.muted, marginBottom: 6 }}>Meta Ads לא מחובר</div>
-            <div style={{ fontSize: 13, color: `${C.muted}88` }}>הוסף META_ADS_ACCESS_TOKEN ו-META_AD_ACCOUNT_ID לקובץ .env</div>
+            <div style={{ fontSize: 13, color: `${C.muted}88` }}>הוסף META_AD_ACCOUNT_ID לקובץ .env</div>
           </div>
         )}
       </Card>

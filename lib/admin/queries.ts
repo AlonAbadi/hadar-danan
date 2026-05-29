@@ -487,8 +487,20 @@ export async function getMetaAdsData(dateRange?: string) {
     const res = await fetch(url, { next: { revalidate: 300 } });
     const json = await res.json();
 
+    // Meta returns errors as { error: {...} } inside 200 OK responses
+    if (json.error) {
+      console.error('Meta Ads API error:', json.error);
+      return {
+        configured: true,
+        data: null,
+        error: `${json.error.message ?? 'Unknown error'} (code: ${json.error.code ?? '?'}, type: ${json.error.type ?? '?'})`,
+        dateRange: { since, until },
+      };
+    }
+
     return {
       configured: true,
+      dateRange: { since, until },
       data: json.data?.map((campaign: any) => ({
         name: campaign.campaign_name,
         impressions: parseInt(campaign.impressions || '0'),
