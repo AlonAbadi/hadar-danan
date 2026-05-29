@@ -83,7 +83,7 @@ function TabBar({
   onChange: (key: string) => void;
 }) {
   return (
-    <div style={{ display: 'flex', borderBottom: '2px solid #e5e7eb', marginBottom: '24px', gap: '0' }}>
+    <div style={{ display: 'flex', borderBottom: '2px solid #2C323E', marginBottom: '24px', gap: '0' }}>
       {tabs.map((tab) => (
         <button
           key={tab.key}
@@ -92,10 +92,10 @@ function TabBar({
             padding: '10px 20px',
             fontSize: '13px',
             fontWeight: active === tab.key ? 600 : 400,
-            color: active === tab.key ? '#c9a84c' : '#6b7280',
+            color: active === tab.key ? '#C9964A' : '#9E9990',
             background: 'none',
             border: 'none',
-            borderBottom: active === tab.key ? '2px solid #c9a84c' : '2px solid transparent',
+            borderBottom: active === tab.key ? '2px solid #C9964A' : '2px solid transparent',
             marginBottom: '-2px',
             cursor: 'pointer',
             display: 'flex',
@@ -108,10 +108,11 @@ function TabBar({
           <span style={{
             fontSize: '11px',
             fontWeight: 600,
-            background: active === tab.key ? '#fef9f0' : '#f3f4f6',
-            color: active === tab.key ? '#c9a84c' : '#9ca3af',
-            padding: '1px 6px',
+            background: active === tab.key ? 'rgba(201,150,74,0.15)' : '#1D2430',
+            color: active === tab.key ? '#C9964A' : '#9E9990',
+            padding: '2px 8px',
             borderRadius: '10px',
+            border: '1px solid #2C323E',
           }}>
             {tab.count}
           </span>
@@ -124,21 +125,95 @@ function TabBar({
 // ── Confidence Meter ───────────────────────────────────────────────────────────
 
 function ConfidenceMeter({ confidence }: { confidence: number }) {
-  const color = confidence >= 95 ? '#16a34a' : confidence >= 80 ? '#ca8a04' : '#9ca3af';
+  const color = confidence >= 95 ? '#22C55E' : confidence >= 80 ? '#E8B94A' : '#9E9990';
+  const label = confidence >= 95 ? 'מובהק' : confidence >= 80 ? 'מתקרב למובהקות' : 'עוד מוקדם להחליט';
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#9E9990', marginBottom: '4px' }}>
-        <span>Confidence</span>
-        <span style={{ fontWeight: 600, color, fontFamily: 'system-ui' }}>{confidence.toFixed(0)}%</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
+        <span style={{ color: '#9E9990' }}>רמת ביטחון סטטיסטית</span>
+        <span style={{ fontWeight: 600, color, fontFamily: 'system-ui' }}>
+          {confidence.toFixed(0)}% · {label}
+        </span>
       </div>
-      <div style={{ height: '6px', background: '#e5e7eb', borderRadius: '3px', overflow: 'hidden' }}>
+      <div style={{ height: '8px', background: '#1D2430', borderRadius: '4px', overflow: 'hidden', border: '1px solid #2C323E' }}>
         <div style={{
           height: '100%',
           width: `${Math.min(100, confidence)}%`,
           background: color,
-          borderRadius: '3px',
+          borderRadius: '4px',
           transition: 'width 0.5s ease',
         }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#9E9990', marginTop: '4px' }}>
+        <span>0%</span>
+        <span style={{ color: '#E8B94A' }}>↑ 80%</span>
+        <span style={{ color: '#22C55E' }}>↑ 95% (קבלת החלטה)</span>
+      </div>
+    </div>
+  );
+}
+
+// One-line "what does this mean" interpretation for non-statisticians
+function ResultInterpretation({
+  hasMinSample,
+  confidence,
+  uplift,
+  probBWins,
+  visitorsA,
+  visitorsB,
+}: {
+  hasMinSample: boolean;
+  confidence: number;
+  uplift: number;
+  probBWins: number;
+  visitorsA: number;
+  visitorsB: number;
+}) {
+  let icon = '⏳';
+  let title = 'הניסוי עוד צעיר';
+  let body = `נצברו ${visitorsA + visitorsB} מבקרים. צריך לפחות 200 לכל גרסה כדי לקבל החלטה משמעותית.`;
+  let color = '#9E9990';
+  let bg = 'rgba(158,153,144,0.08)';
+
+  if (hasMinSample) {
+    if (confidence >= 95) {
+      const winner = uplift > 0 ? 'B' : 'A';
+      icon = '✅';
+      title = `יש מנצח: גרסה ${winner}`;
+      body = `הפער ${Math.abs(uplift).toFixed(1)}% מובהק סטטיסטית. אפשר להשאיר רק את גרסה ${winner} ולסיים את הניסוי.`;
+      color = '#22C55E';
+      bg = 'rgba(34,197,94,0.08)';
+    } else if (confidence >= 80) {
+      const leader = uplift > 0 ? 'B' : 'A';
+      icon = '📊';
+      title = `גרסה ${leader} מובילה, אבל עוד לא מספיק`;
+      body = `הסיכוי שגרסה B תנצח: ${(probBWins * 100).toFixed(0)}%. ממתינים לעוד מבקרים כדי להגיע ל-95% ביטחון.`;
+      color = '#E8B94A';
+      bg = 'rgba(232,185,74,0.08)';
+    } else {
+      icon = '🔀';
+      title = 'הפער קטן מדי להחלטה';
+      body = `שתי הגרסאות מתפקדות דומה (Uplift ${uplift.toFixed(1)}%). הסיכוי ש-B תנצח: ${(probBWins * 100).toFixed(0)}%. ייתכן שאין הבדל אמיתי.`;
+      color = '#9E9990';
+      bg = 'rgba(158,153,144,0.08)';
+    }
+  }
+
+  return (
+    <div style={{
+      marginTop: '14px',
+      padding: '12px 14px',
+      background: bg,
+      border: `1px solid ${color}33`,
+      borderRadius: '8px',
+      display: 'flex',
+      gap: '10px',
+      alignItems: 'flex-start',
+    }}>
+      <span style={{ fontSize: '20px', lineHeight: 1 }}>{icon}</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: '13px', fontWeight: 600, color, marginBottom: '2px' }}>{title}</div>
+        <div style={{ fontSize: '12px', color: '#9E9990', lineHeight: '1.5' }}>{body}</div>
       </div>
     </div>
   );
@@ -197,8 +272,9 @@ function EditModal({
                 rows={3}
                 style={{
                   width: '100%', padding: '8px 10px', fontSize: '13px', borderRadius: '6px',
-                  border: '1px solid #d1d5db', outline: 'none', fontFamily: 'inherit',
+                  border: '1px solid #2C323E', outline: 'none', fontFamily: 'inherit',
                   resize: 'vertical', boxSizing: 'border-box', lineHeight: '1.5',
+                  background: '#1D2430', color: '#EDE9E1',
                 }}
               />
             ) : (
@@ -208,8 +284,9 @@ function EditModal({
                 onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                 style={{
                   width: '100%', padding: '8px 10px', fontSize: '13px', borderRadius: '6px',
-                  border: '1px solid #d1d5db', outline: 'none', fontFamily: 'inherit',
+                  border: '1px solid #2C323E', outline: 'none', fontFamily: 'inherit',
                   boxSizing: 'border-box',
+                  background: '#1D2430', color: '#EDE9E1',
                 }}
               />
             )}
@@ -222,7 +299,7 @@ function EditModal({
             <select
               value={form.metric}
               onChange={(e) => setForm({ ...form, metric: e.target.value })}
-              style={{ width: '100%', padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', fontFamily: 'inherit' }}
+              style={{ width: '100%', padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #2C323E', outline: 'none', fontFamily: 'inherit', background: '#1D2430', color: '#EDE9E1' }}
             >
               {Object.entries(METRIC_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -234,7 +311,7 @@ function EditModal({
             <select
               value={form.priority}
               onChange={(e) => setForm({ ...form, priority: e.target.value as 'high' | 'medium' | 'low' })}
-              style={{ width: '100%', padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', fontFamily: 'inherit' }}
+              style={{ width: '100%', padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #2C323E', outline: 'none', fontFamily: 'inherit', background: '#1D2430', color: '#EDE9E1' }}
             >
               <option value="high">גבוהה</option>
               <option value="medium">בינונית</option>
@@ -247,7 +324,7 @@ function EditModal({
               type="number"
               value={form.days_to_significance}
               onChange={(e) => setForm({ ...form, days_to_significance: Number(e.target.value) })}
-              style={{ width: '100%', padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '8px 10px', fontSize: '13px', borderRadius: '6px', border: '1px solid #2C323E', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', background: '#1D2430', color: '#EDE9E1' }}
             />
           </div>
         </div>
@@ -257,7 +334,7 @@ function EditModal({
             onClick={onCancel}
             style={{
               padding: '8px 20px', fontSize: '13px', borderRadius: '6px',
-              border: '1px solid #d1d5db', background: '#1D2430', color: '#EDE9E1',
+              border: '1px solid #2C323E', background: '#1D2430', color: '#EDE9E1',
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
@@ -267,7 +344,7 @@ function EditModal({
             onClick={() => onSave(form)}
             style={{
               padding: '8px 20px', fontSize: '13px', borderRadius: '6px',
-              border: 'none', background: '#c9a84c', color: '#fff',
+              border: 'none', background: '#C9964A', color: '#fff',
               cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit',
             }}
           >
@@ -325,7 +402,7 @@ function ProposalCard({
             onClick={onEdit}
             style={{
               padding: '6px 14px', fontSize: '12px', borderRadius: '6px',
-              border: '1px solid #d1d5db', background: '#1D2430', color: '#EDE9E1',
+              border: '1px solid #2C323E', background: '#1D2430', color: '#EDE9E1',
               cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
@@ -336,7 +413,7 @@ function ProposalCard({
             disabled={loading}
             style={{
               padding: '6px 14px', fontSize: '12px', borderRadius: '6px',
-              border: 'none', background: loading ? '#d1d5db' : '#c9a84c', color: '#fff',
+              border: 'none', background: loading ? '#2C323E' : '#C9964A', color: '#fff',
               cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontFamily: 'inherit',
             }}
           >
@@ -419,7 +496,7 @@ function LiveTestCard({ test }: { test: LiveTest }) {
           <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
             <span style={{
               fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px',
-              background: '#fef3c7', color: '#C9964A',
+              background: 'rgba(201,150,74,0.15)', color: '#C9964A', border: '1px solid rgba(201,150,74,0.30)',
             }}>
               📡 ניסוי חי
             </span>
@@ -439,74 +516,79 @@ function LiveTestCard({ test }: { test: LiveTest }) {
 
       {/* Variant texts */}
       {meta && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-          <div style={{ padding: '10px 12px', background: '#f3f4f6', borderRadius: '6px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: '#9E9990', marginBottom: '4px' }}>גרסה A — נוכחית</div>
-            <div style={{ fontSize: '12px', color: '#EDE9E1', lineHeight: '1.5' }}>{meta.a}</div>
-            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '4px' }}>CTA: {meta.aCta}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+          <div style={{ padding: '12px 14px', background: '#1D2430', borderRadius: '8px', border: '1px solid #2C323E' }}>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: '#9E9990', marginBottom: '6px', letterSpacing: '0.04em' }}>גרסה A — נוכחית</div>
+            <div style={{ fontSize: '13px', color: '#EDE9E1', lineHeight: '1.5' }}>{meta.a}</div>
+            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>CTA: {meta.aCta}</div>
           </div>
-          <div style={{ padding: '10px 12px', background: '#fef9f0', borderRadius: '6px', border: '1px solid #f3d89a' }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: '#c9a84c', marginBottom: '4px' }}>גרסה B — מאתגר</div>
-            <div style={{ fontSize: '12px', color: '#EDE9E1', lineHeight: '1.5' }}>{meta.b}</div>
-            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '4px' }}>CTA: {meta.bCta}</div>
+          <div style={{ padding: '12px 14px', background: 'rgba(201,150,74,0.08)', borderRadius: '8px', border: '1px solid rgba(201,150,74,0.30)' }}>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: '#C9964A', marginBottom: '6px', letterSpacing: '0.04em' }}>גרסה B — מאתגר</div>
+            <div style={{ fontSize: '13px', color: '#EDE9E1', lineHeight: '1.5' }}>{meta.b}</div>
+            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>CTA: {meta.bCta}</div>
           </div>
         </div>
       )}
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '16px', alignItems: 'center', marginBottom: '16px' }}>
+      {/* Stats — large CVR numbers, clear hierarchy */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '14px', alignItems: 'stretch', marginBottom: '16px' }}>
         <div style={{
-          textAlign: 'center', padding: '14px', borderRadius: '8px',
-          background: winner === 'a' ? '#eff6ff' : '#f9fafb',
-          border: winner === 'a' ? '1px solid #bfdbfe' : '1px solid #e5e7eb',
+          textAlign: 'center', padding: '16px 12px', borderRadius: '10px',
+          background: winner === 'a' ? 'rgba(66,133,244,0.10)' : '#1D2430',
+          border: winner === 'a' ? '1px solid rgba(66,133,244,0.40)' : '1px solid #2C323E',
         }}>
-          <div style={{ fontSize: '10px', color: '#9E9990', marginBottom: '4px', fontWeight: 500 }}>גרסה A</div>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
+          <div style={{ fontSize: '11px', color: '#9E9990', marginBottom: '6px', fontWeight: 600 }}>גרסה A · שיעור המרה</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
             {cvrA.toFixed(2)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '4px' }}>
-            {test.conversions_a.toLocaleString()} / {test.visitors_a.toLocaleString()} מבקרים
+          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>
+            {test.conversions_a.toLocaleString()} המרות מתוך {test.visitors_a.toLocaleString()}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '2px', fontFamily: 'system-ui' }}>
-              95% CI: {(stats.ci_a[0] * 100).toFixed(1)}–{(stats.ci_a[1] * 100).toFixed(1)}%
+            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px', fontFamily: 'system-ui' }}>
+              טווח אמת 95%: {(stats.ci_a[0] * 100).toFixed(1)}–{(stats.ci_a[1] * 100).toFixed(1)}%
             </div>
           )}
         </div>
 
         <div style={{
-          padding: '12px 16px', textAlign: 'center', borderRadius: '8px',
-          background: !stats.hasMinSample ? '#f9fafb' : stats.uplift > 0 ? '#f0fdf4' : '#fef2f2',
+          padding: '14px 18px', textAlign: 'center', borderRadius: '10px',
+          background: !stats.hasMinSample ? '#1D2430' : stats.uplift > 0 ? 'rgba(34,197,94,0.10)' : 'rgba(220,38,38,0.10)',
+          border: `1px solid ${!stats.hasMinSample ? '#2C323E' : stats.uplift > 0 ? 'rgba(34,197,94,0.30)' : 'rgba(220,38,38,0.30)'}`,
+          display: 'flex', flexDirection: 'column', justifyContent: 'center',
         }}>
-          <div style={{ fontSize: '10px', color: '#9E9990', marginBottom: '4px' }}>Uplift</div>
+          <div style={{ fontSize: '10px', color: '#9E9990', marginBottom: '4px', fontWeight: 600 }}>הבדל (B מול A)</div>
           <div style={{
-            fontSize: '22px', fontWeight: 700, fontFamily: 'system-ui', lineHeight: 1,
-            color: !stats.hasMinSample ? '#9ca3af' : stats.uplift > 0 ? '#16a34a' : '#dc2626',
+            fontSize: '26px', fontWeight: 700, fontFamily: 'system-ui', lineHeight: 1,
+            color: !stats.hasMinSample ? '#9E9990' : stats.uplift > 0 ? '#22C55E' : '#EF4444',
           }}>
             {stats.hasMinSample ? `${stats.uplift > 0 ? '+' : ''}${stats.uplift.toFixed(1)}%` : '–'}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px' }}>
-              P(B&gt;A): {(stats.probBWins * 100).toFixed(0)}%
+            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '6px', lineHeight: 1.4 }}>
+              סיכוי ש-B מנצח<br />
+              <span style={{ fontWeight: 600, color: '#EDE9E1', fontFamily: 'system-ui' }}>
+                {(stats.probBWins * 100).toFixed(0)}%
+              </span>
             </div>
           )}
         </div>
 
         <div style={{
-          textAlign: 'center', padding: '14px', borderRadius: '8px',
-          background: winner === 'b' ? '#f0fdf4' : '#fef9f0',
-          border: winner === 'b' ? '1px solid #bbf7d0' : '1px solid #f3d89a',
+          textAlign: 'center', padding: '16px 12px', borderRadius: '10px',
+          background: winner === 'b' ? 'rgba(34,197,94,0.10)' : 'rgba(201,150,74,0.06)',
+          border: winner === 'b' ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(201,150,74,0.25)',
         }}>
-          <div style={{ fontSize: '10px', color: '#c9a84c', marginBottom: '4px', fontWeight: 500 }}>גרסה B</div>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
+          <div style={{ fontSize: '11px', color: '#C9964A', marginBottom: '6px', fontWeight: 600 }}>גרסה B · שיעור המרה</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
             {cvrB.toFixed(2)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '4px' }}>
-            {test.conversions_b.toLocaleString()} / {test.visitors_b.toLocaleString()} מבקרים
+          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>
+            {test.conversions_b.toLocaleString()} המרות מתוך {test.visitors_b.toLocaleString()}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '2px', fontFamily: 'system-ui' }}>
-              95% CI: {(stats.ci_b[0] * 100).toFixed(1)}–{(stats.ci_b[1] * 100).toFixed(1)}%
+            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px', fontFamily: 'system-ui' }}>
+              טווח אמת 95%: {(stats.ci_b[0] * 100).toFixed(1)}–{(stats.ci_b[1] * 100).toFixed(1)}%
             </div>
           )}
         </div>
@@ -514,12 +596,14 @@ function LiveTestCard({ test }: { test: LiveTest }) {
 
       <ConfidenceMeter confidence={stats.hasMinSample ? stats.confidence : 0} />
 
-      {!stats.hasMinSample && (
-        <div style={{ fontSize: '11px', color: '#9E9990', textAlign: 'center', marginTop: '8px' }}>
-          נדרשים לפחות 100 מבקרים לכל גרסה לפני חישוב מובהקות
-          ({test.visitors_a}/100 A · {test.visitors_b}/100 B)
-        </div>
-      )}
+      <ResultInterpretation
+        hasMinSample={stats.hasMinSample}
+        confidence={stats.confidence}
+        uplift={stats.uplift}
+        probBWins={stats.probBWins}
+        visitorsA={test.visitors_a}
+        visitorsB={test.visitors_b}
+      />
     </div>
   );
 }
@@ -594,7 +678,7 @@ function RunningCard({
             disabled={loading}
             style={{
               padding: '6px 12px', fontSize: '12px', borderRadius: '6px',
-              border: '1px solid #d1d5db', background: '#1D2430', color: '#EDE9E1',
+              border: '1px solid #2C323E', background: '#1D2430', color: '#EDE9E1',
               cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
             }}
           >
@@ -605,7 +689,7 @@ function RunningCard({
             disabled={loading}
             style={{
               padding: '6px 12px', fontSize: '12px', borderRadius: '6px',
-              border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626',
+              border: '1px solid rgba(220,38,38,0.30)', background: 'rgba(220,38,38,0.08)', color: '#EF4444',
               cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
             }}
           >
@@ -615,62 +699,67 @@ function RunningCard({
       </div>
 
       {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '16px', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '14px', alignItems: 'stretch', marginBottom: '16px' }}>
         {/* Variant A */}
         <div style={{
-          textAlign: 'center', padding: '14px', borderRadius: '8px',
-          background: winner === 'a' ? '#eff6ff' : '#f9fafb',
-          border: winner === 'a' ? '1px solid #bfdbfe' : '1px solid #e5e7eb',
+          textAlign: 'center', padding: '16px 12px', borderRadius: '10px',
+          background: winner === 'a' ? 'rgba(66,133,244,0.10)' : '#1D2430',
+          border: winner === 'a' ? '1px solid rgba(66,133,244,0.40)' : '1px solid #2C323E',
         }}>
-          <div style={{ fontSize: '10px', color: '#9E9990', marginBottom: '4px', fontWeight: 500 }}>גרסה A (נוכחית)</div>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
+          <div style={{ fontSize: '11px', color: '#9E9990', marginBottom: '6px', fontWeight: 600 }}>גרסה A · שיעור המרה</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
             {cvrA.toFixed(2)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '4px' }}>
-            {proposal.conversions_a.toLocaleString()} / {proposal.visitors_a.toLocaleString()} מבקרים
+          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>
+            {proposal.conversions_a.toLocaleString()} המרות מתוך {proposal.visitors_a.toLocaleString()}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '2px', fontFamily: 'system-ui' }}>
-              95% CI: {(stats.ci_a[0] * 100).toFixed(1)}-{(stats.ci_a[1] * 100).toFixed(1)}%
+            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px', fontFamily: 'system-ui' }}>
+              טווח אמת 95%: {(stats.ci_a[0] * 100).toFixed(1)}-{(stats.ci_a[1] * 100).toFixed(1)}%
             </div>
           )}
         </div>
 
         {/* Uplift */}
         <div style={{
-          padding: '12px 16px', textAlign: 'center', borderRadius: '8px',
-          background: !stats.hasMinSample ? '#f9fafb' : stats.uplift > 0 ? '#f0fdf4' : '#fef2f2',
+          padding: '14px 18px', textAlign: 'center', borderRadius: '10px',
+          background: !stats.hasMinSample ? '#1D2430' : stats.uplift > 0 ? 'rgba(34,197,94,0.10)' : 'rgba(220,38,38,0.10)',
+          border: `1px solid ${!stats.hasMinSample ? '#2C323E' : stats.uplift > 0 ? 'rgba(34,197,94,0.30)' : 'rgba(220,38,38,0.30)'}`,
+          display: 'flex', flexDirection: 'column', justifyContent: 'center',
         }}>
-          <div style={{ fontSize: '10px', color: '#9E9990', marginBottom: '4px' }}>Uplift</div>
+          <div style={{ fontSize: '10px', color: '#9E9990', marginBottom: '4px', fontWeight: 600 }}>הבדל (B מול A)</div>
           <div style={{
-            fontSize: '22px', fontWeight: 700, fontFamily: 'system-ui', lineHeight: 1,
-            color: !stats.hasMinSample ? '#9ca3af' : stats.uplift > 0 ? '#16a34a' : '#dc2626',
+            fontSize: '26px', fontWeight: 700, fontFamily: 'system-ui', lineHeight: 1,
+            color: !stats.hasMinSample ? '#9E9990' : stats.uplift > 0 ? '#22C55E' : '#EF4444',
           }}>
             {stats.hasMinSample ? `${stats.uplift > 0 ? '+' : ''}${stats.uplift.toFixed(1)}%` : '-'}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px' }}>
-              P(B&gt;A): {(stats.probBWins * 100).toFixed(0)}%
+            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '6px', lineHeight: 1.4 }}>
+              סיכוי ש-B מנצח<br />
+              <span style={{ fontWeight: 600, color: '#EDE9E1', fontFamily: 'system-ui' }}>
+                {(stats.probBWins * 100).toFixed(0)}%
+              </span>
             </div>
           )}
         </div>
 
         {/* Variant B */}
         <div style={{
-          textAlign: 'center', padding: '14px', borderRadius: '8px',
-          background: winner === 'b' ? '#f0fdf4' : '#fef9f0',
-          border: winner === 'b' ? '1px solid #bbf7d0' : '1px solid #f3d89a',
+          textAlign: 'center', padding: '16px 12px', borderRadius: '10px',
+          background: winner === 'b' ? 'rgba(34,197,94,0.10)' : 'rgba(201,150,74,0.06)',
+          border: winner === 'b' ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(201,150,74,0.25)',
         }}>
-          <div style={{ fontSize: '10px', color: '#c9a84c', marginBottom: '4px', fontWeight: 500 }}>גרסה B (מוצעת)</div>
-          <div style={{ fontSize: '28px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
+          <div style={{ fontSize: '11px', color: '#C9964A', marginBottom: '6px', fontWeight: 600 }}>גרסה B · שיעור המרה</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
             {cvrB.toFixed(2)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '4px' }}>
-            {proposal.conversions_b.toLocaleString()} / {proposal.visitors_b.toLocaleString()} מבקרים
+          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>
+            {proposal.conversions_b.toLocaleString()} המרות מתוך {proposal.visitors_b.toLocaleString()}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '2px', fontFamily: 'system-ui' }}>
-              95% CI: {(stats.ci_b[0] * 100).toFixed(1)}-{(stats.ci_b[1] * 100).toFixed(1)}%
+            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px', fontFamily: 'system-ui' }}>
+              טווח אמת 95%: {(stats.ci_b[0] * 100).toFixed(1)}-{(stats.ci_b[1] * 100).toFixed(1)}%
             </div>
           )}
         </div>
@@ -679,12 +768,14 @@ function RunningCard({
       {/* Confidence meter */}
       <ConfidenceMeter confidence={stats.hasMinSample ? stats.confidence : 0} />
 
-      {!stats.hasMinSample && (
-        <div style={{ fontSize: '11px', color: '#9E9990', textAlign: 'center', marginTop: '8px' }}>
-          נדרשים לפחות 100 מבקרים לכל גרסה לפני חישוב מובהקות
-          ({proposal.visitors_a}/100 A · {proposal.visitors_b}/100 B)
-        </div>
-      )}
+      <ResultInterpretation
+        hasMinSample={stats.hasMinSample}
+        confidence={stats.confidence}
+        uplift={stats.uplift}
+        probBWins={stats.probBWins}
+        visitorsA={proposal.visitors_a}
+        visitorsB={proposal.visitors_b}
+      />
     </div>
   );
 }
@@ -799,7 +890,7 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
             disabled={analyzing}
             style={{
               padding: '8px 18px', fontSize: '13px', borderRadius: '8px',
-              border: 'none', background: analyzing ? '#d1d5db' : '#c9a84c', color: '#fff',
+              border: 'none', background: analyzing ? '#2C323E' : '#C9964A', color: '#fff',
               cursor: analyzing ? 'not-allowed' : 'pointer', fontWeight: 600, fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: '6px',
             }}
@@ -924,7 +1015,7 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
                           disabled={loadingId === p.id}
                           style={{
                             padding: '6px 14px', fontSize: '12px', borderRadius: '6px',
-                            border: 'none', background: '#c9a84c', color: '#fff',
+                            border: 'none', background: '#C9964A', color: '#fff',
                             cursor: 'pointer', fontFamily: 'inherit',
                           }}
                         >
@@ -975,7 +1066,7 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
                 ),
                 uplift: (
                   <span style={{
-                    color: stats.uplift > 0 ? '#16a34a' : stats.uplift < 0 ? '#dc2626' : '#6b7280',
+                    color: stats.uplift > 0 ? '#22C55E' : stats.uplift < 0 ? '#EF4444' : '#9E9990',
                     fontWeight: 600, fontFamily: 'system-ui',
                   }}>
                     {stats.hasMinSample ? `${stats.uplift > 0 ? '+' : ''}${stats.uplift.toFixed(1)}%` : '-'}
