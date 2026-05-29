@@ -54,6 +54,7 @@ const NAV_CARDS = [
   { title: 'לקוחות',          desc: 'היסטוריה, רכישות, צפיות, מיילים',        href: '/admin/clients',     group: 'ראשי',     icon: '⭐' },
   { title: 'ניהול לידים CRM', desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',   href: '/admin/crm',         group: 'ראשי',     icon: '👥' },
   { title: 'רכישת לקוחות',   desc: 'מקורות תנועה, CAC, ROAS',                href: '/admin/acquisition', group: 'ראשי',     icon: '🎯' },
+  { title: 'אירועי CAPI',     desc: 'מה נשלח למטא: Purchase, Lead, Schedule', href: '/admin/conversions', group: 'ראשי',     icon: '📡' },
   { title: 'סקירה כללית',     desc: 'הכנסות, גרפים, conversion funnel',        href: '/admin/sales',       group: 'מכירות',   icon: '📊' },
   { title: 'פאנל מכירות',     desc: 'מסלול רכישה, שלבים, נטישות',             href: '/admin/funnel',      group: 'מכירות',   icon: '🌊' },
   { title: 'מוצרים',          desc: 'ניהול מוצרים, מחירים, רכישות',           href: '/admin/products',    group: 'מכירות',   icon: '📦' },
