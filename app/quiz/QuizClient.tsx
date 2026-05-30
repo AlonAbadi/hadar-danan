@@ -1030,8 +1030,118 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           </div>
         )}
 
+        {/* NEW — Profile card: "זה הפרופיל שלכם" */}
+        <div style={{ margin: "20px 16px 0", ...fadeUp(0.55, resultReady) }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 12 }}>
+            הפרופיל שלכם
+          </div>
+          <div style={{ background: C.card, borderRadius: 16, padding: "18px 20px", border: "1px solid rgba(255,255,255,0.06)" }}>
+            {narrative.profile.map((p, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.04)" }}>
+                <span style={{ width: 4, height: 4, background: C.gold, borderRadius: "50%", flexShrink: 0 }} />
+                <span style={{ fontSize: 14, color: C.textPrim, lineHeight: 1.5 }}>{p.line}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* NEW — Hadar's observation: "מה ראיתי באבחון שלכם" */}
+        <div style={{ margin: "24px 16px 0", ...fadeUp(0.6, resultReady) }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14 }}>
+            מה ראיתי באבחון שלכם
+          </div>
+          <div style={{ background: "rgba(232,185,74,0.04)", borderRadius: 16, padding: "20px 22px", border: "1px solid rgba(232,185,74,0.15)", position: "relative" }}>
+            <p style={{ fontSize: 16, color: C.textPrim, lineHeight: 1.75, margin: 0 }}>
+              {narrative.hadarObservation}
+            </p>
+            <p style={{ fontSize: 13, color: C.gold, marginTop: 14, fontWeight: 600 }}>
+              הדר דנן
+            </p>
+          </div>
+        </div>
+
+        {/* NEW — Phase map: "איפה אתם במסע" */}
+        <div style={{ margin: "24px 16px 0", ...fadeUp(0.65, resultReady) }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14 }}>
+            איפה אתם במסע
+          </div>
+          <div style={{ background: C.card, borderRadius: 16, padding: "20px", border: "1px solid rgba(255,255,255,0.06)" }}>
+            {narrative.phaseMap.phases.map((ph, i) => {
+              const isCurrent = i === narrative.phaseMap.currentIndex;
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0" }}>
+                  <div style={{
+                    width: 10, height: 10, borderRadius: "50%",
+                    background: isCurrent ? C.gold : "rgba(255,255,255,0.15)",
+                    boxShadow: isCurrent ? `0 0 0 4px rgba(201,168,76,0.2)` : "none",
+                    flexShrink: 0,
+                  }} />
+                  <div style={{ flex: 1, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span style={{ fontSize: 15, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? C.textPrim : C.textSec }}>
+                      {ph.name}
+                    </span>
+                    <span style={{ fontSize: 12, color: C.textMuted }}>
+                      {ph.range}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+            <p style={{ fontSize: 14, color: C.textSec, lineHeight: 1.65, marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              {narrative.phaseMap.insight}
+            </p>
+          </div>
+        </div>
+
+        {/* NEW — 3 mistakes: "3 דברים לא לעשות בחודשים הקרובים" */}
+        <div style={{ margin: "24px 16px 0", ...fadeUp(0.7, resultReady) }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14 }}>
+            3 דברים לא לעשות בחודשים הקרובים
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {narrative.commonMistakes.map((m, i) => (
+              <div key={i} style={{ background: C.card, borderRadius: 12, padding: "16px 18px", border: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 14, alignItems: "flex-start" }}>
+                <span style={{
+                  fontSize: 22, fontWeight: 800,
+                  color: C.gold,
+                  flexShrink: 0,
+                  lineHeight: 1,
+                  fontFamily: "'Assistant', sans-serif",
+                  minWidth: 24,
+                }}>
+                  {i + 1}
+                </span>
+                <p style={{ fontSize: 14, color: C.textPrim, lineHeight: 1.65, margin: 0 }}>
+                  {m}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* NEW — Reflection question: "שאלה להתעכב עליה" */}
+        <div style={{ margin: "24px 16px 0", ...fadeUp(0.75, resultReady) }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14 }}>
+            שאלה להתעכב עליה
+          </div>
+          <div style={{
+            background: "rgba(255,255,255,0.02)",
+            borderRadius: 16,
+            padding: "24px 24px 26px",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRight: `3px solid ${C.gold}`,
+          }}>
+            <p style={{ fontSize: 17, color: C.textPrim, lineHeight: 1.75, margin: 0, fontStyle: "italic" }}>
+              {narrative.reflectionQuestion}
+            </p>
+          </div>
+        </div>
+
+        {/* Section divider */}
+        <div style={{ margin: "32px 16px 0", height: 1, background: "rgba(255,255,255,0.08)" }} />
+
         {/* 6. Bridge text */}
-        <p style={{ padding: "20px 16px 0", fontSize: 14, color: C.textSec, ...fadeIn(0.6, resultReady) }}>
+        <p style={{ padding: "20px 16px 0", fontSize: 14, color: C.textSec, ...fadeIn(0.8, resultReady) }}>
           {narrative.bridge}
         </p>
 
@@ -1076,41 +1186,32 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           )}
         </div>
 
-        {/* 9. Action buttons */}
-        <div style={{ display: "flex", gap: 8, padding: "12px 16px 0", ...fadeUp(0.85, resultReady) }}>
-          <button
-            onClick={() => handleCTAClick(winner.id, winner.checkoutHref)}
-            style={{
-              flex: 1,
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              background: C.gold, color: "#0a0a0a", fontWeight: 700, fontSize: 15,
-              border: "none", borderRadius: 8, padding: "14px 16px", minHeight: 52, cursor: "pointer",
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5l10 5.5-10 5.5V2.5z"/></svg>
-            {ctaText}
-          </button>
+        {/* 9. Soft CTA — link, not aggressive button. Lead is already captured. */}
+        <div style={{ padding: "16px 16px 0", ...fadeUp(0.85, resultReady) }}>
           <button
             onClick={() => handleCTAClick(winner.id, winner.href)}
             style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              background: "transparent", color: C.textPrim, fontWeight: 600, fontSize: 14,
-              border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "14px 18px", minHeight: 52, cursor: "pointer",
+              width: "100%",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              background: "transparent",
+              color: C.textPrim,
+              fontWeight: 600, fontSize: 15,
+              border: "1px solid rgba(232,185,74,0.4)",
+              borderRadius: 12,
+              padding: "16px 18px",
+              minHeight: 56, cursor: "pointer",
+              textAlign: "right",
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/>
+            <span>{winner.name} - לקרוא יותר</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2">
+              <path d="M15 18l-6-6 6-6"/>
             </svg>
-            פרטים
           </button>
+          <p style={{ textAlign: "center", fontSize: 12, color: C.textMuted, marginTop: 12, lineHeight: 1.55 }}>
+            אין לחץ. הפרטים שלכם אצלי - אם זה הזמן הנכון, אתם תדעו.
+          </p>
         </div>
-
-        {/* 10. CTA microcopy */}
-        <p style={{ textAlign: "center", fontSize: 13, color: C.textMuted, padding: "8px 16px 0", ...fadeIn(0.9, resultReady) }}>
-          {winner.id === "course" && "אפשר לשלם עד 4 תשלומים ללא ריבית"}
-          {winner.id === "free_training" && "בלי כרטיס אשראי, בלי התחייבות"}
-          {winner.id === "strategy" && "4 מקומות בחודש בלבד"}
-        </p>
 
         {/* Soft consent ask */}
         {isLoggedIn && !hasConsent && !consentDismissed && (
@@ -1133,9 +1234,11 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           </div>
         )}
 
-        {/* 11. Why it fits */}
+        {/* 11. What the diagnostic found (reframed from "Why it fits") */}
         <div style={{ padding: "24px 16px 0" }}>
-          <p style={{ fontSize: 15, fontWeight: 600, color: C.textPrim, marginBottom: 14, ...fadeUp(1.0, resultReady) }}>למה זה מתאים לכם:</p>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14, ...fadeUp(1.0, resultReady) }}>
+            מה האבחון מצא
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {personalizedReasons.map((reason, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, ...fadeIn(1.1 + i * 0.1, resultReady) }}>
@@ -1146,10 +1249,31 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           </div>
         </div>
 
-        {/* 12. Social proof */}
-        <div style={{ margin: "24px 16px 0", padding: "16px 0", borderTop: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 10, ...fadeIn(1.4, resultReady) }}>
-          <span style={{ color: C.gold, fontSize: 14, letterSpacing: 2 }}>★★★★★</span>
-          <span style={{ fontSize: 12, color: C.textMuted }}>94 בעלות עסקים כבר השתתפו</span>
+        {/* NEW — Emotional anchor: "תזכרו את זה" */}
+        <div style={{ margin: "32px 16px 0", ...fadeUp(1.4, resultReady) }}>
+          <div style={{
+            background: "rgba(232,185,74,0.04)",
+            borderRadius: 16,
+            padding: "22px 24px",
+            border: "1px solid rgba(232,185,74,0.15)",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14 }}>
+              תזכרו את זה
+            </div>
+            <p style={{ fontSize: 16, color: C.textPrim, lineHeight: 1.8, margin: 0 }}>
+              {narrative.emotionalAnchor}
+            </p>
+            <p style={{ fontSize: 13, color: C.gold, marginTop: 14, fontWeight: 600 }}>
+              הדר דנן
+            </p>
+          </div>
+        </div>
+
+        {/* 12. Authority reference (replaces weak "94" social proof) */}
+        <div style={{ margin: "32px 16px 0", padding: "16px 0", borderTop: `1px solid ${C.border}`, ...fadeIn(1.5, resultReady) }}>
+          <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.65, margin: 0 }}>
+            האבחון הזה מבוסס על המתודולוגיה שעברו דרכה למעלה מ-3,500 בעלי עסקים, פותחה לאורך 4 שנות מחקר.
+          </p>
         </div>
 
         {/* 13. More like this */}
