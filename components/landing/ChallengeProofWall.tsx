@@ -20,7 +20,7 @@ const TESTIMONIALS: Testimonial[] = [
     src: "/testimonials/challenge/ws-07.png",
     author: "משתתפת באתגר",
     highlight: "אתגר סופר משמעותי שהייתי בו בחיי",
-    body: "ירדו לי כמה אסימונים בזכותו והצלחת להכניס בי ביטחון שעוד לא היה לי. אם זה ככה באתגר כזה קטן — איך מרגיש לעבור איתך תהליכים במוצרי פרמיום?! מטורף.",
+    body: "ירדו לי כמה אסימונים בזכותו והצלחת להכניס בי ביטחון שעוד לא היה לי. אם זה ככה באתגר כזה קטן, איך מרגיש לעבור איתך תהליכים במוצרי פרמיום?! מטורף.",
   },
   {
     src: "/testimonials/challenge/ws-04.png",
@@ -32,7 +32,7 @@ const TESTIMONIALS: Testimonial[] = [
     src: "/testimonials/challenge/ws-05.png",
     author: "שנהב בנימין, ירוחם",
     highlight: "כמה ידע וכוח נתת לי בסדנה",
-    body: "האנרגיות שלך ממכרות. ה'אין אני' זה האתגר האמיתי — גם בסרטונים וגם בחיים.",
+    body: "האנרגיות שלך ממכרות. ה'אין אני' זה האתגר האמיתי. גם בסרטונים וגם בחיים.",
   },
   {
     src: "/testimonials/challenge/ws-08.png",
@@ -104,7 +104,7 @@ export default function ChallengeProofWall() {
               {t.body && <span className="cpw-body"> {t.body}</span>}
             </blockquote>
             <div className="cpw-foot">
-              <div className="cpw-author">— {t.author}</div>
+              <div className="cpw-author">{t.author}</div>
               <button
                 type="button"
                 className="cpw-proof"
