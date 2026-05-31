@@ -97,9 +97,9 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         whoText={'3,500 בעלי עסקים עברו דרכי. ראיתי את אותן תקיעויות חוזרות — לא חוסר ביכולת, אלא חוסר בודאות. האתגר בנוי על אותה מתודולוגיה שעבדה עבורם: להבין מי את/ה בתוך השירות שלך, ולבנות מסביב לזה תוכן שמוכר — בלי מניפולציות, בלי פטנטים.'}
 
         proofStats={[
-          { val: "3,500+", label: "בעלי עסקים" },
-          { val: "4",      label: "שנות ניסיון" },
-          { val: "97%",    label: "ממליצים" },
+          { val: "מאות", label: "משתתפים באתגר" },
+          { val: "7",    label: "ימים, סרטונים, פעולה" },
+          { val: "4",    label: "שנות ניסיון" },
         ]}
         testimonials={[]}
         proofSlot={<ChallengeProofWall />}

@@ -88,7 +88,7 @@ export default function ChallengeProofWall() {
       <div className="cpw-wall">
         <img src="/testimonials/challenge/wall-of-150.jpg" alt="משתתפי האתגר" />
         <div className="cpw-wall-overlay">
-          <div className="cpw-wall-stat">3,500+</div>
+          <div className="cpw-wall-stat">מאות</div>
           <div className="cpw-wall-label">בעלי עסקים עברו את האתגר</div>
           <div className="cpw-wall-sub">הנה חלק מהם</div>
         </div>
