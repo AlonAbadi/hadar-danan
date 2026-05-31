@@ -1,5 +1,6 @@
 import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
+import ChallengeProofWall from "@/components/landing/ChallengeProofWall";
 import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
 import { CreditBanner } from "@/components/landing/CreditBanner";
@@ -100,12 +101,8 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
           { val: "4",      label: "שנות ניסיון" },
           { val: "97%",    label: "ממליצים" },
         ]}
-        testimonials={[
-          { text: "חתיכת בעיטה בתחת, יצאתי מאזור הנוחות.", author: "משתתף/ת", role: "⭐⭐⭐⭐⭐" },
-          { text: "מסתכלת על העסק בצורה אחרת, תודה שאתגרת אותי.", author: "משתתפת", role: "⭐⭐⭐⭐⭐" },
-          { text: "הצלחת להכניס בי ביטחון שעוד לא היה לי.", author: "משתתף/ת", role: "⭐⭐⭐⭐⭐" },
-          { text: "שינה לי משמעותית את הגישה בתהליך המכירה והשירות.", author: "משתתף/ת", role: "⭐⭐⭐⭐⭐" },
-        ]}
+        testimonials={[]}
+        proofSlot={<ChallengeProofWall />}
 
         questions={[
           {
