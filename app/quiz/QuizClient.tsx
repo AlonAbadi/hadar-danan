@@ -1146,10 +1146,12 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
         </p>
 
         {/* 7. Recommendation label */}
-        <div style={{ padding: "16px 16px 0", ...fadeUp(0.65, resultReady) }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px" }}>
+        <div style={{ padding: "28px 16px 4px", display: "flex", alignItems: "center", gap: 12, ...fadeUp(0.65, resultReady) }}>
+          <span style={{ flex: 1, height: 1, background: "linear-gradient(to left, rgba(201,168,76,0.4), transparent)" }} />
+          <span style={{ fontSize: 26, fontWeight: 800, color: C.gold, letterSpacing: "0.5px", textShadow: "0 0 20px rgba(201,168,76,0.25)" }}>
             ההמלצה שלנו
           </span>
+          <span style={{ flex: 1, height: 1, background: "linear-gradient(to right, rgba(201,168,76,0.4), transparent)" }} />
         </div>
 
         {/* 8. Hero card */}
