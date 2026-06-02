@@ -244,7 +244,7 @@ type InitialQuizResult = {
 // ── Component ─────────────────────────────────────────────────────
 // Steps: -1 = checking session, 0-5 = questions, 6 = lead gate, 7 = result
 
-export function QuizClient({ initialUser = null, initialQuizResult = null, abVariant = "A" }: { initialUser?: InitialUser; initialQuizResult?: InitialQuizResult; abVariant?: AbVariant }) {
+export function QuizClient({ initialUser = null, initialQuizResult = null, abVariant = "A", initialProductFromUrl }: { initialUser?: InitialUser; initialQuizResult?: InitialQuizResult; abVariant?: AbVariant; initialProductFromUrl?: string }) {
   const hasServerResult = !!initialQuizResult;
   const serverAnswers: Answer[] = hasServerResult
     ? ["q1","q2","q3","q4","q5","q6"].map(k => (initialQuizResult!.answers[k] as Answer) ?? "A")
@@ -326,6 +326,9 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
       startedRef.current   = true;
       completedRef.current = true;
       setStep(7);
+    } else if (initialProductFromUrl) {
+      // User landed on /quiz/result/<product> without any session — start fresh
+      if (typeof window !== "undefined") window.location.replace("/quiz");
     } else {
       // Pre-fill lead form from any prior signup (e.g. training page SignupForm)
       const sessionUser = getSessionUser();
@@ -346,6 +349,11 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
     window.scrollTo(0, 0);
     setResultReady(false);
     setDisplayPct(0);
+    // Swap URL to per-product result path so Meta can build custom conversions
+    // per recommended product. No navigation — React state stays intact.
+    if (!initialProductFromUrl && typeof window !== "undefined") {
+      window.history.replaceState(null, "", `/quiz/result/${winner.id}`);
+    }
     // QuizRecommended — fires when user sees their result (stronger signal than QuizComplete)
     // Used to build product-segmented lookalike audiences from quiz behaviour
     trackQuizRecommended(winner.id, matchPct);
