@@ -1094,20 +1094,35 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
         </div>
 
         {/* NEW — 3 mistakes: "3 דברים לא לעשות בחודשים הקרובים" */}
-        <div style={{ margin: "24px 16px 0", ...fadeUp(0.7, resultReady) }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14 }}>
-            3 דברים לא לעשות בחודשים הקרובים
+        <div style={{ margin: "32px 16px 0", ...fadeUp(0.7, resultReady) }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 22, height: 22, borderRadius: "50%",
+              background: "rgba(224,85,85,0.15)", border: "1px solid rgba(224,85,85,0.4)",
+              color: "#E05555", fontSize: 13, fontWeight: 800, lineHeight: 1,
+            }}>✕</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: "#E05555", letterSpacing: "0.3px" }}>
+              3 דברים להימנע מהם בחודשים הקרובים
+            </span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {narrative.commonMistakes.map((m, i) => (
-              <div key={i} style={{ background: C.card, borderRadius: 12, padding: "16px 18px", border: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 14, alignItems: "flex-start" }}>
+              <div key={i} style={{
+                background: "rgba(224,85,85,0.05)",
+                borderRadius: 12,
+                padding: "16px 18px",
+                border: "1px solid rgba(224,85,85,0.18)",
+                borderRight: "3px solid #E05555",
+                display: "flex", gap: 14, alignItems: "flex-start",
+              }}>
                 <span style={{
-                  fontSize: 22, fontWeight: 800,
-                  color: C.gold,
-                  flexShrink: 0,
-                  lineHeight: 1,
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 26, height: 26, borderRadius: "50%",
+                  background: "rgba(224,85,85,0.18)",
+                  color: "#E05555", fontSize: 14, fontWeight: 800, lineHeight: 1,
+                  flexShrink: 0, marginTop: 2,
                   fontFamily: "'Assistant', sans-serif",
-                  minWidth: 24,
                 }}>
                   {i + 1}
                 </span>
