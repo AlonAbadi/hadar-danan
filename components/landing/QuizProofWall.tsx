@@ -27,9 +27,8 @@ type GoogleTestimonial = TestimonialBase & {
 
 type Testimonial = ImageTestimonial | VideoTestimonial | GoogleTestimonial;
 
-// All workshop video testimonials open the same FEATURED compilation video,
-// which contains the actual workshop testimonials transcribed.
-const WORKSHOP_VIDEO_ID = "1188793450";
+// All video testimonials open the testimonials compilation video.
+const WORKSHOP_VIDEO_ID = "1190120935";
 
 const TESTIMONIALS: Testimonial[] = [
   // ── Strategy / clarity ────────────────────────────────────────────
