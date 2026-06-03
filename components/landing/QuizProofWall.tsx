@@ -27,7 +27,26 @@ type GoogleTestimonial = TestimonialBase & {
 
 type Testimonial = ImageTestimonial | VideoTestimonial | GoogleTestimonial;
 
+// All workshop video testimonials open the same FEATURED compilation video,
+// which contains the actual workshop testimonials transcribed.
+const WORKSHOP_VIDEO_ID = "1188793450";
+
 const TESTIMONIALS: Testimonial[] = [
+  // ── Strategy / clarity ────────────────────────────────────────────
+  {
+    type: "video",
+    vimeoId: WORKSHOP_VIDEO_ID,
+    highlight: "קיבלתי את הבהירות שרציתי",
+    body: "האסטרטגיה, איך להגיש את השיווק שלי, איך לדבר עם הקהל שלי. יצאתי עם כלים פרקטיים — מה השיטה שלי, איך להעביר את המסרים.",
+    author: "מתוך הסדנה",
+  },
+  {
+    type: "video",
+    vimeoId: WORKSHOP_VIDEO_ID,
+    highlight: "הייתי בארבע סדנאות שלא הצליחו לפצח אותי",
+    body: "והיא הצליחה לזהות. זה היה מאוד מאוד מדויק — זה מתחבר לי, זה פתח לי משהו חדש.",
+    author: "מתוך הסדנה",
+  },
   // ── Business results (Google) ───────────────────────────────────────
   {
     type: "google",
@@ -59,6 +78,30 @@ const TESTIMONIALS: Testimonial[] = [
     highlight: "ירדו לי כמה אסימונים והכניסה בי ביטחון שעוד לא היה לי",
     body: "אם זה ככה בתהליך קצר — איך מרגיש לעבור איתך תהליכים גדולים? מטורף!",
     author: "משתתפת",
+  },
+  // ── Deep methodology (Video) ────────────────────────────────────────
+  {
+    type: "video",
+    vimeoId: WORKSHOP_VIDEO_ID,
+    highlight: "אם הדר לא הייתה קיימת היה צריך לברוא מישהי כמוה",
+    body: "מה שהיא עושה — פיה קטנה עם עוצמות ענקיות. היא פשוט עושה מיינדסט חדש לביזנס.",
+    author: "מתוך הסדנה",
+  },
+  // ── Authentic marketing (Video) ─────────────────────────────────────
+  {
+    type: "video",
+    vimeoId: WORKSHOP_VIDEO_ID,
+    highlight: "ההבנה של איך לשווק ועדיין להיות אני",
+    body: "שיווק זה עניין של אנושיות. זה לא טכניקה מורכבת — זה להקשיב ולהיות מהלב.",
+    author: "מתוך הסדנה",
+  },
+  // ── Refinement (Video) ──────────────────────────────────────────────
+  {
+    type: "video",
+    vimeoId: WORKSHOP_VIDEO_ID,
+    highlight: "אני יוצאת עם היכולת באמת לדייק את עצמי",
+    body: "החידודים שהיא נתנה לי, איך להסתכל על עצמי מכל מיני זוויות ולדייק את הקהל שלי. מי אני ומה אני רוצה להביא.",
+    author: "מתוך הסדנה",
   },
   // ── Strategy + marketing wrap (Google) ──────────────────────────────
   {
@@ -442,19 +485,16 @@ export default function QuizProofWall() {
           z-index: 1001;
         }
 
-        /* Video lightbox */
+        /* Video lightbox — 16:9 for landscape compilation video */
         .qpw-video-wrap {
-          width: min(720px, 95vw);
-          aspect-ratio: 9 / 16;
+          width: min(900px, 95vw);
+          aspect-ratio: 16 / 9;
           max-height: 90vh;
           border-radius: 14px;
           overflow: hidden;
           background: #000;
           cursor: default;
           box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-        }
-        @media (min-width: 768px) {
-          .qpw-video-wrap { width: min(420px, 95vw); }
         }
         .qpw-video-wrap iframe {
           width: 100%; height: 100%;

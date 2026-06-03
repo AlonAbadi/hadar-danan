@@ -1312,32 +1312,18 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           <ClientVideosCarousel />
         </div>
 
-        {/* 13. More like this */}
-        {alsoConsider.length > 0 && (
-          <div style={{ padding: "8px 16px 0", ...fadeUp(1.5, resultReady) }}>
-            <p style={{ fontSize: 14, color: C.textSec, marginBottom: 12 }}>
-              {PRODUCTS.indexOf(alsoConsider[0]) > winnerIdx ? "רוצים ללכת על משהו יותר מקיף?" : "אם זה גדול מדי כרגע - אפשר להתחיל כאן:"}
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, overflow: "hidden" }}>
-              {alsoConsider.map((p) => {
-                const pScore = scores[PRODUCTS.findIndex((pr) => pr.id === p.id)];
-                const pMatch = scaleSecondary(pScore);
-                return (
-                  <button key={p.id} onClick={() => handleCTAClick(p.id, p.href)} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", cursor: "pointer", textAlign: "right" }}>
-                    <div style={{ height: 120, overflow: "hidden" }}>
-                      <img src={PRODUCT_IMAGE[p.id] ?? "/hadar.jpg"} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
-                    </div>
-                    <div style={{ padding: "10px 10px 12px" }}>
-                      <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, marginBottom: 4 }}>התאמה {pMatch}%</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: C.textPrim, marginBottom: 4, lineHeight: 1.3 }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: C.textMuted, lineHeight: 1.4 }}>{PRODUCT_DESC[p.id]}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* 14. Closing line — general, no extra recommendation */}
+        <div style={{ margin: "48px 16px 0", textAlign: "center", ...fadeIn(1.7, resultReady) }}>
+          <div style={{ width: 40, height: 1, background: "rgba(232,185,74,0.4)", margin: "0 auto 20px" }} />
+          <p style={{ fontSize: 17, color: C.textPrim, lineHeight: 1.7, fontWeight: 600, marginBottom: 10 }}>
+            3,500 בעלי עסקים כבר עברו את הדרך הזו.
+          </p>
+          <p style={{ fontSize: 14, color: C.textSec, lineHeight: 1.7, margin: 0 }}>
+            הצעד הראשון תמיד הכי מפחיד. גם הכי משמעותי.
+            <br />
+            הבחירה שלך מחכה לך למעלה.
+          </p>
+        </div>
 
         {/* 14. Bottom CTA */}
         <div style={{ padding: "32px 16px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 16, ...fadeIn(1.8, resultReady) }}>
