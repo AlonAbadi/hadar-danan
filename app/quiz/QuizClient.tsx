@@ -463,6 +463,34 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
               match_percent:       pct,
             }),
           }).catch(() => {});
+
+          // Fire Lead + LeadChallenge / LeadPremium / etc. for returning users too,
+          // so Meta gets a single optimisation signal per product regardless of
+          // whether the user filled the form just now or was already known.
+          const recommendedProductId = PRODUCTS[winIdx].id;
+          const skipLeadEventId = typeof crypto !== "undefined" ? crypto.randomUUID() : undefined;
+          trackProductLead(recommendedProductId, skipLeadEventId);
+          if (sessionId || sessionEmail) {
+            const skipNameParts = sessionName.trim().split(" ");
+            fetch("/api/meta-event", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                eventName:        "Lead",
+                eventId:          skipLeadEventId,
+                email:            sessionEmail,
+                phone:            sessionPhone,
+                firstName:        skipNameParts[0] || undefined,
+                lastName:         skipNameParts.slice(1).join(" ") || undefined,
+                userId:           sessionId || undefined,
+                contentName:      recommendedProductId,
+                productEventName: productLeadEventName(recommendedProductId),
+                value:            LEAD_VALUE_ILS[recommendedProductId] ?? 0,
+                currency:         "ILS",
+              }),
+            }).catch(() => {});
+          }
+
           setStep(7);
         } else {
           setStep(newAnswers.length === QUESTIONS.length ? 6 : newAnswers.length);
