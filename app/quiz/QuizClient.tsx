@@ -1040,21 +1040,6 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           </div>
         )}
 
-        {/* NEW — Profile card: "זה הפרופיל שלכם" */}
-        <div style={{ margin: "20px 16px 0", ...fadeUp(0.55, resultReady) }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 12 }}>
-            הפרופיל שלכם
-          </div>
-          <div style={{ background: C.card, borderRadius: 16, padding: "18px 20px", border: "1px solid rgba(255,255,255,0.06)" }}>
-            {narrative.profile.map((p, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.04)" }}>
-                <span style={{ width: 4, height: 4, background: C.gold, borderRadius: "50%", flexShrink: 0 }} />
-                <span style={{ fontSize: 14, color: C.textPrim, lineHeight: 1.5 }}>{p.line}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* NEW — Hadar's observation: "מה ראיתי באבחון שלכם" */}
         <div style={{ margin: "24px 16px 0", ...fadeUp(0.6, resultReady) }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14 }}>
@@ -1066,39 +1051,6 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
             </p>
             <p style={{ fontSize: 13, color: C.gold, marginTop: 14, fontWeight: 600 }}>
               הדר דנן
-            </p>
-          </div>
-        </div>
-
-        {/* NEW — Phase map: "איפה אתם במסע" */}
-        <div style={{ margin: "24px 16px 0", ...fadeUp(0.65, resultReady) }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14 }}>
-            איפה אתם במסע
-          </div>
-          <div style={{ background: C.card, borderRadius: 16, padding: "20px", border: "1px solid rgba(255,255,255,0.06)" }}>
-            {narrative.phaseMap.phases.map((ph, i) => {
-              const isCurrent = i === narrative.phaseMap.currentIndex;
-              return (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0" }}>
-                  <div style={{
-                    width: 10, height: 10, borderRadius: "50%",
-                    background: isCurrent ? C.gold : "rgba(255,255,255,0.15)",
-                    boxShadow: isCurrent ? `0 0 0 4px rgba(201,168,76,0.2)` : "none",
-                    flexShrink: 0,
-                  }} />
-                  <div style={{ flex: 1, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                    <span style={{ fontSize: 15, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? C.textPrim : C.textSec }}>
-                      {ph.name}
-                    </span>
-                    <span style={{ fontSize: 12, color: C.textMuted }}>
-                      {ph.range}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-            <p style={{ fontSize: 14, color: C.textSec, lineHeight: 1.65, marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              {narrative.phaseMap.insight}
             </p>
           </div>
         </div>
