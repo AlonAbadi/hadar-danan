@@ -188,7 +188,7 @@ export default function QuizProofWall() {
         <img src="/testimonials/challenge/wall-of-150.jpg" alt="לקוחות הדר דנן" />
         <div className="qpw-wall-overlay">
           <div className="qpw-wall-stat">3,500+</div>
-          <div className="qpw-wall-label">בעלי עסקים בנו איתי שיווק שעובד</div>
+          <div className="qpw-wall-label">בעלי עסקים בנו איתנו שיווק שעובד</div>
           <div className="qpw-wall-sub">הנה חלק מהסיפורים שלהם</div>
         </div>
       </div>
