@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { Resend } from "resend";
 
 const MAKE_WEBHOOK = "https://hook.eu1.make.com/rmw23usw8k9l4oooc573epuwh2skcbil";
 
 const HIGH_VALUE_PRODUCTS = new Set(["strategy", "premium", "partnership"]);
+
+// Quiz leads that get an instant admin email to Alon + Hadar so they can
+// call immediately. Partnership has its own dedicated lead flow with
+// notification, so it's not included here.
+const ADMIN_ALERT_PRODUCTS = new Set(["strategy", "premium"]);
 
 const PRODUCT_LABELS: Record<string, string> = {
   challenge:   "אתגר 7 ימים",
@@ -13,6 +19,58 @@ const PRODUCT_LABELS: Record<string, string> = {
   premium:     "יום צילום פרמיום",
   partnership: "שותפות אסטרטגית",
 };
+
+const PRODUCT_EMOJI: Record<string, string> = {
+  strategy: "🎯",
+  premium:  "📸",
+};
+
+async function sendAdminQuizAlert(opts: {
+  product:      string;
+  name:         string;
+  email:        string;
+  phone:        string;
+  user_id:      string;
+  matchPercent: number;
+  secondProduct?: string;
+  utmSource?:   string;
+  utmCampaign?: string;
+}) {
+  if (!ADMIN_ALERT_PRODUCTS.has(opts.product)) return;
+  if (!opts.phone || !opts.name) return;
+
+  const label    = PRODUCT_LABELS[opts.product] ?? opts.product;
+  const emoji    = PRODUCT_EMOJI[opts.product]  ?? "🎯";
+  const phoneWa  = opts.phone.replace(/\D/g, "").replace(/^0/, "972");
+  const secondLine = opts.secondProduct
+    ? `<p style="margin:4px 0;font-size:13px;color:#888"><strong>גם מתאים:</strong> ${PRODUCT_LABELS[opts.secondProduct] ?? opts.secondProduct}</p>`
+    : "";
+  const utmLine = opts.utmSource
+    ? `<p style="margin:4px 0;font-size:12px;color:#aaa">מקור: ${opts.utmSource}${opts.utmCampaign ? ` · ${opts.utmCampaign}` : ""}</p>`
+    : "";
+
+  try {
+    await new Resend(process.env.RESEND_API_KEY).emails.send({
+      from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
+      to: ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
+      subject: `${emoji} ליד חם מהקוויז — ${label}: ${opts.name}`,
+      html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
+        <h2 style="color:#C9964A;margin-bottom:16px">${emoji} ליד מהקוויז · ${label}</h2>
+        <p style="margin:4px 0"><strong>שם:</strong> ${opts.name}</p>
+        <p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${opts.email}" style="color:#4285F4">${opts.email}</a></p>
+        <p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${opts.phone}" style="color:#4285F4">📞 ${opts.phone}</a> &nbsp;·&nbsp; <a href="https://wa.me/${phoneWa}" style="color:#25D366">💬 WhatsApp</a></p>
+        <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+        <p style="margin:4px 0"><strong>התאמה:</strong> ${opts.matchPercent}%</p>
+        ${secondLine}
+        ${utmLine}
+        <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+        <p style="margin:8px 0;font-size:13px;color:#888">💡 סיים/ה את הקוויז וקיבל/ה המלצה ל-${label}. שווה להתקשר עכשיו לפני שמתקרר.</p>
+        <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
+        <a href="https://www.beegood.online/admin/users/${opts.user_id}" style="display:inline-block;background:#C9964A;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח פרופיל באדמין ←</a>
+      </div>`,
+    });
+  } catch {}
+}
 
 async function sendToMake(payload: Record<string, unknown>) {
   try {
@@ -117,6 +175,21 @@ export async function PATCH(req: NextRequest) {
             source:              "quiz",
           });
         }
+
+        // Admin email alert to Alon + Hadar for strategy / premium recommendations
+        if (qr?.recommended_product && user) {
+          await sendAdminQuizAlert({
+            product:       qr.recommended_product,
+            name:          user.name ?? "",
+            email:         user.email ?? "",
+            phone:         user.phone ?? "",
+            user_id,
+            matchPercent:  qr.match_percent ?? 0,
+            secondProduct: qr.second_product ?? undefined,
+            utmSource:     user.utm_source ?? undefined,
+            utmCampaign:   user.utm_campaign ?? undefined,
+          });
+        }
       } catch {}
     }
 
@@ -203,6 +276,21 @@ export async function POST(req: NextRequest) {
               utm_medium:          user.utm_medium ?? "",
               utm_campaign:        user.utm_campaign ?? "",
               source:              "quiz",
+            });
+          }
+
+          // Admin email alert to Alon + Hadar for strategy / premium recommendations
+          if (user) {
+            await sendAdminQuizAlert({
+              product:       recommended_product,
+              name:          user.name ?? "",
+              email:         user.email ?? "",
+              phone:         user.phone ?? "",
+              user_id,
+              matchPercent:  match_percent ?? 0,
+              secondProduct: second_product ?? undefined,
+              utmSource:     user.utm_source ?? undefined,
+              utmCampaign:   user.utm_campaign ?? undefined,
             });
           }
         } catch {}
