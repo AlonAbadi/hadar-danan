@@ -71,7 +71,7 @@ export default async function ChallengeThankyouPage({
           {/* Heading */}
           <div className="flex flex-col gap-3">
             <h1 className="text-3xl md:text-4xl font-black" style={{ color: "#EDE9E1" }}>
-              ברוך הבא לאתגר
+              ברוכים הבאים לאתגר
             </h1>
             <p className="text-lg font-medium" style={{ color: "#EDE9E1" }}>
               ההרשמה הושלמה בהצלחה.
@@ -92,10 +92,10 @@ export default async function ChallengeThankyouPage({
           {/* Start watching section */}
           <div className="flex flex-col items-center gap-4 w-full">
             <h2 className="text-xl font-bold" style={{ color: "#EDE9E1" }}>
-              {needsSetup ? "ואחרי זה —" : "השלב הבא —"} התחל לצפות במפגש הפתיחה
+              {needsSetup ? "ואחרי זה —" : "השלב הבא —"} התחילו לצפות במפגש הפתיחה
             </h2>
             <p className="text-sm leading-relaxed" style={{ color: "#9E9990" }}>
-              האתגר זמין לצפייה עכשיו. התחל עם מפגש הפתיחה וקדם בקצב שלך.
+              האתגר זמין לצפייה עכשיו. התחילו עם מפגש הפתיחה והתקדמו בקצב שלכם.
             </p>
 
             <Link
@@ -107,7 +107,7 @@ export default async function ChallengeThankyouPage({
                 textDecoration: "none",
               }}
             >
-              התחל לצפות ←
+              התחילו לצפות ←
             </Link>
           </div>
 
