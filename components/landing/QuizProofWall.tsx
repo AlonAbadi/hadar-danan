@@ -484,10 +484,10 @@ export default function QuizProofWall() {
           z-index: 1001;
         }
 
-        /* Video lightbox — 16:9 for landscape compilation video */
+        /* Video lightbox — 9:16 portrait for testimonials video */
         .qpw-video-wrap {
-          width: min(900px, 95vw);
-          aspect-ratio: 16 / 9;
+          width: min(420px, 95vw);
+          aspect-ratio: 9 / 16;
           max-height: 90vh;
           border-radius: 14px;
           overflow: hidden;
