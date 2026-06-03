@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import QuizProofWall from "@/components/landing/QuizProofWall";
+import ClientVideosCarousel from "@/components/landing/ClientVideosCarousel";
 import { saveQuizSession, getQuizSession, getSessionUser } from "@/lib/quiz-session";
 import { trackProductLead, trackQuizRecommended, trackViewContent, trackInitiateCheckout, productLeadEventName, LEAD_VALUE_ILS } from "@/lib/analytics";
 import { buildNarrative } from "@/lib/quiz-narrative";
@@ -1295,7 +1296,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           </div>
         </div>
 
-        {/* 12. Social proof — testimonials wall (replaces single-line authority ref) */}
+        {/* 12. Social proof — testimonials wall */}
         <div style={{ margin: "40px 16px 0", ...fadeIn(1.5, resultReady) }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14, textAlign: "center" }}>
             הוכחה
@@ -1304,6 +1305,11 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
             מה אומרים אחרי שעברו את הדרך
           </h3>
           <QuizProofWall />
+        </div>
+
+        {/* 13. Client videos carousel (binge-style) */}
+        <div style={{ margin: "40px 16px 0", ...fadeIn(1.6, resultReady) }}>
+          <ClientVideosCarousel />
         </div>
 
         {/* 13. More like this */}
