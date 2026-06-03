@@ -68,8 +68,8 @@ export default function ClientVideosCarousel() {
 
   return (
     <div className="cvc">
-      <h2 className="cvc-title">הלקוחות שלנו</h2>
-      <p className="cvc-sub">סרטונים אמיתיים שצולמו בסטודיו של הדר. צפה בלקוחות מספרים</p>
+      <h2 className="cvc-title">השיטה בפעולה</h2>
+      <p className="cvc-sub">תוכן שלקוחות יצרו אחרי יישום האסטרטגיה. ככה זה נראה בשטח.</p>
 
       <div className="cvc-row">
         {CLIENT_VIDEOS.map((v) => (
