@@ -1250,7 +1250,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           </div>
         </div>
 
-        {/* 12. Social proof — testimonials wall */}
+        {/* 12. Social proof — first batch (wall + 6 testimonials) */}
         <div style={{ margin: "40px 16px 0", ...fadeIn(1.5, resultReady) }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14, textAlign: "center" }}>
             הוכחה
@@ -1258,12 +1258,17 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           <h3 style={{ fontSize: 22, fontWeight: 800, color: C.textPrim, marginBottom: 24, textAlign: "center", lineHeight: 1.3 }}>
             מה אומרים אחרי שעברו את הדרך
           </h3>
-          <QuizProofWall />
+          <QuizProofWall end={6} showFooter={false} />
         </div>
 
         {/* 13. Client videos carousel (binge-style) */}
         <div style={{ margin: "40px 16px 0", ...fadeIn(1.6, resultReady) }}>
           <ClientVideosCarousel />
+        </div>
+
+        {/* 14. Social proof — second batch (remaining testimonials) */}
+        <div style={{ margin: "40px 16px 0", ...fadeIn(1.65, resultReady) }}>
+          <QuizProofWall start={6} showWall={false} />
         </div>
 
         {/* 14. Closing line — general, no extra recommendation */}

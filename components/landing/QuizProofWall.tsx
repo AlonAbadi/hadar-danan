@@ -164,8 +164,17 @@ function WhatsAppIcon() {
   );
 }
 
-export default function QuizProofWall() {
+interface Props {
+  start?:      number;       // slice start index
+  end?:        number;       // slice end index (exclusive)
+  showWall?:   boolean;      // show the "3,500+" hero image (default: true)
+  showFooter?: boolean;      // show the small trust footer (default: true)
+}
+
+export default function QuizProofWall({ start = 0, end, showWall = true, showFooter = true }: Props = {}) {
   const [lightbox, setLightbox] = useState<LightboxState>(null);
+
+  const items = TESTIMONIALS.slice(start, end);
 
   useEffect(() => {
     if (!lightbox) return;
@@ -183,18 +192,20 @@ export default function QuizProofWall() {
   return (
     <div className="qpw">
       {/* Tier 1 — Wall of Faces */}
-      <div className="qpw-wall">
-        <img src="/testimonials/challenge/wall-of-150.jpg" alt="לקוחות הדר דנן" />
-        <div className="qpw-wall-overlay">
-          <div className="qpw-wall-stat">3,500+</div>
-          <div className="qpw-wall-label">בעלי עסקים בנו איתנו שיווק שעובד</div>
-          <div className="qpw-wall-sub">הנה חלק מהסיפורים שלהם</div>
+      {showWall && (
+        <div className="qpw-wall">
+          <img src="/testimonials/challenge/wall-of-150.jpg" alt="לקוחות הדר דנן" />
+          <div className="qpw-wall-overlay">
+            <div className="qpw-wall-stat">3,500+</div>
+            <div className="qpw-wall-label">בעלי עסקים בנו איתנו שיווק שעובד</div>
+            <div className="qpw-wall-sub">הנה חלק מהסיפורים שלהם</div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Tier 2 — Quote cards (3 types) */}
       <div className="qpw-grid">
-        {TESTIMONIALS.map((t, i) => (
+        {items.map((t, i) => (
           <article key={i} className="qpw-card">
             <div className="qpw-stars">★★★★★</div>
             <blockquote className="qpw-quote">
@@ -248,9 +259,11 @@ export default function QuizProofWall() {
       </div>
 
       {/* Tier 3 — Trust footer */}
-      <p className="qpw-trust">
-        עדויות אמיתיות מלקוחות. סרטונים שצולמו בסדנאות, הודעות וואטסאפ מקבוצות, וביקורות גוגל פומביות.
-      </p>
+      {showFooter && (
+        <p className="qpw-trust">
+          עדויות אמיתיות מלקוחות. סרטונים שצולמו בסדנאות, הודעות וואטסאפ מקבוצות, וביקורות גוגל פומביות.
+        </p>
+      )}
 
       {/* Lightbox */}
       {lightbox && (
