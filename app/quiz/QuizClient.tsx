@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
+import QuizProofWall from "@/components/landing/QuizProofWall";
 import { saveQuizSession, getQuizSession, getSessionUser } from "@/lib/quiz-session";
 import { trackProductLead, trackQuizRecommended, trackViewContent, trackInitiateCheckout, productLeadEventName, LEAD_VALUE_ILS } from "@/lib/analytics";
 import { buildNarrative } from "@/lib/quiz-narrative";
@@ -1294,11 +1295,15 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           </div>
         </div>
 
-        {/* 12. Authority reference (replaces weak "94" social proof) */}
-        <div style={{ margin: "32px 16px 0", padding: "16px 0", borderTop: `1px solid ${C.border}`, ...fadeIn(1.5, resultReady) }}>
-          <p style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.65, margin: 0 }}>
-            האבחון הזה מבוסס על המתודולוגיה שעברו דרכה למעלה מ-3,500 בעלי עסקים, פותחה לאורך 4 שנות מחקר.
-          </p>
+        {/* 12. Social proof — testimonials wall (replaces single-line authority ref) */}
+        <div style={{ margin: "40px 16px 0", ...fadeIn(1.5, resultReady) }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: 14, textAlign: "center" }}>
+            הוכחה
+          </div>
+          <h3 style={{ fontSize: 22, fontWeight: 800, color: C.textPrim, marginBottom: 24, textAlign: "center", lineHeight: 1.3 }}>
+            מה אומרים אחרי שעברו את הדרך
+          </h3>
+          <QuizProofWall />
         </div>
 
         {/* 13. More like this */}
