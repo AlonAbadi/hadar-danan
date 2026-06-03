@@ -28,20 +28,21 @@ type GoogleTestimonial = TestimonialBase & {
 type Testimonial = ImageTestimonial | VideoTestimonial | GoogleTestimonial;
 
 const TESTIMONIALS: Testimonial[] = [
-  // ── Strategy / clarity (top priority for quiz results page) ─────────
+  // ── Featured: full workshop testimonial reel ──────────────────────
   {
     type: "video",
-    vimeoId: "PLACEHOLDER_3",
+    vimeoId: "1188793450", // FEATURED — תהליך שלם מהסדנה
     highlight: "קיבלתי את הבהירות שרציתי",
     body: "האסטרטגיה, איך להגיש את השיווק שלי, איך לדבר עם הקהל שלי. יצאתי עם כלים פרקטיים — מה השיטה שלי, איך להעביר את המסרים.",
-    author: "בעלת עסק · עדות בסרטון",
+    author: "מתוך הסדנה",
   },
+  // ── Process: long client testimonial ──────────────────────────────
   {
     type: "video",
-    vimeoId: "PLACEHOLDER_5",
+    vimeoId: "1188789280", // תהליך אדיר
     highlight: "הייתי בארבע סדנאות שלא הצליחו לפצח אותי",
     body: "והיא הצליחה לזהות. זה היה מאוד מאוד מדויק — זה מתחבר לי, זה פתח לי משהו חדש.",
-    author: "בעלת עסק · עדות בסרטון",
+    author: "תהליך לקוח",
   },
   // ── Business results (Google) ───────────────────────────────────────
   {
@@ -78,26 +79,26 @@ const TESTIMONIALS: Testimonial[] = [
   // ── Deep methodology (Video) ────────────────────────────────────────
   {
     type: "video",
-    vimeoId: "PLACEHOLDER_4",
+    vimeoId: "1188790254", // תהליך בחורה בסלון
     highlight: "אם הדר לא הייתה קיימת היה צריך לברוא מישהי כמוה",
     body: "מה שהיא עושה — פיה קטנה עם עוצמות ענקיות. היא פשוט עושה מיינדסט חדש לביזנס.",
-    author: "בעלת עסק · עדות בסרטון",
+    author: "תהליך לקוחה",
   },
   // ── Authentic marketing (Video) ─────────────────────────────────────
   {
     type: "video",
-    vimeoId: "PLACEHOLDER_1",
+    vimeoId: "1188793244", // תהליך יהודית
     highlight: "ההבנה של איך לשווק ועדיין להיות אני",
     body: "שיווק זה עניין של אנושיות. זה לא טכניקה מורכבת — זה להקשיב ולהיות מהלב.",
-    author: "בעלת עסק · עדות בסרטון",
+    author: "תהליך יהודית",
   },
   // ── Refinement (Video) ──────────────────────────────────────────────
   {
     type: "video",
-    vimeoId: "PLACEHOLDER_6",
-    highlight: "אני יוצאת עם היכולת באמת לדייק את עצמי",
+    vimeoId: "1188792815", // תהליך מתן
+    highlight: "אני יוצא עם היכולת באמת לדייק את עצמי",
     body: "החידודים שהיא נתנה לי, איך להסתכל על עצמי מכל מיני זוויות ולדייק את הקהל שלי. מי אני ומה אני רוצה להביא.",
-    author: "בעלת עסק · עדות בסרטון",
+    author: "תהליך מתן",
   },
   // ── Strategy + marketing wrap (Google) ──────────────────────────────
   {
