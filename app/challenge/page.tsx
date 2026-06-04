@@ -136,7 +136,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         ctaSlot={
           <>
             <CreditBanner credit={credit} listPrice={PRODUCT_MAP.challenge_197.price} productName="האתגר 7 הימים" dark />
-            <ChallengeCTA price={price} whatsappPhone={whatsappPhone} credit={credit} />
+            <ChallengeCTA price={price} originalPrice={CHALLENGE_ORIGINAL_PRICE} whatsappPhone={whatsappPhone} credit={credit} />
             {credit > 0 && (
               <p style={{ textAlign: "center", fontSize: 11, color: "rgba(201,150,74,0.75)", marginTop: 8 }}>
                 הזיכוי מרכישות קודמות מקוזז אוטומטית -{" "}

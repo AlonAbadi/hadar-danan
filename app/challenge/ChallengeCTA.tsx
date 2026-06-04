@@ -18,11 +18,25 @@ const WA_ICON = (
 
 interface ChallengeCTAProps {
   price: string;
+  originalPrice?: number;
   whatsappPhone: string;
   credit?: number;
 }
 
-export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAProps) {
+// Renders ₪297 strikethrough + ₪price for the sale callout inside CTA buttons
+function PriceWithDiscount({ price, originalPrice }: { price: string | number; originalPrice?: number }) {
+  if (!originalPrice || Number(price) >= originalPrice) return <>₪{price}</>;
+  return (
+    <>
+      <span style={{ textDecoration: "line-through", opacity: 0.55, marginInlineEnd: 6, fontSize: "85%" }}>
+        ₪{originalPrice}
+      </span>
+      ₪{price}
+    </>
+  );
+}
+
+export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }: ChallengeCTAProps) {
   const [phase, setPhase]       = useState<"idle" | "phone" | "form" | "loading" | "error">("idle");
   const [form, setForm]         = useState({ name: "", email: "", phone: "" });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -271,8 +285,8 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
             {toPay === 0
               ? "קבל גישה חינם ←"
               : toPay < listPrice
-                ? `המשך לתשלום ₪${toPay} ←`
-                : `המשך לתשלום ₪${price} ←`}
+                ? <>המשך לתשלום ₪{toPay} ←</>
+                : <>המשך לתשלום <PriceWithDiscount price={price} originalPrice={originalPrice} /> ←</>}
           </button>
           {waHref && (
             <a
@@ -300,8 +314,8 @@ export function ChallengeCTA({ price, whatsappPhone, credit = 0 }: ChallengeCTAP
           {toPay === 0
             ? "קבל גישה חינם ←"
             : toPay < listPrice
-              ? `הצטרף עכשיו - ₪${toPay} ←`
-              : `הצטרף לאתגר ← ₪${price}`}
+              ? <>הצטרף עכשיו - ₪{toPay} ←</>
+              : <>הצטרף לאתגר ← <PriceWithDiscount price={price} originalPrice={originalPrice} /></>}
         </button>
         {waHref && (
           <a
