@@ -207,7 +207,10 @@ export async function PATCH(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { user_id, anonymous_id, answers, scores, recommended_product, second_product, match_percent } = body;
+    const {
+      user_id, anonymous_id, answers, scores, recommended_product, second_product, match_percent,
+      utm_source, utm_medium, utm_campaign, utm_content, utm_term, utm_adset, utm_ad, click_id,
+    } = body;
 
     if (!recommended_product || !answers) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -222,6 +225,14 @@ export async function POST(req: NextRequest) {
       recommended_product,
       second_product:       second_product ?? null,
       match_percent:        match_percent ?? 0,
+      utm_source:           utm_source   ? String(utm_source).slice(0, 100)   : null,
+      utm_medium:           utm_medium   ? String(utm_medium).slice(0, 100)   : null,
+      utm_campaign:         utm_campaign ? String(utm_campaign).slice(0, 100) : null,
+      utm_content:          utm_content  ? String(utm_content).slice(0, 100)  : null,
+      utm_term:             utm_term     ? String(utm_term).slice(0, 100)     : null,
+      utm_adset:            utm_adset    ? String(utm_adset).slice(0, 100)    : null,
+      utm_ad:               utm_ad       ? String(utm_ad).slice(0, 100)       : null,
+      click_id:             click_id     ? String(click_id).slice(0, 200)     : null,
     });
 
     if (error) {

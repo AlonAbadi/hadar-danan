@@ -59,10 +59,14 @@ async function metaFetch(path: string): Promise<{ ok: true; json: any } | { ok: 
 }
 
 // ─── Campaign-level insights + CRM cross-reference ────
+export type CampaignKind = 'lead' | 'sale' | 'quiz' | 'other';
+
 export type MetaCampaignRow = {
   campaignId: string;
   name: string;
   status: string;
+  objective: string;
+  kind: CampaignKind;
   impressions: number;
   reach: number;
   clicks: number;
@@ -81,6 +85,30 @@ export type MetaCampaignRow = {
   trueRoas: number;
 };
 
+// Quiz name patterns — matched against campaign name (case-insensitive)
+const QUIZ_PATTERNS = /(quiz|קוויז|שאלון|אבחון)/i;
+
+function classifyCampaign(name: string, objective: string): CampaignKind {
+  // Quiz override — even if objective is conversions, name pattern wins
+  if (QUIZ_PATTERNS.test(name || '')) return 'quiz';
+  const o = (objective || '').toUpperCase();
+  if (o.includes('LEAD')) return 'lead';
+  if (o === 'OUTCOME_SALES' || o === 'CONVERSIONS' || o === 'PRODUCT_CATALOG_SALES') return 'sale';
+  return 'other';
+}
+
+// Fetch campaign metadata (objective, status) — separate from insights
+async function fetchCampaignMeta(token: string, accountId: string): Promise<Record<string, { objective: string; status: string }>> {
+  const url = `https://graph.facebook.com/${API_VERSION}/act_${accountId}/campaigns?fields=id,name,objective,status&limit=200&access_token=${token}`;
+  const result = await metaFetch(url);
+  if (!result.ok) return {};
+  const map: Record<string, { objective: string; status: string }> = {};
+  ((result.json.data ?? []) as any[]).forEach(c => {
+    map[c.id] = { objective: c.objective ?? '', status: c.status ?? '' };
+  });
+  return map;
+}
+
 export async function getMetaCampaigns(dateRange?: string): Promise<{
   configured: boolean;
   error?: string;
@@ -94,7 +122,10 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
   const fields = 'campaign_id,campaign_name,impressions,reach,clicks,spend,ctr,cpc,frequency,actions,action_values';
   const url = `https://graph.facebook.com/${API_VERSION}/act_${accountId}/insights?fields=${fields}&time_range={"since":"${since}","until":"${until}"}&level=campaign&limit=100&access_token=${token}`;
 
-  const result = await metaFetch(url);
+  const [result, campaignMeta] = await Promise.all([
+    metaFetch(url),
+    fetchCampaignMeta(token, accountId),
+  ]);
   if (!result.ok) return { configured: true, error: result.error, dateRange: { since, until } };
 
   const campaigns = (result.json.data ?? []) as any[];
@@ -163,10 +194,15 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
     const metaPurchases = pickAction(c.actions, ['purchase', 'offsite_conversion.fb_pixel_purchase']);
     const metaRevenue = pickAction(c.action_values, ['purchase', 'offsite_conversion.fb_pixel_purchase']);
 
+    const meta = campaignMeta[c.campaign_id] ?? { objective: '', status: '' };
+    const kind = classifyCampaign(c.campaign_name || '', meta.objective);
+
     return {
       campaignId: c.campaign_id,
       name: c.campaign_name,
-      status: c.status ?? '',
+      status: meta.status,
+      objective: meta.objective,
+      kind,
       impressions: parseInt(c.impressions || '0'),
       reach: parseInt(c.reach || '0'),
       clicks: parseInt(c.clicks || '0'),
@@ -391,12 +427,23 @@ export type QuizFunnelByProduct = {
   dropoffPct: number;
 };
 
+export type QuizFunnelBySource = {
+  source: string;
+  campaign: string;
+  completions: number;
+  leads: number;
+  dropoff: number;
+  dropoffPct: number;
+};
+
 export async function getQuizFunnel(dateRange?: string): Promise<{
   completions: number;
   leads: number;
   dropoff: number;
   dropoffPct: number;
   byProduct: QuizFunnelByProduct[];
+  byMetaCampaign: QuizFunnelBySource[];
+  metaTotal: { completions: number; leads: number; dropoff: number; dropoffPct: number };
   dateRange: { since: string; until: string };
 }> {
   const { since, until } = getRange(dateRange);
@@ -405,7 +452,7 @@ export async function getQuizFunnel(dateRange?: string): Promise<{
   const supabase = createServerClient();
   const { data: rows } = await supabase
     .from('quiz_results')
-    .select('user_id, recommended_product')
+    .select('user_id, recommended_product, utm_source, utm_campaign')
     .gte('created_at', sinceIso);
 
   const all = rows ?? [];
@@ -413,6 +460,35 @@ export async function getQuizFunnel(dateRange?: string): Promise<{
   const leads = all.filter(r => r.user_id != null).length;
   const dropoff = completions - leads;
   const dropoffPct = completions > 0 ? (dropoff / completions) * 100 : 0;
+
+  // Filter to meta-only and group by campaign
+  const metaRows = all.filter(r => r.utm_source && META_SOURCES.has(r.utm_source));
+  const metaCampaignMap: Record<string, { source: string; campaign: string; completions: number; leads: number }> = {};
+  metaRows.forEach(r => {
+    const campaign = r.utm_campaign || '(ללא קמפיין)';
+    const key = `${r.utm_source}||${campaign}`;
+    if (!metaCampaignMap[key]) metaCampaignMap[key] = { source: r.utm_source!, campaign, completions: 0, leads: 0 };
+    metaCampaignMap[key].completions += 1;
+    if (r.user_id != null) metaCampaignMap[key].leads += 1;
+  });
+
+  const byMetaCampaign: QuizFunnelBySource[] = Object.values(metaCampaignMap)
+    .map(d => ({
+      ...d,
+      dropoff: d.completions - d.leads,
+      dropoffPct: d.completions > 0 ? ((d.completions - d.leads) / d.completions) * 100 : 0,
+    }))
+    .sort((a, b) => b.completions - a.completions);
+
+  const metaCompletions = metaRows.length;
+  const metaLeads = metaRows.filter(r => r.user_id != null).length;
+  const metaDropoff = metaCompletions - metaLeads;
+  const metaTotal = {
+    completions: metaCompletions,
+    leads: metaLeads,
+    dropoff: metaDropoff,
+    dropoffPct: metaCompletions > 0 ? (metaDropoff / metaCompletions) * 100 : 0,
+  };
 
   const productMap: Record<string, { completions: number; leads: number }> = {};
   all.forEach(r => {
@@ -432,7 +508,7 @@ export async function getQuizFunnel(dateRange?: string): Promise<{
     }))
     .sort((a, b) => b.completions - a.completions);
 
-  return { completions, leads, dropoff, dropoffPct, byProduct, dateRange: { since, until } };
+  return { completions, leads, dropoff, dropoffPct, byProduct, byMetaCampaign, metaTotal, dateRange: { since, until } };
 }
 
 // ─── Aggregate KPIs (computed from campaigns) ─────────

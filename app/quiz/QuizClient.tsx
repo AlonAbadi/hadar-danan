@@ -183,6 +183,19 @@ function getCookie(name: string): string | undefined {
   return document.cookie.split("; ").find((c) => c.startsWith(`${name}=`))?.split("=")[1];
 }
 
+function collectUtmFromCookies(): Record<string, string> {
+  const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "utm_adset", "utm_ad", "fbclid", "gclid"];
+  const out: Record<string, string> = {};
+  for (const key of keys) {
+    const v = getCookie(key);
+    if (!v) continue;
+    const dest = key === "fbclid" || key === "gclid" ? "click_id" : key;
+    const max  = dest === "click_id" ? 200 : 100;
+    out[dest] = decodeURIComponent(v).slice(0, max);
+  }
+  return out;
+}
+
 function postEvent(payload: Record<string, unknown>) {
   fetch("/api/events", {
     method: "POST",
@@ -461,6 +474,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
               recommended_product: PRODUCTS[winIdx].id,
               second_product:      secondProd?.id ?? null,
               match_percent:       pct,
+              ...collectUtmFromCookies(),
             }),
           }).catch(() => {});
 
@@ -639,6 +653,7 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
         recommended_product: prod.id,
         second_product:      secondProduct?.id ?? null,
         match_percent:       pct,
+        ...collectUtmFromCookies(),
       }),
     }).catch(() => {});
     animateTransition("forward", () => setStep(7));

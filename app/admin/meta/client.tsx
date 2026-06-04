@@ -12,6 +12,8 @@ import type {
   MetaDemoRow,
   MetaPlacementRow,
   QuizFunnelByProduct,
+  QuizFunnelBySource,
+  CampaignKind,
 } from '@/lib/admin/meta-queries';
 
 const C = {
@@ -146,6 +148,13 @@ function dropoffColorFor(pct: number) {
   return pct >= 70 ? C.red : pct >= 40 ? C.gold : C.green;
 }
 
+const KIND_BADGE: Record<CampaignKind, { label: string; color: string }> = {
+  lead:  { label: 'לידים',  color: '#3b82f6' },
+  sale:  { label: 'מכירות', color: '#C9964A' },
+  quiz:  { label: 'קוויז',  color: '#8b5cf6' },
+  other: { label: 'אחר',    color: '#9E9990' },
+};
+
 const PRODUCT_LABELS: Record<string, string> = {
   challenge:    'אתגר 7 ימים',
   workshop:     'סדנה יום אחד',
@@ -171,7 +180,13 @@ export default function MetaClient({
   daily: { configured: boolean; error?: string; points?: MetaDailyPoint[] };
   demo: { configured: boolean; error?: string; rows?: MetaDemoRow[] };
   placements: { configured: boolean; error?: string; rows?: MetaPlacementRow[] };
-  quizFunnel: { completions: number; leads: number; dropoff: number; dropoffPct: number; byProduct: QuizFunnelByProduct[]; dateRange: { since: string; until: string } };
+  quizFunnel: {
+    completions: number; leads: number; dropoff: number; dropoffPct: number;
+    byProduct: QuizFunnelByProduct[];
+    byMetaCampaign: QuizFunnelBySource[];
+    metaTotal: { completions: number; leads: number; dropoff: number; dropoffPct: number };
+    dateRange: { since: string; until: string };
+  };
   kpis: ReturnType<typeof import('@/lib/admin/meta-queries').aggregateKpis> | null;
   dateRange: string;
 }) {
@@ -179,6 +194,7 @@ export default function MetaClient({
   const pathname = usePathname();
   const setRange = (v: string) => router.push(`${pathname}?range=${v}`);
   const [extrasTab, setExtrasTab] = useState<'demo' | 'placements'>('demo');
+  const [kindTab, setKindTab] = useState<'all' | CampaignKind>('all');
 
   // If Meta isn't configured at all — show prompt and exit early
   if (!campaigns.configured) {
@@ -201,9 +217,48 @@ export default function MetaClient({
     );
   }
 
-  const rows = campaigns.rows ?? [];
-  const adRows = ads.rows ?? [];
+  const allRows = campaigns.rows ?? [];
+  const allAdRows = ads.rows ?? [];
   const dailyPoints = daily.points ?? [];
+
+  // Filter rows by selected kind tab
+  const rows = kindTab === 'all' ? allRows : allRows.filter(r => r.kind === kindTab);
+
+  // Filter ads to those whose campaign matches the kindTab
+  const campaignKindMap: Record<string, CampaignKind> = {};
+  allRows.forEach(r => { campaignKindMap[r.name] = r.kind; });
+  const adRows = kindTab === 'all'
+    ? allAdRows
+    : allAdRows.filter(a => campaignKindMap[a.campaign] === kindTab);
+
+  // Recompute KPIs based on filtered rows
+  const tabKpis = rows.length > 0 ? {
+    totalSpend:        rows.reduce((s, r) => s + r.spend, 0),
+    totalImpressions:  rows.reduce((s, r) => s + r.impressions, 0),
+    totalClicks:       rows.reduce((s, r) => s + r.clicks, 0),
+    totalMetaLeads:    rows.reduce((s, r) => s + r.metaLeads, 0),
+    totalMetaPurchases:rows.reduce((s, r) => s + r.metaPurchases, 0),
+    totalMetaRevenue:  rows.reduce((s, r) => s + r.metaRevenue, 0),
+    totalCrmLeads:     rows.reduce((s, r) => s + r.crmLeads, 0),
+    totalCrmBuyers:    rows.reduce((s, r) => s + r.crmBuyers, 0),
+    totalCrmRevenue:   rows.reduce((s, r) => s + r.crmRevenue, 0),
+  } : null;
+
+  const kindCounts = {
+    all:   allRows.length,
+    lead:  allRows.filter(r => r.kind === 'lead').length,
+    sale:  allRows.filter(r => r.kind === 'sale').length,
+    quiz:  allRows.filter(r => r.kind === 'quiz').length,
+    other: allRows.filter(r => r.kind === 'other').length,
+  };
+
+  const KIND_TABS: { key: 'all' | CampaignKind; label: string; sub: string; color: string }[] = [
+    { key: 'all',   label: 'כל הקמפיינים', sub: 'All',                color: C.muted },
+    { key: 'lead',  label: 'לידים',         sub: 'Lead Generation',    color: C.blue },
+    { key: 'sale',  label: 'מכירות',        sub: 'Sales / Purchases',  color: C.gold },
+    { key: 'quiz',  label: 'קוויז',         sub: 'Quiz Completion',    color: C.purple },
+    { key: 'other', label: 'אחר',           sub: 'Other',              color: C.muted },
+  ];
 
   // Demographics aggregation by age + gender
   const demoByAge: Record<string, { spend: number; leads: number; impressions: number }> = {};
@@ -256,34 +311,103 @@ export default function MetaClient({
         </div>
       </div>
 
-      {/* KPIs Row 1 — Spend, Leads (Meta vs CRM), Buyers, Revenue */}
-      {kpis && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
-            <Kpi label="הוצאה" value={fmtMoney(kpis.totalSpend)} accent={C.gold} sub={`${rows.length} קמפיינים`} />
-            <Kpi
-              label="לידים — Meta vs CRM"
-              value={`${fmtNum(kpis.totalMetaLeads)} / ${fmtNum(kpis.totalCrmLeads)}`}
-              accent={C.blue}
-              sub={kpis.leakage > 0 ? `📉 פער ${kpis.leakage.toFixed(0)}% מטא→CRM` : kpis.leakage < 0 ? `📈 CRM גבוה מ-Meta` : ''}
-            />
-            <Kpi label="רוכשים (CRM)" value={fmtNum(kpis.totalCrmBuyers)} accent={C.gold} />
-            <Kpi label="הכנסה (CRM)" value={fmtMoney(kpis.totalCrmRevenue)} accent={C.green} />
-          </div>
+      {/* Kind tabs — separates leads from sales */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+        {KIND_TABS.filter(t => t.key === 'all' || kindCounts[t.key] > 0).map(t => (
+          <button
+            key={t.key}
+            onClick={() => setKindTab(t.key)}
+            style={{
+              background: kindTab === t.key ? C.card : 'transparent',
+              border: `1px solid ${kindTab === t.key ? t.color : C.border}`,
+              color: kindTab === t.key ? t.color : C.muted,
+              borderRadius: 8, padding: '8px 14px', cursor: 'pointer',
+              fontFamily: "'Assistant', sans-serif", fontSize: 13,
+              display: 'flex', alignItems: 'center', gap: 8,
+              transition: 'all 0.15s',
+            }}
+          >
+            <span style={{ fontWeight: 600 }}>{t.label}</span>
+            <span style={{ fontSize: 10, color: C.muted, fontFamily: 'system-ui' }}>{t.sub}</span>
+            <span style={{
+              background: kindTab === t.key ? `${t.color}22` : C.soft,
+              color: kindTab === t.key ? t.color : C.muted,
+              fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10,
+              fontFamily: 'system-ui',
+            }}>
+              {kindCounts[t.key]}
+            </span>
+          </button>
+        ))}
+      </div>
 
-          {/* KPIs Row 2 — ROAS, CPL, CPA, Frequency */}
+      {/* KPIs — tab-aware (lead-centric, sale-centric, quiz-centric, or full) */}
+      {tabKpis && (
+        kindTab === 'sale' ? (
+          // SALES TAB: ROAS-first
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+            <Kpi label="הוצאה" value={fmtMoney(tabKpis.totalSpend)} accent={C.gold} sub={`${rows.length} קמפיינים`} />
+            <Kpi label="רכישות (Meta)" value={fmtNum(tabKpis.totalMetaPurchases)} accent={C.blue} />
+            <Kpi label="רכישות (CRM)" value={fmtNum(tabKpis.totalCrmBuyers)} accent={C.gold} />
+            <Kpi label="הכנסה (CRM)" value={fmtMoney(tabKpis.totalCrmRevenue)} accent={C.green} />
             <Kpi
               label="True ROAS"
-              value={`${kpis.trueRoas.toFixed(2)}x`}
-              accent={kpis.trueRoas >= 2 ? C.green : kpis.trueRoas >= 1 ? C.gold : C.red}
+              value={`${tabKpis.totalSpend > 0 ? (tabKpis.totalCrmRevenue / tabKpis.totalSpend).toFixed(2) : '0.00'}x`}
+              accent={tabKpis.totalSpend > 0 && tabKpis.totalCrmRevenue / tabKpis.totalSpend >= 2 ? C.green : tabKpis.totalCrmRevenue / tabKpis.totalSpend >= 1 ? C.gold : C.red}
               sub="הכנסה CRM / הוצאה"
             />
-            <Kpi label="CPL (CRM)" value={fmtMoney(kpis.cplCrm)} accent={C.purple} sub="עלות לליד אמיתי" />
-            <Kpi label="CPA (CRM)" value={fmtMoney(kpis.cpaCrm)} accent={C.purple} sub="עלות לרכישה" />
-            <Kpi label="תדירות ממוצעת" value={kpis.avgFrequency.toFixed(2)} sub={`CTR ${kpis.overallCtr.toFixed(2)}%`} />
+            <Kpi label="CPA (CRM)" value={tabKpis.totalCrmBuyers > 0 ? fmtMoney(tabKpis.totalSpend / tabKpis.totalCrmBuyers) : '—'} accent={C.purple} sub="עלות לרכישה" />
+            <Kpi label="ערך הזמנה ממוצע" value={tabKpis.totalCrmBuyers > 0 ? fmtMoney(tabKpis.totalCrmRevenue / tabKpis.totalCrmBuyers) : '—'} sub="AOV" />
+            <Kpi label="CTR" value={`${tabKpis.totalImpressions > 0 ? ((tabKpis.totalClicks / tabKpis.totalImpressions) * 100).toFixed(2) : '0.00'}%`} sub={`${fmtNum(tabKpis.totalClicks)} קליקים`} />
           </div>
-        </>
+        ) : kindTab === 'lead' ? (
+          // LEADS TAB: CPL-first
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+            <Kpi label="הוצאה" value={fmtMoney(tabKpis.totalSpend)} accent={C.gold} sub={`${rows.length} קמפיינים`} />
+            <Kpi label="לידים (Meta)" value={fmtNum(tabKpis.totalMetaLeads)} accent={C.blue} />
+            <Kpi label="לידים (CRM)" value={fmtNum(tabKpis.totalCrmLeads)} accent={C.green} sub={tabKpis.totalMetaLeads > tabKpis.totalCrmLeads ? `📉 פער ${(((tabKpis.totalMetaLeads - tabKpis.totalCrmLeads) / tabKpis.totalMetaLeads) * 100).toFixed(0)}%` : ''} />
+            <Kpi label="CPL (CRM)" value={tabKpis.totalCrmLeads > 0 ? fmtMoney(tabKpis.totalSpend / tabKpis.totalCrmLeads) : '—'} accent={C.purple} sub="עלות לליד אמיתי" />
+            <Kpi label="CPL (Meta)" value={tabKpis.totalMetaLeads > 0 ? fmtMoney(tabKpis.totalSpend / tabKpis.totalMetaLeads) : '—'} sub="עלות לליד מדווח" />
+            <Kpi label="המרה לליד" value={`${tabKpis.totalClicks > 0 ? ((tabKpis.totalCrmLeads / tabKpis.totalClicks) * 100).toFixed(1) : '0.0'}%`} sub="לידים / קליקים" />
+            <Kpi label="רוכשים מהלידים" value={fmtNum(tabKpis.totalCrmBuyers)} accent={C.gold} sub={tabKpis.totalCrmLeads > 0 ? `${((tabKpis.totalCrmBuyers / tabKpis.totalCrmLeads) * 100).toFixed(0)}% lead-to-buyer` : ''} />
+            <Kpi label="הכנסה (CRM)" value={fmtMoney(tabKpis.totalCrmRevenue)} accent={C.green} />
+          </div>
+        ) : kindTab === 'quiz' ? (
+          // QUIZ TAB: completion + dropoff
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+            <Kpi label="הוצאה" value={fmtMoney(tabKpis.totalSpend)} accent={C.gold} sub={`${rows.length} קמפיינים`} />
+            <Kpi label="השלמות (Meta)" value={fmtNum(tabKpis.totalMetaLeads)} accent={C.blue} sub="QuizComplete event" />
+            <Kpi label="השלמות (CRM)" value={fmtNum(quizFunnel.metaTotal.completions)} accent={C.purple} sub="quiz_results מ-Meta" />
+            <Kpi label="הכניסו פרטים" value={fmtNum(quizFunnel.metaTotal.leads)} accent={C.green} sub={quizFunnel.metaTotal.completions > 0 ? `${((quizFunnel.metaTotal.leads / quizFunnel.metaTotal.completions) * 100).toFixed(0)}%` : ''} />
+            <Kpi label="נטשו לפני פרטים" value={fmtNum(quizFunnel.metaTotal.dropoff)} accent={C.red} sub={`${quizFunnel.metaTotal.dropoffPct.toFixed(0)}% נטישה`} />
+            <Kpi label="עלות להשלמה" value={quizFunnel.metaTotal.completions > 0 ? fmtMoney(tabKpis.totalSpend / quizFunnel.metaTotal.completions) : '—'} sub="Cost per quiz" />
+            <Kpi label="עלות לליד אמיתי" value={quizFunnel.metaTotal.leads > 0 ? fmtMoney(tabKpis.totalSpend / quizFunnel.metaTotal.leads) : '—'} accent={C.purple} sub="CPL after lead form" />
+            <Kpi label="רוכשים מהלידים" value={fmtNum(tabKpis.totalCrmBuyers)} accent={C.gold} />
+          </div>
+        ) : (
+          // ALL / OTHER — original combined view
+          kpis && (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 12 }}>
+                <Kpi label="הוצאה" value={fmtMoney(kpis.totalSpend)} accent={C.gold} sub={`${rows.length} קמפיינים`} />
+                <Kpi
+                  label="לידים — Meta vs CRM"
+                  value={`${fmtNum(kpis.totalMetaLeads)} / ${fmtNum(kpis.totalCrmLeads)}`}
+                  accent={C.blue}
+                  sub={kpis.leakage > 0 ? `📉 פער ${kpis.leakage.toFixed(0)}% מטא→CRM` : kpis.leakage < 0 ? `📈 CRM גבוה מ-Meta` : ''}
+                />
+                <Kpi label="רוכשים (CRM)" value={fmtNum(kpis.totalCrmBuyers)} accent={C.gold} />
+                <Kpi label="הכנסה (CRM)" value={fmtMoney(kpis.totalCrmRevenue)} accent={C.green} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+                <Kpi label="True ROAS" value={`${kpis.trueRoas.toFixed(2)}x`} accent={kpis.trueRoas >= 2 ? C.green : kpis.trueRoas >= 1 ? C.gold : C.red} sub="הכנסה CRM / הוצאה" />
+                <Kpi label="CPL (CRM)" value={fmtMoney(kpis.cplCrm)} accent={C.purple} sub="עלות לליד אמיתי" />
+                <Kpi label="CPA (CRM)" value={fmtMoney(kpis.cpaCrm)} accent={C.purple} sub="עלות לרכישה" />
+                <Kpi label="תדירות ממוצעת" value={kpis.avgFrequency.toFixed(2)} sub={`CTR ${kpis.overallCtr.toFixed(2)}%`} />
+              </div>
+            </>
+          )
+        )
       )}
 
       {/* Daily trend chart */}
@@ -424,6 +548,41 @@ export default function MetaClient({
                 </div>
               )}
 
+              {/* Per Meta campaign breakdown */}
+              {quizFunnel.byMetaCampaign.length > 0 && (
+                <div style={{ marginTop: 28 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 14, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    פילוח לפי קמפיין Meta
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: C.soft }}>
+                          {['מקור', 'קמפיין', 'השלימו', 'הכניסו פרטים', 'נטישה', '% נטישה'].map(h => (
+                            <th key={h} style={{ padding: '10px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {quizFunnel.byMetaCampaign.map((c, i) => (
+                          <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                            <td style={{ padding: '10px 14px', color: C.gold, fontWeight: 600 }}>{c.source}</td>
+                            <td style={{ padding: '10px 14px', color: C.fg, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.campaign}</td>
+                            <td style={{ padding: '10px 14px', color: C.blue, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.completions}</td>
+                            <td style={{ padding: '10px 14px', color: C.green, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.leads}</td>
+                            <td style={{ padding: '10px 14px', color: C.red, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.dropoff}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: dropoffColorFor(c.dropoffPct), fontFamily: 'system-ui' }}>{c.dropoffPct.toFixed(0)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{ fontSize: 10, color: `${C.muted}88`, marginTop: 8, fontStyle: 'italic' }}>
+                    * דורש שה-quiz_results יכיל UTM (מ-migration 035 ואילך). השלמות לפני המעבר יופיעו ללא קמפיין.
+                  </div>
+                </div>
+              )}
+
               {/* Helper note */}
               <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(201,150,74,0.06)', borderRight: `3px solid ${C.gold}`, borderRadius: 6, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
                 💡 הקמפיין של הקוויז ב-Meta מתממש על השלמת הקוויז ({quizFunnel.completions.toLocaleString()}). הנתון המאשר ROAS אמיתי הוא <strong style={{ color: C.fg }}>{quizFunnel.leads.toLocaleString()}</strong> לידים שהגיעו עד הסוף. <strong style={{ color: dropoffColorFor(quizFunnel.dropoffPct) }}>{quizFunnel.dropoff.toLocaleString()} נטישות</strong> ({quizFunnel.dropoffPct.toFixed(0)}%) של אנשים שסיימו את 6 השאלות אבל לא הכניסו שם/טלפון — שווה לבדוק מה קורה בעמוד התוצאות.
@@ -452,7 +611,7 @@ export default function MetaClient({
               <thead>
                 <tr style={{ background: C.soft }}>
                   {[
-                    'קמפיין', 'הוצאה', 'חשיפות', 'CTR', 'CPC',
+                    'קמפיין', 'סוג', 'הוצאה', 'חשיפות', 'CTR', 'CPC',
                     'Meta Leads', 'CRM Leads', 'CRM Buyers', 'CRM הכנסה',
                     'CPL', 'CPA', 'True ROAS',
                   ].map(h => (
@@ -463,9 +622,14 @@ export default function MetaClient({
                 </tr>
               </thead>
               <tbody>
-                {rows.map((c, i) => (
+                {rows.map((c, i) => {
+                  const badge = KIND_BADGE[c.kind];
+                  return (
                   <tr key={c.campaignId ?? i} style={{ borderBottom: `1px solid ${C.border}` }}>
-                    <td style={{ padding: '10px 12px', fontWeight: 600, color: C.fg, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 600, color: C.fg, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: badge.color, background: `${badge.color}22`, padding: '3px 8px', borderRadius: 5, whiteSpace: 'nowrap' }}>{badge.label}</span>
+                    </td>
                     <td style={{ padding: '10px 12px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{fmtMoney(c.spend)}</td>
                     <td style={{ padding: '10px 12px', color: C.muted, textAlign: 'right', fontFamily: 'system-ui' }}>{fmtNum(c.impressions)}</td>
                     <td style={{ padding: '10px 12px', color: C.fg, textAlign: 'right' }}>{c.ctr.toFixed(2)}%</td>
@@ -480,7 +644,8 @@ export default function MetaClient({
                       {c.trueRoas > 0 ? `${c.trueRoas.toFixed(2)}x` : '—'}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
