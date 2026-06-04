@@ -174,7 +174,19 @@ export default function MetaClient({
   kpis,
   dateRange,
 }: {
-  campaigns: { configured: boolean; error?: string; dateRange?: { since: string; until: string }; rows?: MetaCampaignRow[] };
+  campaigns: {
+    configured: boolean; error?: string;
+    dateRange?: { since: string; until: string };
+    rows?: MetaCampaignRow[];
+    sourcedTotals?: {
+      totalLeads: number;
+      matchedLeads: number;
+      looseQuizLeads: number;
+      looseChallengeLeads: number;
+      looseUnknownLeads: number;
+      topUtmCampaigns: { utm_campaign: string; count: number }[];
+    };
+  };
   ads: { configured: boolean; error?: string; rows?: MetaAdRow[] };
   daily: { configured: boolean; error?: string; points?: MetaDailyPoint[] };
   demo: { configured: boolean; error?: string; rows?: MetaDemoRow[] };
@@ -350,6 +362,100 @@ export default function MetaClient({
           </button>
         ))}
       </div>
+
+      {/* Meta-sourced total — independent of per-campaign matching.
+          Reveals the gap between "this many leads came from Meta" vs
+          "this many we could attribute to a specific Meta campaign". */}
+      {campaigns.sourcedTotals && campaigns.sourcedTotals.totalLeads > 0 && (
+        <Card style={{ marginBottom: 28 }}>
+          <CardHeader
+            title="לידים ממטא — סיכום ייחוס"
+            sub="Meta-Sourced Attribution"
+            action={
+              <span style={{ fontSize: 11, color: C.muted, background: C.soft, padding: '3px 10px', borderRadius: 6 }}>
+                לפי utm_source=fb/ig/meta
+              </span>
+            }
+          />
+          <div style={{ padding: '20px 24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+              <Kpi label="סך לידים ממטא" value={fmtNum(campaigns.sourcedTotals.totalLeads)} accent={C.green} sub="utm_source מכיל fb/ig/meta" />
+              <Kpi
+                label="זוהו לקמפיין"
+                value={fmtNum(campaigns.sourcedTotals.matchedLeads)}
+                accent={C.blue}
+                sub={`${campaigns.sourcedTotals.totalLeads > 0 ? ((campaigns.sourcedTotals.matchedLeads / campaigns.sourcedTotals.totalLeads) * 100).toFixed(0) : 0}% מההתאמות`}
+              />
+              <Kpi
+                label="ליד קוויז (לפי keyword)"
+                value={fmtNum(campaigns.sourcedTotals.looseQuizLeads)}
+                accent={C.purple}
+                sub="utm_campaign מכיל quiz/קוויז"
+              />
+              <Kpi
+                label="ליד אתגר (לפי keyword)"
+                value={fmtNum(campaigns.sourcedTotals.looseChallengeLeads)}
+                accent={C.gold}
+                sub="utm_campaign מכיל challenge/אתגר"
+              />
+            </div>
+
+            {/* Top utm_campaign values from CRM — diagnose mismatches */}
+            <div>
+              <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 10 }}>
+                ערכי utm_campaign בפועל ב-CRM (top {campaigns.sourcedTotals.topUtmCampaigns.length})
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: C.soft }}>
+                      <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>utm_campaign value</th>
+                      <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>לידים</th>
+                      <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>זוהה?</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {campaigns.sourcedTotals.topUtmCampaigns.map((row, i) => {
+                      const matched = allRows.some(r => r.campaignId === row.utm_campaign || r.name.toLowerCase().trim() === row.utm_campaign.toLowerCase().trim());
+                      const matchedRow = allRows.find(r => r.campaignId === row.utm_campaign || r.name.toLowerCase().trim() === row.utm_campaign.toLowerCase().trim());
+                      const looseQuiz = !matched && (row.utm_campaign.toLowerCase().includes('quiz') || row.utm_campaign.includes('קוויז') || row.utm_campaign.includes('קויז'));
+                      const looseChallenge = !matched && (row.utm_campaign.toLowerCase().includes('challenge') || row.utm_campaign.includes('אתגר'));
+                      return (
+                        <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                          <td style={{ padding: '8px 14px', color: C.fg, fontFamily: 'monospace', fontSize: 11 }}>{row.utm_campaign || '(empty)'}</td>
+                          <td style={{ padding: '8px 14px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{row.count}</td>
+                          <td style={{ padding: '8px 14px', textAlign: 'right' }}>
+                            {matched ? (
+                              <span style={{ fontSize: 10, color: C.green, background: `${C.green}22`, padding: '2px 8px', borderRadius: 4 }}>
+                                ✓ {matchedRow?.name}
+                              </span>
+                            ) : looseQuiz ? (
+                              <span style={{ fontSize: 10, color: C.purple, background: `${C.purple}22`, padding: '2px 8px', borderRadius: 4 }}>
+                                ~ ליד קוויז (keyword)
+                              </span>
+                            ) : looseChallenge ? (
+                              <span style={{ fontSize: 10, color: C.gold, background: `${C.gold}22`, padding: '2px 8px', borderRadius: 4 }}>
+                                ~ ליד אתגר (keyword)
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: 10, color: C.red, background: `${C.red}22`, padding: '2px 8px', borderRadius: 4 }}>
+                                ✗ לא זוהה
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(59,130,246,0.06)', borderRight: `3px solid ${C.blue}`, borderRadius: 6, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
+                💡 ההתאמה הנוכחית בקמפיינים דורשת ש-utm_campaign יהיה <strong style={{ color: C.fg }}>בדיוק</strong> שם הקמפיין במטא או ה-Campaign ID. אם הרבה לידים מסומנים "לא זוהה" — צריך לעדכן את URL Parameters במטא שיוסיף <code style={{ background: C.soft, padding: '1px 4px', borderRadius: 3 }}>utm_campaign={'{{campaign.name}}'}</code> או <code style={{ background: C.soft, padding: '1px 4px', borderRadius: 3 }}>utm_campaign={'{{campaign.id}}'}</code>.
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* KPIs — tab-aware (lead-centric, sale-centric, quiz-centric, or full) */}
       {tabKpis && (

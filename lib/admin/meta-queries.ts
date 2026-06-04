@@ -144,11 +144,25 @@ async function fetchCampaignMeta(token: string, accountId: string): Promise<Reco
   return map;
 }
 
+export type MetaSourcedTotals = {
+  // Lenient: any user whose utm_source contains fb/facebook/meta/ig/instagram
+  totalLeads: number;
+  // Of those, matched to a specific campaign (campaign_id or name)
+  matchedLeads: number;
+  // Of those, NOT matched but loose-bucketed by keyword
+  looseQuizLeads: number;
+  looseChallengeLeads: number;
+  looseUnknownLeads: number;
+  // Top utm_campaign values for debugging mismatches
+  topUtmCampaigns: { utm_campaign: string; count: number }[];
+};
+
 export async function getMetaCampaigns(dateRange?: string): Promise<{
   configured: boolean;
   error?: string;
   dateRange?: { since: string; until: string };
   rows?: MetaCampaignRow[];
+  sourcedTotals?: MetaSourcedTotals;
 }> {
   const { token, accountId } = metaCreds();
   if (!token || !accountId) return { configured: false };
@@ -190,43 +204,93 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
     buyerMap[u.id] = { source: u.utm_source || '', campaign: u.utm_campaign || '' };
   });
 
-  // Build set of Meta campaign names (lowercased) so we can match users by
-  // utm_campaign WITHOUT relying on utm_source — Meta auto-tag sometimes
-  // sets utm_source to inconsistent values (fb, facebook, facebook_ads, ig,
-  // instagram, etc.) and filtering by an exact-set check drops many legit
-  // leads. Match by utm_campaign === campaign_name instead.
-  const metaCampaignNames = new Set(
-    campaigns.map(c => (c.campaign_name || '').toLowerCase().trim()).filter(Boolean)
-  );
-
-  const metaUsersByCampaign: Record<string, number> = {};
-  (users ?? []).forEach(u => {
-    const key = (u.utm_campaign || '').toLowerCase().trim();
-    if (!key || !metaCampaignNames.has(key)) return;
-    metaUsersByCampaign[key] = (metaUsersByCampaign[key] ?? 0) + 1;
+  // Build lookup of Meta campaigns by BOTH name AND ID, plus per-campaign
+  // keyword tags (quiz/challenge) for fallback matching.
+  //
+  // Reality of utm_campaign tagging in the wild — it can be ANY of:
+  //   1. Meta campaign name verbatim   ("קמפיין-קוויז-29-5-2026")
+  //   2. Meta campaign ID              ("120247620090120693")
+  //   3. A static custom tag           ("quiz_tofu_v4")
+  //   4. An ad-level tag               ("hadar_danan_quiz")
+  // Strict name-only matching misses cases 2–4 entirely. We try ID first,
+  // then exact name, then loose keyword classification (quiz / challenge).
+  const nameToCampaignId: Record<string, string> = {};
+  const idSet = new Set<string>();
+  const quizCampaignIds = new Set<string>();
+  const challengeCampaignIds = new Set<string>();
+  campaigns.forEach(c => {
+    const id = String(c.campaign_id || '');
+    const lname = (c.campaign_name || '').toLowerCase().trim();
+    if (id) idSet.add(id);
+    if (lname) nameToCampaignId[lname] = id;
+    const meta = campaignMeta[id] ?? { objective: '', status: '' };
+    const { isQuiz } = classifyCampaign(c.campaign_name || '', meta.objective);
+    if (isQuiz) quizCampaignIds.add(id);
+    else if (lname.includes('אתגר') || lname.includes('challenge')) challengeCampaignIds.add(id);
   });
 
-  const buyersByCampaign: Record<string, { count: number; revenue: number }> = {};
-  const buyerSetByCampaign: Record<string, Set<string>> = {};
+  // Resolve a user's utm_campaign to a Meta campaign_id (or null if no match).
+  // This is THE matching function the rest of the page depends on.
+  function resolveCampaignId(utmCampaign: string | null | undefined): string | null {
+    if (!utmCampaign) return null;
+    const v = String(utmCampaign).toLowerCase().trim();
+    if (!v) return null;
+    // Direct campaign ID match
+    if (idSet.has(v)) return v;
+    if (idSet.has(String(utmCampaign).trim())) return String(utmCampaign).trim();
+    // Direct name match
+    if (nameToCampaignId[v]) return nameToCampaignId[v];
+    return null;
+  }
+
+  // Loose keyword-based bucket (for quiz funnel aggregate)
+  function looseBucket(utmCampaign: string | null | undefined): 'quiz' | 'challenge' | 'unknown' {
+    if (!utmCampaign) return 'unknown';
+    const v = String(utmCampaign).toLowerCase();
+    if (v.includes('quiz') || v.includes('קוויז') || v.includes('קויז')) return 'quiz';
+    if (v.includes('אתגר') || v.includes('challenge')) return 'challenge';
+    return 'unknown';
+  }
+
+  // Per-campaign-ID buckets
+  const metaUsersByCampaignId: Record<string, number> = {};
+  // Also bucket Meta-sourced users by loose category for fallback display
+  const looseUsersByBucket: Record<string, number> = { quiz: 0, challenge: 0, unknown: 0 };
+  (users ?? []).forEach(u => {
+    const cid = resolveCampaignId(u.utm_campaign);
+    if (cid) {
+      metaUsersByCampaignId[cid] = (metaUsersByCampaignId[cid] ?? 0) + 1;
+    } else {
+      // No direct match — bucket by loose keyword (only count if source is meta-ish)
+      const src = (u.utm_source || '').toLowerCase();
+      if (src.includes('fb') || src.includes('facebook') || src.includes('meta') || src.includes('ig') || src.includes('instagram')) {
+        const bucket = looseBucket(u.utm_campaign);
+        looseUsersByBucket[bucket] = (looseUsersByBucket[bucket] ?? 0) + 1;
+      }
+    }
+  });
+
+  const buyersByCampaignId: Record<string, { count: number; revenue: number }> = {};
+  const buyerSetByCampaignId: Record<string, Set<string>> = {};
   (purchases ?? []).forEach(p => {
     const u = buyerMap[p.user_id];
     if (!u) return;
-    const key = (u.campaign || '').toLowerCase().trim();
-    if (!key || !metaCampaignNames.has(key)) return;
-    if (!buyersByCampaign[key]) buyersByCampaign[key] = { count: 0, revenue: 0 };
-    buyersByCampaign[key].revenue += p.amount || 0;
-    if (!buyerSetByCampaign[key]) buyerSetByCampaign[key] = new Set();
-    buyerSetByCampaign[key].add(p.user_id);
+    const cid = resolveCampaignId(u.campaign);
+    if (!cid) return;
+    if (!buyersByCampaignId[cid]) buyersByCampaignId[cid] = { count: 0, revenue: 0 };
+    buyersByCampaignId[cid].revenue += p.amount || 0;
+    if (!buyerSetByCampaignId[cid]) buyerSetByCampaignId[cid] = new Set();
+    buyerSetByCampaignId[cid].add(p.user_id);
   });
-  Object.entries(buyerSetByCampaign).forEach(([k, s]) => {
-    if (buyersByCampaign[k]) buyersByCampaign[k].count = s.size;
+  Object.entries(buyerSetByCampaignId).forEach(([k, s]) => {
+    if (buyersByCampaignId[k]) buyersByCampaignId[k].count = s.size;
   });
 
   const rows: MetaCampaignRow[] = campaigns.map(c => {
     const spend = parseFloat(c.spend || '0');
-    const key = (c.campaign_name || '').toLowerCase().trim();
-    const crmLeads = metaUsersByCampaign[key] ?? 0;
-    const crm = buyersByCampaign[key] ?? { count: 0, revenue: 0 };
+    const cid = String(c.campaign_id || '');
+    const crmLeads = metaUsersByCampaignId[cid] ?? 0;
+    const crm = buyersByCampaignId[cid] ?? { count: 0, revenue: 0 };
 
     const metaLeads = pickAction(c.actions, ['lead', 'offsite_conversion.fb_pixel_lead']);
     const metaPurchases = pickAction(c.actions, ['purchase', 'offsite_conversion.fb_pixel_purchase']);
@@ -268,7 +332,36 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
   });
 
   rows.sort((a, b) => b.spend - a.spend);
-  return { configured: true, dateRange: { since, until }, rows };
+
+  // Aggregate Meta-sourced totals for the lenient KPI + debug panel
+  const utmCampaignCount: Record<string, number> = {};
+  let totalLeads = 0;
+  let matchedLeads = 0;
+  (users ?? []).forEach(u => {
+    const src = (u.utm_source || '').toLowerCase();
+    const isMeta = src.includes('fb') || src.includes('facebook') || src.includes('meta') || src.includes('ig') || src.includes('instagram');
+    if (!isMeta) return;
+    totalLeads += 1;
+    const cid = resolveCampaignId(u.utm_campaign);
+    if (cid) matchedLeads += 1;
+    const tag = (u.utm_campaign || '(empty)').trim();
+    utmCampaignCount[tag] = (utmCampaignCount[tag] ?? 0) + 1;
+  });
+  const topUtmCampaigns = Object.entries(utmCampaignCount)
+    .map(([utm_campaign, count]) => ({ utm_campaign, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 15);
+
+  const sourcedTotals: MetaSourcedTotals = {
+    totalLeads,
+    matchedLeads,
+    looseQuizLeads:      looseUsersByBucket.quiz ?? 0,
+    looseChallengeLeads: looseUsersByBucket.challenge ?? 0,
+    looseUnknownLeads:   looseUsersByBucket.unknown ?? 0,
+    topUtmCampaigns,
+  };
+
+  return { configured: true, dateRange: { since, until }, rows, sourcedTotals };
 }
 
 // ─── Ad-level top performers ──────────────────────────
