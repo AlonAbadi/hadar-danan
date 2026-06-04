@@ -14,6 +14,7 @@ import type {
   QuizFunnelByProduct,
   QuizFunnelBySource,
   CampaignKind,
+  TopAd,
 } from '@/lib/admin/meta-queries';
 
 const C = {
@@ -148,6 +149,83 @@ function dropoffColorFor(pct: number) {
   return pct >= 70 ? C.red : pct >= 40 ? C.gold : C.green;
 }
 
+function AdCreativeCard({ ad, kind }: { ad: TopAd; kind: 'quiz' | 'challenge' }) {
+  const accentColor = kind === 'quiz' ? '#3b82f6' : '#C9964A';
+  const imgSrc = ad.thumbnailUrl || ad.imageUrl;
+  const primaryMetric = kind === 'quiz'
+    ? { label: 'CPL', value: ad.metaLeads > 0 ? `₪${Math.round(ad.cplMeta).toLocaleString()}` : '—', sub: `${ad.metaLeads} השלמות` }
+    : { label: 'CPA', value: ad.metaPurchases > 0 ? `₪${Math.round(ad.cpaMeta).toLocaleString()}` : '—', sub: `${ad.metaPurchases} רכישות` };
+
+  return (
+    <div style={{ background: '#141820', border: `1px solid #2C323E`, borderRadius: 12, overflow: 'hidden', borderRight: `3px solid ${accentColor}` }}>
+      {/* Creative image */}
+      <div style={{ background: '#080C14', aspectRatio: '1.91 / 1', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            alt={ad.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div style={{ color: '#9E9990', fontSize: 12, padding: 16, textAlign: 'center' }}>
+            🖼️<br />אין תמונה זמינה<br />
+            <a href={ad.previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#C9964A', fontSize: 11, textDecoration: 'underline' }}>פתח ב-Meta</a>
+          </div>
+        )}
+        {ad.status && ad.status !== 'ACTIVE' && (
+          <span style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(239,68,68,0.85)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, fontFamily: 'system-ui' }}>
+            {ad.status}
+          </span>
+        )}
+      </div>
+
+      {/* Ad info */}
+      <div style={{ padding: '14px 16px' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#EDE9E1', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ad.name}>
+          {ad.name}
+        </div>
+        <div style={{ fontSize: 10, color: '#9E9990', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ad.campaign}>
+          {ad.campaign}
+        </div>
+
+        {/* KPI grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, fontFamily: 'system-ui' }}>
+          <div>
+            <div style={{ fontSize: 9, color: '#9E9990', textTransform: 'uppercase', letterSpacing: '0.04em' }}>הוצאה</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1' }}>₪{Math.round(ad.spend).toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: '#9E9990', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CTR</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1' }}>{ad.ctr.toFixed(2)}%</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: '#9E9990', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CPC</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1' }}>₪{ad.cpc.toFixed(2)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>{primaryMetric.label}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: accentColor }}>{primaryMetric.value}</div>
+            <div style={{ fontSize: 9, color: '#9E9990' }}>{primaryMetric.sub}</div>
+          </div>
+        </div>
+
+        {/* Links */}
+        <div style={{ display: 'flex', gap: 12, marginTop: 12, paddingTop: 10, borderTop: '1px solid #2C323E', fontSize: 11 }}>
+          {ad.permalinkUrl && (
+            <a href={ad.permalinkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#C9964A', textDecoration: 'none' }}>
+              🔗 צפה בפוסט
+            </a>
+          )}
+          <a href={ad.previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#C9964A', textDecoration: 'none', marginRight: 'auto' }}>
+            📊 פתח ב-Ads Manager
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const KIND_BADGE: Record<CampaignKind, { label: string; color: string }> = {
   lead:  { label: 'לידים',  color: '#3b82f6' },
   sale:  { label: 'מכירות', color: '#C9964A' },
@@ -171,6 +249,7 @@ export default function MetaClient({
   demo,
   placements,
   quizFunnel,
+  topByKind,
   kpis,
   dateRange,
 }: {
@@ -198,6 +277,7 @@ export default function MetaClient({
     metaTotal: { completions: number; leads: number; dropoff: number; dropoffPct: number };
     dateRange: { since: string; until: string };
   };
+  topByKind: { configured: boolean; error?: string; quiz: TopAd[]; challenge: TopAd[] };
   kpis: ReturnType<typeof import('@/lib/admin/meta-queries').aggregateKpis> | null;
   dateRange: string;
 }) {
@@ -770,7 +850,59 @@ export default function MetaClient({
         )}
       </Card>
 
-      {/* Top ads */}
+      {/* Best creatives per kind — Quiz × Challenge */}
+      {topByKind.configured && (topByKind.quiz.length > 0 || topByKind.challenge.length > 0) && (
+        <Card style={{ marginBottom: 24 }}>
+          <CardHeader
+            title="הקריאייטיבים הכי טובים — לפי סוג"
+            sub="Top 2 Creatives per Kind"
+            action={
+              <span style={{ fontSize: 11, color: C.muted, background: C.soft, padding: '3px 10px', borderRadius: 6 }}>
+                ממוין לפי CPL (קוויז) / CPA (אתגר), fallback ל-CTR
+              </span>
+            }
+          />
+          {topByKind.error ? (
+            <ErrorBox error={topByKind.error} />
+          ) : (
+            <div style={{ padding: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                {/* Quiz column */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.blue }}>קמפייני קוויז</span>
+                    <span style={{ fontSize: 10, color: C.muted }}>top {topByKind.quiz.length} לפי CPL נמוך</span>
+                  </div>
+                  {topByKind.quiz.length === 0 ? (
+                    <div style={{ padding: 24, textAlign: 'center', color: C.muted, fontSize: 13 }}>אין קריאייטיבים בקמפייני קוויז עם הוצאה</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {topByKind.quiz.map(ad => <AdCreativeCard key={ad.adId} ad={ad} kind="quiz" />)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Challenge column */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.gold }}>קמפיין אתגר</span>
+                    <span style={{ fontSize: 10, color: C.muted }}>top {topByKind.challenge.length} לפי CPA נמוך</span>
+                  </div>
+                  {topByKind.challenge.length === 0 ? (
+                    <div style={{ padding: 24, textAlign: 'center', color: C.muted, fontSize: 13 }}>אין קריאייטיבים בקמפיין אתגר עם הוצאה</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {topByKind.challenge.map(ad => <AdCreativeCard key={ad.adId} ad={ad} kind="challenge" />)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Top ads (by spend) */}
       <Card style={{ marginBottom: 24 }}>
         <CardHeader title="קריאייטיבים מובילים" sub={`Top Ads — לפי הוצאה (top ${adRows.length})`} />
         {ads.error ? (

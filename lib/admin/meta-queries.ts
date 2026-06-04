@@ -415,6 +415,142 @@ export async function getMetaTopAds(dateRange?: string, limit = 15): Promise<{
   return { configured: true, rows: rows.slice(0, limit) };
 }
 
+// ─── Top creatives per campaign kind (quiz / challenge) ─
+// For each kind (quiz lead-gen, challenge sales), surface the 2 best-
+// performing creatives with their actual image so the user can see what
+// is working. Sorted by lowest cost per conversion (CPL for quiz, CPA
+// for sale); falls back to highest CTR when no conversions yet.
+export type TopAd = {
+  adId: string;
+  name: string;
+  campaign: string;
+  campaignId: string;
+  campaignKind: CampaignKind;
+  isQuiz: boolean;
+  status: string;
+  impressions: number;
+  clicks: number;
+  spend: number;
+  ctr: number;
+  cpc: number;
+  metaLeads: number;
+  metaPurchases: number;
+  cplMeta: number;
+  cpaMeta: number;
+  thumbnailUrl: string | null;
+  imageUrl: string | null;
+  permalinkUrl: string | null;
+  previewUrl: string;
+};
+
+export async function getTopAdsByKind(dateRange?: string): Promise<{
+  configured: boolean;
+  error?: string;
+  quiz: TopAd[];
+  challenge: TopAd[];
+}> {
+  const { token, accountId } = metaCreds();
+  if (!token || !accountId) return { configured: false, quiz: [], challenge: [] };
+
+  const { since, until } = getRange(dateRange);
+
+  // Three calls, all cached 5min via the metaFetch helper:
+  //   1. Ad-level insights (spend/clicks/actions per ad)
+  //   2. All ads with creative thumbnail (for the actual image)
+  //   3. Campaign metadata (for objective → kind classification)
+  const adInsightsUrl = `https://graph.facebook.com/${API_VERSION}/act_${accountId}/insights?fields=ad_id,ad_name,campaign_id,campaign_name,impressions,clicks,spend,ctr,cpc,actions&time_range={"since":"${since}","until":"${until}"}&level=ad&limit=200&access_token=${token}`;
+  const adsUrl         = `https://graph.facebook.com/${API_VERSION}/act_${accountId}/ads?fields=id,name,campaign_id,effective_status,creative{thumbnail_url,image_url,object_story_id,effective_object_story_id}&limit=200&access_token=${token}`;
+  const campaignsUrl   = `https://graph.facebook.com/${API_VERSION}/act_${accountId}/campaigns?fields=id,name,objective&limit=200&access_token=${token}`;
+
+  const [insightsRes, adsRes, campaignsRes] = await Promise.all([
+    metaFetch(adInsightsUrl),
+    metaFetch(adsUrl),
+    metaFetch(campaignsUrl),
+  ]);
+
+  if (!insightsRes.ok) return { configured: true, error: insightsRes.error, quiz: [], challenge: [] };
+
+  // Build campaign_id → kind classification
+  const campaignKindMap: Record<string, { kind: CampaignKind; isQuiz: boolean }> = {};
+  if (campaignsRes.ok) {
+    ((campaignsRes.json.data ?? []) as any[]).forEach(c => {
+      const cls = classifyCampaign(c.name || '', c.objective || '');
+      campaignKindMap[String(c.id)] = cls;
+    });
+  }
+
+  // Build ad_id → creative info
+  const creativeMap: Record<string, { thumbnailUrl: string | null; imageUrl: string | null; storyId: string | null; status: string }> = {};
+  if (adsRes.ok) {
+    ((adsRes.json.data ?? []) as any[]).forEach(a => {
+      const c = a.creative || {};
+      creativeMap[String(a.id)] = {
+        thumbnailUrl: c.thumbnail_url || null,
+        imageUrl: c.image_url || null,
+        storyId: c.effective_object_story_id || c.object_story_id || null,
+        status: a.effective_status || '',
+      };
+    });
+  }
+
+  // Combine into typed rows
+  const ads: TopAd[] = ((insightsRes.json.data ?? []) as any[]).map(a => {
+    const cMeta = campaignKindMap[String(a.campaign_id)] ?? { kind: 'other' as CampaignKind, isQuiz: false };
+    const cr = creativeMap[String(a.ad_id)] ?? { thumbnailUrl: null, imageUrl: null, storyId: null, status: '' };
+    const spend = parseFloat(a.spend || '0');
+    const metaLeads = pickAction(a.actions, ['lead', 'offsite_conversion.fb_pixel_lead']);
+    const metaPurchases = pickAction(a.actions, ['purchase', 'offsite_conversion.fb_pixel_purchase']);
+    return {
+      adId: String(a.ad_id),
+      name: a.ad_name || '(ללא שם)',
+      campaign: a.campaign_name || '',
+      campaignId: String(a.campaign_id || ''),
+      campaignKind: cMeta.kind,
+      isQuiz: cMeta.isQuiz,
+      status: cr.status,
+      impressions: parseInt(a.impressions || '0'),
+      clicks: parseInt(a.clicks || '0'),
+      spend,
+      ctr: parseFloat(a.ctr || '0'),
+      cpc: parseFloat(a.cpc || '0'),
+      metaLeads,
+      metaPurchases,
+      cplMeta: metaLeads > 0 ? spend / metaLeads : 0,
+      cpaMeta: metaPurchases > 0 ? spend / metaPurchases : 0,
+      thumbnailUrl: cr.thumbnailUrl,
+      imageUrl: cr.imageUrl,
+      permalinkUrl: cr.storyId ? `https://www.facebook.com/${cr.storyId}` : null,
+      previewUrl: `https://www.facebook.com/ads/manager/manage/ads?act=${accountId}&selected_ad_ids=${a.ad_id}`,
+    };
+  });
+
+  // Pick top 2 quiz creatives — lowest CPL among ads with leads,
+  // falling back to highest CTR if no leads yet.
+  const quizCandidates = ads.filter(a => a.isQuiz && a.spend > 0);
+  quizCandidates.sort((a, b) => {
+    if (a.metaLeads > 0 && b.metaLeads > 0) return a.cplMeta - b.cplMeta;
+    if (a.metaLeads > 0) return -1;
+    if (b.metaLeads > 0) return 1;
+    return b.ctr - a.ctr;
+  });
+
+  // Pick top 2 challenge creatives — lowest CPA among ads with purchases,
+  // falling back to highest CTR.
+  const challengeCandidates = ads.filter(a => a.campaignKind === 'sale' && a.spend > 0);
+  challengeCandidates.sort((a, b) => {
+    if (a.metaPurchases > 0 && b.metaPurchases > 0) return a.cpaMeta - b.cpaMeta;
+    if (a.metaPurchases > 0) return -1;
+    if (b.metaPurchases > 0) return 1;
+    return b.ctr - a.ctr;
+  });
+
+  return {
+    configured: true,
+    quiz: quizCandidates.slice(0, 2),
+    challenge: challengeCandidates.slice(0, 2),
+  };
+}
+
 // ─── Daily trend (spend + leads per day) ──────────────
 export type MetaDailyPoint = {
   date: string;
