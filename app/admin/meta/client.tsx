@@ -151,20 +151,22 @@ function dropoffColorFor(pct: number) {
 
 function AdCreativeCard({ ad, kind }: { ad: TopAd; kind: 'quiz' | 'challenge' }) {
   const accentColor = kind === 'quiz' ? '#3b82f6' : '#C9964A';
-  const imgSrc = ad.thumbnailUrl || ad.imageUrl;
+  // Prefer high-res image source over the tiny thumbnail
+  const imgSrc = ad.imageUrl || ad.thumbnailUrl;
   const primaryMetric = kind === 'quiz'
     ? { label: 'CPL', value: ad.metaLeads > 0 ? `₪${Math.round(ad.cplMeta).toLocaleString()}` : '—', sub: `${ad.metaLeads} השלמות` }
     : { label: 'CPA', value: ad.metaPurchases > 0 ? `₪${Math.round(ad.cpaMeta).toLocaleString()}` : '—', sub: `${ad.metaPurchases} רכישות` };
 
   return (
     <div style={{ background: '#141820', border: `1px solid #2C323E`, borderRadius: 12, overflow: 'hidden', borderRight: `3px solid ${accentColor}` }}>
-      {/* Creative image */}
-      <div style={{ background: '#080C14', aspectRatio: '1.91 / 1', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Creative image — flexible height, contain to show the whole creative
+          regardless of aspect ratio (1:1 / 9:16 / 1.91:1 all look fine) */}
+      <div style={{ background: '#000', minHeight: 280, maxHeight: 480, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {imgSrc ? (
           <img
             src={imgSrc}
             alt={ad.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ maxWidth: '100%', maxHeight: 480, width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }}
             referrerPolicy="no-referrer"
           />
         ) : (
@@ -442,100 +444,6 @@ export default function MetaClient({
           </button>
         ))}
       </div>
-
-      {/* Meta-sourced total — independent of per-campaign matching.
-          Reveals the gap between "this many leads came from Meta" vs
-          "this many we could attribute to a specific Meta campaign". */}
-      {campaigns.sourcedTotals && campaigns.sourcedTotals.totalLeads > 0 && (
-        <Card style={{ marginBottom: 28 }}>
-          <CardHeader
-            title="לידים ממטא — סיכום ייחוס"
-            sub="Meta-Sourced Attribution"
-            action={
-              <span style={{ fontSize: 11, color: C.muted, background: C.soft, padding: '3px 10px', borderRadius: 6 }}>
-                לפי utm_source=fb/ig/meta
-              </span>
-            }
-          />
-          <div style={{ padding: '20px 24px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-              <Kpi label="סך לידים ממטא" value={fmtNum(campaigns.sourcedTotals.totalLeads)} accent={C.green} sub="utm_source מכיל fb/ig/meta" />
-              <Kpi
-                label="זוהו לקמפיין"
-                value={fmtNum(campaigns.sourcedTotals.matchedLeads)}
-                accent={C.blue}
-                sub={`${campaigns.sourcedTotals.totalLeads > 0 ? ((campaigns.sourcedTotals.matchedLeads / campaigns.sourcedTotals.totalLeads) * 100).toFixed(0) : 0}% מההתאמות`}
-              />
-              <Kpi
-                label="ליד קוויז (לפי keyword)"
-                value={fmtNum(campaigns.sourcedTotals.looseQuizLeads)}
-                accent={C.purple}
-                sub="utm_campaign מכיל quiz/קוויז"
-              />
-              <Kpi
-                label="ליד אתגר (לפי keyword)"
-                value={fmtNum(campaigns.sourcedTotals.looseChallengeLeads)}
-                accent={C.gold}
-                sub="utm_campaign מכיל challenge/אתגר"
-              />
-            </div>
-
-            {/* Top utm_campaign values from CRM — diagnose mismatches */}
-            <div>
-              <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 10 }}>
-                ערכי utm_campaign בפועל ב-CRM (top {campaigns.sourcedTotals.topUtmCampaigns.length})
-              </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                  <thead>
-                    <tr style={{ background: C.soft }}>
-                      <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>utm_campaign value</th>
-                      <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>לידים</th>
-                      <th style={{ padding: '8px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>זוהה?</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {campaigns.sourcedTotals.topUtmCampaigns.map((row, i) => {
-                      const matched = allRows.some(r => r.campaignId === row.utm_campaign || r.name.toLowerCase().trim() === row.utm_campaign.toLowerCase().trim());
-                      const matchedRow = allRows.find(r => r.campaignId === row.utm_campaign || r.name.toLowerCase().trim() === row.utm_campaign.toLowerCase().trim());
-                      const looseQuiz = !matched && (row.utm_campaign.toLowerCase().includes('quiz') || row.utm_campaign.includes('קוויז') || row.utm_campaign.includes('קויז'));
-                      const looseChallenge = !matched && (row.utm_campaign.toLowerCase().includes('challenge') || row.utm_campaign.includes('אתגר'));
-                      return (
-                        <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
-                          <td style={{ padding: '8px 14px', color: C.fg, fontFamily: 'monospace', fontSize: 11 }}>{row.utm_campaign || '(empty)'}</td>
-                          <td style={{ padding: '8px 14px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{row.count}</td>
-                          <td style={{ padding: '8px 14px', textAlign: 'right' }}>
-                            {matched ? (
-                              <span style={{ fontSize: 10, color: C.green, background: `${C.green}22`, padding: '2px 8px', borderRadius: 4 }}>
-                                ✓ {matchedRow?.name}
-                              </span>
-                            ) : looseQuiz ? (
-                              <span style={{ fontSize: 10, color: C.purple, background: `${C.purple}22`, padding: '2px 8px', borderRadius: 4 }}>
-                                ~ ליד קוויז (keyword)
-                              </span>
-                            ) : looseChallenge ? (
-                              <span style={{ fontSize: 10, color: C.gold, background: `${C.gold}22`, padding: '2px 8px', borderRadius: 4 }}>
-                                ~ ליד אתגר (keyword)
-                              </span>
-                            ) : (
-                              <span style={{ fontSize: 10, color: C.red, background: `${C.red}22`, padding: '2px 8px', borderRadius: 4 }}>
-                                ✗ לא זוהה
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(59,130,246,0.06)', borderRight: `3px solid ${C.blue}`, borderRadius: 6, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
-                💡 ההתאמה הנוכחית בקמפיינים דורשת ש-utm_campaign יהיה <strong style={{ color: C.fg }}>בדיוק</strong> שם הקמפיין במטא או ה-Campaign ID. אם הרבה לידים מסומנים "לא זוהה" — צריך לעדכן את URL Parameters במטא שיוסיף <code style={{ background: C.soft, padding: '1px 4px', borderRadius: 3 }}>utm_campaign={'{{campaign.name}}'}</code> או <code style={{ background: C.soft, padding: '1px 4px', borderRadius: 3 }}>utm_campaign={'{{campaign.id}}'}</code>.
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
 
       {/* KPIs — tab-aware (lead-centric, sale-centric, quiz-centric, or full) */}
       {tabKpis && (
@@ -850,59 +758,75 @@ export default function MetaClient({
         )}
       </Card>
 
-      {/* Best creatives per kind — Quiz × Challenge */}
-      {topByKind.configured && (topByKind.quiz.length > 0 || topByKind.challenge.length > 0) && (
-        <Card style={{ marginBottom: 24 }}>
-          <CardHeader
-            title="הקריאייטיבים הכי טובים — לפי סוג"
-            sub="Top 2 Creatives per Kind"
-            action={
-              <span style={{ fontSize: 11, color: C.muted, background: C.soft, padding: '3px 10px', borderRadius: 6 }}>
-                ממוין לפי CPL (קוויז) / CPA (אתגר), fallback ל-CTR
-              </span>
-            }
-          />
-          {topByKind.error ? (
-            <ErrorBox error={topByKind.error} />
-          ) : (
-            <div style={{ padding: 24 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                {/* Quiz column */}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.blue }}>קמפייני קוויז</span>
-                    <span style={{ fontSize: 10, color: C.muted }}>top {topByKind.quiz.length} לפי CPL נמוך</span>
-                  </div>
-                  {topByKind.quiz.length === 0 ? (
-                    <div style={{ padding: 24, textAlign: 'center', color: C.muted, fontSize: 13 }}>אין קריאייטיבים בקמפייני קוויז עם הוצאה</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      {topByKind.quiz.map(ad => <AdCreativeCard key={ad.adId} ad={ad} kind="quiz" />)}
+      {/* Best creatives per kind — tab-aware. In 'sale' tab only show
+          challenge column; in 'lead' tab only show quiz column. */}
+      {topByKind.configured && (() => {
+        const showQuiz      = kindTab === 'all' || kindTab === 'lead';
+        const showChallenge = kindTab === 'all' || kindTab === 'sale';
+        const hasQuiz       = showQuiz && topByKind.quiz.length > 0;
+        const hasChallenge  = showChallenge && topByKind.challenge.length > 0;
+        if (!hasQuiz && !hasChallenge) return null;
+        const cols = showQuiz && showChallenge ? '1fr 1fr' : '1fr';
+        return (
+          <Card style={{ marginBottom: 24 }}>
+            <CardHeader
+              title="הקריאייטיבים הכי טובים"
+              sub={kindTab === 'sale' ? 'Top Sales Creatives' : kindTab === 'lead' ? 'Top Lead Creatives' : 'Top Creatives per Kind'}
+              action={
+                <span style={{ fontSize: 11, color: C.muted, background: C.soft, padding: '3px 10px', borderRadius: 6 }}>
+                  {kindTab === 'sale' ? 'top 2 לפי CPA נמוך' : kindTab === 'lead' ? 'top 2 לפי CPL נמוך' : 'CPL (קוויז) / CPA (אתגר)'}
+                </span>
+              }
+            />
+            {topByKind.error ? (
+              <ErrorBox error={topByKind.error} />
+            ) : (
+              <div style={{ padding: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: cols, gap: 24 }}>
+                  {showQuiz && (
+                    <div>
+                      {showChallenge && (
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: C.blue }}>קמפייני קוויז</span>
+                          <span style={{ fontSize: 10, color: C.muted }}>לפי CPL נמוך</span>
+                        </div>
+                      )}
+                      {topByKind.quiz.length === 0 ? (
+                        <div style={{ padding: 24, textAlign: 'center', color: C.muted, fontSize: 13 }}>אין קריאייטיבים בקמפייני קוויז עם הוצאה</div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                          {topByKind.quiz.map(ad => <AdCreativeCard key={ad.adId} ad={ad} kind="quiz" />)}
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-
-                {/* Challenge column */}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.gold }}>קמפיין אתגר</span>
-                    <span style={{ fontSize: 10, color: C.muted }}>top {topByKind.challenge.length} לפי CPA נמוך</span>
-                  </div>
-                  {topByKind.challenge.length === 0 ? (
-                    <div style={{ padding: 24, textAlign: 'center', color: C.muted, fontSize: 13 }}>אין קריאייטיבים בקמפיין אתגר עם הוצאה</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      {topByKind.challenge.map(ad => <AdCreativeCard key={ad.adId} ad={ad} kind="challenge" />)}
+                  {showChallenge && (
+                    <div>
+                      {showQuiz && (
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: C.gold }}>קמפיין אתגר</span>
+                          <span style={{ fontSize: 10, color: C.muted }}>לפי CPA נמוך</span>
+                        </div>
+                      )}
+                      {topByKind.challenge.length === 0 ? (
+                        <div style={{ padding: 24, textAlign: 'center', color: C.muted, fontSize: 13 }}>אין קריאייטיבים בקמפיין אתגר עם הוצאה</div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                          {topByKind.challenge.map(ad => <AdCreativeCard key={ad.adId} ad={ad} kind="challenge" />)}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
-            </div>
-          )}
-        </Card>
-      )}
+            )}
+          </Card>
+        );
+      })()}
 
-      {/* Top ads (by spend) */}
+      {/* Top ads (by spend) — generic fallback, only on 'all' tab to avoid
+          duplicating the per-kind section above */}
+      {kindTab === 'all' && (
       <Card style={{ marginBottom: 24 }}>
         <CardHeader title="קריאייטיבים מובילים" sub={`Top Ads — לפי הוצאה (top ${adRows.length})`} />
         {ads.error ? (
@@ -939,6 +863,7 @@ export default function MetaClient({
           </div>
         )}
       </Card>
+      )}
 
       {/* Extras — Demographics + Placements with tabs */}
       <Card>

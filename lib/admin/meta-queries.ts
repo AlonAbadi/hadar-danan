@@ -459,7 +459,10 @@ export async function getTopAdsByKind(dateRange?: string): Promise<{
   //   2. All ads with creative thumbnail (for the actual image)
   //   3. Campaign metadata (for objective → kind classification)
   const adInsightsUrl = `https://graph.facebook.com/${API_VERSION}/act_${accountId}/insights?fields=ad_id,ad_name,campaign_id,campaign_name,impressions,clicks,spend,ctr,cpc,actions&time_range={"since":"${since}","until":"${until}"}&level=ad&limit=200&access_token=${token}`;
-  const adsUrl         = `https://graph.facebook.com/${API_VERSION}/act_${accountId}/ads?fields=id,name,campaign_id,effective_status,creative{thumbnail_url,image_url,object_story_id,effective_object_story_id}&limit=200&access_token=${token}`;
+  // Request multiple image sources — image_url is full-resolution (1080+px),
+  // thumbnail_url is a small preview. Also pull object_story_spec for
+  // link_data.picture (high-res link ads) and video_data.image_url (video posters).
+  const adsUrl         = `https://graph.facebook.com/${API_VERSION}/act_${accountId}/ads?fields=id,name,campaign_id,effective_status,creative{thumbnail_url,image_url,object_story_id,effective_object_story_id,object_story_spec{link_data{picture},video_data{image_url}}}&limit=200&access_token=${token}`;
   const campaignsUrl   = `https://graph.facebook.com/${API_VERSION}/act_${accountId}/campaigns?fields=id,name,objective&limit=200&access_token=${token}`;
 
   const [insightsRes, adsRes, campaignsRes] = await Promise.all([
@@ -479,14 +482,24 @@ export async function getTopAdsByKind(dateRange?: string): Promise<{
     });
   }
 
-  // Build ad_id → creative info
+  // Build ad_id → creative info. Prefer the highest-resolution source:
+  // 1) object_story_spec.link_data.picture (full-res link ad image)
+  // 2) object_story_spec.video_data.image_url (video poster, usually 1080p)
+  // 3) creative.image_url (medium-res)
+  // 4) creative.thumbnail_url (small, last resort)
   const creativeMap: Record<string, { thumbnailUrl: string | null; imageUrl: string | null; storyId: string | null; status: string }> = {};
   if (adsRes.ok) {
     ((adsRes.json.data ?? []) as any[]).forEach(a => {
       const c = a.creative || {};
+      const story = c.object_story_spec || {};
+      const bestImage =
+        story.link_data?.picture
+        || story.video_data?.image_url
+        || c.image_url
+        || null;
       creativeMap[String(a.id)] = {
         thumbnailUrl: c.thumbnail_url || null,
-        imageUrl: c.image_url || null,
+        imageUrl: bestImage,
         storyId: c.effective_object_story_id || c.object_story_id || null,
         status: a.effective_status || '',
       };
