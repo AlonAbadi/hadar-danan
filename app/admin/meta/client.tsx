@@ -635,7 +635,12 @@ export default function MetaClient({
                   <tr key={c.campaignId ?? i} style={{ borderBottom: `1px solid ${C.border}` }}>
                     <td style={{ padding: '10px 12px', fontWeight: 600, color: C.fg, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</td>
                     <td style={{ padding: '10px 12px' }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: badge.color, background: `${badge.color}22`, padding: '3px 8px', borderRadius: 5, whiteSpace: 'nowrap' }}>{badge.label}</span>
+                      <span
+                        title={`objective: ${c.objective || '(none)'} | kind: ${c.kind} | isQuiz: ${c.isQuiz}`}
+                        style={{ fontSize: 10, fontWeight: 700, color: badge.color, background: `${badge.color}22`, padding: '3px 8px', borderRadius: 5, whiteSpace: 'nowrap', cursor: 'help' }}
+                      >
+                        {badge.label}
+                      </span>
                     </td>
                     <td style={{ padding: '10px 12px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{fmtMoney(c.spend)}</td>
                     <td style={{ padding: '10px 12px', color: C.muted, textAlign: 'right', fontFamily: 'system-ui' }}>{fmtNum(c.impressions)}</td>

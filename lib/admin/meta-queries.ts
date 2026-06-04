@@ -93,13 +93,24 @@ export type MetaCampaignRow = {
   trueRoas: number;
 };
 
-// Quiz name patterns — matched against campaign name (case-insensitive)
-const QUIZ_PATTERNS = /(quiz|קוויז|שאלון|אבחון)/i;
+// Quiz keywords — matched against campaign name via string.includes()
+// (avoid regex literals with Hebrew chars — bundler/transpiler edge cases).
+// Includes alternative spellings: "קוויז" (5 letters) and "קויז" (4 letters).
+const QUIZ_KEYWORDS = ['quiz', 'קוויז', 'קויז', 'שאלון', 'אבחון'];
+
+// Challenge keyword — only the challenge campaign is sales.
+const CHALLENGE_KEYWORDS = ['אתגר', 'challenge'];
 
 function classifyCampaign(name: string, objective: string): { kind: CampaignKind; isQuiz: boolean } {
-  const isQuiz = QUIZ_PATTERNS.test(name || '');
-  // Quiz campaigns are LEAD campaigns whose conversion event is reaching the form.
+  const lower = (name || '').toLowerCase().trim();
+  const isQuiz = QUIZ_KEYWORDS.some(k => lower.includes(k.toLowerCase()));
   if (isQuiz) return { kind: 'lead', isQuiz: true };
+
+  // Challenge campaign — sales (only)
+  const isChallenge = CHALLENGE_KEYWORDS.some(k => lower.includes(k.toLowerCase()));
+  if (isChallenge) return { kind: 'sale', isQuiz: false };
+
+  // Fall back to Meta's stated objective
   const o = (objective || '').toUpperCase();
   if (o.includes('LEAD')) return { kind: 'lead', isQuiz: false };
   if (o === 'OUTCOME_SALES' || o === 'CONVERSIONS' || o === 'PRODUCT_CATALOG_SALES') return { kind: 'sale', isQuiz: false };
