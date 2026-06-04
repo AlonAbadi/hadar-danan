@@ -14,7 +14,7 @@ const NAV_LINKS = [
 ];
 
 const DROPDOWN_ITEMS = [
-  { label: "אתגר 7 ימים",      price: "₪197",    href: "/challenge" },
+  { label: "אתגר 7 ימים",      price: "₪197",    priceOriginal: "₪297", href: "/challenge" },
   { label: "סדנה יום אחד",     price: "₪1,080",  href: "/workshop" },
   { label: "קורס דיגיטלי",     price: "₪1,800",  href: "/course" },
   { label: "פגישת אסטרטגיה",   price: "₪4,000",  href: "/strategy" },
@@ -197,7 +197,12 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#1D2430"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
-                  <span style={{ color: "#9E9990", fontSize: 13 }}>{item.price}</span>
+                  <span style={{ color: "#9E9990", fontSize: 13, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    {('priceOriginal' in item) && (
+                      <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: 11 }}>{(item as { priceOriginal: string }).priceOriginal}</span>
+                    )}
+                    <span>{item.price}</span>
+                  </span>
                   <span>{item.label}</span>
                 </Link>
               ))}

@@ -19,7 +19,7 @@ const ITEMS_GROUP2 = [
 ];
 
 const ITEMS_GROUP3 = [
-  { label: "אתגר 7 ימים",      price: "₪197",    href: "/challenge" },
+  { label: "אתגר 7 ימים",      price: "₪197",    priceOriginal: "₪297", href: "/challenge" },
   { label: "סדנה יום אחד",     price: "₪1,080",  href: "/workshop" },
   { label: "קורס דיגיטלי",     price: "₪1,800",  href: "/course" },
   { label: "פגישת אסטרטגיה",   price: "₪4,000",  href: "/strategy" },
@@ -398,7 +398,14 @@ function DrawerItem({
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
     >
       <span style={{ color: active ? "#E8B94A" : "#EDE9E1" }}>{item.label}</span>
-      {item.price && <span style={{ color: "#9E9990", fontSize: 13 }}>{item.price}</span>}
+      {item.price && (
+        <span style={{ color: "#9E9990", fontSize: 13, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+          {('priceOriginal' in item) && (
+            <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: 11 }}>{(item as { priceOriginal: string }).priceOriginal}</span>
+          )}
+          <span>{item.price}</span>
+        </span>
+      )}
     </Link>
   );
 }

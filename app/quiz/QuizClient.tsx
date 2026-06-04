@@ -31,6 +31,7 @@ type Product = {
   checkoutHref: string;
   name: string;
   price: string;
+  priceOriginal?: string;
 };
 
 // ── Questions ────────────────────────────────────────────────────
@@ -108,7 +109,7 @@ const QUESTIONS = [
 
 const PRODUCTS: Product[] = [
   { id: "free_training", href: "/training",    checkoutHref: "/training",        name: "הדרכה חינמית",      price: "חינם" },
-  { id: "challenge",     href: "/challenge",   checkoutHref: "/challenge#cta",   name: "אתגר 7 הימים",      price: "197 ש\"ח" },
+  { id: "challenge",     href: "/challenge",   checkoutHref: "/challenge#cta",   name: "אתגר 7 הימים",      price: "197 ש\"ח", priceOriginal: "297 ש\"ח" },
   { id: "workshop",      href: "/workshop",    checkoutHref: "/workshop#cta",    name: "סדנה יום אחד",      price: "1,080 ש\"ח" },
   { id: "course",        href: "/course",      checkoutHref: "/course#cta",      name: "קורס דיגיטלי",      price: "1,800 ש\"ח" },
   { id: "strategy",      href: "/strategy",    checkoutHref: "/strategy/book",   name: "פגישת אסטרטגיה",    price: "4,000 ש\"ח" },
@@ -1201,6 +1202,9 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
               <div style={{ position: "absolute", bottom: 0, right: 0, left: 0, padding: 16 }}>
                 <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.2, color: "#fff", marginBottom: 8 }}>{winner.name}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+                  {winner.priceOriginal && (
+                    <span style={{ color: "rgba(255,255,255,0.5)", textDecoration: "line-through", fontSize: 13 }}>{winner.priceOriginal}</span>
+                  )}
                   <span style={{ color: C.gold, fontWeight: 700 }}>{winner.price}</span>
                   <span style={{ color: "rgba(255,255,255,0.4)" }}>·</span>
                   <span style={{ color: "rgba(255,255,255,0.6)" }}>{metaText}</span>

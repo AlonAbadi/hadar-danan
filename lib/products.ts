@@ -71,6 +71,13 @@ export function formatHebrew(d: string): string {
   return `${Number(day)} ב${MONTHS[Number(m)]}`;
 }
 
+// Display-only original prices (for strikethrough/discount UI). The actual
+// charged amount lives in the `price` field of PRODUCT_MAP and in Cardcom
+// + Pixel/CAPI events — these constants are for product cards / nav /
+// landing pages only.
+export const CHALLENGE_PRICE = 197;          // actual charged
+export const CHALLENGE_ORIGINAL_PRICE = 297; // display strikethrough
+
 export const PRODUCT_MAP = {
   challenge_197:  { name: "צ׳אלנג׳ 7 הימים",   price: 197   },
   workshop_1080:  { name: "סדנה יום אחד",        price: 1080  },

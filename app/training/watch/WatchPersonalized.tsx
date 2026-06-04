@@ -135,6 +135,7 @@ export function WatchNextStep() {
                   border: "1px solid rgba(201,150,74,0.2)",
                 }}
               >
+                <span style={{ textDecoration: 'line-through', opacity: 0.55, marginInlineEnd: 6, fontSize: 12 }}>₪297</span>
                 ₪197
               </div>
             </div>

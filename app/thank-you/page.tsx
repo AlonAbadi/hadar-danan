@@ -75,7 +75,7 @@ export default function ThankYouPage() {
               href="/challenge"
               className="rounded-full py-3 text-sm font-bold text-center btn-cta-gold"
             >
-              הצ׳אלנג׳ 7 הימים - ₪197 ←
+              הצ׳אלנג׳ 7 הימים - <span style={{ textDecoration: 'line-through', opacity: 0.6, marginInlineEnd: 4 }}>₪297</span> ₪197 ←
             </Link>
           </div>
 

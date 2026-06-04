@@ -6,7 +6,7 @@ import { ChallengeGreeting } from "./ChallengeGreeting";
 import { InstantAccessStrip } from "./InstantAccessStrip";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
-import { PRODUCT_MAP } from "@/lib/products";
+import { PRODUCT_MAP, CHALLENGE_ORIGINAL_PRICE } from "@/lib/products";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
@@ -53,7 +53,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
       <ProductLandingPage
         productName="אתגר 7 הימים"
         price={PRODUCT_MAP.challenge_197.price}
-        originalPrice={397}
+        originalPrice={CHALLENGE_ORIGINAL_PRICE}
         checkoutHref="#cta"
 
         headline={<>7 ימים, 7 סרטונים<br /><em>שמייצרים מכירות</em></>}

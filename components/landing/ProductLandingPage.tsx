@@ -412,16 +412,24 @@ function PriceCard({
       border: `1px solid ${GOLD}`, padding: '30px 26px', textAlign: 'center',
       boxShadow: `0 0 60px rgba(201,150,74,0.1)`,
     }}>
+      {originalPrice && (
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10, marginBottom: 4 }}>
+          <span style={{ fontSize: 22, textDecoration: 'line-through', color: FG_M, direction: 'ltr' }}>
+            ₪{originalPrice.toLocaleString('he-IL')}
+          </span>
+          <span style={{
+            background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 800,
+            padding: '3px 9px', borderRadius: 6, letterSpacing: '0.05em',
+          }}>
+            במבצע — חוסכים ₪{(originalPrice - price).toLocaleString('he-IL')}
+          </span>
+        </div>
+      )}
       <div style={{
         fontSize: 68, fontWeight: 900, lineHeight: 1, direction: 'ltr', marginBottom: 6,
         background: `linear-gradient(135deg, ${GOLD_L}, ${GOLD_D})`,
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
       }}>{displayPrice}</div>
-      {originalPrice && (
-        <div style={{ fontSize: 16, textDecoration: 'line-through', color: FG_M, marginBottom: 4 }}>
-          ₪{originalPrice.toLocaleString('he-IL')}
-        </div>
-      )}
       {price > 0 && (
         <div style={{ color: FG_M, fontSize: 13, marginBottom: 22 }}>
           פחות מ-₪{dailyPrice} ליום לאורך שנה

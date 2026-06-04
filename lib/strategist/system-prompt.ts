@@ -26,7 +26,7 @@ export const STRATEGIST_SYSTEM_PROMPT = `אתה האסטרטג השיווקי ה
 | שלב | מוצר | מחיר | סוג |
 |------|-------|--------|------|
 | 0 | הדרכה חינמית ("/training") | ₪0 | Lead magnet |
-| 1 | אתגר 7 ימים ("/challenge") | ₪197 | Tripwire / front-end |
+| 1 | אתגר 7 ימים ("/challenge") | ₪197 (מבצע, מחיר רגיל ₪297) | Tripwire / front-end |
 | 2 | סדנה יום אחד ("/workshop") | ₪1,080 | Mid-ticket |
 | 3 | קורס דיגיטלי ("/course") | ₪1,800 | Self-paced |
 | 4 | פגישת אסטרטגיה 90 דק' ("/strategy") | ₪4,000 | **Anchor product** |

@@ -102,6 +102,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       badge:    "02",
       href:     "/challenge",
       price:    "₪197",
+      priceOriginal: "₪297",
       name:     "אתגר 7 ימים",
       tag:      null,
       outcome:  "7 סרטונים שמשנים את הדרך",
@@ -264,8 +265,13 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                       </div>
                     </div>
 
-                    <div style={{ flexShrink: 0 }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: "#C9964A", textAlign: "left" }}>{p.price}</div>
+                    <div style={{ flexShrink: 0, textAlign: "left" }}>
+                      {('priceOriginal' in p) && (
+                        <div style={{ fontSize: 12, textDecoration: 'line-through', color: '#9E9990', direction: 'ltr', marginBottom: 2 }}>
+                          {(p as { priceOriginal: string }).priceOriginal}
+                        </div>
+                      )}
+                      <div style={{ fontSize: 18, fontWeight: 800, color: "#C9964A" }}>{p.price}</div>
                     </div>
                   </div>
 

@@ -9,7 +9,7 @@ export const GROUP2 = [
 ];
 
 export const GROUP3 = [
-  { label: "אתגר 7 ימים",      price: "₪197",    href: "/challenge" },
+  { label: "אתגר 7 ימים",      price: "₪197",    priceOriginal: "₪297", href: "/challenge" },
   { label: "סדנה יום אחד",     price: "₪1,080",  href: "/workshop" },
   { label: "קורס דיגיטלי",     price: "₪1,800",  href: "/course" },
   { label: "פגישת אסטרטגיה",   price: "₪4,000",  href: "/strategy" },
