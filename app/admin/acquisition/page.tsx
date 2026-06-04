@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
-import { getSourceAnalytics, getGoogleAdsData, getQuizStats, getTrainingVideoStats } from '@/lib/admin/queries';
+import { getSourceAnalytics, getMetaAdsData, getGoogleAdsData, getQuizStats, getTrainingVideoStats } from '@/lib/admin/queries';
 import { getGA4Data } from '@/lib/admin/ga4-server';
 import AcquisitionClient from './client';
 
@@ -13,10 +13,9 @@ export default async function AcquisitionPage({
   const { range } = await searchParams;
   const dateRange = range || '30d';
 
-  // Meta Ads integration disabled until System User token is regenerated
-  // with ads_read scope on the ad account (current token has CAPI scope only).
-  const [sourceData, googleAds, ga4, quiz, trainingVideo] = await Promise.all([
+  const [sourceData, metaAds, googleAds, ga4, quiz, trainingVideo] = await Promise.all([
     getSourceAnalytics(dateRange),
+    getMetaAdsData(dateRange),
     getGoogleAdsData(dateRange),
     getGA4Data(dateRange),
     getQuizStats(dateRange),
@@ -28,6 +27,7 @@ export default async function AcquisitionPage({
       <AcquisitionClient
         sources={sourceData.sources}
         campaigns={sourceData.campaigns}
+        metaAds={metaAds}
         googleAds={googleAds}
         ga4={ga4}
         quiz={quiz}

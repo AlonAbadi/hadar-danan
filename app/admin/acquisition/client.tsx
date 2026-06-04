@@ -179,6 +179,7 @@ type CampaignRow = {
 export default function AcquisitionClient({
   sources,
   campaigns,
+  metaAds,
   googleAds,
   ga4,
   quiz,
@@ -187,6 +188,7 @@ export default function AcquisitionClient({
 }: {
   sources: any[];
   campaigns: CampaignRow[];
+  metaAds: any;
   googleAds: any;
   ga4: any;
   quiz: { total: number; leads: number; byProduct: Record<string, number> };
@@ -712,7 +714,70 @@ export default function AcquisitionClient({
         </Card>
       )}
 
-      {/* Meta Ads section temporarily removed — pending token regeneration with ads_read scope */}
+      {/* ── Meta Ads ─────────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader
+          title="קמפיינים — Meta Ads"
+          sub="Meta Campaigns"
+          action={!metaAds.configured ? (
+            <span style={{ fontSize: 11, color: C.gold, background: 'rgba(201,150,74,0.12)', padding: '3px 10px', borderRadius: 6 }}>לא מחובר</span>
+          ) : undefined}
+        />
+        {metaAds.configured && metaAds.error ? (
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: '#e05555', marginBottom: 8 }}>שגיאה מ-Meta API</div>
+            <div style={{ fontSize: 12, color: C.muted, fontFamily: 'monospace', maxWidth: 600, margin: '0 auto', wordBreak: 'break-word' }}>{metaAds.error}</div>
+            {metaAds.dateRange && (
+              <div style={{ fontSize: 11, color: `${C.muted}88`, marginTop: 12 }}>
+                טווח: {metaAds.dateRange.since} → {metaAds.dateRange.until}
+              </div>
+            )}
+          </div>
+        ) : metaAds.configured && metaAds.data && metaAds.data.length > 0 ? (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: C.soft }}>
+                  {['קמפיין', 'חשיפות', 'קליקים', 'CTR', 'הוצאה', 'המרות', 'CPA'].map(h => (
+                    <th key={h} style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}` }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {metaAds.data.map((camp: any, i: number) => (
+                  <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: C.fg }}>{camp.name}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{camp.impressions.toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{camp.clicks.toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right' }}>{camp.ctr.toFixed(2)}%</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>₪{Math.round(camp.spend).toLocaleString()}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{camp.conversions}</td>
+                    <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{camp.costPerConversion > 0 ? `₪${Math.round(camp.costPerConversion)}` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : metaAds.configured && metaAds.data && metaAds.data.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: C.muted, marginBottom: 6 }}>אין קמפיינים פעילים בטווח</div>
+            {metaAds.dateRange && (
+              <div style={{ fontSize: 12, color: `${C.muted}88` }}>
+                טווח: {metaAds.dateRange.since} → {metaAds.dateRange.until}
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: `${C.muted}66`, marginTop: 8 }}>החיבור עובד — פשוט אין נתונים להציג</div>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📢</div>
+            <div style={{ fontSize: 15, fontWeight: 500, color: C.muted, marginBottom: 6 }}>Meta Ads לא מחובר</div>
+            <div style={{ fontSize: 13, color: `${C.muted}88` }}>הוסף META_AD_ACCOUNT_ID לקובץ .env</div>
+          </div>
+        )}
+      </Card>
 
     </div>
   );
