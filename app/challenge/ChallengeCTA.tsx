@@ -23,12 +23,33 @@ interface ChallengeCTAProps {
   credit?: number;
 }
 
-// Renders ₪297 strikethrough + ₪price for the sale callout inside CTA buttons
+// Renders ₪297 strikethrough + ₪price for the sale callout inside CTA buttons.
+// Strikethrough sits in a soft red pill so the old price stays readable on the
+// gold button background (the previous opacity-based version was practically
+// invisible). Crossed by a thick red line to telegraph "was reduced" instantly.
 function PriceWithDiscount({ price, originalPrice }: { price: string | number; originalPrice?: number }) {
   if (!originalPrice || Number(price) >= originalPrice) return <>₪{price}</>;
   return (
     <>
-      <span style={{ textDecoration: "line-through", opacity: 0.55, marginInlineEnd: 6, fontSize: "85%" }}>
+      <span
+        style={{
+          display: "inline-block",
+          padding: "1px 8px",
+          marginInlineEnd: 10,
+          background: "rgba(220, 38, 38, 0.16)",
+          border: "1.5px solid rgba(185, 28, 28, 0.55)",
+          borderRadius: 6,
+          color: "#7f1d1d",
+          fontSize: "0.74em",
+          fontWeight: 800,
+          textDecoration: "line-through",
+          textDecorationColor: "#b91c1c",
+          textDecorationThickness: 2,
+          verticalAlign: "middle",
+          letterSpacing: "0.01em",
+          direction: "ltr",
+        }}
+      >
         ₪{originalPrice}
       </span>
       ₪{price}

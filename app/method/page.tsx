@@ -396,7 +396,22 @@ export default function MethodPage() {
                 textDecoration: "none",
               }}
             >
-              אתגר 7 הימים — <span style={{ textDecoration: 'line-through', opacity: 0.6, marginInlineEnd: 4 }}>₪297</span> ₪197 ←
+              אתגר 7 הימים — <span style={{
+                display: 'inline-block',
+                padding: '1px 8px',
+                marginInlineEnd: 8,
+                background: 'rgba(220, 38, 38, 0.16)',
+                border: '1.5px solid rgba(185, 28, 28, 0.55)',
+                borderRadius: 6,
+                color: '#7f1d1d',
+                fontSize: '0.74em',
+                fontWeight: 800,
+                textDecoration: 'line-through',
+                textDecorationColor: '#b91c1c',
+                textDecorationThickness: 2,
+                verticalAlign: 'middle',
+                direction: 'ltr',
+              }}>₪297</span> ₪197 ←
             </Link>
             <Link
               href="/strategy"
