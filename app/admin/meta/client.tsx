@@ -11,6 +11,7 @@ import type {
   MetaDailyPoint,
   MetaDemoRow,
   MetaPlacementRow,
+  QuizFunnelByProduct,
 } from '@/lib/admin/meta-queries';
 
 const C = {
@@ -141,12 +142,27 @@ function fmtNum(n: number) {
   return n.toLocaleString();
 }
 
+function dropoffColorFor(pct: number) {
+  return pct >= 70 ? C.red : pct >= 40 ? C.gold : C.green;
+}
+
+const PRODUCT_LABELS: Record<string, string> = {
+  challenge:    'אתגר 7 ימים',
+  workshop:     'סדנה יום אחד',
+  course:       'קורס דיגיטלי',
+  strategy:     'פגישת אסטרטגיה',
+  premium:      'יום צילום פרמיום',
+  partnership:  'שותפות אסטרטגית',
+  hive:         'הכוורת',
+};
+
 export default function MetaClient({
   campaigns,
   ads,
   daily,
   demo,
   placements,
+  quizFunnel,
   kpis,
   dateRange,
 }: {
@@ -155,6 +171,7 @@ export default function MetaClient({
   daily: { configured: boolean; error?: string; points?: MetaDailyPoint[] };
   demo: { configured: boolean; error?: string; rows?: MetaDemoRow[] };
   placements: { configured: boolean; error?: string; rows?: MetaPlacementRow[] };
+  quizFunnel: { completions: number; leads: number; dropoff: number; dropoffPct: number; byProduct: QuizFunnelByProduct[]; dateRange: { since: string; until: string } };
   kpis: ReturnType<typeof import('@/lib/admin/meta-queries').aggregateKpis> | null;
   dateRange: string;
 }) {
@@ -294,6 +311,126 @@ export default function MetaClient({
             </ResponsiveContainer>
           </div>
         )}
+      </Card>
+
+      {/* Quiz funnel — completed quiz vs entered details */}
+      <Card style={{ marginBottom: 24 }}>
+        <CardHeader
+          title="פאנל קוויז → ליד"
+          sub="Quiz Completion → Lead Capture Gap"
+          action={
+            <span style={{ fontSize: 10, color: C.muted, background: C.soft, padding: '3px 8px', borderRadius: 5 }}>
+              כל המקורות (אין UTM ב-quiz_results)
+            </span>
+          }
+        />
+        <div style={{ padding: '24px 28px' }}>
+          {quizFunnel.completions === 0 ? (
+            <EmptyBox msg="אין השלמות קוויז בטווח" />
+          ) : (
+            <>
+              {/* Funnel visualization */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+                <div style={{ background: C.soft, borderRadius: 10, padding: '20px 22px', borderRight: `3px solid ${C.blue}` }}>
+                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>השלימו את הקוויז</div>
+                  <div style={{ fontSize: 32, fontWeight: 700, color: C.blue, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizFunnel.completions.toLocaleString()}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>אירוע ההמרה של מטא לקמפיין הקוויז</div>
+                </div>
+                <div style={{ background: C.soft, borderRadius: 10, padding: '20px 22px', borderRight: `3px solid ${C.green}` }}>
+                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>הכניסו פרטים</div>
+                  <div style={{ fontSize: 32, fontWeight: 700, color: C.green, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizFunnel.leads.toLocaleString()}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                    {quizFunnel.completions > 0 ? `${((quizFunnel.leads / quizFunnel.completions) * 100).toFixed(0)}% מהשלימו` : ''}
+                  </div>
+                </div>
+                <div style={{ background: C.soft, borderRadius: 10, padding: '20px 22px', borderRight: `3px solid ${C.red}` }}>
+                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>נטשו לפני פרטים</div>
+                  <div style={{ fontSize: 32, fontWeight: 700, color: C.red, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizFunnel.dropoff.toLocaleString()}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
+                    {quizFunnel.dropoffPct.toFixed(0)}% מהשלימו את הקוויז ולא השאירו פרטים
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual funnel bar */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 0, height: 36, borderRadius: 8, overflow: 'hidden' }}>
+                  <div style={{
+                    width: `${quizFunnel.completions > 0 ? (quizFunnel.leads / quizFunnel.completions) * 100 : 0}%`,
+                    height: '100%',
+                    background: `linear-gradient(90deg, ${C.green}aa, ${C.green})`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                    paddingLeft: 12, minWidth: quizFunnel.leads > 0 ? 60 : 0,
+                    color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
+                  }}>
+                    {quizFunnel.leads > 0 && `${quizFunnel.leads} → ליד`}
+                  </div>
+                  <div style={{
+                    width: `${quizFunnel.completions > 0 ? (quizFunnel.dropoff / quizFunnel.completions) * 100 : 0}%`,
+                    height: '100%',
+                    background: `linear-gradient(90deg, ${C.red}aa, ${C.red})`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
+                    paddingRight: 12, minWidth: quizFunnel.dropoff > 0 ? 60 : 0,
+                    color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
+                  }}>
+                    {quizFunnel.dropoff > 0 && `${quizFunnel.dropoff} ← נטישה`}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 8, textAlign: 'center' }}>
+                  סך השלמות הקוויז: {quizFunnel.completions.toLocaleString()}
+                </div>
+              </div>
+
+              {/* By recommended product */}
+              {quizFunnel.byProduct.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 14, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    פילוח לפי מוצר מומלץ
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: C.soft }}>
+                          {['מוצר מומלץ', 'השלימו קוויז', 'הכניסו פרטים', 'נטישה', '% נטישה', 'המרה'].map(h => (
+                            <th key={h} style={{ padding: '10px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {quizFunnel.byProduct.map(p => {
+                          const convPct = p.completions > 0 ? (p.leads / p.completions) * 100 : 0;
+                          const dropColor = p.dropoffPct >= 70 ? C.red : p.dropoffPct >= 40 ? C.gold : C.green;
+                          return (
+                            <tr key={p.product} style={{ borderBottom: `1px solid ${C.border}` }}>
+                              <td style={{ padding: '10px 14px', fontWeight: 600, color: C.fg }}>{PRODUCT_LABELS[p.product] ?? p.product}</td>
+                              <td style={{ padding: '10px 14px', color: C.blue, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{p.completions}</td>
+                              <td style={{ padding: '10px 14px', color: C.green, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{p.leads}</td>
+                              <td style={{ padding: '10px 14px', color: C.red, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{p.dropoff}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: dropColor, fontFamily: 'system-ui' }}>{p.dropoffPct.toFixed(0)}%</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                                  <div style={{ width: 60, background: C.soft, borderRadius: 3, overflow: 'hidden', height: 5 }}>
+                                    <div style={{ width: `${convPct}%`, height: '100%', background: C.green, opacity: 0.85 }} />
+                                  </div>
+                                  <span style={{ fontSize: 11, color: C.muted, fontFamily: 'system-ui', minWidth: 36 }}>{convPct.toFixed(0)}%</span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Helper note */}
+              <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(201,150,74,0.06)', borderRight: `3px solid ${C.gold}`, borderRadius: 6, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                💡 הקמפיין של הקוויז ב-Meta מתממש על השלמת הקוויז ({quizFunnel.completions.toLocaleString()}). הנתון המאשר ROAS אמיתי הוא <strong style={{ color: C.fg }}>{quizFunnel.leads.toLocaleString()}</strong> לידים שהגיעו עד הסוף. <strong style={{ color: dropoffColorFor(quizFunnel.dropoffPct) }}>{quizFunnel.dropoff.toLocaleString()} נטישות</strong> ({quizFunnel.dropoffPct.toFixed(0)}%) של אנשים שסיימו את 6 השאלות אבל לא הכניסו שם/טלפון — שווה לבדוק מה קורה בעמוד התוצאות.
+              </div>
+            </>
+          )}
+        </div>
       </Card>
 
       {/* Campaign performance table */}

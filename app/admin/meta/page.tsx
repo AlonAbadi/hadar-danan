@@ -5,6 +5,7 @@ import {
   getMetaDailyTrend,
   getMetaDemographics,
   getMetaPlacements,
+  getQuizFunnel,
   aggregateKpis,
 } from '@/lib/admin/meta-queries';
 import MetaClient from './client';
@@ -19,12 +20,13 @@ export default async function MetaAdminPage({
   const { range } = await searchParams;
   const dateRange = range || '30d';
 
-  const [campaigns, ads, daily, demo, placements] = await Promise.all([
+  const [campaigns, ads, daily, demo, placements, quizFunnel] = await Promise.all([
     getMetaCampaigns(dateRange),
     getMetaTopAds(dateRange, 15),
     getMetaDailyTrend(dateRange),
     getMetaDemographics(dateRange),
     getMetaPlacements(dateRange),
+    getQuizFunnel(dateRange),
   ]);
 
   const kpis = campaigns.rows ? aggregateKpis(campaigns.rows) : null;
@@ -37,6 +39,7 @@ export default async function MetaAdminPage({
         daily={daily}
         demo={demo}
         placements={placements}
+        quizFunnel={quizFunnel}
         kpis={kpis}
         dateRange={dateRange}
       />

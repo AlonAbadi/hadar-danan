@@ -376,6 +376,65 @@ export async function getMetaPlacements(dateRange?: string): Promise<{
   return { configured: true, rows };
 }
 
+// ─── Quiz funnel — completed quiz vs entered details ─
+// Cold gap: how many completed all 6 questions but bailed before
+// submitting the lead form. Detection: quiz_results.user_id IS NULL.
+//
+// LIMITATION: quiz_results has no utm columns, so this is an
+// OVERALL gap across all sources. Per-campaign breakdown would
+// need a migration adding utm_source/utm_campaign to quiz_results.
+export type QuizFunnelByProduct = {
+  product: string;
+  completions: number;
+  leads: number;
+  dropoff: number;
+  dropoffPct: number;
+};
+
+export async function getQuizFunnel(dateRange?: string): Promise<{
+  completions: number;
+  leads: number;
+  dropoff: number;
+  dropoffPct: number;
+  byProduct: QuizFunnelByProduct[];
+  dateRange: { since: string; until: string };
+}> {
+  const { since, until } = getRange(dateRange);
+  const sinceIso = new Date(`${since}T00:00:00Z`).toISOString();
+
+  const supabase = createServerClient();
+  const { data: rows } = await supabase
+    .from('quiz_results')
+    .select('user_id, recommended_product')
+    .gte('created_at', sinceIso);
+
+  const all = rows ?? [];
+  const completions = all.length;
+  const leads = all.filter(r => r.user_id != null).length;
+  const dropoff = completions - leads;
+  const dropoffPct = completions > 0 ? (dropoff / completions) * 100 : 0;
+
+  const productMap: Record<string, { completions: number; leads: number }> = {};
+  all.forEach(r => {
+    const p = r.recommended_product || 'unknown';
+    if (!productMap[p]) productMap[p] = { completions: 0, leads: 0 };
+    productMap[p].completions += 1;
+    if (r.user_id != null) productMap[p].leads += 1;
+  });
+
+  const byProduct: QuizFunnelByProduct[] = Object.entries(productMap)
+    .map(([product, d]) => ({
+      product,
+      completions: d.completions,
+      leads: d.leads,
+      dropoff: d.completions - d.leads,
+      dropoffPct: d.completions > 0 ? ((d.completions - d.leads) / d.completions) * 100 : 0,
+    }))
+    .sort((a, b) => b.completions - a.completions);
+
+  return { completions, leads, dropoff, dropoffPct, byProduct, dateRange: { since, until } };
+}
+
 // ─── Aggregate KPIs (computed from campaigns) ─────────
 export function aggregateKpis(rows: MetaCampaignRow[]) {
   const totalSpend = rows.reduce((s, r) => s + r.spend, 0);
