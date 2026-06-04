@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const PAGE_NAMES: Record<string, string> = {
+  '/admin/strategist':  'אסטרטג שיווק AI',
   '/admin/meta':        'ניתוח קמפיינים — Meta',
   '/admin/sales':       'דשבורד מכירות',
   '/admin/funnel':      'פאנל מכירות',
