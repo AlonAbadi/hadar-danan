@@ -222,44 +222,67 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           </div>
         )}
 
-        {/* ── Core ladder panel ─────────────────────────────────────────── */}
-        <div className="ps-ladder" style={{ background: "#0F1523", border: "1px solid #1C2638", borderRadius: 20, overflow: "hidden", marginBottom: 48 }}>
+        {/* ── Core ladder — each product is its own card with clear separation ── */}
+        <div className="ps-ladder-stack" style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 48 }}>
           {products.map((p, i) => {
             const highlighted = isHL(i);
             const dimmed      = stage !== "הכל" && !highlighted;
             const isExp       = expanded.has(i);
-            const isLast      = i === products.length - 1;
+            const goldRing    = highlighted && stage !== "הכל";
 
             return (
-              <div key={p.badge}>
-                {/* Product row */}
-                <div style={{ padding: "20px 24px", opacity: dimmed ? 0.4 : 1, transition: "opacity 0.25s", borderRight: highlighted && stage !== "הכל" ? "3px solid #C9964A" : "3px solid transparent" }}>
+              <div
+                key={p.badge}
+                className="ps-card"
+                style={{
+                  background: goldRing
+                    ? "linear-gradient(180deg, rgba(201,150,74,0.06), rgba(15,21,35,0.95))"
+                    : "linear-gradient(180deg, #131A29, #0F1523)",
+                  border: goldRing
+                    ? "1px solid rgba(201,150,74,0.55)"
+                    : "1px solid #1F2A40",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  opacity: dimmed ? 0.45 : 1,
+                  transition: "opacity 0.25s, transform 0.2s, border-color 0.2s",
+                  boxShadow: goldRing
+                    ? "0 12px 32px -16px rgba(201,150,74,0.45), 0 0 0 1px rgba(232,185,74,0.08)"
+                    : "0 8px 24px -12px rgba(0,0,0,0.5)",
+                  position: "relative",
+                }}
+              >
+                {/* Top-edge accent line (only on highlighted) */}
+                {goldRing && (
+                  <div style={{
+                    position: "absolute", top: 0, left: 0, right: 0, height: 2,
+                    background: "linear-gradient(90deg, transparent, #E8B94A, transparent)",
+                  }} />
+                )}
 
+                {/* Product body */}
+                <div style={{ padding: "22px 24px 18px" }}>
                   {/* Top line: badge · name · tag · price */}
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 8 }}>
-                    {/* Fix 5 — 32×32 circle step number */}
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 12 }}>
                     <div className="ps-step" style={{
-                      flexShrink: 0, width: 32, height: 32, borderRadius: "50%",
-                      background:  highlighted && stage !== "הכל" ? "linear-gradient(135deg,#E8B94A,#9E7C3A)" : "#131C2E",
-                      border:      highlighted && stage !== "הכל" ? "none"                                     : "1px solid rgba(201,150,74,0.30)",
-                      boxShadow:   highlighted && stage !== "הכל" ? "0 0 24px rgba(232,185,74,0.35)"          : "none",
+                      flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
+                      background:  goldRing ? "linear-gradient(135deg,#E8B94A,#9E7C3A)" : "rgba(201,150,74,0.08)",
+                      border:      goldRing ? "none" : "1px solid rgba(201,150,74,0.35)",
+                      boxShadow:   goldRing ? "0 0 20px rgba(232,185,74,0.4)" : "none",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontFamily: "monospace", fontSize: 12, fontWeight: 800,
-                      color: highlighted && stage !== "הכל" ? "#1A1206" : "#C9964A",
+                      fontFamily: "monospace", fontSize: 13, fontWeight: 800,
+                      color: goldRing ? "#1A1206" : "#C9964A",
                     }}>{p.badge}</div>
 
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
-                        <span style={{ fontSize: 18, fontWeight: 800, color: "#EDE9E1" }}>{p.name}</span>
-                        {/* Fix 4 — outline badge, not filled */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                        <span style={{ fontSize: 19, fontWeight: 800, color: "#EDE9E1", letterSpacing: "-0.005em" }}>{p.name}</span>
                         {p.tag && (
-                          <span style={{ fontSize: 10, fontWeight: 700, background: "transparent", color: "#E8B94A", padding: "2px 8px", borderRadius: 4, border: "1px solid #9E7C3A", opacity: 0.85, letterSpacing: "0.06em" }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, background: "rgba(232,185,74,0.08)", color: "#E8B94A", padding: "3px 9px", borderRadius: 5, border: "1px solid rgba(201,150,74,0.35)", letterSpacing: "0.06em" }}>
                             {p.tag}
                           </span>
                         )}
                       </div>
-                      {/* Outcome strip */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "#9E9990" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#A8A293" }}>
                         <span style={{ color: "#C9964A", fontWeight: 700 }}>→</span>
                         <span>{p.outcome}</span>
                       </div>
@@ -271,17 +294,17 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                           {(p as { priceOriginal: string }).priceOriginal}
                         </div>
                       )}
-                      <div style={{ fontSize: 18, fontWeight: 800, color: "#C9964A" }}>{p.price}</div>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#C9964A", direction: 'ltr' }}>{p.price}</div>
                     </div>
                   </div>
 
-                  {/* Scarcity bar — Fix 1: ⚡→✦ gold glyph, 📅 dropped */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", background: "rgba(201,150,74,0.05)", borderRadius: 6, marginBottom: 14 }}>
+                  {/* Scarcity bar */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "rgba(201,150,74,0.06)", border: "1px solid rgba(201,150,74,0.1)", borderRadius: 8, marginBottom: 16 }}>
                     {p.scIcon === "⚡" && <span style={{ fontSize: 11, color: "#C9964A", lineHeight: 1 }}>✦</span>}
-                    <span style={{ fontSize: 12, color: "#9E9990" }}>{p.scarcity}</span>
+                    <span style={{ fontSize: 12, color: "#A8A293" }}>{p.scarcity}</span>
                   </div>
 
-                  {/* CTAs + Fix 3: disclosure "פרטים" text link, not pill button */}
+                  {/* CTAs + פרטים */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     {p.ctas.map((cta, ci) => (
                       <a key={ci} href={cta.href} onClick={dismissSticky} style={cta.primary ? ctaGold : ctaOutline}>
@@ -307,10 +330,9 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                 {/* Expand panel */}
                 {isExp && (
                   <div style={{
-                    background: "rgba(201,150,74,0.04)",
-                    borderTop:    "1px solid rgba(201,150,74,0.1)",
-                    borderBottom: isLast ? "none" : "1px solid rgba(201,150,74,0.08)",
-                    padding: "18px 24px",
+                    background: "rgba(0,0,0,0.25)",
+                    borderTop: "1px solid rgba(201,150,74,0.12)",
+                    padding: "20px 24px",
                   }}>
                     <ul style={{ margin: 0, padding: 0, listStyle: "none", marginBottom: 16 }}>
                       {p.bullets.map((b, bi) => (
@@ -320,15 +342,12 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                         </li>
                       ))}
                     </ul>
-                    <div style={{ background: "rgba(201,150,74,0.07)", border: "1px solid rgba(201,150,74,0.15)", borderRadius: 10, padding: "12px 16px" }}>
+                    <div style={{ background: "rgba(201,150,74,0.06)", border: "1px solid rgba(201,150,74,0.15)", borderRadius: 10, padding: "12px 16px" }}>
                       <p style={{ margin: 0, fontSize: 13, color: "rgba(237,233,225,0.8)", lineHeight: 1.6, fontStyle: "italic", marginBottom: 5 }}>{p.quote.text}</p>
                       <span style={{ fontSize: 12, color: "#9E9990" }}>— {p.quote.author}</span>
                     </div>
                   </div>
                 )}
-
-                {/* Row divider */}
-                {!isLast && <div style={{ height: 1, background: "rgba(201,150,74,0.07)", margin: "0 24px" }} />}
               </div>
             );
           })}
