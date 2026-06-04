@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Script from "next/script";
 
 type Testimonial = {
   src: string;
@@ -66,8 +67,27 @@ const TESTIMONIALS: Testimonial[] = [
   },
 ];
 
+const FEATURED_VIDEO_ID = "1198426241"; // יחיאל — מרץ 2026
+
 export default function ChallengeProofWall() {
   const [lightbox, setLightbox] = useState<string | null>(null);
+
+  // Disable autoplay-loop on the featured Vimeo testimonial (project policy:
+  // every Vimeo embed must explicitly disable looping in both URL and API)
+  useEffect(() => {
+    let attempts = 0;
+    const trySetLoop = () => {
+      type VimeoPlayer = { setLoop(v: boolean): Promise<void> };
+      const w = window as Window & { Vimeo?: { Player: new (el: HTMLElement) => VimeoPlayer } };
+      const iframe = document.getElementById("vimeo-testimonial-yechiel") as HTMLElement | null;
+      if (w.Vimeo?.Player && iframe) {
+        try { new w.Vimeo.Player(iframe).setLoop(false).catch(() => {}); } catch {}
+        return;
+      }
+      if (attempts++ < 20) setTimeout(trySetLoop, 400);
+    };
+    trySetLoop();
+  }, []);
 
   useEffect(() => {
     if (!lightbox) return;
@@ -84,6 +104,32 @@ export default function ChallengeProofWall() {
 
   return (
     <div className="cpw">
+      <Script src="https://player.vimeo.com/api/player.js" strategy="afterInteractive" />
+
+      {/* Tier 0 — Featured video testimonial (Yechiel, March 2026) */}
+      <div className="cpw-video-wrap">
+        <div className="cpw-video-eyebrow">
+          <span className="cpw-video-dot" />
+          <span>עדות מהאתגר · מרץ 2026</span>
+        </div>
+        <h3 className="cpw-video-title">
+          &ldquo;במילים של יחיאל&rdquo;
+        </h3>
+        <p className="cpw-video-sub">
+          לקוח האתגר מספר מה השתנה אצלו בעסק אחרי 7 הימים.
+        </p>
+
+        <div className="cpw-video-frame">
+          <iframe
+            id="vimeo-testimonial-yechiel"
+            src={`https://player.vimeo.com/video/${FEATURED_VIDEO_ID}?badge=0&autopause=0&loop=0&player_id=0&app_id=58479&cc=0`}
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+            title="עדות יחיאל"
+          />
+        </div>
+      </div>
+
       {/* Tier 1 — Wall of Faces */}
       <div className="cpw-wall">
         <img src="/testimonials/challenge/wall-of-150.jpg" alt="משתתפי האתגר" />
@@ -141,6 +187,74 @@ export default function ChallengeProofWall() {
 
       <style jsx>{`
         .cpw { display: flex; flex-direction: column; gap: 28px; }
+
+        /* Featured video testimonial — Tier 0 */
+        .cpw-video-wrap {
+          background: linear-gradient(180deg, rgba(201,150,74,0.06), rgba(13,16,24,0));
+          border: 1px solid rgba(201,150,74,0.28);
+          border-radius: 20px;
+          padding: 28px 22px 24px;
+          text-align: center;
+          position: relative;
+          overflow: hidden;
+        }
+        .cpw-video-wrap::before {
+          content: "";
+          position: absolute; top: 0; left: 0; right: 0; height: 2px;
+          background: linear-gradient(90deg, transparent, #E8B94A, transparent);
+        }
+        .cpw-video-eyebrow {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-size: 11px; font-weight: 700;
+          color: #E8B94A; letter-spacing: 0.14em; text-transform: uppercase;
+          margin-bottom: 12px;
+        }
+        .cpw-video-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          background: #E8B94A;
+          box-shadow: 0 0 12px rgba(232,185,74,0.7);
+          animation: cpwPulse 2s ease-in-out infinite;
+        }
+        @keyframes cpwPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.85); }
+        }
+        .cpw-video-title {
+          margin: 0 0 8px;
+          font-size: clamp(22px, 3.5vw, 28px);
+          font-weight: 800;
+          color: #EDE9E1;
+          line-height: 1.25;
+          letter-spacing: -0.01em;
+        }
+        .cpw-video-sub {
+          margin: 0 auto 22px;
+          max-width: 480px;
+          font-size: 14px;
+          color: #9E9990;
+          line-height: 1.55;
+        }
+        .cpw-video-frame {
+          position: relative;
+          width: 100%;
+          max-width: 760px;
+          margin: 0 auto;
+          aspect-ratio: 16 / 9;
+          border-radius: 14px;
+          overflow: hidden;
+          border: 1px solid rgba(201,150,74,0.35);
+          box-shadow: 0 20px 60px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(232,185,74,0.05);
+          background: #0d1018;
+        }
+        .cpw-video-frame iframe {
+          position: absolute; inset: 0;
+          width: 100%; height: 100%;
+          border: 0;
+        }
+        @media (max-width: 640px) {
+          .cpw-video-wrap { padding: 22px 14px 18px; border-radius: 16px; }
+        }
+
 
         /* Wall of faces */
         .cpw-wall {
