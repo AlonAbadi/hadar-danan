@@ -345,7 +345,7 @@ export default function ChallengePlayer({
       )}
 
       <div style={{ fontSize: 12, fontWeight: 700, color: "#9E9990", textAlign: "right", marginTop: 14, marginBottom: 4 }}>
-        {activeDay === 0 ? "מפגש פתיחה" : activeDay === 8 ? "מפגש סיום" : `יום ${activeDay} מתוך 7`}
+        {activeDay === 0 ? "שיעור פתיחה" : activeDay === 8 ? "מפגש סיום" : `יום ${activeDay} מתוך 7`}
         {" · "}
         {dayData.aspectRatio === "9:16" ? "ריל" : "וידאו"}
       </div>
