@@ -179,28 +179,31 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
     buyerMap[u.id] = { source: u.utm_source || '', campaign: u.utm_campaign || '' };
   });
 
+  // Build set of Meta campaign names (lowercased) so we can match users by
+  // utm_campaign WITHOUT relying on utm_source — Meta auto-tag sometimes
+  // sets utm_source to inconsistent values (fb, facebook, facebook_ads, ig,
+  // instagram, etc.) and filtering by an exact-set check drops many legit
+  // leads. Match by utm_campaign === campaign_name instead.
+  const metaCampaignNames = new Set(
+    campaigns.map(c => (c.campaign_name || '').toLowerCase().trim()).filter(Boolean)
+  );
+
   const metaUsersByCampaign: Record<string, number> = {};
   (users ?? []).forEach(u => {
-    if (!u.utm_source || !META_SOURCES.has(u.utm_source)) return;
     const key = (u.utm_campaign || '').toLowerCase().trim();
+    if (!key || !metaCampaignNames.has(key)) return;
     metaUsersByCampaign[key] = (metaUsersByCampaign[key] ?? 0) + 1;
   });
 
   const buyersByCampaign: Record<string, { count: number; revenue: number }> = {};
-  (purchases ?? []).forEach(p => {
-    const u = buyerMap[p.user_id];
-    if (!u || !u.source || !META_SOURCES.has(u.source)) return;
-    const key = (u.campaign || '').toLowerCase().trim();
-    if (!buyersByCampaign[key]) buyersByCampaign[key] = { count: 0, revenue: 0 };
-    buyersByCampaign[key].revenue += p.amount || 0;
-  });
-
-  // Count unique buyers
   const buyerSetByCampaign: Record<string, Set<string>> = {};
   (purchases ?? []).forEach(p => {
     const u = buyerMap[p.user_id];
-    if (!u || !u.source || !META_SOURCES.has(u.source)) return;
+    if (!u) return;
     const key = (u.campaign || '').toLowerCase().trim();
+    if (!key || !metaCampaignNames.has(key)) return;
+    if (!buyersByCampaign[key]) buyersByCampaign[key] = { count: 0, revenue: 0 };
+    buyersByCampaign[key].revenue += p.amount || 0;
     if (!buyerSetByCampaign[key]) buyerSetByCampaign[key] = new Set();
     buyerSetByCampaign[key].add(p.user_id);
   });

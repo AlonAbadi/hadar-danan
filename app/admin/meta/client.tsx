@@ -257,11 +257,18 @@ export default function MetaClient({
     { key: 'other', label: 'אחר',           sub: 'Other',              color: C.muted },
   ];
 
-  // Quiz campaigns (sub-category of leads — flagged by isQuiz on each row)
+  // Quiz campaigns (sub-category of leads — flagged by isQuiz on each row).
+  // For quiz campaigns, Meta's optimisation event (reported as `lead` action)
+  // counts users who completed the quiz (reached the lead form). The CRM
+  // lead count is users who actually filled the form, matched by utm_campaign.
   const quizCampaignRows = allRows.filter(r => r.isQuiz);
-  const quizMetaCompleteTotal = quizCampaignRows.reduce((s, r) => s + r.metaQuizComplete, 0);
-  const quizMetaDetailsTotal  = quizCampaignRows.reduce((s, r) => s + r.metaQuizDetails,  0);
   const quizSpendTotal        = quizCampaignRows.reduce((s, r) => s + r.spend, 0);
+  const quizMetaEventsTotal   = quizCampaignRows.reduce((s, r) => s + r.metaLeads, 0);
+  const quizCrmLeadsTotal     = quizCampaignRows.reduce((s, r) => s + r.crmLeads, 0);
+  const quizCrmBuyersTotal    = quizCampaignRows.reduce((s, r) => s + r.crmBuyers, 0);
+  const quizCrmRevenueTotal   = quizCampaignRows.reduce((s, r) => s + r.crmRevenue, 0);
+  const quizDropoffTotal      = Math.max(quizMetaEventsTotal - quizCrmLeadsTotal, 0);
+  const quizFillRate          = quizMetaEventsTotal > 0 ? (quizCrmLeadsTotal / quizMetaEventsTotal) * 100 : 0;
 
   // Demographics aggregation by age + gender
   const demoByAge: Record<string, { spend: number; leads: number; impressions: number }> = {};
@@ -428,125 +435,116 @@ export default function MetaClient({
         )}
       </Card>
 
-      {/* Quiz funnel — Meta-reported "reached form" vs "entered details" vs CRM */}
-      {(kindTab === 'all' || kindTab === 'lead') && (
+      {/* Quiz funnel — Meta-reported quiz completions vs CRM form fills */}
+      {(kindTab === 'all' || kindTab === 'lead') && quizCampaignRows.length > 0 && (
       <Card style={{ marginBottom: 24 }}>
         <CardHeader
-          title="פאנל קוויז — הגיעו לטופס מול הכניסו פרטים"
-          sub="Quiz: Reached Form vs Entered Details (Meta pixels + CRM)"
+          title="פאנל קוויז — השלימו את הקוויז מול מילאו את הטופס"
+          sub="Quiz Completions (Meta) vs Form Fills (CRM)"
           action={
             <span style={{ fontSize: 10, color: C.muted, background: C.soft, padding: '3px 8px', borderRadius: 5 }}>
-              קמפיין לידים — תת-קטגוריה
+              {quizCampaignRows.length} קמפייני קוויז
             </span>
           }
         />
         <div style={{ padding: '24px 28px' }}>
-          {quizMetaCompleteTotal === 0 && quizFunnel.completions === 0 ? (
-            <EmptyBox msg="אין פעילות קוויז בטווח (לא ב-Meta ולא ב-CRM)" />
-          ) : (
+          {(
             <>
-              {/* 4-way comparison: Meta QuizComplete vs Meta QuizRecommended vs CRM Completions vs CRM Leads */}
+              {/* 4-card comparison: spend, Meta events (= quiz completions),
+                  CRM leads (= form fills), drop-off + fill-rate */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
-                <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.blue}` }}>
-                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>הגיעו לטופס</div>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: C.blue, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizMetaCompleteTotal.toLocaleString()}</div>
-                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>QuizComplete pixel (Meta)</div>
+                <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.gold}` }}>
+                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>הוצאה</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: C.gold, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{fmtMoney(quizSpendTotal)}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>{quizCampaignRows.length} קמפיינים</div>
                 </div>
-                <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.purple}` }}>
-                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>הכניסו פרטים (Meta)</div>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: C.purple, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizMetaDetailsTotal.toLocaleString()}</div>
-                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>QuizRecommended pixel</div>
+                <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.blue}` }}>
+                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>השלימו את הקוויז</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: C.blue, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizMetaEventsTotal.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>Meta events (= הגיעו לטופס)</div>
                 </div>
                 <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.green}` }}>
-                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>הכניסו פרטים (CRM)</div>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: C.green, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{(quizFunnel.metaTotal.leads || quizFunnel.leads).toLocaleString()}</div>
-                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>quiz_results עם user_id</div>
+                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>מילאו את הטופס</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: C.green, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizCrmLeadsTotal.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>CRM leads (utm_campaign match)</div>
                 </div>
                 <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.red}` }}>
-                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>נטשו (טופס → פרטים)</div>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: C.red, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{Math.max(quizMetaCompleteTotal - quizMetaDetailsTotal, 0).toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>נטשו לפני הטופס</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: C.red, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizDropoffTotal.toLocaleString()}</div>
                   <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>
-                    {quizMetaCompleteTotal > 0 ? `${(((quizMetaCompleteTotal - quizMetaDetailsTotal) / quizMetaCompleteTotal) * 100).toFixed(0)}% מהגיעו לטופס` : ''}
+                    {quizMetaEventsTotal > 0 ? `${(100 - quizFillRate).toFixed(0)}% נטישה · ${quizFillRate.toFixed(0)}% מילוי` : ''}
                   </div>
                 </div>
               </div>
 
-              {/* Drift between Meta-pixel and CRM (should be ~0 if dedup works) */}
-              {quizMetaDetailsTotal > 0 && quizFunnel.metaTotal.leads > 0 && (
-                <div style={{ marginBottom: 24, padding: '10px 16px', background: 'rgba(139,92,246,0.06)', borderRight: `3px solid ${C.purple}`, borderRadius: 6, fontSize: 12, color: C.muted }}>
-                  📊 <strong style={{ color: C.fg }}>פער Meta vs CRM:</strong> {Math.abs(quizMetaDetailsTotal - quizFunnel.metaTotal.leads).toLocaleString()} ({Math.abs(((quizMetaDetailsTotal - quizFunnel.metaTotal.leads) / Math.max(quizMetaDetailsTotal, 1)) * 100).toFixed(0)}%) — אמורים להיות זהים בזכות eventID deduplication. סטייה גדולה מ-15% = בעיה ב-CAPI או UTM tracking
-                </div>
-              )}
-
-              {/* Visualization bar: form-reach → details-entered → bailed */}
-              {quizMetaCompleteTotal > 0 && (
-                <div style={{ marginBottom: 24 }}>
+              {/* Funnel bar visualization */}
+              {quizMetaEventsTotal > 0 && (
+                <div style={{ marginBottom: 28 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 0, height: 36, borderRadius: 8, overflow: 'hidden' }}>
                     <div style={{
-                      width: `${(quizMetaDetailsTotal / quizMetaCompleteTotal) * 100}%`,
+                      width: `${quizFillRate}%`,
                       height: '100%',
                       background: `linear-gradient(90deg, ${C.green}aa, ${C.green})`,
                       display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                      paddingLeft: 12, minWidth: quizMetaDetailsTotal > 0 ? 60 : 0,
+                      paddingLeft: 12, minWidth: quizCrmLeadsTotal > 0 ? 80 : 0,
                       color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
                     }}>
-                      {quizMetaDetailsTotal > 0 && `${quizMetaDetailsTotal} → ליד`}
+                      {quizCrmLeadsTotal > 0 && `${quizCrmLeadsTotal} מילאו טופס`}
                     </div>
                     <div style={{
-                      width: `${((quizMetaCompleteTotal - quizMetaDetailsTotal) / quizMetaCompleteTotal) * 100}%`,
+                      width: `${100 - quizFillRate}%`,
                       height: '100%',
                       background: `linear-gradient(90deg, ${C.red}aa, ${C.red})`,
                       display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
-                      paddingRight: 12, minWidth: quizMetaCompleteTotal - quizMetaDetailsTotal > 0 ? 60 : 0,
+                      paddingRight: 12, minWidth: quizDropoffTotal > 0 ? 80 : 0,
                       color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
                     }}>
-                      {quizMetaCompleteTotal - quizMetaDetailsTotal > 0 && `${quizMetaCompleteTotal - quizMetaDetailsTotal} ← נטישה`}
+                      {quizDropoffTotal > 0 && `${quizDropoffTotal} נטשו`}
                     </div>
                   </div>
                   <div style={{ fontSize: 11, color: C.muted, marginTop: 8, textAlign: 'center' }}>
-                    סך הגעות לטופס מקמפיינים של קוויז: {quizMetaCompleteTotal.toLocaleString()} (הוצאה: {fmtMoney(quizSpendTotal)})
+                    מתוך {quizMetaEventsTotal.toLocaleString()} שהשלימו את הקוויז ב-Meta — {quizFillRate.toFixed(1)}% מילאו את הטופס בפועל
                   </div>
                 </div>
               )}
 
-              {/* Per-campaign Meta cost breakdown */}
-              {quizCampaignRows.length > 0 && (
-                <div style={{ marginBottom: 28 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 14, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                    פילוח לפי קמפיין קוויז ב-Meta
-                  </div>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                      <thead>
-                        <tr style={{ background: C.soft }}>
-                          {['קמפיין', 'הוצאה', 'הגיעו לטופס', 'הכניסו פרטים', '% נטישה', 'עלות לטופס', 'עלות לליד'].map(h => (
-                            <th key={h} style={{ padding: '10px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap' }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {quizCampaignRows.map((c) => {
-                          const drop = Math.max(c.metaQuizComplete - c.metaQuizDetails, 0);
-                          const dropPct = c.metaQuizComplete > 0 ? (drop / c.metaQuizComplete) * 100 : 0;
-                          const costPerForm = c.metaQuizComplete > 0 ? c.spend / c.metaQuizComplete : 0;
-                          const costPerLead = c.metaQuizDetails > 0 ? c.spend / c.metaQuizDetails : 0;
-                          return (
-                            <tr key={c.campaignId} style={{ borderBottom: `1px solid ${C.border}` }}>
-                              <td style={{ padding: '10px 14px', fontWeight: 600, color: C.fg, maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</td>
-                              <td style={{ padding: '10px 14px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{fmtMoney(c.spend)}</td>
-                              <td style={{ padding: '10px 14px', color: C.blue, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.metaQuizComplete}</td>
-                              <td style={{ padding: '10px 14px', color: C.green, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.metaQuizDetails}</td>
-                              <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: dropoffColorFor(dropPct), fontFamily: 'system-ui' }}>{dropPct.toFixed(0)}%</td>
-                              <td style={{ padding: '10px 14px', color: C.muted, textAlign: 'right', fontFamily: 'system-ui' }}>{costPerForm > 0 ? fmtMoney(costPerForm) : '—'}</td>
-                              <td style={{ padding: '10px 14px', color: C.purple, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{costPerLead > 0 ? fmtMoney(costPerLead) : '—'}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+              {/* Per-campaign breakdown */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 14, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  פילוח לפי קמפיין
                 </div>
-              )}
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ background: C.soft }}>
+                        {['קמפיין', 'הוצאה', 'השלימו קוויז', 'מילאו טופס', 'נטישה', '% מילוי', 'עלות לקוויז', 'עלות לליד'].map(h => (
+                          <th key={h} style={{ padding: '10px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {quizCampaignRows.map((c) => {
+                        const drop = Math.max(c.metaLeads - c.crmLeads, 0);
+                        const fillPct = c.metaLeads > 0 ? (c.crmLeads / c.metaLeads) * 100 : 0;
+                        const costPerQuiz = c.metaLeads > 0 ? c.spend / c.metaLeads : 0;
+                        const costPerLead = c.crmLeads > 0 ? c.spend / c.crmLeads : 0;
+                        return (
+                          <tr key={c.campaignId} style={{ borderBottom: `1px solid ${C.border}` }}>
+                            <td style={{ padding: '10px 14px', fontWeight: 600, color: C.fg, maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</td>
+                            <td style={{ padding: '10px 14px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{fmtMoney(c.spend)}</td>
+                            <td style={{ padding: '10px 14px', color: C.blue, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.metaLeads}</td>
+                            <td style={{ padding: '10px 14px', color: c.crmLeads > 0 ? C.green : C.muted, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.crmLeads}</td>
+                            <td style={{ padding: '10px 14px', color: drop > 0 ? C.red : C.muted, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{drop}</td>
+                            <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: fillPct >= 60 ? C.green : fillPct >= 30 ? C.gold : C.red, fontFamily: 'system-ui' }}>{c.metaLeads > 0 ? `${fillPct.toFixed(0)}%` : '—'}</td>
+                            <td style={{ padding: '10px 14px', color: C.muted, textAlign: 'right', fontFamily: 'system-ui' }}>{costPerQuiz > 0 ? fmtMoney(costPerQuiz) : '—'}</td>
+                            <td style={{ padding: '10px 14px', color: C.purple, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{costPerLead > 0 ? fmtMoney(costPerLead) : '—'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
               {/* By recommended product (CRM-wide, all sources) */}
               {quizFunnel.byProduct.length > 0 && (
@@ -591,44 +589,9 @@ export default function MetaClient({
                 </div>
               )}
 
-              {/* Per Meta campaign breakdown */}
-              {quizFunnel.byMetaCampaign.length > 0 && (
-                <div style={{ marginTop: 28 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 14, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                    פילוח לפי קמפיין Meta
-                  </div>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                      <thead>
-                        <tr style={{ background: C.soft }}>
-                          {['מקור', 'קמפיין', 'השלימו', 'הכניסו פרטים', 'נטישה', '% נטישה'].map(h => (
-                            <th key={h} style={{ padding: '10px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap' }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {quizFunnel.byMetaCampaign.map((c, i) => (
-                          <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
-                            <td style={{ padding: '10px 14px', color: C.gold, fontWeight: 600 }}>{c.source}</td>
-                            <td style={{ padding: '10px 14px', color: C.fg, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.campaign}</td>
-                            <td style={{ padding: '10px 14px', color: C.blue, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.completions}</td>
-                            <td style={{ padding: '10px 14px', color: C.green, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.leads}</td>
-                            <td style={{ padding: '10px 14px', color: C.red, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.dropoff}</td>
-                            <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: dropoffColorFor(c.dropoffPct), fontFamily: 'system-ui' }}>{c.dropoffPct.toFixed(0)}%</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div style={{ fontSize: 10, color: `${C.muted}88`, marginTop: 8, fontStyle: 'italic' }}>
-                    * דורש שה-quiz_results יכיל UTM (מ-migration 035 ואילך). השלמות לפני המעבר יופיעו ללא קמפיין.
-                  </div>
-                </div>
-              )}
-
               {/* Helper note */}
               <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(201,150,74,0.06)', borderRight: `3px solid ${C.gold}`, borderRadius: 6, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-                💡 הקונברזין של Meta לקמפיין הקוויז הוא <strong style={{ color: C.blue }}>QuizComplete</strong> (הגיע לטופס). הליד האמיתי הוא <strong style={{ color: C.green }}>QuizRecommended</strong> (הכניס פרטים) — וזה אמור להיות שווה ל-CRM. הפער <strong style={{ color: dropoffColorFor(quizMetaCompleteTotal > 0 ? ((quizMetaCompleteTotal - quizMetaDetailsTotal) / quizMetaCompleteTotal) * 100 : 0) }}>{Math.max(quizMetaCompleteTotal - quizMetaDetailsTotal, 0).toLocaleString()}</strong> זה אנשים שהגיעו לטופס ולא מילאו אותו — האופטימיזציה של מטא לא יודעת על זה. שווה לבדוק את עמוד הטופס.
+                💡 מטא מדווחת על <strong style={{ color: C.blue }}>{quizMetaEventsTotal.toLocaleString()}</strong> השלמות קוויז (קונברזין הקמפיין). מתוכם <strong style={{ color: C.green }}>{quizCrmLeadsTotal.toLocaleString()}</strong> מילאו את הטופס ונכנסו ל-CRM. <strong style={{ color: dropoffColorFor(100 - quizFillRate) }}>{quizDropoffTotal.toLocaleString()} ({(100 - quizFillRate).toFixed(0)}%) נטשו</strong> בעמוד התוצאות לפני שמילאו פרטים. אופטימיזציית המטא לא יודעת על הנטישה הזו — היא מודדת רק "השלים קוויז".
               </div>
             </>
           )}
