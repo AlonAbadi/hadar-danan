@@ -59,7 +59,11 @@ async function metaFetch(path: string): Promise<{ ok: true; json: any } | { ok: 
 }
 
 // ─── Campaign-level insights + CRM cross-reference ────
-export type CampaignKind = 'lead' | 'sale' | 'quiz' | 'other';
+// Only TWO categories of intent: lead-gen (which includes quiz campaigns)
+// and sales (challenge purchase). Quiz campaigns are lead campaigns whose
+// optimisation event is "reached the lead form" (QuizComplete pixel),
+// not "made a purchase".
+export type CampaignKind = 'lead' | 'sale' | 'other';
 
 export type MetaCampaignRow = {
   campaignId: string;
@@ -67,6 +71,7 @@ export type MetaCampaignRow = {
   status: string;
   objective: string;
   kind: CampaignKind;
+  isQuiz: boolean;
   impressions: number;
   reach: number;
   clicks: number;
@@ -77,6 +82,9 @@ export type MetaCampaignRow = {
   metaLeads: number;
   metaPurchases: number;
   metaRevenue: number;
+  // Quiz-specific pixel counts (only meaningful for isQuiz campaigns)
+  metaQuizComplete: number;  // QuizComplete pixel = reached lead form
+  metaQuizDetails: number;   // QuizRecommended/QuizResult pixel = entered details
   crmLeads: number;
   crmBuyers: number;
   crmRevenue: number;
@@ -88,13 +96,29 @@ export type MetaCampaignRow = {
 // Quiz name patterns — matched against campaign name (case-insensitive)
 const QUIZ_PATTERNS = /(quiz|קוויז|שאלון|אבחון)/i;
 
-function classifyCampaign(name: string, objective: string): CampaignKind {
-  // Quiz override — even if objective is conversions, name pattern wins
-  if (QUIZ_PATTERNS.test(name || '')) return 'quiz';
+function classifyCampaign(name: string, objective: string): { kind: CampaignKind; isQuiz: boolean } {
+  const isQuiz = QUIZ_PATTERNS.test(name || '');
+  // Quiz campaigns are LEAD campaigns whose conversion event is reaching the form.
+  if (isQuiz) return { kind: 'lead', isQuiz: true };
   const o = (objective || '').toUpperCase();
-  if (o.includes('LEAD')) return 'lead';
-  if (o === 'OUTCOME_SALES' || o === 'CONVERSIONS' || o === 'PRODUCT_CATALOG_SALES') return 'sale';
-  return 'other';
+  if (o.includes('LEAD')) return { kind: 'lead', isQuiz: false };
+  if (o === 'OUTCOME_SALES' || o === 'CONVERSIONS' || o === 'PRODUCT_CATALOG_SALES') return { kind: 'sale', isQuiz: false };
+  return { kind: 'other', isQuiz: false };
+}
+
+// Sum action values whose action_type contains any of the provided substrings.
+// Used for custom Pixel events which Meta returns with prefixes like
+// `offsite_conversion.fb_pixel_custom.QuizComplete` — partial match catches them.
+function sumActionsContaining(actions: ActionEntry[] | undefined, patterns: string[]): number {
+  if (!actions || !actions.length) return 0;
+  let total = 0;
+  for (const a of actions) {
+    const t = (a.action_type || '').toLowerCase();
+    if (patterns.some(p => t.includes(p.toLowerCase()))) {
+      total += parseFloat(a.value) || 0;
+    }
+  }
+  return total;
 }
 
 // Fetch campaign metadata (objective, status) — separate from insights
@@ -195,7 +219,11 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
     const metaRevenue = pickAction(c.action_values, ['purchase', 'offsite_conversion.fb_pixel_purchase']);
 
     const meta = campaignMeta[c.campaign_id] ?? { objective: '', status: '' };
-    const kind = classifyCampaign(c.campaign_name || '', meta.objective);
+    const { kind, isQuiz } = classifyCampaign(c.campaign_name || '', meta.objective);
+
+    // Quiz pixel counts — only meaningful when isQuiz, but compute for all
+    const metaQuizComplete = sumActionsContaining(c.actions, ['QuizComplete']);
+    const metaQuizDetails  = sumActionsContaining(c.actions, ['QuizRecommended', 'QuizResult']);
 
     return {
       campaignId: c.campaign_id,
@@ -203,6 +231,9 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
       status: meta.status,
       objective: meta.objective,
       kind,
+      isQuiz,
+      metaQuizComplete,
+      metaQuizDetails,
       impressions: parseInt(c.impressions || '0'),
       reach: parseInt(c.reach || '0'),
       clicks: parseInt(c.clicks || '0'),
@@ -517,6 +548,10 @@ export function aggregateKpis(rows: MetaCampaignRow[]) {
   const totalImpressions = rows.reduce((s, r) => s + r.impressions, 0);
   const totalClicks = rows.reduce((s, r) => s + r.clicks, 0);
   const totalMetaLeads = rows.reduce((s, r) => s + r.metaLeads, 0);
+  const totalMetaPurchases = rows.reduce((s, r) => s + r.metaPurchases, 0);
+  const totalMetaRevenue = rows.reduce((s, r) => s + r.metaRevenue, 0);
+  const totalMetaQuizComplete = rows.reduce((s, r) => s + r.metaQuizComplete, 0);
+  const totalMetaQuizDetails  = rows.reduce((s, r) => s + r.metaQuizDetails,  0);
   const totalCrmLeads = rows.reduce((s, r) => s + r.crmLeads, 0);
   const totalCrmBuyers = rows.reduce((s, r) => s + r.crmBuyers, 0);
   const totalCrmRevenue = rows.reduce((s, r) => s + r.crmRevenue, 0);
@@ -529,6 +564,10 @@ export function aggregateKpis(rows: MetaCampaignRow[]) {
     totalImpressions,
     totalClicks,
     totalMetaLeads,
+    totalMetaPurchases,
+    totalMetaRevenue,
+    totalMetaQuizComplete,
+    totalMetaQuizDetails,
     totalCrmLeads,
     totalCrmBuyers,
     totalCrmRevenue,

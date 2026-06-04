@@ -151,7 +151,6 @@ function dropoffColorFor(pct: number) {
 const KIND_BADGE: Record<CampaignKind, { label: string; color: string }> = {
   lead:  { label: 'לידים',  color: '#3b82f6' },
   sale:  { label: 'מכירות', color: '#C9964A' },
-  quiz:  { label: 'קוויז',  color: '#8b5cf6' },
   other: { label: 'אחר',    color: '#9E9990' },
 };
 
@@ -248,17 +247,21 @@ export default function MetaClient({
     all:   allRows.length,
     lead:  allRows.filter(r => r.kind === 'lead').length,
     sale:  allRows.filter(r => r.kind === 'sale').length,
-    quiz:  allRows.filter(r => r.kind === 'quiz').length,
     other: allRows.filter(r => r.kind === 'other').length,
   };
 
   const KIND_TABS: { key: 'all' | CampaignKind; label: string; sub: string; color: string }[] = [
     { key: 'all',   label: 'כל הקמפיינים', sub: 'All',                color: C.muted },
-    { key: 'lead',  label: 'לידים',         sub: 'Lead Generation',    color: C.blue },
+    { key: 'lead',  label: 'לידים',         sub: 'Lead Generation (כולל קוויז)', color: C.blue },
     { key: 'sale',  label: 'מכירות',        sub: 'Sales / Purchases',  color: C.gold },
-    { key: 'quiz',  label: 'קוויז',         sub: 'Quiz Completion',    color: C.purple },
     { key: 'other', label: 'אחר',           sub: 'Other',              color: C.muted },
   ];
+
+  // Quiz campaigns (sub-category of leads — flagged by isQuiz on each row)
+  const quizCampaignRows = allRows.filter(r => r.isQuiz);
+  const quizMetaCompleteTotal = quizCampaignRows.reduce((s, r) => s + r.metaQuizComplete, 0);
+  const quizMetaDetailsTotal  = quizCampaignRows.reduce((s, r) => s + r.metaQuizDetails,  0);
+  const quizSpendTotal        = quizCampaignRows.reduce((s, r) => s + r.spend, 0);
 
   // Demographics aggregation by age + gender
   const demoByAge: Record<string, { spend: number; leads: number; impressions: number }> = {};
@@ -372,18 +375,6 @@ export default function MetaClient({
             <Kpi label="רוכשים מהלידים" value={fmtNum(tabKpis.totalCrmBuyers)} accent={C.gold} sub={tabKpis.totalCrmLeads > 0 ? `${((tabKpis.totalCrmBuyers / tabKpis.totalCrmLeads) * 100).toFixed(0)}% lead-to-buyer` : ''} />
             <Kpi label="הכנסה (CRM)" value={fmtMoney(tabKpis.totalCrmRevenue)} accent={C.green} />
           </div>
-        ) : kindTab === 'quiz' ? (
-          // QUIZ TAB: completion + dropoff
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
-            <Kpi label="הוצאה" value={fmtMoney(tabKpis.totalSpend)} accent={C.gold} sub={`${rows.length} קמפיינים`} />
-            <Kpi label="השלמות (Meta)" value={fmtNum(tabKpis.totalMetaLeads)} accent={C.blue} sub="QuizComplete event" />
-            <Kpi label="השלמות (CRM)" value={fmtNum(quizFunnel.metaTotal.completions)} accent={C.purple} sub="quiz_results מ-Meta" />
-            <Kpi label="הכניסו פרטים" value={fmtNum(quizFunnel.metaTotal.leads)} accent={C.green} sub={quizFunnel.metaTotal.completions > 0 ? `${((quizFunnel.metaTotal.leads / quizFunnel.metaTotal.completions) * 100).toFixed(0)}%` : ''} />
-            <Kpi label="נטשו לפני פרטים" value={fmtNum(quizFunnel.metaTotal.dropoff)} accent={C.red} sub={`${quizFunnel.metaTotal.dropoffPct.toFixed(0)}% נטישה`} />
-            <Kpi label="עלות להשלמה" value={quizFunnel.metaTotal.completions > 0 ? fmtMoney(tabKpis.totalSpend / quizFunnel.metaTotal.completions) : '—'} sub="Cost per quiz" />
-            <Kpi label="עלות לליד אמיתי" value={quizFunnel.metaTotal.leads > 0 ? fmtMoney(tabKpis.totalSpend / quizFunnel.metaTotal.leads) : '—'} accent={C.purple} sub="CPL after lead form" />
-            <Kpi label="רוכשים מהלידים" value={fmtNum(tabKpis.totalCrmBuyers)} accent={C.gold} />
-          </div>
         ) : (
           // ALL / OTHER — original combined view
           kpis && (
@@ -437,75 +428,127 @@ export default function MetaClient({
         )}
       </Card>
 
-      {/* Quiz funnel — completed quiz vs entered details */}
+      {/* Quiz funnel — Meta-reported "reached form" vs "entered details" vs CRM */}
+      {(kindTab === 'all' || kindTab === 'lead') && (
       <Card style={{ marginBottom: 24 }}>
         <CardHeader
-          title="פאנל קוויז → ליד"
-          sub="Quiz Completion → Lead Capture Gap"
+          title="פאנל קוויז — הגיעו לטופס מול הכניסו פרטים"
+          sub="Quiz: Reached Form vs Entered Details (Meta pixels + CRM)"
           action={
             <span style={{ fontSize: 10, color: C.muted, background: C.soft, padding: '3px 8px', borderRadius: 5 }}>
-              כל המקורות (אין UTM ב-quiz_results)
+              קמפיין לידים — תת-קטגוריה
             </span>
           }
         />
         <div style={{ padding: '24px 28px' }}>
-          {quizFunnel.completions === 0 ? (
-            <EmptyBox msg="אין השלמות קוויז בטווח" />
+          {quizMetaCompleteTotal === 0 && quizFunnel.completions === 0 ? (
+            <EmptyBox msg="אין פעילות קוויז בטווח (לא ב-Meta ולא ב-CRM)" />
           ) : (
             <>
-              {/* Funnel visualization */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-                <div style={{ background: C.soft, borderRadius: 10, padding: '20px 22px', borderRight: `3px solid ${C.blue}` }}>
-                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>השלימו את הקוויז</div>
-                  <div style={{ fontSize: 32, fontWeight: 700, color: C.blue, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizFunnel.completions.toLocaleString()}</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>אירוע ההמרה של מטא לקמפיין הקוויז</div>
+              {/* 4-way comparison: Meta QuizComplete vs Meta QuizRecommended vs CRM Completions vs CRM Leads */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+                <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.blue}` }}>
+                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>הגיעו לטופס</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: C.blue, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizMetaCompleteTotal.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>QuizComplete pixel (Meta)</div>
                 </div>
-                <div style={{ background: C.soft, borderRadius: 10, padding: '20px 22px', borderRight: `3px solid ${C.green}` }}>
-                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>הכניסו פרטים</div>
-                  <div style={{ fontSize: 32, fontWeight: 700, color: C.green, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizFunnel.leads.toLocaleString()}</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
-                    {quizFunnel.completions > 0 ? `${((quizFunnel.leads / quizFunnel.completions) * 100).toFixed(0)}% מהשלימו` : ''}
-                  </div>
+                <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.purple}` }}>
+                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>הכניסו פרטים (Meta)</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: C.purple, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizMetaDetailsTotal.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>QuizRecommended pixel</div>
                 </div>
-                <div style={{ background: C.soft, borderRadius: 10, padding: '20px 22px', borderRight: `3px solid ${C.red}` }}>
-                  <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 8 }}>נטשו לפני פרטים</div>
-                  <div style={{ fontSize: 32, fontWeight: 700, color: C.red, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{quizFunnel.dropoff.toLocaleString()}</div>
-                  <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
-                    {quizFunnel.dropoffPct.toFixed(0)}% מהשלימו את הקוויז ולא השאירו פרטים
+                <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.green}` }}>
+                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>הכניסו פרטים (CRM)</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: C.green, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{(quizFunnel.metaTotal.leads || quizFunnel.leads).toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>quiz_results עם user_id</div>
+                </div>
+                <div style={{ background: C.soft, borderRadius: 10, padding: '18px 20px', borderRight: `3px solid ${C.red}` }}>
+                  <div style={{ fontSize: 10, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>נטשו (טופס → פרטים)</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: C.red, fontFamily: 'system-ui', letterSpacing: '-0.02em', lineHeight: 1 }}>{Math.max(quizMetaCompleteTotal - quizMetaDetailsTotal, 0).toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>
+                    {quizMetaCompleteTotal > 0 ? `${(((quizMetaCompleteTotal - quizMetaDetailsTotal) / quizMetaCompleteTotal) * 100).toFixed(0)}% מהגיעו לטופס` : ''}
                   </div>
                 </div>
               </div>
 
-              {/* Visual funnel bar */}
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 0, height: 36, borderRadius: 8, overflow: 'hidden' }}>
-                  <div style={{
-                    width: `${quizFunnel.completions > 0 ? (quizFunnel.leads / quizFunnel.completions) * 100 : 0}%`,
-                    height: '100%',
-                    background: `linear-gradient(90deg, ${C.green}aa, ${C.green})`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                    paddingLeft: 12, minWidth: quizFunnel.leads > 0 ? 60 : 0,
-                    color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
-                  }}>
-                    {quizFunnel.leads > 0 && `${quizFunnel.leads} → ליד`}
-                  </div>
-                  <div style={{
-                    width: `${quizFunnel.completions > 0 ? (quizFunnel.dropoff / quizFunnel.completions) * 100 : 0}%`,
-                    height: '100%',
-                    background: `linear-gradient(90deg, ${C.red}aa, ${C.red})`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
-                    paddingRight: 12, minWidth: quizFunnel.dropoff > 0 ? 60 : 0,
-                    color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
-                  }}>
-                    {quizFunnel.dropoff > 0 && `${quizFunnel.dropoff} ← נטישה`}
-                  </div>
+              {/* Drift between Meta-pixel and CRM (should be ~0 if dedup works) */}
+              {quizMetaDetailsTotal > 0 && quizFunnel.metaTotal.leads > 0 && (
+                <div style={{ marginBottom: 24, padding: '10px 16px', background: 'rgba(139,92,246,0.06)', borderRight: `3px solid ${C.purple}`, borderRadius: 6, fontSize: 12, color: C.muted }}>
+                  📊 <strong style={{ color: C.fg }}>פער Meta vs CRM:</strong> {Math.abs(quizMetaDetailsTotal - quizFunnel.metaTotal.leads).toLocaleString()} ({Math.abs(((quizMetaDetailsTotal - quizFunnel.metaTotal.leads) / Math.max(quizMetaDetailsTotal, 1)) * 100).toFixed(0)}%) — אמורים להיות זהים בזכות eventID deduplication. סטייה גדולה מ-15% = בעיה ב-CAPI או UTM tracking
                 </div>
-                <div style={{ fontSize: 11, color: C.muted, marginTop: 8, textAlign: 'center' }}>
-                  סך השלמות הקוויז: {quizFunnel.completions.toLocaleString()}
-                </div>
-              </div>
+              )}
 
-              {/* By recommended product */}
+              {/* Visualization bar: form-reach → details-entered → bailed */}
+              {quizMetaCompleteTotal > 0 && (
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 0, height: 36, borderRadius: 8, overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${(quizMetaDetailsTotal / quizMetaCompleteTotal) * 100}%`,
+                      height: '100%',
+                      background: `linear-gradient(90deg, ${C.green}aa, ${C.green})`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                      paddingLeft: 12, minWidth: quizMetaDetailsTotal > 0 ? 60 : 0,
+                      color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
+                    }}>
+                      {quizMetaDetailsTotal > 0 && `${quizMetaDetailsTotal} → ליד`}
+                    </div>
+                    <div style={{
+                      width: `${((quizMetaCompleteTotal - quizMetaDetailsTotal) / quizMetaCompleteTotal) * 100}%`,
+                      height: '100%',
+                      background: `linear-gradient(90deg, ${C.red}aa, ${C.red})`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
+                      paddingRight: 12, minWidth: quizMetaCompleteTotal - quizMetaDetailsTotal > 0 ? 60 : 0,
+                      color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'system-ui',
+                    }}>
+                      {quizMetaCompleteTotal - quizMetaDetailsTotal > 0 && `${quizMetaCompleteTotal - quizMetaDetailsTotal} ← נטישה`}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 8, textAlign: 'center' }}>
+                    סך הגעות לטופס מקמפיינים של קוויז: {quizMetaCompleteTotal.toLocaleString()} (הוצאה: {fmtMoney(quizSpendTotal)})
+                  </div>
+                </div>
+              )}
+
+              {/* Per-campaign Meta cost breakdown */}
+              {quizCampaignRows.length > 0 && (
+                <div style={{ marginBottom: 28 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 14, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    פילוח לפי קמפיין קוויז ב-Meta
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: C.soft }}>
+                          {['קמפיין', 'הוצאה', 'הגיעו לטופס', 'הכניסו פרטים', '% נטישה', 'עלות לטופס', 'עלות לליד'].map(h => (
+                            <th key={h} style={{ padding: '10px 14px', textAlign: 'right', fontSize: 10, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {quizCampaignRows.map((c) => {
+                          const drop = Math.max(c.metaQuizComplete - c.metaQuizDetails, 0);
+                          const dropPct = c.metaQuizComplete > 0 ? (drop / c.metaQuizComplete) * 100 : 0;
+                          const costPerForm = c.metaQuizComplete > 0 ? c.spend / c.metaQuizComplete : 0;
+                          const costPerLead = c.metaQuizDetails > 0 ? c.spend / c.metaQuizDetails : 0;
+                          return (
+                            <tr key={c.campaignId} style={{ borderBottom: `1px solid ${C.border}` }}>
+                              <td style={{ padding: '10px 14px', fontWeight: 600, color: C.fg, maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</td>
+                              <td style={{ padding: '10px 14px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{fmtMoney(c.spend)}</td>
+                              <td style={{ padding: '10px 14px', color: C.blue, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.metaQuizComplete}</td>
+                              <td style={{ padding: '10px 14px', color: C.green, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{c.metaQuizDetails}</td>
+                              <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, color: dropoffColorFor(dropPct), fontFamily: 'system-ui' }}>{dropPct.toFixed(0)}%</td>
+                              <td style={{ padding: '10px 14px', color: C.muted, textAlign: 'right', fontFamily: 'system-ui' }}>{costPerForm > 0 ? fmtMoney(costPerForm) : '—'}</td>
+                              <td style={{ padding: '10px 14px', color: C.purple, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>{costPerLead > 0 ? fmtMoney(costPerLead) : '—'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* By recommended product (CRM-wide, all sources) */}
               {quizFunnel.byProduct.length > 0 && (
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 14, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
@@ -585,12 +628,13 @@ export default function MetaClient({
 
               {/* Helper note */}
               <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(201,150,74,0.06)', borderRight: `3px solid ${C.gold}`, borderRadius: 6, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-                💡 הקמפיין של הקוויז ב-Meta מתממש על השלמת הקוויז ({quizFunnel.completions.toLocaleString()}). הנתון המאשר ROAS אמיתי הוא <strong style={{ color: C.fg }}>{quizFunnel.leads.toLocaleString()}</strong> לידים שהגיעו עד הסוף. <strong style={{ color: dropoffColorFor(quizFunnel.dropoffPct) }}>{quizFunnel.dropoff.toLocaleString()} נטישות</strong> ({quizFunnel.dropoffPct.toFixed(0)}%) של אנשים שסיימו את 6 השאלות אבל לא הכניסו שם/טלפון — שווה לבדוק מה קורה בעמוד התוצאות.
+                💡 הקונברזין של Meta לקמפיין הקוויז הוא <strong style={{ color: C.blue }}>QuizComplete</strong> (הגיע לטופס). הליד האמיתי הוא <strong style={{ color: C.green }}>QuizRecommended</strong> (הכניס פרטים) — וזה אמור להיות שווה ל-CRM. הפער <strong style={{ color: dropoffColorFor(quizMetaCompleteTotal > 0 ? ((quizMetaCompleteTotal - quizMetaDetailsTotal) / quizMetaCompleteTotal) * 100 : 0) }}>{Math.max(quizMetaCompleteTotal - quizMetaDetailsTotal, 0).toLocaleString()}</strong> זה אנשים שהגיעו לטופס ולא מילאו אותו — האופטימיזציה של מטא לא יודעת על זה. שווה לבדוק את עמוד הטופס.
               </div>
             </>
           )}
         </div>
       </Card>
+      )}
 
       {/* Campaign performance table */}
       <Card style={{ marginBottom: 24 }}>
