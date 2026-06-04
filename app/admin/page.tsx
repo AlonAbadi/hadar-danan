@@ -51,6 +51,7 @@ async function getHubKPIs() {
 }
 
 const NAV_CARDS = [
+  { title: 'ניתוח קמפיינים — Meta', desc: 'ROAS אמיתי, CPL, CPA, השוואת Meta vs CRM', href: '/admin/meta',        group: 'ראשי',     icon: '📊' },
   { title: 'לקוחות',          desc: 'היסטוריה, רכישות, צפיות, מיילים',        href: '/admin/clients',     group: 'ראשי',     icon: '⭐' },
   { title: 'ניהול לידים CRM', desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',   href: '/admin/crm',         group: 'ראשי',     icon: '👥' },
   { title: 'רכישת לקוחות',   desc: 'מקורות תנועה, CAC, ROAS',                href: '/admin/acquisition', group: 'ראשי',     icon: '🎯' },
