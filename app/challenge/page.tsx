@@ -3,6 +3,7 @@ import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import ChallengeProofWall from "@/components/landing/ChallengeProofWall";
 import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
+import { InstantAccessStrip } from "./InstantAccessStrip";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
@@ -11,6 +12,7 @@ import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
 const CHALLENGE_FAQS = [
+  { question: "מתי מתחילים? צריך לחכות למחזור?", answer: "מתחילות מיד, תוך שניות אחרי התשלום. מפגש הפתיחה המוקלט פתוח לצפייה בו ברגע, וכל יום נפתח לפי הקצב שלכן. אין מחזורים ואין המתנה לקבוצה." },
   { question: "מה זה אתגר 7 הימים?", answer: "אתגר 7 הימים הוא קורס on-demand שבו כל יום מקבלים סרטון מהדר + אתגר יומי לצלם ולהעלות לאינסטגרם. המטרה: לצאת לדרך עם סרטונים איכותיים שמקדמים מכירות ומטפחים קהילה סביב המותג האישי." },
   { question: "מה מקבלים?", answer: "מפגש פתיחה מוקלט (כדי שתוכל/י להתחיל מיד), 7 סרטונים יומיים מהדר על סוג תוכן שמקדם מכירות, אתגר יומי לביצוע ולהעלאה לאינסטגרם, ומפגש סיום חי בזום: איך להפוך את הסרטונים לסיסטם מכירות. מפגש הסיום פתוח רק למי שסיים/ה את כל 7 הימים." },
   { question: "למי מתאים האתגר?", answer: "לכל מי שמבולבל וכבר מרגיש שעידן השיווק מיצה את עצמו מכל הכיוונים, ורוצה ללמוד איך בעולם של רעש יוצרים משהו שניתן להקשיב לו." },
@@ -62,7 +64,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
           { val: "3,500+", label: "בעלי עסקים" },
           { val: "97%",    label: "ממליצים" },
         ]}
-        heroExtra={<ChallengeGreeting />}
+        heroExtra={<><ChallengeGreeting /><InstantAccessStrip /></>}
 
         problemItems={[
           { icon: "🎥", text: "רוצה לצלם, אבל לא מסתדר/ת עם עצמך מול המצלמה. לא אוהב/ת את מה שאת/ה רואה, ומוותר/ת לפני שמתחיל/ה." },
@@ -74,7 +76,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         solutionTitle="במשך 7 ימים, כל משתתף מקבל:"
         solutionDesc="הכוונה יומיומית ממוקדת, עם תוצאות שרואים"
         solutionItems={[
-          { num: "🧠", title: "מפגש פתיחה מוקלט",            desc: "\"איך נראה שיווק בעידן מוצף בוידאו\". מוקלט כדי שתוכל/י להתחיל מיד, בלי להמתין למחזור." },
+          { num: "⚡", title: "גישה מיידית למפגש הפתיחה",     desc: "תוך שניות אחרי התשלום, מפגש הפתיחה המוקלט פתוח לצפייה: \"איך נראה שיווק בעידן מוצף בוידאו\". אין מחזורים. אין המתנה. מתחילות מתי שמתאים לכן." },
           { num: "🎥", title: "7 סרטונים יומיים מהדר",       desc: "הדרכה ממוקדת על סוג תוכן שמקדם מכירות. כל יום נושא אחר, מיושם ישר." },
           { num: "✏️", title: "אתגר יומי",                   desc: "ליצור וידאו מסוג מסוים ולהעלות אותו לאינסטגרם. מתרגלים בזמן אמת." },
           { num: "🏆", title: "מפגש סיום חי בזום",            desc: "מפגש מסכם בלייב: איך להפוך את הסרטונים שלך לסיסטם מכירות. פתוח רק למשתתפים/ות שסיימו את כל 7 הימים." },
