@@ -185,11 +185,25 @@ export function computeMaxUnlockedDay(enrolledAt: string): number {
 }
 
 /**
- * Closing live meeting: 15th of the current (or next) month.
- * If the 15th falls on Friday (5) or Saturday (6), moves to Sunday.
+ * Closing live meeting:
+ *   - If a specific NEXT_LIVE_MEETING_OVERRIDE is in the future, use it
+ *     (lets us pin one-off session times without the 15th-of-month rule).
+ *   - Otherwise default to 15th of the current (or next) month, with
+ *     Fri/Sat sliding to Sunday.
+ *
+ * To set a custom next meeting: change NEXT_LIVE_MEETING_OVERRIDE below.
+ * Note: months in `new Date(year, month, day, hour, minute)` are 0-indexed
+ * (0 = January, 5 = June). Local time = Israel time on Vercel server.
  */
+const NEXT_LIVE_MEETING_OVERRIDE: Date | null = new Date(2026, 5, 22, 17, 0); // 22 ביוני 2026, 17:00
+
 export function computeNextLiveMeetingDate(): Date {
   const now = new Date();
+
+  if (NEXT_LIVE_MEETING_OVERRIDE && NEXT_LIVE_MEETING_OVERRIDE > now) {
+    return NEXT_LIVE_MEETING_OVERRIDE;
+  }
+
   let d = new Date(now.getFullYear(), now.getMonth(), 15);
   // If 15th already passed this month, use next month
   if (d <= now) {

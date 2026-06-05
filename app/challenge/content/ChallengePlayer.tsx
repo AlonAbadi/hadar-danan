@@ -45,12 +45,18 @@ export default function ChallengePlayer({
   const progressPct    = (completedCount / totalDays) * 100;
   const is916          = dayData.aspectRatio === "9:16";
 
-  // Format live meeting date in Hebrew
+  // Format live meeting date in Hebrew, including time if present
   const liveMeetingLabel = (() => {
     const d = new Date(liveMeetingDate);
-    return d.toLocaleDateString("he-IL", {
+    const datePart = d.toLocaleDateString("he-IL", {
       weekday: "long", day: "numeric", month: "long",
     });
+    const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+    if (!hasTime) return datePart;
+    const timePart = d.toLocaleTimeString("he-IL", {
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    });
+    return `${datePart} בשעה ${timePart}`;
   })();
 
   // Vimeo Player API — auto-mark watched at 90%
