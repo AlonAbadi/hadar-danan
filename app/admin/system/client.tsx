@@ -2,20 +2,23 @@
 
 import { PageHeader, KpiGrid, KpiCard, SectionCard, DataTable, Badge, EmptyState } from '@/components/admin/ui';
 
-const API_INTEGRATIONS = [
-  { name: 'Supabase', envVars: ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'], icon: '🟢' },
-  { name: 'Cardcom', envVars: ['CARDCOM_TERMINAL_NUMBER', 'CARDCOM_API_NAME'], icon: '💳' },
-  { name: 'Resend', envVars: ['RESEND_API_KEY'], icon: '📧' },
-  { name: 'Meta Ads', envVars: ['META_ADS_ACCESS_TOKEN', 'META_AD_ACCOUNT_ID'], icon: '📘' },
-  { name: 'Google Ads', envVars: ['GOOGLE_ADS_CUSTOMER_ID', 'GOOGLE_ADS_DEVELOPER_TOKEN'], icon: '🔍' },
-  { name: 'GA4', envVars: ['GA4_PROPERTY_ID'], icon: '📊' },
-  { name: 'Calendly', envVars: ['CALENDLY_API_TOKEN'], icon: '📅' },
-  { name: 'Vimeo', envVars: ['VIMEO_ACCESS_TOKEN'], icon: '🎬' },
-  { name: 'WhatsApp Business', envVars: ['WHATSAPP_BUSINESS_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'], icon: '💬' },
-  { name: 'Vercel', envVars: ['VERCEL_PROJECT_ID'], icon: '▲' },
-];
+export type ApiIntegration = {
+  name:      string;
+  icon:      string;
+  envVars:   string[];
+  connected: boolean;
+  missing:   string[];
+};
 
-export default function SystemClient({ errors, events }: { errors: any[]; events: any[] }) {
+export default function SystemClient({
+  errors,
+  events,
+  integrations,
+}: {
+  errors: any[];
+  events: any[];
+  integrations: ApiIntegration[];
+}) {
   const errorCount = errors.length;
   const criticalErrors = errors.filter((e) => e.level === 'error').length;
   const warnings = errors.filter((e) => e.level === 'warning').length;
@@ -38,45 +41,43 @@ export default function SystemClient({ errors, events }: { errors: any[]; events
       {/* API Health */}
       <SectionCard title="סטטוס חיבורי API" titleEn="API Integration Status">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
-          {API_INTEGRATIONS.map((api) => {
-            // In production, check actual env vars server-side
-            const isCore = ['Supabase', 'Resend'].includes(api.name);
-            return (
-              <div key={api.name} style={{
-                padding: '12px 16px',
-                background: '#f9fafb',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '14px' }}>{api.icon}</span>
-                  <span style={{ fontSize: '13px', color: '#374151' }}>{api.name}</span>
-                </div>
-                <Badge variant={isCore ? 'success' : 'warning'}>
-                  {isCore ? 'מחובר' : 'ממתין'}
-                </Badge>
+          {integrations.map((api) => (
+            <div key={api.name} style={{
+              padding: '12px 16px',
+              background: '#f9fafb',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '14px' }}>{api.icon}</span>
+                <span style={{ fontSize: '13px', color: '#374151' }}>{api.name}</span>
               </div>
-            );
-          })}
+              <Badge variant={api.connected ? 'success' : 'warning'}>
+                {api.connected ? 'מחובר' : 'חסר'}
+              </Badge>
+            </div>
+          ))}
         </div>
 
-        <div style={{
-          marginTop: '16px',
-          padding: '12px',
-          background: '#eff6ff',
-          borderRadius: '8px',
-          fontSize: '12px',
-          color: '#6b7280',
-          lineHeight: '1.8',
-        }}>
-          <strong style={{ color: '#2563eb' }}>env vars נדרשים:</strong><br />
-          {API_INTEGRATIONS.filter((a) => !['Supabase', 'Resend'].includes(a.name))
-            .map((a) => `${a.name}: ${a.envVars.join(', ')}`)
-            .join(' | ')}
-        </div>
+        {integrations.some((a) => !a.connected) && (
+          <div style={{
+            marginTop: '16px',
+            padding: '12px',
+            background: '#fef3c7',
+            borderRadius: '8px',
+            fontSize: '12px',
+            color: '#92400e',
+            lineHeight: '1.8',
+          }}>
+            <strong style={{ color: '#b45309' }}>env vars חסרים:</strong><br />
+            {integrations.filter((a) => !a.connected)
+              .map((a) => `${a.name}: ${a.missing.join(', ')}`)
+              .join(' | ')}
+          </div>
+        )}
       </SectionCard>
 
       {/* Error Logs */}

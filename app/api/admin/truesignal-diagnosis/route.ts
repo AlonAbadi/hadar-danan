@@ -282,15 +282,32 @@ export async function POST(req: NextRequest) {
     // ── Call Claude ──────────────────────────────────────────────────────────
 
     const client = new Anthropic();
-    const aiResponse = await client.messages.create({
+    const requestParams = {
       model:      "claude-sonnet-4-6",
       max_tokens: 1500,
       system:     SYSTEM_PROMPT,
       messages: [{
-        role:    "user",
+        role:    "user" as const,
         content: "שים לב: abandoned_checkouts הם לא רכישות אמיתיות - אלה ניסיונות שלא הושלמו. אל תתייחס אליהם כאל לקוחות משלמים. completed_purchases הן הרכישות שהושלמו בפועל.\n\nלהלן נתוני הליד. החזר תיק אבחון לפי ההוראות:\n\n" + JSON.stringify(userContext, null, 2),
       }],
-    });
+    };
+
+    // Retry on 429/529 (rate-limit / overloaded) with exponential backoff.
+    let aiResponse: Awaited<ReturnType<typeof client.messages.create>> | null = null;
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        aiResponse = await client.messages.create(requestParams);
+        break;
+      } catch (e: unknown) {
+        lastErr = e;
+        const status = (e as { status?: number })?.status;
+        if (status !== 429 && status !== 529) throw e;
+        if (attempt === 2) throw e;
+        await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+      }
+    }
+    if (!aiResponse) throw lastErr ?? new Error("Anthropic call failed");
 
     const firstBlock = aiResponse.content[0];
     if (!firstBlock || firstBlock.type !== "text") {
