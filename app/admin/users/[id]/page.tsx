@@ -63,21 +63,32 @@ const QUIZ_LABELS: Record<string, string> = {
 };
 
 const PAGE_LABELS: Record<string, string> = {
-  "/":               "עמוד הבית",
-  "/challenge":      "אתגר 7 ימים",
-  "/course":         "קורס דיגיטלי",
-  "/strategy":       "פגישת אסטרטגיה",
-  "/premium":        "יום צילום פרמיום",
-  "/training":       "הדרכה חינמית",
-  "/training/watch": "צפה בהדרכה",
-  "/workshop":       "סדנה",
-  "/partnership":    "שותפות",
-  "/hive":           "הכוורת",
-  "/quiz":           "קוויז",
+  "/":                    "עמוד הבית",
+  "/challenge":           "אתגר 7 ימים",
+  "/challenge/content":   "תכני האתגר",
+  "/challenge/success":   "תודה - אתגר",
+  "/challenge/thank-you": "תודה - אתגר",
+  "/course":              "קורס דיגיטלי",
+  "/strategy":            "פגישת אסטרטגיה",
+  "/premium":             "יום צילום פרמיום",
+  "/training":            "הדרכה חינמית",
+  "/training/watch":      "צפה בהדרכה",
+  "/workshop":            "סדנה",
+  "/partnership":         "שותפות",
+  "/hive":                "הכוורת",
+  "/quiz":                "קוויז",
 };
 
 const VIDEO_TITLE: Record<string, string> = {
   "1178865564": "הדרכה חינמית",
+  "1185862328": "אתגר · יום 0 — פתיחה",
+  "1146491419": "אתגר · יום 1 — סרטוני בעיה",
+  "1149821176": "אתגר · יום 2 — סרטוני סיפור",
+  "1146553292": "אתגר · יום 3 — אזור הגאונות",
+  "1147280995": "אתגר · יום 4 — סרטוני ביקורת",
+  "1147281285": "אתגר · יום 5 — פירוק התנגדויות",
+  "1147597114": "אתגר · יום 6 — סיפור + דעה",
+  "1147325993": "אתגר · יום 7 — עדויות שמוכרות",
 };
 
 const SKIP_EVENTS = new Set(["QUIZ_ANSWER", "QUIZ_CTA_CLICK"]);
@@ -346,13 +357,17 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const supabase = createServerClient();
   const { id } = await params;
 
-  const [userRes, eventsRes, purchasesRes, notesRes, quizRes, inboundRes] = await Promise.all([
+  const [userRes, eventsRes, purchasesRes, notesRes, quizRes, inboundRes, challengeRes] = await Promise.all([
     supabase.from("users").select("*").eq("id", id).single(),
     supabase.from("events").select("*").eq("user_id", id).order("created_at", { ascending: false }).limit(100),
     supabase.from("purchases").select("*").eq("user_id", id).order("created_at", { ascending: false }),
     safeFrom(supabase, "notes").select("id, author, content, created_at").eq("user_id", id).order("created_at", { ascending: false }),
     supabase.from("quiz_results").select("recommended_product, second_product, match_percent, scores, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(1),
     safeFrom(supabase, "whatsapp_inbound").select("id, type, content, sentiment, score_delta, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(20),
+    safeFrom(supabase, "challenge_enrollments")
+      .select("enrolled_at, current_day, completed_at, last_activity_at, challenge_day_completions(day_number, completed_at)")
+      .eq("user_id", id)
+      .maybeSingle(),
   ]);
 
   const user = userRes.data;
@@ -373,6 +388,24 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
     id: string; type: string; content: string | null;
     sentiment: string; score_delta: number; created_at: string;
   }>;
+  const enrollment = (challengeRes.data ?? null) as null | {
+    enrolled_at:      string;
+    current_day:      number;
+    completed_at:     string | null;
+    last_activity_at: string;
+    challenge_day_completions: { day_number: number; completed_at: string }[];
+  };
+
+  // Count visits to /challenge/content (= "entered the challenge area")
+  const contentVisits = events.filter((e) => {
+    if (String(e.type) !== "PAGE_VIEW") return false;
+    const page = (e.metadata as Record<string, unknown> | null)?.page;
+    return typeof page === "string" && page.startsWith("/challenge/content");
+  }).length;
+
+  const completedDays = new Set<number>(
+    enrollment?.challenge_day_completions?.map((c) => c.day_number) ?? [],
+  );
 
   // ── Derived ──────────────────────────────────────────────
   const initials  = getInitials(user.name, user.email);
@@ -644,6 +677,73 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                   </div>
                 )}
               </Card>
+
+              {/* ── Challenge activity ─────────────────────────────── */}
+              {(enrollment || contentVisits > 0) && (
+                <Card
+                  title="פעילות באתגר"
+                  badge={
+                    enrollment?.completed_at
+                      ? <Chip bg="rgba(76,175,130,0.15)" color="#4CAF82">סיים את האתגר</Chip>
+                      : enrollment
+                        ? <Chip bg="rgba(232,185,74,0.15)" color="#E8B94A">בעיצומו</Chip>
+                        : <Chip bg="rgba(158,153,144,0.15)" color="#9E9990">נכנס בלבד</Chip>
+                  }
+                >
+                  {enrollment ? (
+                    <>
+                      <InfoRow label="נרשם לאתגר"  value={`${fmtDateTime(enrollment.enrolled_at)} (${relativeTime(enrollment.enrolled_at)})`} />
+                      <InfoRow label="יום נוכחי"   value={`${Math.min(enrollment.current_day, 8)} / 8`} />
+                      <InfoRow label="ימים שהושלמו" value={`${completedDays.size} / 9`} />
+                      <InfoRow label="פעילות אחרונה" value={relativeTime(enrollment.last_activity_at)} />
+                      {enrollment.completed_at && (
+                        <InfoRow label="סיים בתאריך" value={fmtDateTime(enrollment.completed_at)} />
+                      )}
+                      <InfoRow label="כניסות לתוכן" value={String(contentVisits)} />
+
+                      <div style={{ marginTop: 14 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                          <span style={{ fontSize: 12, color: "#9E9990" }}>התקדמות לפי יום</span>
+                          <span style={{ fontSize: 11, color: "#6F6A60" }}>0 = פתיחה · 8 = מפגש סיום</span>
+                        </div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {Array.from({ length: 9 }, (_, day) => {
+                            const done    = completedDays.has(day);
+                            const current = !done && day === enrollment.current_day;
+                            return (
+                              <div
+                                key={day}
+                                title={done ? `יום ${day} — הושלם` : current ? `יום ${day} — נוכחי` : `יום ${day} — טרם`}
+                                style={{
+                                  width: 30, height: 30, borderRadius: 8,
+                                  display: "grid", placeItems: "center",
+                                  fontSize: 12, fontWeight: 700,
+                                  background: done
+                                    ? "linear-gradient(135deg, #E8B94A, #9E7C3A)"
+                                    : current
+                                      ? "transparent"
+                                      : "rgba(44,50,62,0.5)",
+                                  color: done ? "#1A1206" : current ? "#E8B94A" : "#6F6A60",
+                                  border: current ? "1.5px dashed #E8B94A" : "1px solid rgba(44,50,62,0.8)",
+                                }}
+                              >
+                                {day}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ color: "#9E9990", fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+                        הלקוח נכנס לתכני האתגר אבל אין רישום אתגר פעיל.
+                      </p>
+                      <InfoRow label="כניסות לתוכן" value={String(contentVisits)} />
+                    </>
+                  )}
+                </Card>
+              )}
 
               {/* ── Abandoned checkouts (pending / failed) ────────── */}
               {purchases.filter((p) => p.status === "pending" || p.status === "failed").length > 0 && (
