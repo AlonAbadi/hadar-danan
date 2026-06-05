@@ -45,18 +45,23 @@ export default function ChallengePlayer({
   const progressPct    = (completedCount / totalDays) * 100;
   const is916          = dayData.aspectRatio === "9:16";
 
-  // Format live meeting date in Hebrew, including time if present
+  // Format live meeting date in Israel time explicitly. Without timeZone,
+  // toLocaleString uses the browser's local timezone — a user phone in
+  // a non-Israel timezone (or any timezone math drift) would render the
+  // wrong time. Asia/Jerusalem is always the right answer for Hadar's sessions.
   const liveMeetingLabel = (() => {
     const d = new Date(liveMeetingDate);
     const datePart = d.toLocaleDateString("he-IL", {
       weekday: "long", day: "numeric", month: "long",
+      timeZone: "Asia/Jerusalem",
     });
-    const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
-    if (!hasTime) return datePart;
-    const timePart = d.toLocaleTimeString("he-IL", {
+    // Detect "no time set" by formatting hours+minutes in Israel time.
+    const hm = d.toLocaleTimeString("he-IL", {
       hour: "2-digit", minute: "2-digit", hour12: false,
+      timeZone: "Asia/Jerusalem",
     });
-    return `${datePart} בשעה ${timePart}`;
+    if (hm === "00:00") return datePart;
+    return `${datePart} בשעה ${hm}`;
   })();
 
   // Vimeo Player API — auto-mark watched at 90%

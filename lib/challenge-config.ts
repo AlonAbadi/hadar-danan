@@ -195,7 +195,12 @@ export function computeMaxUnlockedDay(enrolledAt: string): number {
  * Note: months in `new Date(year, month, day, hour, minute)` are 0-indexed
  * (0 = January, 5 = June). Local time = Israel time on Vercel server.
  */
-const NEXT_LIVE_MEETING_OVERRIDE: Date | null = new Date(2026, 5, 22, 20, 0); // 22 ביוני 2026, 20:00
+// IMPORTANT: pin the timezone with +03:00 (Asia/Jerusalem, DST in June).
+// Constructing `new Date(year, month, day, hour, min)` uses the SERVER's local
+// timezone — Vercel functions can land in regions with non-UTC offsets, which
+// double-shifts the time when the browser later converts it. ISO-with-offset
+// makes the instant absolute regardless of where the code runs.
+const NEXT_LIVE_MEETING_OVERRIDE: Date | null = new Date("2026-06-22T17:00:00+03:00"); // 22 ביוני 2026, 17:00 שעון ישראל
 
 export function computeNextLiveMeetingDate(): Date {
   const now = new Date();
