@@ -23,37 +23,156 @@ interface ChallengeCTAProps {
   credit?: number;
 }
 
-// Renders ₪297 strikethrough + ₪price for the sale callout inside CTA buttons.
-// Strikethrough sits in a soft red pill so the old price stays readable on the
-// gold button background (the previous opacity-based version was practically
-// invisible). Crossed by a thick red line to telegraph "was reduced" instantly.
-function PriceWithDiscount({ price, originalPrice }: { price: string | number; originalPrice?: number }) {
-  if (!originalPrice || Number(price) >= originalPrice) return <>₪{price}</>;
+function PriceWas({ amount }: { amount: number }) {
   return (
-    <>
+    <span style={{ position: "relative", fontSize: 17, fontWeight: 600, color: "#6b5320", opacity: 0.78, display: "inline-block" }}>
+      {amount}₪
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: -2,
+          right: -2,
+          top: "52%",
+          height: 2,
+          background: "#6b5320",
+          borderRadius: 2,
+          transform: "rotate(-7deg)",
+          opacity: 0.85,
+        }}
+      />
+    </span>
+  );
+}
+
+function SavingsBadge({ savings }: { savings: number }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        whiteSpace: "nowrap",
+        gap: 7,
+        background: "rgba(232, 185, 66, 0.12)",
+        border: "1px solid rgba(232, 185, 66, 0.32)",
+        color: "#E8B94A",
+        fontSize: 13,
+        fontWeight: 700,
+        letterSpacing: "0.2px",
+        padding: "6px 13px",
+        borderRadius: 999,
+      }}
+    >
       <span
         style={{
-          display: "inline-block",
-          padding: "1px 8px",
-          marginInlineEnd: 10,
-          background: "rgba(220, 38, 38, 0.16)",
-          border: "1.5px solid rgba(185, 28, 28, 0.55)",
-          borderRadius: 6,
-          color: "#7f1d1d",
-          fontSize: "0.74em",
-          fontWeight: 800,
-          textDecoration: "line-through",
-          textDecorationColor: "#b91c1c",
-          textDecorationThickness: 2,
-          verticalAlign: "middle",
-          letterSpacing: "0.01em",
-          direction: "ltr",
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          background: "#E8B94A",
+          boxShadow: "0 0 0 4px rgba(232, 185, 66, 0.18)",
         }}
-      >
-        ₪{originalPrice}
+      />
+      חסכת ₪{savings} · מבצע מסתיים בקרוב
+    </span>
+  );
+}
+
+function SecurityNote() {
+  return (
+    <p
+      style={{
+        textAlign: "center",
+        color: "rgba(255,255,255,0.5)",
+        fontSize: 13,
+        fontWeight: 500,
+        letterSpacing: "0.2px",
+        margin: 0,
+      }}
+    >
+      תשלום מאובטח · <strong style={{ color: "rgba(255,255,255,0.78)", fontWeight: 700 }}>SSL 256-bit</strong> · הצטרפות מיידית
+    </p>
+  );
+}
+
+function ArrowChip() {
+  return (
+    <span
+      className="cta-arrow"
+      aria-hidden
+      style={{
+        flex: "0 0 auto",
+        width: 42,
+        height: 42,
+        borderRadius: "50%",
+        display: "grid",
+        placeItems: "center",
+        background: "rgba(42, 29, 5, 0.14)",
+        boxShadow: "0 1px 0 rgba(255,255,255,0.35) inset",
+        transition: "transform 0.18s ease, background 0.18s ease",
+      }}
+    >
+      <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="#2a1d05" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12" />
+        <polyline points="12 19 5 12 12 5" />
+      </svg>
+    </span>
+  );
+}
+
+const GOLD_BTN_STYLE: React.CSSProperties = {
+  position: "relative",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 16,
+  width: "100%",
+  border: "none",
+  cursor: "pointer",
+  padding: "17px 22px",
+  borderRadius: 18,
+  textAlign: "right",
+  background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+  boxShadow:
+    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
+  overflow: "hidden",
+  transition: "transform 0.18s cubic-bezier(.2,.8,.3,1), box-shadow 0.18s ease, filter 0.18s ease",
+};
+
+interface CtaButtonProps {
+  label: React.ReactNode;
+  priceNow?: number;
+  priceWas?: number;
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: "button" | "submit";
+}
+
+function CheckoutCtaButton({ label, priceNow, priceWas, onClick, disabled, type = "button" }: CtaButtonProps) {
+  const showPriceWas = priceWas !== undefined && priceNow !== undefined && priceWas > priceNow;
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className="checkout-cta active:scale-[0.98]"
+      style={{ ...GOLD_BTN_STYLE, opacity: disabled ? 0.6 : 1, cursor: disabled ? "not-allowed" : "pointer" }}
+    >
+      <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+        <span style={{ fontSize: 19, fontWeight: 800, color: "#2a1d05", letterSpacing: "-0.2px", lineHeight: 1.1 }}>
+          {label}
+        </span>
+        {priceNow !== undefined && (
+          <span style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
+            <span style={{ fontSize: 26, fontWeight: 900, color: "#2a1d05", lineHeight: 1 }}>
+              {priceNow}
+              <span style={{ fontSize: 19, fontWeight: 800, marginInlineStart: 1 }}>₪</span>
+            </span>
+            {showPriceWas && <PriceWas amount={priceWas!} />}
+          </span>
+        )}
       </span>
-      ₪{price}
-    </>
+      <ArrowChip />
+    </button>
   );
 }
 
@@ -71,24 +190,18 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
   const listPrice = Number(price);
   const toPay     = Math.max(0, listPrice - credit);
 
-  const BTN_STYLE: React.CSSProperties = {
-    display: "inline-block",
-    width: "auto",
-    padding: "15px 36px",
-    borderRadius: 14,
-    fontSize: 15,
-    fontWeight: 800,
-    border: "none",
-    cursor: "pointer",
-  };
-
   const WRAPPER_STYLE: React.CSSProperties = {
-    textAlign: "center",
+    width: "100%",
+    maxWidth: 520,
+    marginInline: "auto",
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    gap: 12,
+    alignItems: "stretch",
+    gap: 16,
   };
+
+  const hasDiscount = !!originalPrice && originalPrice > toPay && toPay > 0;
+  const savings = hasDiscount ? originalPrice! - toPay : 0;
 
   useEffect(() => {
     // 1. Quiz session (users who came through the quiz)
@@ -283,9 +396,13 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
             onBlur={(e) => { e.currentTarget.style.borderColor = "#2C323E"; }}
           />
         </div>
-        <button type="submit" className="btn-cta-gold active:scale-[0.98]" style={BTN_STYLE}>
-          המשך לתשלום ←
-        </button>
+        <CheckoutCtaButton
+          type="submit"
+          label="המשך לתשלום"
+          priceNow={toPay > 0 ? toPay : undefined}
+          priceWas={hasDiscount ? originalPrice : undefined}
+        />
+        <SecurityNote />
         <button type="button" onClick={() => setPhase("idle")} className="text-sm text-center transition" style={{ color: "#9E9990" }}>
           ביטול
         </button>
@@ -295,20 +412,23 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
 
   if (phase === "idle") {
     if (quizUserId) {
+      const label = toPay === 0
+        ? `${quizName ? `${quizName}, ` : ""}קבל גישה חינם`
+        : `${quizName ? `${quizName}, ` : ""}המשך לתשלום`;
       return (
         <div style={WRAPPER_STYLE}>
-          <button
-            onClick={() => hasPhone ? doCheckout(quizUserId) : setPhase("phone")}
-            className="btn-cta-gold active:scale-[0.98]"
-            style={BTN_STYLE}
-          >
-            {quizName ? `${quizName}, ` : ""}
-            {toPay === 0
-              ? "קבל גישה חינם ←"
-              : toPay < listPrice
-                ? <>המשך לתשלום ₪{toPay} ←</>
-                : <>המשך לתשלום <PriceWithDiscount price={price} originalPrice={originalPrice} /> ←</>}
-          </button>
+          {hasDiscount && (
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <SavingsBadge savings={savings} />
+            </div>
+          )}
+          <CheckoutCtaButton
+            label={label}
+            priceNow={toPay > 0 ? toPay : undefined}
+            priceWas={hasDiscount ? originalPrice : undefined}
+            onClick={() => (hasPhone ? doCheckout(quizUserId) : setPhase("phone"))}
+          />
+          <SecurityNote />
           {waHref && (
             <a
               href={waHref}
@@ -325,19 +445,21 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
       );
     }
 
+    const anonLabel = toPay === 0 ? "קבל גישה חינם" : "הצטרף לאתגר";
     return (
       <div style={WRAPPER_STYLE}>
-        <button
+        {hasDiscount && (
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <SavingsBadge savings={savings} />
+          </div>
+        )}
+        <CheckoutCtaButton
+          label={anonLabel}
+          priceNow={toPay > 0 ? toPay : undefined}
+          priceWas={hasDiscount ? originalPrice : undefined}
           onClick={() => setPhase("form")}
-          className="btn-cta-gold active:scale-[0.98]"
-          style={BTN_STYLE}
-        >
-          {toPay === 0
-            ? "קבל גישה חינם ←"
-            : toPay < listPrice
-              ? <>הצטרף עכשיו - ₪{toPay} ←</>
-              : <>הצטרף לאתגר ← <PriceWithDiscount price={price} originalPrice={originalPrice} /></>}
-        </button>
+        />
+        <SecurityNote />
         {waHref && (
           <a
             href={waHref}
@@ -359,14 +481,14 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
     return (
       <div style={WRAPPER_STYLE}>
         {errorMsg && <p className="text-red-400 text-sm text-center">{errorMsg}</p>}
-        <button
+        <CheckoutCtaButton
+          label={phase === "loading" ? "מעביר לתשלום..." : "נסה שוב"}
+          priceNow={phase === "error" && toPay > 0 ? toPay : undefined}
+          priceWas={phase === "error" && hasDiscount ? originalPrice : undefined}
           onClick={() => doCheckout(quizUserId)}
           disabled={phase === "loading"}
-          className="btn-cta-gold active:scale-[0.98] disabled:opacity-60"
-          style={BTN_STYLE}
-        >
-          {phase === "loading" ? "מעביר לתשלום..." : "נסה שוב ←"}
-        </button>
+        />
+        <SecurityNote />
       </div>
     );
   }
@@ -405,20 +527,14 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
 
       {errorMsg && <p className="text-red-400 text-sm">{errorMsg}</p>}
 
-      <button
+      <CheckoutCtaButton
         type="submit"
+        label={phase === "loading" ? "מעביר לתשלום..." : toPay === 0 ? "קבל גישה חינם" : "לתשלום מאובטח"}
+        priceNow={phase !== "loading" && toPay > 0 ? toPay : undefined}
+        priceWas={phase !== "loading" && hasDiscount ? originalPrice : undefined}
         disabled={phase === "loading"}
-        className="w-full btn-cta-gold active:scale-[0.98] disabled:opacity-60"
-        style={{ borderRadius: 14, padding: "15px 36px", fontSize: 15, fontWeight: 800, border: "none", cursor: "pointer" }}
-      >
-        {phase === "loading"
-          ? "מעביר לתשלום..."
-          : toPay === 0
-            ? "קבל גישה חינם ←"
-            : toPay < listPrice
-              ? `לתשלום ₪${toPay} ←`
-              : "לתשלום מאובטח ←"}
-      </button>
+      />
+      <SecurityNote />
 
       <button
         type="button"

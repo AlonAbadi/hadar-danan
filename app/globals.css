@@ -119,6 +119,38 @@ body {
   transform: scale(0.98);
 }
 
+/* ══ Checkout CTA (gold gradient with arrow chip) ═════════════ */
+.checkout-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.45) 47%, transparent 64%);
+  transform: translateX(120%);
+  transition: transform 0.7s ease;
+  pointer-events: none;
+}
+.checkout-cta:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.6) inset,
+    0 -10px 22px rgba(157,110,12,0.35) inset,
+    0 24px 40px -12px rgba(214,155,31,0.65),
+    0 8px 16px -6px rgba(0,0,0,0.55);
+}
+.checkout-cta:hover:not(:disabled)::before { transform: translateX(-120%); }
+.checkout-cta:hover:not(:disabled) .cta-arrow {
+  transform: translateX(-4px);
+  background: rgba(42,29,5,0.2);
+}
+.checkout-cta:active:not(:disabled) { filter: brightness(0.97); }
+.checkout-cta:focus-visible {
+  outline: 3px solid #C9964A;
+  outline-offset: 3px;
+}
+@media (max-width: 420px) {
+  .checkout-cta { padding: 18px 20px !important; }
+}
+
 /* ══ Dark navy secondary button (inside light cards) ══════════ */
 .btn-navy-secondary {
   background: #0F172A;
