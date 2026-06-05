@@ -87,7 +87,17 @@ export async function middleware(request: NextRequest) {
   }
 
   // A/B variant — 50% each
-  if (!request.cookies.get("ab_variant")) {
+  // QA override: ?ab=A or ?ab=B forces a variant (sets the cookie) so we can
+  // preview both sides on demand. Real visitors don't pass this param.
+  const abOverride = searchParams.get("ab");
+  if (abOverride === "A" || abOverride === "B") {
+    response.cookies.set("ab_variant", abOverride, {
+      httpOnly: false,
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: "lax",
+      path: "/",
+    });
+  } else if (!request.cookies.get("ab_variant")) {
     const r = Math.random();
     const variant = r < 0.5 ? "A" : "B";
     response.cookies.set("ab_variant", variant, {

@@ -5,8 +5,12 @@
 -- Both track the same visitors (every /challenge PAGE_VIEW), so we can compare
 -- click-through vs actual sale per variant without compromising the primary metric.
 
+-- The experiments table doesn't have a unique constraint on `name`, so
+-- ON CONFLICT (name) isn't supported. Use WHERE NOT EXISTS for idempotency.
 INSERT INTO experiments (name, variant_a_label, variant_b_label, status, visitors_a, visitors_b, conversions_a, conversions_b)
-VALUES
-  ('challenge_hero_format',          'וידאו של הדר (control)', 'טקסט מעוצב במקום וידאו', 'running', 0, 0, 0, 0),
-  ('challenge_hero_format_checkout', 'וידאו של הדר (control)', 'טקסט מעוצב במקום וידאו', 'running', 0, 0, 0, 0)
-ON CONFLICT (name) DO NOTHING;
+SELECT 'challenge_hero_format', 'וידאו של הדר (control)', 'טקסט מעוצב במקום וידאו', 'running', 0, 0, 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM experiments WHERE name = 'challenge_hero_format');
+
+INSERT INTO experiments (name, variant_a_label, variant_b_label, status, visitors_a, visitors_b, conversions_a, conversions_b)
+SELECT 'challenge_hero_format_checkout', 'וידאו של הדר (control)', 'טקסט מעוצב במקום וידאו', 'running', 0, 0, 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM experiments WHERE name = 'challenge_hero_format_checkout');
