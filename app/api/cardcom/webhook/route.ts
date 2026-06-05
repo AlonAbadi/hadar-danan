@@ -22,6 +22,62 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendCapiEvent } from "@/lib/meta-capi";
 import { sendChallengeWhatsApp } from "@/lib/challenge-whatsapp";
+import { Resend } from "resend";
+
+const PRODUCT_LABELS: Record<string, string> = {
+  challenge_197:  "אתגר 7 ימים",
+  workshop_1080:  "סדנה יום אחד",
+  course_1800:    "קורס דיגיטלי",
+  strategy_4000:  "פגישת אסטרטגיה",
+  premium_14000:  "יום צילום פרמיום",
+  test_1:         "מוצר בדיקה",
+};
+
+function notifyPurchase(opts: {
+  userId:        string;
+  name:          string | null;
+  email:         string | null;
+  phone:         string | null;
+  product:       string;
+  amount:        number;
+  invoiceLink:   string | null;
+  invoiceNumber: string | null;
+}): void {
+  const productLabel = PRODUCT_LABELS[opts.product] ?? opts.product;
+  const amountFmt    = `₪${(opts.amount ?? 0).toLocaleString("he-IL")}`;
+  const displayName  = opts.name ?? opts.email ?? "לקוח";
+  const adminUrl     = `https://www.beegood.online/admin/users/${opts.userId}`;
+  const phoneWa      = opts.phone ? opts.phone.replace(/\D/g, "").replace(/^0/, "972") : null;
+  const phoneLine    = opts.phone
+    ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${opts.phone}" style="color:#4285F4">📞 ${opts.phone}</a>${phoneWa ? ` &nbsp;·&nbsp; <a href="https://wa.me/${phoneWa}" style="color:#25D366">💬 WhatsApp</a>` : ""}</p>`
+    : "";
+  const invoiceLine  = opts.invoiceLink
+    ? `<p style="margin:4px 0"><strong>חשבונית:</strong> <a href="${opts.invoiceLink}" style="color:#4285F4">${opts.invoiceNumber ? `#${opts.invoiceNumber}` : "פתח PDF"}</a></p>`
+    : opts.invoiceNumber ? `<p style="margin:4px 0"><strong>חשבונית:</strong> #${opts.invoiceNumber}</p>` : "";
+
+  new Resend(process.env.RESEND_API_KEY).emails.send({
+    from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
+    to: ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
+    subject: `💰 עסקה חדשה — ${displayName} · ${productLabel} · ${amountFmt}`,
+    html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
+      <h2 style="color:#34A853;margin-bottom:8px;font-size:22px">💰 עסקה חדשה</h2>
+      <p style="margin:0 0 20px;color:#888;font-size:13px">תשלום הושלם בהצלחה</p>
+
+      <div style="background:linear-gradient(135deg,#E8B94A,#9E7C3A);color:#1A1206;padding:16px 20px;border-radius:12px;margin-bottom:18px">
+        <p style="margin:0;font-size:14px;font-weight:700;opacity:0.85">${productLabel}</p>
+        <p style="margin:6px 0 0;font-size:28px;font-weight:900;letter-spacing:-0.5px">${amountFmt}</p>
+      </div>
+
+      <p style="margin:4px 0"><strong>שם:</strong> ${displayName}</p>
+      ${opts.email ? `<p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${opts.email}" style="color:#4285F4">${opts.email}</a></p>` : ""}
+      ${phoneLine}
+      ${invoiceLine}
+
+      <hr style="border:none;border-top:1px solid #eee;margin:16px 0"/>
+      <a href="${adminUrl}" style="display:inline-block;background:#34A853;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח פרופיל באדמין ←</a>
+    </div>`,
+  }).catch(() => {});
+}
 
 // ── Shared fulfillment logic ───────────────────────────────────────────────
 
@@ -240,6 +296,29 @@ async function fulfillPurchase(
     .update({ status: "buyer" })
     .eq("id", purchase.user_id)
     .eq("status", "high_intent");
+
+  // Notify Alon + Hadar of the closed deal. The status-change email in
+  // /api/events doesn't fire here because the webhook updates status
+  // directly (it doesn't go through POST /api/events), so without this
+  // call the team would only see the "started checkout" alert and never
+  // a deal-closed confirmation.
+  const { data: buyerForEmail } = await supabase
+    .from("users")
+    .select("name, email, phone")
+    .eq("id", purchase.user_id)
+    .single();
+  if (buyerForEmail) {
+    notifyPurchase({
+      userId:        purchase.user_id,
+      name:          buyerForEmail.name,
+      email:         buyerForEmail.email,
+      phone:         buyerForEmail.phone,
+      product:       purchase.product,
+      amount:        purchase.amount,
+      invoiceLink:   invoiceLink,
+      invoiceNumber: invoiceNumber,
+    });
+  }
 
   // Fire Purchase to Meta Conversions API (server-side, not blocked by iOS/adblockers)
   // event_id = purchase.id — deduplicates with browser pixel firing on success page
