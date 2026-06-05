@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -120,7 +121,7 @@ function StatusBadge({ status }: { status: string }) {
 
 // ── Tab: Dashboard ────────────────────────────────────────────────────────────
 
-function DashboardTab() {
+function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => void }) {
   const [stats, setStats]   = useState<Stats | null>(null);
   const [recent, setRecent] = useState<PipelineUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -181,14 +182,21 @@ function DashboardTab() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 {u.quiz_product && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 700,
-                    color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
-                    background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
-                    border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
-                    borderRadius: 6, padding: '2px 8px', whiteSpace: 'nowrap',
-                  }}>
-                    🎯 {PRODUCT_LABELS[u.quiz_product] ?? u.quiz_product}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onJumpToTier(u.quiz_product!); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onJumpToTier(u.quiz_product!); } }}
+                    title="קפוץ לקטגוריה הזו ב-עדיפות"
+                    style={{
+                      fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                      color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
+                      background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
+                      border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
+                      borderRadius: 6, padding: '2px 8px', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    🎯 {PRODUCT_LABELS[u.quiz_product] ?? u.quiz_product} ↗
                   </span>
                 )}
                 <StatusBadge status={u.status} />
@@ -213,7 +221,7 @@ const FILTER_BUTTONS = [
   { label: 'פרמיום',      value: 'premium_lead' },
 ];
 
-function PipelineTab() {
+function PipelineTab({ onJumpToTier }: { onJumpToTier: (product: string) => void }) {
   const [users, setUsers]   = useState<PipelineUser[]>([]);
   const [total, setTotal]   = useState(0);
   const [loading, setLoading] = useState(false);
@@ -301,14 +309,21 @@ function PipelineTab() {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                 <StatusBadge status={u.status} />
                 {u.quiz_product && (
-                  <span style={{
-                    fontSize: 11, fontWeight: 600,
-                    color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
-                    background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
-                    border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
-                    borderRadius: 6, padding: '2px 8px',
-                  }}>
-                    🎯 {PRODUCT_LABELS[u.quiz_product] ?? u.quiz_product}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onJumpToTier(u.quiz_product!); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onJumpToTier(u.quiz_product!); } }}
+                    title="קפוץ לקטגוריה הזו ב-עדיפות"
+                    style={{
+                      fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                      color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
+                      background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
+                      border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
+                      borderRadius: 6, padding: '2px 8px',
+                    }}
+                  >
+                    🎯 {PRODUCT_LABELS[u.quiz_product] ?? u.quiz_product} ↗
                   </span>
                 )}
                 {u.total_spent > 0 && (
@@ -329,7 +344,7 @@ function PipelineTab() {
 
 // ── Tab: Customers (all contacts) ─────────────────────────────────────────────
 
-function CustomersTab() {
+function CustomersTab({ onJumpToTier }: { onJumpToTier: (product: string) => void }) {
   const [users, setUsers]     = useState<PipelineUser[]>([]);
   const [total, setTotal]     = useState(0);
   const [loading, setLoading] = useState(false);
@@ -424,6 +439,24 @@ function CustomersTab() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                 <StatusBadge status={u.status} />
+                {u.quiz_product && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onJumpToTier(u.quiz_product!); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onJumpToTier(u.quiz_product!); } }}
+                    title="קפוץ לקטגוריה הזו ב-עדיפות"
+                    style={{
+                      fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                      color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
+                      background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
+                      border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
+                      borderRadius: 6, padding: '2px 8px',
+                    }}
+                  >
+                    🎯 {PRODUCT_LABELS[u.quiz_product] ?? u.quiz_product} ↗
+                  </span>
+                )}
                 {u.purchase_count > 0 && (
                   <span style={{ fontSize: 11, color: '#9E9990' }}>
                     {u.purchase_count} {u.purchase_count === 1 ? 'רכישה' : 'רכישות'}
@@ -1140,7 +1173,7 @@ function PriorityLeadsTab() {
           const tierLeads = leads.filter(l => l.quiz_product === tier.product);
           if (tierLeads.length === 0) return null;
           return (
-            <div key={tier.product}>
+            <div key={tier.product} id={`tier-${tier.product}`} style={{ scrollMarginTop: 100 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: tier.color, flexShrink: 0 }} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: showArchive ? '#9E9990' : tier.color, letterSpacing: '0.05em' }}>
@@ -1192,8 +1225,52 @@ const TABS = [
 ] as const;
 type TabId = typeof TABS[number]['id'];
 
-export default function CrmPage() {
-  const [tab, setTab] = useState<TabId>('priority');
+function isTabId(v: string | null): v is TabId {
+  return v === 'customers' || v === 'priority' || v === 'dashboard' || v === 'pipeline' || v === 'reminders';
+}
+
+function CrmPageInner() {
+  const router       = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab: TabId = isTabId(searchParams.get('tab')) ? (searchParams.get('tab') as TabId) : 'priority';
+  const [tab, setTab] = useState<TabId>(initialTab);
+
+  // Sync tab to URL so deep links / refresh keep state.
+  useEffect(() => {
+    const params = new URLSearchParams(Array.from(searchParams.entries()));
+    if (params.get('tab') !== tab) {
+      params.set('tab', tab);
+      router.replace(`/admin/crm?${params.toString()}`, { scroll: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  // After switching to priority tab, scroll to the requested tier anchor.
+  // Re-runs when tab changes so navigation from another tab works.
+  useEffect(() => {
+    if (tab !== 'priority') return;
+    const tier = searchParams.get('tier');
+    if (!tier) return;
+    const tryScroll = (attempt = 0) => {
+      const el = document.getElementById(`tier-${tier}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (attempt < 20) {
+        // Tier hasn't rendered yet — retry every 100ms (priority data loads async)
+        setTimeout(() => tryScroll(attempt + 1), 100);
+      }
+    };
+    tryScroll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, searchParams.get('tier')]);
+
+  const jumpToTier = useCallback((product: string) => {
+    setTab('priority');
+    const params = new URLSearchParams(Array.from(searchParams.entries()));
+    params.set('tab', 'priority');
+    params.set('tier', product);
+    router.replace(`/admin/crm?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
 
   return (
     <div dir="rtl" style={{ fontFamily: 'var(--font-assistant), Assistant, sans-serif', minHeight: '100vh', background: '#0D1018', padding: 24 }}>
@@ -1226,11 +1303,19 @@ export default function CrmPage() {
       </div>
 
       {/* Tab content */}
-      {tab === 'customers'  && <CustomersTab />}
+      {tab === 'customers'  && <CustomersTab  onJumpToTier={jumpToTier} />}
       {tab === 'priority'   && <PriorityLeadsTab />}
-      {tab === 'dashboard'  && <DashboardTab />}
-      {tab === 'pipeline'   && <PipelineTab />}
+      {tab === 'dashboard'  && <DashboardTab  onJumpToTier={jumpToTier} />}
+      {tab === 'pipeline'   && <PipelineTab   onJumpToTier={jumpToTier} />}
       {tab === 'reminders'  && <RemindersTab />}
     </div>
+  );
+}
+
+export default function CrmPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 24, color: '#9E9990' }}>טוען...</div>}>
+      <CrmPageInner />
+    </Suspense>
   );
 }
