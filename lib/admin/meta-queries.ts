@@ -188,13 +188,20 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
     .select('id, utm_source, utm_campaign')
     .gte('created_at', dateFilterIso);
 
-  const { data: purchases } = await supabase
+  // Purchase-level utm (captured at checkout time) is preferred over the
+  // user-level utm because buyers often return via a later Meta touch — their
+  // user row may have null/stale utm from an earlier organic signup.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: purchases } = await (supabase as any)
     .from('purchases')
-    .select('user_id, amount')
+    .select('user_id, amount, utm_source, utm_campaign')
     .eq('status', 'completed')
     .gte('created_at', dateFilterIso);
 
-  const buyerIds = new Set((purchases ?? []).map(p => p.user_id).filter(Boolean));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const purchasesTyped = (purchases ?? []) as Array<{ user_id: string; amount: number; utm_source: string | null; utm_campaign: string | null }>;
+
+  const buyerIds = new Set(purchasesTyped.map(p => p.user_id).filter(Boolean));
   const { data: buyerUsers } = buyerIds.size > 0
     ? await supabase.from('users').select('id, utm_source, utm_campaign').in('id', Array.from(buyerIds))
     : { data: [] };
@@ -272,10 +279,13 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
 
   const buyersByCampaignId: Record<string, { count: number; revenue: number }> = {};
   const buyerSetByCampaignId: Record<string, Set<string>> = {};
-  (purchases ?? []).forEach(p => {
+  purchasesTyped.forEach(p => {
+    // Prefer purchase-level utm (captured at checkout), fall back to the
+    // buyer's user-row utm (signup-time first-touch).
+    const purchaseCampaign = p.utm_campaign || '';
     const u = buyerMap[p.user_id];
-    if (!u) return;
-    const cid = resolveCampaignId(u.campaign);
+    const userCampaign = u?.campaign || '';
+    const cid = resolveCampaignId(purchaseCampaign) ?? resolveCampaignId(userCampaign);
     if (!cid) return;
     if (!buyersByCampaignId[cid]) buyersByCampaignId[cid] = { count: 0, revenue: 0 };
     buyersByCampaignId[cid].revenue += p.amount || 0;

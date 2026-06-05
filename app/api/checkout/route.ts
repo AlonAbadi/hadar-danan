@@ -103,8 +103,13 @@ export async function POST(req: NextRequest) {
   // Premium includes VAT (18%) — charged at list price + VAT
   const amount = product === "premium_14000" ? Math.round(listPrice * 1.18) : listPrice;
 
+  // Capture current-session UTM from cookies so attribution survives even when
+  // the buyer's user row has null utm (organic signup, returned via Meta ad).
+  const utmCookie = (name: string) => req.cookies.get(name)?.value ?? null;
+
   // Create a pending purchase record for idempotency
-  const { data: purchase, error: purchaseErr } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: purchase, error: purchaseErr } = await (supabase as any)
     .from("purchases")
     .insert({
       user_id,
@@ -116,6 +121,14 @@ export async function POST(req: NextRequest) {
       meta_fbc:         req.cookies.get("_fbc")?.value ?? null,
       meta_client_ip:   getClientIp(req),
       meta_user_agent:  req.headers.get("user-agent") ?? null,
+      utm_source:       utmCookie("utm_source"),
+      utm_medium:       utmCookie("utm_medium"),
+      utm_campaign:     utmCookie("utm_campaign"),
+      utm_content:      utmCookie("utm_content"),
+      utm_term:         utmCookie("utm_term"),
+      utm_adset:        utmCookie("utm_adset"),
+      utm_ad:           utmCookie("utm_ad"),
+      click_id:         utmCookie("fbclid") ?? utmCookie("gclid"),
     })
     .select("id")
     .single();
