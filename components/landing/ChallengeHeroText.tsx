@@ -130,13 +130,15 @@ export function ChallengeHeroText({
   const pitchText = content.headline ?? "";
 
   return (
-    <div style={{
+    <div dir="rtl" style={{
       maxWidth: 560,
       margin: "0 auto",
       width: "100%",
       display: "flex",
       flexDirection: "column",
       gap: 34,
+      direction: "rtl",
+      textAlign: "right",
     }}>
       {/* ── Trust strip ─────────────────────────────── */}
       <section
@@ -243,25 +245,31 @@ export function ChallengeHeroText({
         {/* Savings badge */}
         {savings > 0 && (
           <div style={{
-            display: "inline-flex", alignItems: "center",
-            whiteSpace: "nowrap", gap: 8,
+            display: "flex", alignItems: "center",
+            justifyContent: "flex-start",
+            gap: 8,
             fontSize: 13, fontWeight: 700, color: GOLD_1,
             marginBottom: 26,
           }}>
             <span style={{
+              flex: "0 0 auto",
               width: 6, height: 6, borderRadius: "50%",
               background: GOLD_2,
               boxShadow: "0 0 0 4px rgba(232,185,66,0.16)",
             }} />
-            חוסכים <Numeral>{savings}</Numeral>₪ · מבצע מסתיים בקרוב
+            <span style={{ whiteSpace: "nowrap" }}>
+              חוסכים <Numeral>{savings}₪</Numeral> · המבצע מסתיים בקרוב
+            </span>
           </div>
         )}
 
         {/* Pitch */}
         <p style={{
           fontSize: 23, fontWeight: 800, lineHeight: 1.4,
-          letterSpacing: "-0.3px", textWrap: "balance",
+          letterSpacing: "-0.3px",
           color: TEXT,
+          textAlign: "right",
+          margin: 0,
         }}>
           <PitchText text={pitchText} />
         </p>
@@ -276,7 +284,7 @@ export function ChallengeHeroText({
         {/* Checklist */}
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           {bullets.map((b, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 13 }}>
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 13, textAlign: "right" }}>
               <span style={{
                 flex: "0 0 auto",
                 width: 28, height: 28, marginTop: 1,
@@ -288,6 +296,7 @@ export function ChallengeHeroText({
                 <CheckIcon />
               </span>
               <span style={{
+                flex: 1,
                 fontSize: 16.5, fontWeight: 500, lineHeight: 1.45,
                 color: "rgba(255,255,255,0.86)",
               }}>
@@ -306,7 +315,7 @@ export function ChallengeHeroText({
 
         {/* Quote */}
         {content.quoteText && (
-          <blockquote style={{ position: "relative", paddingTop: 6, margin: 0 }}>
+          <blockquote style={{ position: "relative", paddingTop: 6, margin: 0, textAlign: "right" }}>
             <span aria-hidden style={{
               fontSize: 46, fontWeight: 900, lineHeight: 0.5,
               color: GOLD_2, opacity: 0.5,
@@ -316,8 +325,8 @@ export function ChallengeHeroText({
             <p style={{
               fontSize: 16.5, fontWeight: 400, fontStyle: "italic",
               lineHeight: 1.6, color: "rgba(255,255,255,0.8)",
-              textWrap: "pretty",
               margin: 0,
+              textAlign: "right",
             }}>
               {content.quoteText}
             </p>
@@ -328,6 +337,7 @@ export function ChallengeHeroText({
                 fontStyle: "normal",
                 fontSize: 14, fontWeight: 600,
                 color: GOLD_1,
+                textAlign: "right",
               }}>
                 — {content.quoteAuthor}
               </cite>
