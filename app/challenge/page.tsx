@@ -82,7 +82,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
           { val: "3,500+", label: "בעלי עסקים" },
           { val: "97%",    label: "ממליצים" },
         ]}
-        heroExtra={<><ChallengeGreeting /><InstantAccessStrip /></>}
+        heroExtra={<><ChallengeGreeting />{!useTextHero && <InstantAccessStrip />}</></>}
 
         problemItems={[
           { icon: "🎥", text: "רוצה לצלם, אבל לא מסתדר/ת עם עצמך מול המצלמה. לא אוהב/ת את מה שאת/ה רואה, ומוותר/ת לפני שמתחיל/ה." },
