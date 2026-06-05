@@ -612,7 +612,7 @@ export default function ProductLandingPage({
         <h1 className="hero-hook">{headline}</h1>
 
         {heroSlot ? (
-          <div className="vsl-wrap" style={{ display: 'flex', justifyContent: 'center' }}>
+          <div className="vsl-wrap" style={{ maxWidth: '100%', width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
             {heroSlot}
           </div>
         ) : vimeoId ? (

@@ -131,7 +131,7 @@ export function ChallengeHeroText({
 
   return (
     <div style={{
-      maxWidth: 460,
+      maxWidth: 560,
       margin: "0 auto",
       width: "100%",
       display: "flex",
