@@ -4,6 +4,7 @@ import { EventSchema } from "@/lib/validations";
 import { rateLimit } from "@/lib/rate-limit";
 import { Resend } from "resend";
 import type { UserStatus } from "@/lib/supabase/types";
+import { applyQuizSideEffects, ensureQuizResultRow } from "@/lib/quiz/side-effects";
 
 const STATUS_EMOJI: Record<string, string> = {
   high_intent: "🔥",
@@ -122,6 +123,41 @@ export async function POST(req: NextRequest) {
       type,
       metadata: metadata ?? {},
     });
+
+    // ── QUIZ_COMPLETED backup: ensure quiz_results row + fire side effects ──
+    // The client also fires POST /api/quiz-result, but that call is
+    // fire-and-forget on the client side — silent failures (network race,
+    // tab close during navigation, transient 5xx) leave us with the event
+    // recorded but no quiz_results row and no admin email. This is the
+    // safety net so high-value leads can never go silent.
+    if (type === "QUIZ_COMPLETED" && metadata && typeof metadata === "object") {
+      const meta = metadata as { recommended_product?: unknown; match_percent?: unknown; answers?: unknown };
+      const recommended_product = typeof meta.recommended_product === "string" ? meta.recommended_product : null;
+      const match_percent       = typeof meta.match_percent === "number" ? meta.match_percent : null;
+
+      if (recommended_product) {
+        try {
+          await ensureQuizResultRow(supabase, {
+            user_id:             resolvedUserId,
+            anonymous_id:        anonymous_id ?? null,
+            recommended_product,
+            match_percent,
+            answers:             meta.answers,
+          });
+        } catch {}
+
+        if (resolvedUserId) {
+          try {
+            await applyQuizSideEffects(supabase, {
+              user_id:             resolvedUserId,
+              recommended_product,
+              match_percent,
+              answers:             meta.answers,
+            });
+          } catch {}
+        }
+      }
+    }
 
     // ── A/B experiment visitor/conversion tracking ───────────
     // Each PAGE_VIEW counts as a visitor for its experiment.
