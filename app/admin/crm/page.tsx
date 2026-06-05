@@ -327,6 +327,141 @@ function PipelineTab() {
   );
 }
 
+// ── Tab: Customers (all contacts) ─────────────────────────────────────────────
+
+function CustomersTab() {
+  const [users, setUsers]     = useState<PipelineUser[]>([]);
+  const [total, setTotal]     = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch]   = useState('');
+  const [query, setQuery]     = useState('');
+  const [buyersOnly, setBuyersOnly] = useState(false);
+  const [limit, setLimit]     = useState(100);
+
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(search), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (query) params.set('search', query);
+    fetch(`/api/admin/pipeline?${params}`)
+      .then(r => r.json())
+      .then(d => { setUsers(d.users ?? []); setTotal(d.total ?? 0); })
+      .finally(() => setLoading(false));
+  }, [query, limit]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const visibleUsers = buyersOnly ? users.filter(u => u.total_spent > 0) : users;
+  const buyersCount  = users.filter(u => u.total_spent > 0).length;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <input
+        type="text"
+        placeholder="חיפוש לפי שם, אימייל, טלפון..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={inputStyle}
+      />
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setBuyersOnly(false)}
+            style={{
+              padding: '6px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', border: 'none',
+              background: !buyersOnly ? '#C9964A' : '#1D2430',
+              color: !buyersOnly ? '#1A1206' : '#9E9990',
+              transition: 'all 0.15s',
+            }}
+          >
+            כולם
+          </button>
+          <button
+            onClick={() => setBuyersOnly(true)}
+            style={{
+              padding: '6px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', border: 'none',
+              background: buyersOnly ? '#C9964A' : '#1D2430',
+              color: buyersOnly ? '#1A1206' : '#9E9990',
+              transition: 'all 0.15s',
+            }}
+          >
+            רוכשים בלבד ({buyersCount})
+          </button>
+        </div>
+        <div style={{ fontSize: 13, color: '#9E9990' }}>
+          {loading ? 'טוען...' : `${visibleUsers.length.toLocaleString()} מתוך ${total.toLocaleString()}`}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {visibleUsers.map(u => (
+          <Link key={u.id} href={`/admin/users/${u.id}`} style={{ textDecoration: 'none' }}>
+            <div style={{
+              ...cardStyle,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 12, padding: '14px 18px',
+              transition: 'border-color 0.15s',
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1', marginBottom: 2 }}>
+                  {u.name ?? '—'}
+                </div>
+                <div style={{ fontSize: 12, color: '#9E9990', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {u.email}
+                </div>
+                {u.phone && (
+                  <div dir="ltr" style={{ fontSize: 12, color: '#6F6A60', marginTop: 2, textAlign: 'right' }}>
+                    {u.phone}
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                <StatusBadge status={u.status} />
+                {u.purchase_count > 0 && (
+                  <span style={{ fontSize: 11, color: '#9E9990' }}>
+                    {u.purchase_count} {u.purchase_count === 1 ? 'רכישה' : 'רכישות'}
+                  </span>
+                )}
+                {u.total_spent > 0 && (
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#34A853' }}>{formatPrice(u.total_spent)}</span>
+                )}
+                <span style={{ fontSize: 11, color: '#6F6A60' }}>{relativeTime(u.created_at)}</span>
+              </div>
+            </div>
+          </Link>
+        ))}
+        {!loading && visibleUsers.length === 0 && (
+          <div style={{ ...cardStyle, textAlign: 'center', color: '#9E9990', padding: 32 }}>
+            {buyersOnly ? 'אין רוכשים בתוצאות' : 'אין תוצאות'}
+          </div>
+        )}
+      </div>
+
+      {users.length < total && !buyersOnly && (
+        <button
+          onClick={() => setLimit(l => l + 100)}
+          disabled={loading}
+          style={{
+            padding: '10px 20px', borderRadius: 9999, fontSize: 13, fontWeight: 600,
+            background: '#1D2430', color: '#C9964A', border: '1px solid #2C323E',
+            cursor: loading ? 'wait' : 'pointer', alignSelf: 'center',
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          {loading ? 'טוען...' : `טען עוד 100 (נשארו ${(total - users.length).toLocaleString()})`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Tab: Reminders ────────────────────────────────────────────────────────────
 
 function RemindersTab() {
@@ -1049,6 +1184,7 @@ const inputStyle: React.CSSProperties = {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 const TABS = [
+  { id: 'customers',  label: 'לקוחות' },
   { id: 'priority',   label: 'עדיפות 🔥' },
   { id: 'dashboard',  label: 'דאשבורד' },
   { id: 'pipeline',   label: 'פייפליין' },
@@ -1090,6 +1226,7 @@ export default function CrmPage() {
       </div>
 
       {/* Tab content */}
+      {tab === 'customers'  && <CustomersTab />}
       {tab === 'priority'   && <PriorityLeadsTab />}
       {tab === 'dashboard'  && <DashboardTab />}
       {tab === 'pipeline'   && <PipelineTab />}
