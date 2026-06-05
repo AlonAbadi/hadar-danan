@@ -136,9 +136,24 @@ export async function POST(req: NextRequest) {
           : "landing_headline";
 
       const isVisitor = type === "PAGE_VIEW";
-      // Conversion events: signup for landing tests, QUIZ_LEAD for quiz tests
-      const isConversion =
-        type === "USER_SIGNED_UP" || type === "QUIZ_LEAD";
+
+      // Per-experiment conversion definition. Each experiment chooses what
+      // counts as a win: signup, quiz lead, checkout start, or purchase.
+      let isConversion = false;
+      if (experimentName === "challenge_hero_format") {
+        // Primary: actual purchase of the challenge
+        isConversion =
+          type === "PURCHASE_COMPLETED" &&
+          (metadata as { product?: string }).product === "challenge_197";
+      } else if (experimentName === "challenge_hero_format_checkout") {
+        // Secondary: clicked through to checkout
+        isConversion =
+          type === "CHECKOUT_STARTED" &&
+          (metadata as { product?: string }).product === "challenge_197";
+      } else {
+        // Landing-headline / quiz-Q1 / default: signup or quiz lead
+        isConversion = type === "USER_SIGNED_UP" || type === "QUIZ_LEAD";
+      }
 
       if (isVisitor || isConversion) {
         const variantSuffix = metadata.ab_variant === "A" ? "_a" : "_b";

@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import ChallengeProofWall from "@/components/landing/ChallengeProofWall";
@@ -5,8 +6,11 @@ import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
 import { InstantAccessStrip } from "./InstantAccessStrip";
 import { CreditBanner } from "@/components/landing/CreditBanner";
+import { ChallengeHeroText } from "@/components/landing/ChallengeHeroText";
+import { ChallengeHeroTracker } from "./ChallengeHeroTracker";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP, CHALLENGE_ORIGINAL_PRICE } from "@/lib/products";
+import { parseVariant, CHALLENGE_HERO_AB } from "@/lib/ab";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
@@ -32,6 +36,12 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const credit        = email ? await getUserCredit(email) : 0;
 
+  // A/B test: hero video vs designed text block
+  const cookieStore  = await cookies();
+  const abVariant    = parseVariant(cookieStore.get("ab_variant")?.value);
+  const heroContent  = CHALLENGE_HERO_AB[abVariant];
+  const useTextHero  = heroContent.type === "text";
+
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   return (
@@ -50,6 +60,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         { name: "אתגר 7 הימים", url: `${APP_URL}/challenge` },
       ]} />
       <ViewContentTracker product="challenge_197" value={197} />
+      <ChallengeHeroTracker variant={abVariant} />
       <ProductLandingPage
         productName="אתגר 7 הימים"
         price={PRODUCT_MAP.challenge_197.price}
@@ -58,7 +69,14 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
 
         headline={<>7 ימים, 7 סרטונים<br /><em>שמייצרים מכירות</em></>}
         heroSub="לגרום לכל משתתף לצאת לדרך עם סרטונים איכותיים שמקדמים מכירות ומטפחים קהילה איכותית סביב המותג האישי"
-        vimeoId="1184733084"
+        vimeoId={useTextHero ? undefined : heroContent.vimeoId}
+        heroSlot={useTextHero ? (
+          <ChallengeHeroText
+            content={heroContent}
+            priceNow={PRODUCT_MAP.challenge_197.price}
+            priceOriginal={CHALLENGE_ORIGINAL_PRICE}
+          />
+        ) : undefined}
         definitionBlock="הקהל לא קונה את השירות שלך. הוא קונה את מי שאת בתוך השירות. 7 ימים של הכוונה יומיומית שיגרמו לך לצאת לדרך עם ודאות: לדעת בדיוק מה לצלם, למה זה עובד, ואיך הופכים סרטונים לסיסטם שמביא לקוחות חדשים, חודש אחרי חודש."
         stats={[
           { val: "3,500+", label: "בעלי עסקים" },

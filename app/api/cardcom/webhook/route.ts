@@ -71,6 +71,23 @@ async function fulfillPurchase(
     return { ok: false };
   }
 
+  // Look up the buyer's ab_variant so we can attribute the purchase to the
+  // right experiment row (e.g. challenge_hero_format primary metric).
+  let buyerAbVariant: string | null = null;
+  if (purchase.user_id) {
+    const { data: buyer } = await supabase
+      .from("users")
+      .select("ab_variant")
+      .eq("id", purchase.user_id)
+      .single();
+    buyerAbVariant = buyer?.ab_variant ?? null;
+  }
+
+  // Pick which experiment this purchase contributes to (if any). Today only
+  // the challenge has a purchase-tracked experiment.
+  const purchaseExperimentName =
+    purchase.product === "challenge_197" ? "challenge_hero_format" : null;
+
   // Fire PURCHASE_COMPLETED — drives state machine + downstream sequences
   await supabase.from("events").insert({
     user_id:  purchase.user_id,
@@ -79,8 +96,20 @@ async function fulfillPurchase(
       product:      purchase.product,
       amount:       purchase.amount,
       cardcom_ref:  internalDealNumber,
+      ...(buyerAbVariant ? { ab_variant: buyerAbVariant } : {}),
+      ...(purchaseExperimentName ? { experiment_name: purchaseExperimentName } : {}),
     },
   });
+
+  // Direct increment for the AB experiment (webhook bypasses /api/events).
+  if (purchaseExperimentName && (buyerAbVariant === "A" || buyerAbVariant === "B")) {
+    try {
+      await supabase.rpc("increment_experiment", {
+        p_name: purchaseExperimentName,
+        p_column: buyerAbVariant === "A" ? "conversions_a" : "conversions_b",
+      });
+    } catch {}
+  }
 
   // Determine product-specific trigger event
   const productEvent =

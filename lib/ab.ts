@@ -56,3 +56,43 @@ export const QUIZ_Q1_AB: Record<AbVariant, { title: string; subtitle: string }> 
 };
 
 export const QUIZ_Q1_EXPERIMENT = "quiz_q1_framing";
+
+// ── Challenge hero A/B test: video vs designed text block ──────────
+// Variant A (control): current Vimeo VSL at the top of /challenge
+// Variant B (test):    designed text block in place of the video
+// Primary metric (challenge_hero_format): PURCHASE of challenge_197
+// Secondary metric (challenge_hero_format_checkout): CHECKOUT_STARTED for challenge_197
+export const CHALLENGE_HERO_EXPERIMENT          = "challenge_hero_format";
+export const CHALLENGE_HERO_CHECKOUT_EXPERIMENT = "challenge_hero_format_checkout";
+
+export interface ChallengeHeroVariant {
+  type: "video" | "text";
+  // For variant A:
+  vimeoId?: string;
+  // For variant B:
+  headline?: string;
+  body?: string;
+  bullets?: string[];
+  quoteText?: string;
+  quoteAuthor?: string;
+}
+
+export const CHALLENGE_HERO_AB: Record<AbVariant, ChallengeHeroVariant> = {
+  A: {
+    type: "video",
+    vimeoId: "1184733084",
+  },
+  B: {
+    type: "text",
+    headline: "האתגר הוא לא סדרת הרצאות.\nהוא תוכנית פעולה יומית עם תרגול.",
+    body: "",
+    bullets: [
+      "שיעור פתיחה מעמיק על מה השתנה בשיווק ב-2026 ומה צריך לעשות",
+      "7 ימים — כל יום סוג סרטון אחר עם משימת צילום ברורה",
+      "מפגש סיום חי בזום עם הדר",
+    ],
+    quoteText: "אתגר סופר משמעותי שהייתי בו בחיי. הצלחת להכניס בי ביטחון שעוד לא היה לי.",
+    quoteAuthor: "משתתפת באתגר",
+  },
+  C: { type: "video", vimeoId: "1184733084" }, // C falls back to A
+};

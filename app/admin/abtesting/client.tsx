@@ -53,6 +53,24 @@ const LIVE_TEST_META: Record<string, {
     bSub: QUIZ_Q1_AB.B.subtitle,
     subLabel: 'כותרת משנה',
   },
+  challenge_hero_format: {
+    label: 'אתגר — וידאו מול טקסט (primary: רכישות)',
+    metric: 'אחוז הרכישות (PURCHASE_COMPLETED של challenge_197 / PAGE_VIEW של /challenge)',
+    a: 'וידאו של הדר בראש העמוד',
+    b: 'בלוק טקסט מעוצב במקום הוידאו',
+    aSub: '5:25 דק׳ צפייה ב-VSL ראשי',
+    bSub: '6 שורות עם 3 bullets וציטוט',
+    subLabel: 'פורמט',
+  },
+  challenge_hero_format_checkout: {
+    label: 'אתגר — וידאו מול טקסט (secondary: קליקים ל-checkout)',
+    metric: 'אחוז קליקים על CTA (CHECKOUT_STARTED של challenge_197 / PAGE_VIEW של /challenge)',
+    a: 'וידאו של הדר בראש העמוד',
+    b: 'בלוק טקסט מעוצב במקום הוידאו',
+    aSub: 'leading indicator לרכישות',
+    bSub: 'אותו פיצול ויזיטורים כמו ה-primary',
+    subLabel: 'פורמט',
+  },
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

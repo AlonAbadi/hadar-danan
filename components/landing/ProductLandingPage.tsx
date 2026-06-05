@@ -32,6 +32,8 @@ export interface ProductLandingPageProps {
   heroSub?:   string;
   vslVideoId?: string;
   vimeoId?: string;
+  /** A/B test override: when provided, renders this in place of the video/VSL slot in the hero. */
+  heroSlot?: React.ReactNode;
   stats?:     { val: React.ReactNode; label: string }[];
   heroExtra?: React.ReactNode;
 
@@ -512,7 +514,7 @@ function SecTitle({ children, sub }: { children: React.ReactNode; sub?: string }
 // ── Main component ─────────────────────────────────────────────
 export default function ProductLandingPage({
   productName, price, originalPrice, checkoutHref,
-  headline, heroSub, vslVideoId, vimeoId, stats, heroExtra,
+  headline, heroSub, vslVideoId, vimeoId, heroSlot, stats, heroExtra,
   problemItems, agitationText,
   solutionTitle, solutionDesc, solutionItems,
   notForItems, forItems,
@@ -609,7 +611,11 @@ export default function ProductLandingPage({
 
         <h1 className="hero-hook">{headline}</h1>
 
-        {vimeoId ? (
+        {heroSlot ? (
+          <div className="vsl-wrap" style={{ display: 'flex', justifyContent: 'center' }}>
+            {heroSlot}
+          </div>
+        ) : vimeoId ? (
           <div className="vsl-wrap">
             <div style={{ maxWidth: 260, margin: '0 auto', position: 'relative' }}>
               <div style={{

@@ -237,14 +237,17 @@ export default function ChallengeProofWall() {
         .cpw-video-frame {
           position: relative;
           width: 100%;
-          max-width: 760px;
+          max-width: 360px;
           margin: 0 auto;
-          aspect-ratio: 16 / 9;
-          border-radius: 14px;
+          aspect-ratio: 9 / 16;
+          border-radius: 18px;
           overflow: hidden;
           border: 1px solid rgba(201,150,74,0.35);
           box-shadow: 0 20px 60px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(232,185,74,0.05);
           background: #0d1018;
+        }
+        @media (max-width: 480px) {
+          .cpw-video-frame { max-width: 300px; border-radius: 16px; }
         }
         .cpw-video-frame iframe {
           position: absolute; inset: 0;
