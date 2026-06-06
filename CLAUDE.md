@@ -124,6 +124,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | `/course/success` | Post-course-purchase | - | - |
 | `/members` | Legacy members area | - | Secret token gate (`?t=` or cookie) — kept for backward compat |
 | `/atelier` | Atelier influencer program | - | Lead capture for influencer-to-cultural-leader service; form saves to `atelier_applications` with UTM |
+| `/apply` | 3 ימים פתוחים — application | Free | 6-step Hebrew form, server-computed commitment score (0–100), saves to `stage_applications`. Linked from nav (accent) + homepage CTA |
 | `/binge` | Content binge page | - | Video/content series page |
 | `/method` | TrueSignal method page | - | Explains TrueSignal© methodology |
 | `/press` | Press page | - | Media / press kit |
@@ -133,6 +134,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | `/admin/users/[id]` | Individual user profile | - | Notes, reminders, event timeline, TrueSignal AI diagnosis |
 | `/admin/atelier` | Atelier leads CRM | - | Cards with fit-score, UTM chips, status filter; links to `/admin/atelier/[id]` |
 | `/admin/atelier/[id]` | Atelier onboarding workbench | - | AI analysis, content generation, ProjectManagerAgent orchestrator, deploy pipeline |
+| `/admin/stage` | 3 ימים פתוחים — applications CRM | - | List sorted by score, expandable answers, status select (new/reviewing/shortlisted/accepted/rejected) |
 | `/admin/acquisition` | UTM acquisition analytics | - | Full utm_source → utm_medium → utm_campaign → utm_adset → utm_ad breakdown |
 | `/admin/email` | Email stats | - | Send/open/click stats from `email_logs` |
 | `/admin/funnel` | Funnel analytics | - | Conversion funnel visualization |
@@ -190,6 +192,8 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 028 | `028_user_status_archive.sql` | Applied — `handled` + `not_relevant` values added to user_status enum |
 | 029 | `029_utm_extended.sql` | Applied — utm_medium, utm_content, utm_term columns on users |
 | 030 | `030_whatsapp_logs.sql` | Applied — whatsapp_logs table for dedup |
+| 031-041 | (Applied — see filesystem for full list; covers sadna, whatsapp_inbound, challenge_progress, quiz_insights/experiments/results_utm, challenge_hero, premium_partnership backfill, purchases_utm, daily_call_list + outcomes) | |
+| 042 | `042_stage_applications.sql` | Applied — stage_applications table for /apply ("3 ימים פתוחים"): answers jsonb, score 0–100 + breakdown, RLS policies |
 
 ### Tables (20 total)
 
@@ -212,6 +216,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | `hive_content` | Curated content for hive members — tier_required (starter/pro/elite), content_type (article/pdf/video) |
 | `user_insights` | TrueSignal AI diagnosis cache per user — avoids re-calling Claude API on every `/admin/users/[id]` load |
 | `atelier_applications` | Atelier lead applications — full onboarding pipeline state: `status` (lead funnel), `pipeline_status` (site creation), `source_utm` JSONB, AI analysis, generated content, deploy metadata |
+| `stage_applications` | "3 ימים פתוחים" applications from `/apply` — 5 open-ended `answers` (jsonb), server-computed `score` 0–100 + `score_breakdown` (depth/specificity/commitment), `status` check constraint, UTM, IP. RLS on |
 | `deals` | Brand deals CRM — brand_name, logo, category, deal value, status |
 
 **Key DB patterns:**
@@ -300,6 +305,8 @@ All templates: `lib/email/templates.ts` → `TEMPLATES` map. Style: Ben Settle (
 | `/api/book` | POST | Book session slot (strategy / premium / partnership). Returns `{ booking_id, user_id }` |
 | `/api/premium-lead` | POST | Save premium lead |
 | `/api/partnership-lead` | POST | Save partnership lead (step 1 of `PartnershipBookingFlow`) |
+| `/api/stage/apply` | POST | Save "3 ימים פתוחים" application — rate-limited 3/hr/IP, server-computes commitment score, sends applicant confirmation + admin alert (Resend), fires Meta CAPI `Lead` |
+| `/api/admin/stage/applications` | GET/PATCH | Admin list + status update for `/admin/stage` (Basic Auth) |
 | `/api/user/credit` | GET | ~~Fetch accumulated credit for email~~ — credit system removed, endpoint unused |
 | `/api/hive/check` | POST | Check ₪29 tier eligibility (has completed purchase?) |
 | `/api/hive/join` | POST | Join hive — sets hive fields, enqueues emails, stubs Cardcom recurring |
@@ -737,7 +744,7 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
-- Next migration number: 031
+- Next migration number: 043
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes

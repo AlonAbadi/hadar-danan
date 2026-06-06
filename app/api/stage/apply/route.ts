@@ -100,11 +100,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "שגיאה בשמירת הבקשה, נסי שוב." }, { status: 500 });
   }
 
-  const resend  = new Resend(process.env.RESEND_API_KEY);
   const fromAddr = process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online";
+  const resendKey = process.env.RESEND_API_KEY;
+  // In dev RESEND_API_KEY is often blank; the constructor throws synchronously
+  // on undefined/empty, so guard before instantiating.
+  const resend    = resendKey ? new Resend(resendKey) : null;
 
   // Applicant confirmation - short, warm, no emoji.
-  if (email) {
+  if (resend && email) {
     resend.emails.send({
       from: `הדר דנן <${fromAddr}>`,
       to:   email,
@@ -125,7 +128,7 @@ export async function POST(req: NextRequest) {
     ([k, v]) => `<p style="margin:6px 0"><strong>${k}:</strong> ${v.replace(/\n/g, "<br/>")}</p>`
   ).join("");
 
-  resend.emails.send({
+  resend?.emails.send({
     from: fromAddr,
     to:   ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
     subject: `🎯 מועמדות חדשה — 3 ימים פתוחים: ${name} (${score})`,
