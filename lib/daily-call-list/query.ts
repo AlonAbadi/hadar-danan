@@ -12,6 +12,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 import type { CandidateLead } from "./types";
+import { cleanEvents, selectBestQuiz, isJunkPageView } from "./junk-filter";
 
 // High-ticket products. Buyers of any of these are excluded (already converted).
 // Anyone else with a signal toward these is a candidate.
@@ -110,11 +111,14 @@ export async function fetchCandidates(
     hotPromise, pageViewPromise, quizPromise, statusPromise, dormantPromise, recentlyActivePromise,
   ]);
 
+  // HOT_EVENT_TYPES are already high-intent action types — no junk filter needed.
   const hotIds = (hotRes.data ?? []).map((r: { user_id: string }) => r.user_id).filter(Boolean);
 
+  // PAGE_VIEW: keep only real product paths (drop /api, /_next, /fonts, assets).
   const pageViewIds = (pageRes.data ?? [])
     .filter((r: { metadata: Record<string, unknown> | null }) => {
-      const page = (r.metadata as { page?: string } | null)?.page;
+      if (!r.metadata || isJunkPageView(r.metadata)) return false;
+      const page = (r.metadata as { page?: string }).page;
       return page && HIGH_TICKET_PAGES.has(page);
     })
     .map((r: { user_id: string }) => r.user_id)
@@ -131,7 +135,8 @@ export async function fetchCandidates(
   if (candidateIds.length === 0) return [];
 
   // ── Hydrate ───────────────────────────────────────────────────────────────
-  const [usersRes, eventsRes, quizzesRes, purchasesRes] = await Promise.all([
+  const insightCutoff = isoDaysAgo(7);
+  const [usersRes, eventsRes, quizzesRes, purchasesRes, insightsRes] = await Promise.all([
     supabase
       .from("users")
       .select("id, name, email, phone, status, last_activity_at, created_at, utm_source, utm_campaign, marketing_consent")
@@ -151,27 +156,44 @@ export async function fetchCandidates(
       .from("purchases")
       .select("user_id, product, amount, status, created_at")
       .in("user_id", candidateIds),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("user_insights")
+      .select("user_id, synthesis, generated_at")
+      .in("user_id", candidateIds)
+      .gte("generated_at", insightCutoff)
+      .order("generated_at", { ascending: false }),
   ]);
 
   type EventRow    = { user_id: string; type: string; metadata: Record<string, unknown>; created_at: string };
   type QuizRow     = { user_id: string; recommended_product: string; second_product: string | null; match_percent: number | null; answers: Record<string, unknown>; created_at: string };
   type PurchaseRow = { user_id: string; product: string; amount: number; status: string; created_at: string };
 
-  const eventsByUser: Record<string, EventRow[]> = {};
+  // Raw events bucketed by user — junk filter is applied per-user below.
+  const rawEventsByUser: Record<string, EventRow[]> = {};
   (eventsRes.data ?? []).forEach((e: EventRow) => {
-    if (!eventsByUser[e.user_id]) eventsByUser[e.user_id] = [];
-    eventsByUser[e.user_id]!.push(e);
+    if (!rawEventsByUser[e.user_id]) rawEventsByUser[e.user_id] = [];
+    rawEventsByUser[e.user_id]!.push(e);
   });
 
-  const latestQuizByUser: Record<string, QuizRow> = {};
+  // All recent quiz rows bucketed by user — selectBestQuiz picks the best
+  // non-junk one and flags multi-submission noise.
+  const quizzesByUser: Record<string, QuizRow[]> = {};
   (quizzesRes.data ?? []).forEach((q: QuizRow) => {
-    if (!latestQuizByUser[q.user_id]) latestQuizByUser[q.user_id] = q; // first = newest (desc order)
+    if (!quizzesByUser[q.user_id]) quizzesByUser[q.user_id] = [];
+    quizzesByUser[q.user_id]!.push(q);
   });
 
   const purchasesByUser: Record<string, PurchaseRow[]> = {};
   (purchasesRes.data ?? []).forEach((p: PurchaseRow) => {
     if (!purchasesByUser[p.user_id]) purchasesByUser[p.user_id] = [];
     purchasesByUser[p.user_id]!.push(p);
+  });
+
+  type InsightRow = { user_id: string; synthesis: string; generated_at: string };
+  const insightByUser: Record<string, InsightRow> = {};
+  ((insightsRes.data ?? []) as InsightRow[]).forEach((r) => {
+    if (!insightByUser[r.user_id]) insightByUser[r.user_id] = r; // newest first
   });
 
   const t7dDate = new Date(t7d).getTime();
@@ -199,10 +221,16 @@ export async function fetchCandidates(
       .filter(p => p.status === "pending" && HIGH_TICKET_PRODUCTS.has(p.product) && new Date(p.created_at).getTime() >= t7dDate)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
 
+    // Apply junk filters per user
+    const { cleaned: cleanedEvents, junkCount: junkEventCount } = cleanEvents(rawEventsByUser[u.id] ?? []);
+    const { quiz: bestQuiz, multipleSubmissionsFlag } = selectBestQuiz(quizzesByUser[u.id] ?? []);
+
     const isDormant = !!u.last_activity_at && new Date(u.last_activity_at).getTime() < new Date(t30d).getTime();
-    const hadRecentActivity = (eventsByUser[u.id] ?? []).some(
+    const hadRecentActivity = cleanedEvents.some(
       e => new Date(e.created_at).getTime() >= new Date(t72h).getTime()
     );
+
+    const insightRow = insightByUser[u.id];
 
     leads.push({
       id:               u.id,
@@ -215,13 +243,16 @@ export async function fetchCandidates(
       utmSource:        u.utm_source,
       utmCampaign:      u.utm_campaign,
       marketingConsent: u.marketing_consent ?? false,
-      latestQuiz:       latestQuizByUser[u.id] ?? null,
-      recentEvents:     eventsByUser[u.id] ?? [],
+      latestQuiz:       bestQuiz,
+      recentEvents:     cleanedEvents,
       hasCompletedHighTicket,
       pendingHighTicketCheckout: pendingHigh
         ? { product: pendingHigh.product, amount: pendingHigh.amount, created_at: pendingHigh.created_at }
         : null,
       isAwakened: isDormant && hadRecentActivity,
+      multipleQuizSubmissions: multipleSubmissionsFlag,
+      junkEventCount,
+      insight: insightRow ? { synthesis: insightRow.synthesis, generated_at: insightRow.generated_at } : null,
     });
   }
 

@@ -13,35 +13,58 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ScoredLead, LeadBrief } from "./types";
 
-const SYSTEM_PROMPT = `אתה עוזר של הדר דנן, מומחית שיווק וקואצ'רית בכירה לעסקים. תפקידך לכתוב בריף קצר לקראת שיחת מכירה.
+const SYSTEM_PROMPT = `אתה עוזר של הדר דנן, מומחית שיווק וקואצ'רית בכירה לעסקים. תפקידך לכתוב בריף קצר לקראת שיחת מכירה ולהחליט אם בכלל שווה להתקשר ללקוח היום.
 
 ההדר מתקשרת ללידים שהראו עניין בפגישת אסטרטגיה (₪4,000), יום צילום פרמיום (₪14,000), או שותפות אסטרטגית (₪10-30 אלף לחודש).
 
+קונטקסט חשוב:
+- פגישת אסטרטגיה היא העדיפות העליונה. אחרי פגישה קל הרבה יותר לסגור פרמיום או שותפות. אנחנו מעדיפים לידים שמתאימים לפגישה.
+- הזמן של הדר יקר. עדיף לוותר על שיחה מאשר לבזבז אותה על מישהו שלא בשל.
+
 לכל ליד תקבל:
 - תשובות הקוויז שלו (אם מילא)
-- אירועים אחרונים באתר
+- אירועים אחרונים באתר (כבר סוננו מ junk)
 - סטטוס במערכת
+- אם קיים, ניתוח TrueSignal© של ה-AI על הליד. זה הניתוח הסמכותי ביותר.
 
-החזר 3 שדות באמצעות הכלי 'lead_brief':
-1. opening. שורת פתיחה קצרה (משפט אחד עד שניים) שהדר תפתח איתו את השיחה. ספציפית, אישית, מתייחסת למשהו שהליד עשה או אמר. לא גנרי. בעברית טבעית.
-2. talking_points. שתי נקודות שיחה קצרות (כל אחת עד 12 מילים) שיעזרו לה לחבר עם הכאב או הרצון של הליד.
-3. risk (אופציונלי). דגל אחד אם יש סיכון לשיחה: חוסר הסכמת שיווק, סטיגנל מעורב, וכו'.
+החזר את השדות הבאים באמצעות הכלי 'lead_brief':
+
+1. go_no_go. החלטה: "go" אם שווה להתקשר, "no_go" אם לא. אמת מידה: האם סביר שהיא תיסגר על פגישה. סימני no_go: מילא קוויז מספר פעמים במהירות, אין מעורבות אמיתית, TrueSignal מצביע על סקרנות בלבד, לא נתן הסכמת שיווק וגם אין סיגנל חזק אחר. כשיש ספק, no_go.
+
+2. no_go_reason. אם no_go, סיבה אחת קצרה בעברית. אחרת, השאר ריק.
+
+3. opening. רק אם go. שורת פתיחה קצרה (משפט אחד עד שניים) שהדר תפתח איתו. ספציפית, מתייחסת למשהו ספציפי שהליד עשה. לא גנרי.
+
+4. talking_points. רק אם go. שתי נקודות שיחה קצרות (עד 12 מילים כל אחת) שיחברו לכאב הספציפי של הליד.
+
+5. risk (אופציונלי). דגל אחד אם יש סיכון מסוים בשיחה (חוסר הסכמת שיווק, סיגנלים מעורבים).
 
 עקרונות:
-- אל תמציא עובדות. אם אין מספיק מידע, התבסס רק על מה שיש.
+- אל תמציא עובדות. רק על בסיס המידע שיש.
 - אל תשתמש במקפים גדולים (—) בקופי בעברית. תמיד נקודה או פסיק.
-- שפה: לשון פנייה ישירה ("אמרת ש...", "ראיתי ש..."). לא "המשתמש".
-- טון: חם, אישי, מקצועי. לא מכירתי בכוח.`;
+- שפה: לשון פנייה ישירה ("ראיתי ש...", "אמרת ש..."). לא "המשתמש".
+- טון: חם, אישי, מקצועי. לא מכירתי בכוח.
+- כשיש קונפליקט בין המספרים לבין TrueSignal, סמוך על TrueSignal.`;
 
 const TOOL = {
   name: "lead_brief",
-  description: "Output the call brief in structured form",
+  description: "Output the call brief + go/no-go decision in structured form",
   input_schema: {
     type: "object" as const,
     properties: {
+      go_no_go: {
+        type: "string",
+        enum: ["go", "no_go"],
+        description: "Whether the lead is worth calling today. When in doubt → no_go.",
+      },
+      no_go_reason: {
+        type: "string",
+        maxLength: 120,
+        description: "Short Hebrew sentence on why no_go. Required when go_no_go='no_go', empty otherwise.",
+      },
       opening: {
         type: "string",
-        description: "Hebrew opening line — 1 to 2 sentences. Personal, specific.",
+        description: "Hebrew opening line, 1 to 2 sentences. Personal, specific.",
         maxLength: 220,
       },
       talking_points: {
@@ -57,7 +80,7 @@ const TOOL = {
         description: "Optional: one risk flag in Hebrew. Omit if no concern.",
       },
     },
-    required: ["opening", "talking_points"],
+    required: ["go_no_go", "opening", "talking_points"],
   },
 };
 
@@ -67,6 +90,13 @@ function buildUserPrompt(lead: ScoredLead): string {
   lines.push(`סטטוס: ${lead.status}`);
   if (lead.utmCampaign)         lines.push(`קמפיין מקור: ${lead.utmCampaign}`);
   if (!lead.marketingConsent)   lines.push(`הסכמה שיווקית: ❌`);
+
+  // TrueSignal AI synthesis — show it FIRST since it's authoritative.
+  if (lead.insight?.synthesis) {
+    lines.push(`\n=== ניתוח TrueSignal© (${new Date(lead.insight.generated_at).toLocaleDateString("he-IL")}) ===`);
+    lines.push(lead.insight.synthesis);
+    lines.push(`=== סוף ניתוח TrueSignal© ===`);
+  }
 
   if (lead.latestQuiz) {
     lines.push(`\nתוצאות קוויז (${new Date(lead.latestQuiz.created_at).toLocaleDateString("he-IL")}):`);
@@ -79,6 +109,10 @@ function buildUserPrompt(lead: ScoredLead): string {
     lines.push(`\n(לא מילא קוויז)`);
   }
 
+  if (lead.multipleQuizSubmissions) {
+    lines.push(`⚠ הליד מילא את הקוויז מספר פעמים בזמן קצר — סימן לאי-רצינות.`);
+  }
+
   if (lead.pendingHighTicketCheckout) {
     lines.push(`\n⚠ התחיל תשלום ולא סיים:`);
     lines.push(`- מוצר: ${lead.pendingHighTicketCheckout.product}`);
@@ -86,14 +120,17 @@ function buildUserPrompt(lead: ScoredLead): string {
     lines.push(`- מתי: ${new Date(lead.pendingHighTicketCheckout.created_at).toLocaleString("he-IL")}`);
   }
 
-  lines.push(`\nאירועים אחרונים (עד 15 אחרונים):`);
+  lines.push(`\nאירועים אחרונים (עד 15 אחרונים, אחרי סינון רעש):`);
   for (const e of lead.recentEvents.slice(0, 15)) {
     const when = new Date(e.created_at).toLocaleString("he-IL");
     const meta = Object.keys(e.metadata ?? {}).length > 0 ? ` · ${JSON.stringify(e.metadata).slice(0, 120)}` : "";
     lines.push(`- ${when} · ${e.type}${meta}`);
   }
+  if (lead.junkEventCount > 0) {
+    lines.push(`(הוסרו ${lead.junkEventCount} אירועי רעש: קליקים על קבצי פונט/CSS וכדומה.)`);
+  }
 
-  lines.push(`\nסיבות שהליד ברשימה היום:`);
+  lines.push(`\nסיבות שהליד ברשימה היום (לפי scoring):`);
   lead.reasons.forEach(r => lines.push(`- ${r}`));
 
   return lines.join("\n");
@@ -126,8 +163,13 @@ function deterministicFallback(lead: ScoredLead): LeadBrief {
     talkingPoints.push("איך אני יכולה לעזור בצורה הכי ממוקדת?");
   }
 
+  // Deterministic go/no-go: when the AI call failed, fall back to the
+  // strongest local signals. Multiple-quiz-spam is auto no-go.
+  const goNoGo: "go" | "no_go" = lead.multipleQuizSubmissions ? "no_go" : "go";
+  const noGoReason = goNoGo === "no_go" ? "מילא את הקוויז כמה פעמים במהירות, ככל הנראה לא בשל לשיחה." : undefined;
+
   const risk = !lead.marketingConsent ? "אין הסכמת שיווק. תפתחי בעדינות" : undefined;
-  return { opening, talkingPoints, risk };
+  return { opening, talkingPoints, risk, goNoGo, noGoReason };
 }
 
 export async function generateBrief(lead: ScoredLead): Promise<LeadBrief> {
@@ -154,14 +196,23 @@ export async function generateBrief(lead: ScoredLead): Promise<LeadBrief> {
       if (!toolBlock || toolBlock.type !== "tool_use") {
         return deterministicFallback(lead);
       }
-      const out = toolBlock.input as { opening?: string; talking_points?: string[]; risk?: string };
+      const out = toolBlock.input as {
+        opening?:        string;
+        talking_points?: string[];
+        risk?:           string;
+        go_no_go?:       string;
+        no_go_reason?:   string;
+      };
       if (!out.opening || !Array.isArray(out.talking_points) || out.talking_points.length < 2) {
         return deterministicFallback(lead);
       }
+      const goNoGo: "go" | "no_go" = out.go_no_go === "no_go" ? "no_go" : "go";
       return {
         opening:       out.opening,
         talkingPoints: out.talking_points.slice(0, 2),
         risk:          out.risk,
+        goNoGo,
+        noGoReason:    goNoGo === "no_go" ? (out.no_go_reason || undefined) : undefined,
       };
     } catch (e: unknown) {
       const status = (e as { status?: number })?.status;

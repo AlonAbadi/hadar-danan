@@ -17,9 +17,30 @@ const HIGH_TICKET_PAGES = new Set([
   "/partnership",
 ]);
 
+// Strategy is the priority product: ₪4k entry that opens premium + partnership
+// upsells. A user interested in strategy is much easier to close than a cold
+// premium lead. We weight strategy signals slightly above premium.
+const STRATEGY_PAGES = new Set(["/strategy", "/strategy/book"]);
+
 const HIGH_TICKET_QUIZ_PRODUCTS = new Set(["strategy", "premium", "partnership"]);
 
 const HIGH_TICKET_CHECKOUT_PRODUCTS = new Set(["strategy_4000", "premium_14000"]);
+
+// Words in user_insights synthesis that signal low intent / curiosity / noise.
+// Presence of these in the AI's diagnosis is a strong "do not call" cue.
+const LOW_INTENT_MARKERS = [
+  "סקרנות",        // curiosity
+  "לא מחליטה",     // not deciding (fem)
+  "לא מחליט",      // not deciding (masc)
+  "לא רציני",      // not serious
+  "לא רצינית",     // not serious (fem)
+  "לחיצה מהירה",  // quick clicking
+  "אפס התנהגות",  // zero behavior
+  "לא בשלה",       // not ripe (fem)
+  "לא בשל",        // not ripe (masc)
+  "מסתכלת",        // just looking
+  "מסתכל",         // just looking
+];
 
 // Hours-since-event → decay multiplier (1.0 at 0h, 0 at 7d)
 function recencyMultiplier(eventDate: string): number {
@@ -74,15 +95,25 @@ export function scoreLead(lead: CandidateLead): ScoredLead {
   }
 
   // ── Quiz recommendation toward high-ticket ───────────────────────────────
+  // Strategy quiz reco gets a 1.3x preference vs premium/partnership because
+  // it's the easier-to-close gateway product.
   if (lead.latestQuiz && HIGH_TICKET_QUIZ_PRODUCTS.has(lead.latestQuiz.recommended_product)) {
     const match = lead.latestQuiz.match_percent ?? 0;
     const recency = recencyMultiplier(lead.latestQuiz.created_at);
-    const intentBoost = 25 * (match / 100) * recency;
+    const productPreference = lead.latestQuiz.recommended_product === "strategy" ? 1.3 : 1.0;
+    const intentBoost = 25 * (match / 100) * recency * productPreference;
     score += intentBoost;
 
     const productHe = PRODUCT_HE[lead.latestQuiz.recommended_product] ?? lead.latestQuiz.recommended_product;
     const matchTxt = match > 0 ? ` (${Math.round(match)}% התאמה)` : "";
     reasons.push(`קוויז: ${productHe}${matchTxt}`);
+  }
+
+  // Multiple rapid quiz submissions: heavy penalty + flag in reasons.
+  // The Lotam case: 3 quizzes in <20 minutes, all answers "D".
+  if (lead.multipleQuizSubmissions) {
+    score -= 30;
+    reasons.push("⚠ מילא את הקוויז 3 פעמים בזמן קצר. כנראה לא רציני");
   }
 
   // ── PAGE_VIEW on high-ticket pages — count + recency ─────────────────────
@@ -93,10 +124,13 @@ export function scoreLead(lead: CandidateLead): ScoredLead {
   );
 
   if (highTicketVisits.length > 0) {
-    // Score the most recent visit + a small bonus for repeated visits
+    // Score the most recent visit + a small bonus for repeated visits.
+    // Strategy pages get a 1.3x preference (gateway product).
     const mostRecent = highTicketVisits[0]!;
+    const mostRecentPage = (mostRecent.metadata as { page: string }).page;
     const recency = recencyMultiplier(mostRecent.created_at);
-    score += 30 * recency;
+    const pagePreference = STRATEGY_PAGES.has(mostRecentPage) ? 1.3 : 1.0;
+    score += 30 * recency * pagePreference;
     if (highTicketVisits.length >= 3) score += 10;
 
     const pages = Array.from(new Set(highTicketVisits.map(
@@ -154,28 +188,49 @@ export function scoreLead(lead: CandidateLead): ScoredLead {
     score -= 5;
   }
 
+  // ── TrueSignal AI synthesis — the authoritative quality verdict ─────────
+  // If user_insights has a recent synthesis and it speaks of low intent,
+  // penalize heavily. The Lotam case: synthesis explicitly said "סקרנות
+  // ראשונית, לא מחליטה" and the system still ranked her #1. Never again.
+  if (lead.insight?.synthesis) {
+    const s = lead.insight.synthesis;
+    const hits = LOW_INTENT_MARKERS.filter(m => s.includes(m));
+    if (hits.length > 0) {
+      const penalty = Math.min(60, 25 * hits.length);
+      score -= penalty;
+      reasons.push(`⚠ TrueSignal זיהה כוונה נמוכה (${hits[0]})`);
+    }
+  }
+
+  // ── Junk-event share penalty ─────────────────────────────────────────────
+  // If more than half their "engagement" turned out to be junk events,
+  // apply a soft penalty. (Hard floor was already applied during query.)
+  if (lead.junkEventCount > 0) {
+    const realEvents = lead.recentEvents.length;
+    if (realEvents > 0 && lead.junkEventCount >= realEvents) {
+      score -= 15;
+    }
+  }
+
   return { ...lead, score, reasons };
 }
 
 const MIN_SCORE_THRESHOLD = 30;
 const MAX_LEADS_PER_DAY   = 10;
-const MIN_LEADS_PER_DAY   = 5;
 
 /**
  * Pick the final list to call today.
- * - All leads scoring above MIN_SCORE_THRESHOLD are eligible
- * - If fewer than MIN_LEADS_PER_DAY pass, lower the bar to fill
- * - Cap at MAX_LEADS_PER_DAY
+ *
+ * Only leads with score >= MIN_SCORE_THRESHOLD pass. No backfill —
+ * if 0 leads qualify, the email sends with just the Tao verse. Better
+ * an empty morning than a wasted call. (Lotam case: backfill let a junk
+ * lead through because the system "had to" fill the minimum.)
  */
 export function pickTopLeads(scored: ScoredLead[]): ScoredLead[] {
-  const sorted = [...scored].sort((a, b) => b.score - a.score);
-  const aboveThreshold = sorted.filter(l => l.score >= MIN_SCORE_THRESHOLD);
-
-  if (aboveThreshold.length >= MIN_LEADS_PER_DAY) {
-    return aboveThreshold.slice(0, MAX_LEADS_PER_DAY);
-  }
-  // Backfill from below-threshold to reach minimum
-  return sorted.slice(0, MAX_LEADS_PER_DAY);
+  return [...scored]
+    .sort((a, b) => b.score - a.score)
+    .filter(l => l.score >= MIN_SCORE_THRESHOLD)
+    .slice(0, MAX_LEADS_PER_DAY);
 }
 
 /**

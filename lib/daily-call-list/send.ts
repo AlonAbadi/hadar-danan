@@ -145,7 +145,22 @@ export async function runDailyCallList(options: { force?: boolean } = {}): Promi
     const top = pickTopLeads(deduped);
 
     // ── Generate briefs in parallel ──────────────────────────────────────
-    const final = top.length > 0 ? await generateBriefsConcurrent(top, 4) : [];
+    const withBriefs = top.length > 0 ? await generateBriefsConcurrent(top, 4) : [];
+
+    // ── AI go/no-go gate: drop leads the brief AI flagged as no_go ───────
+    // The brief itself decides; we just enforce it here.
+    const dropped = withBriefs.filter(l => l.brief.goNoGo === "no_go");
+    const final   = withBriefs.filter(l => l.brief.goNoGo === "go");
+
+    if (dropped.length > 0) {
+      await supabase.from("error_logs").insert({
+        context: "api/cron/daily-call-list",
+        error:   "no_go drops",
+        payload: {
+          dropped: dropped.map(d => ({ user_id: d.id, score: d.score, reason: d.brief.noGoReason })),
+        },
+      });
+    }
 
     // ── Persist (idempotent via UNIQUE constraint) ───────────────────────
     if (final.length > 0) {
