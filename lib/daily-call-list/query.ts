@@ -31,8 +31,10 @@ const HIGH_TICKET_PAGES = new Set([
   "/partnership",
 ]);
 
-// Statuses that exclude a lead entirely.
-const EXCLUDED_STATUSES = new Set(["handled", "not_relevant"]);
+// Statuses that exclude a lead entirely from the candidate set.
+// `booked` is excluded because the user already booked a session as a result of
+// the previous call — admin clicked "סגירה" on /admin/call-list.
+const EXCLUDED_STATUSES = new Set(["handled", "not_relevant", "booked"]);
 
 const HOT_EVENT_TYPES = [
   "CHECKOUT_STARTED",
