@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface StageApp {
   id:        string;
@@ -203,24 +204,41 @@ export default function StageAdminPage() {
                   </div>
                 </div>
 
-                {/* Toggle */}
-                <button
-                  onClick={() => setExpanded(isOpen ? null : app.id)}
-                  style={{
-                    marginTop: 16,
-                    background: "transparent",
-                    border: "1px solid #2C323E",
-                    borderRadius: 8,
-                    padding: "8px 14px",
-                    color: "#C9964A",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  {isOpen ? "כיווץ ←" : "תשובות מלאות →"}
-                </button>
+                {/* Actions */}
+                <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => setExpanded(isOpen ? null : app.id)}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #2C323E",
+                      borderRadius: 8,
+                      padding: "8px 14px",
+                      color: "#C9964A",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {isOpen ? "כיווץ ←" : "תשובות מלאות →"}
+                  </button>
+                  <Link
+                    href={`/admin/stage/${app.id}`}
+                    style={{
+                      background: "linear-gradient(90deg, #9E7C3A, #E8B94A)",
+                      border: "1px solid transparent",
+                      borderRadius: 8,
+                      padding: "8px 14px",
+                      color: "#080C14",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    דף מועמד ←
+                  </Link>
+                </div>
 
                 {/* Expanded answers */}
                 {isOpen && (

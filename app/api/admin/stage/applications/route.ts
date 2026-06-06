@@ -18,14 +18,27 @@ function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string
   return (supabase as any).from(table);
 }
 
+const FULL_COLS = "id, name, email, phone, answers, score, score_breakdown, status, source_utm, ip_address, user_agent, notes, reviewed_at, created_at";
+
 export async function GET(req: NextRequest) {
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const supabase = createServerClient();
+  const id = req.nextUrl.searchParams.get("id");
+
+  if (id) {
+    const { data, error } = await safeFrom(supabase, "stage_applications")
+      .select(FULL_COLS)
+      .eq("id", id)
+      .single();
+    if (error || !data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ application: data });
+  }
+
   const { data, error } = await safeFrom(supabase, "stage_applications")
-    .select("id, name, email, phone, answers, score, score_breakdown, status, source_utm, created_at")
+    .select(FULL_COLS)
     .order("score", { ascending: false });
 
   if (error) {

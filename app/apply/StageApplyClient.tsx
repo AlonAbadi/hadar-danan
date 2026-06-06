@@ -186,6 +186,9 @@ export function StageApplyClient() {
     setStep((s) => Math.max(0, s - 1));
   };
 
+  // Long intro scrolls; form/done are short and centered.
+  const centerVertically = phase !== "intro";
+
   return (
     <div
       dir="rtl"
@@ -197,8 +200,8 @@ export function StageApplyClient() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
+        justifyContent: centerVertically ? "center" : "flex-start",
+        padding: centerVertically ? 24 : "48px 24px 80px",
         position: "relative",
         overflow: "hidden",
       }}
@@ -340,68 +343,223 @@ export function StageApplyClient() {
   );
 }
 
+const STAGES = [
+  {
+    n:     "01",
+    title: "הגשת המועמדות",
+    tag:   "חינם, פתוח לכולם",
+    body:  "טופס קצר אבל לא טריוויאלי. אנחנו לא בודקים אם יש לך עסק, אנחנו בודקים אם יש רצון והתחייבות. עצם הכתיבה כאן כבר מתחילה אצלך תהליך פנימי.",
+  },
+  {
+    n:     "02",
+    title: "סינון",
+    tag:   "מספר מצומצם של עסקים",
+    body:  "אנחנו קוראים כל מועמדות באופן ידני, לא בוט. הצוואר שלנו צר כי אנחנו נכנסים עמוק לכל עסק נבחר, ויכולים לקחת רק כמה אנשים בכל מחזור. אם זה לא מתאים, זה לא שיפוט, זה פשוט מתמטיקה של עומק.",
+  },
+  {
+    n:     "03",
+    title: "שלושה ימי עבודה",
+    tag:   "אינטנסיביים, פנים אל פנים",
+    body:  "כל מי שעובר את הסף נכנס לתהליך אישי בליווי אסטרטגי אמיתי, לא קבוצתי. בלי שקפים, בלי הכללות. יושבים על העסק שלך, מפרקים, ובונים מחדש על בסיס מה שבאמת מבדל אותך.",
+  },
+  {
+    n:     "04",
+    title: "ההמשך",
+    tag:   "רק אם יש התאמה הדדית",
+    body:  "בסוף שלושת הימים שני הצדדים מחליטים אם להמשיך יחד. לא מספיק שאהבת אותנו, אנחנו צריכים גם להאמין שאנחנו יכולים להזיז את העסק שלך מקצה לקצה. בלי הסכם נצחי, בלי מלכודות.",
+  },
+];
+
 function Intro({ onStart }: { onStart: () => void }) {
   return (
-    <div style={{ textAlign: "center" }}>
-      <div
-        style={{
-          color: C.gold,
-          fontSize: 13,
-          letterSpacing: 4,
-          marginBottom: 18,
-          fontWeight: 600,
-        }}
-      >
-        beegood × הדר דנן
+    <div style={{ width: "100%", maxWidth: 560 }}>
+      {/* Hero */}
+      <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            color: C.gold,
+            fontSize: 13,
+            letterSpacing: 4,
+            marginBottom: 18,
+            fontWeight: 600,
+          }}
+        >
+          beegood × הדר דנן
+        </div>
+        <h1 style={{ fontSize: 44, fontWeight: 700, margin: "0 0 20px", lineHeight: 1.1 }}>
+          3 ימים פתוחים
+        </h1>
+        <p
+          style={{
+            color: C.fg,
+            fontSize: 19,
+            lineHeight: 1.6,
+            margin: "0 0 14px",
+            maxWidth: 460,
+            marginInline: "auto",
+          }}
+        >
+          אנחנו לא מחפשים מושלמים. אנחנו מחפשים עסקים שמוכנים להעז את הצעד הבא באמת.
+        </p>
+        <p
+          style={{
+            color: C.muted,
+            fontSize: 16,
+            lineHeight: 1.6,
+            margin: "0 0 34px",
+            maxWidth: 460,
+            marginInline: "auto",
+          }}
+        >
+          כניסה היא פעם בצמיחה. השאלות הבאות יגלו אם יש רצון והתחייבות אמיתית. ספר לנו
+          מי אתה, ואם נראה לנו נכון נחזור עם המשך.
+        </p>
+        <button onClick={onStart} style={ctaStyle}>התחלת המועמדות</button>
+        <div style={{ color: C.muted, fontSize: 13, marginTop: 16 }}>
+          6 שאלות שדורשות קצת מחשבה. קח את הזמן.
+        </div>
       </div>
-      <h1 style={{ fontSize: 44, fontWeight: 700, margin: "0 0 20px", lineHeight: 1.1 }}>
-        3 ימים פתוחים
-      </h1>
-      <p
-        style={{
-          color: C.fg,
-          fontSize: 19,
-          lineHeight: 1.6,
-          margin: "0 0 14px",
-          maxWidth: 460,
-          marginInline: "auto",
-        }}
-      >
-        אנחנו לא מחפשים מושלמים. אנחנו מחפשים עסקים שמוכנים להעז את הצעד הבא באמת.
-      </p>
-      <p
-        style={{
-          color: C.muted,
-          fontSize: 16,
-          lineHeight: 1.6,
-          margin: "0 0 34px",
-          maxWidth: 460,
-          marginInline: "auto",
-        }}
-      >
-        כניסה יש פעם בצמיחה. השאלות הבאות יגלו אם יש רצון והתחייבות אמיתית. ספר לנו מי
-        אתה, ואם נראה לנו נכון נחזור עם המשך.
-      </p>
-      <button
-        onClick={onStart}
-        style={{
-          background: `linear-gradient(90deg, ${C.goldDeep}, ${C.gold})`,
-          color: C.bg,
-          border: "none",
-          borderRadius: 12,
-          padding: "16px 44px",
-          fontSize: 17,
-          fontWeight: 700,
-          fontFamily: "inherit",
-          cursor: "pointer",
-        }}
-      >
-        התחלת המועמדות
-      </button>
-      <div style={{ color: C.muted, fontSize: 13, marginTop: 16 }}>
-        6 שאלות, בערך עשר דקות. בלי חיוב, בלי תוצרים.
+
+      <SectionRule />
+
+      {/* "איך זה עובד" */}
+      <div>
+        <h2 style={expHeading}>איך זה עובד</h2>
+        <p style={expLead}>ארבעה שלבים. הכל שקוף, אין כאן אף אחד עיוורים.</p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 28 }}>
+          {STAGES.map((s) => (
+            <div
+              key={s.n}
+              style={{
+                background: C.card,
+                border: `1px solid ${C.line}`,
+                borderRadius: 16,
+                padding: 22,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: C.gold, letterSpacing: 1 }}>
+                  {s.n}
+                </span>
+                <span style={{ fontSize: 20, fontWeight: 600 }}>{s.title}</span>
+              </div>
+              <div style={{ color: C.gold, fontSize: 13, marginBottom: 10, fontWeight: 500 }}>
+                {s.tag}
+              </div>
+              <p style={{ color: C.muted, fontSize: 15, lineHeight: 1.6, margin: 0 }}>
+                {s.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <SectionRule />
+
+      {/* "מה אנחנו נותנים, ולמה לא עולה כסף" */}
+      <div>
+        <h2 style={expHeading}>מה אנחנו נותנים לך, ולמה לא עולה כסף</h2>
+        <p style={expLead}>
+          אנחנו לא מוכרים שיעורים שיווקיים. אנחנו בוחרים עסקים על פני צומת שבה אנחנו
+          יכולים להזיז אותם באמת, וההצלחה שלהם היא ההצלחה שלנו.
+        </p>
+
+        <div
+          style={{
+            background: C.card,
+            border: `1px solid ${C.line}`,
+            borderRadius: 16,
+            padding: "24px 22px",
+            marginTop: 24,
+          }}
+        >
+          <p style={{ color: C.fg, fontSize: 16, lineHeight: 1.7, margin: "0 0 18px" }}>
+            המודל שלנו לא בנוי על כניסות יקרות וקורסים אחידים, אלא על שותפות. אנחנו
+            מקבלים נתח מההצלחה, לא חוזה שמשעבד אותך לתשלום חודשי.
+          </p>
+          <div style={{ height: 1, background: C.line, margin: "18px 0" }} />
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ color: C.gold, fontSize: 15, fontWeight: 600, marginBottom: 4 }}>
+              תשלום בסיסי
+            </div>
+            <div style={{ color: C.muted, fontSize: 15, lineHeight: 1.6 }}>
+              דמי כניסה סמליים מאוד. לא מחיר מסחרי, רק כדי שהכניסה לא תהיה ריקה ושיהיה
+              לך עור במשחק כבר ביום הראשון.
+            </div>
+          </div>
+          <div>
+            <div style={{ color: C.gold, fontSize: 15, fontWeight: 600, marginBottom: 4 }}>
+              אחוז מההצלחה
+            </div>
+            <div style={{ color: C.muted, fontSize: 15, lineHeight: 1.6 }}>
+              אנחנו שותפים להצלחה. אם העסק צומח, אנחנו נהנים יחד. אם לא, אז אנחנו לא.
+              ככה אנחנו מצידנו לא בורחים מהאחריות.
+            </div>
+          </div>
+        </div>
+
+        <p
+          style={{
+            color: C.fg,
+            fontSize: 17,
+            lineHeight: 1.6,
+            margin: "28px 0 0",
+            textAlign: "center",
+            fontWeight: 500,
+          }}
+        >
+          אין כאן ספק שמוכר לך, יש כאן שותף שמהמר על הצמיחה שלך.
+        </p>
+
+        <div style={{ textAlign: "center", marginTop: 32 }}>
+          <button onClick={onStart} style={ctaStyle}>התחלת המועמדות</button>
+        </div>
       </div>
     </div>
+  );
+}
+
+const ctaStyle: React.CSSProperties = {
+  background: `linear-gradient(90deg, ${C.goldDeep}, ${C.gold})`,
+  color: C.bg,
+  border: "none",
+  borderRadius: 12,
+  padding: "16px 44px",
+  fontSize: 17,
+  fontWeight: 700,
+  fontFamily: "inherit",
+  cursor: "pointer",
+};
+
+const expHeading: React.CSSProperties = {
+  fontSize: 28,
+  fontWeight: 700,
+  margin: "0 0 8px",
+  textAlign: "center",
+  lineHeight: 1.25,
+};
+
+const expLead: React.CSSProperties = {
+  color: C.muted,
+  fontSize: 16,
+  lineHeight: 1.6,
+  margin: 0,
+  textAlign: "center",
+  maxWidth: 480,
+  marginInline: "auto",
+};
+
+function SectionRule() {
+  return (
+    <div
+      style={{
+        width: 48,
+        height: 2,
+        background: `linear-gradient(90deg, ${C.gold}, ${C.goldDeep})`,
+        margin: "56px auto",
+      }}
+    />
   );
 }
 
