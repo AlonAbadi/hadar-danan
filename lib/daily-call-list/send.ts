@@ -31,7 +31,7 @@ const FROM_NAME    = "הדר דנן · רשימת חיוגים";
 
 function getRecipients(): string[] {
   const list = [
-    "alonabadi9@gmail.com",
+    process.env.ADMIN_EMAIL,
     process.env.HADAR_EMAIL,
   ].filter((x): x is string => !!x);
   return Array.from(new Set(list));

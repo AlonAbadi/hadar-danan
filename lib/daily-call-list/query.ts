@@ -55,7 +55,6 @@ export async function fetchCandidates(
 ): Promise<CandidateLead[]> {
   const t72h = isoDaysAgo(3);
   const t7d  = isoDaysAgo(7);
-  const t14d = isoDaysAgo(14);
   const t30d = isoDaysAgo(30);
 
   // ── 1) Hot-signal events in last 72h ──────────────────────────────────────
