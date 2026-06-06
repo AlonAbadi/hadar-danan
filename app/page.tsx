@@ -535,7 +535,7 @@ export default async function LandingPage() {
                 <Link href="/apply" className="path-card apply">
                   <span className="path-flag selective">בסלקציה</span>
                   <div className="path-kicker gold">המסלול האחר</div>
-                  <div className="path-head">אנחנו מהמרים יחד</div>
+                  <div className="path-head">אנחנו על אותו צד</div>
                   <p className="path-lede">
                     שלושה ימי עבודה אינטנסיביים, בליווי אסטרטגי אישי. אנחנו לא לוקחים
                     מחיר מסחרי מראש — אנחנו שותפים להצלחה שלך.

@@ -546,7 +546,7 @@ function Intro({ onStart }: { onStart: () => void }) {
             fontWeight: 500,
           }}
         >
-          אין כאן ספק שמוכר לך, יש כאן שותף שמהמר על הצמיחה שלך.
+          אין כאן ספק שמוכר לך, יש כאן שותף שצומח רק אם אתה צומח.
         </p>
 
         <div style={{ textAlign: "center", marginTop: 32 }}>
