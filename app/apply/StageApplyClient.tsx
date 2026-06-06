@@ -672,7 +672,7 @@ function Done() {
         ✓
       </div>
       <h2 style={{ fontSize: 30, fontWeight: 700, margin: "0 0 14px" }}>
-        קיבלנו אותך.
+        קיבלנו את המועמדות.
       </h2>
       <p
         style={{
