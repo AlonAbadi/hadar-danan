@@ -100,15 +100,46 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "שגיאה בשמירת הבקשה, נסי שוב." }, { status: 500 });
   }
 
-  const fromAddr = process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online";
+  const fromAddr  = process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online";
   const resendKey = process.env.RESEND_API_KEY;
   // In dev RESEND_API_KEY is often blank; the constructor throws synchronously
   // on undefined/empty, so guard before instantiating.
   const resend    = resendKey ? new Resend(resendKey) : null;
 
+  // Resend's send() returns { data, error } and does NOT reject on application
+  // errors. Plain .catch(() => {}) is double-silent: it doesn't see the error
+  // object AND doesn't see network rejections meaningfully. Wrap properly and
+  // log every failure path to error_logs so we never go blind again.
+  async function sendAndLog(label: string, payload: Parameters<NonNullable<typeof resend>["emails"]["send"]>[0]): Promise<void> {
+    if (!resend) {
+      await supabase.from("error_logs").insert({
+        context: "api/stage/apply",
+        error:   `RESEND_API_KEY missing — ${label} skipped`,
+        payload: { applicationId: data.id, label },
+      });
+      return;
+    }
+    try {
+      const result = await resend.emails.send(payload);
+      if (result.error) {
+        await supabase.from("error_logs").insert({
+          context: "api/stage/apply",
+          error:   `Resend rejected (${label}): ${result.error.name ?? "unknown"} — ${result.error.message ?? ""}`,
+          payload: { applicationId: data.id, label, resendError: result.error },
+        });
+      }
+    } catch (err) {
+      await supabase.from("error_logs").insert({
+        context: "api/stage/apply",
+        error:   `${label}: ${err instanceof Error ? err.message : String(err)}`,
+        payload: { applicationId: data.id, label },
+      });
+    }
+  }
+
   // Applicant confirmation - short, warm, no emoji.
-  if (resend && email) {
-    resend.emails.send({
+  if (email) {
+    await sendAndLog("applicant_confirmation", {
       from: `הדר דנן <${fromAddr}>`,
       to:   email,
       subject: "קיבלנו את המועמדות שלך — 3 ימים פתוחים",
@@ -119,7 +150,7 @@ export async function POST(req: NextRequest) {
         <p>בינתיים, היה חכם שכתבת את התשובות באמת. השיחה הזאת מתחילה ברגע ששלחת.</p>
         <p style="margin-top:24px">צוות beegood</p>
       </div>`,
-    }).catch(() => {});
+    });
   }
 
   // Admin alert - to Hadar + Alon.
@@ -128,7 +159,7 @@ export async function POST(req: NextRequest) {
     ([k, v]) => `<p style="margin:6px 0"><strong>${k}:</strong> ${v.replace(/\n/g, "<br/>")}</p>`
   ).join("");
 
-  resend?.emails.send({
+  await sendAndLog("admin_alert", {
     from: fromAddr,
     to:   ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
     subject: `🎯 מועמדות חדשה — 3 ימים פתוחים: ${name} (${score})`,
@@ -145,7 +176,7 @@ export async function POST(req: NextRequest) {
       <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>
       <a href="https://www.beegood.online/admin/stage" style="display:inline-block;background:#C9964A;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח ב-CRM ←</a>
     </div>`,
-  }).catch(() => {});
+  });
 
   // Meta CAPI Lead event - fire-and-forget.
   sendCapiEvent({

@@ -33,7 +33,7 @@ const PRODUCT_LABELS: Record<string, string> = {
   test_1:         "מוצר בדיקה",
 };
 
-function notifyPurchase(opts: {
+export function buildPurchaseEmail(opts: {
   userId:        string;
   name:          string | null;
   email:         string | null;
@@ -42,7 +42,7 @@ function notifyPurchase(opts: {
   amount:        number;
   invoiceLink:   string | null;
   invoiceNumber: string | null;
-}): void {
+}): { subject: string; html: string } {
   const productLabel = PRODUCT_LABELS[opts.product] ?? opts.product;
   const amountFmt    = `₪${(opts.amount ?? 0).toLocaleString("he-IL")}`;
   const displayName  = opts.name ?? opts.email ?? "לקוח";
@@ -55,9 +55,7 @@ function notifyPurchase(opts: {
     ? `<p style="margin:4px 0"><strong>חשבונית:</strong> <a href="${opts.invoiceLink}" style="color:#4285F4">${opts.invoiceNumber ? `#${opts.invoiceNumber}` : "פתח PDF"}</a></p>`
     : opts.invoiceNumber ? `<p style="margin:4px 0"><strong>חשבונית:</strong> #${opts.invoiceNumber}</p>` : "";
 
-  new Resend(process.env.RESEND_API_KEY).emails.send({
-    from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
-    to: ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
+  return {
     subject: `💰 עסקה חדשה — ${displayName} · ${productLabel} · ${amountFmt}`,
     html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
       <h2 style="color:#34A853;margin-bottom:8px;font-size:22px">💰 עסקה חדשה</h2>
@@ -76,7 +74,62 @@ function notifyPurchase(opts: {
       <hr style="border:none;border-top:1px solid #eee;margin:16px 0"/>
       <a href="${adminUrl}" style="display:inline-block;background:#34A853;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח פרופיל באדמין ←</a>
     </div>`,
-  }).catch(() => {});
+  };
+}
+
+/** Send the admin "deal closed" alert.
+ *
+ *  History note: this used to be `.catch(() => {})` which swallowed BOTH
+ *  network rejections AND, worse, Resend's `{ data, error }` success-shape
+ *  errors that never reject at all. A real challenge purchase landed but
+ *  the alert never went out — invisible to the team, invisible to logs.
+ *  Now: any failure path lands in error_logs and is visible in /admin/system. */
+async function notifyPurchase(
+  supabase: ReturnType<typeof createServerClient>,
+  opts: {
+    userId:        string;
+    name:          string | null;
+    email:         string | null;
+    phone:         string | null;
+    product:       string;
+    amount:        number;
+    invoiceLink:   string | null;
+    invoiceNumber: string | null;
+  },
+): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    await supabase.from("error_logs").insert({
+      context: "api/cardcom/webhook notifyPurchase",
+      error:   "RESEND_API_KEY missing — admin alert skipped",
+      payload: { userId: opts.userId, product: opts.product, amount: opts.amount },
+    });
+    return;
+  }
+
+  const { subject, html } = buildPurchaseEmail(opts);
+
+  try {
+    const result = await new Resend(apiKey).emails.send({
+      from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
+      to:   ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
+      subject,
+      html,
+    });
+    if (result.error) {
+      await supabase.from("error_logs").insert({
+        context: "api/cardcom/webhook notifyPurchase",
+        error:   `Resend rejected: ${result.error.name ?? "unknown"} — ${result.error.message ?? ""}`,
+        payload: { userId: opts.userId, product: opts.product, amount: opts.amount, resendError: result.error },
+      });
+    }
+  } catch (err) {
+    await supabase.from("error_logs").insert({
+      context: "api/cardcom/webhook notifyPurchase",
+      error:   err instanceof Error ? err.message : String(err),
+      payload: { userId: opts.userId, product: opts.product, amount: opts.amount },
+    });
+  }
 }
 
 // ── Shared fulfillment logic ───────────────────────────────────────────────
@@ -308,7 +361,7 @@ async function fulfillPurchase(
     .eq("id", purchase.user_id)
     .single();
   if (buyerForEmail) {
-    notifyPurchase({
+    await notifyPurchase(supabase, {
       userId:        purchase.user_id,
       name:          buyerForEmail.name,
       email:         buyerForEmail.email,
