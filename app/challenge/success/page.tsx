@@ -21,6 +21,7 @@ export default function ChallengeSuccessPage() {
       whatsappPhone={whatsappPhone || undefined}
       trackingProduct="challenge_197"
       trackingValue={197}
+      showApplyRail
     />
     </Suspense>
   );

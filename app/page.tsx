@@ -316,6 +316,7 @@ export default async function LandingPage() {
               לא בטוח/ה מה מתאים לך? ← קח את הקוויז וקבל המלצה אישית
             </a>
           </div>
+          <div id="products" />
           <ProductsSection />
 
           {/* ══════════════════════════════════════════════════════
@@ -464,47 +465,95 @@ export default async function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════════════════
-              5.5 APPLY — 3 ימים פתוחים (subtle middle-of-page CTA)
+              5.5 TWO PATHS — קנייה ישירה vs. מסלול מועמדות
           ══════════════════════════════════════════════════════ */}
-          <section style={{ background: "#080C14", padding: "40px 20px" }}>
-            <Link
-              href="/apply"
-              style={{
-                display: "block",
-                maxWidth: 640,
-                margin: "0 auto",
-                padding: "28px 32px",
-                borderRadius: 16,
-                border: "1px solid rgba(232,185,74,0.22)",
-                background: "linear-gradient(145deg, #141820, #0F131B)",
-                textDecoration: "none",
-                color: "#EDE9E1",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ color: "#C9964A", fontSize: 12, letterSpacing: 4, fontWeight: 600, marginBottom: 10 }}>
-                3 ימים פתוחים
+          <section style={{ background: "#080C14", padding: "96px 20px 80px" }}>
+            <style>{`
+              .paths-wrap { max-width: 1080px; margin: 0 auto; }
+              .paths-eyebrow { color: #C9964A; font-size: 12px; letter-spacing: 4px; font-weight: 700; text-align: center; margin-bottom: 14px; }
+              .paths-title { font-size: 38px; font-weight: 800; text-align: center; line-height: 1.15; margin: 0 auto 16px; color: #EDE9E1; max-width: 720px; }
+              .paths-sub { font-size: 17px; text-align: center; color: #9E9990; max-width: 560px; margin: 0 auto 56px; line-height: 1.6; }
+              .paths-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch; }
+              .path-card { position: relative; background: linear-gradient(145deg, #141820, #0F131B); border-radius: 18px; padding: 36px 32px; display: flex; flex-direction: column; text-decoration: none; color: #EDE9E1; transition: transform 0.2s, border-color 0.2s; }
+              .path-card.buy { border: 1px solid #2C323E; }
+              .path-card.buy:hover { border-color: rgba(201,150,74,0.30); transform: translateY(-2px); }
+              .path-card.apply { border: 1px solid rgba(232,185,74,0.45); box-shadow: 0 0 0 1px rgba(232,185,74,0.08), 0 20px 60px -20px rgba(232,185,74,0.18); }
+              .path-card.apply:hover { border-color: rgba(232,185,74,0.75); transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(232,185,74,0.18), 0 24px 70px -20px rgba(232,185,74,0.28); }
+              .path-flag { position: absolute; top: 16px; left: 16px; font-size: 10px; letter-spacing: 3px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+              .path-flag.standard { color: #9E9990; border: 1px solid #2C323E; background: rgba(255,255,255,0.02); }
+              .path-flag.selective { color: #080C14; background: linear-gradient(90deg, #9E7C3A, #E8B94A); }
+              .path-kicker { color: #9E9990; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+              .path-kicker.gold { color: #E8B94A; }
+              .path-head { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; }
+              .path-lede { color: #9E9990; font-size: 15px; line-height: 1.65; margin: 0 0 24px; }
+              .path-points { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 12px; }
+              .path-point { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.55; color: #EDE9E1; }
+              .path-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; }
+              .path-dot.muted { background: #2C323E; }
+              .path-dot.gold { background: #E8B94A; box-shadow: 0 0 8px rgba(232,185,74,0.45); }
+              .path-cta { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; transition: filter 0.15s; }
+              .path-cta.muted { border: 1px solid #2C323E; color: #EDE9E1; background: rgba(255,255,255,0.02); }
+              .path-card.buy:hover .path-cta.muted { background: rgba(201,150,74,0.08); border-color: rgba(201,150,74,0.35); }
+              .path-cta.gold { background: linear-gradient(90deg, #9E7C3A, #E8B94A); color: #080C14; }
+              .path-card.apply:hover .path-cta.gold { filter: brightness(1.08); }
+              .paths-foot { text-align: center; color: #9E9990; font-size: 13px; margin-top: 28px; line-height: 1.7; }
+              .paths-foot strong { color: #C9964A; font-weight: 600; }
+              @media (max-width: 760px) {
+                .paths-title { font-size: 28px; }
+                .paths-grid { grid-template-columns: 1fr; gap: 16px; }
+                .path-card { padding: 28px 22px; }
+                .path-head { font-size: 22px; }
+              }
+            `}</style>
+
+            <div className="paths-wrap">
+              <div className="paths-eyebrow">איך לעבוד איתנו</div>
+              <h2 className="paths-title">שתי דרכים להתחיל לעבוד יחד</h2>
+              <p className="paths-sub">
+                בכל המוצרים למעלה — אתה משלם תוצר. יש דרך אחת שונה.
+              </p>
+
+              <div className="paths-grid">
+                {/* LEFT — Direct purchase */}
+                <Link href="#products" className="path-card buy" scroll={false}>
+                  <span className="path-flag standard">קנייה ישירה</span>
+                  <div className="path-kicker">המסלול הרגיל</div>
+                  <div className="path-head">אתה משלם, אנחנו מספקים</div>
+                  <p className="path-lede">
+                    תשעה מוצרים. לכל אחד תוצר ברור ומחיר ברור. מאתגר ₪197 עד שותפות
+                    ₪10k לחודש. בוחר, מקבל, מתחיל.
+                  </p>
+                  <ul className="path-points">
+                    <li className="path-point"><span className="path-dot muted" />תוצר מוגדר מראש, אתה יודע מה תקבל</li>
+                    <li className="path-point"><span className="path-dot muted" />התחלה מיידית, בלי תהליך התאמה</li>
+                    <li className="path-point"><span className="path-dot muted" />הסיכון הכספי על הקונה</li>
+                  </ul>
+                  <span className="path-cta muted">לכל המוצרים ↑</span>
+                </Link>
+
+                {/* RIGHT — Application track */}
+                <Link href="/apply" className="path-card apply">
+                  <span className="path-flag selective">בסלקציה</span>
+                  <div className="path-kicker gold">המסלול האחר</div>
+                  <div className="path-head">אנחנו מהמרים יחד</div>
+                  <p className="path-lede">
+                    שלושה ימי עבודה אינטנסיביים, בליווי אסטרטגי אישי. אנחנו לא לוקחים
+                    מחיר מסחרי מראש — אנחנו שותפים להצלחה שלך.
+                  </p>
+                  <ul className="path-points">
+                    <li className="path-point"><span className="path-dot gold" />תשלום בסיסי סמלי בלבד בהתחלה</li>
+                    <li className="path-point"><span className="path-dot gold" />אחוז מההכנסות שייצרנו יחד</li>
+                    <li className="path-point"><span className="path-dot gold" />3-5 עסקים בלבד בכל מחזור, בסינון ידני</li>
+                  </ul>
+                  <span className="path-cta gold">התחלת המועמדות ←</span>
+                </Link>
               </div>
-              <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8, lineHeight: 1.35 }}>
-                אנחנו לא מחפשים מושלמים, אנחנו מחפשים מוכנים
-              </div>
-              <div style={{ color: "#9E9990", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
-                שש שאלות פתוחות. אם נראה התאמה, נחזור אליך תוך כמה ימים.
-              </div>
-              <span
-                style={{
-                  display: "inline-block",
-                  padding: "10px 22px",
-                  borderRadius: 999,
-                  background: "linear-gradient(90deg, #9E7C3A, #E8B94A)",
-                  color: "#080C14",
-                  fontSize: 14,
-                  fontWeight: 700,
-                }}
-              >
-                התחלת המועמדות ←
-              </span>
-            </Link>
+
+              <p className="paths-foot">
+                לא בטוח לאן ללכת? <strong>קח את הקוויז</strong> — שלוש שאלות שיגידו לך
+                איפה אתה ומה הצעד הבא.
+              </p>
+            </div>
           </section>
 
           {/* ══════════════════════════════════════════════════════

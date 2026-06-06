@@ -64,6 +64,7 @@ export default async function CourseSuccessPage({
           nextStepDesc="כל השיעורים פתוחים - לך בקצב שלך"
           trackingProduct="course_1800"
           trackingValue={1800}
+          showApplyRail
         />
       </Suspense>
     </div>

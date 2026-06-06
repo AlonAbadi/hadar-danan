@@ -1,3 +1,4 @@
+import Link from "next/link";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { PartnershipBookingFlow } from "./PartnershipBookingFlow";
 import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
@@ -13,6 +14,63 @@ export default async function PartnershipPage() {
   return (
     <>
     <ViewContentTracker product="partnership_lead" value={0} />
+
+    {/* On-ramp banner — for visitors who aren't ready to commit to a retainer */}
+    <section style={{ background: "#080C14", padding: "20px 16px", borderBottom: "1px solid rgba(232,185,74,0.12)" }}>
+      <Link
+        href="/apply"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          maxWidth: 960,
+          margin: "0 auto",
+          padding: "14px 22px",
+          borderRadius: 14,
+          background: "linear-gradient(145deg, rgba(232,185,74,0.06), rgba(232,185,74,0.02))",
+          border: "1px solid rgba(232,185,74,0.25)",
+          textDecoration: "none",
+          direction: "rtl",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 280 }}>
+          <span
+            style={{
+              flexShrink: 0,
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 2,
+              padding: "4px 10px",
+              borderRadius: 999,
+              color: "#080C14",
+              background: "linear-gradient(90deg, #9E7C3A, #E8B94A)",
+            }}
+          >
+            מסלול חלופי
+          </span>
+          <div style={{ color: "#EDE9E1", fontSize: 14, lineHeight: 1.5 }}>
+            <strong style={{ fontWeight: 700, color: "#EDE9E1" }}>לא בטוח ששותפות מלאה זה בשבילך?</strong>{" "}
+            <span style={{ color: "#9E9990" }}>
+              יש מסלול מועמדות — שלושה ימים אינטנסיביים, תשלום בסיסי + אחוז מההצלחה. אם יעבוד, נמשיך לשותפות.
+            </span>
+          </div>
+        </div>
+        <span
+          style={{
+            flexShrink: 0,
+            color: "#E8B94A",
+            fontSize: 14,
+            fontWeight: 700,
+            whiteSpace: "nowrap",
+          }}
+        >
+          להגשת מועמדות ←
+        </span>
+      </Link>
+    </section>
+
     <ProductLandingPage
       productName="שותפות אסטרטגית"
       price={0}

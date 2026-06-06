@@ -20,6 +20,7 @@ export default function PremiumSuccessPage() {
       nextStepDesc="נשמח לדבר איתך בקרוב!"
       trackingProduct="premium_14000"
       trackingValue={14000}
+      showApplyRail
     />
     </Suspense>
   );

@@ -19,6 +19,7 @@ export default function StrategySuccessPage() {
       nextStepDesc="נשמח לדבר איתך בקרוב!"
       trackingProduct="strategy_4000"
       trackingValue={4000}
+      showApplyRail
     />
     </Suspense>
   );

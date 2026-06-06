@@ -18,6 +18,9 @@ interface SuccessPageProps {
   whatsappPhone?: string;
   trackingProduct?: string;
   trackingValue?: number;
+  /** Show the "3 ימים פתוחים" application rail. Use on real-money products
+   *  for committed buyers; skip on test/utility products. */
+  showApplyRail?: boolean;
 }
 
 const WA_ICON = (
@@ -38,6 +41,7 @@ export function SuccessPage({
   whatsappPhone,
   trackingProduct,
   trackingValue,
+  showApplyRail = false,
 }: SuccessPageProps) {
   const [visible, setVisible] = useState(false);
   const searchParams = useSearchParams();
@@ -209,6 +213,46 @@ export function SuccessPage({
         >
           לדף הבית
         </Link>
+
+        {/* Apply rail — for committed buyers who might be ready for deeper work */}
+        {showApplyRail && (
+          <Link
+            href="/apply"
+            className="w-full rounded-2xl p-5 flex flex-col gap-2 transition"
+            style={{
+              background: "linear-gradient(145deg, rgba(232,185,74,0.06), rgba(232,185,74,0.02))",
+              border: "1px solid rgba(232,185,74,0.30)",
+              textDecoration: "none",
+              marginTop: 4,
+            }}
+          >
+            <div className="flex items-center justify-between" style={{ gap: 12 }}>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  letterSpacing: 3,
+                  padding: "3px 10px",
+                  borderRadius: 999,
+                  color: "#080C14",
+                  background: "linear-gradient(90deg, #9E7C3A, #E8B94A)",
+                }}
+              >
+                המסלול הבא
+              </span>
+              <span style={{ color: "#E8B94A", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" }}>
+                גלה פרטים ←
+              </span>
+            </div>
+            <div style={{ color: "#EDE9E1", fontSize: 16, fontWeight: 700, lineHeight: 1.35, marginTop: 4 }}>
+              עברת את {productName}. יש שלב אחד עמוק יותר.
+            </div>
+            <div style={{ color: "#9E9990", fontSize: 13, lineHeight: 1.6 }}>
+              3 ימים פתוחים — שלושה ימי עבודה אינטנסיביים, בליווי אישי, בסלקציה.
+              תשלום בסיסי + אחוז מההצלחה. לעסקים שכבר מוכנים לקפיצה.
+            </div>
+          </Link>
+        )}
 
         {/* Footer note */}
         <p className="text-xs text-center" style={{ color: "rgba(158,153,144,0.6)" }}>

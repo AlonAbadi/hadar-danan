@@ -15,6 +15,7 @@ export default function SadnaSuccessPage() {
       nextStepDesc="נשמח לראותך בסדנה"
       trackingProduct="sadna_500"
       trackingValue={500}
+      showApplyRail
     />
     </Suspense>
   );

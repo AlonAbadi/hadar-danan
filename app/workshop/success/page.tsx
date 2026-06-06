@@ -19,6 +19,7 @@ export default function WorkshopSuccessPage() {
       nextStepDesc="בחר תאריך שמתאים לך מהיומן"
       trackingProduct="workshop_1080"
       trackingValue={1080}
+      showApplyRail
     />
     </Suspense>
   );
