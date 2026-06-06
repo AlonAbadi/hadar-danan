@@ -515,7 +515,7 @@ export default async function LandingPage() {
 
               <div className="paths-grid">
                 {/* LEFT — Direct purchase */}
-                <Link href="#products" className="path-card buy" scroll={false}>
+                <Link href="#products" className="path-card buy">
                   <span className="path-flag standard">קנייה ישירה</span>
                   <div className="path-kicker">המסלול הרגיל</div>
                   <div className="path-head">אתה משלם, אנחנו מספקים</div>
