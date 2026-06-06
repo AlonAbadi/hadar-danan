@@ -16,6 +16,7 @@ const ITEMS_GROUP1 = [
 const ITEMS_GROUP2 = [
   { label: "הדרכה חינמית",      href: "/training" },
   { label: "קוויז - איפה אתה?", href: "/quiz" },
+  { label: "3 ימים פתוחים",     href: "/apply" },
 ];
 
 const ITEMS_GROUP3 = [

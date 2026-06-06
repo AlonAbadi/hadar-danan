@@ -464,6 +464,50 @@ export default async function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════════════════
+              5.5 APPLY — 3 ימים פתוחים (subtle middle-of-page CTA)
+          ══════════════════════════════════════════════════════ */}
+          <section style={{ background: "#080C14", padding: "40px 20px" }}>
+            <Link
+              href="/apply"
+              style={{
+                display: "block",
+                maxWidth: 640,
+                margin: "0 auto",
+                padding: "28px 32px",
+                borderRadius: 16,
+                border: "1px solid rgba(232,185,74,0.22)",
+                background: "linear-gradient(145deg, #141820, #0F131B)",
+                textDecoration: "none",
+                color: "#EDE9E1",
+                textAlign: "center",
+              }}
+            >
+              <div style={{ color: "#C9964A", fontSize: 12, letterSpacing: 4, fontWeight: 600, marginBottom: 10 }}>
+                3 ימים פתוחים
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8, lineHeight: 1.35 }}>
+                אנחנו לא מחפשים מושלמים, אנחנו מחפשים מוכנים
+              </div>
+              <div style={{ color: "#9E9990", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>
+                שש שאלות פתוחות. אם נראה התאמה, נחזור אליך תוך כמה ימים.
+              </div>
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "10px 22px",
+                  borderRadius: 999,
+                  background: "linear-gradient(90deg, #9E7C3A, #E8B94A)",
+                  color: "#080C14",
+                  fontSize: 14,
+                  fontWeight: 700,
+                }}
+              >
+                התחלת המועמדות ←
+              </span>
+            </Link>
+          </section>
+
+          {/* ══════════════════════════════════════════════════════
               6. SOCIAL PROOF
           ══════════════════════════════════════════════════════ */}
           <section className="px-6 py-24 md:py-36" style={{ background: "#080C14" }}>

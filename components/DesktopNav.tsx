@@ -6,11 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 const NAV_LINKS = [
-  { label: "אודות",         href: "/about" },
-  { label: "בינג׳",         href: "/binge" },
-  { label: "הצוות",        href: "/team" },
-  { label: "הדרכה חינמית", href: "/training" },
-  { label: "קוויז",        href: "/quiz" },
+  { label: "אודות",          href: "/about" },
+  { label: "בינג׳",          href: "/binge" },
+  { label: "הצוות",          href: "/team" },
+  { label: "הדרכה חינמית",   href: "/training" },
+  { label: "קוויז",          href: "/quiz" },
+  { label: "3 ימים פתוחים",  href: "/apply", accent: true },
 ];
 
 const DROPDOWN_ITEMS = [
@@ -130,17 +131,26 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
       {/* CENTER - Nav links (RTL order) */}
       <div style={{ display: "flex", alignItems: "center", gap: 24, direction: "rtl", position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
 
-        {NAV_LINKS.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            style={LINK_STYLE(pathname === link.href)}
-            onMouseEnter={(e) => { if (pathname !== link.href) (e.currentTarget as HTMLElement).style.color = "#C9964A"; }}
-            onMouseLeave={(e) => { if (pathname !== link.href) (e.currentTarget as HTMLElement).style.color = "#EDE9E1"; }}
-          >
-            {link.label}
-          </Link>
-        ))}
+        {NAV_LINKS.map((link) => {
+          const active = pathname === link.href;
+          const accent = "accent" in link && link.accent;
+          const base   = LINK_STYLE(active);
+          const style: React.CSSProperties = accent
+            ? { ...base, color: active ? "#E8B94A" : "#C9964A", fontWeight: 600 }
+            : base;
+          const resting = accent ? "#C9964A" : "#EDE9E1";
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              style={style}
+              onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = "#E8B94A"; }}
+              onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = resting; }}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
 
         {/* Dropdown - מסלולים */}
         <div
