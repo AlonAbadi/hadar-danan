@@ -465,13 +465,50 @@ function Intro({ onStart }: { onStart: () => void }) {
           יכולים להזיז אותם באמת, וההצלחה שלהם היא ההצלחה שלנו.
         </p>
 
+        {/* Principle card — comes before the commercial model on purpose */}
+        <div
+          style={{
+            position: "relative",
+            background: "linear-gradient(145deg, rgba(232,185,74,0.06), rgba(232,185,74,0.015))",
+            border: `1px solid rgba(232,185,74,0.30)`,
+            borderRadius: 16,
+            padding: "28px 24px",
+            marginTop: 24,
+            overflow: "hidden",
+          }}
+        >
+          {/* Gold accent rail on the right edge (RTL) */}
+          <div
+            style={{
+              position: "absolute",
+              top: 24,
+              bottom: 24,
+              right: 0,
+              width: 3,
+              borderRadius: "2px 0 0 2px",
+              background: `linear-gradient(180deg, ${C.gold}, ${C.goldDeep})`,
+            }}
+          />
+          <div style={{ color: C.gold, fontSize: 11, letterSpacing: 3, fontWeight: 700, marginBottom: 10 }}>
+            עיקרון
+          </div>
+          <h3 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 12px", color: C.fg, lineHeight: 1.25 }}>
+            נאמנות לשותפות.
+          </h3>
+          <p style={{ color: C.muted, fontSize: 16, lineHeight: 1.7, margin: 0 }}>
+            לפני כל מודל ולפני כל אחוז, הדבר הראשון שאנחנו מביאים הוא מחויבות לשותפות
+            עצמה. אנחנו מצדדים בעסק כי התחייבנו לו, לא בגלל מה שיש לנו בו. כל השאר נגזר
+            מזה.
+          </p>
+        </div>
+
         <div
           style={{
             background: C.card,
             border: `1px solid ${C.line}`,
             borderRadius: 16,
             padding: "24px 22px",
-            marginTop: 24,
+            marginTop: 16,
           }}
         >
           <p style={{ color: C.fg, fontSize: 16, lineHeight: 1.7, margin: "0 0 18px" }}>
