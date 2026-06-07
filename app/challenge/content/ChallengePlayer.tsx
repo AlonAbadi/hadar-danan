@@ -9,6 +9,7 @@ interface Props {
   maxUnlockedDay:      number;   // time-based — highest day currently accessible
   completedDayNumbers: number[];
   liveMeetingDate:     string;   // ISO string of next closing live meeting
+  userEmail:           string;   // for video_events.user_email — admin profile lookups
 }
 
 export default function ChallengePlayer({
@@ -16,6 +17,7 @@ export default function ChallengePlayer({
   maxUnlockedDay,
   completedDayNumbers,
   liveMeetingDate,
+  userEmail,
 }: Props) {
   const [completed, setCompleted]       = useState<Set<number>>(new Set(completedDayNumbers));
   const [reported, setReported]         = useState<Set<number>>(new Set(completedDayNumbers));
@@ -23,6 +25,10 @@ export default function ChallengePlayer({
   const [lockedPopup, setLockedPopup]   = useState(false);
   const [expanded, setExpanded]         = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  // Tracks which (videoId,milestone) pairs were already reported to /api/video-event.
+  // Kept in a ref because timeupdate fires many times per second — using state
+  // would trigger re-renders for every milestone check.
+  const milestoneReported = useRef<Set<string>>(new Set());
 
   // Day 8 unlocks once day 7 is accessible
   const day8Accessible = maxUnlockedDay >= 7;
@@ -64,18 +70,43 @@ export default function ChallengePlayer({
     return `${datePart} בשעה ${hm}`;
   })();
 
-  // Vimeo Player API — auto-mark watched at 90%
+  // Vimeo Player API — auto-mark watched at 90% AND log analytics milestones to
+  // video_events so admin profile / video drop-off dashboard see real numbers.
   useEffect(() => {
     if (isPlaceholder || isLocked || !iframeRef.current) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const win = window as any;
     if (!win.Vimeo) return;
     const player = new win.Vimeo.Player(iframeRef.current);
+    const videoId = dayData.videoId;
+
+    const fireMilestone = (eventType: "watch_progress" | "completed", percent: number) => {
+      const key = `${videoId}:${percent}`;
+      if (milestoneReported.current.has(key)) return;
+      milestoneReported.current.add(key);
+      fetch("/api/video-event", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          video_id:        videoId,
+          event_type:      eventType,
+          percent_watched: percent,
+          email:           userEmail,
+        }),
+      }).catch(() => {});
+    };
+
     player.on("timeupdate", (data: { percent: number }) => {
-      if (data.percent >= 0.9 && !reported.has(activeDay)) markWatched(activeDay);
+      if (data.percent >= 0.25) fireMilestone("watch_progress", 25);
+      if (data.percent >= 0.50) fireMilestone("watch_progress", 50);
+      if (data.percent >= 0.75) fireMilestone("watch_progress", 75);
+      if (data.percent >= 0.90) {
+        fireMilestone("completed", 90);
+        if (!reported.has(activeDay)) markWatched(activeDay);
+      }
     });
     return () => { player.off("timeupdate"); };
-  }, [activeDay, isPlaceholder, isLocked]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeDay, isPlaceholder, isLocked, dayData.videoId, userEmail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function markWatched(day: number) {
     if (reported.has(day) || marking) return;

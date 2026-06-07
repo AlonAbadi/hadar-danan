@@ -128,6 +128,7 @@ export default async function ChallengeContentPage() {
       maxUnlockedDay={maxUnlockedDay}
       completedDayNumbers={completedDayNumbers}
       liveMeetingDate={liveMeetingDate}
+      userEmail={userData.email}
     />
   );
 }
