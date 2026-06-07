@@ -443,15 +443,27 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
     : null;
 
   // ── Video processing ─────────────────────────────────────
-  // Summary: max percent reached per video
-  const videoSummary = Object.entries(
-    videoEvents.reduce<Record<string, number>>((acc, ev) => {
-      const vid = ev.video_id;
-      const pct = ev.event_type === "completed" ? 100 : (ev.percent_watched ?? 0);
-      acc[vid]  = Math.max(acc[vid] ?? 0, pct);
-      return acc;
-    }, {}),
-  ).map(([vid, maxPct]) => ({ vid, title: VIDEO_TITLE[vid] ?? `סרטון ${vid}`, maxPct }));
+  // Per video: did they watch? when last? Percent isn't surfaced in the
+  // profile card (Alon's feedback: binary signal + recency matters,
+  // exact percent is noise) but is still kept in the timeline below.
+  const videoStats = videoEvents.reduce<Record<string, { watched: boolean; lastViewedAt: string }>>((acc, ev) => {
+    const vid     = ev.video_id;
+    const watched = ev.event_type === "completed" || (ev.percent_watched ?? 0) >= 25;
+    const cur     = acc[vid];
+    acc[vid] = {
+      watched:      cur?.watched || watched,
+      lastViewedAt: cur && cur.lastViewedAt > ev.created_at ? cur.lastViewedAt : ev.created_at,
+    };
+    return acc;
+  }, {});
+  const videoSummary = Object.entries(videoStats)
+    .map(([vid, s]) => ({
+      vid,
+      title:        VIDEO_TITLE[vid] ?? `סרטון ${vid}`,
+      watched:      s.watched,
+      lastViewedAt: s.lastViewedAt,
+    }))
+    .sort((a, b) => b.lastViewedAt.localeCompare(a.lastViewedAt));
 
   // Timeline: merge events + video milestones
   const videoMilestones = toVideoMilestones(videoEvents);
@@ -786,36 +798,55 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                 </Card>
               )}
 
-              {/* Video summary card */}
-              <Card title="צפיות בסרטונים">
-                {videoSummary.length === 0 ? (
-                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
-                    אין צפיות מתועדות
-                  </p>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {videoSummary.map(({ vid, title, maxPct }) => (
-                      <div key={vid}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                          <span style={{ fontSize: 13, color: "#EDE9E1" }}>{title}</span>
-                          <span style={{ fontSize: 12, color: maxPct >= 90 ? "#4CAF82" : "#9E9990", fontWeight: 600 }}>
-                            {maxPct >= 90 ? "עד הסוף" : `${maxPct}%`}
+              {/* Video summary card — hidden entirely when there's nothing to
+                  show. An empty "אין צפיות מתועדות" line for buyers who never
+                  entered is misleading; the "פעילות באתגר" card above already
+                  shows the entry signal. */}
+              {videoSummary.length > 0 && (
+                <Card
+                  title="סרטונים שנצפו"
+                  badge={
+                    <Chip bg="rgba(76,175,130,0.15)" color="#4CAF82">
+                      {videoSummary.filter((v) => v.watched).length}
+                    </Chip>
+                  }
+                >
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    {videoSummary.map(({ vid, title, watched, lastViewedAt }, i) => (
+                      <div
+                        key={vid}
+                        style={{
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                          padding: "10px 0",
+                          borderTop: i === 0 ? "none" : "1px solid rgba(44,50,62,0.5)",
+                          gap: 12,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+                          <span style={{
+                            flexShrink: 0,
+                            color: watched ? "#4CAF82" : "#6F6A60",
+                            fontSize: 14,
+                            fontWeight: 700,
+                          }}>
+                            {watched ? "✓" : "○"}
+                          </span>
+                          <span style={{
+                            fontSize: 13,
+                            color: "#EDE9E1",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}>
+                            {title}
                           </span>
                         </div>
-                        <div style={{ background: "#0D1219", borderRadius: 4, height: 5, overflow: "hidden" }}>
-                          <div style={{
-                            width: `${maxPct}%`, height: "100%",
-                            background: maxPct >= 90
-                              ? "linear-gradient(90deg, #4CAF82, #2E8B57)"
-                              : "linear-gradient(90deg, #7F77DD, #5B54AA)",
-                            borderRadius: 4,
-                          }} />
-                        </div>
+                        <span style={{ fontSize: 11, color: "#9E9990", flexShrink: 0 }}>
+                          {relativeTime(lastViewedAt)}
+                        </span>
                       </div>
                     ))}
                   </div>
-                )}
-              </Card>
+                </Card>
+              )}
             </div>
           </div>
 
