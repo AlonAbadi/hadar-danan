@@ -10,19 +10,33 @@ import { ChallengeHeroText } from "@/components/landing/ChallengeHeroText";
 import { ChallengeHeroTracker } from "./ChallengeHeroTracker";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP, CHALLENGE_ORIGINAL_PRICE } from "@/lib/products";
+import { computeNextLiveMeetingDate } from "@/lib/challenge-config";
 import { parseVariant, CHALLENGE_HERO_AB } from "@/lib/ab";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
 
-const CHALLENGE_FAQS = [
-  { question: "מתי מתחילים? צריך לחכות למחזור?", answer: "מתחילים מיד, תוך שניות אחרי התשלום. שיעור הפתיחה המוקלט פתוח לצפייה בו ברגע, ובו לומדים לעומק איך נראה שיווק ב-2026 ואיך להגדיר את העסק שלכם מחדש. כל יום נפתח לפי הקצב שלכם. אין מחזורים ואין המתנה לקבוצה." },
-  { question: "מה זה אתגר 7 הימים?", answer: "אתגר 7 הימים הוא קורס on-demand שבו כל יום מקבלים סרטון מהדר + אתגר יומי לצלם ולהעלות לאינסטגרם. המטרה: לצאת לדרך עם סרטונים איכותיים שמקדמים מכירות ומטפחים קהילה סביב המותג האישי." },
-  { question: "מה מקבלים?", answer: "שיעור פתיחה מוקלט ועמוק על שיווק ב-2026 (כדי שתוכלו להתחיל מיד), 7 סרטונים יומיים מהדר על סוג תוכן שמקדם מכירות, אתגר יומי לביצוע ולהעלאה לאינסטגרם, ומפגש סיום חי בזום: איך להפוך את הסרטונים לסיסטם מכירות. מפגש הסיום פתוח רק למי שסיימו את כל 7 הימים." },
-  { question: "למי מתאים האתגר?", answer: "לכל מי שמבולבל וכבר מרגיש שעידן השיווק מיצה את עצמו מכל הכיוונים, ורוצה ללמוד איך בעולם של רעש יוצרים משהו שניתן להקשיב לו." },
-  { question: "מה ההבדל בין האתגר לסדנה?", answer: "האתגר הוא שבוע on-demand של בניית הרגלי וידאו ואסטרטגיה. צופים, מיישמים, מעלים. הסדנה (יום אחד פיזי) היא השלב הבא: עומק על ביטוי, נוכחות ומשפך שיווקי שלם." },
-  { question: "האם האתגר מתאים גם למי שעסוק?", answer: "כן. האתגר on-demand. צופים בקצב שלכם, מבצעים את האתגר היומי בזמן שנוח לכם, ומעלים לאינסטגרם. אין מחויבות לשעה קבועה." },
-];
+/**
+ * Format the next live closing meeting in Israel time as:
+ *   "יום שלישי, 23 ביוני, בשעה 17:00"
+ * Pinned to Asia/Jerusalem so the string doesn't drift if rendered on a
+ * non-Israel Vercel region.
+ */
+function formatClosingMeeting(d: Date): string {
+  const dayPart = new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem",
+    weekday:  "long",
+    day:      "numeric",
+    month:    "long",
+  }).format(d).replace(/,?\s*\d{4}$/, ""); // strip year if locale appends it
+  const timePart = new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem",
+    hour:     "2-digit",
+    minute:   "2-digit",
+    hour12:   false,
+  }).format(d);
+  return `${dayPart}, בשעה ${timePart}`;
+}
 
 export const metadata = {
   title: "אתגר 7 הימים | הדר דנן",
@@ -35,6 +49,18 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
   const price         = String(PRODUCT_MAP.challenge_197.price);
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const credit        = email ? await getUserCredit(email) : 0;
+
+  // Next live closing-meeting date, formatted for display in Israel time.
+  const closingMeetingText = formatClosingMeeting(computeNextLiveMeetingDate());
+
+  const CHALLENGE_FAQS = [
+    { question: "מתי מתחילים? צריך לחכות למחזור?", answer: "מתחילים מיד, תוך שניות אחרי התשלום. שיעור הפתיחה המוקלט פתוח לצפייה בו ברגע, ובו לומדים לעומק איך נראה שיווק ב-2026 ואיך להגדיר את העסק שלכם מחדש. כל יום נפתח לפי הקצב שלכם. אין מחזורים ואין המתנה לקבוצה." },
+    { question: "מה זה אתגר 7 הימים?", answer: "אתגר 7 הימים הוא קורס on-demand שבו כל יום מקבלים סרטון מהדר + אתגר יומי לצלם ולהעלות לאינסטגרם. המטרה: לצאת לדרך עם סרטונים איכותיים שמקדמים מכירות ומטפחים קהילה סביב המותג האישי." },
+    { question: "מה מקבלים?", answer: `שיעור פתיחה מוקלט ועמוק על שיווק ב-2026 (כדי שתוכלו להתחיל מיד), 7 סרטונים יומיים מהדר על סוג תוכן שמקדם מכירות, אתגר יומי לביצוע ולהעלאה לאינסטגרם, ומפגש סיום חי בזום ${closingMeetingText}: איך להפוך את הסרטונים לסיסטם מכירות. מפגש הסיום פתוח רק למי שסיימו את כל 7 הימים.` },
+    { question: "למי מתאים האתגר?", answer: "לכל מי שמבולבל וכבר מרגיש שעידן השיווק מיצה את עצמו מכל הכיוונים, ורוצה ללמוד איך בעולם של רעש יוצרים משהו שניתן להקשיב לו." },
+    { question: "מה ההבדל בין האתגר לסדנה?", answer: "האתגר הוא שבוע on-demand של בניית הרגלי וידאו ואסטרטגיה. צופים, מיישמים, מעלים. הסדנה (יום אחד פיזי) היא השלב הבא: עומק על ביטוי, נוכחות ומשפך שיווקי שלם." },
+    { question: "האם האתגר מתאים גם למי שעסוק?", answer: "כן. האתגר on-demand. צופים בקצב שלכם, מבצעים את האתגר היומי בזמן שנוח לכם, ומעלים לאינסטגרם. אין מחויבות לשעה קבועה." },
+  ];
 
   // A/B test: hero video vs designed text block
   const cookieStore  = await cookies();
@@ -97,7 +123,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
           { num: "⚡", title: "גישה מיידית לשיעור הפתיחה",     desc: "תוך שניות אחרי התשלום, שיעור הפתיחה המוקלט פתוח לצפייה. שיעור עמוק על איך נראה שיווק ב-2026, ואיך להגדיר את העסק שלכם מחדש בעידן מוצף בוידאו. אין מחזורים. אין המתנה. מתחילים מתי שמתאים לכם." },
           { num: "🎥", title: "7 סרטונים יומיים מהדר",       desc: "הדרכה ממוקדת על סוג תוכן שמקדם מכירות. כל יום נושא אחר, מיושם ישר." },
           { num: "✏️", title: "אתגר יומי",                   desc: "ליצור וידאו מסוג מסוים ולהעלות אותו לאינסטגרם. מתרגלים בזמן אמת." },
-          { num: "🏆", title: "מפגש סיום חי בזום",            desc: "מפגש מסכם בלייב: איך להפוך את הסרטונים שלך לסיסטם מכירות. פתוח רק למשתתפים/ות שסיימו את כל 7 הימים." },
+          { num: "🏆", title: "מפגש סיום חי בזום",            desc: `מפגש מסכם בלייב — ${closingMeetingText}. איך להפוך את הסרטונים שלך לסיסטם מכירות. פתוח רק למשתתפים/ות שסיימו את כל 7 הימים.` },
         ]}
 
         notForItems={[
