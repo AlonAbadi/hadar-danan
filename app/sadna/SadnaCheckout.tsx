@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&") + "=([^;]*)"));
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
 const btnStyle: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10,
   background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
@@ -35,7 +41,14 @@ export function SadnaCheckout() {
       const signupRes = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, source: "sadna" }),
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          source:       "sadna",
+          ab_variant:   getCookie("ab_variant"),
+          anonymous_id: getCookie("anon_id"),
+        }),
       });
       const signupData = await signupRes.json();
       if (!signupRes.ok || !signupData.user_id) throw new Error("הרישום נכשל");

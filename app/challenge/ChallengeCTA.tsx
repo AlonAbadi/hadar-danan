@@ -283,6 +283,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
           email:        form.email,
           phone:             form.phone,
           anonymous_id:      getCookie("anon_id"),
+          ab_variant:        getCookie("ab_variant"),
           marketing_consent: consent,
         }),
       });

@@ -43,6 +43,7 @@ export function PremiumBookingFlow({ price, whatsappPhone }: Props) {
           email:        form.email,
           phone:        form.phone,
           anonymous_id: getCookie("anon_id"),
+          ab_variant:   getCookie("ab_variant"),
         }),
       });
 
