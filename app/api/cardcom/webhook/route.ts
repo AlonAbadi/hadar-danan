@@ -77,6 +77,39 @@ export function buildPurchaseEmail(opts: {
   };
 }
 
+/** Make.com purchase webhook. Fired once per completed transaction so the
+ *  no-code automations on Make can hook downstream actions (Sheets log,
+ *  Slack ping, etc). Same observability pattern as notifyPurchase — no more
+ *  `.catch(() => {})` silent black holes. */
+const MAKE_PURCHASE_WEBHOOK_URL = "https://hook.eu1.make.com/a11gotdkyvsbroc3q8zrlx9fcdxapqzk";
+
+async function notifyMakeOfPurchase(
+  supabase: ReturnType<typeof createServerClient>,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const res = await fetch(MAKE_PURCHASE_WEBHOOK_URL, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      await supabase.from("error_logs").insert({
+        context: "api/cardcom/webhook makeWebhook",
+        error:   `Make webhook returned ${res.status}: ${body.slice(0, 300)}`,
+        payload: { purchaseId: payload.purchase_id, status: res.status },
+      });
+    }
+  } catch (err) {
+    await supabase.from("error_logs").insert({
+      context: "api/cardcom/webhook makeWebhook",
+      error:   err instanceof Error ? err.message : String(err),
+      payload: { purchaseId: payload.purchase_id },
+    });
+  }
+}
+
 /** Send the admin "deal closed" alert.
  *
  *  History note: this used to be `.catch(() => {})` which swallowed BOTH
@@ -354,22 +387,50 @@ async function fulfillPurchase(
   // /api/events doesn't fire here because the webhook updates status
   // directly (it doesn't go through POST /api/events), so without this
   // call the team would only see the "started checkout" alert and never
-  // a deal-closed confirmation.
-  const { data: buyerForEmail } = await supabase
+  // a deal-closed confirmation. The same query pulls UTM fields used by
+  // the Make.com purchase webhook below.
+  const { data: buyer } = await supabase
     .from("users")
-    .select("name, email, phone")
+    .select("name, email, phone, utm_source, utm_medium, utm_campaign, utm_content, utm_term, utm_adset, utm_ad, click_id")
     .eq("id", purchase.user_id)
     .single();
-  if (buyerForEmail) {
+  if (buyer) {
     await notifyPurchase(supabase, {
       userId:        purchase.user_id,
-      name:          buyerForEmail.name,
-      email:         buyerForEmail.email,
-      phone:         buyerForEmail.phone,
+      name:          buyer.name,
+      email:         buyer.email,
+      phone:         buyer.phone,
       product:       purchase.product,
       amount:        purchase.amount,
       invoiceLink:   invoiceLink,
       invoiceNumber: invoiceNumber,
+    });
+
+    // Forward the closed deal to the Make.com purchase automation. Sent
+    // unconditionally for every completed transaction.
+    await notifyMakeOfPurchase(supabase, {
+      purchase_id:    purchase.id,
+      cardcom_ref:    internalDealNumber ?? null,
+      product:        purchase.product,
+      product_label:  PRODUCT_LABELS[purchase.product] ?? purchase.product,
+      amount:         purchase.amount,
+      currency:       "ILS",
+      invoice_number: invoiceNumber,
+      invoice_link:   invoiceLink,
+      user_id:        purchase.user_id,
+      name:           buyer.name,
+      email:          buyer.email,
+      phone:          buyer.phone,
+      utm_source:     buyer.utm_source   ?? null,
+      utm_medium:     buyer.utm_medium   ?? null,
+      utm_campaign:   buyer.utm_campaign ?? null,
+      utm_content:    buyer.utm_content  ?? null,
+      utm_term:       buyer.utm_term     ?? null,
+      utm_adset:      buyer.utm_adset    ?? null,
+      utm_ad:         buyer.utm_ad       ?? null,
+      click_id:       buyer.click_id     ?? null,
+      completed_at:   new Date().toISOString(),
+      source:         "cardcom_webhook",
     });
   }
 
