@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { trackInitiateCheckout, trackProductLead } from "@/lib/analytics";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { getSessionUser, saveUserDetails } from "@/lib/quiz-session";
+import { CheckoutCtaButton, SavingsBadge, SecurityNote } from "@/components/landing/CheckoutCtaButton";
 
 function getCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -16,7 +17,15 @@ const WA_ICON = (
   </svg>
 );
 
-export function WorkshopCTA({ price, whatsappPhone, credit = 0, couponCode }: { price: string; whatsappPhone: string; credit?: number; couponCode?: string }) {
+interface WorkshopCTAProps {
+  price:          string;
+  originalPrice?: number;
+  whatsappPhone:  string;
+  credit?:        number;
+  couponCode?:    string;
+}
+
+export function WorkshopCTA({ price, originalPrice, whatsappPhone, credit = 0, couponCode }: WorkshopCTAProps) {
   const [phase, setPhase]       = useState<"idle" | "phone" | "form" | "loading" | "error">("idle");
   const [form, setForm]         = useState({ name: "", email: "", phone: "" });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -29,6 +38,22 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0, couponCode }: { 
 
   const listPrice = Number(price);
   const toPay     = Math.max(0, listPrice - credit);
+
+  const WRAPPER_STYLE: React.CSSProperties = {
+    width: "100%",
+    maxWidth: 520,
+    marginInline: "auto",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 16,
+  };
+
+  const hasDiscount = !!originalPrice && originalPrice > toPay && toPay > 0;
+  const savings     = hasDiscount ? originalPrice! - toPay : 0;
+  // Coupon-driven discounts use "הנחה אישית" instead of the urgency-flavored
+  // "מבצע מסתיים בקרוב" — there's no real expiry on the SADNA50 link.
+  const badgeSubtext = couponCode ? "הנחה אישית" : "מבצע מסתיים בקרוב";
 
   useEffect(() => {
     const sessionUser = getSessionUser();
@@ -203,28 +228,9 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0, couponCode }: { 
     ? `https://wa.me/${whatsappPhone}?text=${encodeURIComponent("היי הדר! יש לי שאלה לגבי הסדנה יום אחד")}`
     : null;
 
-  const BTN_STYLE: React.CSSProperties = {
-    display: "inline-block",
-    width: "auto",
-    padding: "15px 36px",
-    borderRadius: 14,
-    fontSize: 15,
-    fontWeight: 800,
-    border: "none",
-    cursor: "pointer",
-  };
-
-  const WRAPPER_STYLE: React.CSSProperties = {
-    textAlign: "center",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 12,
-  };
-
   if (phase === "phone") {
     return (
-      <form onSubmit={handlePhoneSubmit} className="flex flex-col gap-4" dir="rtl">
+      <form onSubmit={handlePhoneSubmit} className="flex flex-col gap-4" dir="rtl" style={WRAPPER_STYLE}>
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium" style={{ color: "#9E9990" }}>מספר טלפון לחשבונית</label>
           <input
@@ -240,9 +246,13 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0, couponCode }: { 
             onBlur={(e) => { e.currentTarget.style.borderColor = "#2C323E"; }}
           />
         </div>
-        <button type="submit" className="btn-cta-gold active:scale-[0.98]" style={BTN_STYLE}>
-          המשך לתשלום ←
-        </button>
+        <CheckoutCtaButton
+          type="submit"
+          label="המשך לתשלום"
+          priceNow={toPay > 0 ? toPay : undefined}
+          priceWas={hasDiscount ? originalPrice : undefined}
+        />
+        <SecurityNote />
         <button type="button" onClick={() => setPhase("idle")} className="text-sm text-center transition" style={{ color: "#9E9990" }}>
           ביטול
         </button>
@@ -252,20 +262,23 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0, couponCode }: { 
 
   if (phase === "idle") {
     if (quizUserId) {
+      const label = toPay === 0
+        ? `${quizName ? `${quizName}, ` : ""}קבל גישה חינם`
+        : `${quizName ? `${quizName}, ` : ""}המשך לתשלום`;
       return (
         <div style={WRAPPER_STYLE}>
-          <button
-            onClick={() => hasPhone ? doCheckout(quizUserId) : setPhase("phone")}
-            className="btn-cta-gold active:scale-[0.98]"
-            style={BTN_STYLE}
-          >
-            {quizName ? `${quizName}, ` : ""}
-            {toPay === 0
-              ? "קבל גישה חינם ←"
-              : toPay < listPrice
-                ? `המשך לתשלום ₪${toPay.toLocaleString("he-IL")} ←`
-                : `המשך לתשלום ₪${Number(price).toLocaleString("he-IL")} ←`}
-          </button>
+          {hasDiscount && (
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <SavingsBadge savings={savings} subtext={badgeSubtext} />
+            </div>
+          )}
+          <CheckoutCtaButton
+            label={label}
+            priceNow={toPay > 0 ? toPay : undefined}
+            priceWas={hasDiscount ? originalPrice : undefined}
+            onClick={() => (hasPhone ? doCheckout(quizUserId) : setPhase("phone"))}
+          />
+          <SecurityNote />
           {waHref && (
             <a
               href={waHref}
@@ -282,19 +295,21 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0, couponCode }: { 
       );
     }
 
+    const anonLabel = toPay === 0 ? "קבל גישה חינם" : "הרשם לסדנה";
     return (
       <div style={WRAPPER_STYLE}>
-        <button
+        {hasDiscount && (
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <SavingsBadge savings={savings} subtext={badgeSubtext} />
+          </div>
+        )}
+        <CheckoutCtaButton
+          label={anonLabel}
+          priceNow={toPay > 0 ? toPay : undefined}
+          priceWas={hasDiscount ? originalPrice : undefined}
           onClick={() => setPhase("form")}
-          className="btn-cta-gold active:scale-[0.98]"
-          style={BTN_STYLE}
-        >
-          {toPay === 0
-            ? "קבל גישה חינם ←"
-            : toPay < listPrice
-              ? `הצטרף עכשיו - ₪${toPay.toLocaleString("he-IL")} ←`
-              : `הרשם לסדנה ← ₪${Number(price).toLocaleString("he-IL")}`}
-        </button>
+        />
+        <SecurityNote />
         {waHref && (
           <a
             href={waHref}
@@ -311,25 +326,24 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0, couponCode }: { 
     );
   }
 
-  // Quiz user in loading/error state — no registration form
   if (quizUserId && (phase === "loading" || phase === "error")) {
     return (
       <div style={WRAPPER_STYLE}>
         {errorMsg && <p className="text-red-400 text-sm text-center">{errorMsg}</p>}
-        <button
+        <CheckoutCtaButton
+          label={phase === "loading" ? "מעביר לתשלום..." : "נסה שוב"}
+          priceNow={phase === "error" && toPay > 0 ? toPay : undefined}
+          priceWas={phase === "error" && hasDiscount ? originalPrice : undefined}
           onClick={() => doCheckout(quizUserId)}
           disabled={phase === "loading"}
-          className="btn-cta-gold active:scale-[0.98] disabled:opacity-60"
-          style={BTN_STYLE}
-        >
-          {phase === "loading" ? "מעביר לתשלום..." : "נסה שוב ←"}
-        </button>
+        />
+        <SecurityNote />
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4" dir="rtl">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4" dir="rtl" style={WRAPPER_STYLE}>
       {[
         { id: "name",  label: "שם מלא",  type: "text",  placeholder: "ישראל ישראלי" },
         { id: "email", label: "אימייל",   type: "email", placeholder: "israel@example.com" },
@@ -362,20 +376,14 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0, couponCode }: { 
 
       {errorMsg && <p className="text-red-400 text-sm">{errorMsg}</p>}
 
-      <button
+      <CheckoutCtaButton
         type="submit"
+        label={phase === "loading" ? "מעביר לתשלום..." : toPay === 0 ? "קבל גישה חינם" : "לתשלום מאובטח"}
+        priceNow={phase !== "loading" && toPay > 0 ? toPay : undefined}
+        priceWas={phase !== "loading" && hasDiscount ? originalPrice : undefined}
         disabled={phase === "loading"}
-        className="w-full btn-cta-gold active:scale-[0.98] disabled:opacity-60"
-        style={{ borderRadius: 14, padding: "15px 36px", fontSize: 15, fontWeight: 800, border: "none", cursor: "pointer" }}
-      >
-        {phase === "loading"
-          ? "מעביר לתשלום..."
-          : toPay === 0
-            ? "קבל גישה חינם ←"
-            : toPay < listPrice
-              ? `לתשלום ₪${toPay.toLocaleString("he-IL")} ←`
-              : "לתשלום מאובטח ←"}
-      </button>
+      />
+      <SecurityNote />
 
       <button
         type="button"

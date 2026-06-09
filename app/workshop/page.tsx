@@ -152,6 +152,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
             <CreditBanner credit={credit} listPrice={PRODUCT_MAP.workshop_1080.price} productName="הסדנה יום אחד" dark />
             <WorkshopCTA
               price={priceStr}
+              originalPrice={coupon ? listPrice : undefined}
               whatsappPhone={whatsappPhone}
               credit={credit}
               couponCode={coupon?.code}
