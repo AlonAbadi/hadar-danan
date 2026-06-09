@@ -157,12 +157,51 @@ export type MetaSourcedTotals = {
   topUtmCampaigns: { utm_campaign: string; count: number }[];
 };
 
+// Total revenue + buyers in period across ALL sources. Decoupled from
+// per-campaign attribution because UTM-based attribution misses:
+//   - returning buyers whose UTM cookies expired
+//   - email-driven conversions where utm_source = stale signup-time value
+//   - direct/branded-search conversions that were marketing-primed
+// Surfaces "marketing impact" honestly even when attribution is imperfect.
+export type CrmPeriodTotals = {
+  totalRevenue: number;
+  totalBuyers: number;
+  // Attributed = strict UTM + loose-keyword UTM + product-match fallback
+  attributedRevenue: number;
+  attributedBuyers: number;
+  // Per-product breakdown (regardless of attribution)
+  revenueByProduct: Record<string, { revenue: number; buyers: number }>;
+};
+
+// Product → campaign bucket. When a buyer's product matches the bucket of an
+// active campaign and there's no conflicting non-Meta UTM, attribute to the
+// dominant campaign in that bucket. This catches marketing-influenced buyers
+// whose UTM tracking failed (iOS ATT, expired cookies, email reactivation).
+const PRODUCT_TO_BUCKET: Record<string, 'quiz' | 'challenge'> = {
+  challenge_197: 'challenge',
+  // Quiz campaigns funnel to strategy sessions (the quiz's main recommendation).
+  // Other higher-tier products are also quiz-influenced when no other source claims them.
+  strategy_4000:  'quiz',
+  premium_14000:  'quiz',
+  workshop_1080:  'quiz',
+  course_1800:    'quiz',
+};
+
+// Non-Meta sources we should never override with product-match fallback.
+// If a buyer explicitly came from Google/TikTok/etc, don't claim them for Meta.
+function isNonMetaUtmSource(s: string | null | undefined): boolean {
+  if (!s) return false;
+  const lower = String(s).toLowerCase();
+  return ['google', 'youtube', 'tiktok', 'linkedin', 'twitter', 'x.com', 'bing'].some(k => lower.includes(k));
+}
+
 export async function getMetaCampaigns(dateRange?: string): Promise<{
   configured: boolean;
   error?: string;
   dateRange?: { since: string; until: string };
   rows?: MetaCampaignRow[];
   sourcedTotals?: MetaSourcedTotals;
+  crmTotals?: CrmPeriodTotals;
 }> {
   const { token, accountId } = metaCreds();
   if (!token || !accountId) return { configured: false };
@@ -194,12 +233,12 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: purchases } = await (supabase as any)
     .from('purchases')
-    .select('user_id, amount, utm_source, utm_campaign')
+    .select('user_id, amount, product, utm_source, utm_campaign')
     .eq('status', 'completed')
     .gte('created_at', dateFilterIso);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const purchasesTyped = (purchases ?? []) as Array<{ user_id: string; amount: number; utm_source: string | null; utm_campaign: string | null }>;
+  const purchasesTyped = (purchases ?? []) as Array<{ user_id: string; amount: number; product: string | null; utm_source: string | null; utm_campaign: string | null }>;
 
   const buyerIds = new Set(purchasesTyped.map(p => p.user_id).filter(Boolean));
   const { data: buyerUsers } = buyerIds.size > 0
@@ -315,15 +354,30 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
 
   const buyersByCampaignId: Record<string, { count: number; revenue: number }> = {};
   const buyerSetByCampaignId: Record<string, Set<string>> = {};
+
+  // Attribution waterfall per buyer:
+  //   1. Strict utm_campaign match (ID or exact name) on purchase row
+  //   2. Strict match on buyer's user row
+  //   3. Loose keyword match on either, gated on Meta-ish utm_source
+  //   4. Product-match fallback: buyer's product belongs to a campaign bucket
+  //      AND no explicit non-Meta source claims them → dominant campaign in bucket
+  // Step 4 catches buyers whose UTM tracking failed (iOS ATT, expired cookies,
+  // email reactivation flows). Trade-off: per-campaign split inside the same
+  // bucket is approximate; the aggregate is honest about marketing impact.
   purchasesTyped.forEach(p => {
-    // Prefer purchase-level utm (captured at checkout), fall back to the
-    // buyer's user-row utm (signup-time first-touch). Each (campaign, source)
-    // pair is evaluated independently so we don't lose attribution when the
-    // purchase has a non-matching tag but the user row has the right one.
     const u = buyerMap[p.user_id];
-    const cid =
+    let cid: string | null =
       resolveCampaignIdLoose(p.utm_campaign, p.utm_source) ??
       resolveCampaignIdLoose(u?.campaign, u?.source);
+
+    if (!cid && p.product) {
+      const bucket = PRODUCT_TO_BUCKET[p.product];
+      const claimedByOther = isNonMetaUtmSource(p.utm_source) || isNonMetaUtmSource(u?.source);
+      if (bucket && !claimedByOther) {
+        cid = dominantByBucket[bucket];
+      }
+    }
+
     if (!cid) return;
     if (!buyersByCampaignId[cid]) buyersByCampaignId[cid] = { count: 0, revenue: 0 };
     buyersByCampaignId[cid].revenue += p.amount || 0;
@@ -333,6 +387,37 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
   Object.entries(buyerSetByCampaignId).forEach(([k, s]) => {
     if (buyersByCampaignId[k]) buyersByCampaignId[k].count = s.size;
   });
+
+  // Period-wide CRM totals — no attribution required. This is the honest
+  // "marketing impact" number that complements per-campaign attribution.
+  const allBuyerIds = new Set<string>();
+  const revenueByProduct: Record<string, { revenue: number; buyers: number }> = {};
+  const productBuyerSet: Record<string, Set<string>> = {};
+  let periodTotalRevenue = 0;
+  purchasesTyped.forEach(p => {
+    periodTotalRevenue += p.amount || 0;
+    if (p.user_id) allBuyerIds.add(p.user_id);
+    const prod = p.product || 'unknown';
+    if (!revenueByProduct[prod]) revenueByProduct[prod] = { revenue: 0, buyers: 0 };
+    revenueByProduct[prod].revenue += p.amount || 0;
+    if (!productBuyerSet[prod]) productBuyerSet[prod] = new Set();
+    if (p.user_id) productBuyerSet[prod].add(p.user_id);
+  });
+  Object.entries(productBuyerSet).forEach(([k, s]) => {
+    if (revenueByProduct[k]) revenueByProduct[k].buyers = s.size;
+  });
+
+  const attributedRevenue = Object.values(buyersByCampaignId).reduce((s, x) => s + x.revenue, 0);
+  const attributedBuyerSet = new Set<string>();
+  Object.values(buyerSetByCampaignId).forEach(set => set.forEach(id => attributedBuyerSet.add(id)));
+
+  const crmTotals: CrmPeriodTotals = {
+    totalRevenue: periodTotalRevenue,
+    totalBuyers: allBuyerIds.size,
+    attributedRevenue,
+    attributedBuyers: attributedBuyerSet.size,
+    revenueByProduct,
+  };
 
   const rows: MetaCampaignRow[] = campaigns.map(c => {
     const spend = parseFloat(c.spend || '0');
@@ -407,7 +492,7 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
     topUtmCampaigns,
   };
 
-  return { configured: true, dateRange: { since, until }, rows, sourcedTotals };
+  return { configured: true, dateRange: { since, until }, rows, sourcedTotals, crmTotals };
 }
 
 // ─── Ad-level top performers ──────────────────────────

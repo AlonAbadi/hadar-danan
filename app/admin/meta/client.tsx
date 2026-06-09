@@ -253,6 +253,7 @@ export default function MetaClient({
   quizFunnel,
   topByKind,
   kpis,
+  crmTotals,
   dateRange,
 }: {
   campaigns: {
@@ -281,6 +282,13 @@ export default function MetaClient({
   };
   topByKind: { configured: boolean; error?: string; quiz: TopAd[]; challenge: TopAd[] };
   kpis: ReturnType<typeof import('@/lib/admin/meta-queries').aggregateKpis> | null;
+  crmTotals: {
+    totalRevenue: number;
+    totalBuyers: number;
+    attributedRevenue: number;
+    attributedBuyers: number;
+    revenueByProduct: Record<string, { revenue: number; buyers: number }>;
+  } | null;
   dateRange: string;
 }) {
   const router = useRouter();
@@ -414,6 +422,88 @@ export default function MetaClient({
           ))}
         </div>
       </div>
+
+      {/* Marketing Impact — honest period-wide totals. Attribution is
+          imperfect (UTM cookies expire, iOS ATT, email reactivation),
+          so this card shows the true bottom-line: total revenue vs total
+          spend during the period, regardless of per-campaign attribution. */}
+      {crmTotals && (
+        <Card style={{ marginBottom: 20, borderTop: `3px solid ${C.gold}` }}>
+          <CardHeader
+            title="השפעת השיווק על הכנסות"
+            sub="Marketing Impact — period-wide CRM totals (all sources)"
+            action={
+              <span style={{ fontSize: 10, color: C.muted, background: C.soft, padding: '3px 8px', borderRadius: 5 }}>
+                ייחוס לא מלא · השווה הוצאה כוללת מול הכנסה כוללת
+              </span>
+            }
+          />
+          <div style={{ padding: '18px 20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 16 }}>
+              <Kpi
+                label="הכנסה כוללת (CRM)"
+                value={fmtMoney(crmTotals.totalRevenue)}
+                accent={C.green}
+                sub={`${crmTotals.totalBuyers} רוכשים בתקופה`}
+              />
+              <Kpi
+                label="הוצאת שיווק"
+                value={fmtMoney(kpis?.totalSpend ?? 0)}
+                accent={C.gold}
+                sub={`${allRows.length} קמפיינים פעילים`}
+              />
+              <Kpi
+                label="Influence ROAS"
+                value={`${(kpis?.totalSpend ?? 0) > 0 ? (crmTotals.totalRevenue / (kpis?.totalSpend ?? 1)).toFixed(2) : '0.00'}x`}
+                accent={
+                  (kpis?.totalSpend ?? 0) > 0
+                    ? (crmTotals.totalRevenue / (kpis?.totalSpend ?? 1)) >= 2 ? C.green
+                    : (crmTotals.totalRevenue / (kpis?.totalSpend ?? 1)) >= 1 ? C.gold
+                    : C.red
+                    : C.muted
+                }
+                sub="הכנסה כוללת / הוצאה"
+              />
+              <Kpi
+                label="מיוחס לקמפיין"
+                value={fmtMoney(crmTotals.attributedRevenue)}
+                accent={C.purple}
+                sub={`${crmTotals.attributedBuyers} רוכשים · ${crmTotals.totalRevenue > 0 ? Math.round((crmTotals.attributedRevenue / crmTotals.totalRevenue) * 100) : 0}% מההכנסה`}
+              />
+              <Kpi
+                label="לא מיוחס"
+                value={fmtMoney(crmTotals.totalRevenue - crmTotals.attributedRevenue)}
+                accent={C.muted}
+                sub={`${crmTotals.totalBuyers - crmTotals.attributedBuyers} רוכשים · UTM חסר/פג`}
+              />
+            </div>
+
+            {Object.keys(crmTotals.revenueByProduct).length > 0 && (
+              <div style={{ marginTop: 6 }}>
+                <div style={{ fontSize: 11, color: C.muted, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 10 }}>פילוח לפי מוצר</div>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(Object.keys(crmTotals.revenueByProduct).length, 5)}, 1fr)`, gap: 10 }}>
+                  {Object.entries(crmTotals.revenueByProduct)
+                    .sort((a, b) => b[1].revenue - a[1].revenue)
+                    .map(([product, d]) => {
+                      const label = PRODUCT_LABELS[product.replace(/_\d+$/, '')] ?? product;
+                      return (
+                        <div key={product} style={{ background: C.soft, borderRadius: 8, padding: '12px 14px', borderRight: `2px solid ${C.gold}` }}>
+                          <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{label}</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: C.green, fontFamily: 'system-ui' }}>{fmtMoney(d.revenue)}</div>
+                          <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{d.buyers} רוכשים</div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(201,150,74,0.06)', borderRight: `3px solid ${C.gold}`, borderRadius: 6, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
+              💡 הייחוס לא מושלם: UTM נופל ב-iOS (ATT), נמחק במייל, או פג בעת חזרה. הראינו את הסכום הכולל מול ההוצאה כדי לתת תמונת השפעה אמיתית. הפילוח לפי קמפיין למטה מסומן לפי ייחוס + product-match fallback.
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Kind tabs — separates leads from sales */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>

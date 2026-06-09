@@ -44,6 +44,7 @@ export default async function MetaAdminPage({
         quizFunnel={quizFunnel}
         topByKind={topByKind}
         kpis={kpis}
+        crmTotals={campaigns.crmTotals ?? null}
         dateRange={dateRange}
       />
     </Suspense>
