@@ -7,7 +7,6 @@ import ClientVideosCarousel from "@/components/landing/ClientVideosCarousel";
 import { saveQuizSession, getQuizSession, getSessionUser } from "@/lib/quiz-session";
 import { trackProductLead, trackQuizRecommended, trackViewContent, trackInitiateCheckout, productLeadEventName, LEAD_VALUE_ILS } from "@/lib/analytics";
 import { buildNarrative } from "@/lib/quiz-narrative";
-import { type AbVariant, QUIZ_Q1_AB, QUIZ_Q1_EXPERIMENT } from "@/lib/ab";
 import {
   type Answer,
   type BulletRule,
@@ -39,8 +38,8 @@ type Product = {
 const QUESTIONS = [
   {
     id: "q1",
-    title: "איפה העסק שלך עכשיו?",
-    subtitle: "ענה בכנות - זה יעזור לנו למצוא את הצעד הנכון",
+    title: "מה עוצר אותך מלצמוח בשיווק?",
+    subtitle: "6 שאלות. 2 דקות. תשובה מדויקת לעסק שלך.",
     options: [
       { id: "A", text: "רק מתחיל - עדיין בונה את הבסיס" },
       { id: "B", text: "יש לי עסק פעיל - רוצה יותר לקוחות" },
@@ -260,7 +259,7 @@ type InitialQuizResult = {
 // ── Component ─────────────────────────────────────────────────────
 // Steps: -1 = checking session, 0-5 = questions, 6 = lead gate, 7 = result
 
-export function QuizClient({ initialUser = null, initialQuizResult = null, abVariant = "A", initialProductFromUrl }: { initialUser?: InitialUser; initialQuizResult?: InitialQuizResult; abVariant?: AbVariant; initialProductFromUrl?: string }) {
+export function QuizClient({ initialUser = null, initialQuizResult = null, initialProductFromUrl }: { initialUser?: InitialUser; initialQuizResult?: InitialQuizResult; initialProductFromUrl?: string }) {
   const hasServerResult = !!initialQuizResult;
   const serverAnswers: Answer[] = hasServerResult
     ? ["q1","q2","q3","q4","q5","q6"].map(k => (initialQuizResult!.answers[k] as Answer) ?? "A")
@@ -319,17 +318,12 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
     if (startedRef.current) return;
     startedRef.current = true;
     postEvent({ type: "QUIZ_STARTED" });
-    // A/B: count this visitor for the quiz_q1_framing experiment
     postEvent({
       type: "PAGE_VIEW",
-      metadata: {
-        page: "/quiz",
-        ab_variant: abVariant,
-        experiment_name: QUIZ_Q1_EXPERIMENT,
-      },
+      metadata: { page: "/quiz" },
     });
     if (typeof window !== "undefined") window.fbq?.("trackCustom", "QuizStart");
-  }, [abVariant]);
+  }, []);
 
   // Detect prior quiz session in localStorage (anonymous users / new device)
   useEffect(() => {
@@ -576,8 +570,6 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
           user_id: userId,
           metadata: {
             email: leadForm.email,
-            ab_variant: abVariant,
-            experiment_name: QUIZ_Q1_EXPERIMENT,
           },
         });
         const leadEventId = typeof crypto !== "undefined" ? crypto.randomUUID() : undefined;
@@ -763,11 +755,11 @@ export function QuizClient({ initialUser = null, initialQuizResult = null, abVar
                     שאלה {step + 1} מתוך {QUESTIONS.length}
                   </p>
                   <h1 className="font-black leading-snug" style={{ fontSize: "22px" }}>
-                    {step === 0 ? QUIZ_Q1_AB[abVariant].title : QUESTIONS[step].title}
+                    {QUESTIONS[step].title}
                   </h1>
-                  {(step === 0 ? QUIZ_Q1_AB[abVariant].subtitle : QUESTIONS[step].subtitle) && (
+                  {QUESTIONS[step].subtitle && (
                     <p style={{ fontSize: "13px", color: C.quizMuted, lineHeight: 1.6 }}>
-                      {step === 0 ? QUIZ_Q1_AB[abVariant].subtitle : QUESTIONS[step].subtitle}
+                      {QUESTIONS[step].subtitle}
                     </p>
                   )}
                 </div>

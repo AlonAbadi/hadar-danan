@@ -36,10 +36,11 @@ export function parseVariant(value: string | undefined): AbVariant {
   return "A";
 }
 
-// ── Quiz Q1 A/B test: "quiz_q1_framing" ──────────────────────────
-// Reframes the first quiz question from status ("where are you?")
-// to pain ("what's stopping you?") for campaign visitors who arrive
-// with an existing pain. Variant C falls back to A (2-variant test).
+// ── Quiz Q1 A/B test: "quiz_q1_framing" — COMPLETED ──────────────
+// Winner: variant B (10.18% CVR vs 6.99%, +44.6% uplift, 97% confidence).
+// Variant B is now hard-coded as the Q1 default in QuizClient.tsx.
+// These constants are kept ONLY so /admin/abtesting can render the
+// historical winner card with the original variant labels.
 export const QUIZ_Q1_AB: Record<AbVariant, { title: string; subtitle: string }> = {
   A: {
     title: "איפה העסק שלך עכשיו?",

@@ -5,7 +5,6 @@ import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { createServerClient } from "@/lib/supabase/server";
 import { QuizClient } from "../../QuizClient";
 import type { Database } from "@/lib/supabase/types";
-import { parseVariant } from "@/lib/ab";
 
 const VALID_PRODUCTS = [
   "free_training",
@@ -90,13 +89,10 @@ export default async function QuizResultPage({ params }: { params: Promise<{ pro
     }
   }
 
-  const abVariant = parseVariant(cookieStore.get("ab_variant")?.value);
-
   return (
     <QuizClient
       initialUser={initialUser}
       initialQuizResult={initialQuizResult}
-      abVariant={abVariant}
       initialProductFromUrl={product}
     />
   );

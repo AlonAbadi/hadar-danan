@@ -36,7 +36,7 @@ function isAdminAuthorized(req: NextRequest): boolean {
 const QUESTIONS: { id: string; title: string; options: Record<string, string> }[] = [
   {
     id: "q1",
-    title: "איפה העסק שלך עכשיו?",
+    title: "מה עוצר אותך מלצמוח בשיווק?",
     options: {
       A: "רק מתחיל - עדיין בונה את הבסיס",
       B: "יש לי עסק פעיל - רוצה יותר לקוחות",
