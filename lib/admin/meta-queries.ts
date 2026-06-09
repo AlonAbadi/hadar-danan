@@ -225,16 +225,34 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
   const idSet = new Set<string>();
   const quizCampaignIds = new Set<string>();
   const challengeCampaignIds = new Set<string>();
+  const spendByCampaignId: Record<string, number> = {};
   campaigns.forEach(c => {
     const id = String(c.campaign_id || '');
     const lname = (c.campaign_name || '').toLowerCase().trim();
     if (id) idSet.add(id);
     if (lname) nameToCampaignId[lname] = id;
+    spendByCampaignId[id] = parseFloat(c.spend || '0');
     const meta = campaignMeta[id] ?? { objective: '', status: '' };
     const { isQuiz } = classifyCampaign(c.campaign_name || '', meta.objective);
     if (isQuiz) quizCampaignIds.add(id);
     else if (lname.includes('אתגר') || lname.includes('challenge')) challengeCampaignIds.add(id);
   });
+
+  // Dominant (highest-spend) campaign per bucket — used as the loose-match
+  // attribution target when utm_campaign is a tag, not the verbatim Meta name.
+  function pickDominant(idSet: Set<string>): string | null {
+    let best: string | null = null;
+    let bestSpend = -1;
+    idSet.forEach(id => {
+      const s = spendByCampaignId[id] ?? 0;
+      if (s > bestSpend) { bestSpend = s; best = id; }
+    });
+    return best;
+  }
+  const dominantByBucket: Record<'quiz' | 'challenge', string | null> = {
+    quiz: pickDominant(quizCampaignIds),
+    challenge: pickDominant(challengeCampaignIds),
+  };
 
   // Resolve a user's utm_campaign to a Meta campaign_id (or null if no match).
   // This is THE matching function the rest of the page depends on.
@@ -259,21 +277,39 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
     return 'unknown';
   }
 
+  function isMetaSource(s: string | null | undefined): boolean {
+    if (!s) return false;
+    const lower = String(s).toLowerCase();
+    return ['fb', 'facebook', 'meta', 'ig', 'instagram'].some(k => lower.includes(k));
+  }
+
+  // Loose resolver — tries exact match first; if that fails AND utm_source
+  // is Meta-ish, falls back to keyword bucket → dominant (highest-spend)
+  // campaign in that bucket. This recovers buyers/leads tagged with custom
+  // values like "quiz_v6" instead of the verbatim Meta campaign name.
+  function resolveCampaignIdLoose(
+    utmCampaign: string | null | undefined,
+    utmSource: string | null | undefined,
+  ): string | null {
+    const exact = resolveCampaignId(utmCampaign);
+    if (exact) return exact;
+    if (!isMetaSource(utmSource)) return null;
+    const bucket = looseBucket(utmCampaign);
+    if (bucket === 'unknown') return null;
+    return dominantByBucket[bucket];
+  }
+
   // Per-campaign-ID buckets
   const metaUsersByCampaignId: Record<string, number> = {};
-  // Also bucket Meta-sourced users by loose category for fallback display
+  // Also bucket Meta-sourced users by loose category for the debug panel
   const looseUsersByBucket: Record<string, number> = { quiz: 0, challenge: 0, unknown: 0 };
   (users ?? []).forEach(u => {
-    const cid = resolveCampaignId(u.utm_campaign);
+    const cid = resolveCampaignIdLoose(u.utm_campaign, u.utm_source);
     if (cid) {
       metaUsersByCampaignId[cid] = (metaUsersByCampaignId[cid] ?? 0) + 1;
-    } else {
-      // No direct match — bucket by loose keyword (only count if source is meta-ish)
-      const src = (u.utm_source || '').toLowerCase();
-      if (src.includes('fb') || src.includes('facebook') || src.includes('meta') || src.includes('ig') || src.includes('instagram')) {
-        const bucket = looseBucket(u.utm_campaign);
-        looseUsersByBucket[bucket] = (looseUsersByBucket[bucket] ?? 0) + 1;
-      }
+    } else if (isMetaSource(u.utm_source)) {
+      const bucket = looseBucket(u.utm_campaign);
+      looseUsersByBucket[bucket] = (looseUsersByBucket[bucket] ?? 0) + 1;
     }
   });
 
@@ -281,11 +317,13 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
   const buyerSetByCampaignId: Record<string, Set<string>> = {};
   purchasesTyped.forEach(p => {
     // Prefer purchase-level utm (captured at checkout), fall back to the
-    // buyer's user-row utm (signup-time first-touch).
-    const purchaseCampaign = p.utm_campaign || '';
+    // buyer's user-row utm (signup-time first-touch). Each (campaign, source)
+    // pair is evaluated independently so we don't lose attribution when the
+    // purchase has a non-matching tag but the user row has the right one.
     const u = buyerMap[p.user_id];
-    const userCampaign = u?.campaign || '';
-    const cid = resolveCampaignId(purchaseCampaign) ?? resolveCampaignId(userCampaign);
+    const cid =
+      resolveCampaignIdLoose(p.utm_campaign, p.utm_source) ??
+      resolveCampaignIdLoose(u?.campaign, u?.source);
     if (!cid) return;
     if (!buyersByCampaignId[cid]) buyersByCampaignId[cid] = { count: 0, revenue: 0 };
     buyersByCampaignId[cid].revenue += p.amount || 0;
@@ -348,11 +386,9 @@ export async function getMetaCampaigns(dateRange?: string): Promise<{
   let totalLeads = 0;
   let matchedLeads = 0;
   (users ?? []).forEach(u => {
-    const src = (u.utm_source || '').toLowerCase();
-    const isMeta = src.includes('fb') || src.includes('facebook') || src.includes('meta') || src.includes('ig') || src.includes('instagram');
-    if (!isMeta) return;
+    if (!isMetaSource(u.utm_source)) return;
     totalLeads += 1;
-    const cid = resolveCampaignId(u.utm_campaign);
+    const cid = resolveCampaignIdLoose(u.utm_campaign, u.utm_source);
     if (cid) matchedLeads += 1;
     const tag = (u.utm_campaign || '(empty)').trim();
     utmCampaignCount[tag] = (utmCampaignCount[tag] ?? 0) + 1;
