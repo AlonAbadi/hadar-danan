@@ -6,6 +6,7 @@ import { WorkshopTestimonials } from "./WorkshopTestimonials";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP } from "@/lib/products";
+import { validateCoupon } from "@/lib/coupons";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
@@ -24,11 +25,20 @@ export const metadata = {
   alternates: { canonical: "/workshop" },
 };
 
-export default async function WorkshopPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
-  const { email = "" } = await searchParams;
-  const price         = String(PRODUCT_MAP.workshop_1080.price);
+export default async function WorkshopPage({ searchParams }: { searchParams: Promise<{ email?: string; code?: string }> }) {
+  const { email = "", code = "" } = await searchParams;
+  const listPrice     = PRODUCT_MAP.workshop_1080.price;
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
   const credit        = email ? await getUserCredit(email) : 0;
+
+  // URL-based coupon — only active when ?code= matches an active coupon row.
+  // No cookie, no localStorage: customer must arrive via the dedicated link.
+  const coupon         = await validateCoupon(code, "workshop_1080");
+  const effectivePrice = coupon?.finalPrice ?? listPrice;
+  // When discount is active, strike through the real list price (1080), not
+  // the marketing "was" price (1980) — we don't want two crossed-out numbers.
+  const originalPrice  = coupon ? listPrice : 1980;
+  const priceStr       = String(effectivePrice);
 
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
@@ -50,8 +60,8 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
       <ViewContentTracker product="workshop_1080" value={1080} />
       <ProductLandingPage
         productName="סדנה יום אחד"
-        price={PRODUCT_MAP.workshop_1080.price}
-        originalPrice={1980}
+        price={effectivePrice}
+        originalPrice={originalPrice}
         checkoutHref="#cta"
 
         headline={<>איך מביאים את <em>מי שאנחנו</em> ומפסיקים להתאמץ בוידאו?</>}
@@ -140,7 +150,12 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         ctaSlot={
           <>
             <CreditBanner credit={credit} listPrice={PRODUCT_MAP.workshop_1080.price} productName="הסדנה יום אחד" dark />
-            <WorkshopCTA price={price} whatsappPhone={whatsappPhone} credit={credit} />
+            <WorkshopCTA
+              price={priceStr}
+              whatsappPhone={whatsappPhone}
+              credit={credit}
+              couponCode={coupon?.code}
+            />
             {credit > 0 && (
               <p style={{ textAlign: "center", fontSize: 11, color: "rgba(201,150,74,0.75)", marginTop: 8 }}>
                 הזיכוי מקוזז אוטומטית -{" "}

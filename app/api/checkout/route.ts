@@ -9,9 +9,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { PRODUCT_MAP } from "@/lib/products";
+import { PRODUCT_MAP, type ProductKey } from "@/lib/products";
 import { sendCapiEvent } from "@/lib/meta-capi";
 import { getClientIp } from "@/lib/rate-limit";
+import { validateCoupon } from "@/lib/coupons";
 
 // Invoice description per product (more descriptive than the short UI name)
 const INVOICE_DESCRIPTIONS: Record<string, string> = {
@@ -59,7 +60,8 @@ const BodySchema = z.object({
     "sadna_500",
     "test_1",
   ]),
-  user_id: z.string().uuid(),
+  user_id:     z.string().uuid(),
+  coupon_code: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -78,9 +80,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const { product, user_id } = body.data;
+  const { product, user_id, coupon_code } = body.data;
   const listPrice = PRICES[product];
   const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.beegood.online";
+
+  // Server-side coupon validation. The page rendered the discounted price,
+  // the CTA forwarded the code — but we re-validate here so a buyer who
+  // tampers with the request body can't fake a discount.
+  // PRODUCT_MAP keys exclude test_1 / sadna_500; validateCoupon returns null
+  // when the product key isn't in the map, which is the safe default.
+  const coupon = coupon_code
+    ? await validateCoupon(coupon_code, product as ProductKey).catch(() => null)
+    : null;
 
   const supabase = createServerClient();
 
@@ -100,8 +111,12 @@ export async function POST(req: NextRequest) {
     .eq("product", product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000")
     .eq("status", "pending");
 
-  // Premium includes VAT (18%) — charged at list price + VAT
-  const amount = product === "premium_14000" ? Math.round(listPrice * 1.18) : listPrice;
+  // Premium includes VAT (18%) — charged at list price + VAT.
+  // Coupon (when valid) overrides — final billed amount comes from validateCoupon
+  // which already applied the discount to the product's list price.
+  const amount = coupon
+    ? coupon.finalPrice
+    : (product === "premium_14000" ? Math.round(listPrice * 1.18) : listPrice);
 
   // Capture current-session UTM from cookies so attribution survives even when
   // the buyer's user row has null utm (organic signup, returned via Meta ad).
@@ -140,6 +155,44 @@ export async function POST(req: NextRequest) {
       payload: { product, user_id, message: purchaseErr.message, code: purchaseErr.code },
     });
     return NextResponse.json({ error: "DB error" }, { status: 500 });
+  }
+
+  // Record coupon redemption + increment used_count.
+  // unique(coupon_code, purchase_id) constraint prevents double-insert if
+  // the user retries checkout for the same purchase row. Failure here must
+  // not block the payment — log and continue.
+  if (coupon) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: redemptionErr } = await (supabase as any)
+      .from("coupon_redemptions")
+      .insert({
+        coupon_code: coupon.code,
+        user_id,
+        purchase_id: purchase.id,
+      });
+    if (redemptionErr) {
+      await supabase.from("error_logs").insert({
+        context: "api/checkout coupon redemption",
+        error:   redemptionErr.message,
+        payload: { coupon_code: coupon.code, user_id, purchase_id: purchase.id, code: redemptionErr.code },
+      });
+    } else {
+      // Atomic increment via RPC would be ideal — for now a fetch-then-update
+      // race is acceptable since max_uses is null (unlimited).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: c } = await (supabase as any)
+        .from("coupons")
+        .select("used_count")
+        .eq("code", coupon.code)
+        .single();
+      if (c) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from("coupons")
+          .update({ used_count: (c.used_count ?? 0) + 1 })
+          .eq("code", coupon.code);
+      }
+    }
   }
 
   const customerName  = userRow?.name  ?? "";

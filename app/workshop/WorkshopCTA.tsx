@@ -16,7 +16,7 @@ const WA_ICON = (
   </svg>
 );
 
-export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: string; whatsappPhone: string; credit?: number }) {
+export function WorkshopCTA({ price, whatsappPhone, credit = 0, couponCode }: { price: string; whatsappPhone: string; credit?: number; couponCode?: string }) {
   const [phase, setPhase]       = useState<"idle" | "phone" | "form" | "loading" | "error">("idle");
   const [form, setForm]         = useState({ name: "", email: "", phone: "" });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -69,7 +69,7 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
       const checkoutRes = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product: "workshop_1080", user_id: userId }),
+        body: JSON.stringify({ product: "workshop_1080", user_id: userId, coupon_code: couponCode }),
       });
 
       if (checkoutRes.status === 503) { fallbackWhatsapp(); return; }
@@ -150,7 +150,7 @@ export function WorkshopCTA({ price, whatsappPhone, credit = 0 }: { price: strin
       const checkoutRes = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product: "workshop_1080", user_id: userId }),
+        body: JSON.stringify({ product: "workshop_1080", user_id: userId, coupon_code: couponCode }),
       });
 
       if (checkoutRes.status === 503) {
