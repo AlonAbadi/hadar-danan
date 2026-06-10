@@ -5,7 +5,6 @@
  * Design: dark header (#0a0a0f), white body, blue CTAs (#2563eb).
  */
 
-import { getNextWorkshopDate, formatHebrew } from "@/lib/products";
 
 const APP_URL  = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 const FROM_NAME = "הדר דנן";
@@ -373,8 +372,6 @@ function challengeUpsellWorkshop(ctx: EmailTemplateContext): RenderedEmail {
 
 function workshopConfirmation(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
-  const nextDate = getNextWorkshopDate();
-  const dateStr = nextDate ? formatHebrew(nextDate) : "יום חמישי הקרוב";
   return {
     subject: `${firstName} — ההרשמה לסדנה אושרה`,
     html: base(`
@@ -384,22 +381,12 @@ function workshopConfirmation(ctx: EmailTemplateContext): RenderedEmail {
       </div>
       <div class="body">
         <p>${firstName},</p>
-        <p>זה קבוע.</p>
         <p>הסדנה יום אחד — מקומך שמור.</p>
-        <p>הפרטים:</p>
-        <p><strong>${dateStr} — יום חמישי</strong></p>
-        <p>09:00–15:00</p>
+        <p><strong>25 ביוני 2026, יום חמישי</strong></p>
+        <p>10:00–15:00</p>
         <p>בית ציוני אמריקה, תל אביב</p>
-        <p>5 שעות של עבודה אמיתית.</p>
-        <p>לא הרצאה.</p>
-        <p>לא "קח השראה הביתה".</p>
-        <p>בונים ביחד, בזמן אמת, את מערכת השיווק של העסק שלך.</p>
-        <p>כדי להגיע מוכן/ת —</p>
-        <p>חשוב/י על 3 לקוחות אידיאליים שלך:</p>
-        <p>מי הם?</p>
-        <p>מה הם קיבלו ממך?</p>
-        <p>ומה הם אמרו עליך?</p>
-        <p>זה יהיה הבסיס לעבודה בסדנה.</p>
+        <p>כדי להגיע מוכן/ת — חשוב/י על 3 לקוחות אידיאליים שלך:<br/>
+        מי הם? מה קיבלו ממך? ומה אמרו עליך?</p>
         <p>מחכים לך.</p>
         <p>צוות beegood</p>
       </div>
