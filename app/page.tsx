@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import Script from "next/script";
 import { parseVariant, AB_CONTENT } from "@/lib/ab";
 import { createServerClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/landing/PageTracker";
@@ -663,10 +662,6 @@ export default async function LandingPage() {
           </section>
 
         </main>
-
-        {/* Port8 AI widget — lazy-loaded after page becomes idle so it
-            doesn't block the homepage critical path. */}
-        <Script src="https://port8.ai/hadardananltd-716824/widget.js" strategy="lazyOnload" />
 
         {/* ══════════════════════════════════════════════════════
             7. FOOTER
