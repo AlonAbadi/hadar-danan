@@ -106,11 +106,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { answers, first_name, email, name } = (body ?? {}) as {
+  const { answers, first_name, email, name, phone } = (body ?? {}) as {
     answers?:    unknown;
     first_name?: unknown;
     email?:      unknown;
     name?:       unknown;
+    phone?:      unknown;
   };
 
   const db = createServerClient();
@@ -134,14 +135,18 @@ export async function POST(req: NextRequest) {
       userNameForPrompt = userRow.name.split(" ")[0];
     }
   } else {
-    // Anonymous path — require email + name, upsert lead
+    // Anonymous path — require email + name + phone, upsert lead
     const emailStr = typeof email === "string" ? email.trim().toLowerCase() : "";
     const nameStr  = typeof name === "string" ? name.trim() : "";
+    const phoneStr = typeof phone === "string" ? phone.trim() : "";
     if (!isValidEmail(emailStr)) {
       return NextResponse.json({ error: "אימייל לא תקין" }, { status: 400 });
     }
     if (nameStr.length < 2) {
       return NextResponse.json({ error: "נדרש שם" }, { status: 400 });
+    }
+    if (!/^[0-9+\-\s()]{9,20}$/.test(phoneStr)) {
+      return NextResponse.json({ error: "טלפון לא תקין" }, { status: 400 });
     }
 
     // Rate-limit anonymous extractions by IP — 3/hr
@@ -157,22 +162,25 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (db as any)
       .from("users")
-      .select("id, name")
+      .select("id, name, phone")
       .eq("email", emailStr)
       .maybeSingle();
 
     if (existing?.id) {
       userId = existing.id as string;
-      // Backfill name if missing
-      if (!existing.name && nameStr) {
+      // Backfill missing fields without overwriting existing values
+      const patch: Record<string, string> = {};
+      if (!existing.name  && nameStr)  patch.name  = nameStr;
+      if (!existing.phone && phoneStr) patch.phone = phoneStr;
+      if (Object.keys(patch).length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (db as any).from("users").update({ name: nameStr }).eq("id", userId);
+        await (db as any).from("users").update(patch).eq("id", userId);
       }
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: created, error: insErr } = await (db as any)
         .from("users")
-        .insert({ email: emailStr, name: nameStr, status: "lead" })
+        .insert({ email: emailStr, name: nameStr, phone: phoneStr, status: "lead" })
         .select("id")
         .single();
       if (insErr || !created?.id) {

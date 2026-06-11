@@ -29,6 +29,7 @@ interface ExtractionRow {
     id:    string;
     name:  string | null;
     email: string | null;
+    phone: string | null;
   } | null;
 }
 
@@ -61,7 +62,7 @@ export default async function AdminSignalPage() {
 
   // Fetch extractions joined with user info. Newest first.
   const { data: rows, error } = await safeFrom(supabase, "signal_extractions")
-    .select("id, user_id, signal, answers, generated_at, users(id, name, email)")
+    .select("id, user_id, signal, answers, generated_at, users(id, name, email, phone)")
     .order("generated_at", { ascending: false })
     .limit(200);
 
@@ -129,7 +130,9 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
 function ExtractionCard({ row }: { row: ExtractionRow }) {
   const name      = row.users?.name?.trim() || "—";
   const email     = row.users?.email ?? null;
+  const phone     = row.users?.phone ?? null;
   const userHref  = row.users?.id ? `/admin/users/${row.users.id}` : null;
+  const waPhone   = phone ? phone.replace(/\D/g, "").replace(/^0/, "972") : null;
   const signal    = row.signal;
 
   return (
@@ -140,11 +143,39 @@ function ExtractionCard({ row }: { row: ExtractionRow }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 17, fontWeight: 700 }}>{name}</div>
-          <div style={{ fontSize: 13, color: C.muted, marginTop: 2, display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 4, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
             {email && <span dir="ltr">{email}</span>}
-            <span>·</span>
+            {email && phone && <span>·</span>}
+            {phone && <span dir="ltr">{phone}</span>}
+            {(email || phone) && <span>·</span>}
             <span>{relativeTime(row.generated_at)}</span>
           </div>
+          {waPhone && (
+            <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <a
+                href={`https://wa.me/${waPhone}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: 12, color: "#25D366", textDecoration: "none",
+                  padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(37,211,102,0.30)",
+                }}
+              >
+                WhatsApp ←
+              </a>
+              {phone && (
+                <a
+                  href={`tel:${phone}`}
+                  style={{
+                    fontSize: 12, color: "#4285F4", textDecoration: "none",
+                    padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(66,133,244,0.30)",
+                  }}
+                >
+                  התקשר ←
+                </a>
+              )}
+            </div>
+          )}
         </div>
         {userHref && (
           <Link

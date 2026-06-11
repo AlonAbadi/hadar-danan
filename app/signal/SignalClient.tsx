@@ -52,6 +52,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
   // Lead-gate fields (anonymous only)
   const [leadName, setLeadName]   = useState(firstName ?? "");
   const [leadEmail, setLeadEmail] = useState(prefillEmail ?? "");
+  const [leadPhone, setLeadPhone] = useState("");
 
   // Load any draft + check for an existing cached signal on mount.
   // GET only returns a signal for authenticated users — anonymous starts fresh.
@@ -120,6 +121,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
       if (!isAuthenticated) {
         payload.email = leadEmail.trim().toLowerCase();
         payload.name  = leadName.trim();
+        payload.phone = leadPhone.trim();
       }
 
       const res = await fetch("/api/signal/extract", {
@@ -235,8 +237,10 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
           <LeadGate
             name={leadName}
             email={leadEmail}
+            phone={leadPhone}
             setName={setLeadName}
             setEmail={setLeadEmail}
+            setPhone={setLeadPhone}
             onSubmit={() => void submit()}
             onBack={() => setPhase("form")}
             errorMsg={errorMsg}
@@ -490,18 +494,24 @@ function Loading() {
 interface LeadGateProps {
   name:     string;
   email:    string;
+  phone:    string;
   setName:  (v: string) => void;
   setEmail: (v: string) => void;
+  setPhone: (v: string) => void;
   onSubmit: () => void;
   onBack:   () => void;
   errorMsg: string | null;
 }
 
-function LeadGate({ name, email, setName, setEmail, onSubmit, onBack, errorMsg }: LeadGateProps) {
+function LeadGate({ name, email, phone, setName, setEmail, setPhone, onSubmit, onBack, errorMsg }: LeadGateProps) {
   const trimmedName  = name.trim();
   const trimmedEmail = email.trim();
+  const trimmedPhone = phone.trim();
   const validEmail   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
-  const canSubmit    = trimmedName.length >= 2 && validEmail;
+  // Israeli mobile pattern is loose on purpose — accept 05X-XXXXXXX, with or
+  // without dashes / spaces / international prefix. Server re-validates.
+  const validPhone   = /^[0-9+\-\s()]{9,20}$/.test(trimmedPhone);
+  const canSubmit    = trimmedName.length >= 2 && validEmail && validPhone;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -569,6 +579,30 @@ function LeadGate({ name, email, setName, setEmail, onSubmit, onBack, errorMsg }
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            dir="ltr"
+            style={{
+              width:        "100%",
+              background:   C.cardSoft,
+              color:        C.fg,
+              border:       `1px solid ${C.line}`,
+              borderRadius: 12,
+              padding:      "12px 16px",
+              fontSize:     16,
+              fontFamily:   "inherit",
+              outline:      "none",
+              textAlign:    "left",
+            }}
+          />
+        </label>
+
+        <label style={{ display: "block" }}>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>טלפון נייד</div>
+          <input
+            type="tel"
+            inputMode="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="050-0000000"
             dir="ltr"
             style={{
               width:        "100%",
