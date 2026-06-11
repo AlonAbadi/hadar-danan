@@ -5,6 +5,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { AdminUserActions } from "./AdminUserActions";
 import { NotesSection } from "./NotesSection";
 import { TrueSignalCard } from "./TrueSignalCard";
+import { LeadSignalCard } from "./LeadSignalCard";
 
 export const dynamic = "force-dynamic";
 
@@ -532,8 +533,11 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
 
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
 
-          {/* ── TrueSignal diagnosis ──────────────────────────────────── */}
+          {/* ── TrueSignal diagnosis (admin-side AI) ──────────────────── */}
           <TrueSignalCard userId={user.id} />
+
+          {/* ── Lead's own Signal Engine extraction (user-side) ───────── */}
+          <LeadSignalCard userId={user.id} />
 
           {/* ── Alerts ────────────────────────────────────────────────── */}
           {hasCart && (
