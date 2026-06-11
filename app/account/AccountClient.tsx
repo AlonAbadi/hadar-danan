@@ -676,14 +676,52 @@ function QuizCTACard() {
   );
 }
 
+function SignalSection({ title, body, tone = "normal" }: { title: string; body: string; tone?: "normal" | "warm" }) {
+  const isWarm = tone === "warm";
+  return (
+    <div
+      style={{
+        background:   isWarm ? "linear-gradient(145deg, rgba(232,185,74,0.08), #141820)" : "#141820",
+        border:       `1px solid ${isWarm ? "rgba(232,185,74,0.25)" : "#2C323E"}`,
+        borderRadius: 12,
+        padding:      "20px 22px",
+        marginBottom: 16,
+        color:        "#EDE9E1",
+      }}
+    >
+      <div style={{ color: "#C9964A", fontSize: 11, letterSpacing: 0.6, marginBottom: 10, textTransform: "uppercase" as const }}>
+        {title}
+      </div>
+      <p style={{ fontSize: 14, lineHeight: 1.7, margin: 0 }}>{body}</p>
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────
-type Tab = "main" | "purchases" | "profile";
+type Tab = "main" | "signal" | "purchases" | "profile";
+
+type SignalOutput = {
+  pain_source:        string;
+  element:            string;
+  signal:             string;
+  central_tool:       string;
+  people:             string;
+  content_directions: string[];
+  warm_note:          string;
+};
+
+interface SignalState {
+  loaded:       boolean;
+  signal:       SignalOutput | null;
+  generated_at: string | null;
+}
 
 export default function AccountClient({ authUser, userData, completedPurchases, pendingPurchases, credit, isGoogleUser, quizResult, cardcomTerminal }: Props) {
   const router  = useRouter();
   const supabase = createBrowserClient();
 
   const [tab, setTab]           = useState<Tab>("main");
+  const [signalState, setSignalState] = useState<SignalState>({ loaded: false, signal: null, generated_at: null });
   const [profName, setProfName] = useState(userData?.name ?? "");
   const [profPhone, setProfPhone] = useState(userData?.phone ?? "");
   const [saving, setSaving]     = useState(false);
@@ -748,6 +786,28 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
 
   const isHiveActive = userData?.hive_status === "active";
   const hiveTierInfo = HIVE_TIER_MAP[userData?.hive_tier ?? ""] ?? { label: "Starter", color: "#378ADD" };
+
+  // Lazy-load the user's saved signal the first time they open the "אות" tab.
+  useEffect(() => {
+    if (tab !== "signal") return;
+    if (signalState.loaded) return;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch("/api/signal/extract", { signal: controller.signal });
+        if (!res.ok) throw new Error("fetch failed");
+        const data = await res.json();
+        setSignalState({
+          loaded:       true,
+          signal:       (data?.signal as SignalOutput | null) ?? null,
+          generated_at: (data?.generated_at as string | null) ?? null,
+        });
+      } catch {
+        setSignalState({ loaded: true, signal: null, generated_at: null });
+      }
+    })();
+    return () => controller.abort();
+  }, [tab, signalState.loaded]);
 
   async function handleSaveProfile() {
     setSaving(true);
@@ -943,6 +1003,114 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
             <Link href="/hive/members" style={S.enterBtn}>כנס</Link>
           </div>
         )}
+      </div>
+    </>
+  );
+
+  // ── אות ───────────────────────────────────────────────────
+  const dateStr = signalState.generated_at
+    ? new Date(signalState.generated_at).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
+  const SignalTab = !signalState.loaded ? (
+    <div style={{ ...S.card, textAlign: "center", color: "#9E9990", fontSize: 14, padding: "40px 20px" }}>
+      טוען…
+    </div>
+  ) : !signalState.signal ? (
+    // Empty state — no signal extracted yet
+    <div style={{ ...S.card, padding: "32px 24px", textAlign: "center" }}>
+      <div style={{ fontSize: 12, letterSpacing: 1.4, color: "#C9964A", marginBottom: 12 }}>
+        <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
+      </div>
+      <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 10px", color: "#EDE9E1" }}>
+        מנוע האות
+      </h2>
+      <p style={{ fontSize: 14, color: "#9E9990", margin: "0 0 22px", lineHeight: 1.65 }}>
+        חמש שאלות. אות מותגי אחד שמחזיר לך את הבידול האמיתי שלך.
+        <br />
+        לא מה שאתה מוכר, אלא מה שרק אתה יכול לתת.
+      </p>
+      <Link
+        href="/signal"
+        style={{
+          display:      "inline-block",
+          background:   "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+          color:        "#0D1018",
+          fontWeight:   800,
+          fontSize:     14,
+          border:       "none",
+          borderRadius: 10,
+          padding:      "11px 26px",
+          textDecoration: "none",
+        }}
+      >
+        להתחיל את האבחון
+      </Link>
+    </div>
+  ) : (
+    // Saved signal — render the 7 fields
+    <>
+      <div style={{ ...S.card, textAlign: "center", padding: "20px 20px 14px" }}>
+        <div style={{ fontSize: 11, letterSpacing: 1.4, color: "#C9964A", marginBottom: 8 }}>
+          <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
+        </div>
+        <p style={{ ...S.sectionTitle, marginBottom: 4, fontSize: 17 }}>האות שלי</p>
+        {dateStr && (
+          <p style={{ fontSize: 12, color: "#9E9990", margin: 0 }}>נחלץ ב-{dateStr}</p>
+        )}
+      </div>
+
+      {/* The signal sentence — gold-bordered featured card */}
+      <div
+        style={{
+          background:   "linear-gradient(145deg, #1D2430, #141820)",
+          border:       "1px solid #E8B94A",
+          borderRadius: 14,
+          padding:      "22px 22px",
+          marginBottom: 16,
+          textAlign:    "center",
+          boxShadow:    "0 8px 24px rgba(232,185,74,0.10)",
+        }}
+      >
+        <div style={{ color: "#C9964A", fontSize: 11, letterSpacing: 0.6, marginBottom: 10 }}>
+          האות
+        </div>
+        <p style={{ fontSize: 18, lineHeight: 1.55, margin: 0, color: "#EDE9E1", fontWeight: 500 }}>
+          {signalState.signal.signal}
+        </p>
+      </div>
+
+      <SignalSection title="הערה אישית" body={signalState.signal.warm_note} tone="warm" />
+      <SignalSection title="מקור הכאב"      body={signalState.signal.pain_source} />
+      <SignalSection title="האלמנט"         body={signalState.signal.element} />
+      <SignalSection title="הכלי המרכזי"    body={signalState.signal.central_tool} />
+      <SignalSection title="האנשים שלך"     body={signalState.signal.people} />
+
+      <div style={S.card}>
+        <p style={{ ...S.sectionTitle, marginBottom: 12 }}>שלושה כיווני תוכן להתחיל מהם</p>
+        <ol style={{ margin: 0, paddingInlineStart: 22, lineHeight: 1.75, color: "#EDE9E1", fontSize: 14 }}>
+          {signalState.signal.content_directions.map((d, i) => (
+            <li key={i} style={{ marginBottom: 8 }}>{d}</li>
+          ))}
+        </ol>
+      </div>
+
+      <div style={{ ...S.card, display: "flex", justifyContent: "center", padding: "14px" }}>
+        <Link
+          href="/signal"
+          style={{
+            display:        "inline-block",
+            background:     "transparent",
+            color:          "#9E9990",
+            border:         "1px solid #2C323E",
+            borderRadius:   10,
+            padding:        "9px 20px",
+            fontSize:       13,
+            textDecoration: "none",
+          }}
+        >
+          לחילוץ מחדש
+        </Link>
       </div>
     </>
   );
@@ -1265,14 +1433,15 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
     <div style={S.page} lang="he">
       <div style={S.container}>
         <div style={S.tabs}>
-          {(["main", "purchases", "profile"] as Tab[]).map((t) => (
+          {(["main", "signal", "purchases", "profile"] as Tab[]).map((t) => (
             <button key={t} style={S.tab(tab === t)} onClick={() => setTab(t)}>
-              {t === "main" ? "ראשי" : t === "purchases" ? "רכישות" : "פרופיל"}
+              {t === "main" ? "ראשי" : t === "signal" ? "אות" : t === "purchases" ? "רכישות" : "פרופיל"}
             </button>
           ))}
         </div>
 
         {tab === "main"      && MainTab}
+        {tab === "signal"    && SignalTab}
         {tab === "purchases" && PurchasesTab}
         {tab === "profile"   && ProfileTab}
       </div>
