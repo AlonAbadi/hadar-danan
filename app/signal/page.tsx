@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
-import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { SignalClient } from "./SignalClient";
 import type { Database } from "@/lib/supabase/types";
@@ -13,6 +12,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/signal" },
 };
 
+// Open access — no auth required. Anonymous visitors can answer the 5 questions;
+// email + name are captured just before the result is generated (lead gate).
 export default async function SignalPage() {
   const cookieStore = await cookies();
 
@@ -28,19 +29,25 @@ export default async function SignalPage() {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/signal");
 
-  const db = createServerClient();
-  const { data: userData } = await db
-    .from("users")
-    .select("name")
-    .eq("auth_id", user.id)
-    .maybeSingle();
+  let firstName: string | undefined;
+  let email:     string | undefined;
 
-  const firstName =
-    typeof userData?.name === "string" && userData.name.trim().length > 0
-      ? userData.name.split(" ")[0]
-      : undefined;
+  if (user) {
+    const db = createServerClient();
+    const { data: userData } = await db
+      .from("users")
+      .select("name, email")
+      .eq("auth_id", user.id)
+      .maybeSingle();
 
-  return <SignalClient firstName={firstName} />;
+    if (typeof userData?.name === "string" && userData.name.trim().length > 0) {
+      firstName = userData.name.split(" ")[0];
+    }
+    if (typeof userData?.email === "string") {
+      email = userData.email;
+    }
+  }
+
+  return <SignalClient firstName={firstName} isAuthenticated={!!user} prefillEmail={email} />;
 }

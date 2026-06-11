@@ -84,32 +84,21 @@ export async function GET() {
 }
 
 // ── POST: generate a fresh signal from 5 answers ────────────────────────────
+// Auth is optional. Authenticated users skip the email gate; anonymous users
+// must pass `email` and `name` in the body — we upsert a lead row before
+// running the extraction so every signal is tied to a real CRM entry.
+
+function isValidEmail(s: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+
+function getRequestIp(req: NextRequest): string {
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0]?.trim() || "unknown";
+  return req.headers.get("x-real-ip") || "unknown";
+}
 
 export async function POST(req: NextRequest) {
-  const authUser = await getSessionUser();
-  if (!authUser) {
-    return NextResponse.json({ error: "יש להתחבר כדי להפעיל את מנוע האות" }, { status: 401 });
-  }
-
-  const db = createServerClient();
-  const { data: userRow } = await db
-    .from("users")
-    .select("id, name")
-    .eq("auth_id", authUser.id)
-    .maybeSingle();
-  if (!userRow) {
-    return NextResponse.json({ error: "לא נמצא פרופיל משתמש" }, { status: 404 });
-  }
-  const userId = userRow.id as string;
-
-  // Rate-limit: 5 calls per hour per user. Claude calls are expensive.
-  if (!rateLimit(`signal:${userId}`, 5, 60 * 60 * 1000)) {
-    return NextResponse.json(
-      { error: "הגעת למקסימום ניסיונות לשעה. נסה שוב מאוחר יותר." },
-      { status: 429 },
-    );
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -117,7 +106,106 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { answers, first_name } = (body ?? {}) as { answers?: unknown; first_name?: unknown };
+  const { answers, first_name, email, name } = (body ?? {}) as {
+    answers?:    unknown;
+    first_name?: unknown;
+    email?:      unknown;
+    name?:       unknown;
+  };
+
+  const db = createServerClient();
+  const authUser = await getSessionUser();
+
+  let userId:        string;
+  let userNameForPrompt: string | undefined;
+
+  if (authUser) {
+    // Authenticated path — find their public.users row
+    const { data: userRow } = await db
+      .from("users")
+      .select("id, name")
+      .eq("auth_id", authUser.id)
+      .maybeSingle();
+    if (!userRow) {
+      return NextResponse.json({ error: "לא נמצא פרופיל משתמש" }, { status: 404 });
+    }
+    userId = userRow.id as string;
+    if (typeof userRow.name === "string" && userRow.name.trim().length > 0) {
+      userNameForPrompt = userRow.name.split(" ")[0];
+    }
+  } else {
+    // Anonymous path — require email + name, upsert lead
+    const emailStr = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const nameStr  = typeof name === "string" ? name.trim() : "";
+    if (!isValidEmail(emailStr)) {
+      return NextResponse.json({ error: "אימייל לא תקין" }, { status: 400 });
+    }
+    if (nameStr.length < 2) {
+      return NextResponse.json({ error: "נדרש שם" }, { status: 400 });
+    }
+
+    // Rate-limit anonymous extractions by IP — 3/hr
+    const ip = getRequestIp(req);
+    if (!rateLimit(`signal-anon:${ip}`, 3, 60 * 60 * 1000)) {
+      return NextResponse.json(
+        { error: "יותר מדי ניסיונות. נסה שוב בעוד שעה." },
+        { status: 429 },
+      );
+    }
+
+    // Upsert the lead. Match by email; create with status=lead if new.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existing } = await (db as any)
+      .from("users")
+      .select("id, name")
+      .eq("email", emailStr)
+      .maybeSingle();
+
+    if (existing?.id) {
+      userId = existing.id as string;
+      // Backfill name if missing
+      if (!existing.name && nameStr) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (db as any).from("users").update({ name: nameStr }).eq("id", userId);
+      }
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: created, error: insErr } = await (db as any)
+        .from("users")
+        .insert({ email: emailStr, name: nameStr, status: "lead" })
+        .select("id")
+        .single();
+      if (insErr || !created?.id) {
+        await db.from("error_logs").insert({
+          context: "api/signal/extract POST — user upsert",
+          error:   String(insErr?.message ?? insErr ?? "no row"),
+          payload: { emailStr },
+        });
+        return NextResponse.json({ error: "לא הצלחנו לשמור את הפרטים. נסה שוב." }, { status: 500 });
+      }
+      userId = created.id as string;
+
+      // Fire USER_SIGNED_UP so the welcome email sequence kicks in
+      try {
+        await db.from("events").insert({
+          user_id:  userId,
+          type:     "USER_SIGNED_UP",
+          metadata: { source: "signal_extract" },
+        });
+      } catch {}
+    }
+
+    userNameForPrompt = nameStr.split(" ")[0];
+  }
+
+  // Rate-limit per user (in addition to the per-IP anon limit above)
+  if (!rateLimit(`signal:${userId}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "הגעת למקסימום ניסיונות לשעה. נסה שוב מאוחר יותר." },
+      { status: 429 },
+    );
+  }
+
   if (!isValidAnswers(answers)) {
     return NextResponse.json(
       { error: "צריך לענות על לפחות שלוש שאלות, בכל אחת לפחות שמונה תווים." },
@@ -127,7 +215,7 @@ export async function POST(req: NextRequest) {
 
   const nameForPrompt = typeof first_name === "string" && first_name.trim().length > 0
     ? first_name.trim()
-    : (typeof userRow.name === "string" ? userRow.name.split(" ")[0] : undefined);
+    : userNameForPrompt;
 
   // ── Call Claude ───────────────────────────────────────────────────────────
   let parsed: SignalOutput;

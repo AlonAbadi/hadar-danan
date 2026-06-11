@@ -33,12 +33,14 @@ const MIN_CHARS = 40;          // per-question minimum (soft — server requires
 const DRAFT_KEY = "signal_draft_v1";
 
 interface Props {
-  firstName?: string;
+  firstName?:       string;
+  isAuthenticated?: boolean;
+  prefillEmail?:    string;
 }
 
-type Phase = "intro" | "form" | "loading" | "result" | "error";
+type Phase = "intro" | "form" | "gate" | "loading" | "result" | "error";
 
-export function SignalClient({ firstName }: Props) {
+export function SignalClient({ firstName, isAuthenticated = false, prefillEmail }: Props) {
   const [phase, setPhase]         = useState<Phase>("intro");
   const [step, setStep]           = useState(0);
   const [answers, setAnswers]     = useState<SignalAnswers>({});
@@ -47,7 +49,12 @@ export function SignalClient({ firstName }: Props) {
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
   const [cacheChecked, setCacheChecked] = useState(false);
 
+  // Lead-gate fields (anonymous only)
+  const [leadName, setLeadName]   = useState(firstName ?? "");
+  const [leadEmail, setLeadEmail] = useState(prefillEmail ?? "");
+
   // Load any draft + check for an existing cached signal on mount.
+  // GET only returns a signal for authenticated users — anonymous starts fresh.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
@@ -58,6 +65,11 @@ export function SignalClient({ firstName }: Props) {
         }
       }
     } catch {}
+
+    if (!isAuthenticated) {
+      setCacheChecked(true);
+      return;
+    }
 
     (async () => {
       try {
@@ -73,7 +85,7 @@ export function SignalClient({ firstName }: Props) {
       } catch {}
       setCacheChecked(true);
     })();
-  }, []);
+  }, [isAuthenticated]);
 
   // Persist draft so a reload doesn't wipe answers.
   useEffect(() => {
@@ -101,10 +113,19 @@ export function SignalClient({ firstName }: Props) {
     setPhase("loading");
     setErrorMsg(null);
     try {
+      const payload: Record<string, unknown> = {
+        answers,
+        first_name: firstName ?? leadName.split(" ")[0],
+      };
+      if (!isAuthenticated) {
+        payload.email = leadEmail.trim().toLowerCase();
+        payload.name  = leadName.trim();
+      }
+
       const res = await fetch("/api/signal/extract", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ answers, first_name: firstName }),
+        body:    JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.signal) {
@@ -125,7 +146,14 @@ export function SignalClient({ firstName }: Props) {
   const next = () => {
     setErrorMsg(null);
     if (lastStep) {
-      void submit();
+      // Anonymous users see the lead gate before the result; authenticated users
+      // jump straight into extraction.
+      if (isAuthenticated) {
+        void submit();
+      } else {
+        setPhase("gate");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
       return;
     }
     setStep((s) => s + 1);
@@ -203,8 +231,24 @@ export function SignalClient({ firstName }: Props) {
             errorMsg={errorMsg}
           />
         )}
+        {phase === "gate"    && (
+          <LeadGate
+            name={leadName}
+            email={leadEmail}
+            setName={setLeadName}
+            setEmail={setLeadEmail}
+            onSubmit={() => void submit()}
+            onBack={() => setPhase("form")}
+            errorMsg={errorMsg}
+          />
+        )}
         {phase === "loading" && <Loading />}
-        {phase === "error"   && <ErrorCard message={errorMsg} onRetry={() => setPhase("form")} />}
+        {phase === "error"   && (
+          <ErrorCard
+            message={errorMsg}
+            onRetry={() => setPhase(isAuthenticated ? "form" : "gate")}
+          />
+        )}
         {phase === "result"  && signal && (
           <Result
             firstName={firstName}
@@ -439,6 +483,155 @@ function Loading() {
       <p style={{ fontSize: 17, color: C.fg, margin: 0 }}>מחלץ את האות שלך…</p>
       <p style={{ fontSize: 14, color: C.muted, margin: "8px 0 0" }}>זה יכול לקחת בין עשר לעשרים שניות.</p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+interface LeadGateProps {
+  name:     string;
+  email:    string;
+  setName:  (v: string) => void;
+  setEmail: (v: string) => void;
+  onSubmit: () => void;
+  onBack:   () => void;
+  errorMsg: string | null;
+}
+
+function LeadGate({ name, email, setName, setEmail, onSubmit, onBack, errorMsg }: LeadGateProps) {
+  const trimmedName  = name.trim();
+  const trimmedEmail = email.trim();
+  const validEmail   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+  const canSubmit    = trimmedName.length >= 2 && validEmail;
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+    onSubmit();
+  }
+
+  return (
+    <div
+      style={{
+        background:   C.card,
+        border:       `1px solid ${C.line}`,
+        borderRadius: 20,
+        padding:      "36px 32px",
+      }}
+    >
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div
+          style={{
+            display:       "inline-block",
+            fontSize:      12,
+            letterSpacing: 1.6,
+            color:         C.goldMid,
+            marginBottom:  12,
+            textTransform: "uppercase",
+          }}
+        >
+          <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
+        </div>
+        <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 10px", lineHeight: 1.3 }}>
+          כמעט שם
+        </h2>
+        <p style={{ color: C.muted, fontSize: 15, margin: 0, lineHeight: 1.6 }}>
+          השאר שם ואימייל, האות שלך נשמר אצלך לחיים ואפשר לחזור אליו בכל רגע.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <label style={{ display: "block" }}>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>שם פרטי</div>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="איך לקרוא לך"
+            autoFocus
+            style={{
+              width:        "100%",
+              background:   C.cardSoft,
+              color:        C.fg,
+              border:       `1px solid ${C.line}`,
+              borderRadius: 12,
+              padding:      "12px 16px",
+              fontSize:     16,
+              fontFamily:   "inherit",
+              outline:      "none",
+            }}
+          />
+        </label>
+
+        <label style={{ display: "block" }}>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>אימייל</div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            dir="ltr"
+            style={{
+              width:        "100%",
+              background:   C.cardSoft,
+              color:        C.fg,
+              border:       `1px solid ${C.line}`,
+              borderRadius: 12,
+              padding:      "12px 16px",
+              fontSize:     16,
+              fontFamily:   "inherit",
+              outline:      "none",
+              textAlign:    "left",
+            }}
+          />
+        </label>
+
+        {errorMsg && (
+          <div role="alert" style={{ color: "#FF8888", fontSize: 14, marginTop: 4 }}>
+            {errorMsg}
+          </div>
+        )}
+
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, gap: 12 }}>
+          <button
+            type="button"
+            onClick={onBack}
+            style={{
+              background:   "transparent",
+              color:        C.muted,
+              border:       `1px solid ${C.line}`,
+              borderRadius: 12,
+              padding:      "12px 22px",
+              cursor:       "pointer",
+              fontSize:     15,
+            }}
+          >
+            חזרה
+          </button>
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            style={{
+              background:   canSubmit
+                ? `linear-gradient(135deg, ${C.gold}, ${C.goldMid}, ${C.goldDeep})`
+                : "rgba(232,185,74,0.18)",
+              color:        canSubmit ? "#0D1018" : "rgba(237,233,225,0.4)",
+              fontWeight:   700,
+              border:       "none",
+              borderRadius: 12,
+              padding:      "12px 28px",
+              cursor:       canSubmit ? "pointer" : "not-allowed",
+              fontSize:     15,
+              boxShadow:    canSubmit ? "0 6px 18px rgba(232,185,74,0.18)" : "none",
+            }}
+          >
+            לחילוץ האות שלי ←
+          </button>
+        </div>
+
+        <p style={{ fontSize: 12, color: C.muted, textAlign: "center", margin: "8px 0 0", lineHeight: 1.6 }}>
+          הפרטים נשמרים אצלנו ולא משותפים עם אף אחד. ניתן להסיר את עצמך בכל רגע.
+        </p>
+      </form>
     </div>
   );
 }
