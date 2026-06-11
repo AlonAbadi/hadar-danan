@@ -519,6 +519,44 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           </div>
         </div>
 
+        {/* ── הכוורת — live (one card, prominent, clickable) ─────────── */}
+        <a
+          href="/hive"
+          style={{
+            display:        "flex",
+            alignItems:     "center",
+            gap:            14,
+            marginBottom:   28,
+            padding:        "16px 18px",
+            borderRadius:   14,
+            background:     "linear-gradient(145deg, #1D2430, #141820)",
+            border:         "1px solid rgba(232,185,74,0.30)",
+            textDecoration: "none",
+            color:          "inherit",
+            boxShadow:      "0 8px 24px rgba(232,185,74,0.08)",
+          }}
+        >
+          <div style={{
+            width: 38, height: 38, borderRadius: 10,
+            background: "rgba(232,185,74,0.10)", border: "1px solid rgba(232,185,74,0.25)",
+            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0,
+          }}>
+            🐝
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1" }}>הכוורת</div>
+            <div style={{ fontSize: 12, color: "#9E9990" }}>קהילה חודשית — ₪59 / ₪149</div>
+          </div>
+          <div style={{
+            flexShrink: 0,
+            background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)",
+            color: "#1A1206", fontSize: 11, fontWeight: 800,
+            padding: "5px 12px", borderRadius: 999,
+          }}>
+            כנס ←
+          </div>
+        </a>
+
         {/* ── Coming Soon rail ──────────────────────────────────────────── */}
         <div style={{ marginBottom: 48 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
@@ -533,16 +571,6 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1" }}>קורס דיגיטלי</div>
                 <div style={{ fontSize: 12, color: "#9E9990" }}>השיטה המלאה — ₪1,800</div>
-              </div>
-              <div style={{ flexShrink: 0, background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)", color: "#1A1206", fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 4 }}>🔜 בקרוב</div>
-            </div>
-
-            {/* הכוורת */}
-            <div className="ps-soon-card">
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🐝</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1" }}>הכוורת</div>
-                <div style={{ fontSize: 12, color: "#9E9990" }}>קהילה חודשית — ₪29–97</div>
               </div>
               <div style={{ flexShrink: 0, background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)", color: "#1A1206", fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 4 }}>🔜 בקרוב</div>
             </div>
