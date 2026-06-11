@@ -23,6 +23,8 @@ import { createServerClient } from "@/lib/supabase/server";
 import { sendCapiEvent } from "@/lib/meta-capi";
 import { sendChallengeWhatsApp } from "@/lib/challenge-whatsapp";
 import { Resend } from "resend";
+import { extractTokenizedCardFields } from "@/lib/cardcom/lowprofile";
+import { createRecurringOrder } from "@/lib/cardcom/recurring";
 
 const PRODUCT_LABELS: Record<string, string> = {
   challenge_197:  "אתגר 7 ימים",
@@ -173,6 +175,7 @@ async function fulfillPurchase(
   internalDealNumber:  string | undefined,
   invoiceNumber:       string | null,
   invoiceLink:         string | null,
+  rawCardcomData:      Record<string, string>,
 ): Promise<{ ok: boolean; alreadyProcessed?: boolean }> {
   // Idempotency: skip if InternalDealNumber already recorded
   if (internalDealNumber) {
@@ -263,11 +266,172 @@ async function fulfillPurchase(
   // Fetch user data once (shared by all email enqueuing below)
   const { data: user } = await supabase
     .from("users")
-    .select("email, name")
+    .select("email, name, phone")
     .eq("id", purchase.user_id)
     .single();
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.beegood.online";
+
+  // ── Hive subscription: extract token, hand off to Cardcom recurring ─────
+  // For hive_basic_59 / hive_full_149 the first payment was Operation=2 (charge
+  // + tokenize). We extract the resulting token + card validity from the
+  // Cardcom response, save them on the user, then call AddUpdateRecurringOrder
+  // so Cardcom takes over the monthly schedule. On success we activate hive_*
+  // fields and fire HIVE_JOINED which triggers the existing welcome sequence.
+  const isHiveProduct =
+    purchase.product === "hive_basic_59" || purchase.product === "hive_full_149";
+
+  if (isHiveProduct && purchase.user_id && user) {
+    const tier = purchase.product === "hive_basic_59" ? "basic_59" : "full_149";
+    const tokenized = extractTokenizedCardFields(rawCardcomData);
+
+    if (!tokenized.token || !tokenized.validMonth || !tokenized.validYear) {
+      await supabase.from("error_logs").insert({
+        context: "api/cardcom/webhook hive — missing token fields",
+        error:   "LowProfile success but token/validity not returned",
+        payload: {
+          purchaseId,
+          product:    purchase.product,
+          tokenized,
+        },
+      });
+    } else {
+      // Save card details on the user — needed to construct a new recurring
+      // order later (tier upgrade / reactivation after cancel).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from("users")
+        .update({
+          cardcom_token:            tokenized.token,
+          cardcom_card_valid_month: tokenized.validMonth,
+          cardcom_card_valid_year:  tokenized.validYear,
+          cardcom_card_last4:       tokenized.last4Display ?? null,
+        })
+        .eq("id", purchase.user_id);
+
+      // Schedule the next bill 30 days out — Cardcom owns the calendar after
+      // the SOAP call but we also display this on /account.
+      const now           = new Date();
+      const nextBillIso   = new Date(now.getTime() + 30 * 86400000).toISOString();
+      const nextBillDate  = nextBillIso.slice(0, 10);
+
+      const tierLabel     = tier === "basic_59" ? "Hive basic 59" : "Hive full 149";
+      const tierAmount    = tier === "basic_59" ? 59 : 149;
+
+      const recurring = await createRecurringOrder({
+        customerName:           user.name  ?? "",
+        customerEmail:          user.email ?? "",
+        customerPhone:          user.phone ?? "",
+        token:                  tokenized.token,
+        validMonth:             tokenized.validMonth,
+        validYear:              tokenized.validYear,
+        internalDescription:    tierLabel,
+        amount:                 tierAmount,
+        nextDateToBill:         nextBillDate,
+        invoiceLineDescription: tierLabel,
+        returnValue:            purchase.user_id,
+      });
+
+      if (!recurring.ok) {
+        await supabase.from("error_logs").insert({
+          context: "api/cardcom/webhook hive — AddUpdateRecurringOrder",
+          error:   recurring.error,
+          payload: {
+            purchaseId,
+            user_id:       purchase.user_id,
+            responseCode:  "responseCode" in recurring ? recurring.responseCode : undefined,
+            // raw kept short — full SOAP body can be large
+            rawHead:       "raw" in recurring ? recurring.raw?.slice(0, 1000) : undefined,
+          },
+        });
+        // Don't fail the request — the first charge already went through. The
+        // customer has paid for month 1; we'll fix the recurring side manually
+        // if the SOAP call failed. Better than blocking access.
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from("users")
+          .update({
+            cardcom_recurring_id: recurring.recurringId,
+            cardcom_account_id:   recurring.accountId,
+          })
+          .eq("id", purchase.user_id);
+      }
+
+      // Activate hive regardless of recurring success — the customer paid
+      // month 1, they get month 1 of access. If recurring failed we'll
+      // reconcile manually before the next cycle.
+      await supabase
+        .from("users")
+        .update({
+          hive_tier:              tier,
+          hive_status:            "active",
+          hive_started_at:        now.toISOString(),
+          hive_next_billing_date: nextBillIso,
+        })
+        .eq("id", purchase.user_id);
+
+      // Fire HIVE_JOINED — triggers the hive_welcome + day7 sequences.
+      await supabase.from("events").insert({
+        user_id:  purchase.user_id,
+        type:     "HIVE_JOINED",
+        metadata: { tier, amount: tierAmount, source: "cardcom_webhook" },
+      });
+
+      // Enqueue the welcome + day7 jobs (same pattern as the old /api/hive/join
+      // used before we moved activation into the webhook).
+      const { data: welcomeSeq } = await supabase
+        .from("email_sequences")
+        .select("id, subject, template_key")
+        .eq("trigger_event", "HIVE_JOINED")
+        .eq("delay_hours", 0)
+        .eq("active", true)
+        .maybeSingle();
+
+      if (welcomeSeq) {
+        await supabase.from("jobs").insert({
+          type:    "SEND_EMAIL",
+          payload: {
+            user_id:      purchase.user_id,
+            email:        user.email,
+            name:         user.name ?? "",
+            sequence_id:  welcomeSeq.id,
+            subject:      welcomeSeq.subject,
+            template_key: welcomeSeq.template_key,
+            tier,
+            price:        String(tierAmount),
+          },
+          run_at: new Date().toISOString(),
+          status: "pending",
+        });
+      }
+
+      const { data: followups } = await supabase
+        .from("email_sequences")
+        .select("id, delay_hours, subject, template_key")
+        .eq("trigger_event", "HIVE_JOINED")
+        .gt("delay_hours", 0)
+        .eq("active", true);
+
+      if (followups?.length) {
+        const jobs = followups.map((seq) => ({
+          type:    "SEND_EMAIL",
+          payload: {
+            user_id:      purchase.user_id,
+            email:        user.email,
+            name:         user.name ?? "",
+            sequence_id:  seq.id,
+            subject:      seq.subject,
+            template_key: seq.template_key,
+            tier,
+          },
+          run_at: new Date(now.getTime() + seq.delay_hours * 3600000).toISOString(),
+          status: "pending" as const,
+        }));
+        await supabase.from("jobs").insert(jobs);
+      }
+    }
+  }
 
   // Create challenge enrollment + auth account immediately on purchase
   let challengeMagicLink: string | null = null;
@@ -644,6 +808,7 @@ export async function GET(req: NextRequest) {
     internalDealNumber,
     invoiceNumber,
     invoiceLink,
+    data,
   );
 
   return new Response("OK", { status: 200 });
@@ -700,7 +865,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  await fulfillPurchase(supabase, ReturnValue, InternalDealNumber, null, null);
+  await fulfillPurchase(supabase, ReturnValue, InternalDealNumber, null, null, body);
 
   return NextResponse.json({ ok: true });
 }

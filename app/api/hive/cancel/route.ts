@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { cancelRecurringOrder } from "@/lib/cardcom/recurring";
 
 const BodySchema = z.object({
   email: z.string().email("כתובת אימייל לא תקינה"),
@@ -36,10 +37,12 @@ export async function POST(req: NextRequest) {
   const supabase = createServerClient();
 
   try {
-    // Find user by email
-    const { data: user, error: userErr } = await supabase
+    // Find user by email — include cardcom_recurring_id so we can ask Cardcom
+    // to stop the schedule on their side.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: user, error: userErr } = await (supabase as any)
       .from("users")
-      .select("id, name, hive_status, hive_started_at")
+      .select("id, name, hive_status, hive_started_at, cardcom_recurring_id")
       .eq("email", email)
       .maybeSingle();
 
@@ -60,6 +63,25 @@ export async function POST(req: NextRequest) {
     const msIn14Days    = 14 * 24 * 60 * 60 * 1000;
     const refundEligible =
       startedAt !== null && now.getTime() - startedAt.getTime() <= msIn14Days;
+
+    // Stop the recurring order at Cardcom BEFORE marking the user cancelled.
+    // If Cardcom rejects the call we still complete cancellation locally and
+    // log the error — better to honor the customer's request and reconcile
+    // manually than to refuse cancellation because of a SOAP hiccup.
+    if (user.cardcom_recurring_id) {
+      const stopped = await cancelRecurringOrder(user.cardcom_recurring_id as number);
+      if (!stopped.ok) {
+        await supabase.from("error_logs").insert({
+          context: "api/hive/cancel — cancelRecurringOrder",
+          error:   stopped.error,
+          payload: {
+            user_id:             user.id,
+            cardcom_recurring_id: user.cardcom_recurring_id,
+            responseCode:        "responseCode" in stopped ? stopped.responseCode : undefined,
+          },
+        });
+      }
+    }
 
     // Update hive_status and hive_cancelled_at
     const { error: updateErr } = await supabase

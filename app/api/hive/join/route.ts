@@ -1,19 +1,39 @@
 /**
  * POST /api/hive/join
  *
- * Joins a user to the "הכוורת" (Hive) monthly membership.
+ * Starts a Hive subscription. Creates a pending purchase row, opens a
+ * Cardcom LowProfile session with Operation=2 (charge + tokenize), and
+ * returns the redirect URL.
  *
- * Body: { email: string, name: string, tier: "basic_59" | "full_149" }
- * Response: { success: true, tier: string } | { status: "pending_payment", message: string }
+ * Hive activation (hive_status / hive_tier / hive_started_at / cardcom_token /
+ * cardcom_recurring_id) is set by /api/cardcom/webhook on payment success.
+ * This route never activates hive on its own — keeps the source of truth
+ * single and protects against pre-payment access.
+ *
+ * Body:     { email, name, tier: "basic_59" | "full_149" }
+ * Response: { url: string, purchaseId: string }
+ *         | { status: "pending_payment", message: string }   // Cardcom creds missing
+ *         | { errors: {...} } | { error: string }
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { sendCapiEvent } from "@/lib/meta-capi";
+import { createHiveLowProfileSession } from "@/lib/cardcom/lowprofile";
 
 const TIER_PRICE: Record<string, number> = {
   basic_59: 59,
   full_149: 149,
+};
+
+const TIER_PRODUCT: Record<string, "hive_basic_59" | "hive_full_149"> = {
+  basic_59: "hive_basic_59",
+  full_149: "hive_full_149",
+};
+
+const TIER_PRODUCT_NAME: Record<string, string> = {
+  basic_59: "הכוורת — מסלול בסיסי",
+  full_149: "הכוורת — מסלול מלא",
 };
 
 const BodySchema = z.object({
@@ -41,12 +61,14 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, name, tier } = parsed.data;
-  const price = TIER_PRICE[tier];
+  const price       = TIER_PRICE[tier];
+  const product     = TIER_PRODUCT[tier];
+  const productName = TIER_PRODUCT_NAME[tier];
 
   const supabase = createServerClient();
 
   try {
-    // Upsert user - on conflict email, update name only if blank
+    // ── Upsert user (no hive activation yet — that happens in the webhook) ──
     const { data: user, error: upsertErr } = await supabase
       .from("users")
       .upsert(
@@ -60,113 +82,88 @@ export async function POST(req: NextRequest) {
           ignoreDuplicates: false,
         }
       )
-      .select("id, name")
+      .select("id, name, phone")
       .single();
 
     if (upsertErr || !user) throw upsertErr ?? new Error("Upsert returned no user");
 
-    // Update hive membership fields
-    const now      = new Date();
-    const billing  = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-    const { error: updateErr } = await supabase
-      .from("users")
-      .update({
-        hive_tier:              tier,
-        hive_status:            "active",
-        hive_started_at:        now.toISOString(),
-        hive_next_billing_date: billing.toISOString(),
+    // Track which tier the user is attempting — used by the webhook to know
+    // which tier to activate. We store on the purchase metadata via product.
+    // The pending purchase is the source of truth.
+    // ── Create pending purchase row ────────────────────────────────────────
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: purchase, error: purchaseErr } = await (supabase as any)
+      .from("purchases")
+      .insert({
+        user_id:      user.id,
+        product,
+        amount:       price,
+        currency:     "ILS",
+        status:       "pending",
+        is_recurring: true,
       })
-      .eq("id", user.id);
-
-    if (updateErr) throw updateErr;
-
-    // Stub Cardcom recurring - return pending_payment if credentials not set
-    const terminal = process.env.CARDCOM_TERMINAL;
-    const apiName  = process.env.CARDCOM_API_NAME;
-
-    if (!terminal || !apiName) {
-      return NextResponse.json({
-        status: "pending_payment",
-        message: "נדרש תשלום - יתווסף בקרוב",
-      });
-    }
-
-    // Insert HIVE_JOINED event
-    await supabase.from("events").insert({
-      user_id:  user.id,
-      type:     "HIVE_JOINED",
-      metadata: { tier },
-    });
-
-    // Enqueue SEND_EMAIL job for hive_welcome (immediate)
-    const { data: welcomeSeq } = await supabase
-      .from("email_sequences")
-      .select("id, subject, template_key")
-      .eq("trigger_event", "HIVE_JOINED")
-      .eq("delay_hours", 0)
-      .eq("active", true)
+      .select("id")
       .single();
 
-    if (welcomeSeq) {
-      await supabase.from("jobs").insert({
-        type:    "SEND_EMAIL",
-        payload: {
-          user_id:      user.id,
-          email,
-          name:         user.name ?? name,
-          sequence_id:  welcomeSeq.id,
-          subject:      welcomeSeq.subject,
-          template_key: welcomeSeq.template_key,
-          tier,
-          price:        String(price),
-        },
-        run_at: new Date().toISOString(),
-        status: "pending",
+    if (purchaseErr || !purchase) throw purchaseErr ?? new Error("Could not create purchase row");
+
+    // ── If Cardcom creds aren't set, keep the legacy "pending_payment" path ─
+    if (!process.env.CARDCOM_TERMINAL || !process.env.CARDCOM_API_NAME) {
+      return NextResponse.json({
+        status:  "pending_payment",
+        message: "נדרש תשלום — יתווסף בקרוב",
       });
     }
 
-    // Enqueue follow-up jobs (e.g. day-7) at their scheduled times
-    const { data: followups } = await supabase
-      .from("email_sequences")
-      .select("id, delay_hours, subject, template_key")
-      .eq("trigger_event", "HIVE_JOINED")
-      .gt("delay_hours", 0)
-      .eq("active", true);
-
-    if (followups?.length) {
-      const jobs = followups.map((seq) => ({
-        type:    "SEND_EMAIL",
-        payload: {
-          user_id:      user.id,
-          email,
-          name:         user.name ?? name,
-          sequence_id:  seq.id,
-          subject:      seq.subject,
-          template_key: seq.template_key,
-          tier,
-        },
-        run_at: new Date(
-          now.getTime() + seq.delay_hours * 60 * 60 * 1000
-        ).toISOString(),
-        status: "pending" as const,
-      }));
-      await supabase.from("jobs").insert(jobs);
-    }
-
+    // ── Fire InitiateCheckout CAPI (mirrors /api/checkout pattern) ─────────
+    const icUserData = {
+      email,
+      phone:           user.phone ?? undefined,
+      fbp:             req.cookies.get("_fbp")?.value,
+      fbc:             req.cookies.get("_fbc")?.value,
+      clientUserAgent: req.headers.get("user-agent") ?? undefined,
+    };
+    const icCustomData = {
+      value:       price,
+      currency:    "ILS",
+      contentName: product,
+      contentIds:  [product],
+    };
     await sendCapiEvent({
-      eventName: "Lead",
-      eventId:   `hive_${user.id}`,
-      userData:  {
-        email,
-        fbp:             req.cookies.get("_fbp")?.value,
-        fbc:             req.cookies.get("_fbc")?.value,
-        clientUserAgent: req.headers.get("user-agent") ?? undefined,
-      },
-      customData: { value: price, currency: "ILS", contentName: `hive_${tier}`, contentIds: [`hive_${tier}`] },
+      eventName:  "InitiateCheckout",
+      eventId:    `ic_${purchase.id}`,
+      userData:   icUserData,
+      customData: icCustomData,
     });
 
-    return NextResponse.json({ success: true, tier }, { status: 201 });
+    // ── Open Cardcom LowProfile session (Operation=2 → charge + tokenize) ──
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.beegood.online";
+    const session = await createHiveLowProfileSession({
+      purchaseId:    purchase.id,
+      amount:        price,
+      productName,
+      customerName:  user.name ?? name,
+      customerEmail: email,
+      customerPhone: user.phone ?? "",
+      appUrl,
+    });
+
+    if (!session.ok) {
+      await supabase.from("error_logs").insert({
+        context: "api/hive/join — lowprofile",
+        error:   session.error,
+        payload: { purchaseId: purchase.id, email, tier, raw: "raw" in session ? session.raw : undefined },
+      });
+      return NextResponse.json(
+        { error: "תקלה זמנית בפתיחת התשלום. נסה שוב בעוד רגע." },
+        { status: 502 },
+      );
+    }
+
+    return NextResponse.json({
+      url:        session.redirectUrl,
+      purchaseId: purchase.id,
+    }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 

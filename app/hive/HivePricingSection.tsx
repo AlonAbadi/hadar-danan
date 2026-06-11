@@ -184,7 +184,11 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, name, tier }),
       });
-      const data = (await res.json()) as { status?: string; error?: string };
+      const data = (await res.json()) as {
+        status?: string;
+        error?:  string;
+        url?:    string;
+      };
 
       if (!res.ok) {
         setError(data.error ?? "שגיאה בהצטרפות. נסה שוב.");
@@ -192,6 +196,13 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
         return;
       }
 
+      // New path: redirect straight to Cardcom hosted checkout
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      // Legacy fallback when Cardcom env vars aren't set
       if (data.status === "pending_payment") {
         setStep("pending_payment");
       } else {
