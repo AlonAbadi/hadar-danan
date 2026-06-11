@@ -1,40 +1,47 @@
--- Migration 047: Cardcom token storage for Hive recurring billing (Stage 4 Phase 1)
+-- Migration 047: Cardcom recurring order linkage for Hive billing (Stage 4 Phase 1)
 -- ============================================================================
--- The Hive billing model: the customer pays the first month via Cardcom
--- LowProfile with Operation=ChargeAndCreateToken. Cardcom returns a Token +
--- card validity month/year. We store these and use ChargeToken to bill the
--- recurring monthly charge ourselves on a cron schedule. Cardcom does NOT
--- run the recurring calendar; we do.
+-- Cardcom runs the recurring schedule natively via its הוראת קבע (standing
+-- order) system. Our flow:
+--   1. Customer pays month 1 via LowProfile with Operation=ChargeAndCreateToken
+--      → Cardcom returns a Token + LowProfileDealGuid
+--   2. We POST to BillGoldService.AddUpdateRecurringOrder with the token →
+--      Cardcom creates a RecurringOrder and returns its RecurringId + AccountId
+--   3. Cardcom charges the saved card on its own schedule. Each charge hits
+--      our existing /api/cardcom/webhook IndicatorUrl. We just listen.
+--   4. Cancellation = call AddUpdateRecurringOrder with IsActive=false.
 --
--- These columns are NULL until the customer completes their first Hive
--- payment. Sensitive token data is never logged or returned in API responses.
+-- These columns are NULL until the customer's first Hive payment succeeds.
 
 ALTER TABLE users
-  -- Cardcom-issued token used to charge the saved card again. Single token
-  -- per user — if they re-subscribe with a different card, we overwrite.
+  -- Cardcom's identifier for the recurring order. Required for cancel /
+  -- update calls (AddUpdateRecurringOrder with this RecurringId).
+  ADD COLUMN IF NOT EXISTS cardcom_recurring_id      INTEGER     DEFAULT NULL,
+
+  -- Cardcom's customer account record. Returned by AddUpdateRecurringOrder.
+  -- Useful for tying multiple orders to the same customer in the future.
+  ADD COLUMN IF NOT EXISTS cardcom_account_id        INTEGER     DEFAULT NULL,
+
+  -- Token from LowProfile ChargeAndCreateToken. Stored so we can build a
+  -- new RecurringOrder if the customer ever upgrades tier / restarts after
+  -- cancellation without re-entering card details. Treat as a secret.
   ADD COLUMN IF NOT EXISTS cardcom_token             TEXT        DEFAULT NULL,
 
-  -- Card validity required by ChargeToken on every monthly renewal. We can't
-  -- bill if these are stale — used to detect expired cards in advance.
+  -- Card validity — Cardcom can in some flows require these to be re-asserted
+  -- when reactivating a cancelled recurring order. Cheap to store.
   ADD COLUMN IF NOT EXISTS cardcom_card_valid_month  SMALLINT    DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS cardcom_card_valid_year   SMALLINT    DEFAULT NULL,
 
   -- Last 4 digits for display in /account and admin views. Safe to show.
-  ADD COLUMN IF NOT EXISTS cardcom_card_last4        TEXT        DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS cardcom_card_last4        TEXT        DEFAULT NULL;
 
-  -- Last successful renewal timestamp. Used by the renewal cron to skip
-  -- users whose charge already ran this cycle (idempotency belt-and-braces
-  -- on top of hive_next_billing_date).
-  ADD COLUMN IF NOT EXISTS hive_last_charged_at      TIMESTAMPTZ DEFAULT NULL,
+-- Look up a user by their Cardcom RecurringId quickly when the renewal
+-- webhook fires referencing an order, not a user.
+CREATE INDEX IF NOT EXISTS idx_users_cardcom_recurring_id
+  ON users (cardcom_recurring_id)
+  WHERE cardcom_recurring_id IS NOT NULL;
 
-  -- Count of consecutive failed renewal attempts. Reset to 0 on success.
-  -- Used to escalate (e.g. email at 1 failure, suspend at 3).
-  ADD COLUMN IF NOT EXISTS hive_failed_charge_count  SMALLINT    NOT NULL DEFAULT 0;
-
--- Partial index — only the rows we'll actually scan in the renewal cron.
-CREATE INDEX IF NOT EXISTS idx_users_hive_renewal_due
-  ON users (hive_next_billing_date)
-  WHERE hive_status = 'active' AND cardcom_token IS NOT NULL;
+COMMENT ON COLUMN users.cardcom_recurring_id IS
+  'Cardcom RecurringId from BillGoldService.AddUpdateRecurringOrder. Cardcom runs the monthly schedule; we cancel by calling the same endpoint with IsActive=false.';
 
 COMMENT ON COLUMN users.cardcom_token IS
-  'Cardcom card token from LowProfile ChargeAndCreateToken. Used by /api/cron/hive-renew to charge monthly via ChargeToken endpoint. Treat as a secret.';
+  'Cardcom card token from LowProfile ChargeAndCreateToken. Treat as a secret. Only used to construct new recurring orders (e.g. tier change, reactivation).';

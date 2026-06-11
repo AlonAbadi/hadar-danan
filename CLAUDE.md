@@ -198,7 +198,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 044 | `044_signal_extractions.sql` | Applied — signal_extractions table for the user-facing Signal Engine (מנוע האות) at /signal: answers jsonb + 7-field signal jsonb |
 | 045 | `045_hive_product_types.sql` | Applied — adds `hive_basic_59` and `hive_full_149` to the product_type enum so Cardcom recurring (Stage 4) can write Hive subscription purchases |
 | 046 | `046_signal_email_sequence.sql` | Applied — adds the SIGNAL_EXTRACTED row to email_sequences (template_key=signal_welcome, 0h delay) so /signal leads get a dedicated welcome that references the diagnostic instead of the generic ladder pitch |
-| 047 | `047_hive_cardcom_token.sql` | Pending — adds `cardcom_token` + card validity + renewal-state columns to users, plus partial index `idx_users_hive_renewal_due`. Stage 4 Phase 1 — schema only, no user-facing change. Token stored from LowProfile ChargeAndCreateToken on first payment, used by `/api/cron/hive-renew` (Phase 3) to charge monthly via ChargeToken |
+| 047 | `047_hive_cardcom_token.sql` | Pending — adds `cardcom_recurring_id`, `cardcom_account_id`, `cardcom_token`, card validity + last-4 columns to users, plus index `idx_users_cardcom_recurring_id`. Stage 4 Phase 1 — schema only, no user-facing change. Cardcom runs the recurring schedule natively via BillGoldService.AddUpdateRecurringOrder; we just store the RecurringId so we can cancel/update later |
 
 ### Tables (20 total)
 
