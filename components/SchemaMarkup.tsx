@@ -14,7 +14,7 @@ const person = {
   "name": "הדר דנן",
   "url": APP_URL,
   "jobTitle": "מומחית שיווק, יוצרת שיטת TrueSignal",
-  "description": "הדר דנן, מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal by BeeGood. קורסים, סדנאות וליווי אישי לבעלי עסקים.",
+  "description": "הדר דנן, מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal©. קורסים, סדנאות וליווי אישי לבעלי עסקים.",
   "knowsAbout": ["שיווק דיגיטלי", "אסטרטגיה עסקית", "יצירת תוכן", "מיתוג אישי", "TrueSignal"],
   "sameAs": [
     "https://www.instagram.com/hadar_danan",

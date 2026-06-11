@@ -194,6 +194,8 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 030 | `030_whatsapp_logs.sql` | Applied — whatsapp_logs table for dedup |
 | 031-041 | (Applied — see filesystem for full list; covers sadna, whatsapp_inbound, challenge_progress, quiz_insights/experiments/results_utm, challenge_hero, premium_partnership backfill, purchases_utm, daily_call_list + outcomes) | |
 | 042 | `042_stage_applications.sql` | Applied — stage_applications table for /apply ("3 ימים פתוחים"): answers jsonb, score 0–100 + breakdown, RLS policies |
+| 043 | `043_coupons.sql` | Applied — coupons + redemptions tables for URL-based discount system (?code=) |
+| 044 | `044_signal_extractions.sql` | Applied — signal_extractions table for the user-facing Signal Engine (מנוע האות) at /signal: answers jsonb + 7-field signal jsonb |
 
 ### Tables (20 total)
 
@@ -744,7 +746,7 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
-- Next migration number: 043
+- Next migration number: 045
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes

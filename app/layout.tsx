@@ -24,8 +24,8 @@ export const viewport: Viewport = {
 
 const OG_IMAGE = "https://beegood.online/og-image.jpg";
 
-const TITLE       = "הדר דנן | שיטת TrueSignal by BeeGood - שיווק אותנטי לעסקים";
-const DESCRIPTION = "הדר דנן, מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal by BeeGood. קורסים, סדנאות וליווי אישי לבעלי עסקים שרוצים לשווק בלי לאבד את עצמם.";
+const TITLE       = "הדר דנן | שיטת TrueSignal© - שיווק אותנטי לעסקים";
+const DESCRIPTION = "הדר דנן, מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal©. קורסים, סדנאות וליווי אישי לבעלי עסקים שרוצים לשווק בלי לאבד את עצמם.";
 
 export const metadata: Metadata = {
   title: {
