@@ -292,6 +292,105 @@ export default async function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════════════════
+              3.5  SIGNAL ENGINE — free taste of TrueSignal©
+          ══════════════════════════════════════════════════════ */}
+          <section
+            style={{
+              background: "#080C14",
+              padding:    "56px 20px 40px",
+            }}
+            dir="rtl"
+          >
+            <div
+              style={{
+                maxWidth:     720,
+                margin:       "0 auto",
+                position:     "relative",
+                background:   "linear-gradient(145deg, #1D2430, #111620)",
+                border:       "1px solid rgba(232,185,74,0.30)",
+                borderRadius: 24,
+                padding:      "44px 28px",
+                textAlign:    "center",
+                boxShadow:    "0 12px 36px rgba(232,185,74,0.10)",
+                overflow:     "hidden",
+              }}
+            >
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  top:      "-40%",
+                  left:     "50%",
+                  transform: "translateX(-50%)",
+                  width:    "120%",
+                  height:   "80%",
+                  background:   "radial-gradient(ellipse at center, rgba(232,185,74,0.08), transparent 70%)",
+                  pointerEvents: "none",
+                }}
+              />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div
+                  style={{
+                    display:       "inline-block",
+                    fontSize:      11,
+                    letterSpacing: 1.6,
+                    color:         "#C9964A",
+                    marginBottom:  14,
+                    textTransform: "uppercase",
+                    fontWeight:    700,
+                  }}
+                >
+                  <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · אבחון אישי בחינם
+                </div>
+                <h2
+                  style={{
+                    fontSize:   "clamp(1.8rem, 4.5vw, 2.4rem)",
+                    fontWeight: 800,
+                    margin:     "0 0 14px",
+                    lineHeight: 1.25,
+                    color:      "#EDE9E1",
+                  }}
+                >
+                  מנוע האות
+                </h2>
+                <p
+                  style={{
+                    fontSize:   16,
+                    lineHeight: 1.7,
+                    color:      "#EDE9E1",
+                    opacity:    0.92,
+                    margin:     "0 auto 28px",
+                    maxWidth:   480,
+                  }}
+                >
+                  חמש שאלות. אות מותגי אחד שמחזיר לך את הבידול האמיתי שלך.
+                  <br />
+                  לא מה שאתה מוכר, אלא מה שרק אתה יכול לתת.
+                </p>
+                <Link
+                  href="/signal"
+                  style={{
+                    display:        "inline-block",
+                    background:     "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+                    color:          "#0D1018",
+                    fontWeight:     800,
+                    fontSize:       16,
+                    borderRadius:   999,
+                    padding:        "14px 34px",
+                    textDecoration: "none",
+                    boxShadow:      "0 8px 24px rgba(232,185,74,0.22)",
+                  }}
+                >
+                  להתחיל את האבחון ←
+                </Link>
+                <p style={{ fontSize: 12, color: "#9E9990", margin: "14px 0 0" }}>
+                  בלי כרטיס אשראי. בלי הצטרפות מחויבת.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════════════════
               4. PRODUCTS - LADDER + NETFLIX
           ══════════════════════════════════════════════════════ */}
           {/* Quiz bridge — recovers visitors overwhelmed by product choices */}
