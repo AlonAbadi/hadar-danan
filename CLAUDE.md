@@ -197,7 +197,8 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 043 | `043_coupons.sql` | Applied — coupons + redemptions tables for URL-based discount system (?code=) |
 | 044 | `044_signal_extractions.sql` | Applied — signal_extractions table for the user-facing Signal Engine (מנוע האות) at /signal: answers jsonb + 7-field signal jsonb |
 | 045 | `045_hive_product_types.sql` | Applied — adds `hive_basic_59` and `hive_full_149` to the product_type enum so Cardcom recurring (Stage 4) can write Hive subscription purchases |
-| 046 | `046_signal_email_sequence.sql` | Pending — adds the SIGNAL_EXTRACTED row to email_sequences (template_key=signal_welcome, 0h delay) so /signal leads get a dedicated welcome that references the diagnostic instead of the generic ladder pitch |
+| 046 | `046_signal_email_sequence.sql` | Applied — adds the SIGNAL_EXTRACTED row to email_sequences (template_key=signal_welcome, 0h delay) so /signal leads get a dedicated welcome that references the diagnostic instead of the generic ladder pitch |
+| 047 | `047_hive_cardcom_token.sql` | Pending — adds `cardcom_token` + card validity + renewal-state columns to users, plus partial index `idx_users_hive_renewal_due`. Stage 4 Phase 1 — schema only, no user-facing change. Token stored from LowProfile ChargeAndCreateToken on first payment, used by `/api/cron/hive-renew` (Phase 3) to charge monthly via ChargeToken |
 
 ### Tables (20 total)
 
@@ -748,7 +749,7 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
-- Next migration number: 047
+- Next migration number: 048
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes
