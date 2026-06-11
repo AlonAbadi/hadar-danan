@@ -217,6 +217,43 @@ function welcome(ctx: EmailTemplateContext): RenderedEmail {
 }
 
 // ─────────────────────────────────────────────────────────────
+// SIGNAL_EXTRACTED · 0h - dedicated welcome for /signal leads.
+// Fired by /api/signal/extract on every successful extraction. Replaces
+// the generic welcome for this funnel — references the diagnostic they
+// just took and points to the Hive as the natural next step.
+// ─────────────────────────────────────────────────────────────
+
+function signalWelcome(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  return {
+    subject: `${firstName}, האות שלך כאן`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>${firstName}, ראיתי אותך</h1>
+      </div>
+      <div class="body">
+        <p>שלום ${firstName},</p>
+        <p>עברת את האבחון. זה לא טריוויאלי.</p>
+        <p>הרוב לא עוצרים לחמש דקות לשאול את עצמם מה הם באמת באים לתת לעולם.</p>
+        <p>האות שלך נשמר אצלך — תוכל לחזור אליו בכל רגע פה:</p>
+        <a class="cta" href="${APP_URL}/account">לאזור האישי שלי ←</a>
+
+        <p>מה הלאה?</p>
+        <p>חברי הכוורת מקבלים כל חודש שני רעיונות תוכן מותאמים אישית לאות שלהם.</p>
+        <p>לא רעיונות כלליים. לא עוד מאה קווים. שניים שעובדים בדיוק לך.</p>
+        <p>אם זה מרגיש כמו הצעד הבא הנכון —</p>
+        <a class="cta" href="${APP_URL}/hive">לראות את מסלולי הכוורת ←</a>
+
+        <p>בכל מקרה, האות שלך אצלך. עכשיו זה רק עניין של מה אתה עושה איתו.</p>
+        <p>אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#2563eb">הוואטסאפ פתוח</a>.</p>
+        <p>הדר</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
 // SEQUENCE 1 cont. - Followup 24h (USER_SIGNED_UP · 24h)
 // ─────────────────────────────────────────────────────────────
 
@@ -912,6 +949,8 @@ const TEMPLATES: Record<string, TemplateFn> = {
   welcome,
   followup_24h:                followup24h,
   followup_72h:                followup72h,
+  // SIGNAL_EXTRACTED welcome
+  signal_welcome:              signalWelcome,
   // Sequence 2 - challenge buyers
   challenge_access:            challengeAccess,
   challenge_upsell_workshop:   challengeUpsellWorkshop,

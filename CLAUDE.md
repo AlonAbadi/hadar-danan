@@ -196,7 +196,8 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 042 | `042_stage_applications.sql` | Applied — stage_applications table for /apply ("3 ימים פתוחים"): answers jsonb, score 0–100 + breakdown, RLS policies |
 | 043 | `043_coupons.sql` | Applied — coupons + redemptions tables for URL-based discount system (?code=) |
 | 044 | `044_signal_extractions.sql` | Applied — signal_extractions table for the user-facing Signal Engine (מנוע האות) at /signal: answers jsonb + 7-field signal jsonb |
-| 045 | `045_hive_product_types.sql` | Pending — adds `hive_basic_59` and `hive_full_149` to the product_type enum so Cardcom recurring (Stage 4) can write Hive subscription purchases |
+| 045 | `045_hive_product_types.sql` | Applied — adds `hive_basic_59` and `hive_full_149` to the product_type enum so Cardcom recurring (Stage 4) can write Hive subscription purchases |
+| 046 | `046_signal_email_sequence.sql` | Pending — adds the SIGNAL_EXTRACTED row to email_sequences (template_key=signal_welcome, 0h delay) so /signal leads get a dedicated welcome that references the diagnostic instead of the generic ladder pitch |
 
 ### Tables (20 total)
 
@@ -747,7 +748,7 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
-- Next migration number: 046
+- Next migration number: 047
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes

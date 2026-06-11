@@ -192,15 +192,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "לא הצלחנו לשמור את הפרטים. נסה שוב." }, { status: 500 });
       }
       userId = created.id as string;
-
-      // Fire USER_SIGNED_UP so the welcome email sequence kicks in
-      try {
-        await db.from("events").insert({
-          user_id:  userId,
-          type:     "USER_SIGNED_UP",
-          metadata: { source: "signal_extract" },
-        });
-      } catch {}
+      // Note: we intentionally do NOT fire USER_SIGNED_UP here. The generic
+      // welcome pitches the full ladder, which doesn't fit a lead who just
+      // generated their signal. Instead, SIGNAL_EXTRACTED fires below for
+      // every successful extraction (new and existing users) and triggers
+      // the signal_welcome template.
     }
 
     userNameForPrompt = nameStr.split(" ")[0];
@@ -305,6 +301,60 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     await db.from("error_logs").insert({
       context: "api/signal/extract POST — db insert threw",
+      error:   String(e),
+      payload: { userId },
+    });
+  }
+
+  // ── Fire SIGNAL_EXTRACTED + enqueue welcome email inline ────────────────
+  // We don't route through /api/events because we want this self-contained
+  // and we already have the user_id in hand. Soft-fail throughout — the user
+  // already has their signal on screen even if event logging or job enqueue
+  // fails. Matches the same pattern /api/hive/join uses.
+  try {
+    await db.from("events").insert({
+      user_id:  userId,
+      type:     "SIGNAL_EXTRACTED",
+      metadata: { source: authUser ? "authenticated" : "anonymous_gate" },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: welcomeSeq } = await (db as any)
+      .from("email_sequences")
+      .select("id, subject, template_key")
+      .eq("trigger_event", "SIGNAL_EXTRACTED")
+      .eq("delay_hours", 0)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (welcomeSeq) {
+      // Pull email + name fresh so the job has what it needs even if the
+      // anonymous path didn't keep it in scope.
+      const { data: u } = await db
+        .from("users")
+        .select("email, name")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (u?.email) {
+        await db.from("jobs").insert({
+          type:    "SEND_EMAIL",
+          payload: {
+            user_id:      userId,
+            email:        u.email,
+            name:         u.name ?? "",
+            sequence_id:  welcomeSeq.id,
+            subject:      welcomeSeq.subject,
+            template_key: welcomeSeq.template_key,
+          },
+          run_at: new Date().toISOString(),
+          status: "pending",
+        });
+      }
+    }
+  } catch (e) {
+    await db.from("error_logs").insert({
+      context: "api/signal/extract POST — SIGNAL_EXTRACTED enqueue",
       error:   String(e),
       payload: { userId },
     });
