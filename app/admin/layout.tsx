@@ -15,6 +15,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/admin/crm':         'ניהול לידים',
   '/admin/atelier':     'Atelier — לידים',
   '/admin/stage':       '3 ימים פתוחים — מועמדויות',
+  '/admin/signal':      'מנוע האות — אבחונים',
   '/admin/email':       'אימיילים',
   '/admin/acquisition': 'רכישת לקוחות',
   '/admin/conversions': 'אירועי CAPI',

@@ -70,6 +70,7 @@ const NAV_CARDS = [
   { title: 'שיעור במתנה',     desc: 'נרשמים, צפייה, השלמה, המרה למוצרים',   href: '/admin/training',    group: 'תוכן',     icon: '🎓' },
   { title: 'וידאו ואנליטיקס', desc: 'מעקב צפיות, milestones, נשירה',          href: '/admin/video',       group: 'תוכן',     icon: '🎬' },
   { title: 'הכוורת',          desc: 'חברי קהילה, MRR, שימור מנויים',          href: '/admin/community',   group: 'קהילה',    icon: '🐝' },
+  { title: 'מנוע האות',       desc: 'אבחוני TrueSignal© של לידים — האות שלהם',  href: '/admin/signal',      group: 'קהילה',    icon: '✨' },
   { title: 'מודל MMM',        desc: 'הקצאת תקציב, רגרסיה, תחזיות',           href: '/admin/mmm',         group: 'אנליטיקה', icon: '🔬' },
   { title: 'לוגים ומערכת',    desc: 'שגיאות, אירועים, מעקב מערכת',           href: '/admin/system',      group: 'מערכת',    icon: '⚙️' },
 ];
