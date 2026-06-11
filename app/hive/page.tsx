@@ -80,14 +80,14 @@ export default function HivePage() {
             <Link
               href="/signal"
               style={{
-                background:   `linear-gradient(135deg, ${C.gold}, ${C.goldM}, #9E7C3A)`,
-                color:        "#0D1018",
+                background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                color:        "#2a1d05",
                 fontWeight:   800,
                 fontSize:     16,
                 borderRadius: 999,
                 padding:      "14px 32px",
                 textDecoration: "none",
-                boxShadow:    "0 8px 24px rgba(232,185,74,0.20)",
+                boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
               }}
             >
               להתחיל מהאות שלך ←
