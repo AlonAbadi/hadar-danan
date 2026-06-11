@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
 
 type SignalAnswers = Record<string, string>;
@@ -562,8 +563,45 @@ function Result({ firstName, signal, generatedAt, onRestart }: ResultProps) {
         </ol>
       </Card>
 
+      {/* Hive CTA — the natural next step after seeing your signal */}
+      <div
+        style={{
+          background:   `linear-gradient(145deg, ${C.cardSoft}, ${C.card})`,
+          border:       `1px solid ${C.line}`,
+          borderRadius: 18,
+          padding:      "26px 24px",
+          textAlign:    "center",
+          marginTop:    12,
+        }}
+      >
+        <p style={{ fontSize: 16, lineHeight: 1.65, color: C.fg, margin: "0 0 6px" }}>
+          האות שלך נוצר. עכשיו אפשר להפוך אותו לתוכן.
+        </p>
+        <p style={{ fontSize: 14, lineHeight: 1.6, color: C.muted, margin: "0 0 20px" }}>
+          חברי הכוורת מקבלים כל חודש שני רעיונות תוכן מותאמים אישית לאות שלהם.
+        </p>
+        <Link
+          href="/hive"
+          style={{
+            display:      "inline-block",
+            background:   `linear-gradient(135deg, ${C.gold}, ${C.goldMid}, ${C.goldDeep})`,
+            color:        "#0D1018",
+            fontWeight:   800,
+            fontSize:     15,
+            border:       "none",
+            borderRadius: 999,
+            padding:      "12px 28px",
+            cursor:       "pointer",
+            textDecoration: "none",
+            boxShadow:    "0 8px 24px rgba(232,185,74,0.18)",
+          }}
+        >
+          לראות את מסלולי הכוורת ←
+        </Link>
+      </div>
+
       {/* Footer */}
-      <div style={{ textAlign: "center", paddingTop: 12 }}>
+      <div style={{ textAlign: "center", paddingTop: 4 }}>
         <button
           onClick={onRestart}
           style={{

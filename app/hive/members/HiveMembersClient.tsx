@@ -7,6 +7,9 @@ import type { HiveContent } from "./page";
 
 // ── Tier config ────────────────────────────────────────────
 const TIER_MAP: Record<string, { label: string; color: string; price: number; rank: number }> = {
+  basic_59:      { label: "בסיסי",   color: "#C9964A", price: 59,  rank: 0 },
+  full_149:      { label: "מלא",     color: "#E8B94A", price: 149, rank: 1 },
+  // legacy values — backward-compat for rows created before the rename
   discounted_29: { label: "Starter", color: "#378ADD", price: 29,  rank: 0 },
   basic_97:      { label: "Pro",     color: "#E8B94A", price: 97,  rank: 1 },
   elite:         { label: "Elite",   color: "#7F77DD", price: 197, rank: 2 },

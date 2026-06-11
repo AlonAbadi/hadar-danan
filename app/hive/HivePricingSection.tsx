@@ -2,32 +2,38 @@
 
 import { useState } from "react";
 
-type Tier = "basic_97" | "discounted_29";
+type Tier = "basic_59" | "full_149";
 
-const FEATURES_STANDARD = [
-  "מפגש זום חודשי עם הדר",
-  "תוכן בלעדי",
-  "קבוצת WhatsApp פעילה",
+const FEATURES_BASIC = [
+  "מנוע האות — אבחון אישי לפי שיטת TrueSignal©",
+  "ספריית בינג' — תכנים מהשיטה",
+  "שני רעיונות תוכן חודשיים מותאמים לאות שלך",
+  "גישה לאזור החברים",
 ];
 
-const FEATURES_DISCOUNTED = [
-  "מפגש זום חודשי עם הדר",
-  "תוכן בלעדי",
-  "קבוצת WhatsApp פעילה",
-  "עדיפות בזום עם הדר",
+const FEATURES_FULL = [
+  "הכל מהמסלול הבסיסי",
+  "מפגש Zoom חודשי עם הדר",
+  "קבוצת WhatsApp פעילה של חברי הכוורת",
+  "₪500 הנחה בעבודה אישית עם הצוות",
 ];
+
+const TIER_LABEL: Record<Tier, string> = {
+  basic_59: "מסלול בסיסי",
+  full_149: "מסלול מלא",
+};
+
+const TIER_PRICE: Record<Tier, string> = {
+  basic_59: "₪59",
+  full_149: "₪149",
+};
 
 export function HivePricingSection() {
   const [open, setOpen] = useState(false);
-  const [tier, setTier] = useState<Tier>("basic_97");
+  const [tier, setTier] = useState<Tier>("basic_59");
 
-  function handleOpenStandard() {
-    setTier("basic_97");
-    setOpen(true);
-  }
-
-  function handleOpenDiscounted() {
-    setTier("discounted_29");
+  function openTier(t: Tier) {
+    setTier(t);
     setOpen(true);
   }
 
@@ -40,18 +46,18 @@ export function HivePricingSection() {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {/* ── Card 1: Standard ── */}
+          {/* ── Basic ₪59 ── */}
           <div
             className="rounded-3xl p-8 flex flex-col gap-6"
             style={{ background: "#191F2B", border: "1px solid #2C323E" }}
           >
             <div>
               <p className="text-xs font-semibold mb-3" style={{ color: "#9E9990" }}>
-                פתוח לכולם
+                בסיסי — לכולם
               </p>
               <div className="flex items-baseline gap-1">
                 <span className="text-5xl font-black" style={{ color: "#EDE9E1" }}>
-                  ₪97
+                  ₪59
                 </span>
                 <span className="text-sm" style={{ color: "#9E9990" }}>
                   /חודש כולל מע״מ
@@ -60,82 +66,71 @@ export function HivePricingSection() {
             </div>
 
             <ul className="flex flex-col gap-3">
-              {FEATURES_STANDARD.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm" style={{ color: "#EDE9E1" }}>
-                  <span style={{ color: "#C9964A" }}>✓</span>
-                  {f}
+              {FEATURES_BASIC.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-sm" style={{ color: "#EDE9E1" }}>
+                  <span style={{ color: "#C9964A", marginTop: 2 }}>✓</span>
+                  <span>{f}</span>
                 </li>
               ))}
             </ul>
 
             <button
-              onClick={handleOpenStandard}
+              onClick={() => openTier("basic_59")}
               className="w-full py-4 rounded-2xl font-black text-lg active:scale-[0.98] btn-navy-secondary"
             >
-              הצטרף לכוורת ←
+              הצטרף לבסיסי ←
             </button>
           </div>
 
-          {/* ── Card 2: Discounted ── */}
+          {/* ── Full ₪149 ── */}
           <div
             className="rounded-3xl p-8 flex flex-col gap-6 relative"
             style={{
               background: "linear-gradient(145deg, #1D2430, #111620)",
-              border: "1px solid rgba(201,150,74,0.08)",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 16px rgba(0,0,0,0.2)",
+              border: "1px solid rgba(232,185,74,0.30)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 28px rgba(232,185,74,0.10)",
             }}
           >
-            {/* Badge */}
+            {/* Featured badge */}
             <div
               className="absolute -top-3 right-6 text-xs font-black px-4 py-1.5 rounded-full"
               style={{
-                background: "linear-gradient(135deg, #E8B94A 0%, #C9964A 50%, #9E7C3A 100%)",
-                color: "#1A1206",
+                background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+                color: "#0D1018",
               }}
             >
-              לקוחות הדר 🐝
+              הכי פופולרי
             </div>
 
             <div>
-              <p className="text-xs font-semibold mb-3 mt-2" style={{ color: "rgba(201,150,74,0.7)" }}>
-                מסלול מיוחד
+              <p className="text-xs font-semibold mb-3" style={{ color: "#C9964A" }}>
+                מלא — גישה ישירה להדר
               </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black" style={{ color: "#C9964A" }}>
-                  ₪29
+              <div className="flex items-baseline gap-1">
+                <span className="text-5xl font-black" style={{ color: "#EDE9E1" }}>
+                  ₪149
                 </span>
                 <span className="text-sm" style={{ color: "#9E9990" }}>
                   /חודש כולל מע״מ
-                </span>
-                <span
-                  className="text-base line-through"
-                  style={{ color: "rgba(158,153,144,0.5)" }}
-                >
-                  ₪97
                 </span>
               </div>
             </div>
 
             <ul className="flex flex-col gap-3">
-              {FEATURES_DISCOUNTED.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm" style={{ color: "#EDE9E1" }}>
-                  <span style={{ color: "#C9964A" }}>✓</span>
-                  {f}
+              {FEATURES_FULL.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-sm" style={{ color: "#EDE9E1" }}>
+                  <span style={{ color: "#C9964A", marginTop: 2 }}>✓</span>
+                  <span>{f}</span>
                 </li>
               ))}
             </ul>
 
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={handleOpenDiscounted}
-                className="w-full py-4 rounded-full font-bold text-lg active:scale-[0.98] btn-cta-gold"
-              >
-                הצטרף עם ההטבה שלך ←
-              </button>
-              <p className="text-xs text-center" style={{ color: "rgba(158,153,144,0.6)" }}>
-                זמין למי שעבר לפחות מוצר אחד של הדר
-              </p>
-            </div>
+            <button
+              onClick={() => openTier("full_149")}
+              className="w-full py-4 rounded-2xl font-black text-lg active:scale-[0.98] btn-cta-gold"
+            >
+              הצטרף למלא ←
+            </button>
           </div>
 
         </div>
@@ -158,38 +153,19 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<
-    "form" | "checking" | "not_eligible" | "legal" | "submitting" | "success" | "pending_payment"
+    "form" | "legal" | "submitting" | "success" | "pending_payment"
   >("form");
 
-  const tierPrice = tier === "discounted_29" ? "₪29" : "₪97";
+  const tierPrice = TIER_PRICE[tier];
+  const tierLabel = TIER_LABEL[tier];
 
-  async function handleFormSubmit(e: React.FormEvent) {
+  function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
     if (!email.trim() || !name.trim()) {
       setError("יש למלא שם ואימייל");
       return;
-    }
-
-    if (tier === "discounted_29") {
-      setStep("checking");
-      try {
-        const res = await fetch("/api/hive/check", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        const data = (await res.json()) as { eligible?: boolean };
-        if (!data.eligible) {
-          setStep("not_eligible");
-          return;
-        }
-      } catch {
-        setError("שגיאה בבדיקת הזכאות. נסה שוב.");
-        setStep("form");
-        return;
-      }
     }
 
     setStep("legal");
@@ -249,17 +225,15 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
           ✕
         </button>
 
-        {/* ── FORM / CHECKING ── */}
-        {(step === "form" || step === "checking") && (
+        {/* ── FORM ── */}
+        {step === "form" && (
           <form onSubmit={handleFormSubmit} className="flex flex-col gap-5" dir="rtl">
             <div>
               <h2 className="text-2xl font-black mb-1" style={{ color: "#EDE9E1" }}>
-                הצטרף לכוורת 🐝
+                הצטרף לכוורת
               </h2>
               <p className="text-sm" style={{ color: "#9E9990" }}>
-                {tier === "discounted_29"
-                  ? "מסלול לקוחות הדר - ₪29/חודש"
-                  : "מסלול פתוח - ₪97/חודש"}
+                {tierLabel} — {tierPrice}/חודש
               </p>
             </div>
 
@@ -273,7 +247,6 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
                 onChange={(e) => setName(e.target.value)}
                 placeholder="ישראל ישראלי"
                 required
-                disabled={step === "checking"}
                 className="rounded-xl px-4 py-3 text-base outline-none transition"
                 style={{ background: "#1D2430", border: "1px solid #2C323E", color: "#EDE9E1" }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "#C9964A")}
@@ -291,7 +264,6 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                disabled={step === "checking"}
                 className="rounded-xl px-4 py-3 text-base outline-none transition"
                 style={{ background: "#1D2430", border: "1px solid #2C323E", color: "#EDE9E1" }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "#C9964A")}
@@ -307,50 +279,11 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
 
             <button
               type="submit"
-              disabled={step === "checking"}
-              className="w-full py-4 rounded-full font-bold text-lg active:scale-[0.98] disabled:opacity-50 btn-cta-gold"
+              className="w-full py-4 rounded-full font-bold text-lg active:scale-[0.98] btn-cta-gold"
             >
-              {step === "checking" ? "בודק זכאות..." : "המשך ←"}
+              המשך ←
             </button>
           </form>
-        )}
-
-        {/* ── NOT_ELIGIBLE ── */}
-        {step === "not_eligible" && (
-          <div className="flex flex-col gap-6 text-center" dir="rtl">
-            <div
-              className="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl"
-              style={{ background: "rgba(201,150,74,0.1)" }}
-            >
-              🐝
-            </div>
-            <div>
-              <h2 className="text-xl font-black mb-2" style={{ color: "#EDE9E1" }}>
-                המחיר המיוחד הזה שמור ללקוחות הדר
-              </h2>
-              <p className="text-sm leading-relaxed" style={{ color: "#9E9990" }}>
-                רוצה להתחיל? בוא נכיר.
-              </p>
-            </div>
-            <a
-              href="/quiz"
-              className="w-full py-4 rounded-full font-bold text-lg text-center transition hover:opacity-90 active:scale-[0.98]"
-              style={{
-                background: "linear-gradient(135deg, #E8B94A 0%, #C9964A 50%, #9E7C3A 100%)",
-                color: "#1A1206",
-                display: "block",
-              }}
-            >
-              בוא נתחיל ←
-            </a>
-            <button
-              onClick={onClose}
-              className="text-sm transition hover:opacity-70"
-              style={{ color: "#9E9990" }}
-            >
-              חזור
-            </button>
-          </div>
         )}
 
         {/* ── LEGAL / SUBMITTING ── */}
@@ -361,7 +294,7 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
                 פרטי המנוי
               </h2>
               <p className="text-sm" style={{ color: "#9E9990" }}>
-                אנא קרא בעיון לפני האישור
+                {tierLabel} — אנא קרא בעיון לפני האישור
               </p>
             </div>
 
@@ -377,7 +310,7 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
                 פרטי המנוי:
               </p>
               <p>• חיוב חודשי אוטומטי של {tierPrice} כולל מע״מ</p>
-              <p>• ניתן לביטול בכל עת - ללא קנס</p>
+              <p>• ניתן לביטול בכל עת — ללא קנס</p>
               <p>• ביטול תוך 14 יום מההצטרפות: החזר מלא</p>
               <p>• ביטול לאחר 14 יום: המנוי יסתיים בסוף תקופת החיוב הנוכחית</p>
               <p>
@@ -428,7 +361,7 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
               disabled={!consent || step === "submitting"}
               className="w-full py-4 rounded-full font-bold text-lg active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed btn-cta-gold"
             >
-              {step === "submitting" ? "שולח..." : "אשר והצטרף ←"}
+              {step === "submitting" ? "שולח…" : "אשר והצטרף ←"}
             </button>
           </form>
         )}
@@ -444,7 +377,7 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
             </div>
             <div>
               <h2 className="text-xl font-black mb-2" style={{ color: "#EDE9E1" }}>
-                הבקשה שלך התקבלה!
+                הבקשה שלך התקבלה
               </h2>
               <p className="text-sm leading-relaxed" style={{ color: "#9E9990" }}>
                 נחזור אליך עם פרטי תשלום בקרוב.
@@ -481,7 +414,7 @@ function HiveJoinFormModal({ tier, onClose }: { tier: Tier; onClose: () => void 
             </div>
             <div>
               <h2 className="text-2xl font-black mb-2" style={{ color: "#EDE9E1" }}>
-                ברוך הבא לכוורת 🐝
+                ברוך הבא לכוורת
               </h2>
               {email && (
                 <p className="text-sm" style={{ color: "#9E9990" }}>

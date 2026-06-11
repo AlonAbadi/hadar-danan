@@ -263,9 +263,13 @@ export async function getHiveStats() {
     .select('hive_tier, hive_status, hive_started_at, hive_cancelled_at, created_at')
     .eq('hive_status', 'active' as any);
 
-  const tier29 = members?.filter((m) => m.hive_tier === 'discounted_29').length || 0;
-  const tier97 = members?.filter((m) => m.hive_tier === 'basic_97').length || 0;
-  const mrr = tier29 * 29 + tier97 * 97;
+  // Current tiers (2026-06 rename)
+  const tier59  = members?.filter((m) => m.hive_tier === 'basic_59').length  || 0;
+  const tier149 = members?.filter((m) => m.hive_tier === 'full_149').length  || 0;
+  // Legacy tiers — still billing existing members at their original price
+  const tier29  = members?.filter((m) => m.hive_tier === 'discounted_29').length || 0;
+  const tier97  = members?.filter((m) => m.hive_tier === 'basic_97').length || 0;
+  const mrr = tier59 * 59 + tier149 * 149 + tier29 * 29 + tier97 * 97;
 
   // New this month
   const monthStart = new Date();

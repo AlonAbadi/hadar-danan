@@ -759,8 +759,16 @@ function partnershipConfirmation(ctx: EmailTemplateContext): RenderedEmail {
 
 function hiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
-  const tier      = String(ctx.tier ?? "basic_97");
-  const price     = tier === "discounted_29" ? "29" : "97";
+  const tier      = String(ctx.tier ?? "basic_59");
+  // The hive/join API now passes price explicitly in ctx; fall back to known
+  // tier → price mapping for backward-compat with any older queued jobs.
+  const TIER_PRICE: Record<string, string> = {
+    basic_59:      "59",
+    full_149:      "149",
+    basic_97:      "97",
+    discounted_29: "29",
+  };
+  const price = typeof ctx.price === "string" ? ctx.price : (TIER_PRICE[tier] ?? "59");
   return {
     subject: "ברוך הבא לכוורת 🐝",
     html: base(`

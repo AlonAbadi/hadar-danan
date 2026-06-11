@@ -70,6 +70,10 @@ const PRODUCT_LABELS: Record<string, string> = {
 };
 
 const HIVE_TIER_MAP: Record<string, { label: string; color: string }> = {
+  basic_59:      { label: "בסיסי",   color: "#C9964A" },
+  full_149:      { label: "מלא",     color: "#E8B94A" },
+  // legacy values — kept for backward-compat with rows created before the
+  // 2-tier rename. Safe to remove once no rows reference them.
   discounted_29: { label: "Starter", color: "#378ADD" },
   basic_97:      { label: "Pro",     color: "#E8B94A" },
   elite:         { label: "Elite",   color: "#7F77DD" },

@@ -3,7 +3,7 @@
  *
  * Joins a user to the "הכוורת" (Hive) monthly membership.
  *
- * Body: { email: string, name: string, tier: "basic_97" | "discounted_29" }
+ * Body: { email: string, name: string, tier: "basic_59" | "full_149" }
  * Response: { success: true, tier: string } | { status: "pending_payment", message: string }
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -11,18 +11,15 @@ import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { sendCapiEvent } from "@/lib/meta-capi";
 
-const QUALIFYING_PRODUCTS = [
-  "challenge_197",
-  "workshop_1080",
-  "course_1800",
-  "strategy_4000",
-  "premium_14000",
-] as const;
+const TIER_PRICE: Record<string, number> = {
+  basic_59: 59,
+  full_149: 149,
+};
 
 const BodySchema = z.object({
   email: z.string().email("כתובת אימייל לא תקינה"),
   name:  z.string().min(1, "נדרש שם"),
-  tier:  z.enum(["basic_97", "discounted_29"]),
+  tier:  z.enum(["basic_59", "full_149"]),
 });
 
 export async function POST(req: NextRequest) {
@@ -44,41 +41,11 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, name, tier } = parsed.data;
+  const price = TIER_PRICE[tier];
 
   const supabase = createServerClient();
 
   try {
-    // For discounted tier: re-verify eligibility via completed purchases
-    if (tier === "discounted_29") {
-      const { data: existingUser } = await supabase
-        .from("users")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (!existingUser) {
-        return NextResponse.json(
-          { error: "לא נמצאה רכישה קודמת - אינך זכאי למחיר המיוחד" },
-          { status: 403 }
-        );
-      }
-
-      const { data: purchases } = await supabase
-        .from("purchases")
-        .select("id")
-        .eq("user_id", existingUser.id)
-        .eq("status", "completed")
-        .in("product", QUALIFYING_PRODUCTS)
-        .limit(1);
-
-      if (!purchases || purchases.length === 0) {
-        return NextResponse.json(
-          { error: "לא נמצאה רכישה קודמת - אינך זכאי למחיר המיוחד" },
-          { status: 403 }
-        );
-      }
-    }
-
     // Upsert user - on conflict email, update name only if blank
     const { data: user, error: upsertErr } = await supabase
       .from("users")
@@ -142,7 +109,6 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (welcomeSeq) {
-      const price = tier === "discounted_29" ? "29" : "97";
       await supabase.from("jobs").insert({
         type:    "SEND_EMAIL",
         payload: {
@@ -153,7 +119,7 @@ export async function POST(req: NextRequest) {
           subject:      welcomeSeq.subject,
           template_key: welcomeSeq.template_key,
           tier,
-          price,
+          price:        String(price),
         },
         run_at: new Date().toISOString(),
         status: "pending",
@@ -188,7 +154,6 @@ export async function POST(req: NextRequest) {
       await supabase.from("jobs").insert(jobs);
     }
 
-    const price = tier === "discounted_29" ? 29 : 97;
     await sendCapiEvent({
       eventName: "Lead",
       eventId:   `hive_${user.id}`,
