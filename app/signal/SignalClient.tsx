@@ -10,6 +10,7 @@ type SignalOutput = {
   pain_source:        string;
   element:            string;
   signal:             string;
+  signal_promise:     string;
   central_tool:       string;
   people:             string;
   content_directions: string[];
@@ -759,6 +760,13 @@ function Result({ firstName, signal, generatedAt, onRestart }: ResultProps) {
           {signal.signal}
         </p>
       </div>
+
+      {/* What the signal promises — quiet card directly under the signal */}
+      {signal.signal_promise && (
+        <Card title="מה שהאות שלך מבטיח">
+          <p style={{ margin: 0, lineHeight: 1.7 }}>{signal.signal_promise}</p>
+        </Card>
+      )}
 
       {/* Warm note */}
       <Card title="הערה אישית" tone="warm">

@@ -13,6 +13,7 @@ type SignalOutput = {
   pain_source:        string;
   element:            string;
   signal:             string;
+  signal_promise:     string;
   central_tool:       string;
   people:             string;
   content_directions: string[];
@@ -205,6 +206,22 @@ function ExtractionCard({ row }: { row: ExtractionRow }) {
           {signal.signal}
         </p>
       </div>
+
+      {/* What the signal promises — quiet card directly under the signal */}
+      {signal.signal_promise && (
+        <div style={{
+          background:   C.cardSoft,
+          border:       `1px solid ${C.line}`,
+          borderRadius: 10,
+          padding:      "12px 16px",
+          marginBottom: 14,
+        }}>
+          <div style={{ fontSize: 11, color: C.goldM, letterSpacing: 0.6, marginBottom: 6, textTransform: "uppercase" as const }}>
+            מה שהאות שלך מבטיח
+          </div>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: C.fg }}>{signal.signal_promise}</p>
+        </div>
+      )}
 
       {/* Expandable — native details/summary, no JS needed */}
       <details>

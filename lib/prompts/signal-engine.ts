@@ -1,6 +1,6 @@
 // Signal Engine prompt (מנוע האות) — the heart of the Hive onboarding diagnostic.
 //
-// Takes 5 extraction answers in Hebrew and returns the 7-field signal per the
+// Takes 5 extraction answers in Hebrew and returns the 8-field signal per the
 // TrueSignal© method. Output language: Hebrew. No em dashes, no emoji, no markdown.
 
 export const SIGNAL_ENGINE_MODEL = "claude-sonnet-4-6";
@@ -39,11 +39,12 @@ export const SIGNAL_QUESTIONS = [
 export type SignalQuestionKey = (typeof SIGNAL_QUESTIONS)[number]["key"];
 export type SignalAnswers = Record<SignalQuestionKey, string>;
 
-// The 7-field output shape the model MUST return.
+// The 8-field output shape the model MUST return.
 export type SignalOutput = {
   pain_source:        string;            // מקור הכאב — the wound the user came out of
   element:            string;            // האלמנט — the talent×passion zone
   signal:             string;            // האות עצמו — pain + element in one sentence
+  signal_promise:     string;            // מה שהאות מבטיח — forward-pointing potential in the signal's own voice
   central_tool:       string;            // הכלי המרכזי — the practice they developed
   people:             string;            // האנשים שלך — the audience, described as "where I was"
   content_directions: [string, string, string];  // שלושה כיווני תוכן
@@ -65,6 +66,7 @@ export const SIGNAL_ENGINE_SYSTEM_PROMPT = `אתה מנוע האות של שיט
 - חלץ את הכלי מהשאלה הרביעית. כאן הזהב, זה מה שהפך את הכאב לשליחות.
 - חלץ את הקהל ואת הקול מהשאלה החמישית. הקהל הוא מי שנמצא היום איפה שהאדם היה. לא דמוגרפיה.
 - האות הוא משפט אחד שמחבר את הכאב ואת האלמנט. צריך להיות חד מספיק שאדם שמתאים ירגיש בו את עצמו.
+- signal_promise (מה שהאות מבטיח): הכיוון שאליו האות נמשך, שעדיין לא מומש במלואו. זה לא מה שהאדם אמר על עצמו - זה מה שעולה מהפער בין הכאב, האלמנט והזווית הייחודית שחולצו, לבין מה שעוד לא נוסח. הקול הוא קול האות עצמו, לא קול חיצוני: כתוב "האות שלך מצביע אל..." או "הכיוון שנפתח כאן הוא...", לעולם לא "אנחנו רואים בך" או "יש לך פוטנציאל ל". זה לא מחמאה ולא נבואה - זו הצבעה שקטה על מה שכבר נמצא בתוך האות ורק טרם נאמר. שניים עד שלושה משפטים. אם התשובות דקות מדי מכדי לגזור כיוון אמיתי - אל תמציא. כתוב שהאות עדיין מתגבש ושווה לחזור ולפרוט יותר.
 
 שפה וטון:
 - עברית בלבד. בלי אנגלית, בלי מילים לועזיות מיותרות.
@@ -94,6 +96,7 @@ export const SIGNAL_ENGINE_SYSTEM_PROMPT = `אתה מנוע האות של שיט
   "pain_source": "תיאור של מקור הכאב המרכזי שעולה מהתשובות, בגוף שני. שתיים עד שלוש שורות. בעדינות. דוגמה למבנה נכון: 'עברת תקופה ש...' או 'הכאב שלך נולד מ...'",
   "element": "האלמנט שלך, בגוף שני. שתיים עד שלוש שורות. דוגמה למבנה נכון: 'אתה פועל באפס מאמץ כש...' או 'כשאת ב..., את לא מרגישה את הזמן.'",
   "signal": "האות שלך. משפט אחד חד, בגוף שני, שמחבר את הכאב ואת האלמנט. זה משפט שאדם שמתאים לך אמור לקרוא ולהגיד 'זה אני'. בלי שם פרטי באמצע.",
+  "signal_promise": "מה שהאות שלך מבטיח. הצבעה קדימה אל הכיוון שהאות נמשך אליו ושעדיין לא מומש. שניים עד שלושה משפטים. הקול הוא קול האות עצמו ('האות שלך מצביע אל...', 'הכיוון שנפתח כאן הוא...'), לא קול חיצוני ('אנחנו רואים בך', 'יש לך פוטנציאל ל'). לא מחמאה ולא נבואה - הצבעה שקטה על מה שכבר בתוך האות וטרם נאמר. אם התשובות דקות מדי לגזור כיוון אמיתי - כתוב שהאות עדיין מתגבש, אל תמציא.",
   "central_tool": "הכלי המרכזי שפיתחת, בגוף שני. שתיים עד שלוש שורות. קונקרטי. דוגמה למבנה נכון: 'פיתחת דרך ש...' או 'הכלי שלך הוא...'",
   "people": "תיאור האנשים שלך, לא כדמוגרפיה אלא כמקום בחיים. בגוף שני אליך כשאתה מתאר אותם. דוגמה למבנה נכון: 'הם נמצאים היום איפה שאתה היית כש...'",
   "content_directions": [
@@ -124,6 +127,7 @@ const REQUIRED_STRING_FIELDS: (keyof SignalOutput)[] = [
   "pain_source",
   "element",
   "signal",
+  "signal_promise",
   "central_tool",
   "people",
   "warm_note",

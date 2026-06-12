@@ -713,6 +713,7 @@ type SignalOutput = {
   pain_source:        string;
   element:            string;
   signal:             string;
+  signal_promise:     string;
   central_tool:       string;
   people:             string;
   content_directions: string[];
@@ -1089,6 +1090,10 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
           {signalState.signal.signal}
         </p>
       </div>
+
+      {signalState.signal.signal_promise && (
+        <SignalSection title="מה שהאות שלך מבטיח" body={signalState.signal.signal_promise} />
+      )}
 
       <SignalSection title="הערה אישית" body={signalState.signal.warm_note} tone="warm" />
       <SignalSection title="מקור הכאב"      body={signalState.signal.pain_source} />
