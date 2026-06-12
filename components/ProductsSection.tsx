@@ -26,7 +26,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
     {
       name:        "הדרכה חינמית",
       price:       "חינם",
-      description: "מבין למה השיווק שלך לא עובד",
+      description: "להבין למה השיווק שלך לא עובד",
       href:        "/training",
       ctaLabel:    "צפה בהדרכה ←",
       variant:     "primary",
