@@ -14,6 +14,7 @@ const SocialProofStrip   = dynamic(() => import("@/components/SocialProofStrip")
 const PhilosophySection  = dynamic(() => import("@/components/landing/PhilosophySection").then(m => ({ default: m.PhilosophySection })));
 const WorkshopTestimonials = dynamic(() => import("@/app/workshop/WorkshopTestimonials").then(m => ({ default: m.WorkshopTestimonials })));
 const HomeStickyBar      = dynamic(() => import("@/components/home/HomeStickyBar"));
+const HomeBingeSection   = dynamic(() => import("@/components/home/HomeBingeSection"));
 
 export const metadata: Metadata = {
   title: "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
@@ -530,150 +531,9 @@ export default async function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════════════════
-              5.5 BINGE CTA
+              5.5 BINGE — trailer-style preview (homepage only)
           ══════════════════════════════════════════════════════ */}
-          <section style={{ background: "#080C14", padding: "48px 20px" }}>
-            <style>{`
-              .binge-card {
-                display: block;
-                max-width: 860px;
-                margin: 0 auto;
-                border-radius: 20px;
-                overflow: hidden;
-                text-decoration: none;
-                border: 1px solid rgba(201,150,74,0.2);
-                box-shadow: 0 8px 48px rgba(0,0,0,0.45);
-                transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
-                background: #0A0E18;
-                position: relative;
-              }
-              .binge-card:hover {
-                border-color: rgba(201,150,74,0.55);
-                box-shadow: 0 0 80px rgba(201,150,74,0.14), 0 24px 64px rgba(0,0,0,0.55);
-                transform: translateY(-3px);
-              }
-              .binge-card:hover .binge-thumb-img {
-                transform: scale(1.07);
-              }
-              .binge-card:hover .binge-play {
-                background: rgba(201,150,74,0.92) !important;
-                color: #080C14 !important;
-              }
-              .binge-card:hover .binge-enter-btn {
-                background: linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%) !important;
-                color: #2a1d05 !important;
-                border-color: transparent !important;
-                box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55) !important;
-              }
-              .binge-thumb-img {
-                transition: transform 0.5s ease;
-              }
-              .binge-play {
-                transition: background 0.2s ease, color 0.2s ease;
-              }
-            `}</style>
-            <Link href="/binge" className="binge-card">
-
-              {/* ── Thumbnail strip ─────────────────────────── */}
-              <div style={{ display: "flex", height: 220, position: "relative", overflow: "hidden" }}>
-                {[
-                  { src: "https://i.vimeocdn.com/video/2153151890-8e7a70d2ddab4ee1e253e06a69db11e3c8575e13cfb18ee1b2d6631e4f29815d-d_640x360?&r=pad&region=us", mobileHide: false },
-                  { src: "https://i.vimeocdn.com/video/2153148315-1a053bf671a4af54ec57a9a43271b6db0acdcae7066c0564da52f081c77544f0-d_640x360?&r=pad&region=us", mobileHide: false },
-                  { src: "https://i.vimeocdn.com/video/2153147710-6fe1753b3439622ea3d24b037d1bb5e0ebc718eac24b56464a0551af09372d23-d_640x360?&r=pad&region=us", mobileHide: false },
-                  { src: "https://i.vimeocdn.com/video/2153153525-777573a5f129e2ecea1e05fbf334c1ccbe937d959ac0d72f3a5036ea076ca655-d_640x360?&r=pad&region=us", mobileHide: true },
-                  { src: "https://i.vimeocdn.com/video/2153153469-e3d1f9a5ba2e65cb2c4b116246fd505e0324e7844f77e3c4f4d46cce682a3373-d_640x360?&r=pad&region=us", mobileHide: true },
-                ].map(({ src, mobileHide }, i) => (
-                  <div key={i} className={mobileHide ? "hidden md:flex" : ""} style={{ flex: 1, overflow: "hidden", position: "relative", borderLeft: i > 0 ? "1px solid rgba(0,0,0,0.4)" : "none" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={src}
-                      alt=""
-                      loading="lazy"
-                      className="binge-thumb-img"
-                      style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }}
-                    />
-                    {/* Per-thumb dark overlay */}
-                    <div style={{ position: "absolute", inset: 0, background: "rgba(8,12,20,0.28)" }} />
-                    {/* Play icon */}
-                    <div className="binge-play" style={{
-                      position: "absolute", top: "50%", left: "50%",
-                      transform: "translate(-50%,-50%)",
-                      width: 32, height: 32, borderRadius: "50%",
-                      background: "rgba(255,255,255,0.18)",
-                      backdropFilter: "blur(4px)",
-                      border: "1px solid rgba(255,255,255,0.22)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 11, color: "#fff",
-                    }}>▶</div>
-                  </div>
-                ))}
-                {/* Heavy bottom gradient to blend into card body */}
-                <div style={{
-                  position: "absolute", bottom: 0, left: 0, right: 0, height: "65%",
-                  background: "linear-gradient(to top, #0A0E18 0%, rgba(10,14,24,0.7) 50%, transparent 100%)",
-                  pointerEvents: "none",
-                }} />
-                {/* Badge top-right */}
-                <div style={{
-                  position: "absolute", top: 14, right: 16,
-                  background: "rgba(10,14,24,0.82)",
-                  border: "1px solid rgba(201,150,74,0.35)",
-                  color: "#E8B94A", fontSize: 11, fontWeight: 700,
-                  padding: "4px 12px", borderRadius: 20,
-                  backdropFilter: "blur(6px)",
-                  fontFamily: "var(--font-assistant), Assistant, sans-serif",
-                }}>80+ סרטונים</div>
-              </div>
-
-              {/* ── Card body ───────────────────────────────── */}
-              <div style={{ padding: "18px 24px 26px", direction: "rtl" }}>
-                {/* Title row */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                  <p style={{
-                    margin: 0, fontSize: 32, fontWeight: 900, lineHeight: 1,
-                    background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-                    WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                    fontFamily: "var(--font-assistant), Assistant, sans-serif",
-                  }}>בינג׳</p>
-                  <span style={{ fontSize: 13, color: "#6B7480", fontWeight: 400, fontFamily: "var(--font-assistant), Assistant, sans-serif" }}>
-                    — ספריית התוכן של הדר דנן
-                  </span>
-                </div>
-
-                {/* Description */}
-                <p style={{
-                  margin: "0 0 14px", fontSize: 14, color: "#AAB0BD", lineHeight: 1.6,
-                  fontFamily: "var(--font-assistant), Assistant, sans-serif",
-                }}>
-                  רילס, תהליכים מהסדנה, עדויות לקוחות. הכל במקום אחד, חלק מהתוכן חינמי.
-                </p>
-
-                {/* Category chips */}
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
-                  {["רילס של הדר", "תהליכים מלאים", "לקוחות מדברים"].map(tag => (
-                    <span key={tag} style={{
-                      background: "rgba(44,50,62,0.7)", color: "#AAB0BD",
-                      fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 12,
-                      fontFamily: "var(--font-assistant), Assistant, sans-serif",
-                    }}>{tag}</span>
-                  ))}
-                </div>
-
-                {/* CTA */}
-                <span className="binge-enter-btn" style={{
-                  display: "inline-block",
-                  border: "1px solid rgba(201,150,74,0.45)",
-                  color: "#E8B94A",
-                  fontSize: 14, fontWeight: 800,
-                  padding: "11px 30px", borderRadius: 24,
-                  fontFamily: "var(--font-assistant), Assistant, sans-serif",
-                  transition: "all 0.2s ease",
-                }}>
-                  ▶ כניסה לבינג׳
-                </span>
-              </div>
-            </Link>
-          </section>
+          <HomeBingeSection />
 
           {/* ══════════════════════════════════════════════════════
               6. SOCIAL PROOF
