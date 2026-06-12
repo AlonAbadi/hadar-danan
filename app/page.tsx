@@ -280,14 +280,105 @@ export default async function LandingPage() {
 
               <PhilosophySection />
 
+              {/* Variant C — dramatic full-bleed quote: closing climax before the Signal Engine */}
               <div
-                className="rounded-3xl px-8 py-7 text-center"
-                style={{ background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.12)" }}
+                style={{
+                  position:     "relative",
+                  borderRadius: 24,
+                  padding:      "clamp(40px, 7vw, 72px) clamp(24px, 5vw, 56px)",
+                  background:   "linear-gradient(180deg, #0E1119 0%, #0A0D14 100%)",
+                  border:       "1px solid rgba(201,150,74,0.14)",
+                  textAlign:    "center",
+                  overflow:     "hidden",
+                }}
               >
-                <p className="text-base md:text-lg leading-relaxed font-medium" style={{ color: "#EDE9E1" }}>
-                  ״אנחנו לא מוכרים סרטונים.<br className="hidden md:block" />
-                  אנחנו מוכרים את הבהירות שגורמת לתוכן לעבוד.״
+                {/* Ambient gold glow */}
+                <div
+                  aria-hidden
+                  style={{
+                    position:      "absolute",
+                    top:           "-40%",
+                    left:          "50%",
+                    transform:     "translateX(-50%)",
+                    width:         "100%",
+                    height:        "80%",
+                    background:    "radial-gradient(ellipse at center, rgba(232,185,74,0.06), transparent 70%)",
+                    pointerEvents: "none",
+                  }}
+                />
+
+                {/* Opening quotation mark */}
+                <div
+                  aria-hidden
+                  style={{
+                    fontFamily:    "Georgia, serif",
+                    fontSize:      "clamp(56px, 9vw, 96px)",
+                    lineHeight:    0.6,
+                    color:         "rgba(201,150,74,0.55)",
+                    marginBottom:  "clamp(16px, 3vw, 28px)",
+                    fontWeight:    700,
+                    position:      "relative",
+                    zIndex:        1,
+                  }}
+                >
+                  ״
+                </div>
+
+                {/* The quote */}
+                <p
+                  style={{
+                    position:   "relative",
+                    zIndex:     1,
+                    margin:     "0 auto",
+                    maxWidth:   720,
+                    fontSize:   "clamp(1.5rem, 4vw, 2.2rem)",
+                    fontWeight: 800,
+                    lineHeight: 1.35,
+                    color:      "#EDE9E1",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  אנחנו לא מוכרים סרטונים.<br />
+                  אנחנו מוכרים את{" "}
+                  <span style={{
+                    background:           "linear-gradient(160deg, #E8B94A 0%, #C9964A 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor:  "transparent",
+                    backgroundClip:       "text",
+                  }}>
+                    הבהירות
+                  </span>{" "}
+                  שגורמת לתוכן לעבוד.
                 </p>
+
+                {/* Bottom: ── ©TRUESIGNAL ── */}
+                <div
+                  style={{
+                    position:       "relative",
+                    zIndex:         1,
+                    display:        "flex",
+                    alignItems:     "center",
+                    justifyContent: "center",
+                    gap:            14,
+                    marginTop:      "clamp(28px, 5vw, 44px)",
+                  }}
+                  aria-hidden
+                >
+                  <div style={{ width: 42, height: 1, background: "rgba(201,150,74,0.45)" }} />
+                  <span
+                    dir="ltr"
+                    style={{
+                      unicodeBidi:    "embed",
+                      color:          "#E8B94A",
+                      fontSize:       12,
+                      fontWeight:     700,
+                      letterSpacing:  "0.22em",
+                    }}
+                  >
+                    ©TRUESIGNAL
+                  </span>
+                  <div style={{ width: 42, height: 1, background: "rgba(201,150,74,0.45)" }} />
+                </div>
               </div>
             </div>
           </section>
