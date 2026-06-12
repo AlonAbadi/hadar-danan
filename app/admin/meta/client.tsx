@@ -151,34 +151,31 @@ function dropoffColorFor(pct: number) {
 
 function AdCreativeCard({ ad, kind }: { ad: TopAd; kind: 'quiz' | 'challenge' }) {
   const accentColor = kind === 'quiz' ? '#3b82f6' : '#C9964A';
-  // Prefer high-res image source over the tiny thumbnail
-  const imgSrc = ad.imageUrl || ad.thumbnailUrl;
   const primaryMetric = kind === 'quiz'
     ? { label: 'CPL', value: ad.metaLeads > 0 ? `₪${Math.round(ad.cplMeta).toLocaleString()}` : '—', sub: `${ad.metaLeads} השלמות` }
     : { label: 'CPA', value: ad.metaPurchases > 0 ? `₪${Math.round(ad.cpaMeta).toLocaleString()}` : '—', sub: `${ad.metaPurchases} רכישות` };
 
+  // Meta's native ad-preview iframe — same renderer Ads Manager uses. We
+  // proxy through /api/admin/meta/preview so the access_token stays on the
+  // server. INSTAGRAM_STORY gives a faithful 9:16 render of reels/stories
+  // creatives, which is what the account is mostly running.
+  const previewIframeSrc = `/api/admin/meta/preview/${ad.adId}?format=INSTAGRAM_STORY`;
+
   return (
     <div style={{ background: '#141820', border: `1px solid #2C323E`, borderRadius: 12, overflow: 'hidden', borderRight: `3px solid ${accentColor}` }}>
-      {/* Creative preview — fixed 1:1 aspect ratio container, image scales to
-          fully fill it (width/height 100%) with objectFit:contain so the
-          whole creative is always visible regardless of source aspect
-          (1:1 / 4:5 / 9:16 / 1.91:1). The previous version used width:auto
-          which froze small Meta thumbnails at their natural pixel size,
-          leaving them floating tiny in the middle of a large black box. */}
-      <div style={{ background: '#0A0E16', width: '100%', aspectRatio: '1 / 1', position: 'relative', overflow: 'hidden' }}>
-        {imgSrc ? (
-          <img
-            src={imgSrc}
-            alt={ad.name}
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#AAB0BD', fontSize: 12, padding: 16, textAlign: 'center' }}>
-            🖼️<br />אין תמונה זמינה<br />
-            <a href={ad.previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#E8B94A', fontSize: 11, textDecoration: 'underline' }}>פתח ב-Meta</a>
-          </div>
-        )}
+      {/* Creative preview — Meta's official iframe, capped to a reasonable
+          max height so the 9:16 vertical isn't oppressively tall on wide
+          cards. The iframe inside shows the actual ad rendering at native
+          resolution, exactly as it appears on Instagram. */}
+      <div style={{ background: '#0A0E16', width: '100%', aspectRatio: '9 / 16', maxHeight: 520, position: 'relative', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+        <iframe
+          src={previewIframeSrc}
+          title={ad.name}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          allow="autoplay"
+          style={{ border: 'none', width: '100%', height: '100%', display: 'block' }}
+        />
         {ad.status && ad.status !== 'ACTIVE' && (
           <span style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(239,68,68,0.85)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, fontFamily: 'system-ui' }}>
             {ad.status}
