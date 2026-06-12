@@ -513,7 +513,7 @@ export default async function LandingPage() {
 
             <div className="other-path-wrap">
               <Link href="/apply" className="other-path-card">
-                <span className="other-path-flag">בסלקציה</span>
+                <span className="other-path-flag">במועמדות</span>
                 <div className="other-path-kicker">המסלול האחר</div>
                 <div className="other-path-head">אנחנו על אותו צד</div>
                 <p className="other-path-lede">

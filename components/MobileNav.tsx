@@ -25,7 +25,7 @@ const ITEMS_GROUP3 = [
   { label: "יום צילום פרמיום",   price: "₪14,000", href: "/premium" },
   { label: "שותפות",             price: "+₪10k",   href: "/partnership" },
   { label: "אטלייה ליוצרי תוכן", price: "בהתאמה", href: "/atelier" },
-  { label: "המסלול האחר",        price: "בסלקציה", href: "/apply", accent: true },
+  { label: "המסלול האחר",        price: "במועמדות", href: "/apply", accent: true },
 ];
 
 const ITEMS_GROUP4 = [{ label: "הכוורת 🐝",        href: "/hive" }];
