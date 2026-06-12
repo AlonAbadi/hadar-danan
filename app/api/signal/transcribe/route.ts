@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   const fd = new FormData();
   fd.append("file", audio, `audio.${ext}`);
-  fd.append("model", "gpt-4o-mini-transcribe");
+  fd.append("model", "whisper-1");
   fd.append("language", "he");
   fd.append("response_format", "json");
 
@@ -52,14 +52,19 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      console.error("openai stt error", res.status, body.slice(0, 300));
-      return NextResponse.json({ error: "transcribe_failed" }, { status: 502 });
+      console.error("openai stt error", res.status, body.slice(0, 500));
+      // surface a short detail so the client can show something useful in dev
+      return NextResponse.json(
+        { error: "transcribe_failed", status: res.status, detail: body.slice(0, 200) },
+        { status: 502 }
+      );
     }
 
     const data = (await res.json()) as { text?: string };
     return NextResponse.json({ text: data.text ?? "" });
   } catch (err) {
     console.error("transcribe network error", err);
-    return NextResponse.json({ error: "network" }, { status: 502 });
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: "network", detail: msg.slice(0, 200) }, { status: 502 });
   }
 }

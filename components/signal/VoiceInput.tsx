@@ -85,13 +85,17 @@ export function VoiceInput({ onTranscript, disabled, hasExistingText }: Props) {
       form.append("audio", blob, `audio.${ext}`);
       const res = await fetch("/api/signal/transcribe", { method: "POST", body: form });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+        const data = await res.json().catch(() => ({} as { error?: string; status?: number; detail?: string }));
         if (data.error === "service_unconfigured") {
           setErrorMsg("ההקלטה לא זמינה כרגע. אפשר להקליד את התשובה.");
         } else if (data.error === "rate_limited") {
           setErrorMsg("יותר מדי הקלטות. רגע אחד ונסה שוב.");
         } else {
-          setErrorMsg("התמלול נכשל. אפשר להקליד את התשובה.");
+          // Surface OpenAI status + first line of detail for debugging.
+          const detail = typeof data.detail === "string" ? data.detail.split("\n")[0].slice(0, 120) : "";
+          const status = data.status ? ` (${data.status})` : "";
+          console.error("transcribe failed", data);
+          setErrorMsg(`התמלול נכשל${status}. אפשר להקליד את התשובה.${detail ? `\n${detail}` : ""}`);
         }
         setState("error");
         return;
