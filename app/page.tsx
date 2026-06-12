@@ -135,7 +135,7 @@ export default async function LandingPage() {
                 <p style={{ color: "#AAB0BD", fontSize: "clamp(0.9rem, 2vw, 1rem)", lineHeight: 1.72, marginBottom: 16 }}>
                   {content.description}
                 </p>
-                <a href="/quiz" data-home-hero-cta="" style={{
+                <a href="/signal" data-home-hero-cta="" style={{
                   display: "block", textAlign: "center",
                   background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
                   color: "#2a1d05", fontWeight: 800, fontSize: "clamp(0.95rem, 2vw, 1.05rem)",
@@ -228,7 +228,7 @@ export default async function LandingPage() {
                 </p>
 
                 {/* CTA */}
-                <a href="/quiz" data-home-hero-cta="" style={{
+                <a href="/signal" data-home-hero-cta="" style={{
                   display: "inline-block",
                   background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
                   color: "#2a1d05", fontWeight: 800, fontSize: "1.05rem",
