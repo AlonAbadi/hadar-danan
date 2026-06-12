@@ -179,20 +179,20 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           </span>
         </a>
 
-        {/* Lane 1 — התחל לבד */}
+        {/* Lane 1 — התחילו לבד */}
         <LaneHeader
           eyebrow="משפחה 1"
-          title="התחל לבד"
-          sub="דיגיטלי · גישה מיידית · בקצב שלך"
+          title="התחילו לבד"
+          sub="דיגיטלי · גישה מיידית · בקצב שלכם"
         />
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 56 }}>
           {lane1.map((p) => <ProductCardItem key={p.name} product={p} />)}
         </div>
 
-        {/* Lane 2 — עבוד איתנו */}
+        {/* Lane 2 — צמחו איתנו */}
         <LaneHeader
           eyebrow="משפחה 2"
-          title="עבוד איתנו"
+          title="צמחו איתנו"
           sub="אישי · בליווי הדר והצוות · כל אחד מתחיל בשיחה"
         />
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
