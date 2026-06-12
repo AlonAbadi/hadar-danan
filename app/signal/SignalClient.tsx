@@ -6,6 +6,7 @@ import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
 import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
 import { PrintButton } from "@/components/signal/PrintButton";
+import { EmailMeButton } from "@/components/signal/EmailMeButton";
 
 type SignalAnswers = Record<string, string>;
 
@@ -266,6 +267,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
             firstName={firstName}
             signal={signal}
             extractionId={extractionId}
+            ownerEmail={(isAuthenticated ? prefillEmail : leadEmail.trim().toLowerCase()) || ""}
             generatedAt={generatedAt}
             onRestart={restart}
           />
@@ -726,11 +728,12 @@ interface ResultProps {
   firstName?:    string;
   signal:        SignalOutput;
   extractionId:  string | null;
+  ownerEmail:    string;
   generatedAt:   string | null;
   onRestart:     () => void;
 }
 
-function Result({ firstName, signal, extractionId, generatedAt, onRestart }: ResultProps) {
+function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRestart }: ResultProps) {
   const dateStr = generatedAt
     ? new Date(generatedAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
     : null;
@@ -892,8 +895,11 @@ function Result({ firstName, signal, extractionId, generatedAt, onRestart }: Res
         </Link>
       </div>
 
-      {/* Footer — utility actions: print + restart */}
+      {/* Footer — utility actions: email + print + restart */}
       <div className="result-footer" style={{ textAlign: "center", paddingTop: 4, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+        {extractionId && ownerEmail && (
+          <EmailMeButton extractionId={extractionId} ownerEmail={ownerEmail} />
+        )}
         <PrintButton />
         <button
           onClick={onRestart}

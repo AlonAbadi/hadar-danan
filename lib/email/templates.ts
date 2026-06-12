@@ -217,6 +217,103 @@ function welcome(ctx: EmailTemplateContext): RenderedEmail {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Manual send — full signal result delivered to the user's inbox.
+// Triggered by the "שלח לי את כל האות באימייל" button on /signal result page.
+// Not part of any sequence — fired on demand via /api/signal/[id]/email-result.
+// ─────────────────────────────────────────────────────────────
+
+function signalResultFull(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  // The signal payload is passed in as ctx.signal — defensive defaults so a
+  // missing field doesn't render an empty <p>.
+  const sig = (ctx.signal as Record<string, unknown> | undefined) ?? {};
+  const get = (k: string) => {
+    const v = sig[k];
+    return typeof v === "string" ? v : "";
+  };
+  const dirs = Array.isArray(sig.content_directions)
+    ? (sig.content_directions as unknown[]).filter((d): d is string => typeof d === "string")
+    : [];
+
+  const signalSentence = get("signal");
+  const signalPromise  = get("signal_promise");
+  const painSource     = get("pain_source");
+  const element        = get("element");
+  const centralTool    = get("central_tool");
+  const people         = get("people");
+  const warmNote       = get("warm_note");
+
+  return {
+    subject: `${firstName}, האות שלך — מלא, לארכיון`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood · TrueSignal©</div>
+        <h1>${firstName}, האות שלך</h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>הנה האות שלך, מלא, לקריאה חוזרת ושמירה.</p>
+
+        ${signalSentence ? `
+        <div class="highlight-box-yellow" style="text-align:center;padding:24px 18px;">
+          <div style="font-size:11px;letter-spacing:1.4px;color:#9E7C3A;margin-bottom:8px;text-transform:uppercase;">האות</div>
+          <p style="font-size:18px;font-weight:600;line-height:1.5;margin:0;color:#1a1a1a;">${signalSentence}</p>
+        </div>
+        ` : ""}
+
+        ${signalPromise ? `
+        <p style="font-size:11px;letter-spacing:1px;color:#C9964A;text-transform:uppercase;margin:24px 0 6px;">↗ מה שהאות שלך מבטיח</p>
+        <p style="line-height:1.7;">${signalPromise}</p>
+        ` : ""}
+
+        ${warmNote ? `
+        <p style="font-size:11px;letter-spacing:1px;color:#C9964A;text-transform:uppercase;margin:24px 0 6px;">הערה אישית</p>
+        <p style="line-height:1.7;">${warmNote}</p>
+        ` : ""}
+
+        ${painSource ? `
+        <p style="font-size:11px;letter-spacing:1px;color:#C9964A;text-transform:uppercase;margin:24px 0 6px;">מקור הכאב</p>
+        <p style="line-height:1.7;">${painSource}</p>
+        ` : ""}
+
+        ${element ? `
+        <p style="font-size:11px;letter-spacing:1px;color:#C9964A;text-transform:uppercase;margin:24px 0 6px;">האלמנט</p>
+        <p style="line-height:1.7;">${element}</p>
+        ` : ""}
+
+        ${centralTool ? `
+        <p style="font-size:11px;letter-spacing:1px;color:#C9964A;text-transform:uppercase;margin:24px 0 6px;">הכלי המרכזי</p>
+        <p style="line-height:1.7;">${centralTool}</p>
+        ` : ""}
+
+        ${people ? `
+        <p style="font-size:11px;letter-spacing:1px;color:#C9964A;text-transform:uppercase;margin:24px 0 6px;">האנשים שלך</p>
+        <p style="line-height:1.7;">${people}</p>
+        ` : ""}
+
+        ${dirs.length ? `
+        <p style="font-size:11px;letter-spacing:1px;color:#C9964A;text-transform:uppercase;margin:24px 0 6px;">שלושה כיווני תוכן להתחיל מהם</p>
+        <ol style="line-height:1.75;padding-inline-start:22px;">
+          ${dirs.map((d) => `<li style="margin-bottom:6px;">${d}</li>`).join("")}
+        </ol>
+        ` : ""}
+
+        <hr class="divider"/>
+
+        <p>האות שלך תמיד נשמר באזור האישי:</p>
+        <a class="cta" href="${APP_URL}/account">פתח את האזור האישי ←</a>
+
+        <p>חברי הכוורת מקבלים כל חודש שני רעיונות תוכן מותאמים אישית לאות שלהם.</p>
+        <a class="cta" href="${APP_URL}/hive">לראות את מסלולי הכוורת ←</a>
+
+        <p>אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#2563eb">הוואטסאפ פתוח</a>.</p>
+        <p>הדר</p>
+      </div>
+    `),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
 // SIGNAL_EXTRACTED · 0h - dedicated welcome for /signal leads.
 // Fired by /api/signal/extract on every successful extraction. Replaces
 // the generic welcome for this funnel — references the diagnostic they
@@ -951,6 +1048,8 @@ const TEMPLATES: Record<string, TemplateFn> = {
   followup_72h:                followup72h,
   // SIGNAL_EXTRACTED welcome
   signal_welcome:              signalWelcome,
+  // Manual on-demand full result email
+  signal_result_full:          signalResultFull,
   // Sequence 2 - challenge buyers
   challenge_access:            challengeAccess,
   challenge_upsell_workshop:   challengeUpsellWorkshop,
