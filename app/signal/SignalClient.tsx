@@ -7,6 +7,7 @@ import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
 import { PrintButton } from "@/components/signal/PrintButton";
 import { EmailMeButton } from "@/components/signal/EmailMeButton";
+import { ShareButton } from "@/components/signal/ShareButton";
 
 type SignalAnswers = Record<string, string>;
 
@@ -785,6 +786,7 @@ function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRe
             text={`${signal.signal}\n\nTrueSignal© · beegood.online`}
             label="העתק לשיתוף"
           />
+          {extractionId && <ShareButton extractionId={extractionId} firstName={firstName} />}
         </div>
       </div>
 
