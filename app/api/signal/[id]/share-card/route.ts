@@ -40,20 +40,22 @@ function signalFontSize(text: string): number {
   return 36;
 }
 
-function buildHtml(signalText: string, firstName: string): { html: string; css: string } {
+function buildHtml(signalText: string): { html: string; css: string } {
   const fontSize = signalFontSize(signalText);
-  const greeting = firstName ? `${esc(firstName)},` : "";
 
+  // Designed as a public branding statement for the customer to post to
+  // their own audience. No personal address. Discovery attribution lives
+  // quietly at the bottom — turns into a soft funnel back to /signal when
+  // their followers see it.
   const html = `
 <div class="card">
   <div class="glow"></div>
   <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
-  <div class="tag"><span dir="ltr" style="unicode-bidi:embed">TRUESIGNAL©</span></div>
-  ${greeting ? `<div class="name">${greeting}</div>` : ""}
   <div class="signal-wrap">
     <div class="signal" style="font-size:${fontSize}px;">${esc(signalText)}</div>
   </div>
   <div class="divider"></div>
+  <div class="attribution">התגלה באמצעות שיטת <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
   <div class="footer">beegood.online</div>
 </div>`;
 
@@ -83,37 +85,13 @@ body { margin: 0; padding: 0; }
 
 .bee {
   position: absolute;
-  top: 80px;
+  top: 100px;
   left: 50%;
   transform: translateX(-50%);
-  width: 110px;
+  width: 100px;
   height: auto;
   /* Subtle glow to match the brand */
   filter: drop-shadow(0 0 24px rgba(232,185,74,0.25));
-}
-
-.tag {
-  position: absolute;
-  top: 200px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 6px;
-  color: #C9964A;
-}
-
-.name {
-  position: absolute;
-  top: 255px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 28px;
-  font-weight: 600;
-  color: #C9964A;
-  opacity: 0.85;
 }
 
 .signal-wrap {
@@ -136,7 +114,7 @@ body { margin: 0; padding: 0; }
 
 .divider {
   position: absolute;
-  bottom: 195px;
+  bottom: 180px;
   left: 50%;
   transform: translateX(-50%);
   width: 80px;
@@ -144,9 +122,23 @@ body { margin: 0; padding: 0; }
   background: linear-gradient(90deg, transparent, #C9964A, transparent);
 }
 
+.attribution {
+  position: absolute;
+  bottom: 135px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: #C9964A;
+  opacity: 0.78;
+  direction: rtl;
+  letter-spacing: 0.5px;
+}
+
 .footer {
   position: absolute;
-  bottom: 90px;
+  bottom: 85px;
   left: 0;
   right: 0;
   text-align: center;
@@ -182,19 +174,9 @@ export async function GET(
     return new NextResponse("signal not found", { status: 404 });
   }
 
-  let firstName = "";
-  if (row.user_id) {
-    const { data: user } = await supabase
-      .from("users")
-      .select("name")
-      .eq("id", row.user_id)
-      .maybeSingle();
-    if (typeof user?.name === "string" && user.name.trim().length > 0) {
-      firstName = user.name.split(" ")[0];
-    }
-  }
-
-  const { html, css } = buildHtml(String(row.signal.signal), firstName);
+  // No personal address on the card — it's a public branding statement the
+  // customer posts to their own audience. So we don't fetch their name here.
+  const { html, css } = buildHtml(String(row.signal.signal));
 
   const result = await createHctiImage({
     html,
