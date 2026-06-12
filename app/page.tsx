@@ -488,7 +488,49 @@ export default async function LandingPage() {
           <ProductsSection />
 
           {/* ══════════════════════════════════════════════════════
-              5. BINGE CTA
+              5. המסלול האחר — standalone selective application track
+          ══════════════════════════════════════════════════════ */}
+          <section style={{ background: "#080C14", padding: "72px 20px 64px" }}>
+            <style>{`
+              .other-path-wrap { max-width: 560px; margin: 0 auto; }
+              .other-path-card { position: relative; display: flex; flex-direction: column; background: linear-gradient(145deg, #141820, #0F131B); border-radius: 18px; padding: 36px 32px; text-decoration: none; color: #EDE9E1; transition: transform 0.2s, border-color 0.2s; border: 1px solid rgba(232,185,74,0.45); box-shadow: 0 0 0 1px rgba(232,185,74,0.08), 0 20px 60px -20px rgba(232,185,74,0.18); }
+              .other-path-card:hover { border-color: rgba(232,185,74,0.75); transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(232,185,74,0.18), 0 24px 70px -20px rgba(232,185,74,0.28); }
+              .other-path-flag { position: absolute; top: 16px; left: 16px; font-size: 10px; letter-spacing: 3px; font-weight: 700; padding: 4px 10px; border-radius: 999px; color: #080C14; background: linear-gradient(90deg, #9E7C3A, #E8B94A); }
+              .other-path-kicker { color: #E8B94A; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+              .other-path-head { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; color: #EDE9E1; }
+              .other-path-lede { color: #AAB0BD; font-size: 15px; line-height: 1.65; margin: 0 0 24px; }
+              .other-path-points { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 12px; }
+              .other-path-point { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.55; color: #EDE9E1; }
+              .other-path-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; background: #E8B94A; box-shadow: 0 0 8px rgba(232,185,74,0.45); }
+              .other-path-cta { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; transition: filter 0.15s; background: linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%); color: #2a1d05; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 4px 10px -4px rgba(0, 0, 0, 0.45); }
+              .other-path-card:hover .other-path-cta { filter: brightness(1.08); }
+              @media (max-width: 760px) {
+                .other-path-card { padding: 28px 22px; }
+                .other-path-head { font-size: 22px; }
+              }
+            `}</style>
+
+            <div className="other-path-wrap">
+              <Link href="/apply" className="other-path-card">
+                <span className="other-path-flag">בסלקציה</span>
+                <div className="other-path-kicker">המסלול האחר</div>
+                <div className="other-path-head">אנחנו על אותו צד</div>
+                <p className="other-path-lede">
+                  שלושה ימי עבודה אינטנסיביים, בליווי אסטרטגי אישי. אנחנו לא לוקחים
+                  מחיר מסחרי מראש — אנחנו שותפים להצלחה שלך.
+                </p>
+                <ul className="other-path-points">
+                  <li className="other-path-point"><span className="other-path-dot" />תשלום בסיסי סמלי בלבד בהתחלה</li>
+                  <li className="other-path-point"><span className="other-path-dot" />אחוז מההכנסות שייצרנו יחד</li>
+                  <li className="other-path-point"><span className="other-path-dot" />3-5 עסקים בלבד בכל מחזור, בסינון ידני</li>
+                </ul>
+                <span className="other-path-cta">הגשת מועמדות ←</span>
+              </Link>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════════════════
+              5.5 BINGE CTA
           ══════════════════════════════════════════════════════ */}
           <section style={{ background: "#080C14", padding: "48px 20px" }}>
             <style>{`
@@ -631,48 +673,6 @@ export default async function LandingPage() {
                 </span>
               </div>
             </Link>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════
-              5.5 המסלול האחר — standalone selective application track
-          ══════════════════════════════════════════════════════ */}
-          <section style={{ background: "#080C14", padding: "72px 20px 64px" }}>
-            <style>{`
-              .other-path-wrap { max-width: 560px; margin: 0 auto; }
-              .other-path-card { position: relative; display: flex; flex-direction: column; background: linear-gradient(145deg, #141820, #0F131B); border-radius: 18px; padding: 36px 32px; text-decoration: none; color: #EDE9E1; transition: transform 0.2s, border-color 0.2s; border: 1px solid rgba(232,185,74,0.45); box-shadow: 0 0 0 1px rgba(232,185,74,0.08), 0 20px 60px -20px rgba(232,185,74,0.18); }
-              .other-path-card:hover { border-color: rgba(232,185,74,0.75); transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(232,185,74,0.18), 0 24px 70px -20px rgba(232,185,74,0.28); }
-              .other-path-flag { position: absolute; top: 16px; left: 16px; font-size: 10px; letter-spacing: 3px; font-weight: 700; padding: 4px 10px; border-radius: 999px; color: #080C14; background: linear-gradient(90deg, #9E7C3A, #E8B94A); }
-              .other-path-kicker { color: #E8B94A; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
-              .other-path-head { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; color: #EDE9E1; }
-              .other-path-lede { color: #AAB0BD; font-size: 15px; line-height: 1.65; margin: 0 0 24px; }
-              .other-path-points { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 12px; }
-              .other-path-point { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.55; color: #EDE9E1; }
-              .other-path-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; background: #E8B94A; box-shadow: 0 0 8px rgba(232,185,74,0.45); }
-              .other-path-cta { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; transition: filter 0.15s; background: linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%); color: #2a1d05; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 4px 10px -4px rgba(0, 0, 0, 0.45); }
-              .other-path-card:hover .other-path-cta { filter: brightness(1.08); }
-              @media (max-width: 760px) {
-                .other-path-card { padding: 28px 22px; }
-                .other-path-head { font-size: 22px; }
-              }
-            `}</style>
-
-            <div className="other-path-wrap">
-              <Link href="/apply" className="other-path-card">
-                <span className="other-path-flag">בסלקציה</span>
-                <div className="other-path-kicker">המסלול האחר</div>
-                <div className="other-path-head">אנחנו על אותו צד</div>
-                <p className="other-path-lede">
-                  שלושה ימי עבודה אינטנסיביים, בליווי אסטרטגי אישי. אנחנו לא לוקחים
-                  מחיר מסחרי מראש — אנחנו שותפים להצלחה שלך.
-                </p>
-                <ul className="other-path-points">
-                  <li className="other-path-point"><span className="other-path-dot" />תשלום בסיסי סמלי בלבד בהתחלה</li>
-                  <li className="other-path-point"><span className="other-path-dot" />אחוז מההכנסות שייצרנו יחד</li>
-                  <li className="other-path-point"><span className="other-path-dot" />3-5 עסקים בלבד בכל מחזור, בסינון ידני</li>
-                </ul>
-                <span className="other-path-cta">הגשת מועמדות ←</span>
-              </Link>
-            </div>
           </section>
 
           {/* ══════════════════════════════════════════════════════

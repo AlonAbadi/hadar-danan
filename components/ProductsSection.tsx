@@ -97,7 +97,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       variant:     "outline",
     },
     {
-      name:        "בהזמנה בלבד",
+      name:        "אטלייה ליוצרי תוכן",
       price:       "בהתאמה",
       description: "ממשפיענית למנהיגה תרבותית",
       href:        "/atelier",
