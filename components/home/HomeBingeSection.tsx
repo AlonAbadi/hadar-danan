@@ -142,15 +142,32 @@ export default function HomeBingeSection() {
             80+ סרטונים · כל מה שלמדתי על שיווק אותנטי, במקום אחד.
           </p>
           <div style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            padding: "5px 14px",
-            background: "rgba(232,185,74,0.08)",
-            border: "1px solid rgba(232,185,74,0.28)",
-            borderRadius: 9999,
-            fontSize: 11, color: "#E8B94A",
-            fontWeight: 700, letterSpacing: ".10em",
+            display: "inline-flex", alignItems: "center", flexWrap: "wrap", gap: 8,
+            justifyContent: "center",
           }}>
-            מתעדכן כל שבוע
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "5px 14px",
+              background: "rgba(232,185,74,0.10)",
+              border: "1px solid rgba(232,185,74,0.32)",
+              borderRadius: 9999,
+              fontSize: 11, color: "#E8B94A",
+              fontWeight: 700, letterSpacing: ".06em",
+            }}>
+              כלול במנוי הכוורת
+              <span dir="ltr" style={{ unicodeBidi: "embed", opacity: 0.9 }}>· ₪59 לחודש</span>
+            </span>
+            <span style={{
+              display: "inline-flex", alignItems: "center",
+              padding: "5px 12px",
+              background: "rgba(232,185,74,0.04)",
+              border: "1px solid rgba(232,185,74,0.18)",
+              borderRadius: 9999,
+              fontSize: 11, color: "#AAB0BD",
+              fontWeight: 600, letterSpacing: ".06em",
+            }}>
+              מתעדכן כל שבוע
+            </span>
           </div>
         </div>
 
