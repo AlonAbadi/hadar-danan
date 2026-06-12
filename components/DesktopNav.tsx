@@ -115,12 +115,13 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
           <a
             href="/login"
             style={{
-              background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
-              color: "#080C14",
+              background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+              color: "#2a1d05",
               fontSize: 13, fontWeight: 700,
               padding: "6px 18px", borderRadius: 20,
               textDecoration: "none",
               whiteSpace: "nowrap",
+              boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
             }}
           >
             התחבר

@@ -211,7 +211,7 @@ export function SignupForm({ ctaLabel, dark = false }: SignupFormProps) {
         type="submit"
         disabled={loading}
         className="w-full rounded-xl py-4 text-lg font-black shadow-lg transition active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
-        style={{ background: "linear-gradient(135deg, #C9964A, #9E7C3A)", color: "#101520" }}
+        style={{ background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)", color: "#2a1d05", boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)" }}
       >
         {loading ? (
           <span className="flex items-center justify-center gap-2">

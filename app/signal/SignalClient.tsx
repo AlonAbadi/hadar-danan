@@ -316,15 +316,15 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
       <button
         onClick={onStart}
         style={{
-          background:   `linear-gradient(135deg, ${C.gold}, ${C.goldMid}, ${C.goldDeep})`,
-          color:        "#0D1018",
+          background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+          color:        "#2a1d05",
           fontWeight:   700,
           fontSize:     16,
           border:       "none",
           borderRadius: 12,
           padding:      "14px 32px",
           cursor:       "pointer",
-          boxShadow:    "0 8px 24px rgba(232,185,74,0.18)",
+          boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
         }}
       >
         להתחיל
@@ -443,16 +443,16 @@ function FormCard(props: FormCardProps) {
           disabled={!props.canAdvance}
           style={{
             background:   props.canAdvance
-              ? `linear-gradient(135deg, ${C.gold}, ${C.goldMid}, ${C.goldDeep})`
+              ? "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)"
               : "rgba(232,185,74,0.18)",
-            color:        props.canAdvance ? "#0D1018" : "rgba(237,233,225,0.4)",
+            color:        props.canAdvance ? "#2a1d05" : "rgba(237,233,225,0.4)",
             fontWeight:   700,
             border:       "none",
             borderRadius: 12,
             padding:      "12px 28px",
             cursor:       props.canAdvance ? "pointer" : "not-allowed",
             fontSize:     15,
-            boxShadow:    props.canAdvance ? "0 6px 18px rgba(232,185,74,0.18)" : "none",
+            boxShadow:    props.canAdvance ? "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)" : "none",
           }}
         >
           {props.isLast ? "חלץ את האות" : "הלאה"}
@@ -646,16 +646,16 @@ function LeadGate({ name, email, phone, setName, setEmail, setPhone, onSubmit, o
             disabled={!canSubmit}
             style={{
               background:   canSubmit
-                ? `linear-gradient(135deg, ${C.gold}, ${C.goldMid}, ${C.goldDeep})`
+                ? "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)"
                 : "rgba(232,185,74,0.18)",
-              color:        canSubmit ? "#0D1018" : "rgba(237,233,225,0.4)",
+              color:        canSubmit ? "#2a1d05" : "rgba(237,233,225,0.4)",
               fontWeight:   700,
               border:       "none",
               borderRadius: 12,
               padding:      "12px 28px",
               cursor:       canSubmit ? "pointer" : "not-allowed",
               fontSize:     15,
-              boxShadow:    canSubmit ? "0 6px 18px rgba(232,185,74,0.18)" : "none",
+              boxShadow:    canSubmit ? "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)" : "none",
             }}
           >
             לחילוץ האות שלי ←
@@ -688,14 +688,15 @@ function ErrorCard({ message, onRetry }: { message: string | null; onRetry: () =
       <button
         onClick={onRetry}
         style={{
-          background:   `linear-gradient(135deg, ${C.gold}, ${C.goldMid}, ${C.goldDeep})`,
-          color:        "#0D1018",
+          background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+          color:        "#2a1d05",
           fontWeight:   700,
           border:       "none",
           borderRadius: 12,
           padding:      "12px 28px",
           cursor:       "pointer",
           fontSize:     15,
+          boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
         }}
       >
         חזרה לטופס
@@ -811,8 +812,8 @@ function Result({ firstName, signal, generatedAt, onRestart }: ResultProps) {
           href="/hive"
           style={{
             display:      "inline-block",
-            background:   `linear-gradient(135deg, ${C.gold}, ${C.goldMid}, ${C.goldDeep})`,
-            color:        "#0D1018",
+            background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+            color:        "#2a1d05",
             fontWeight:   800,
             fontSize:     15,
             border:       "none",
@@ -820,7 +821,7 @@ function Result({ firstName, signal, generatedAt, onRestart }: ResultProps) {
             padding:      "12px 28px",
             cursor:       "pointer",
             textDecoration: "none",
-            boxShadow:    "0 8px 24px rgba(232,185,74,0.18)",
+            boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
           }}
         >
           לראות את מסלולי הכוורת ←

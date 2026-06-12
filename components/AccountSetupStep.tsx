@@ -192,13 +192,14 @@ export function AccountSetupStep({ email, redirectTo }: Props) {
             border: "none",
             background: loading || password.length < 6
               ? "#2C323E"
-              : "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-            color: loading || password.length < 6 ? "#9E9990" : "#0D1018",
+              : "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+            color: loading || password.length < 6 ? "#9E9990" : "#2a1d05",
             fontSize: 15,
             fontWeight: 800,
             cursor: loading || password.length < 6 ? "not-allowed" : "pointer",
             fontFamily: "Assistant, sans-serif",
             transition: "all 0.15s",
+            boxShadow: loading || password.length < 6 ? "none" : "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
           }}
         >
           {loading ? "רגע..." : "שמור וכנס לתוכן ←"}
