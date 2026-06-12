@@ -592,11 +592,12 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
               <Card title="פרטים אישיים">
-                <InfoRow label="שם"      value={user.name} />
-                <InfoRow label="אימייל"  value={user.email} ltr />
-                <InfoRow label="טלפון"   value={user.phone} ltr />
-                <InfoRow label="נרשם/ה"  value={fmtDateTime(user.created_at)} />
-                <InfoRow label="סטטוס"   value={STATUS_LABELS[user.status] ?? user.status} />
+                <InfoRow label="שם"          value={user.name} />
+                <InfoRow label="תחום עיסוק"  value={(user as { occupation?: string | null }).occupation ?? null} />
+                <InfoRow label="אימייל"      value={user.email} ltr />
+                <InfoRow label="טלפון"       value={user.phone} ltr />
+                <InfoRow label="נרשם/ה"      value={fmtDateTime(user.created_at)} />
+                <InfoRow label="סטטוס"       value={STATUS_LABELS[user.status] ?? user.status} />
               </Card>
 
               <Card title="מקור ושיווק">
