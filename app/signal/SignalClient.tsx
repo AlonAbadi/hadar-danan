@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
+import { VoiceInput } from "@/components/signal/VoiceInput";
 
 type SignalAnswers = Record<string, string>;
 
@@ -389,6 +390,15 @@ function FormCard(props: FormCardProps) {
       <p style={{ color: C.muted, fontSize: 15, margin: "0 0 22px", lineHeight: 1.55 }}>
         {props.hint}
       </p>
+
+      <VoiceInput
+        hasExistingText={props.value.trim().length > 0}
+        onTranscript={(text) => {
+          const current = props.value.trim();
+          const next = current ? `${current}\n\n${text}` : text;
+          props.setValue(next);
+        }}
+      />
 
       <textarea
         value={props.value}
