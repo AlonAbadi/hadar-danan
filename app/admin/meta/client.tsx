@@ -159,18 +159,22 @@ function AdCreativeCard({ ad, kind }: { ad: TopAd; kind: 'quiz' | 'challenge' })
 
   return (
     <div style={{ background: '#141820', border: `1px solid #2C323E`, borderRadius: 12, overflow: 'hidden', borderRight: `3px solid ${accentColor}` }}>
-      {/* Creative image — flexible height, contain to show the whole creative
-          regardless of aspect ratio (1:1 / 9:16 / 1.91:1 all look fine) */}
-      <div style={{ background: '#000', minHeight: 280, maxHeight: 480, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Creative preview — fixed 1:1 aspect ratio container, image scales to
+          fully fill it (width/height 100%) with objectFit:contain so the
+          whole creative is always visible regardless of source aspect
+          (1:1 / 4:5 / 9:16 / 1.91:1). The previous version used width:auto
+          which froze small Meta thumbnails at their natural pixel size,
+          leaving them floating tiny in the middle of a large black box. */}
+      <div style={{ background: '#0A0E16', width: '100%', aspectRatio: '1 / 1', position: 'relative', overflow: 'hidden' }}>
         {imgSrc ? (
           <img
             src={imgSrc}
             alt={ad.name}
-            style={{ maxWidth: '100%', maxHeight: 480, width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div style={{ color: '#AAB0BD', fontSize: 12, padding: 16, textAlign: 'center' }}>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#AAB0BD', fontSize: 12, padding: 16, textAlign: 'center' }}>
             🖼️<br />אין תמונה זמינה<br />
             <a href={ad.previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#E8B94A', fontSize: 11, textDecoration: 'underline' }}>פתח ב-Meta</a>
           </div>
