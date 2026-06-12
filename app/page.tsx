@@ -512,7 +512,7 @@ export default async function LandingPage() {
                   margin: "0 0 14px", fontSize: 14, color: "#AAB0BD", lineHeight: 1.6,
                   fontFamily: "var(--font-assistant), Assistant, sans-serif",
                 }}>
-                  רילס, תהליכים מהסדנה, עדויות לקוחות — הכל במקום אחד, בחינם.
+                  רילס, תהליכים מהסדנה, עדויות לקוחות. הכל במקום אחד, חלק מהתוכן חינמי.
                 </p>
 
                 {/* Category chips */}
