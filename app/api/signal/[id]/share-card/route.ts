@@ -47,6 +47,7 @@ function buildHtml(signalText: string, firstName: string): { html: string; css: 
   const html = `
 <div class="card">
   <div class="glow"></div>
+  <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
   <div class="tag"><span dir="ltr" style="unicode-bidi:embed">TRUESIGNAL©</span></div>
   ${greeting ? `<div class="name">${greeting}</div>` : ""}
   <div class="signal-wrap">
@@ -80,9 +81,20 @@ body { margin: 0; padding: 0; }
   background: radial-gradient(ellipse at center, rgba(232,185,74,0.20) 0%, rgba(232,185,74,0.08) 35%, transparent 70%);
 }
 
+.bee {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: auto;
+  /* Subtle glow to match the brand */
+  filter: drop-shadow(0 0 24px rgba(232,185,74,0.25));
+}
+
 .tag {
   position: absolute;
-  top: 90px;
+  top: 200px;
   left: 0;
   right: 0;
   text-align: center;
@@ -94,7 +106,7 @@ body { margin: 0; padding: 0; }
 
 .name {
   position: absolute;
-  top: 145px;
+  top: 255px;
   left: 0;
   right: 0;
   text-align: center;
@@ -190,7 +202,7 @@ export async function GET(
     googleFonts:    "Assistant:wght@700",
     viewportWidth:  1080,
     viewportHeight: 1080,
-    msDelay:        300,   // give the Hebrew webfont time to load
+    msDelay:        600,   // give the webfont + bee logo image time to load
   });
 
   if (!result.ok) {
