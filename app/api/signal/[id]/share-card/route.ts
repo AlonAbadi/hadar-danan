@@ -47,7 +47,7 @@ function buildHtml(signalText: string, firstName: string): { html: string; css: 
   const html = `
 <div class="card">
   <div class="glow"></div>
-  <div class="tag">TRUESIGNAL©</div>
+  <div class="tag"><span dir="ltr" style="unicode-bidi:embed">TRUESIGNAL©</span></div>
   ${greeting ? `<div class="name">${greeting}</div>` : ""}
   <div class="signal-wrap">
     <div class="signal" style="font-size:${fontSize}px;">${esc(signalText)}</div>
