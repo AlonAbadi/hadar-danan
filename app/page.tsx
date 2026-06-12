@@ -152,7 +152,7 @@ export default async function LandingPage() {
                   marginTop: 8,
                   direction: "rtl",
                 }}>
-                  6 שאלות · 2 דקות · ללא כרטיס אשראי
+                  חמש שאלות · אבחון אישי · ללא כרטיס אשראי
                 </p>
               </div>
             </div>
@@ -245,7 +245,7 @@ export default async function LandingPage() {
                   marginTop: 8,
                   direction: "rtl",
                 }}>
-                  6 שאלות · 2 דקות · ללא כרטיס אשראי
+                  חמש שאלות · אבחון אישי · ללא כרטיס אשראי
                 </p>
 
 
