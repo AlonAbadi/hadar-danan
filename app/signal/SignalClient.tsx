@@ -336,32 +336,23 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
         </p>
       </div>
 
-      <div style={{ borderTop: `1px solid ${C.line}`, margin: "0 0 22px" }} />
+      <div style={{ borderTop: `1px solid ${C.line}`, margin: "0 0 20px" }} />
 
-      <div style={{ marginBottom: 24, textAlign: "right" }}>
-        <div style={sectionHeading}>התהליך</div>
-        <ul style={bulletList}>
-          <li>· חמש שאלות פתוחות, כעשר דקות</li>
-          <li>· אפשר להקליד או להקליט בקול</li>
-          <li>· הטיוטה נשמרת אם עוצרים באמצע</li>
-          <li>· שאלה שלוש מדברת על תקופה קשה. מותר לדלג</li>
-        </ul>
-      </div>
+      <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.65, margin: "0 0 22px", textAlign: "right" }}>
+        כעשר דקות. כתיבה או הקלטה בקול. שאלה 3 על תקופה קשה, מותר לדלג. הטיוטה נשמרת.
+      </p>
 
-      <div style={{ marginBottom: 28, textAlign: "right" }}>
+      <div style={{ marginBottom: 26, textAlign: "right" }}>
         <div style={sectionHeading}>מה חוזר אליך</div>
-        <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, margin: "0 0 10px" }}>
-          שמונה שדות, בעברית, בלי שיווק. הכל נגזר מהתשובות שלך, לא תוכן גנרי.
-        </p>
         <ul style={bulletList}>
-          <li>· משפט האות, ניסוח חד וייחודי לך</li>
-          <li>· מה שהאות שלך מבטיח, הכיוון שעוד לא מומש</li>
-          <li>· מקור הכאב, מאיפה זה גדל</li>
-          <li>· האלמנט, מה שאתה רואה ואחרים פספסו</li>
-          <li>· הכלי המרכזי שפיתחת בדרך החוצה</li>
+          <li>· משפט האות, חד וייחודי לך</li>
+          <li>· מה שהאות מבטיח, הכיוון שעוד לא מומש</li>
+          <li>· הערה אישית</li>
+          <li>· מקור הכאב</li>
+          <li>· האלמנט שאחרים פספסו</li>
+          <li>· הכלי המרכזי שפיתחת</li>
           <li>· האנשים שאתה משרת</li>
-          <li>· שלושה כיווני תוכן להתחיל מהם</li>
-          <li>· הערה אישית קצרה</li>
+          <li>· שלושה כיווני תוכן ספציפיים</li>
         </ul>
       </div>
 
