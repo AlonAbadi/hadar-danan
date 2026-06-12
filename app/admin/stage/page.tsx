@@ -120,7 +120,7 @@ export default function StageAdminPage() {
               padding: "6px 16px", borderRadius: 9999, fontFamily: "inherit",
               border: `1px solid ${active ? "#C9964A" : "#2C323E"}`,
               background: active ? "rgba(201,150,74,0.12)" : "transparent",
-              color: active ? "#C9964A" : "#AAB0BD",
+              color: active ? "#E8B94A" : "#AAB0BD",
               fontSize: 13, fontWeight: active ? 700 : 400, cursor: "pointer",
             }}>
               {s === "all" ? `הכל (${count})` : `${STATUS_LABELS[s]} (${count})`}

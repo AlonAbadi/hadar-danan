@@ -180,7 +180,7 @@ export default function ProductsClient() {
                     <div style={{ fontSize: 12, color: '#AAB0BD', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.email}</div>
                   </div>
                   <div style={{ textAlign: 'left', flexShrink: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: PRODUCT_COLORS[p.product] ?? '#C9964A' }}>{p.productName}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: PRODUCT_COLORS[p.product] ?? '#E8B94A' }}>{p.productName}</div>
                     <div style={{ fontSize: 11, color: '#AAB0BD' }}>{relativeTime(p.created_at)}</div>
                   </div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#34A853', flexShrink: 0 }}>

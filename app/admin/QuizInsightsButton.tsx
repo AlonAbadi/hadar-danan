@@ -90,7 +90,7 @@ export function QuizInsightsButton() {
           disabled={loading}
           style={{
             background: loading ? "rgba(201,150,74,0.15)" : "linear-gradient(135deg,#E8B94A,#9E7C3A)",
-            color: loading ? "#C9964A" : "#1A1206",
+            color: loading ? "#E8B94A" : "#1A1206",
             fontWeight: 800, fontSize: 13,
             padding: "10px 22px", borderRadius: 9999,
             border: loading ? "1px solid rgba(201,150,74,0.3)" : "none",

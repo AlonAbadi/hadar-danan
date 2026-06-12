@@ -566,7 +566,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   {new Date(entry.ts).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
                 </span>
                 <span style={{
-                  color: entry.status === "error" ? "#EA4335" : entry.status === "deployed" || entry.status === "live" ? "#34A853" : "#C9964A",
+                  color: entry.status === "error" ? "#EA4335" : entry.status === "deployed" || entry.status === "live" ? "#34A853" : "#E8B94A",
                   minWidth: 80, flexShrink: 0,
                 }}>{entry.status}</span>
                 <span style={{ color: "#AAB0BD" }}>{entry.msg}</span>
@@ -703,7 +703,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   padding: "8px 16px", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit",
                   background: businessType === t ? "rgba(201,150,74,0.15)" : "#1D2430",
                   border: `1px solid ${businessType === t ? "#C9964A" : "#2C323E"}`,
-                  color: businessType === t ? "#C9964A" : "#AAB0BD", fontWeight: businessType === t ? 700 : 400,
+                  color: businessType === t ? "#E8B94A" : "#AAB0BD", fontWeight: businessType === t ? 700 : 400,
                 }}>{t}</button>
               ))}
             </div>
@@ -871,7 +871,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                         fontFamily: "inherit", transition: "all 0.15s",
                         background: on ? "rgba(201,150,74,0.12)" : "#1D2430",
                         border: `1px solid ${on ? "#C9964A" : "#2C323E"}`,
-                        color: on ? "#C9964A" : "#AAB0BD",
+                        color: on ? "#E8B94A" : "#AAB0BD",
                         fontWeight: on ? 700 : 400,
                         display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2, textAlign: "right",
                       }}
@@ -910,7 +910,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                     fontFamily: "inherit", transition: "all 0.15s",
                     background: isSelected ? "rgba(201,150,74,0.15)" : "#1D2430",
                     border: `1px solid ${isSelected ? "#C9964A" : "#2C323E"}`,
-                    color: isSelected ? "#C9964A" : "#AAB0BD",
+                    color: isSelected ? "#E8B94A" : "#AAB0BD",
                     fontWeight: isSelected ? 700 : 400,
                   }}
                 >
@@ -1071,7 +1071,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 { text: "קבל Cardcom terminal מהלקוחה (ידני)", manual: true },
               ].map((step, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, fontSize: 13, alignItems: "flex-start" }}>
-                  <span style={{ color: step.auto ? "#34A853" : "#C9964A", fontWeight: 700, minWidth: 20 }}>{i + 1}.</span>
+                  <span style={{ color: step.auto ? "#34A853" : "#E8B94A", fontWeight: 700, minWidth: 20 }}>{i + 1}.</span>
                   <span style={{ color: step.auto ? "#34A853" : "#AAB0BD" }}>{step.text}</span>
                 </div>
               ))}

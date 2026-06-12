@@ -112,7 +112,7 @@ export default function AtelierAdminPage() {
             padding: "6px 16px", borderRadius: 9999, fontFamily: "inherit",
             border: `1px solid ${filterStatus === s ? "#C9964A" : "#2C323E"}`,
             background: filterStatus === s ? "rgba(201,150,74,0.12)" : "transparent",
-            color: filterStatus === s ? "#C9964A" : "#AAB0BD",
+            color: filterStatus === s ? "#E8B94A" : "#AAB0BD",
             fontSize: 13, fontWeight: filterStatus === s ? 700 : 400, cursor: "pointer",
           }}>
             {s === "all" ? `הכל (${applications.length})` : `${STATUS_LABELS[s]} (${applications.filter(a => a.status === s).length})`}

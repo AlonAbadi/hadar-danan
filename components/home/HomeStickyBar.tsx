@@ -4,42 +4,32 @@ import { useEffect, useState } from "react";
 
 interface HomeStickyBarProps {
   ctaText: string;
-  heroSelector?: string;
 }
 
 export default function HomeStickyBar({
   ctaText,
-  heroSelector = "[data-home-hero-cta]",
 }: HomeStickyBarProps) {
   const [visible, setVisible] = useState(false);
-  const [heroInView, setHeroInView] = useState(true);
 
-  // IntersectionObserver על כפתורי ה-hero
+  // Option A: observe #products with rootMargin "0px 0px -100% 0px" so the callback
+  // fires when the section's bottom leaves the top of the viewport. Show bar once
+  // the user has scrolled past the products section.
   useEffect(() => {
-    const targets = document.querySelectorAll(heroSelector);
-    if (targets.length === 0) return;
+    const target = document.getElementById("products");
+    if (!target) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        const anyVisible = entries.some((e) => e.isIntersecting);
-        setHeroInView(anyVisible);
+        const entry = entries[0];
+        if (!entry) return;
+        setVisible(entry.boundingClientRect.bottom < 0);
       },
-      { threshold: 0.1 }
+      { rootMargin: "0px 0px -100% 0px", threshold: 0 }
     );
 
-    targets.forEach((t) => observer.observe(t));
+    observer.observe(target);
     return () => observer.disconnect();
-  }, [heroSelector]);
-
-  // Scroll listener — מופיע אחרי 400px + רק אם hero לא נראה
-  useEffect(() => {
-    const handleScroll = () => {
-      setVisible(window.scrollY > 400 && !heroInView);
-    };
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [heroInView]);
+  }, []);
 
   return (
     <div

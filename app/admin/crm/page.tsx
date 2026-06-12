@@ -1292,7 +1292,7 @@ function CrmPageInner() {
             style={{
               padding: '10px 20px', background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 14, fontWeight: tab === t.id ? 700 : 500,
-              color: tab === t.id ? '#C9964A' : '#AAB0BD',
+              color: tab === t.id ? '#E8B94A' : '#AAB0BD',
               borderBottom: tab === t.id ? '2px solid #C9964A' : '2px solid transparent',
               marginBottom: -1, transition: 'all 0.15s',
             }}

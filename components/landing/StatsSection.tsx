@@ -169,6 +169,10 @@ export function StatsSection() {
 
       {/* Gold line — bottom */}
       <div style={lineStyle} aria-hidden />
+
+      <p style={{ textAlign: "center", color: "#AAB0BD", fontSize: 12, marginTop: 24, fontWeight: 500, opacity: visible ? 1 : 0, transition: "opacity 0.8s ease 0.6s" }}>
+        המספרים מבוססים על הצטברות לקוחות, סדנאות, וקמפיינים מאז 2019.
+      </p>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   WORKSHOP_DATES,
   getNextDate,
@@ -36,9 +36,6 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
   const [stage, setStage]           = useState<Stage>("הכל");
   const [expanded, setExpanded]     = useState<Set<number>>(new Set());
   const [showNudge, setShowNudge]   = useState(false);
-  const [showSticky, setShowSticky] = useState(false);
-  const [stickyGone, setStickyGone] = useState(false);
-  const sectionRef                  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("ps_stage") as Stage | null;
@@ -50,20 +47,6 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
   useEffect(() => {
     localStorage.setItem("ps_stage", stage);
   }, [stage]);
-
-  useEffect(() => {
-    const onScroll = () => {
-      if (!sectionRef.current || stickyGone) return;
-      const rect   = sectionRef.current.getBoundingClientRect();
-      const height = sectionRef.current.offsetHeight;
-      const pct    = -rect.top / height;
-      setShowSticky(pct > 0.6 && pct < 1.0);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [stickyGone]);
-
-  function dismissSticky() { setStickyGone(true); setShowSticky(false); }
 
   function toggleExpand(i: number) {
     setExpanded(prev => {
@@ -179,7 +162,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
   };
 
   return (
-    <section id="products" ref={sectionRef} style={{ background: "#080C14", position: "relative" }}>
+    <section id="products" style={{ background: "#080C14", position: "relative" }}>
       <div style={{ color: "#EDE9E1", maxWidth: 840, margin: "0 auto", padding: "80px 24px 0" }}>
 
         {/* ── Section header ─────────────────────────────────────────────── */}
@@ -222,6 +205,18 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             <button onClick={() => setShowNudge(false)} style={{ background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 16, padding: 0 }}>✕</button>
           </div>
         )}
+
+        {/* ── Lane 1 header ─────────────────────────────────────────────── */}
+        <div style={{ padding: "0 0 24px", textAlign: "center" }}>
+          <div style={{ width: 32, height: 1, background: "#9E7C3A", margin: "0 auto 20px", opacity: 0.5 }} />
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".32em", color: "#E8B94A", marginBottom: 12 }}>מסלול 1</div>
+          <h2 style={{ margin: "0 auto 8px", maxWidth: 340, fontSize: 26, fontWeight: 300, lineHeight: 1.2, color: "#f6f1e6", letterSpacing: "-0.01em" }}>
+            בקצב <em style={{ fontStyle: "italic", fontWeight: 400, color: "#E8B94A" }}>שלך.</em>
+          </h2>
+          <p style={{ margin: "0 auto", maxWidth: 320, fontSize: 13, color: "#AAB0BD", lineHeight: 1.65 }}>
+            התחל לבד או עם הקבוצה. מתאים למי שעדיין מרגיש בדרך.
+          </p>
+        </div>
 
         {/* ── Core ladder — each product is its own card with clear separation ── */}
         <div className="ps-ladder-stack" style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 48 }}>
@@ -308,7 +303,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                   {/* CTAs + פרטים */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     {p.ctas.map((cta, ci) => (
-                      <a key={ci} href={cta.href} onClick={dismissSticky} style={cta.primary ? ctaGold : ctaOutline}>
+                      <a key={ci} href={cta.href} style={cta.primary ? ctaGold : ctaOutline}>
                         {cta.label}
                       </a>
                     ))}
@@ -366,13 +361,12 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           {/* Header */}
           <div style={{ padding: "56px 0 36px", textAlign: "center", position: "relative" }}>
             <div style={{ width: 32, height: 1, background: "#9E7C3A", margin: "0 auto 20px", opacity: 0.5 }} />
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".32em", color: "#9E7C3A", marginBottom: 18 }}>PREMIUM</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".32em", color: "#E8B94A", marginBottom: 18 }}>מסלול 2</div>
             <h2 style={{ margin: "0 auto 12px", maxWidth: 340, fontSize: 30, fontWeight: 300, lineHeight: 1.2, color: "#f6f1e6", letterSpacing: "-0.01em" }}>
-              לעסקים שמוכנים<br/>
-              <em style={{ fontStyle: "italic", fontWeight: 400, color: "#E8B94A" }}>לקפיצה הבאה.</em>
+              איתי, <em style={{ fontStyle: "italic", fontWeight: 400, color: "#E8B94A" }}>יחד.</em>
             </h2>
             <p style={{ margin: "0 auto", maxWidth: 300, fontSize: 13, color: "#8e887e", lineHeight: 1.65 }}>
-              שלוש דרכים לעבוד איתנו לעומק.<br/>כל אחת מתחילה בשיחה.
+              שלוש דרכים לעבוד איתי לעומק. כל אחת מתחילה בשיחה.
             </p>
           </div>
 
@@ -383,7 +377,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           {([
             {
               num: "I",
-              kind: "PRODUCTION DAY",
+              kind: "יום צילום",
               pull: "יום צילום אחד.\nתוכן שבאמת עובד.",
               body: "צלם ובמאי לצדך ליום שלם — אצלך או אצלנו. יוצאים עם 14 סרטונים ערוכים, מוכנים לפרסום, שמייצרים פניות ולקוחות.",
               meta: [
@@ -398,7 +392,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             },
             {
               num: "II",
-              kind: "STRATEGIC PARTNERSHIP",
+              kind: "שותפות אסטרטגית",
               pull: "שותפה לצדך -\nלא עוד ספקית.",
               body: "שותפות שיווקית לטווח ארוך - אסטרטגיית תוכן, כתיבה שיווקית, ניתוח חודשי וליווי שוטף. לעסקים שרוצים בניית נוכחות אמיתית.",
               meta: [
@@ -413,7 +407,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             },
             {
               num: "III",
-              kind: "BY INVITATION",
+              kind: "בהזמנה בלבד",
               pull: "ממשפיענית\nלמנהיגה תרבותית.",
               body: "עובדים עם מספר מצומצם של משפיעניות נבחרות — אסטרטגיה, נרטיב ופלטפורמה דיגיטלית מלאה. מיועד להזמנה בלבד.",
               meta: [
@@ -486,7 +480,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
               )}
 
               {/* CTA — typographic link */}
-              <a href={item.href} onClick={dismissSticky} aria-label={`פנה ליצירת קשר — ${item.kind}`} style={{
+              <a href={item.href} aria-label={`פנה ליצירת קשר — ${item.kind}`} style={{
                 display: "inline-flex", alignItems: "center", gap: 10,
                 fontSize: 12, fontWeight: 600, letterSpacing: ".06em",
                 color: "#E8B94A", textDecoration: "none",
@@ -508,7 +502,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
               כל פרויקט פרימיום<br/>מתחיל בשיחה.
             </p>
             <p style={{ margin: "0 0 24px", fontSize: 12, color: "#8e887e", lineHeight: 1.6 }}>בלי עלות. בלי התחייבות.</p>
-            <a href="/strategy" onClick={dismissSticky} style={{
+            <a href="/strategy" style={{
               display: "inline-block", padding: "14px 32px",
               border: "1px solid #C9964A", color: "#E8B94A",
               fontWeight: 600, fontSize: 12, letterSpacing: ".14em",
@@ -603,26 +597,6 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         </div>
 
       </div>
-
-      {/* ── Sticky bottom CTA ────────────────────────────────────────────── */}
-      {showSticky && (
-        <div style={{
-          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-          background: "rgba(15,21,35,0.97)",
-          borderTop: "1px solid rgba(201,150,74,0.3)",
-          backdropFilter: "blur(12px)",
-          padding: "12px 24px",
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
-        }}>
-          <span style={{ fontSize: 14, color: "#EDE9E1", fontWeight: 600 }}>מוכן לצעד הבא?</span>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <a href={excludeTraining ? "/challenge" : "/training"} onClick={dismissSticky} style={ctaGold}>
-              {excludeTraining ? "להצטרף לאתגר ←" : "התחל חינם ←"}
-            </a>
-            <button onClick={dismissSticky} style={{ background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 18, padding: "4px 8px" }}>✕</button>
-          </div>
-        </div>
-      )}
 
       <style>{`
         /* Fix 5 — vertical connector line behind step circles */

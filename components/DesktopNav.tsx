@@ -137,9 +137,9 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
           const accent = "accent" in link && link.accent;
           const base   = LINK_STYLE(active);
           const style: React.CSSProperties = accent
-            ? { ...base, color: active ? "#E8B94A" : "#C9964A", fontWeight: 600 }
+            ? { ...base, color: active ? "#E8B94A" : "#E8B94A", fontWeight: 600 }
             : base;
-          const resting = accent ? "#C9964A" : "#EDE9E1";
+          const resting = accent ? "#E8B94A" : "#EDE9E1";
           return (
             <Link
               key={link.href}
