@@ -125,7 +125,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       outcome:  "אסטרטגיה ברורה ביום אחד",
       scarcity: nextWorkshop ? `${formatHebrew(nextWorkshop)} — מקומות מוגבלים` : "מועד הבא בקרוב",
       scIcon:   "📅",
-      ctas: [{ label: "קבע את היום שלך ←", href: "/workshop", primary: true }],
+      ctas: [{ label: "אני רוצה להיות שם ←", href: "/workshop", primary: true }],
       bullets: [
         "6 שעות אינטנסיביות עם הדר — קבוצה קטנה ואינטימית",
         "בונה לך אסטרטגיה מותאמת אישית לעסק שלך",
