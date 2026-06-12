@@ -38,7 +38,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       description:   "7 סרטונים שמשנים את הדרך",
       href:          "/challenge",
       ctaLabel:      "להצטרף לאתגר ←",
-      variant:       "primary",
+      variant:       "outline",
     },
     {
       name:        "סדנה יום אחד",
@@ -46,8 +46,8 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       priceNote:   workshopScarcity,
       description: "אסטרטגיה ברורה ביום אחד",
       href:        "/workshop",
-      ctaLabel:    "קבע מקום ←",
-      variant:     "primary",
+      ctaLabel:    "אני רוצה להיות שם ←",
+      variant:     "outline",
     },
     {
       name:        "קורס דיגיטלי",
@@ -194,7 +194,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           title="התחל לבד"
           sub="דיגיטלי · גישה מיידית · בקצב שלך"
         />
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 56 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 56 }}>
           {lane1.map((p) => <ProductCardItem key={p.name} product={p} />)}
         </div>
 
@@ -204,7 +204,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           title="עבוד איתנו"
           sub="אישי · בליווי הדר והצוות · כל אחד מתחיל בשיחה"
         />
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {LANE_2.map((p) => <ProductCardItem key={p.name} product={p} />)}
         </div>
       </div>
@@ -253,39 +253,33 @@ function ProductCardItem({ product }: { product: ProductCard }) {
       ? "1px dashed rgba(201,150,74,0.40)"
       : "1px solid #1F2A40",
     borderRadius: 14,
-    padding: "20px 20px 18px",
+    padding: "16px 16px 14px",
   };
 
   const ctaPrimary: React.CSSProperties = {
-    display: "block", width: "100%",
-    padding: "13px 0",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    width: "100%", minHeight: 44, padding: "8px 16px",
     background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
     color: "#2a1d05",
-    fontWeight: 800, fontSize: 14,
-    borderRadius: 999, textAlign: "center",
+    fontWeight: 800, fontSize: 14, lineHeight: 1.2,
+    borderRadius: 999,
     textDecoration: "none",
-    boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
+    boxShadow: "0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 4px 10px -4px rgba(0, 0, 0, 0.45)",
   };
 
   const ctaOutline: React.CSSProperties = {
-    display: "block", width: "100%",
-    padding: "12px 0",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    width: "100%", minHeight: 44, padding: "8px 16px",
     background: "transparent",
     color: "#E8B94A",
-    fontWeight: 700, fontSize: 13,
-    borderRadius: 999, textAlign: "center",
+    fontWeight: 700, fontSize: 13, lineHeight: 1.2,
+    borderRadius: 999,
     textDecoration: "none",
-    border: "1px solid rgba(201,150,74,0.32)",
-  };
-
-  const ctaSelection: React.CSSProperties = {
-    ...ctaOutline,
-    border: "1px dashed rgba(201,150,74,0.45)",
+    border: "1px solid rgba(232,185,74,0.45)",
   };
 
   const ctaStyle =
     product.variant === "primary" ? ctaPrimary :
-    isSelection ? ctaSelection :
     ctaOutline;
 
   return (
@@ -348,7 +342,7 @@ function ProductCardItem({ product }: { product: ProductCard }) {
       {/* Description */}
       <p style={{
         fontSize: 13, color: "#AAB0BD",
-        margin: "0 0 16px", lineHeight: 1.55,
+        margin: "0 0 12px", lineHeight: 1.5,
       }}>
         {product.description}
       </p>
