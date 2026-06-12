@@ -7,34 +7,39 @@ export interface VariantContent {
 }
 
 // Homepage hero A/B test: "landing_headline"
-// Phase 2 (2026-06-12): Hero CTA now leads to /signal (TrueSignal© engine),
-// not /quiz. CTA copy on all three variants pivoted to Signal-extraction
-// framing. Three framings being tested:
-//   A — action ("חלץ"):     proprietary verb, claims a tangible output
-//   B — identity (question): self-question, deeper hook
-//   C — process ("התחל"):    soft, consistent with /hive CTA
-// Headlines + descriptions kept as-is — they still describe the broader
-// positioning. If conversions stay flat we'll rewrite them next.
+// Phase 3 (2026-06-12): Full rewrite of all three variants to speak the
+// Signal-engine voice. Hero now leads to /signal (TrueSignal© engine).
+// Three distinct angles being tested as a coherent stack (headline +
+// description + CTA together):
+//   A — anti-content rebellion: "די לייצר תוכן. תתחיל לשדר את עצמך."
+//       Action verb, contrarian, shortest. For the exhausted owner who
+//       has tried every content course.
+//   B — identity-first question: "מה רק אתה יכול לתת?"
+//       Soft, reflective, aligned with brand line. Pushes inward
+//       reflection before a click.
+//   C — diagnosis + permission: "זה לא בגלל שאתה לא טוב מספיק."
+//       Longest, most narrative. Externalizes blame from the customer
+//       to the marketing system they were taught.
 // After deploying, reset counters in Supabase:
 //   UPDATE experiments SET visitors_a=0, visitors_b=0, conversions_a=0,
 //   conversions_b=0 WHERE name='landing_headline';
 export const AB_CONTENT: Record<AbVariant, VariantContent> = {
   A: {
-    headline: "אתה יכול למכור רק את מה שאתה.\nהשאלה אם השיווק שלך משדר את זה.",
+    headline: "די לייצר תוכן.\nתתחיל לשדר את עצמך.",
     description:
-      "אנחנו מזהים את הפער - והופכים אותו לאסטרטגיה ולתוכן שמביא תוצאות ביום צילום אחד.",
+      "מנוע האות של שיטת TrueSignal© מחלץ ב-5 שאלות את הבידול האמיתי שלך - לא מה שאתה מוכר, אלא מה שרק אתה יכול לתת.",
     cta: "לחלץ את האות שלך ←",
   },
   B: {
-    headline: "לא כל תוכן עובד.\nרק תוכן שנבנה נכון.",
+    headline: "השאלה היא לא מה אתה מוכר.\nהשאלה היא מה רק אתה יכול לתת.",
     description:
-      "אנחנו מתחילים באסטרטגיה - ומסיימים ביום צילום שמייצר תוכן שבאמת עובד.",
+      "מנוע האות שואל אותך חמש שאלות שאף יועץ לא יעז לשאול - ומחזיר לך את האות הקנייני שלך. החלק שאחרים מנסים לחקות אבל לא מצליחים.",
     cta: "מה רק אתה יכול לתת? ←",
   },
   C: {
-    headline: "המצלמה דולקת. התוכן עולה. הלקוחות לא מגיעים.\nיש סיבה לזה. ואנחנו יודעים מה היא.",
+    headline: "הקורסים, היועצים, התוכן -\nובכל זאת הלקוחות לא מגיעים.\nזה לא בגלל שאתה לא טוב מספיק.",
     description:
-      "3,500+ עסקים עברו אבחון מדויק עם שיטת TrueSignal© וגילו בדיוק מה עצר אותם. 6 שאלות. 2 דקות. המלצה אישית.",
+      "זה בגלל שהאות שלך עוד לא ברור. חמש שאלות עם מנוע האות מחזירות לך את הבידול שעצרו ממך כשניסו ללמד אותך לדבר כמו כולם.",
     cta: "להתחיל מהאות שלך ←",
   },
 };
