@@ -85,7 +85,7 @@ export function WorkshopTestimonials() {
           style={{
             flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
             background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.3)",
-            color: "#C9964A", fontSize: 20, cursor: "pointer",
+            color: "#E8B94A", fontSize: 20, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
             WebkitTapHighlightColor: "transparent", WebkitAppearance: "none",
           }}
@@ -210,7 +210,7 @@ export function WorkshopTestimonials() {
           style={{
             flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
             background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.3)",
-            color: "#C9964A", fontSize: 20, cursor: "pointer",
+            color: "#E8B94A", fontSize: 20, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
             WebkitTapHighlightColor: "transparent", WebkitAppearance: "none",
           }}

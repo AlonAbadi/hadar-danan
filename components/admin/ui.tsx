@@ -22,9 +22,9 @@ export function PageHeader({
       <div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#EDE9E1', margin: 0 }}>{title}</h1>
-          {titleEn && <span style={{ fontSize: 12, fontWeight: 400, color: '#9E9990' }}>{titleEn}</span>}
+          {titleEn && <span style={{ fontSize: 12, fontWeight: 400, color: '#AAB0BD' }}>{titleEn}</span>}
         </div>
-        {subtitle && <p style={{ fontSize: 13, color: '#9E9990', margin: '3px 0 0' }}>{subtitle}</p>}
+        {subtitle && <p style={{ fontSize: 13, color: '#AAB0BD', margin: '3px 0 0' }}>{subtitle}</p>}
       </div>
       {actions && <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>{actions}</div>}
     </div>
@@ -71,7 +71,7 @@ export function KpiCard({
       padding: 20,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 11, color: '#9E9990' }}>{icon && `${icon} `}{label}</span>
+        <span style={{ fontSize: 11, color: '#AAB0BD' }}>{icon && `${icon} `}{label}</span>
       </div>
       <div style={{ fontSize: 28, fontWeight: 800, color: valueColors[variant], lineHeight: 1 }}>
         {value}
@@ -79,7 +79,7 @@ export function KpiCard({
       {change !== undefined && (
         <div style={{ fontSize: 11, marginTop: 6, color: change >= 0 ? '#34A853' : '#EA4335' }}>
           {change >= 0 ? '▲' : '▼'} {Math.abs(change).toFixed(1)}%
-          {changeLabel && <span style={{ color: '#9E9990' }}> {changeLabel}</span>}
+          {changeLabel && <span style={{ color: '#AAB0BD' }}> {changeLabel}</span>}
         </div>
       )}
     </div>
@@ -128,7 +128,7 @@ export function SectionCard({
       }}>
         <h2 style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1', margin: 0, display: 'flex', alignItems: 'baseline', gap: 8 }}>
           {title}
-          {titleEn && <span style={{ fontSize: 11, fontWeight: 400, color: '#9E9990' }}>{titleEn}</span>}
+          {titleEn && <span style={{ fontSize: 11, fontWeight: 400, color: '#AAB0BD' }}>{titleEn}</span>}
         </h2>
         {actions && <div style={{ display: 'flex', gap: 8 }}>{actions}</div>}
       </div>
@@ -159,7 +159,7 @@ export function DataTable({
                 textAlign: col.align || 'right',
                 width: col.width,
                 fontWeight: 600,
-                color: '#9E9990',
+                color: '#AAB0BD',
                 fontSize: 11,
                 padding: '10px 14px',
                 background: '#1D2430',
@@ -174,7 +174,7 @@ export function DataTable({
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} style={{ textAlign: 'center', padding: 40, color: '#9E9990', fontSize: 13 }}>
+              <td colSpan={columns.length} style={{ textAlign: 'center', padding: 40, color: '#AAB0BD', fontSize: 13 }}>
                 {emptyMessage}
               </td>
             </tr>
@@ -204,7 +204,7 @@ export function Badge({
   variant?: 'default' | 'success' | 'danger' | 'warning' | 'info' | 'gold';
 }) {
   const colors: Record<string, { bg: string; text: string; border: string }> = {
-    default: { bg: '#9E999018', text: '#9E9990', border: '#9E999033' },
+    default: { bg: '#AAB0BD18', text: '#AAB0BD', border: '#AAB0BD33' },
     success: { bg: '#34A85318', text: '#34A853', border: '#34A85333' },
     danger:  { bg: '#EA433518', text: '#EA4335', border: '#EA433533' },
     warning: { bg: '#FBBC0518', text: '#FBBC05', border: '#FBBC0533' },
@@ -237,7 +237,7 @@ export function FunnelBar({
       {stages.map((stage, i) => (
         <div key={i}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-            <span style={{ fontSize: 13, color: '#9E9990' }}>{stage.label}</span>
+            <span style={{ fontSize: 13, color: '#AAB0BD' }}>{stage.label}</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#EDE9E1' }}>{stage.value.toLocaleString()}</span>
           </div>
           <div style={{ height: 28, background: '#2C323E', borderRadius: 6, overflow: 'hidden' }}>
@@ -251,7 +251,7 @@ export function FunnelBar({
             }} />
           </div>
           {i < stages.length - 1 && (
-            <div style={{ fontSize: 11, color: '#9E9990', textAlign: 'center', padding: '4px 0' }}>
+            <div style={{ fontSize: 11, color: '#AAB0BD', textAlign: 'center', padding: '4px 0' }}>
               ↓ {stage.percent}% המרה
             </div>
           )}
@@ -339,7 +339,7 @@ export function DateRangePicker({
               border: 'none', cursor: pending ? 'wait' : 'pointer',
               transition: 'background 0.12s, color 0.12s, transform 0.08s',
               background: isPending ? '#E8B94A' : showActive ? '#C9964A' : 'transparent',
-              color: showActive ? '#1A1206' : '#9E9990',
+              color: showActive ? '#1A1206' : '#AAB0BD',
               fontFamily: "'Assistant', sans-serif",
               transform: isPending ? 'scale(0.97)' : 'scale(1)',
               animation: isPending ? 'adminRangePulse 0.9s ease-out infinite' : 'none',
@@ -368,8 +368,8 @@ export function EmptyState({
   return (
     <div style={{ textAlign: 'center', padding: '48px 24px' }}>
       <div style={{ fontSize: 32, marginBottom: 12 }}>{icon}</div>
-      <div style={{ fontSize: 15, fontWeight: 600, color: '#9E9990', marginBottom: 4 }}>{title}</div>
-      {description && <div style={{ fontSize: 13, color: '#9E9990', maxWidth: 360, margin: '0 auto' }}>{description}</div>}
+      <div style={{ fontSize: 15, fontWeight: 600, color: '#AAB0BD', marginBottom: 4 }}>{title}</div>
+      {description && <div style={{ fontSize: 13, color: '#AAB0BD', maxWidth: 360, margin: '0 auto' }}>{description}</div>}
       {action && <div style={{ marginTop: 16 }}>{action}</div>}
     </div>
   );
@@ -388,8 +388,8 @@ export function ActionButton({
   size?: 'sm' | 'md';
 }) {
   const styles: Record<string, { bg: string; border: string; color: string }> = {
-    default: { bg: '#1D2430', border: '#2C323E', color: '#9E9990' },
-    gold:    { bg: '#C9964A18', border: '#C9964A44', color: '#C9964A' },
+    default: { bg: '#1D2430', border: '#2C323E', color: '#AAB0BD' },
+    gold:    { bg: '#C9964A18', border: '#C9964A44', color: '#E8B94A' },
     danger:  { bg: '#EA433518', border: '#EA433544', color: '#EA4335' },
   };
   const s = styles[variant];
@@ -437,12 +437,12 @@ export function StatComparison({
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 11, color: '#9E9990', marginBottom: 4 }}>{labelA}</div>
+        <div style={{ fontSize: 11, color: '#AAB0BD', marginBottom: 4 }}>{labelA}</div>
         <div style={{ fontSize: 20, fontWeight: 700, color: '#EDE9E1' }}>{formatValue(valueA)}</div>
       </div>
-      <div style={{ fontSize: 11, color: '#9E9990', fontWeight: 600 }}>VS</div>
+      <div style={{ fontSize: 11, color: '#AAB0BD', fontWeight: 600 }}>VS</div>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 11, color: '#9E9990', marginBottom: 4 }}>{labelB}</div>
+        <div style={{ fontSize: 11, color: '#AAB0BD', marginBottom: 4 }}>{labelB}</div>
         <div style={{ fontSize: 20, fontWeight: 700, color: '#EDE9E1' }}>{formatValue(valueB)}</div>
       </div>
       <div style={{ fontSize: 14, fontWeight: 700, color: isPositive ? '#34A853' : '#EA4335' }}>

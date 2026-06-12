@@ -59,7 +59,7 @@ export default function ClientsListClient({ clients }: { clients: Client[] }) {
         .cl-row:hover td { background: #141820; }
         .cl-td { padding: 12px 12px; border-bottom: 1px solid rgba(44,50,62,0.5); font-size: 13px; vertical-align: middle; }
         .cl-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(127,119,221,0.2); color: #7F77DD; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
-        .cl-chip { display: inline-block; background: rgba(201,150,74,0.12); color: #C9964A; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; margin-left: 4px; }
+        .cl-chip { display: inline-block; background: rgba(201,150,74,0.12); color: #E8B94A; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; margin-left: 4px; }
         @media (max-width: 700px) { .cl-root { padding: 20px 16px; } .cl-hide { display: none; } }
       `}</style>
       <div className="cl-root">
@@ -67,7 +67,7 @@ export default function ClientsListClient({ clients }: { clients: Client[] }) {
           <div style={{ fontSize: 22, fontWeight: 800, color: "#EDE9E1", marginBottom: 6 }}>
             לקוחות
           </div>
-          <div style={{ fontSize: 13, color: "#9E9990" }}>
+          <div style={{ fontSize: 13, color: "#AAB0BD" }}>
             {clients.length} לקוחות · {filtered.length} מוצגים
           </div>
         </div>
@@ -98,25 +98,25 @@ export default function ClientsListClient({ clients }: { clients: Client[] }) {
                     <div className="cl-avatar">{getInitials(c.name, c.email)}</div>
                     <div>
                       <div style={{ fontWeight: 700, color: "#EDE9E1" }}>{c.name ?? "—"}</div>
-                      <div style={{ fontSize: 11, color: "#9E9990", direction: "ltr" }}>{c.email}</div>
+                      <div style={{ fontSize: 11, color: "#AAB0BD", direction: "ltr" }}>{c.email}</div>
                     </div>
                   </Link>
                 </td>
-                <td className="cl-td cl-hide" style={{ color: "#9E9990", direction: "ltr" }}>{c.phone ?? "—"}</td>
+                <td className="cl-td cl-hide" style={{ color: "#AAB0BD", direction: "ltr" }}>{c.phone ?? "—"}</td>
                 <td className="cl-td">
                   {c.products.map((p) => <span key={p} className="cl-chip">{p}</span>)}
                 </td>
-                <td className="cl-td cl-hide" style={{ color: "#9E9990", textAlign: "center" }}>{c.count}</td>
+                <td className="cl-td cl-hide" style={{ color: "#AAB0BD", textAlign: "center" }}>{c.count}</td>
                 <td className="cl-td">
                   <span style={{ fontWeight: 800, background: "linear-gradient(135deg,#E8B94A,#9E7C3A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                     ₪{c.total.toLocaleString("he-IL")}
                   </span>
                 </td>
-                <td className="cl-td" style={{ color: "#9E9990" }}>{relTime(c.lastPurchase)}</td>
+                <td className="cl-td" style={{ color: "#AAB0BD" }}>{relTime(c.lastPurchase)}</td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={6} style={{ textAlign: "center", padding: "40px 0", color: "#9E9990" }}>לא נמצאו תוצאות</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: "center", padding: "40px 0", color: "#AAB0BD" }}>לא נמצאו תוצאות</td></tr>
             )}
           </tbody>
         </table>

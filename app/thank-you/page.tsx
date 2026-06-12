@@ -20,7 +20,7 @@ export default function ThankYouPage() {
       <ThankYouTracker />
       {/* Nav */}
       <header className="px-6 py-4" style={{ borderBottom: "1px solid #2C323E", background: "rgba(16,21,32,0.9)" }}>
-        <span className="font-black text-xl" style={{ color: "#C9964A" }}>הדר דנן</span>
+        <span className="font-black text-xl" style={{ color: "#E8B94A" }}>הדר דנן</span>
       </header>
 
       <div className="flex-1 flex items-center justify-center px-4 py-16">
@@ -39,7 +39,7 @@ export default function ThankYouPage() {
           {/* Headline */}
           <div className="flex flex-col gap-3">
             <h1 className="text-4xl font-black" style={{ color: "#EDE9E1" }}>נרשמת בהצלחה! 🎉</h1>
-            <p className="text-lg leading-relaxed" style={{ color: "#9E9990" }}>
+            <p className="text-lg leading-relaxed" style={{ color: "#AAB0BD" }}>
               שלחנו לך אימייל עם הקישור להדרכה.<br />
               <span className="text-sm">בדוק גם את תיקיית הספאם אם לא רואה.</span>
             </p>
@@ -68,7 +68,7 @@ export default function ThankYouPage() {
             style={{ background: "#191F2B", border: "1px solid #2C323E" }}
           >
             <p className="font-black" style={{ color: "#EDE9E1" }}>רוצה להאיץ את התוצאות?</p>
-            <p className="text-sm leading-relaxed" style={{ color: "#9E9990" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "#AAB0BD" }}>
               הצ׳אלנג׳ של 7 הימים לוקח אותך צעד קדימה - עם פידבק אישי על הסרטונים שלך ולקוחות אמיתיים בסוף השבוע.
             </p>
             <Link
@@ -108,7 +108,7 @@ export default function ThankYouPage() {
             שתף חבר בוואצאפ
           </a>
 
-          <Link href="/" className="text-sm transition hover:opacity-70" style={{ color: "#9E9990" }}>
+          <Link href="/" className="text-sm transition hover:opacity-70" style={{ color: "#AAB0BD" }}>
             חזרה לדף הבית
           </Link>
 

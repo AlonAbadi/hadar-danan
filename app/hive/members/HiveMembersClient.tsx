@@ -7,7 +7,7 @@ import type { HiveContent } from "./page";
 
 // ── Tier config ────────────────────────────────────────────
 const TIER_MAP: Record<string, { label: string; color: string; price: number; rank: number }> = {
-  basic_59:      { label: "בסיסי",   color: "#C9964A", price: 59,  rank: 0 },
+  basic_59:      { label: "בסיסי",   color: "#E8B94A", price: 59,  rank: 0 },
   full_149:      { label: "מלא",     color: "#E8B94A", price: 149, rank: 1 },
   // legacy values — backward-compat for rows created before the rename
   discounted_29: { label: "Starter", color: "#378ADD", price: 29,  rank: 0 },
@@ -125,7 +125,7 @@ export default function HiveMembersClient({
   const sectionTitle: React.CSSProperties = {
     fontSize: 13,
     fontWeight: 700,
-    color: "#9E9990",
+    color: "#AAB0BD",
     textAlign: "right",
     marginBottom: 12,
     marginTop: 4,
@@ -186,7 +186,7 @@ export default function HiveMembersClient({
           {label}
         </span>
         {userName && (
-          <div style={{ fontSize: 14, color: "#9E9990", marginTop: 10 }}>
+          <div style={{ fontSize: 14, color: "#AAB0BD", marginTop: 10 }}>
             שלום, {userName}
           </div>
         )}
@@ -198,7 +198,7 @@ export default function HiveMembersClient({
         <div style={{ ...card, cursor: "pointer" }} onClick={() => setTab("content")}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <span style={{
-              fontSize: 11, color: "#9E9990",
+              fontSize: 11, color: "#AAB0BD",
               padding: "2px 8px", borderRadius: 10,
               background: "#1D2430",
             }}>
@@ -210,7 +210,7 @@ export default function HiveMembersClient({
               </div>
               {latest.body && (
                 <div style={{
-                  fontSize: 13, color: "#9E9990", lineHeight: 1.6,
+                  fontSize: 13, color: "#AAB0BD", lineHeight: 1.6,
                   overflow: "hidden", display: "-webkit-box",
                   WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const,
                 }}>
@@ -225,7 +225,7 @@ export default function HiveMembersClient({
         </div>
       ) : (
         <div style={{ ...card, textAlign: "center", padding: "28px 20px" }}>
-          <div style={{ fontSize: 14, color: "#9E9990" }}>תוכן חדש יתווסף בקרוב</div>
+          <div style={{ fontSize: 14, color: "#AAB0BD" }}>תוכן חדש יתווסף בקרוב</div>
         </div>
       )}
 
@@ -268,7 +268,7 @@ export default function HiveMembersClient({
           {price} &#8362;/חודש
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 12, color: "#9E9990" }}>חידוש הבא</div>
+          <div style={{ fontSize: 12, color: "#AAB0BD" }}>חידוש הבא</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#EDE9E1" }}>
             {fmtDate(hiveNextBilling)}
           </div>
@@ -283,7 +283,7 @@ export default function HiveMembersClient({
       <div style={sectionTitle}>תוכן הכוורת</div>
       {hiveContent.length === 0 ? (
         <div style={{ ...card, textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: 15, color: "#9E9990" }}>תוכן חדש יתווסף בקרוב</div>
+          <div style={{ fontSize: 15, color: "#AAB0BD" }}>תוכן חדש יתווסף בקרוב</div>
         </div>
       ) : (
         hiveContent.map((item) => {
@@ -305,7 +305,7 @@ export default function HiveMembersClient({
                     </span>
                   ) : (
                     <span style={{
-                      fontSize: 11, color: "#9E9990",
+                      fontSize: 11, color: "#AAB0BD",
                       padding: "2px 8px", borderRadius: 10,
                       background: "#1D2430",
                     }}>
@@ -319,7 +319,7 @@ export default function HiveMembersClient({
                     {item.title}
                   </div>
                   {item.body && !locked && (
-                    <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.6, marginBottom: 10 }}>
+                    <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.6, marginBottom: 10 }}>
                       {item.body}
                     </div>
                   )}
@@ -365,7 +365,7 @@ export default function HiveMembersClient({
         <div style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1", marginBottom: 6, textAlign: "right" }}>
           קבוצת WhatsApp
         </div>
-        <div style={{ fontSize: 13, color: "#9E9990", textAlign: "right", marginBottom: 14 }}>
+        <div style={{ fontSize: 13, color: "#AAB0BD", textAlign: "right", marginBottom: 14 }}>
           קבוצה פרטית לחברי הכוורת - שאלות, שיתופים ותמיכה הדדית
         </div>
         {whatsappUrl ? (
@@ -393,12 +393,12 @@ export default function HiveMembersClient({
         </div>
         {zoomNextDate ? (
           <>
-            <div style={{ fontSize: 14, color: "#C9964A", fontWeight: 700, textAlign: "right", marginBottom: 12 }}>
+            <div style={{ fontSize: 14, color: "#E8B94A", fontWeight: 700, textAlign: "right", marginBottom: 12 }}>
               {zoomNextDate}
             </div>
           </>
         ) : (
-          <div style={{ fontSize: 13, color: "#9E9990", textAlign: "right", marginBottom: 12 }}>
+          <div style={{ fontSize: 13, color: "#AAB0BD", textAlign: "right", marginBottom: 12 }}>
             התאריך יפורסם בקבוצת WhatsApp
           </div>
         )}
@@ -419,7 +419,7 @@ export default function HiveMembersClient({
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           <span style={{
-            fontSize: 12, color: "#9E9990",
+            fontSize: 12, color: "#AAB0BD",
             padding: "2px 8px", borderRadius: 10, background: "#1D2430",
           }}>
             PDF
@@ -445,7 +445,7 @@ export default function HiveMembersClient({
         border: `1px solid ${color}33`,
         textAlign: "center", padding: "24px 20px",
       }}>
-        <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 6 }}>המנוי שלך</div>
+        <div style={{ fontSize: 13, color: "#AAB0BD", marginBottom: 6 }}>המנוי שלך</div>
         <div style={{ fontSize: 26, fontWeight: 800, color, marginBottom: 4 }}>{label}</div>
         <div style={{ fontSize: 20, fontWeight: 800, color: "#EDE9E1" }}>
           {price} &#8362;/חודש
@@ -466,7 +466,7 @@ export default function HiveMembersClient({
             borderBottom: "1px solid #1D2430",
           }}>
             <div style={{ fontSize: 14, color: "#EDE9E1", fontWeight: 700 }}>{value}</div>
-            <div style={{ fontSize: 13, color: "#9E9990" }}>{lbl}</div>
+            <div style={{ fontSize: 13, color: "#AAB0BD" }}>{lbl}</div>
           </div>
         ))}
       </div>
@@ -487,7 +487,7 @@ export default function HiveMembersClient({
         }}>
           {credit.toLocaleString("he-IL")} &#8362;
         </div>
-        <div style={{ fontSize: 13, color: "#9E9990", textAlign: "right" }}>
+        <div style={{ fontSize: 13, color: "#AAB0BD", textAlign: "right" }}>
           סה"כ השקעה<br />בתכנים
         </div>
       </div>
@@ -526,7 +526,7 @@ export default function HiveMembersClient({
                 </a>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 14, fontWeight: 800, color: tier.color }}>{tier.label}</div>
-                  <div style={{ fontSize: 13, color: "#9E9990" }}>{tier.price} ₪/חודש</div>
+                  <div style={{ fontSize: 13, color: "#AAB0BD" }}>{tier.price} ₪/חודש</div>
                 </div>
               </div>
             ))}
@@ -565,7 +565,7 @@ export default function HiveMembersClient({
             <div style={{ fontSize: 16, fontWeight: 800, color: "#34A853", marginBottom: 8 }}>
               המנוי בוטל
             </div>
-            <div style={{ fontSize: 13, color: "#9E9990" }}>
+            <div style={{ fontSize: 13, color: "#AAB0BD" }}>
               הגישה שלך נשמרת עד תאריך החיוב הבא. מעביר...
             </div>
           </>
@@ -574,7 +574,7 @@ export default function HiveMembersClient({
             <div style={{ fontSize: 16, fontWeight: 800, color: "#EDE9E1", marginBottom: 8 }}>
               לבטל את המנוי?
             </div>
-            <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.7, marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.7, marginBottom: 20 }}>
               הגישה שלך לתכני הכוורת תישמר עד לתאריך החיוב הבא ({fmtDate(hiveNextBilling)}).
               לאחר מכן המנוי יפוג.
             </div>
@@ -637,7 +637,7 @@ export default function HiveMembersClient({
 
         {/* Back link */}
         <div style={{ marginBottom: 20 }}>
-          <Link href="/account" style={{ fontSize: 13, color: "#9E9990", textDecoration: "none", fontWeight: 700 }}>
+          <Link href="/account" style={{ fontSize: 13, color: "#AAB0BD", textDecoration: "none", fontWeight: 700 }}>
             חזור לחשבון שלי
           </Link>
         </div>
@@ -655,7 +655,7 @@ export default function HiveMembersClient({
               style={{
                 flex: 1, padding: "9px 0", borderRadius: 8, border: "none",
                 background: tab === key ? "linear-gradient(135deg, #E8B94A, #9E7C3A)" : "transparent",
-                color: tab === key ? "#080C14" : "#9E9990",
+                color: tab === key ? "#080C14" : "#AAB0BD",
                 fontSize: 13, fontWeight: tab === key ? 800 : 600,
                 cursor: "pointer", fontFamily: "Assistant, sans-serif",
                 transition: "all 0.15s",

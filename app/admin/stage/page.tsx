@@ -62,7 +62,7 @@ function relativeTime(iso: string): string {
 function scoreColor(score: number): string {
   if (score >= 70) return "#34A853";
   if (score >= 45) return "#E8B94A";
-  return "#9E9990";
+  return "#AAB0BD";
 }
 
 export default function StageAdminPage() {
@@ -101,7 +101,7 @@ export default function StageAdminPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
         <div>
           <div style={{ fontSize: 26, fontWeight: 800, color: "#EDE9E1" }}>3 ימים פתוחים — מועמדויות</div>
-          <div style={{ fontSize: 14, color: "#9E9990", marginTop: 4 }}>מסודרות לפי ציון מחויבות</div>
+          <div style={{ fontSize: 14, color: "#AAB0BD", marginTop: 4 }}>מסודרות לפי ציון מחויבות</div>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Stat label="סה״כ" value={applications.length} color="#E8B94A" />
@@ -120,7 +120,7 @@ export default function StageAdminPage() {
               padding: "6px 16px", borderRadius: 9999, fontFamily: "inherit",
               border: `1px solid ${active ? "#C9964A" : "#2C323E"}`,
               background: active ? "rgba(201,150,74,0.12)" : "transparent",
-              color: active ? "#C9964A" : "#9E9990",
+              color: active ? "#C9964A" : "#AAB0BD",
               fontSize: 13, fontWeight: active ? 700 : 400, cursor: "pointer",
             }}>
               {s === "all" ? `הכל (${count})` : `${STATUS_LABELS[s]} (${count})`}
@@ -130,9 +130,9 @@ export default function StageAdminPage() {
       </div>
 
       {loading ? (
-        <div style={{ color: "#9E9990", fontSize: 14 }}>טוען...</div>
+        <div style={{ color: "#AAB0BD", fontSize: 14 }}>טוען...</div>
       ) : filtered.length === 0 ? (
-        <div style={{ color: "#9E9990", fontSize: 14, padding: 40, textAlign: "center" }}>אין מועמדויות בסטטוס זה</div>
+        <div style={{ color: "#AAB0BD", fontSize: 14, padding: 40, textAlign: "center" }}>אין מועמדויות בסטטוס זה</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {filtered.map(app => {
@@ -164,12 +164,12 @@ export default function StageAdminPage() {
                     </div>
                     <div>
                       <div style={{ fontSize: 17, fontWeight: 700, color: "#EDE9E1" }}>{app.name}</div>
-                      <div style={{ fontSize: 13, color: "#9E9990", marginTop: 2, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      <div style={{ fontSize: 13, color: "#AAB0BD", marginTop: 2, display: "flex", gap: 12, flexWrap: "wrap" }}>
                         {app.email && <span dir="ltr">{app.email}</span>}
                         {app.phone && <span dir="ltr">{app.phone}</span>}
                       </div>
                       {bd && (
-                        <div style={{ display: "flex", gap: 10, marginTop: 6, fontSize: 11, color: "#9E9990" }}>
+                        <div style={{ display: "flex", gap: 10, marginTop: 6, fontSize: 11, color: "#AAB0BD" }}>
                           <span>עומק <span style={{ color: "#EDE9E1" }}>{bd.depth}</span>/40</span>
                           <span>·</span>
                           <span>ספציפיות <span style={{ color: "#EDE9E1" }}>{bd.specificity}</span>/30</span>
@@ -187,9 +187,9 @@ export default function StageAdminPage() {
                       style={{
                         padding: "5px 10px",
                         borderRadius: 8,
-                        background: (STATUS_COLORS[app.status] ?? "#9E9990") + "18",
-                        color: STATUS_COLORS[app.status] ?? "#9E9990",
-                        border: `1px solid ${(STATUS_COLORS[app.status] ?? "#9E9990")}44`,
+                        background: (STATUS_COLORS[app.status] ?? "#AAB0BD") + "18",
+                        color: STATUS_COLORS[app.status] ?? "#AAB0BD",
+                        border: `1px solid ${(STATUS_COLORS[app.status] ?? "#AAB0BD")}44`,
                         fontSize: 12,
                         fontWeight: 700,
                         fontFamily: "inherit",
@@ -200,7 +200,7 @@ export default function StageAdminPage() {
                         <option key={k} value={k}>{label}</option>
                       ))}
                     </select>
-                    <span style={{ fontSize: 11, color: "#9E9990" }}>{relativeTime(app.created_at)}</span>
+                    <span style={{ fontSize: 11, color: "#AAB0BD" }}>{relativeTime(app.created_at)}</span>
                   </div>
                 </div>
 
@@ -213,7 +213,7 @@ export default function StageAdminPage() {
                       border: "1px solid #2C323E",
                       borderRadius: 8,
                       padding: "8px 14px",
-                      color: "#C9964A",
+                      color: "#E8B94A",
                       fontSize: 13,
                       fontWeight: 600,
                       cursor: "pointer",
@@ -247,7 +247,7 @@ export default function StageAdminPage() {
                       .filter(([k]) => k !== "name")
                       .map(([k, v]) => (
                       <div key={k}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: "#C9964A", letterSpacing: 2, marginBottom: 4 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#E8B94A", letterSpacing: 2, marginBottom: 4 }}>
                           {ANSWER_LABELS[k] ?? k}
                         </div>
                         <div style={{
@@ -264,7 +264,7 @@ export default function StageAdminPage() {
                         {Object.entries(app.source_utm).map(([k, v]) => (
                           <span key={k} style={{
                             fontSize: 11, padding: "2px 8px", borderRadius: 9999,
-                            background: "rgba(201,150,74,0.12)", color: "#C9964A",
+                            background: "rgba(201,150,74,0.12)", color: "#E8B94A",
                             border: "1px solid rgba(201,150,74,0.25)",
                           }}>
                             {k}: {v}
@@ -287,7 +287,7 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
   return (
     <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 10, padding: "12px 18px", textAlign: "center", minWidth: 100 }}>
       <div style={{ fontSize: 22, fontWeight: 800, color }}>{value}</div>
-      <div style={{ fontSize: 11, color: "#9E9990", marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 11, color: "#AAB0BD", marginTop: 2 }}>{label}</div>
     </div>
   );
 }

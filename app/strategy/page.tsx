@@ -145,12 +145,12 @@ export default async function StrategyPage() {
           <section id="form" style={{ padding: "48px 20px", maxWidth: 640, margin: "0 auto" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
               <div style={{ flex: 1, height: 1, background: "#2C323E" }} />
-              <span style={{ fontSize: 13, color: "#9E9990" }}>או שלח/י פנייה ונחזור תוך 24 שעות</span>
+              <span style={{ fontSize: 13, color: "#AAB0BD" }}>או שלח/י פנייה ונחזור תוך 24 שעות</span>
               <div style={{ flex: 1, height: 1, background: "#2C323E" }} />
             </div>
             <div style={{ background: "#191F2B", border: "1px solid #2C323E", borderRadius: 16, padding: "28px 24px" }}>
               <h3 style={{ fontWeight: 800, fontSize: 18, color: "#EDE9E1", marginBottom: 8, marginTop: 0 }}>שלח/י פנייה</h3>
-              <p style={{ color: "#9E9990", fontSize: 14, marginBottom: 20 }}>מלא/י את הטופס - נחזור אליך תוך 24 שעות לתיאום.</p>
+              <p style={{ color: "#AAB0BD", fontSize: 14, marginBottom: 20 }}>מלא/י את הטופס - נחזור אליך תוך 24 שעות לתיאום.</p>
                 <CallForm price={price} />
             </div>
           </section>

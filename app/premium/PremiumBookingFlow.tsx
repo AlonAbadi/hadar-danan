@@ -99,7 +99,7 @@ export function PremiumBookingFlow({ price, whatsappPhone }: Props) {
         { id: "phone", label: "טלפון",    type: "tel",   placeholder: "0501234567" },
       ].map(({ id, label, type, placeholder }) => (
         <div key={id} className="flex flex-col gap-1">
-          <label htmlFor={id} className="text-sm font-medium" style={{ color: "#9E9990" }}>
+          <label htmlFor={id} className="text-sm font-medium" style={{ color: "#AAB0BD" }}>
             {label}
           </label>
           <input
@@ -126,21 +126,21 @@ export function PremiumBookingFlow({ price, whatsappPhone }: Props) {
         style={{ background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid rgba(201,150,74,0.16)" }}
       >
         <div className="flex justify-between items-start">
-          <span style={{ color: "#9E9990" }}>יום צילום פרמיום · 14 סרטונים</span>
+          <span style={{ color: "#AAB0BD" }}>יום צילום פרמיום · 14 סרטונים</span>
           <div className="text-right">
             <p className="font-black text-2xl" style={{ color: "#EDE9E1" }}>
               ₪{listPrice.toLocaleString("he-IL")}
             </p>
-            <p className="text-sm font-semibold" style={{ color: "#C9964A" }}>+ מע״מ</p>
+            <p className="text-sm font-semibold" style={{ color: "#E8B94A" }}>+ מע״מ</p>
           </div>
         </div>
-        <p className="text-xs" style={{ color: "#9E9990" }}>
+        <p className="text-xs" style={{ color: "#AAB0BD" }}>
           סה״כ לתשלום כולל מע״מ: <span style={{ color: "#EDE9E1", fontWeight: 700 }}>₪{priceWithVat.toLocaleString("he-IL")}</span>
         </p>
-        <ul className="flex flex-col gap-1 text-sm" style={{ color: "#9E9990" }}>
+        <ul className="flex flex-col gap-1 text-sm" style={{ color: "#AAB0BD" }}>
           {["אסטרטגיה עסקית ושיווקית לפני הצילום", "צוות מקצועי (צלם + במאי) — אצלך או אצלנו", "14 סרטונים ערוכים תוך שבועיים", "3 חודשי ליווי אחרי"].map((item) => (
             <li key={item} className="flex items-center gap-2">
-              <span style={{ color: "#C9964A" }}>✓</span> {item}
+              <span style={{ color: "#E8B94A" }}>✓</span> {item}
             </li>
           ))}
         </ul>
@@ -156,7 +156,7 @@ export function PremiumBookingFlow({ price, whatsappPhone }: Props) {
         {loading ? "מעביר לתשלום..." : `לתשלום ₪${priceWithVat.toLocaleString("he-IL")} כולל מע״מ ←`}
       </button>
 
-      <p className="text-center text-xs" style={{ color: "#9E9990" }}>
+      <p className="text-center text-xs" style={{ color: "#AAB0BD" }}>
         תשלום מאובטח · עד 6 תשלומים · לאחר התשלום ניצור קשר לתיאום יום הצילום
       </p>
 

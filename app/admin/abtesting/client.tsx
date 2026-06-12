@@ -131,7 +131,7 @@ function TabBar({
             padding: '10px 20px',
             fontSize: '13px',
             fontWeight: active === tab.key ? 600 : 400,
-            color: active === tab.key ? '#C9964A' : '#9E9990',
+            color: active === tab.key ? '#C9964A' : '#AAB0BD',
             background: 'none',
             border: 'none',
             borderBottom: active === tab.key ? '2px solid #C9964A' : '2px solid transparent',
@@ -148,7 +148,7 @@ function TabBar({
             fontSize: '11px',
             fontWeight: 600,
             background: active === tab.key ? 'rgba(201,150,74,0.15)' : '#1D2430',
-            color: active === tab.key ? '#C9964A' : '#9E9990',
+            color: active === tab.key ? '#C9964A' : '#AAB0BD',
             padding: '2px 8px',
             borderRadius: '10px',
             border: '1px solid #2C323E',
@@ -164,12 +164,12 @@ function TabBar({
 // ── Confidence Meter ───────────────────────────────────────────────────────────
 
 function ConfidenceMeter({ confidence }: { confidence: number }) {
-  const color = confidence >= 95 ? '#22C55E' : confidence >= 80 ? '#E8B94A' : '#9E9990';
+  const color = confidence >= 95 ? '#22C55E' : confidence >= 80 ? '#E8B94A' : '#AAB0BD';
   const label = confidence >= 95 ? 'מובהק' : confidence >= 80 ? 'מתקרב למובהקות' : 'עוד מוקדם להחליט';
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
-        <span style={{ color: '#9E9990' }}>רמת ביטחון סטטיסטית</span>
+        <span style={{ color: '#AAB0BD' }}>רמת ביטחון סטטיסטית</span>
         <span style={{ fontWeight: 600, color, fontFamily: 'system-ui' }}>
           {confidence.toFixed(0)}% · {label}
         </span>
@@ -183,7 +183,7 @@ function ConfidenceMeter({ confidence }: { confidence: number }) {
           transition: 'width 0.5s ease',
         }} />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#9E9990', marginTop: '4px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#AAB0BD', marginTop: '4px' }}>
         <span>0%</span>
         <span style={{ color: '#E8B94A' }}>↑ 80%</span>
         <span style={{ color: '#22C55E' }}>↑ 95% (קבלת החלטה)</span>
@@ -211,7 +211,7 @@ function ResultInterpretation({
   let icon = '⏳';
   let title = 'הניסוי עוד צעיר';
   let body = `נצברו ${visitorsA + visitorsB} מבקרים. צריך לפחות 200 לכל גרסה כדי לקבל החלטה משמעותית.`;
-  let color = '#9E9990';
+  let color = '#AAB0BD';
   let bg = 'rgba(158,153,144,0.08)';
 
   if (hasMinSample) {
@@ -233,7 +233,7 @@ function ResultInterpretation({
       icon = '🔀';
       title = 'הפער קטן מדי להחלטה';
       body = `שתי הגרסאות מתפקדות דומה (Uplift ${uplift.toFixed(1)}%). הסיכוי ש-B תנצח: ${(probBWins * 100).toFixed(0)}%. ייתכן שאין הבדל אמיתי.`;
-      color = '#9E9990';
+      color = '#AAB0BD';
       bg = 'rgba(158,153,144,0.08)';
     }
   }
@@ -252,7 +252,7 @@ function ResultInterpretation({
       <span style={{ fontSize: '20px', lineHeight: 1 }}>{icon}</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: '13px', fontWeight: 600, color, marginBottom: '2px' }}>{title}</div>
-        <div style={{ fontSize: '12px', color: '#9E9990', lineHeight: '1.5' }}>{body}</div>
+        <div style={{ fontSize: '12px', color: '#AAB0BD', lineHeight: '1.5' }}>{body}</div>
       </div>
     </div>
   );
@@ -301,7 +301,7 @@ function EditModal({
           { key: 'page_or_element', label: 'דף / אלמנט', type: 'input' },
         ] as const).map(({ key, label, type }) => (
           <div key={key} style={{ marginBottom: '14px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 500, color: '#9E9990', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 500, color: '#AAB0BD', display: 'block', marginBottom: '4px' }}>
               {label}
             </label>
             {type === 'textarea' ? (
@@ -334,7 +334,7 @@ function EditModal({
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '14px' }}>
           <div>
-            <label style={{ fontSize: '11px', fontWeight: 500, color: '#9E9990', display: 'block', marginBottom: '4px' }}>מדד</label>
+            <label style={{ fontSize: '11px', fontWeight: 500, color: '#AAB0BD', display: 'block', marginBottom: '4px' }}>מדד</label>
             <select
               value={form.metric}
               onChange={(e) => setForm({ ...form, metric: e.target.value })}
@@ -346,7 +346,7 @@ function EditModal({
             </select>
           </div>
           <div>
-            <label style={{ fontSize: '11px', fontWeight: 500, color: '#9E9990', display: 'block', marginBottom: '4px' }}>עדיפות</label>
+            <label style={{ fontSize: '11px', fontWeight: 500, color: '#AAB0BD', display: 'block', marginBottom: '4px' }}>עדיפות</label>
             <select
               value={form.priority}
               onChange={(e) => setForm({ ...form, priority: e.target.value as 'high' | 'medium' | 'low' })}
@@ -358,7 +358,7 @@ function EditModal({
             </select>
           </div>
           <div>
-            <label style={{ fontSize: '11px', fontWeight: 500, color: '#9E9990', display: 'block', marginBottom: '4px' }}>ימים להשגת מובהקות</label>
+            <label style={{ fontSize: '11px', fontWeight: 500, color: '#AAB0BD', display: 'block', marginBottom: '4px' }}>ימים להשגת מובהקות</label>
             <input
               type="number"
               value={form.days_to_significance}
@@ -414,7 +414,7 @@ function ProposalCard({
       background: '#141820',
       borderRadius: '10px',
       border: '1px solid #2C323E',
-      borderRight: `4px solid ${CATEGORY_COLORS[proposal.category] || '#9E9990'}`,
+      borderRight: `4px solid ${CATEGORY_COLORS[proposal.category] || '#AAB0BD'}`,
     }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
@@ -430,7 +430,7 @@ function ProposalCard({
             <Badge variant={PRIORITY_VARIANT[proposal.priority] || 'default'}>
               {PRIORITY_LABELS[proposal.priority]}
             </Badge>
-            <span style={{ fontSize: '11px', color: '#9E9990' }}>
+            <span style={{ fontSize: '11px', color: '#AAB0BD' }}>
               ~{proposal.days_to_significance} ימים · {proposal.estimated_traffic} ביקורים/יום
             </span>
           </div>
@@ -463,7 +463,7 @@ function ProposalCard({
 
       {/* Hypothesis */}
       <div style={{
-        fontSize: '12px', color: '#9E9990', background: '#1D2430', borderRadius: '6px',
+        fontSize: '12px', color: '#AAB0BD', background: '#1D2430', borderRadius: '6px',
         padding: '10px 12px', marginBottom: '12px', lineHeight: '1.6',
       }}>
         💡 {proposal.hypothesis}
@@ -472,26 +472,26 @@ function ProposalCard({
       {/* Variants */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
         <div style={{ padding: '10px 12px', background: '#1D2430', borderRadius: '6px', border: '1px solid #2C323E' }}>
-          <div style={{ fontSize: '10px', fontWeight: 700, color: '#9E9990', marginBottom: '4px' }}>גרסה A — נוכחית</div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#AAB0BD', marginBottom: '4px' }}>גרסה A — נוכחית</div>
           <div style={{ fontSize: '12px', color: '#EDE9E1', lineHeight: '1.5' }}>{proposal.variant_a}</div>
         </div>
         <div style={{ padding: '10px 12px', background: 'rgba(201,150,74,0.08)', borderRadius: '6px', border: '1px solid rgba(201,150,74,0.25)' }}>
-          <div style={{ fontSize: '10px', fontWeight: 700, color: '#C9964A', marginBottom: '4px' }}>גרסה B — מוצעת</div>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: '#E8B94A', marginBottom: '4px' }}>גרסה B — מוצעת</div>
           <div style={{ fontSize: '12px', color: '#EDE9E1', lineHeight: '1.5' }}>{proposal.variant_b}</div>
         </div>
       </div>
 
       {/* Footer */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '11px', color: '#9E9990' }}>
+        <span style={{ fontSize: '11px', color: '#AAB0BD' }}>
           📊 מדד: {METRIC_LABELS[proposal.metric] || proposal.metric}
         </span>
-        <span style={{ fontSize: '11px', color: '#9E9990' }}>
+        <span style={{ fontSize: '11px', color: '#AAB0BD' }}>
           📍 {proposal.page_or_element}
         </span>
         {proposal.reasoning && (
-          <details style={{ fontSize: '11px', color: '#9E9990' }}>
-            <summary style={{ cursor: 'pointer', color: '#9E9990' }}>נימוק הסוכן</summary>
+          <details style={{ fontSize: '11px', color: '#AAB0BD' }}>
+            <summary style={{ cursor: 'pointer', color: '#AAB0BD' }}>נימוק הסוכן</summary>
             <div style={{ marginTop: '6px', lineHeight: '1.6' }}>{proposal.reasoning}</div>
           </details>
         )}
@@ -535,7 +535,7 @@ function LiveTestCard({ test }: { test: LiveTest }) {
           <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
             <span style={{
               fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px',
-              background: 'rgba(201,150,74,0.15)', color: '#C9964A', border: '1px solid rgba(201,150,74,0.30)',
+              background: 'rgba(201,150,74,0.15)', color: '#E8B94A', border: '1px solid rgba(201,150,74,0.30)',
             }}>
               📡 ניסוי חי
             </span>
@@ -547,7 +547,7 @@ function LiveTestCard({ test }: { test: LiveTest }) {
           <div style={{ fontSize: '15px', fontWeight: 600, color: '#EDE9E1' }}>
             {meta?.label ?? test.name}
           </div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '2px' }}>
+          <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '2px' }}>
             מדד: {meta?.metric ?? 'שיעור המרה · מעקב דרך טבלת experiments'}
           </div>
         </div>
@@ -557,14 +557,14 @@ function LiveTestCard({ test }: { test: LiveTest }) {
       {meta && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
           <div style={{ padding: '12px 14px', background: '#1D2430', borderRadius: '8px', border: '1px solid #2C323E' }}>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#9E9990', marginBottom: '6px', letterSpacing: '0.04em' }}>גרסה A — נוכחית</div>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: '#AAB0BD', marginBottom: '6px', letterSpacing: '0.04em' }}>גרסה A — נוכחית</div>
             <div style={{ fontSize: '13px', color: '#EDE9E1', lineHeight: '1.5' }}>{meta.a}</div>
-            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>{meta.subLabel}: {meta.aSub}</div>
+            <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '6px' }}>{meta.subLabel}: {meta.aSub}</div>
           </div>
           <div style={{ padding: '12px 14px', background: 'rgba(201,150,74,0.08)', borderRadius: '8px', border: '1px solid rgba(201,150,74,0.30)' }}>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: '#C9964A', marginBottom: '6px', letterSpacing: '0.04em' }}>גרסה B — מאתגר</div>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: '#E8B94A', marginBottom: '6px', letterSpacing: '0.04em' }}>גרסה B — מאתגר</div>
             <div style={{ fontSize: '13px', color: '#EDE9E1', lineHeight: '1.5' }}>{meta.b}</div>
-            <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>{meta.subLabel}: {meta.bSub}</div>
+            <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '6px' }}>{meta.subLabel}: {meta.bSub}</div>
           </div>
         </div>
       )}
@@ -576,15 +576,15 @@ function LiveTestCard({ test }: { test: LiveTest }) {
           background: winner === 'a' ? 'rgba(66,133,244,0.10)' : '#1D2430',
           border: winner === 'a' ? '1px solid rgba(66,133,244,0.40)' : '1px solid #2C323E',
         }}>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginBottom: '6px', fontWeight: 600 }}>גרסה A · שיעור המרה</div>
+          <div style={{ fontSize: '11px', color: '#AAB0BD', marginBottom: '6px', fontWeight: 600 }}>גרסה A · שיעור המרה</div>
           <div style={{ fontSize: '32px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
             {cvrA.toFixed(2)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>
+          <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '6px' }}>
             {test.conversions_a.toLocaleString()} המרות מתוך {test.visitors_a.toLocaleString()}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px', fontFamily: 'system-ui' }}>
+            <div style={{ fontSize: '10px', color: '#AAB0BD', marginTop: '4px', fontFamily: 'system-ui' }}>
               טווח אמת 95%: {(stats.ci_a[0] * 100).toFixed(1)}–{(stats.ci_a[1] * 100).toFixed(1)}%
             </div>
           )}
@@ -596,15 +596,15 @@ function LiveTestCard({ test }: { test: LiveTest }) {
           border: `1px solid ${!stats.hasMinSample ? '#2C323E' : stats.uplift > 0 ? 'rgba(34,197,94,0.30)' : 'rgba(220,38,38,0.30)'}`,
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
         }}>
-          <div style={{ fontSize: '10px', color: '#9E9990', marginBottom: '4px', fontWeight: 600 }}>הבדל (B מול A)</div>
+          <div style={{ fontSize: '10px', color: '#AAB0BD', marginBottom: '4px', fontWeight: 600 }}>הבדל (B מול A)</div>
           <div style={{
             fontSize: '26px', fontWeight: 700, fontFamily: 'system-ui', lineHeight: 1,
-            color: !stats.hasMinSample ? '#9E9990' : stats.uplift > 0 ? '#22C55E' : '#EF4444',
+            color: !stats.hasMinSample ? '#AAB0BD' : stats.uplift > 0 ? '#22C55E' : '#EF4444',
           }}>
             {stats.hasMinSample ? `${stats.uplift > 0 ? '+' : ''}${stats.uplift.toFixed(1)}%` : '–'}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '6px', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '10px', color: '#AAB0BD', marginTop: '6px', lineHeight: 1.4 }}>
               סיכוי ש-B מנצח<br />
               <span style={{ fontWeight: 600, color: '#EDE9E1', fontFamily: 'system-ui' }}>
                 {(stats.probBWins * 100).toFixed(0)}%
@@ -618,15 +618,15 @@ function LiveTestCard({ test }: { test: LiveTest }) {
           background: winner === 'b' ? 'rgba(34,197,94,0.10)' : 'rgba(201,150,74,0.06)',
           border: winner === 'b' ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(201,150,74,0.25)',
         }}>
-          <div style={{ fontSize: '11px', color: '#C9964A', marginBottom: '6px', fontWeight: 600 }}>גרסה B · שיעור המרה</div>
+          <div style={{ fontSize: '11px', color: '#E8B94A', marginBottom: '6px', fontWeight: 600 }}>גרסה B · שיעור המרה</div>
           <div style={{ fontSize: '32px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
             {cvrB.toFixed(2)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>
+          <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '6px' }}>
             {test.conversions_b.toLocaleString()} המרות מתוך {test.visitors_b.toLocaleString()}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px', fontFamily: 'system-ui' }}>
+            <div style={{ fontSize: '10px', color: '#AAB0BD', marginTop: '4px', fontFamily: 'system-ui' }}>
               טווח אמת 95%: {(stats.ci_b[0] * 100).toFixed(1)}–{(stats.ci_b[1] * 100).toFixed(1)}%
             </div>
           )}
@@ -707,7 +707,7 @@ function RunningCard({
             )}
           </div>
           <div style={{ fontSize: '15px', fontWeight: 700, color: '#EDE9E1' }}>{proposal.title}</div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '2px' }}>
+          <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '2px' }}>
             יום {days} מתוך {proposal.days_to_significance} · {daysLeft > 0 ? `עוד ${daysLeft} ימים` : 'חרג מהזמן המוערך'}
           </div>
         </div>
@@ -745,15 +745,15 @@ function RunningCard({
           background: winner === 'a' ? 'rgba(66,133,244,0.10)' : '#1D2430',
           border: winner === 'a' ? '1px solid rgba(66,133,244,0.40)' : '1px solid #2C323E',
         }}>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginBottom: '6px', fontWeight: 600 }}>גרסה A · שיעור המרה</div>
+          <div style={{ fontSize: '11px', color: '#AAB0BD', marginBottom: '6px', fontWeight: 600 }}>גרסה A · שיעור המרה</div>
           <div style={{ fontSize: '32px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
             {cvrA.toFixed(2)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>
+          <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '6px' }}>
             {proposal.conversions_a.toLocaleString()} המרות מתוך {proposal.visitors_a.toLocaleString()}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px', fontFamily: 'system-ui' }}>
+            <div style={{ fontSize: '10px', color: '#AAB0BD', marginTop: '4px', fontFamily: 'system-ui' }}>
               טווח אמת 95%: {(stats.ci_a[0] * 100).toFixed(1)}-{(stats.ci_a[1] * 100).toFixed(1)}%
             </div>
           )}
@@ -766,15 +766,15 @@ function RunningCard({
           border: `1px solid ${!stats.hasMinSample ? '#2C323E' : stats.uplift > 0 ? 'rgba(34,197,94,0.30)' : 'rgba(220,38,38,0.30)'}`,
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
         }}>
-          <div style={{ fontSize: '10px', color: '#9E9990', marginBottom: '4px', fontWeight: 600 }}>הבדל (B מול A)</div>
+          <div style={{ fontSize: '10px', color: '#AAB0BD', marginBottom: '4px', fontWeight: 600 }}>הבדל (B מול A)</div>
           <div style={{
             fontSize: '26px', fontWeight: 700, fontFamily: 'system-ui', lineHeight: 1,
-            color: !stats.hasMinSample ? '#9E9990' : stats.uplift > 0 ? '#22C55E' : '#EF4444',
+            color: !stats.hasMinSample ? '#AAB0BD' : stats.uplift > 0 ? '#22C55E' : '#EF4444',
           }}>
             {stats.hasMinSample ? `${stats.uplift > 0 ? '+' : ''}${stats.uplift.toFixed(1)}%` : '-'}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '6px', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '10px', color: '#AAB0BD', marginTop: '6px', lineHeight: 1.4 }}>
               סיכוי ש-B מנצח<br />
               <span style={{ fontWeight: 600, color: '#EDE9E1', fontFamily: 'system-ui' }}>
                 {(stats.probBWins * 100).toFixed(0)}%
@@ -789,15 +789,15 @@ function RunningCard({
           background: winner === 'b' ? 'rgba(34,197,94,0.10)' : 'rgba(201,150,74,0.06)',
           border: winner === 'b' ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(201,150,74,0.25)',
         }}>
-          <div style={{ fontSize: '11px', color: '#C9964A', marginBottom: '6px', fontWeight: 600 }}>גרסה B · שיעור המרה</div>
+          <div style={{ fontSize: '11px', color: '#E8B94A', marginBottom: '6px', fontWeight: 600 }}>גרסה B · שיעור המרה</div>
           <div style={{ fontSize: '32px', fontWeight: 700, color: '#EDE9E1', fontFamily: 'system-ui', lineHeight: 1 }}>
             {cvrB.toFixed(2)}%
           </div>
-          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '6px' }}>
+          <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '6px' }}>
             {proposal.conversions_b.toLocaleString()} המרות מתוך {proposal.visitors_b.toLocaleString()}
           </div>
           {stats.hasMinSample && (
-            <div style={{ fontSize: '10px', color: '#9E9990', marginTop: '4px', fontFamily: 'system-ui' }}>
+            <div style={{ fontSize: '10px', color: '#AAB0BD', marginTop: '4px', fontFamily: 'system-ui' }}>
               טווח אמת 95%: {(stats.ci_b[0] * 100).toFixed(1)}-{(stats.ci_b[1] * 100).toFixed(1)}%
             </div>
           )}
@@ -1006,7 +1006,7 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
           {/* Live tests from experiments table */}
           {liveTests.length > 0 && (
             <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#C9964A', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#E8B94A', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
                 📡 ניסויים חיים — experiments table
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1045,7 +1045,7 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
                       }}>
                         <div>
                           <div style={{ fontSize: '13px', fontWeight: 700, color: '#EDE9E1' }}>{p.title}</div>
-                          <div style={{ fontSize: '11px', color: '#9E9990', marginTop: '2px' }}>
+                          <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '2px' }}>
                             {p.visitors_a} A · {p.visitors_b} B · {p.confidence.toFixed(0)}% confidence
                           </div>
                         </div>
@@ -1091,7 +1091,7 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
                 name: (
                   <div>
                     <div style={{ fontWeight: 500, color: '#EDE9E1', fontSize: '13px' }}>{p.title}</div>
-                    <div style={{ fontSize: '11px', color: '#9E9990' }}>{p.page_or_element}</div>
+                    <div style={{ fontSize: '11px', color: '#AAB0BD' }}>{p.page_or_element}</div>
                   </div>
                 ),
                 category: (
@@ -1105,7 +1105,7 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
                 ),
                 uplift: (
                   <span style={{
-                    color: stats.uplift > 0 ? '#22C55E' : stats.uplift < 0 ? '#EF4444' : '#9E9990',
+                    color: stats.uplift > 0 ? '#22C55E' : stats.uplift < 0 ? '#EF4444' : '#AAB0BD',
                     fontWeight: 600, fontFamily: 'system-ui',
                   }}>
                     {stats.hasMinSample ? `${stats.uplift > 0 ? '+' : ''}${stats.uplift.toFixed(1)}%` : '-'}
@@ -1117,7 +1117,7 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
                     ? <Badge variant="info">גרסה A</Badge>
                     : <Badge variant="default">אין מנצח</Badge>,
                 confidence: <Badge variant={p.confidence >= 95 ? 'success' : 'warning'}>{p.confidence.toFixed(0)}%</Badge>,
-                duration: dur !== null ? <span style={{ fontSize: '12px', color: '#9E9990' }}>{dur} ימים</span> : '-',
+                duration: dur !== null ? <span style={{ fontSize: '12px', color: '#AAB0BD' }}>{dur} ימים</span> : '-',
               };
             })}
             emptyMessage="אין ניסויים שהושלמו עדיין"
@@ -1138,8 +1138,8 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
               padding: '14px', background: '#1D2430', borderRadius: '8px', border: '1px solid #2C323E',
             }}>
               <div style={{ fontSize: '18px', marginBottom: '6px' }}>{item.icon}</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#C9964A', marginBottom: '4px' }}>{item.title}</div>
-              <div style={{ fontSize: '11px', color: '#9E9990', lineHeight: '1.5' }}>{item.desc}</div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#E8B94A', marginBottom: '4px' }}>{item.title}</div>
+              <div style={{ fontSize: '11px', color: '#AAB0BD', lineHeight: '1.5' }}>{item.desc}</div>
             </div>
           ))}
         </div>

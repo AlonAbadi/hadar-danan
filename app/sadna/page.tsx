@@ -17,7 +17,7 @@ export default function SadnaPage() {
         {/* Eyebrow */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(201,150,74,0.10)", border: "1px solid rgba(201,150,74,0.28)", borderRadius: 9999, padding: "5px 18px", marginBottom: 28 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#C9964A", display: "inline-block" }} />
-          <span style={{ color: "#C9964A", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em" }}>סדנת פרימיום · אירוע חד-פעמי</span>
+          <span style={{ color: "#E8B94A", fontSize: 11, fontWeight: 700, letterSpacing: "0.14em" }}>סדנת פרימיום · אירוע חד-פעמי</span>
         </div>
 
         {/* Date strip */}
@@ -34,7 +34,7 @@ export default function SadnaPage() {
               textAlign: "center",
             }}>
               <div style={{ fontSize: 22, fontWeight: 800, color: "#E8B94A", lineHeight: 1 }}>{item.val}</div>
-              <div style={{ fontSize: 11, color: "#9E9990", marginTop: 4, letterSpacing: "0.06em" }}>{item.label}</div>
+              <div style={{ fontSize: 11, color: "#AAB0BD", marginTop: 4, letterSpacing: "0.06em" }}>{item.label}</div>
             </div>
           ))}
         </div>
@@ -47,7 +47,7 @@ export default function SadnaPage() {
           </span>
         </h1>
 
-        <p style={{ fontSize: "1.05rem", color: "#9E9990", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 40px" }}>
+        <p style={{ fontSize: "1.05rem", color: "#AAB0BD", lineHeight: 1.7, maxWidth: 480, margin: "0 auto 40px" }}>
           שלוש שעות של תרגול פרקטי — להטמיע את ההגדרה העצמית שלכם, לחדד את המסר, ולדעת בדיוק איך להטמיע את זה נכון בוידאו.
         </p>
 
@@ -56,7 +56,7 @@ export default function SadnaPage() {
           <SadnaCheckout />
         </div>
 
-        <div style={{ marginTop: 14, fontSize: 12, color: "#9E9990" }}>
+        <div style={{ marginTop: 14, fontSize: 12, color: "#AAB0BD" }}>
           נותרו מקומות ספורים
         </div>
       </section>
@@ -90,11 +90,11 @@ export default function SadnaPage() {
               flexShrink: 0, width: 36, height: 36, borderRadius: "50%",
               border: "1px solid rgba(201,150,74,0.30)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "monospace", fontSize: 11, fontWeight: 800, color: "#C9964A",
+              fontFamily: "monospace", fontSize: 11, fontWeight: 800, color: "#E8B94A",
             }}>{item.num}</div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 6, color: "#EDE9E1" }}>{item.title}</div>
-              <div style={{ fontSize: 14, color: "#9E9990", lineHeight: 1.65 }}>{item.body}</div>
+              <div style={{ fontSize: 14, color: "#AAB0BD", lineHeight: 1.65 }}>{item.body}</div>
             </div>
           </div>
         ))}
@@ -118,7 +118,7 @@ export default function SadnaPage() {
             display: "flex", justifyContent: "space-between", alignItems: "baseline",
             padding: "13px 2px", borderBottom: "1px solid rgba(201,150,74,0.10)", fontSize: 14,
           }}>
-            <span style={{ color: "#9E9990" }}>{row.k}</span>
+            <span style={{ color: "#AAB0BD" }}>{row.k}</span>
             <span style={{ fontWeight: 600, color: "#EDE9E1" }}>{row.v}</span>
           </div>
         ))}
@@ -136,7 +136,7 @@ export default function SadnaPage() {
           "מי שרוצה לדעת בדיוק איך להטמיע את המסר שלו בוידאו ולא רק בכתב",
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", gap: 12, marginBottom: 16, alignItems: "flex-start" }}>
-            <span style={{ color: "#C9964A", fontWeight: 700, fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>
+            <span style={{ color: "#E8B94A", fontWeight: 700, fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>
             <span style={{ fontSize: 14, color: "rgba(237,233,225,0.85)", lineHeight: 1.6 }}>{item}</span>
           </div>
         ))}
@@ -149,7 +149,7 @@ export default function SadnaPage() {
           <p style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.3, marginBottom: 8, textAlign: "center" }}>
             20 מקומות בלבד.
           </p>
-          <p style={{ fontSize: 14, color: "#9E9990", marginBottom: 28, textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: "#AAB0BD", marginBottom: 28, textAlign: "center" }}>
             הסדנה לא תחזור על עצמה בפורמט הזה.
           </p>
           <SadnaCheckout />

@@ -71,7 +71,7 @@ export function CallForm({ price }: { price: string }) {
           </svg>
         </div>
         <h3 className="text-xl font-black" style={{ color: "#EDE9E1" }}>קיבלתי את הפנייה!</h3>
-        <p className="text-sm text-[#9E9990]">אחזור אליך תוך 24 שעות לתיאום מועד השיחה.</p>
+        <p className="text-sm text-[#AAB0BD]">אחזור אליך תוך 24 שעות לתיאום מועד השיחה.</p>
       </div>
     );
   }
@@ -85,7 +85,7 @@ export function CallForm({ price }: { price: string }) {
         { id: "business", label: "במה עוסק העסק שלך?", type: "text", placeholder: "לדוגמה: מאמן אישי, יועץ עסקי...", required: true },
       ].map(({ id, label, type, placeholder, required }) => (
         <div key={id} className="flex flex-col gap-1">
-          <label htmlFor={id} className="text-sm font-medium text-[#9E9990]">{label}</label>
+          <label htmlFor={id} className="text-sm font-medium text-[#AAB0BD]">{label}</label>
           <input
             id={id}
             type={type}
@@ -101,7 +101,7 @@ export function CallForm({ price }: { price: string }) {
       ))}
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="goal" className="text-sm font-medium text-[#9E9990]">
+        <label htmlFor="goal" className="text-sm font-medium text-[#AAB0BD]">
           מה המטרה העיקרית שלך לשנה הקרובה?
         </label>
         <textarea
@@ -134,7 +134,7 @@ export function CallForm({ price }: { price: string }) {
         {state === "loading" ? "שולח..." : `שמור את המקום שלי - ₪${price}`}
       </button>
 
-      <p className="text-center text-xs text-[#9E9990]">
+      <p className="text-center text-xs text-[#AAB0BD]">
         שמירת מקום אינה מחייבת תשלום עכשיו - נתאם ואז נשלח פרטי תשלום.
       </p>
     </form>

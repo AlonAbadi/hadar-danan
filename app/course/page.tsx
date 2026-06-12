@@ -57,7 +57,7 @@ export default function CoursePage() {
         <p
           style={{
             fontSize: "1.05rem",
-            color: "#9E9990",
+            color: "#AAB0BD",
             lineHeight: 1.7,
             marginBottom: "2rem",
           }}

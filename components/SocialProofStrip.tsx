@@ -52,7 +52,7 @@ export default function SocialProofStrip() {
             <div className="flex items-center gap-1.5">
               <span className="text-[#E8B94A] text-base leading-none tracking-wider">★★★★★</span>
               <span className="text-[#EDE9E1] font-bold text-base">{AGGREGATE.rating.toFixed(1)}</span>
-              <span className="text-[#9E9990] text-base">· {REVIEWS.length} ביקורות</span>
+              <span className="text-[#AAB0BD] text-base">· {REVIEWS.length} ביקורות</span>
             </div>
           </div>
 
@@ -72,10 +72,10 @@ export default function SocialProofStrip() {
               className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-lg transition-colors"
               style={{
                 border: '1px solid #2C323E',
-                color: '#9E9990',
+                color: '#AAB0BD',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#C9964A')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#9E9990')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#E8B94A')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#AAB0BD')}
             >
               &#8249;
             </button>
@@ -116,10 +116,10 @@ export default function SocialProofStrip() {
               className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-lg transition-colors"
               style={{
                 border: '1px solid #2C323E',
-                color: '#9E9990',
+                color: '#AAB0BD',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#C9964A')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#9E9990')}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#E8B94A')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#AAB0BD')}
             >
               &#8250;
             </button>

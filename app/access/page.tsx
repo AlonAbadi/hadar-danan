@@ -36,7 +36,7 @@ const S = {
   },
   subtitle: {
     fontSize: 14,
-    color: "#9E9990",
+    color: "#AAB0BD",
     textAlign: "center" as const,
     marginBottom: 28,
     lineHeight: 1.6,
@@ -44,7 +44,7 @@ const S = {
   label: {
     display: "block",
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
     marginBottom: 6,
     fontWeight: 600,
   },
@@ -100,7 +100,7 @@ const S = {
     margin: "20px 0",
   },
   dividerLine: { flex: 1, height: 1, background: "#2C323E" },
-  dividerText:  { fontSize: 12, color: "#9E9990" },
+  dividerText:  { fontSize: 12, color: "#AAB0BD" },
   errorBox: {
     background: "rgba(224,85,85,0.1)",
     border: "1px solid rgba(224,85,85,0.3)",
@@ -117,7 +117,7 @@ const S = {
     borderRadius: 8,
     padding: "10px 14px",
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
     textAlign: "center" as const,
     lineHeight: 1.6,
   },
@@ -125,7 +125,7 @@ const S = {
     textAlign: "center" as const,
     marginTop: 14,
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
   },
 };
 
@@ -196,7 +196,7 @@ function AccessPageInner() {
   if (phase === "initializing") {
     return (
       <div style={S.page} dir="rtl" lang="he">
-        <div style={{ color: "#9E9990", fontSize: 14, fontFamily: "Assistant, sans-serif" }}>
+        <div style={{ color: "#AAB0BD", fontSize: 14, fontFamily: "Assistant, sans-serif" }}>
           טוענת...
         </div>
       </div>
@@ -224,13 +224,13 @@ function AccessPageInner() {
               שלחנו קישור כניסה ל-<br />
               <strong style={{ color: "#E8B94A" }}>{email}</strong>
             </p>
-            <p style={{ fontSize: 13, color: "#9E9990", marginTop: 16, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 13, color: "#AAB0BD", marginTop: 16, lineHeight: 1.6 }}>
               הקישור בתוקף ל-24 שעות.<br />
               לא קיבלת? בדקי גם ב-spam.
             </p>
             <button
               onClick={() => setPhase("idle")}
-              style={{ marginTop: 20, background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 13, fontFamily: "Assistant, sans-serif", textDecoration: "underline" }}
+              style={{ marginTop: 20, background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 13, fontFamily: "Assistant, sans-serif", textDecoration: "underline" }}
             >
               לא הגיע? שלחי שוב
             </button>

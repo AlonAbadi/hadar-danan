@@ -141,7 +141,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
         <button
           onClick={handleClose}
           className="absolute top-4 left-4 w-8 h-8 flex items-center justify-center rounded-full transition hover:opacity-70"
-          style={{ background: "#1D2430", color: "#9E9990" }}
+          style={{ background: "#1D2430", color: "#AAB0BD" }}
           aria-label="סגור"
         >
           ✕
@@ -154,7 +154,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
               <h2 className="text-2xl font-black mb-1" style={{ color: "#EDE9E1" }}>
                 הצטרף לכוורת 🐝
               </h2>
-              <p className="text-sm" style={{ color: "#9E9990" }}>
+              <p className="text-sm" style={{ color: "#AAB0BD" }}>
                 {tier === "discounted_29"
                   ? "מסלול לקוחות הדר - ₪29/חודש"
                   : "מסלול פתוח - ₪97/חודש"}
@@ -162,7 +162,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold" style={{ color: "#9E9990" }}>
+              <label className="text-sm font-semibold" style={{ color: "#AAB0BD" }}>
                 שם מלא
               </label>
               <input
@@ -184,7 +184,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold" style={{ color: "#9E9990" }}>
+              <label className="text-sm font-semibold" style={{ color: "#AAB0BD" }}>
                 אימייל
               </label>
               <input
@@ -234,7 +234,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
               <h2 className="text-xl font-black mb-2" style={{ color: "#EDE9E1" }}>
                 המחיר המיוחד הזה שמור ללקוחות הדר
               </h2>
-              <p className="text-sm leading-relaxed" style={{ color: "#9E9990" }}>
+              <p className="text-sm leading-relaxed" style={{ color: "#AAB0BD" }}>
                 רוצה להתחיל את המסע ולקבל את ההטבה? בוא נכיר.
               </p>
             </div>
@@ -253,7 +253,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
             <button
               onClick={handleClose}
               className="text-sm transition hover:opacity-70"
-              style={{ color: "#9E9990" }}
+              style={{ color: "#AAB0BD" }}
             >
               חזור
             </button>
@@ -267,7 +267,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
               <h2 className="text-xl font-black mb-1" style={{ color: "#EDE9E1" }}>
                 פרטי המנוי
               </h2>
-              <p className="text-sm" style={{ color: "#9E9990" }}>
+              <p className="text-sm" style={{ color: "#AAB0BD" }}>
                 אנא קרא בעיון לפני האישור
               </p>
             </div>
@@ -277,7 +277,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
               style={{
                 background: "#101520",
                 border: "1px solid rgba(201,150,74,0.08)",
-                color: "#9E9990",
+                color: "#AAB0BD",
               }}
             >
               <p className="font-bold mb-1" style={{ color: "#EDE9E1" }}>
@@ -292,7 +292,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
                 <a
                   href="mailto:hive@beegood.online"
                   className="underline hover:opacity-80"
-                  style={{ color: "#C9964A" }}
+                  style={{ color: "#E8B94A" }}
                 >
                   hive@beegood.online
                 </a>{" "}
@@ -310,14 +310,14 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
                 className="mt-0.5 flex-shrink-0 w-5 h-5 rounded cursor-pointer"
                 style={{ accentColor: "#C9964A" }}
               />
-              <span className="text-sm leading-relaxed" style={{ color: "#9E9990" }}>
+              <span className="text-sm leading-relaxed" style={{ color: "#AAB0BD" }}>
                 קראתי והבנתי את תנאי המנוי החודשי ואת מדיניות הביטול{" "}
                 <Link
                   href="/hive/terms"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline hover:opacity-80"
-                  style={{ color: "#C9964A" }}
+                  style={{ color: "#E8B94A" }}
                 >
                   ← תנאי מנוי
                 </Link>
@@ -353,11 +353,11 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
               <h2 className="text-xl font-black mb-2" style={{ color: "#EDE9E1" }}>
                 הבקשה שלך התקבלה!
               </h2>
-              <p className="text-sm leading-relaxed" style={{ color: "#9E9990" }}>
+              <p className="text-sm leading-relaxed" style={{ color: "#AAB0BD" }}>
                 נחזור אליך עם פרטי תשלום בקרוב.
               </p>
               {email && (
-                <p className="text-sm mt-2" style={{ color: "#9E9990" }}>
+                <p className="text-sm mt-2" style={{ color: "#AAB0BD" }}>
                   אימייל:{" "}
                   <span className="font-semibold" style={{ color: "#EDE9E1" }}>
                     {email}
@@ -368,7 +368,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
             <button
               onClick={handleClose}
               className="w-full py-3 rounded-2xl font-bold text-sm transition hover:opacity-70"
-              style={{ background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990" }}
+              style={{ background: "#1D2430", border: "1px solid #2C323E", color: "#AAB0BD" }}
             >
               סגור
             </button>
@@ -389,7 +389,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
                 ברוך הבא לכוורת 🐝
               </h2>
               {email && (
-                <p className="text-sm" style={{ color: "#9E9990" }}>
+                <p className="text-sm" style={{ color: "#AAB0BD" }}>
                   פרטים נשלחו לאימייל:{" "}
                   <span className="font-semibold" style={{ color: "#EDE9E1" }}>
                     {email}
@@ -400,7 +400,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
             <button
               onClick={handleClose}
               className="w-full py-3 rounded-2xl font-bold text-sm transition hover:opacity-70"
-              style={{ background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990" }}
+              style={{ background: "#1D2430", border: "1px solid #2C323E", color: "#AAB0BD" }}
             >
               סגור
             </button>

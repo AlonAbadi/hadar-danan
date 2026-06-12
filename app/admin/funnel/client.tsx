@@ -8,7 +8,7 @@ const STAGE_COLORS = ['#C9964A', '#E8B94A', '#4285F4', '#34A853', '#9C27B0'];
 
 const TT = {
   contentStyle: { background: '#141820', border: '1px solid #2C323E', borderRadius: 8, fontSize: 12, color: '#EDE9E1' },
-  labelStyle: { color: '#9E9990', fontWeight: 600 },
+  labelStyle: { color: '#AAB0BD', fontWeight: 600 },
   cursor: { fill: 'rgba(201,150,74,0.06)' },
 };
 
@@ -71,7 +71,7 @@ export default function FunnelClient() {
         {/* Funnel chart */}
         <SectionCard title="ויזואליזציית פאנל" titleEn="Funnel Visualization">
           {loading
-            ? <div style={{ color: '#9E9990', fontSize: 13 }}>טוען...</div>
+            ? <div style={{ color: '#AAB0BD', fontSize: 13 }}>טוען...</div>
             : (
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart
@@ -79,8 +79,8 @@ export default function FunnelClient() {
                   layout="vertical"
                   margin={{ right: 24, left: 8 }}
                 >
-                  <XAxis type="number" tick={{ fontSize: 11, fill: '#9E9990' }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#9E9990' }} axisLine={false} tickLine={false} width={90} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: '#AAB0BD' }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#AAB0BD' }} axisLine={false} tickLine={false} width={90} />
                   <Tooltip {...TT} />
                   <Bar dataKey="ערך" radius={[0, 6, 6, 0]}>
                     {funnel.map((_f, i) => <Cell key={i} fill={STAGE_COLORS[i % STAGE_COLORS.length]} />)}
@@ -94,7 +94,7 @@ export default function FunnelClient() {
         {/* Drop-off analysis */}
         <SectionCard title="ניתוח נשירה" titleEn="Drop-off Analysis">
           {loading
-            ? <div style={{ color: '#9E9990', fontSize: 13 }}>טוען...</div>
+            ? <div style={{ color: '#AAB0BD', fontSize: 13 }}>טוען...</div>
             : (
               <>
                 {biggestDrop.dropPct > 0 && (
@@ -104,11 +104,11 @@ export default function FunnelClient() {
                     border: '1px solid rgba(234,67,53,0.25)',
                     borderRadius: 10, marginBottom: 16,
                   }}>
-                    <div style={{ fontSize: 11, color: '#9E9990', marginBottom: 4 }}>נקודת הנשירה הגדולה</div>
+                    <div style={{ fontSize: 11, color: '#AAB0BD', marginBottom: 4 }}>נקודת הנשירה הגדולה</div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: '#EA4335' }}>
                       {biggestDrop.dropPct}% נשירה
                     </div>
-                    <div style={{ fontSize: 12, color: '#9E9990', marginTop: 4 }}>
+                    <div style={{ fontSize: 12, color: '#AAB0BD', marginTop: 4 }}>
                       בין {biggestDrop.from} → {biggestDrop.to}
                     </div>
                   </div>
@@ -123,7 +123,7 @@ export default function FunnelClient() {
                         padding: '9px 12px', background: '#1D2430',
                         borderRadius: 8, border: '1px solid #2C323E',
                       }}>
-                        <span style={{ fontSize: 12, color: '#9E9990' }}>
+                        <span style={{ fontSize: 12, color: '#AAB0BD' }}>
                           {funnel[i].label} → {f.label}
                         </span>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -152,11 +152,11 @@ export default function FunnelClient() {
               padding: '16px', background: '#1D2430',
               borderRadius: 10, border: '1px solid #2C323E', textAlign: 'center',
             }}>
-              <div style={{ fontSize: 11, color: '#9E9990', marginBottom: 8 }}>{item.label}</div>
+              <div style={{ fontSize: 11, color: '#AAB0BD', marginBottom: 8 }}>{item.label}</div>
               <div style={{ fontSize: 26, fontWeight: 800, color: '#E8B94A' }}>
                 {loading ? '...' : item.value}
               </div>
-              <div style={{ fontSize: 11, color: '#9E9990', marginTop: 4 }}>{item.unit}</div>
+              <div style={{ fontSize: 11, color: '#AAB0BD', marginTop: 4 }}>{item.unit}</div>
             </div>
           ))}
         </div>

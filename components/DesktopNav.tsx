@@ -208,7 +208,7 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#1D2430"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
-                  <span style={{ color: "#9E9990", fontSize: 13, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                  <span style={{ color: "#AAB0BD", fontSize: 13, display: 'flex', alignItems: 'baseline', gap: 6 }}>
                     {('priceOriginal' in item) && (
                       <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: 11 }}>{(item as { priceOriginal: string }).priceOriginal}</span>
                     )}
@@ -226,7 +226,7 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
             key={link.href}
             href={link.href}
             style={LINK_STYLE(pathname === link.href)}
-            onMouseEnter={(e) => { if (pathname !== link.href) (e.currentTarget as HTMLElement).style.color = "#C9964A"; }}
+            onMouseEnter={(e) => { if (pathname !== link.href) (e.currentTarget as HTMLElement).style.color = '#E8B94A'; }}
             onMouseLeave={(e) => { if (pathname !== link.href) (e.currentTarget as HTMLElement).style.color = "#EDE9E1"; }}
           >
             {link.label}

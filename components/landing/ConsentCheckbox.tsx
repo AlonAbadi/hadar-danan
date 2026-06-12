@@ -20,7 +20,7 @@ export function ConsentCheckbox({ checked, onChange, error, dark = false }: Cons
         />
         <span
           className="text-xs leading-relaxed"
-          style={{ color: "#9E9990" }}
+          style={{ color: "#AAB0BD" }}
         >
           אני מאשר/ת קבלת עדכונים, מבצעים ותוכן שיווקי מהדר דנן בע״מ באמצעות אימייל, SMS ווואטסאפ. ניתן לבטל בכל עת.
         </span>

@@ -66,10 +66,10 @@ export default function BookingsClient({ bookings, calendly }: { bookings: any[]
                       display: 'flex', flexDirection: 'column',
                       alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: '#C9964A' }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: '#E8B94A' }}>
                         {date.getDate()}
                       </div>
-                      <div style={{ fontSize: 9, color: '#9E9990' }}>
+                      <div style={{ fontSize: 9, color: '#AAB0BD' }}>
                         {date.toLocaleDateString('he-IL', { month: 'short' })}
                       </div>
                     </div>
@@ -77,7 +77,7 @@ export default function BookingsClient({ bookings, calendly }: { bookings: any[]
                       <div style={{ fontSize: 13, fontWeight: 700, color: '#EDE9E1' }}>
                         {b.type === 'strategy' ? 'פגישת אסטרטגיה' : b.type === 'premium' ? 'יום צילום פרמיום' : 'ייעוץ'}
                       </div>
-                      <div style={{ fontSize: 11, color: '#9E9990' }}>
+                      <div style={{ fontSize: 11, color: '#AAB0BD' }}>
                         {date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
@@ -113,7 +113,7 @@ export default function BookingsClient({ bookings, calendly }: { bookings: any[]
               time:   date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
               type:   b.type === 'strategy' ? 'אסטרטגיה' : b.type === 'premium' ? 'פרמיום' : 'ייעוץ',
               status: <Badge variant={s.variant}>{s.label}</Badge>,
-              notes:  <span style={{ fontSize: 12, color: '#9E9990' }}>{b.notes || '—'}</span>,
+              notes:  <span style={{ fontSize: 12, color: '#AAB0BD' }}>{b.notes || '—'}</span>,
             };
           })}
         />
@@ -121,7 +121,7 @@ export default function BookingsClient({ bookings, calendly }: { bookings: any[]
 
       {calendly.configured && calendly.data && (
         <SectionCard title="סנכרון Calendly" titleEn="Calendly Sync">
-          <div style={{ fontSize: 12, color: '#9E9990' }}>
+          <div style={{ fontSize: 12, color: '#AAB0BD' }}>
             {calendly.data.length} אירועים מסונכרנים מ-Calendly (30 ימים אחרונים)
           </div>
         </SectionCard>

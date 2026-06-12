@@ -29,7 +29,7 @@ const C = {
   card:     "#141820",
   cardSoft: "#1D2430",
   fg:       "#EDE9E1",
-  muted:    "#9E9990",
+  muted:    "#AAB0BD",
   goldM:    "#C9964A",
   line:     "#2C323E",
   lineGold: "rgba(232,185,74,0.30)",

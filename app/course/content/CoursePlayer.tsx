@@ -70,7 +70,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
           {/* Module header */}
           <div style={{
             padding: "8px 16px",
-            fontSize: 11, fontWeight: 700, color: "#9E9990",
+            fontSize: 11, fontWeight: 700, color: "#AAB0BD",
             textAlign: "right",
             background: "#0D1219",
             borderBottom: "1px solid #1D2430",
@@ -103,7 +103,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
                   background: isDone
                     ? "rgba(52,168,83,0.15)"
                     : isActive ? "rgba(201,150,74,0.15)" : "rgba(255,255,255,0.05)",
-                  color: isDone ? "#34A853" : isActive ? "#C9964A" : "#9E9990",
+                  color: isDone ? "#34A853" : isActive ? "#C9964A" : "#AAB0BD",
                   border: `1px solid ${isDone ? "rgba(52,168,83,0.3)" : isActive ? "rgba(201,150,74,0.3)" : "transparent"}`,
                 }}>
                   {isDone ? "v" : lesson.id}
@@ -114,7 +114,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
                   <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? "#E8B94A" : "#EDE9E1", marginBottom: 2 }}>
                     {lesson.title}
                   </div>
-                  <div style={{ fontSize: 11, color: "#9E9990" }}>{lesson.duration} דקות</div>
+                  <div style={{ fontSize: 11, color: "#AAB0BD" }}>{lesson.duration} דקות</div>
                 </div>
 
                 {/* LEFT: status badge */}
@@ -186,7 +186,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
           display: "flex", alignItems: "center", justifyContent: "center",
           background: "#0D1219",
         }}>
-          <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700 }}>הסרטון יעלה בקרוב</div>
+          <div style={{ fontSize: 14, color: "#AAB0BD", fontWeight: 700 }}>הסרטון יעלה בקרוב</div>
         </div>
       ) : (
         <iframe
@@ -206,7 +206,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
   // RTL: first=right (total duration), last=left (current time)
   const LessonProgressBar = () => (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-      <span style={{ fontSize: 12, color: "#9E9990", whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 12, color: "#AAB0BD", whiteSpace: "nowrap" }}>
         {fmtMin(activeLesson.duration)}
       </span>
       <div style={{ flex: 1, height: 4, background: "#2C323E", borderRadius: 2, position: "relative" }}>
@@ -217,7 +217,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
           transition: "width 0.4s",
         }} />
       </div>
-      <span style={{ fontSize: 12, whiteSpace: "nowrap", color: lessonDone ? "#34A853" : "#9E9990" }}>
+      <span style={{ fontSize: 12, whiteSpace: "nowrap", color: lessonDone ? "#34A853" : "#AAB0BD" }}>
         {lessonDone ? "הושלם" : "0:00"}
       </span>
     </div>
@@ -244,10 +244,10 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
           </button>
         </div>
       )}
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#9E9990", textAlign: "right", marginTop: 14, marginBottom: 4 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#AAB0BD", textAlign: "right", marginTop: 14, marginBottom: 4 }}>
         מודול {activeModule.id} - {activeModule.title}
       </div>
-      <div style={{ fontSize: 13, color: "#9E9990", textAlign: "right", marginBottom: 12 }}>
+      <div style={{ fontSize: 13, color: "#AAB0BD", textAlign: "right", marginBottom: 12 }}>
         שיעור {activeId} · {activeLesson.duration} דקות
       </div>
       <div style={{
@@ -258,7 +258,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
         <div style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1", marginBottom: 6 }}>
           {activeLesson.title}
         </div>
-        <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.7 }}>
+        <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.7 }}>
           {activeLesson.description}
         </div>
       </div>
@@ -274,7 +274,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
       <div style={{ fontSize: 18, fontWeight: 800, color: "#E8B94A", marginBottom: 6 }}>
         סיימת את הקורס!
       </div>
-      <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 16 }}>
+      <div style={{ fontSize: 13, color: "#AAB0BD", marginBottom: 16 }}>
         הצעד הבא - פגישת אסטרטגיה אישית עם הדר
       </div>
       <Link href="/strategy" style={{
@@ -296,13 +296,13 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
       {/* MOBILE HEADER (hidden on desktop) */}
       <div className="cp-mob-hdr">
         <Link href="/course" style={{
-          fontSize: 13, fontWeight: 700, color: "#9E9990",
+          fontSize: 13, fontWeight: 700, color: "#AAB0BD",
           textDecoration: "none",
         }}>
           ← חזור לקורס
         </Link>
         <span style={{
-          fontSize: 12, fontWeight: 700, color: "#C9964A",
+          fontSize: 12, fontWeight: 700, color: "#E8B94A",
           padding: "3px 10px", borderRadius: 20,
           background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.25)",
         }}>
@@ -320,7 +320,7 @@ export default function CoursePlayer({ completedVideoIds, userEmail }: Props) {
           }}>
             קורס TrueSignal דיגיטלי
           </span>
-          <span style={{ fontSize: 12, color: "#9E9990" }}>
+          <span style={{ fontSize: 12, color: "#AAB0BD" }}>
             {completedCount}/{TOTAL_LESSONS} שיעורים הושלמו
           </span>
         </div>

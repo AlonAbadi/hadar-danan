@@ -36,7 +36,7 @@ const EMPTY: Omit<Deal, "id"> = {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 12, fontWeight: 700, color: "#9E9990" }}>{label}</label>
+      <label style={{ fontSize: 12, fontWeight: 700, color: "#AAB0BD" }}>{label}</label>
       {children}
     </div>
   );
@@ -103,7 +103,7 @@ export default function AdminDealsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 800, color: "#EDE9E1" }}>קופונים ודילים</div>
-          <div style={{ fontSize: 13, color: "#9E9990", marginTop: 3 }}>{deals.length} הטבות במערכת</div>
+          <div style={{ fontSize: 13, color: "#AAB0BD", marginTop: 3 }}>{deals.length} הטבות במערכת</div>
         </div>
         <button
           onClick={openNew}
@@ -121,34 +121,34 @@ export default function AdminDealsPage() {
       {/* Table */}
       <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 14, overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: 48, textAlign: "center", color: "#9E9990" }}>טוען...</div>
+          <div style={{ padding: 48, textAlign: "center", color: "#AAB0BD" }}>טוען...</div>
         ) : deals.length === 0 ? (
-          <div style={{ padding: 48, textAlign: "center", color: "#9E9990" }}>אין הטבות עדיין — לחץ &quot;קופון חדש&quot;</div>
+          <div style={{ padding: 48, textAlign: "center", color: "#AAB0BD" }}>אין הטבות עדיין — לחץ &quot;קופון חדש&quot;</div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "#1D2430", borderBottom: "1px solid #2C323E" }}>
                 {["סדר", "מותג", "קטגוריה", "תיאור", "קוד קופון", "הנחה", "תוקף", "⭐", "פעיל", "פעולות"].map(h => (
-                  <th key={h} style={{ padding: "12px 16px", textAlign: "right", fontSize: 11, fontWeight: 700, color: "#9E9990", whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ padding: "12px 16px", textAlign: "right", fontSize: 11, fontWeight: 700, color: "#AAB0BD", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {deals.map((d, i) => (
                 <tr key={d.id} style={{ borderBottom: i < deals.length - 1 ? "1px solid #2C323E" : "none" }}>
-                  <td style={{ padding: "12px 16px", color: "#9E9990", fontSize: 13 }}>{d.display_order}</td>
+                  <td style={{ padding: "12px 16px", color: "#AAB0BD", fontSize: 13 }}>{d.display_order}</td>
                   <td style={{ padding: "12px 16px", fontWeight: 700, color: "#EDE9E1", fontSize: 14 }}>{d.brand_name}</td>
                   <td style={{ padding: "12px 16px" }}>
-                    <span style={{ background: "#1D2430", border: "1px solid #2C323E", borderRadius: 6, padding: "3px 10px", fontSize: 11, color: "#9E9990" }}>{d.category}</span>
+                    <span style={{ background: "#1D2430", border: "1px solid #2C323E", borderRadius: 6, padding: "3px 10px", fontSize: 11, color: "#AAB0BD" }}>{d.category}</span>
                   </td>
-                  <td style={{ padding: "12px 16px", fontSize: 13, color: "#9E9990", maxWidth: 200 }}>{d.product_description}</td>
+                  <td style={{ padding: "12px 16px", fontSize: 13, color: "#AAB0BD", maxWidth: 200 }}>{d.product_description}</td>
                   <td style={{ padding: "12px 16px" }}>
-                    <span style={{ fontFamily: "monospace", background: "rgba(201,150,74,0.12)", border: "1px dashed rgba(201,150,74,0.4)", borderRadius: 6, padding: "4px 10px", fontSize: 13, color: "#C9964A", fontWeight: 700 }}>
+                    <span style={{ fontFamily: "monospace", background: "rgba(201,150,74,0.12)", border: "1px dashed rgba(201,150,74,0.4)", borderRadius: 6, padding: "4px 10px", fontSize: 13, color: "#E8B94A", fontWeight: 700 }}>
                       {d.coupon_code}
                     </span>
                   </td>
                   <td style={{ padding: "12px 16px", fontSize: 13, color: "#EDE9E1" }}>{d.discount_text}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 13, color: d.expires_at ? "#EDE9E1" : "#9E9990" }}>
+                  <td style={{ padding: "12px 16px", fontSize: 13, color: d.expires_at ? "#EDE9E1" : "#AAB0BD" }}>
                     {d.expires_at ? new Date(d.expires_at).toLocaleDateString("he-IL") : "—"}
                   </td>
                   <td style={{ padding: "12px 16px", textAlign: "center" }}>{d.is_featured ? "⭐" : "—"}</td>
@@ -159,7 +159,7 @@ export default function AdminDealsPage() {
                         border: "none", borderRadius: 9999, padding: "4px 12px",
                         fontSize: 11, fontWeight: 700, cursor: "pointer",
                         background: d.is_active ? "rgba(52,168,83,0.15)" : "#1D2430",
-                        color: d.is_active ? "#34A853" : "#9E9990",
+                        color: d.is_active ? "#34A853" : "#AAB0BD",
                         border_: `1px solid ${d.is_active ? "rgba(52,168,83,0.3)" : "#2C323E"}`,
                       } as React.CSSProperties}
                     >
@@ -238,13 +238,13 @@ export default function AdminDealsPage() {
 
             <div style={{ display: "flex", gap: 12, marginTop: 28, justifyContent: "flex-end" }}>
               <button onClick={() => setModalOpen(false)}
-                style={{ background: "#1D2430", color: "#9E9990", border: "1px solid #2C323E", borderRadius: 9, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                style={{ background: "#1D2430", color: "#AAB0BD", border: "1px solid #2C323E", borderRadius: 9, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                 ביטול
               </button>
               <button onClick={save} disabled={!canSave}
                 style={{
                   background: canSave ? "linear-gradient(135deg, #E8B94A, #C9964A)" : "#2C323E",
-                  color: canSave ? "#1A1206" : "#9E9990",
+                  color: canSave ? "#1A1206" : "#AAB0BD",
                   border: "none", borderRadius: 9, padding: "10px 22px",
                   fontSize: 14, fontWeight: 800,
                   cursor: canSave ? "pointer" : "not-allowed",
@@ -261,10 +261,10 @@ export default function AdminDealsPage() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001 }}>
           <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 16, padding: 32, maxWidth: 360, width: "100%", textAlign: "center", direction: "rtl" }}>
             <div style={{ fontSize: 16, color: "#EDE9E1", marginBottom: 8, fontWeight: 700 }}>למחוק את ההטבה?</div>
-            <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 24 }}>פעולה זו אינה הפיכה</div>
+            <div style={{ fontSize: 13, color: "#AAB0BD", marginBottom: 24 }}>פעולה זו אינה הפיכה</div>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
               <button onClick={() => setDeleteConfirm(null)}
-                style={{ background: "#1D2430", color: "#9E9990", border: "1px solid #2C323E", borderRadius: 9, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                style={{ background: "#1D2430", color: "#AAB0BD", border: "1px solid #2C323E", borderRadius: 9, padding: "10px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                 ביטול
               </button>
               <button onClick={() => del(deleteConfirm)}

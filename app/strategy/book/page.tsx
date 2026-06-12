@@ -22,7 +22,7 @@ export default async function BookingPage() {
           <Link href="/" className="font-black text-xl" style={{ color: "#EDE9E1" }}>
             הדר דנן
           </Link>
-          <Link href="/strategy" className="text-sm transition" style={{ color: "#9E9990" }}>
+          <Link href="/strategy" className="text-sm transition" style={{ color: "#AAB0BD" }}>
             ← חזור לעמוד הפגישה
           </Link>
         </div>
@@ -37,13 +37,13 @@ export default async function BookingPage() {
             <h1 className="text-3xl md:text-4xl font-black" style={{ color: "#EDE9E1" }}>
               פגישת אסטרטגיה
             </h1>
-            <p className="text-lg leading-relaxed max-w-lg" style={{ color: "#9E9990" }}>
+            <p className="text-lg leading-relaxed max-w-lg" style={{ color: "#AAB0BD" }}>
               שיחה אחד-על-אחד של 90 דקות שבונה את מפת הדרכים השיווקית של העסק שלך.
               לאחר התשלום ניצור איתך קשר לתיאום המועד.
             </p>
 
             {/* Guarantee */}
-            <p className="text-sm font-semibold" style={{ color: "#C9964A" }}>
+            <p className="text-sm font-semibold" style={{ color: "#E8B94A" }}>
               ✓ לא פיצחנו בפגישה הראשונה? פגישה נוספת עלינו — ללא עלות
             </p>
           </div>
@@ -58,7 +58,7 @@ export default async function BookingPage() {
 
       <footer
         className="border-t px-4 py-6 text-center text-xs"
-        style={{ borderColor: "#2C323E", background: "#0D1018", color: "#9E9990" }}
+        style={{ borderColor: "#2C323E", background: "#0D1018", color: "#AAB0BD" }}
       >
         <p className="mb-1 font-medium" style={{ color: "rgba(158,153,144,0.6)" }}>
           אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. |{" "}

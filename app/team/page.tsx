@@ -80,14 +80,14 @@ export default function TeamPage() {
       <section className="max-w-3xl mx-auto px-6 pt-20 pb-14 text-center">
         <p
           className="text-sm font-semibold tracking-widest uppercase mb-5"
-          style={{ color: "#C9964A" }}
+          style={{ color: "#E8B94A" }}
         >
           הצוות
         </p>
         <h1 className="text-4xl md:text-5xl font-black leading-tight mb-5" style={{ color: "#EDE9E1" }}>
           הצוות שמאחורי האות שלך
         </h1>
-        <p className="text-lg leading-relaxed" style={{ color: "#9E9990" }}>
+        <p className="text-lg leading-relaxed" style={{ color: "#AAB0BD" }}>
           אנשי מקצוע שמאמינים שתוכן טוב מתחיל בהבנה עמוקה — לא בכלים, לא בטרנדים.
           ביחד אנחנו הופכים את הידע שלך לסיפור שמושך את הלקוחות הנכונים.
         </p>
@@ -122,7 +122,7 @@ export default function TeamPage() {
             <div>
               <p
                 className="text-xs font-bold tracking-widest uppercase mb-2"
-                style={{ color: "#C9964A" }}
+                style={{ color: "#E8B94A" }}
               >
                 בעלת החברה
               </p>
@@ -130,7 +130,7 @@ export default function TeamPage() {
                 {featured.name}
               </h2>
             </div>
-            <p className="text-base leading-relaxed" style={{ color: "#9E9990" }}>
+            <p className="text-base leading-relaxed" style={{ color: "#AAB0BD" }}>
               {featured.desc}
             </p>
             <div
@@ -138,7 +138,7 @@ export default function TeamPage() {
               style={{
                 background: "rgba(201,150,74,0.12)",
                 border: "1px solid rgba(201,150,74,0.3)",
-                color: "#C9964A",
+                color: "#E8B94A",
               }}
             >
               <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> מייסדת
@@ -199,10 +199,10 @@ export default function TeamPage() {
                 <p className="font-black text-sm leading-snug" style={{ color: "#EDE9E1" }}>
                   {member.name}
                 </p>
-                <p className="text-xs font-semibold" style={{ color: "#C9964A" }}>
+                <p className="text-xs font-semibold" style={{ color: "#E8B94A" }}>
                   {member.role}
                 </p>
-                <p className="text-xs leading-relaxed mt-1" style={{ color: "#9E9990" }}>
+                <p className="text-xs leading-relaxed mt-1" style={{ color: "#AAB0BD" }}>
                   {member.desc}
                 </p>
               </div>
@@ -221,7 +221,7 @@ export default function TeamPage() {
         <h2 className="text-2xl font-black mb-4" style={{ color: "#EDE9E1" }}>
           רוצה להצטרף לצוות?
         </h2>
-        <p className="mb-8" style={{ color: "#9E9990" }}>
+        <p className="mb-8" style={{ color: "#AAB0BD" }}>
           אנחנו תמיד מחפשים אנשי מקצוע שמאמינים בשיטה ורוצים לעשות עבודה שמשנה.
           שלח/י מייל עם הניסיון שלך.
         </p>
@@ -241,7 +241,7 @@ export default function TeamPage() {
       {/* ── Footer ──────────────────────────────────────── */}
       <footer
         className="text-center py-10 text-sm border-t"
-        style={{ borderColor: "#2C323E", color: "#9E9990" }}
+        style={{ borderColor: "#2C323E", color: "#AAB0BD" }}
       >
         <p className="font-medium mb-1" style={{ color: "rgba(158,153,144,0.6)" }}>
           אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. |{" "}

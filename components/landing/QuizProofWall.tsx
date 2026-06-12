@@ -420,7 +420,7 @@ export default function QuizProofWall({ start = 0, end, showWall = true, showFoo
         }
         .qpw-author {
           font-size: 13px;
-          color: #9E9990;
+          color: #AAB0BD;
           font-weight: 600;
           display: inline-flex;
           align-items: center;
@@ -438,7 +438,7 @@ export default function QuizProofWall({ start = 0, end, showWall = true, showFoo
           cursor: pointer;
           font-family: inherit;
           font-size: 11px;
-          color: #C9964A;
+          color: #E8B94A;
           font-weight: 600;
           transition: background 0.2s, border-color 0.2s;
         }
@@ -516,7 +516,7 @@ export default function QuizProofWall({ start = 0, end, showWall = true, showFoo
           width: 100%; height: 100%;
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          color: #9E9990; gap: 8px;
+          color: #AAB0BD; gap: 8px;
           padding: 20px; text-align: center;
         }
         .qpw-video-id {

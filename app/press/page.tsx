@@ -94,7 +94,7 @@ export default function PressPage() {
         <section style={{ background: "#080C14", padding: "64px 24px 56px" }}>
           <div style={{ maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
             <p style={{
-              color: "#C9964A", fontSize: 11, letterSpacing: "0.2em",
+              color: "#E8B94A", fontSize: 11, letterSpacing: "0.2em",
               fontWeight: 600, textTransform: "uppercase", marginBottom: 16,
             }}>
               תקשורת ונוכחות
@@ -106,7 +106,7 @@ export default function PressPage() {
               הדר דנן בתקשורת
             </h1>
             <p style={{
-              color: "#9E9990", fontSize: "clamp(0.95rem, 2vw, 1.1rem)",
+              color: "#AAB0BD", fontSize: "clamp(0.95rem, 2vw, 1.1rem)",
               lineHeight: 1.75, maxWidth: 560, margin: "0 auto",
             }}>
               כתבות בתקשורת הישראלית, פודקאסטים ונוכחות דיגיטלית —
@@ -148,12 +148,12 @@ export default function PressPage() {
           <div style={{ maxWidth: 860, margin: "0 auto" }}>
             <p className="press-label">פודקאסט</p>
             <h2 className="press-h2">הפודקאסט של הדר דנן — הכל על במה אחת</h2>
-            <p style={{ color: "#9E9990", fontSize: "0.95rem", marginBottom: 36, lineHeight: 1.7 }}>
+            <p style={{ color: "#AAB0BD", fontSize: "0.95rem", marginBottom: 36, lineHeight: 1.7 }}>
               שיווק, השפעה ועסקים נפגשים על במה אחת
             </p>
             <div className="press-embed-grid">
               <div>
-                <p style={{ color: "#C9964A", fontSize: 12, fontWeight: 700, marginBottom: 12 }}>🎵 Spotify</p>
+                <p style={{ color: "#E8B94A", fontSize: 12, fontWeight: 700, marginBottom: 12 }}>🎵 Spotify</p>
                 <iframe
                   style={{ borderRadius: 12 }}
                   src="https://open.spotify.com/embed/show/12EPZoAiHLq63tiq6GjreC"
@@ -165,7 +165,7 @@ export default function PressPage() {
                 />
               </div>
               <div>
-                <p style={{ color: "#C9964A", fontSize: 12, fontWeight: 700, marginBottom: 12 }}>🎧 Apple Podcasts</p>
+                <p style={{ color: "#E8B94A", fontSize: 12, fontWeight: 700, marginBottom: 12 }}>🎧 Apple Podcasts</p>
                 <iframe
                   allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
                   frameBorder={0}
@@ -197,10 +197,10 @@ export default function PressPage() {
                     <span style={{ fontSize: 28 }}>{s.icon}</span>
                     <div>
                       <p style={{ fontWeight: 700, color: "#EDE9E1", fontSize: "1rem", margin: 0 }}>{s.platform}</p>
-                      <p style={{ color: "#C9964A", fontSize: 13, margin: "2px 0 0", fontWeight: 600 }}>{s.handle}</p>
+                      <p style={{ color: "#E8B94A", fontSize: 13, margin: "2px 0 0", fontWeight: 600 }}>{s.handle}</p>
                     </div>
                   </div>
-                  <p style={{ color: "#9E9990", fontSize: "0.875rem", lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
+                  <p style={{ color: "#AAB0BD", fontSize: "0.875rem", lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
                 </a>
               ))}
             </div>
@@ -232,7 +232,7 @@ export default function PressPage() {
 
       <style>{`
         .press-label {
-          color: #C9964A; font-size: 11px; letter-spacing: 0.18em;
+          color: #E8B94A; font-size: 11px; letter-spacing: 0.18em;
           font-weight: 600; text-transform: uppercase; margin-bottom: 10px;
         }
         .press-h2 {
@@ -265,7 +265,7 @@ export default function PressPage() {
         }
         .press-cta-btn {
           display: inline-block;
-          background: #0D1018; color: #C9964A;
+          background: #0D1018; color: #E8B94A;
           font-weight: 700; border-radius: 9999px;
           padding: 13px 32px; font-size: 0.95rem; text-decoration: none;
         }
@@ -294,13 +294,13 @@ function ArticleInner({ article }: { article: typeof ARTICLES[0] }) {
           }}>
             {article.outlet}
           </span>
-          <span style={{ color: "#9E9990", fontSize: 12 }}>{article.date}</span>
+          <span style={{ color: "#AAB0BD", fontSize: 12 }}>{article.date}</span>
         </div>
         <p style={{ color: "#EDE9E1", fontWeight: 600, fontSize: "0.95rem", margin: 0, lineHeight: 1.4 }}>
           {article.title}
         </p>
       </div>
-      {article.href && <span style={{ color: "#C9964A", fontSize: 18, flexShrink: 0 }}>←</span>}
+      {article.href && <span style={{ color: "#E8B94A", fontSize: 18, flexShrink: 0 }}>←</span>}
     </div>
   );
 }

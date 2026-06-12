@@ -84,7 +84,7 @@ export function StrategyBookFlow({ price, whatsappPhone }: Props) {
         { id: "phone", label: "טלפון",    type: "tel",   placeholder: "0501234567" },
       ].map(({ id, label, type, placeholder }) => (
         <div key={id} className="flex flex-col gap-1">
-          <label htmlFor={id} className="text-sm font-medium" style={{ color: "#9E9990" }}>
+          <label htmlFor={id} className="text-sm font-medium" style={{ color: "#AAB0BD" }}>
             {label}
           </label>
           <input
@@ -109,7 +109,7 @@ export function StrategyBookFlow({ price, whatsappPhone }: Props) {
         className="rounded-2xl p-5 flex justify-between items-center"
         style={{ background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid rgba(201,150,74,0.16)" }}
       >
-        <span style={{ color: "#9E9990" }}>פגישת אסטרטגיה · 90 דקות</span>
+        <span style={{ color: "#AAB0BD" }}>פגישת אסטרטגיה · 90 דקות</span>
         <span className="font-black text-2xl" style={{ color: "#EDE9E1" }}>
           ₪{listPrice.toLocaleString("he-IL")}
         </span>

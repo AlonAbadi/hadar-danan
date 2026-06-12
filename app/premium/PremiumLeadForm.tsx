@@ -85,13 +85,13 @@ export function PremiumLeadForm() {
         </div>
         <div className="flex flex-col gap-2">
           <h3 className="text-2xl font-black" style={{ color: "#EDE9E1" }}>הבקשה התקבלה!</h3>
-          <p style={{ color: "#9E9990" }}>ניצור קשר תוך 24 שעות לתיאום שיחת היכרות</p>
+          <p style={{ color: "#AAB0BD" }}>ניצור קשר תוך 24 שעות לתיאום שיחת היכרות</p>
         </div>
         <div
           className="w-full rounded-2xl p-5 text-right"
           style={{ background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.12)" }}
         >
-          <p className="text-sm" style={{ color: "#9E9990" }}>מה הצפוי:</p>
+          <p className="text-sm" style={{ color: "#AAB0BD" }}>מה הצפוי:</p>
           <p className="font-medium mt-2" style={{ color: "#EDE9E1" }}>📞 שיחת היכרות - 15 דקות</p>
           <p className="font-medium mt-1" style={{ color: "#EDE9E1" }}>📋 בניית אסטרטגיית תוכן</p>
           <p className="font-medium mt-1" style={{ color: "#EDE9E1" }}>🎬 תיאום יום הצילום</p>
@@ -109,7 +109,7 @@ export function PremiumLeadForm() {
         { id: "email",    label: "אימייל",       type: "email", placeholder: "israel@example.com" },
       ].map(({ id, label, type, placeholder }) => (
         <div key={id} className="flex flex-col gap-1">
-          <label htmlFor={id} className="text-sm font-medium" style={{ color: "#9E9990" }}>{label}</label>
+          <label htmlFor={id} className="text-sm font-medium" style={{ color: "#AAB0BD" }}>{label}</label>
           <input
             id={id}
             type={type}

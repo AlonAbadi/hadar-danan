@@ -31,7 +31,7 @@ export default function TrainingWatchPage() {
         {/* Label pill */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(201,150,74,0.1)", border: "1px solid rgba(201,150,74,0.28)", borderRadius: 9999, padding: "5px 16px", marginBottom: 16 }}>
           <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C9964A" }} />
-          <span style={{ color: "#C9964A", fontSize: 11, letterSpacing: "0.12em", fontWeight: 700 }}>הדרכה חינמית · 20 דקות</span>
+          <span style={{ color: "#E8B94A", fontSize: 11, letterSpacing: "0.12em", fontWeight: 700 }}>הדרכה חינמית · 20 דקות</span>
         </div>
 
         {/* Personalized greeting — renders only for quiz users */}
@@ -43,7 +43,7 @@ export default function TrainingWatchPage() {
         </h1>
 
         {/* Subheadline */}
-        <p style={{ color: "#9E9990", fontSize: "1rem", marginBottom: 32 }}>
+        <p style={{ color: "#AAB0BD", fontSize: "1rem", marginBottom: 32 }}>
           הדרכה של כ־20 דקות. למה השיווק שלך לא עובד - ומה עושים עם זה.
         </p>
 

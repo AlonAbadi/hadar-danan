@@ -160,7 +160,7 @@ export function AdminUserActions({ userId, currentStatus, phone }: Props) {
                         background: s.value === selectedStatus ? "rgba(232,185,74,0.1)" : "transparent",
                         color: s.value === selectedStatus ? "#E8B94A"
                           : s.value === "handled" ? "#4CAF82"
-                          : s.value === "not_relevant" ? "#9E9990"
+                          : s.value === "not_relevant" ? "#AAB0BD"
                           : "#EDE9E1",
                         border: "none", fontFamily: "Assistant, sans-serif",
                         borderBottom: i < STATUSES.length - 1 ? "1px solid rgba(44,50,62,0.5)" : "none",
@@ -177,7 +177,7 @@ export function AdminUserActions({ userId, currentStatus, phone }: Props) {
 
         {/* Mark irrelevant */}
         <button
-          style={{ ...BASE_BTN, color: "#9E9990", borderColor: "rgba(44,50,62,0.5)" }}
+          style={{ ...BASE_BTN, color: "#AAB0BD", borderColor: "rgba(44,50,62,0.5)" }}
           onClick={() => handleStatusPick("not_relevant")}
         >
           סמן לא רלוונטי
@@ -213,7 +213,7 @@ export function AdminUserActions({ userId, currentStatus, phone }: Props) {
               שלח אימייל
             </div>
 
-            <label style={{ fontSize: 12, color: "#9E9990", display: "block", marginBottom: 6 }}>
+            <label style={{ fontSize: 12, color: "#AAB0BD", display: "block", marginBottom: 6 }}>
               תבנית אימייל
             </label>
             <select
@@ -250,7 +250,7 @@ export function AdminUserActions({ userId, currentStatus, phone }: Props) {
                 style={{
                   padding: "10px 16px", borderRadius: 8, fontSize: 14,
                   background: "transparent", border: "1px solid #2C323E",
-                  color: "#9E9990", cursor: "pointer", fontFamily: "Assistant, sans-serif",
+                  color: "#AAB0BD", cursor: "pointer", fontFamily: "Assistant, sans-serif",
                 }}
               >
                 ביטול

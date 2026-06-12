@@ -231,7 +231,7 @@ export default function ChallengeProofWall() {
           margin: 0 auto 22px;
           max-width: 480px;
           font-size: 14px;
-          color: #9E9990;
+          color: #AAB0BD;
           line-height: 1.55;
         }
         .cpw-video-frame {
@@ -372,7 +372,7 @@ export default function ChallengeProofWall() {
         }
         .cpw-author {
           font-size: 13px;
-          color: #9E9990;
+          color: #AAB0BD;
           font-weight: 600;
         }
 
@@ -387,7 +387,7 @@ export default function ChallengeProofWall() {
           cursor: pointer;
           font-family: inherit;
           font-size: 11px;
-          color: #C9964A;
+          color: #E8B94A;
           font-weight: 600;
           transition: background 0.2s, border-color 0.2s;
         }

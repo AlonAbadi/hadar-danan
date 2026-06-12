@@ -125,14 +125,14 @@ export default async function LandingPage() {
                   borderRadius: 9999, padding: "5px 14px", marginBottom: 12,
                 }}>
                   <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C9964A", flexShrink: 0 }} />
-                  <span style={{ color: "#C9964A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>
+                  <span style={{ color: "#E8B94A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>
                     <span style={{ direction: "rtl" }}>שיטת <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
                   </span>
                 </div>
                 <h1 style={{ color: "#EDE9E1", fontWeight: 800, fontSize: "clamp(1.7rem, 4.5vw, 2rem)", lineHeight: 1.18, marginBottom: 12, whiteSpace: "pre-line" }}>
                   {content.headline}
                 </h1>
-                <p style={{ color: "#9E9990", fontSize: "clamp(0.9rem, 2vw, 1rem)", lineHeight: 1.72, marginBottom: 16 }}>
+                <p style={{ color: "#AAB0BD", fontSize: "clamp(0.9rem, 2vw, 1rem)", lineHeight: 1.72, marginBottom: 16 }}>
                   {content.description}
                 </p>
                 <a href="/quiz" data-home-hero-cta="" style={{
@@ -146,7 +146,7 @@ export default async function LandingPage() {
                   {content.cta}
                 </a>
                 <p style={{
-                  color: "#9E9990",
+                  color: "#AAB0BD",
                   fontSize: 12,
                   textAlign: "center",
                   marginTop: 8,
@@ -205,7 +205,7 @@ export default async function LandingPage() {
                   borderRadius: 9999, padding: "5px 14px", marginBottom: 22,
                 }}>
                   <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C9964A", flexShrink: 0 }} />
-                  <span style={{ color: "#C9964A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>
+                  <span style={{ color: "#E8B94A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>
                     <span style={{ direction: "rtl" }}>שיטת <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
                   </span>
                 </div>
@@ -221,7 +221,7 @@ export default async function LandingPage() {
 
                 {/* Body */}
                 <p style={{
-                  color: "#9E9990", fontSize: "1rem",
+                  color: "#AAB0BD", fontSize: "1rem",
                   lineHeight: 1.78, marginBottom: 36,
                 }}>
                   {content.description}
@@ -239,7 +239,7 @@ export default async function LandingPage() {
                   {content.cta}
                 </a>
                 <p style={{
-                  color: "#9E9990",
+                  color: "#AAB0BD",
                   fontSize: 12,
                   textAlign: "center",
                   marginTop: 8,
@@ -273,7 +273,7 @@ export default async function LandingPage() {
                 <h2 className="text-3xl md:text-4xl font-black" style={{ color: "#EDE9E1" }}>
                   הגישה שלנו
                 </h2>
-                <p className="text-base font-semibold" style={{ color: "#C9964A" }}>
+                <p className="text-base font-semibold" style={{ color: "#E8B94A" }}>
                   כי אפשר למכור רק את מה שאתה באמת - זה הבסיס של <span dir="ltr" style={{unicodeBidi:"embed"}}>TrueSignal©</span>
                 </p>
               </div>
@@ -335,7 +335,7 @@ export default async function LandingPage() {
                     display:       "inline-block",
                     fontSize:      11,
                     letterSpacing: 1.6,
-                    color:         "#C9964A",
+                    color:         "#E8B94A",
                     marginBottom:  14,
                     textTransform: "uppercase",
                     fontWeight:    700,
@@ -384,7 +384,7 @@ export default async function LandingPage() {
                 >
                   להתחיל את האבחון ←
                 </Link>
-                <p style={{ fontSize: 12, color: "#9E9990", margin: "14px 0 0" }}>
+                <p style={{ fontSize: 12, color: "#AAB0BD", margin: "14px 0 0" }}>
                   בלי כרטיס אשראי. בלי הצטרפות מחויבת.
                 </p>
               </div>
@@ -406,7 +406,7 @@ export default async function LandingPage() {
             <a
               href="/quiz"
               style={{
-                color: "#C9964A",
+                color: "#E8B94A",
                 fontSize: 14,
                 fontWeight: 600,
                 textDecoration: "none",
@@ -508,7 +508,7 @@ export default async function LandingPage() {
                   position: "absolute", top: 14, right: 16,
                   background: "rgba(10,14,24,0.82)",
                   border: "1px solid rgba(201,150,74,0.35)",
-                  color: "#C9964A", fontSize: 11, fontWeight: 700,
+                  color: "#E8B94A", fontSize: 11, fontWeight: 700,
                   padding: "4px 12px", borderRadius: 20,
                   backdropFilter: "blur(6px)",
                   fontFamily: "var(--font-assistant), Assistant, sans-serif",
@@ -532,7 +532,7 @@ export default async function LandingPage() {
 
                 {/* Description */}
                 <p style={{
-                  margin: "0 0 14px", fontSize: 14, color: "#9E9990", lineHeight: 1.6,
+                  margin: "0 0 14px", fontSize: 14, color: "#AAB0BD", lineHeight: 1.6,
                   fontFamily: "var(--font-assistant), Assistant, sans-serif",
                 }}>
                   רילס, תהליכים מהסדנה, עדויות לקוחות — הכל במקום אחד, בחינם.
@@ -542,7 +542,7 @@ export default async function LandingPage() {
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
                   {["רילס של הדר", "תהליכים מלאים", "לקוחות מדברים"].map(tag => (
                     <span key={tag} style={{
-                      background: "rgba(44,50,62,0.7)", color: "#9E9990",
+                      background: "rgba(44,50,62,0.7)", color: "#AAB0BD",
                       fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 12,
                       fontFamily: "var(--font-assistant), Assistant, sans-serif",
                     }}>{tag}</span>
@@ -553,7 +553,7 @@ export default async function LandingPage() {
                 <span className="binge-enter-btn" style={{
                   display: "inline-block",
                   border: "1px solid rgba(201,150,74,0.45)",
-                  color: "#C9964A",
+                  color: "#E8B94A",
                   fontSize: 14, fontWeight: 800,
                   padding: "11px 30px", borderRadius: 24,
                   fontFamily: "var(--font-assistant), Assistant, sans-serif",
@@ -571,9 +571,9 @@ export default async function LandingPage() {
           <section style={{ background: "#080C14", padding: "96px 20px 80px" }}>
             <style>{`
               .paths-wrap { max-width: 1080px; margin: 0 auto; }
-              .paths-eyebrow { color: #C9964A; font-size: 12px; letter-spacing: 4px; font-weight: 700; text-align: center; margin-bottom: 14px; }
+              .paths-eyebrow { color: #E8B94A; font-size: 12px; letter-spacing: 4px; font-weight: 700; text-align: center; margin-bottom: 14px; }
               .paths-title { font-size: 38px; font-weight: 800; text-align: center; line-height: 1.15; margin: 0 auto 16px; color: #EDE9E1; max-width: 720px; }
-              .paths-sub { font-size: 17px; text-align: center; color: #9E9990; max-width: 560px; margin: 0 auto 56px; line-height: 1.6; }
+              .paths-sub { font-size: 17px; text-align: center; color: #AAB0BD; max-width: 560px; margin: 0 auto 56px; line-height: 1.6; }
               .paths-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch; }
               .path-card { position: relative; background: linear-gradient(145deg, #141820, #0F131B); border-radius: 18px; padding: 36px 32px; display: flex; flex-direction: column; text-decoration: none; color: #EDE9E1; transition: transform 0.2s, border-color 0.2s; }
               .path-card.buy { border: 1px solid #2C323E; }
@@ -581,12 +581,12 @@ export default async function LandingPage() {
               .path-card.apply { border: 1px solid rgba(232,185,74,0.45); box-shadow: 0 0 0 1px rgba(232,185,74,0.08), 0 20px 60px -20px rgba(232,185,74,0.18); }
               .path-card.apply:hover { border-color: rgba(232,185,74,0.75); transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(232,185,74,0.18), 0 24px 70px -20px rgba(232,185,74,0.28); }
               .path-flag { position: absolute; top: 16px; left: 16px; font-size: 10px; letter-spacing: 3px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
-              .path-flag.standard { color: #9E9990; border: 1px solid #2C323E; background: rgba(255,255,255,0.02); }
+              .path-flag.standard { color: #AAB0BD; border: 1px solid #2C323E; background: rgba(255,255,255,0.02); }
               .path-flag.selective { color: #080C14; background: linear-gradient(90deg, #9E7C3A, #E8B94A); }
-              .path-kicker { color: #9E9990; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+              .path-kicker { color: #AAB0BD; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
               .path-kicker.gold { color: #E8B94A; }
               .path-head { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; }
-              .path-lede { color: #9E9990; font-size: 15px; line-height: 1.65; margin: 0 0 24px; }
+              .path-lede { color: #AAB0BD; font-size: 15px; line-height: 1.65; margin: 0 0 24px; }
               .path-points { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 12px; }
               .path-point { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.55; color: #EDE9E1; }
               .path-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; }
@@ -597,8 +597,8 @@ export default async function LandingPage() {
               .path-card.buy:hover .path-cta.muted { background: rgba(201,150,74,0.08); border-color: rgba(201,150,74,0.35); }
               .path-cta.gold { background: linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%); color: #2a1d05; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55); }
               .path-card.apply:hover .path-cta.gold { filter: brightness(1.08); }
-              .paths-foot { text-align: center; color: #9E9990; font-size: 13px; margin-top: 28px; line-height: 1.7; }
-              .paths-foot strong { color: #C9964A; font-weight: 600; }
+              .paths-foot { text-align: center; color: #AAB0BD; font-size: 13px; margin-top: 28px; line-height: 1.7; }
+              .paths-foot strong { color: #E8B94A; font-weight: 600; }
               @media (max-width: 760px) {
                 .paths-title { font-size: 28px; }
                 .paths-grid { grid-template-columns: 1fr; gap: 16px; }
@@ -676,7 +676,7 @@ export default async function LandingPage() {
                     <path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.2.8-4.6v-6.2H2.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.4 10.8l8.1-6.2z" />
                     <path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.8-6.8C35.9 2.1 30.4 0 24 0 14.6 0 6.4 5.4 2.4 13.2l8.1 6.2C12.4 13.7 17.7 9.5 24 9.5z" />
                   </svg>
-                  <span className="text-sm font-semibold" style={{ color: "#9E9990" }}>ביקורות Google</span>
+                  <span className="text-sm font-semibold" style={{ color: "#AAB0BD" }}>ביקורות Google</span>
                   <div className="flex gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <svg key={i} className="w-4 h-4" fill="#E8B94A" viewBox="0 0 20 20">
@@ -732,7 +732,7 @@ export default async function LandingPage() {
                         className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
                         style={{
                           background: "linear-gradient(135deg, rgba(232,185,74,0.2), rgba(158,124,58,0.2))",
-                          color: "#C9964A",
+                          color: "#E8B94A",
                           border: "1px solid rgba(201,150,74,0.3)",
                         }}
                       >
@@ -740,7 +740,7 @@ export default async function LandingPage() {
                       </div>
                       <div>
                         <p className="font-bold text-sm" style={{ color: "#EDE9E1" }}>{t.name}</p>
-                        <p className="text-xs mt-0.5" style={{ color: "#9E9990" }}>{t.date}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "#AAB0BD" }}>{t.date}</p>
                       </div>
                     </div>
                   </div>
@@ -751,7 +751,7 @@ export default async function LandingPage() {
               <div>
                 <p style={{
                   fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em",
-                  color: "#C9964A", textTransform: "uppercase", textAlign: "center",
+                  color: "#E8B94A", textTransform: "uppercase", textAlign: "center",
                   marginBottom: 16,
                 }}>
                   מה אומרים עליה בוידאו
@@ -771,7 +771,7 @@ export default async function LandingPage() {
           <div className="max-w-5xl mx-auto flex flex-col gap-8">
 
             {/* Links */}
-            <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm" style={{ color: "#9E9990" }}>
+            <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm" style={{ color: "#AAB0BD" }}>
               {[
                 { label: "בית",       href: "/" },
                 { label: "הדרכה",     href: "/training" },
@@ -784,14 +784,14 @@ export default async function LandingPage() {
                 { label: "שותפות",    href: "/partnership" },
                 { label: "אזור אישי", href: "/my" },
               ].map((link) => (
-                <a key={link.href} href={link.href} className="hover:text-white transition" style={{ color: "#C9964A" }}>
+                <a key={link.href} href={link.href} className="hover:text-white transition" style={{ color: "#E8B94A" }}>
                   {link.label}
                 </a>
               ))}
             </nav>
 
             {/* Legal */}
-            <div className="flex flex-col items-center gap-2 text-xs" style={{ color: "#9E9990" }}>
+            <div className="flex flex-col items-center gap-2 text-xs" style={{ color: "#AAB0BD" }}>
               <div className="flex gap-4">
                 <a href="/privacy" className="hover:text-white transition">מדיניות פרטיות</a>
                 <a href="/terms" className="hover:text-white transition">תנאי שימוש</a>

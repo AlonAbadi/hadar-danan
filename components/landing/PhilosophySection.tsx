@@ -63,7 +63,7 @@ function Card({ p, snap }: { p: typeof PRINCIPLES[number]; snap?: boolean }) {
           <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#EDE9E1", textAlign: "right", margin: 0 }}>
             {p.title}
           </h3>
-          <p style={{ fontSize: "0.85rem", color: "#9E9990", lineHeight: 1.6, textAlign: "right", margin: 0 }}>
+          <p style={{ fontSize: "0.85rem", color: "#AAB0BD", lineHeight: 1.6, textAlign: "right", margin: 0 }}>
             {p.body}
           </p>
         </div>

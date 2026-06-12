@@ -40,11 +40,11 @@ function notifyStatusChange(
     to: ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
     subject: `${emoji} ${name} — ${label}`,
     html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:480px">
-      <h2 style="color:#C9964A;margin-bottom:16px">${emoji} שינוי סטטוס</h2>
+      <h2 style="color:#E8B94A;margin-bottom:16px">${emoji} שינוי סטטוס</h2>
       <p style="margin:4px 0"><strong>שם:</strong> ${name}</p>
       <p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${email}" style="color:#4285F4">${email}</a></p>
       ${phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> ${phoneLinks(phone)}</p>` : ""}
-      <p style="margin:4px 0"><strong>סטטוס חדש:</strong> <span style="color:#C9964A;font-weight:bold">${label}</span></p>
+      <p style="margin:4px 0"><strong>סטטוס חדש:</strong> <span style="color:#E8B94A;font-weight:bold">${label}</span></p>
       <p style="margin:4px 0"><strong>טריגר:</strong> ${triggerEvent}</p>
       ${utmSource ? `<p style="margin:4px 0"><strong>מקור:</strong> ${utmSource}</p>` : ""}
       <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>

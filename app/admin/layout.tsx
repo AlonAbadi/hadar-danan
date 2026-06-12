@@ -49,12 +49,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }}>
           <Link href="/admin" style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            color: '#9E9990', textDecoration: 'none',
+            color: '#AAB0BD', textDecoration: 'none',
             fontSize: 13, fontWeight: 600,
             transition: 'color 0.15s',
           }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#C9964A')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#9E9990')}
+            onMouseEnter={e => (e.currentTarget.style.color = '#E8B94A')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#AAB0BD')}
           >
             <span style={{ fontSize: 16 }}>←</span> ניהול
           </Link>

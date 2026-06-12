@@ -85,7 +85,7 @@ export function TestCTA() {
         { id: "phone", label: "טלפון",    type: "tel",   placeholder: "0501234567" },
       ].map(({ id, label, type, placeholder }) => (
         <div key={id} className="flex flex-col gap-1">
-          <label htmlFor={`t-${id}`} className="text-sm font-medium" style={{ color: "#9E9990" }}>{label}</label>
+          <label htmlFor={`t-${id}`} className="text-sm font-medium" style={{ color: "#AAB0BD" }}>{label}</label>
           <input
             id={`t-${id}`}
             type={type}
@@ -123,9 +123,9 @@ export function TestCTA() {
         type="button"
         onClick={() => { setPhase("idle"); setErrorMsg(null); }}
         className="text-sm text-center transition"
-        style={{ color: "#9E9990" }}
+        style={{ color: "#AAB0BD" }}
         onMouseEnter={(e) => { e.currentTarget.style.color = "#EDE9E1"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = "#9E9990"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "#AAB0BD"; }}
       >
         ביטול
       </button>

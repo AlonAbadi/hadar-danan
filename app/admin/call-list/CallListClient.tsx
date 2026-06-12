@@ -34,7 +34,7 @@ const COLOR = {
   cardSoft:  '#1D2430',
   border:    '#2C323E',
   fg:        '#EDE9E1',
-  fgMuted:   '#9E9990',
+  fgMuted:   '#AAB0BD',
   gold:      '#C9964A',
   goldLight: '#E8B94A',
   green:     '#25D366',
@@ -61,7 +61,7 @@ const OUTCOME_LABEL: Record<string, string> = {
 };
 
 const OUTCOME_COLOR: Record<string, string> = {
-  handled:      '#9E9990',
+  handled:      '#AAB0BD',
   not_relevant: '#E07A6A',
   booked:       '#3FBF7F',
 };

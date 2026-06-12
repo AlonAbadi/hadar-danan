@@ -37,7 +37,7 @@ export function InstantAccessStrip() {
           <div style={{ color: "#E8B94A", fontWeight: 800, fontSize: 13, lineHeight: 1.2 }}>
             {it.title}
           </div>
-          <div style={{ color: "#9E9990", fontSize: 11, lineHeight: 1.35, marginTop: 2 }}>
+          <div style={{ color: "#AAB0BD", fontSize: 11, lineHeight: 1.35, marginTop: 2 }}>
             {it.sub}
           </div>
         </div>

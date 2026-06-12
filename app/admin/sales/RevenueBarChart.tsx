@@ -26,12 +26,12 @@ export function RevenueBarChart({ data }: Props) {
         <CartesianGrid strokeDasharray="3 3" stroke="#2C323E" vertical={false} />
         <XAxis
           dataKey="name"
-          tick={{ fill: '#9E9990', fontSize: 12, fontFamily: 'Assistant' }}
+          tick={{ fill: '#AAB0BD', fontSize: 12, fontFamily: 'Assistant' }}
           axisLine={{ stroke: '#2C323E' }}
           tickLine={false}
         />
         <YAxis
-          tick={{ fill: '#9E9990', fontSize: 12, fontFamily: 'Assistant' }}
+          tick={{ fill: '#AAB0BD', fontSize: 12, fontFamily: 'Assistant' }}
           axisLine={false}
           tickLine={false}
           tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}

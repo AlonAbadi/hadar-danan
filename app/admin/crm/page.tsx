@@ -70,7 +70,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  lead:             '#9E9990',
+  lead:             '#AAB0BD',
   engaged:          '#4285F4',
   high_intent:      '#C9964A',
   buyer:            '#34A853',
@@ -78,7 +78,7 @@ const STATUS_COLORS: Record<string, string> = {
   premium_lead:     '#E8B94A',
   partnership_lead: '#E8B94A',
   handled:          '#34A853',
-  not_relevant:     '#9E9990',
+  not_relevant:     '#AAB0BD',
 };
 
 const PRODUCT_LABELS: Record<string, string> = {
@@ -102,7 +102,7 @@ const PRODUCT_COLORS: Record<string, string> = {
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const color = STATUS_COLORS[status] ?? '#9E9990';
+  const color = STATUS_COLORS[status] ?? '#AAB0BD';
   return (
     <span style={{
       display: 'inline-block',
@@ -145,7 +145,7 @@ function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
     { label: 'לידים היום',      value: String(stats.leads_today ?? 0),                               color: '#4285F4' },
     { label: 'מכירות החודש',    value: '₪' + (stats.sales_this_month ?? 0).toLocaleString('he-IL'), color: '#34A853' },
     { label: 'ממתינים לטיפול', value: String(stats.pending_action ?? 0),                             color: '#EA4335' },
-    { label: 'שיעור המרה',     value: (stats.conversion_rate ?? 0).toFixed(1) + '%',                color: '#C9964A' },
+    { label: 'שיעור המרה',     value: (stats.conversion_rate ?? 0).toFixed(1) + '%',                color: '#E8B94A' },
   ] : [];
 
   return (
@@ -157,7 +157,7 @@ function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
           : kpis.map(k => (
             <div key={k.label} style={{ ...cardStyle, borderTop: `3px solid ${k.color}` }}>
               <div style={{ fontSize: 28, fontWeight: 800, color: k.color, lineHeight: 1 }}>{k.value}</div>
-              <div style={{ fontSize: 13, color: '#9E9990', marginTop: 6 }}>{k.label}</div>
+              <div style={{ fontSize: 13, color: '#AAB0BD', marginTop: 6 }}>{k.label}</div>
             </div>
           ))
         }
@@ -167,9 +167,9 @@ function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
       <div style={cardStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>כל הלידים</div>
-          {!loading && <div style={{ fontSize: 12, color: '#9E9990' }}>{recent.length} רשומות</div>}
+          {!loading && <div style={{ fontSize: 12, color: '#AAB0BD' }}>{recent.length} רשומות</div>}
         </div>
-        {loading && <div style={{ color: '#9E9990', fontSize: 13 }}>טוען...</div>}
+        {loading && <div style={{ color: '#AAB0BD', fontSize: 13 }}>טוען...</div>}
         {recent.map(u => (
           <Link key={u.id} href={`/admin/users/${u.id}`} style={{ textDecoration: 'none' }}>
             <div style={{
@@ -178,7 +178,7 @@ function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: '#EDE9E1' }}>{u.name ?? u.email}</span>
-                <div style={{ fontSize: 12, color: '#9E9990', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
+                <div style={{ fontSize: 12, color: '#AAB0BD', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 {u.quiz_product && (
@@ -190,9 +190,9 @@ function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
                     title="קפוץ לקטגוריה הזו ב-עדיפות"
                     style={{
                       fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                      color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
-                      background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
-                      border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
+                      color: PRODUCT_COLORS[u.quiz_product] ?? '#AAB0BD',
+                      background: (PRODUCT_COLORS[u.quiz_product] ?? '#AAB0BD') + '18',
+                      border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#AAB0BD')}33`,
                       borderRadius: 6, padding: '2px 8px', whiteSpace: 'nowrap',
                     }}
                   >
@@ -200,7 +200,7 @@ function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
                   </span>
                 )}
                 <StatusBadge status={u.status} />
-                <span style={{ fontSize: 11, color: '#9E9990', whiteSpace: 'nowrap' }}>{relativeTime(u.created_at)}</span>
+                <span style={{ fontSize: 11, color: '#AAB0BD', whiteSpace: 'nowrap' }}>{relativeTime(u.created_at)}</span>
               </div>
             </div>
           </Link>
@@ -274,7 +274,7 @@ function PipelineTab({ onJumpToTier }: { onJumpToTier: (product: string) => void
               padding: '6px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 600,
               cursor: 'pointer', border: 'none',
               background: status === f.value ? '#C9964A' : '#1D2430',
-              color: status === f.value ? '#1A1206' : '#9E9990',
+              color: status === f.value ? '#1A1206' : '#AAB0BD',
               transition: 'all 0.15s',
             }}
           >
@@ -284,7 +284,7 @@ function PipelineTab({ onJumpToTier }: { onJumpToTier: (product: string) => void
       </div>
 
       {/* Count */}
-      <div style={{ fontSize: 13, color: '#9E9990' }}>
+      <div style={{ fontSize: 13, color: '#AAB0BD' }}>
         {loading ? 'טוען...' : `${total.toLocaleString()} תוצאות`}
       </div>
 
@@ -302,7 +302,7 @@ function PipelineTab({ onJumpToTier }: { onJumpToTier: (product: string) => void
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1', marginBottom: 2 }}>
                   {u.name ?? '—'}
                 </div>
-                <div style={{ fontSize: 12, color: '#9E9990', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 12, color: '#AAB0BD', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {u.email}
                 </div>
               </div>
@@ -317,9 +317,9 @@ function PipelineTab({ onJumpToTier }: { onJumpToTier: (product: string) => void
                     title="קפוץ לקטגוריה הזו ב-עדיפות"
                     style={{
                       fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                      color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
-                      background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
-                      border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
+                      color: PRODUCT_COLORS[u.quiz_product] ?? '#AAB0BD',
+                      background: (PRODUCT_COLORS[u.quiz_product] ?? '#AAB0BD') + '18',
+                      border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#AAB0BD')}33`,
                       borderRadius: 6, padding: '2px 8px',
                     }}
                   >
@@ -329,13 +329,13 @@ function PipelineTab({ onJumpToTier }: { onJumpToTier: (product: string) => void
                 {u.total_spent > 0 && (
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#34A853' }}>{formatPrice(u.total_spent)}</span>
                 )}
-                <span style={{ fontSize: 11, color: '#9E9990' }}>{relativeTime(u.last_activity_at)}</span>
+                <span style={{ fontSize: 11, color: '#AAB0BD' }}>{relativeTime(u.last_activity_at)}</span>
               </div>
             </div>
           </Link>
         ))}
         {!loading && users.length === 0 && (
-          <div style={{ ...cardStyle, textAlign: 'center', color: '#9E9990', padding: 32 }}>אין תוצאות</div>
+          <div style={{ ...cardStyle, textAlign: 'center', color: '#AAB0BD', padding: 32 }}>אין תוצאות</div>
         )}
       </div>
     </div>
@@ -391,7 +391,7 @@ function CustomersTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
               padding: '6px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 600,
               cursor: 'pointer', border: 'none',
               background: !buyersOnly ? '#C9964A' : '#1D2430',
-              color: !buyersOnly ? '#1A1206' : '#9E9990',
+              color: !buyersOnly ? '#1A1206' : '#AAB0BD',
               transition: 'all 0.15s',
             }}
           >
@@ -403,14 +403,14 @@ function CustomersTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
               padding: '6px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 600,
               cursor: 'pointer', border: 'none',
               background: buyersOnly ? '#C9964A' : '#1D2430',
-              color: buyersOnly ? '#1A1206' : '#9E9990',
+              color: buyersOnly ? '#1A1206' : '#AAB0BD',
               transition: 'all 0.15s',
             }}
           >
             רוכשים בלבד ({buyersCount})
           </button>
         </div>
-        <div style={{ fontSize: 13, color: '#9E9990' }}>
+        <div style={{ fontSize: 13, color: '#AAB0BD' }}>
           {loading ? 'טוען...' : `${visibleUsers.length.toLocaleString()} מתוך ${total.toLocaleString()}`}
         </div>
       </div>
@@ -428,7 +428,7 @@ function CustomersTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1', marginBottom: 2 }}>
                   {u.name ?? '—'}
                 </div>
-                <div style={{ fontSize: 12, color: '#9E9990', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 12, color: '#AAB0BD', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {u.email}
                 </div>
                 {u.phone && (
@@ -448,9 +448,9 @@ function CustomersTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
                     title="קפוץ לקטגוריה הזו ב-עדיפות"
                     style={{
                       fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                      color: PRODUCT_COLORS[u.quiz_product] ?? '#9E9990',
-                      background: (PRODUCT_COLORS[u.quiz_product] ?? '#9E9990') + '18',
-                      border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#9E9990')}33`,
+                      color: PRODUCT_COLORS[u.quiz_product] ?? '#AAB0BD',
+                      background: (PRODUCT_COLORS[u.quiz_product] ?? '#AAB0BD') + '18',
+                      border: `1px solid ${(PRODUCT_COLORS[u.quiz_product] ?? '#AAB0BD')}33`,
                       borderRadius: 6, padding: '2px 8px',
                     }}
                   >
@@ -458,7 +458,7 @@ function CustomersTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
                   </span>
                 )}
                 {u.purchase_count > 0 && (
-                  <span style={{ fontSize: 11, color: '#9E9990' }}>
+                  <span style={{ fontSize: 11, color: '#AAB0BD' }}>
                     {u.purchase_count} {u.purchase_count === 1 ? 'רכישה' : 'רכישות'}
                   </span>
                 )}
@@ -471,7 +471,7 @@ function CustomersTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
           </Link>
         ))}
         {!loading && visibleUsers.length === 0 && (
-          <div style={{ ...cardStyle, textAlign: 'center', color: '#9E9990', padding: 32 }}>
+          <div style={{ ...cardStyle, textAlign: 'center', color: '#AAB0BD', padding: 32 }}>
             {buyersOnly ? 'אין רוכשים בתוצאות' : 'אין תוצאות'}
           </div>
         )}
@@ -483,7 +483,7 @@ function CustomersTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
           disabled={loading}
           style={{
             padding: '10px 20px', borderRadius: 9999, fontSize: 13, fontWeight: 600,
-            background: '#1D2430', color: '#C9964A', border: '1px solid #2C323E',
+            background: '#1D2430', color: '#E8B94A', border: '1px solid #2C323E',
             cursor: loading ? 'wait' : 'pointer', alignSelf: 'center',
             opacity: loading ? 0.6 : 1,
           }}
@@ -577,7 +577,7 @@ function RemindersTab() {
               </button>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, color: '#EDE9E1', fontWeight: 600 }}>{r.task}</div>
-                <div style={{ fontSize: 12, color: '#9E9990', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: '#AAB0BD', marginTop: 2 }}>
                   {new Date(r.due_at).toLocaleString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   {r.assigned_to && <span style={{ marginRight: 8 }}>· {r.assigned_to}</span>}
                 </div>
@@ -593,7 +593,7 @@ function RemindersTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 13, color: '#9E9990' }}>
+        <span style={{ fontSize: 13, color: '#AAB0BD' }}>
           {loading ? 'טוען...' : `${reminders.length} תזכורות פתוחות`}
         </span>
         <button
@@ -647,7 +647,7 @@ function RemindersTab() {
               onClick={() => setShowForm(false)}
               style={{
                 padding: '10px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600,
-                background: '#1D2430', color: '#9E9990', border: '1px solid #2C323E', cursor: 'pointer',
+                background: '#1D2430', color: '#AAB0BD', border: '1px solid #2C323E', cursor: 'pointer',
               }}
             >
               ביטול
@@ -659,10 +659,10 @@ function RemindersTab() {
       {/* Grouped reminders */}
       <ReminderGroup title="באיחור"   items={overdue}  color="#EA4335" />
       <ReminderGroup title="היום"     items={today}    color="#C9964A" />
-      <ReminderGroup title="בקרוב"   items={upcoming} color="#9E9990" />
+      <ReminderGroup title="בקרוב"   items={upcoming} color="#AAB0BD" />
 
       {!loading && reminders.length === 0 && (
-        <div style={{ ...cardStyle, textAlign: 'center', color: '#9E9990', padding: 40 }}>
+        <div style={{ ...cardStyle, textAlign: 'center', color: '#AAB0BD', padding: 40 }}>
           אין תזכורות פתוחות 🎉
         </div>
       )}
@@ -709,7 +709,7 @@ function PieChart({ rows }: { rows: QuizRow[] }) {
         <path
           key={s.product}
           d={slicePath(s.startAngle, s.angle)}
-          fill={PRODUCT_COLORS[s.product] ?? '#9E9990'}
+          fill={PRODUCT_COLORS[s.product] ?? '#AAB0BD'}
           stroke="#141820"
           strokeWidth={2}
         />
@@ -733,7 +733,7 @@ function QuizDistribution() {
   }, []);
 
   if (loading) return (
-    <div style={{ ...cardStyle, color: '#9E9990', fontSize: 13 }}>טוען התפלגות קוויז...</div>
+    <div style={{ ...cardStyle, color: '#AAB0BD', fontSize: 13 }}>טוען התפלגות קוויז...</div>
   );
   if (!rows.length) return null;
 
@@ -741,7 +741,7 @@ function QuizDistribution() {
     <div style={{ ...cardStyle, marginBottom: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 18 }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: '#EDE9E1' }}>התפלגות תוצאות קוויז</div>
-        <div style={{ fontSize: 13, color: '#9E9990' }}>{total?.toLocaleString()} מילאו</div>
+        <div style={{ fontSize: 13, color: '#AAB0BD' }}>{total?.toLocaleString()} מילאו</div>
       </div>
 
       {/* Pie + bars side by side */}
@@ -754,7 +754,7 @@ function QuizDistribution() {
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {rows.map(r => {
-            const color = PRODUCT_COLORS[r.product] ?? '#9E9990';
+            const color = PRODUCT_COLORS[r.product] ?? '#AAB0BD';
             const label = PRODUCT_LABELS[r.product] ?? r.product;
             return (
               <div key={r.product}>
@@ -803,7 +803,7 @@ const PRIORITY_TIERS = [
   { product: 'partnership', label: 'שותפות אסטרטגית', color: '#9C27B0' },
   { product: 'premium',     label: 'יום צילום פרמיום', color: '#EA4335' },
   { product: 'strategy',    label: 'פגישת אסטרטגיה',  color: '#E8B94A' },
-  { product: 'course',      label: 'קורס דיגיטלי',    color: '#C9964A' },
+  { product: 'course',      label: 'קורס דיגיטלי',    color: '#E8B94A' },
 ];
 
 // Diagnosis popup uses these to render product names
@@ -902,20 +902,20 @@ function DiagnosisPopup({ lead, onClose }: { lead: PriorityLead; onClose: () => 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 800, color: '#EDE9E1' }}>{lead.name ?? lead.email}</div>
-            <div style={{ fontSize: 12, color: '#9E9990', marginTop: 3 }}>{lead.email}</div>
+            <div style={{ fontSize: 12, color: '#AAB0BD', marginTop: 3 }}>{lead.email}</div>
             <div style={{ fontSize: 13, color: '#E8B94A', marginTop: 6, fontWeight: 700 }}>
               ✦ תיק אבחון <span dir="ltr" style={{ unicodeBidi: 'embed' }}>TrueSignal©</span>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
             <Link href={`/admin/users/${lead.id}`} style={{
-              fontSize: 12, color: '#9E9990', textDecoration: 'none',
+              fontSize: 12, color: '#AAB0BD', textDecoration: 'none',
               padding: '5px 10px', borderRadius: 7, border: '1px solid #2C323E',
             }}>
               פרופיל מלא ↗
             </Link>
             <button onClick={onClose} style={{
-              background: 'transparent', border: 'none', color: '#9E9990',
+              background: 'transparent', border: 'none', color: '#AAB0BD',
               fontSize: 22, cursor: 'pointer', lineHeight: 1, padding: '0 4px',
             }}>×</button>
           </div>
@@ -929,7 +929,7 @@ function DiagnosisPopup({ lead, onClose }: { lead: PriorityLead; onClose: () => 
               border: '2px solid rgba(232,185,74,0.2)', borderTopColor: '#E8B94A',
               animation: 'spin 0.8s linear infinite',
             }} />
-            <div style={{ fontSize: 14, color: '#9E9990' }}>מנתח את הליד...</div>
+            <div style={{ fontSize: 14, color: '#AAB0BD' }}>מנתח את הליד...</div>
             <div style={{ fontSize: 12, color: '#6B7280' }}>זה עשוי לקחת כ-15 שניות</div>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
@@ -972,7 +972,7 @@ function DiagnosisPopup({ lead, onClose }: { lead: PriorityLead; onClose: () => 
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#EDE9E1' }}>
                           {DIAG_PRODUCT_NAMES[pm.product_key] ?? pm.product_key}
                         </div>
-                        <div style={{ fontSize: 12, color: '#9E9990', marginTop: 2, lineHeight: 1.4 }}>{pm.reason}</div>
+                        <div style={{ fontSize: 12, color: '#AAB0BD', marginTop: 2, lineHeight: 1.4 }}>{pm.reason}</div>
                       </div>
                       <div style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, background: `${s.color}20`, color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900 }}>
                         {s.icon}
@@ -990,7 +990,7 @@ function DiagnosisPopup({ lead, onClose }: { lead: PriorityLead; onClose: () => 
                 <button onClick={copyWA} style={{
                   position: 'absolute', top: 8, left: 10,
                   background: copied ? 'rgba(74,222,128,0.15)' : 'rgba(44,50,62,0.8)',
-                  color: copied ? '#4ade80' : '#9E9990',
+                  color: copied ? '#4ade80' : '#AAB0BD',
                   border: `1px solid ${copied ? 'rgba(74,222,128,0.4)' : '#2C323E'}`,
                   borderRadius: 6, padding: '3px 9px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 }}>
@@ -1011,7 +1011,7 @@ function DiagnosisPopup({ lead, onClose }: { lead: PriorityLead; onClose: () => 
 // ── Lead Card ─────────────────────────────────────────────────────────────────
 
 function PriorityLeadCard({ lead, onAnalyze }: { lead: PriorityLead; onAnalyze: () => void }) {
-  const tierColor  = PRIORITY_TIERS.find(t => t.product === lead.quiz_product)?.color ?? '#9E9990';
+  const tierColor  = PRIORITY_TIERS.find(t => t.product === lead.quiz_product)?.color ?? '#AAB0BD';
   const showAnalyze = lead.priority >= 2; // strategy / premium / partnership
 
   return (
@@ -1041,8 +1041,8 @@ function PriorityLeadCard({ lead, onAnalyze }: { lead: PriorityLead; onAnalyze: 
                 </span>
               )}
             </div>
-            <div style={{ fontSize: 13, color: '#9E9990', marginBottom: 2 }}>{lead.email}</div>
-            <div style={{ fontSize: 12, color: '#9E9990' }}>{relativeTime(lead.created_at)}</div>
+            <div style={{ fontSize: 13, color: '#AAB0BD', marginBottom: 2 }}>{lead.email}</div>
+            <div style={{ fontSize: 12, color: '#AAB0BD' }}>{relativeTime(lead.created_at)}</div>
           </div>
           {/* Spacer to keep content away from action buttons */}
           <div style={{ width: showAnalyze ? 240 : (lead.phone ? 150 : 60), flexShrink: 0 }} />
@@ -1082,7 +1082,7 @@ function PriorityLeadCard({ lead, onAnalyze }: { lead: PriorityLead; onAnalyze: 
           </button>
         )}
         {!lead.phone && !showAnalyze && (
-          <span style={{ fontSize: 12, color: '#9E9990' }}>אין טלפון</span>
+          <span style={{ fontSize: 12, color: '#AAB0BD' }}>אין טלפון</span>
         )}
       </div>
     </div>
@@ -1128,7 +1128,7 @@ function PriorityLeadsTab() {
 
         {/* Header row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 13, color: '#9E9990' }}>
+          <div style={{ fontSize: 13, color: '#AAB0BD' }}>
             {loading ? 'טוען...' : showArchive
               ? `${leads.length} לידים בארכיון`
               : `${leads.length} לידים לטיפול`}
@@ -1139,7 +1139,7 @@ function PriorityLeadsTab() {
               padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
               cursor: 'pointer', border: '1px solid #2C323E',
               background: showArchive ? '#2C323E' : 'transparent',
-              color: showArchive ? '#EDE9E1' : '#9E9990',
+              color: showArchive ? '#EDE9E1' : '#AAB0BD',
               display: 'flex', alignItems: 'center', gap: 6,
             }}
           >
@@ -1148,7 +1148,7 @@ function PriorityLeadsTab() {
                 ארכיון
                 {archivedCount > 0 && (
                   <span style={{
-                    background: '#2C323E', color: '#9E9990', borderRadius: 10,
+                    background: '#2C323E', color: '#AAB0BD', borderRadius: 10,
                     fontSize: 11, padding: '1px 6px', fontWeight: 700,
                   }}>
                     {archivedCount}
@@ -1160,11 +1160,11 @@ function PriorityLeadsTab() {
         </div>
 
         {loading && (
-          <div style={{ ...cardStyle, color: '#9E9990', fontSize: 13 }}>טוען...</div>
+          <div style={{ ...cardStyle, color: '#AAB0BD', fontSize: 13 }}>טוען...</div>
         )}
 
         {!loading && leads.length === 0 && (
-          <div style={{ ...cardStyle, textAlign: 'center', color: '#9E9990', padding: 40 }}>
+          <div style={{ ...cardStyle, textAlign: 'center', color: '#AAB0BD', padding: 40 }}>
             {showArchive ? 'אין לידים בארכיון' : 'אין לידים בעדיפות גבוהה'}
           </div>
         )}
@@ -1176,10 +1176,10 @@ function PriorityLeadsTab() {
             <div key={tier.product} id={`tier-${tier.product}`} style={{ scrollMarginTop: 100 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: tier.color, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: showArchive ? '#9E9990' : tier.color, letterSpacing: '0.05em' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: showArchive ? '#AAB0BD' : tier.color, letterSpacing: '0.05em' }}>
                   {tier.label.toUpperCase()} · {tierLeads.length}
                 </span>
-                <div style={{ flex: 1, height: 1, background: (showArchive ? '#9E9990' : tier.color) + '33' }} />
+                <div style={{ flex: 1, height: 1, background: (showArchive ? '#AAB0BD' : tier.color) + '33' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {tierLeads.map(l => (
@@ -1277,7 +1277,7 @@ function CrmPageInner() {
       {/* Page header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 22, fontWeight: 800, color: '#EDE9E1' }}>CRM</div>
-        <div style={{ fontSize: 13, color: '#9E9990', marginTop: 2 }}>ניהול לקוחות ותהליכי מכירה</div>
+        <div style={{ fontSize: 13, color: '#AAB0BD', marginTop: 2 }}>ניהול לקוחות ותהליכי מכירה</div>
       </div>
 
       {/* Quiz distribution */}
@@ -1292,7 +1292,7 @@ function CrmPageInner() {
             style={{
               padding: '10px 20px', background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 14, fontWeight: tab === t.id ? 700 : 500,
-              color: tab === t.id ? '#C9964A' : '#9E9990',
+              color: tab === t.id ? '#C9964A' : '#AAB0BD',
               borderBottom: tab === t.id ? '2px solid #C9964A' : '2px solid transparent',
               marginBottom: -1, transition: 'all 0.15s',
             }}
@@ -1314,7 +1314,7 @@ function CrmPageInner() {
 
 export default function CrmPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 24, color: '#9E9990' }}>טוען...</div>}>
+    <Suspense fallback={<div style={{ padding: 24, color: '#AAB0BD' }}>טוען...</div>}>
       <CrmPageInner />
     </Suspense>
   );

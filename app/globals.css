@@ -16,7 +16,10 @@
   --brand-gold-2: #C9964A;
   --brand-gold-3: #9E7C3A;
   --fg:         #EDE9E1;
-  --fg-muted:   #9E9990;
+  --fg-muted:   #AAB0BD;
+  --text-body:  #CDD1DA;   /* body text (11.8:1 on --bg) */
+  --text-muted: #AAB0BD;   /* secondary/muted text (8.3:1) */
+  --gold-text:  #E8B94A;   /* high-emphasis gold for small text */
   --cream:      #EBE4D6;
 
   --grad-gold:      linear-gradient(135deg, #E8B94A 0%, #C9964A 50%, #9E7C3A 100%);
@@ -55,6 +58,8 @@ body {
   color: var(--fg);
   font-family: var(--font-assistant), "Assistant", Arial, sans-serif;
 }
+
+body, p { font-weight: 500; }
 
 /* ══ Brand utility classes ════════════════════════════════════ */
 .text-gradient-gold {

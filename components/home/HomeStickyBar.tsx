@@ -67,7 +67,7 @@ export default function HomeStickyBar({
       <div style={{ color: "#EDE9E1", fontSize: 14, fontWeight: 600, lineHeight: 1.3, flex: 1 }}>
         לא בטוח/ה איפה להתחיל?
         <br />
-        <span style={{ color: "#9E9990", fontWeight: 400, fontSize: 12 }}>
+        <span style={{ color: "#AAB0BD", fontWeight: 400, fontSize: 12 }}>
           קוויז קצר - ונדע בדיוק מה מתאים לך
         </span>
       </div>

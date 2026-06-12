@@ -367,17 +367,17 @@ export default function BingeClient({ isMember, isLoggedIn }: { isMember: boolea
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "30%", background: "linear-gradient(to bottom, rgba(13,16,24,0.7), transparent)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "32px 20px 20px", background: "linear-gradient(to top, rgba(8,12,20,1) 0%, rgba(8,12,20,0.85) 60%, transparent 100%)" }}>
           <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-            <span style={{ background: "rgba(201,150,74,0.18)", border: "1px solid rgba(201,150,74,0.35)", color: "#C9964A", fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20 }}>
+            <span style={{ background: "rgba(201,150,74,0.18)", border: "1px solid rgba(201,150,74,0.35)", color: "#E8B94A", fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20 }}>
               הדר דנן
             </span>
-            <span style={{ background: "rgba(201,150,74,0.18)", border: "1px solid rgba(201,150,74,0.35)", color: "#C9964A", fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20 }}>
+            <span style={{ background: "rgba(201,150,74,0.18)", border: "1px solid rgba(201,150,74,0.35)", color: "#E8B94A", fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20 }}>
               סדנה
             </span>
           </div>
           <h2 style={{ margin: "0 0 6px", fontSize: "clamp(16px,4vw,22px)", fontWeight: 800, lineHeight: 1.3, color: "#EDE9E1" }}>
             {FEATURED.title}
           </h2>
-          <p style={{ margin: "0 0 14px", fontSize: 13, color: "#9E9990", lineHeight: 1.5 }}>
+          <p style={{ margin: "0 0 14px", fontSize: 13, color: "#AAB0BD", lineHeight: 1.5 }}>
             {FEATURED.subtitle}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -413,7 +413,7 @@ export default function BingeClient({ isMember, isLoggedIn }: { isMember: boolea
           <div style={{ color: "#E8B94A", fontSize: 13, fontWeight: 800, marginBottom: 2 }}>
             הספרייה המלאה פתוחה לחברי הכוורת
           </div>
-          <div style={{ color: "#9E9990", fontSize: 12 }}>
+          <div style={{ color: "#AAB0BD", fontSize: 12 }}>
             הצטרפו ב-₪59 לחודש וצפו בכל התהליכים והרילסים ←
           </div>
         </a>
@@ -457,7 +457,7 @@ export default function BingeClient({ isMember, isLoggedIn }: { isMember: boolea
         <div className="px-5 lg:px-0">
           <p style={{
             fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em",
-            color: "#C9964A", textTransform: "uppercase", marginBottom: 16,
+            color: "#E8B94A", textTransform: "uppercase", marginBottom: 16,
           }}>
             מה אומרים עלינו
           </p>

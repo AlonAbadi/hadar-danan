@@ -196,7 +196,7 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
     return (
       <form onSubmit={handlePhoneSubmit} className="flex flex-col gap-4" dir="rtl">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[#9E9990]">מספר טלפון לחשבונית</label>
+          <label className="text-sm font-medium text-[#AAB0BD]">מספר טלפון לחשבונית</label>
           <input
             type="tel"
             placeholder="0501234567"
@@ -211,7 +211,7 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
         <button type="submit" className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold">
           המשך לתשלום ←
         </button>
-        <button type="button" onClick={() => setPhase("idle")} className="text-sm text-[#9E9990] hover:text-[#EDE9E1] transition text-center">
+        <button type="button" onClick={() => setPhase("idle")} className="text-sm text-[#AAB0BD] hover:text-[#EDE9E1] transition text-center">
           ביטול
         </button>
       </form>
@@ -273,7 +273,7 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
         { id: "phone", label: "טלפון",    type: "tel",   placeholder: "0501234567" },
       ].map(({ id, label, type, placeholder }) => (
         <div key={id} className="flex flex-col gap-1">
-          <label htmlFor={`course-${id}`} className="text-sm font-medium text-[#9E9990]">{label}</label>
+          <label htmlFor={`course-${id}`} className="text-sm font-medium text-[#AAB0BD]">{label}</label>
           <input
             id={`course-${id}`}
             type={type}
@@ -314,7 +314,7 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
       <button
         type="button"
         onClick={() => { setPhase("idle"); setErrorMsg(null); }}
-        className="text-sm text-[#9E9990] hover:text-[#EDE9E1] transition text-center"
+        className="text-sm text-[#AAB0BD] hover:text-[#EDE9E1] transition text-center"
       >
         ביטול
       </button>

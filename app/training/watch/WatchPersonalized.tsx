@@ -21,7 +21,7 @@ export function WatchGreeting() {
       style={{
         fontSize: "1.1rem",
         fontWeight: 700,
-        color: "#C9964A",
+        color: "#E8B94A",
         marginBottom: 4,
       }}
     >
@@ -61,7 +61,7 @@ export function WatchNextStep() {
               fontSize: "0.75rem",
               fontWeight: 700,
               letterSpacing: "0.1em",
-              color: "#C9964A",
+              color: "#E8B94A",
               textTransform: "uppercase",
               marginBottom: 16,
               textAlign: "center",
@@ -160,7 +160,7 @@ export function WatchNextStep() {
               <p
                 style={{
                   fontSize: "0.9rem",
-                  color: "#9E9990",
+                  color: "#AAB0BD",
                   marginBottom: 16,
                   lineHeight: 1.6,
                 }}
@@ -189,7 +189,7 @@ export function WatchNextStep() {
                       gap: 8,
                       alignItems: "flex-start",
                       fontSize: "0.85rem",
-                      color: "#9E9990",
+                      color: "#AAB0BD",
                     }}
                   >
                     <span
@@ -244,7 +244,7 @@ export function WatchNextStep() {
       <p style={{ color: "#EDE9E1", fontWeight: 700, fontSize: "1.1rem", marginBottom: 8 }}>
         צפית? הצעד הבא שלך:
       </p>
-      <p style={{ color: "#9E9990", fontSize: "0.9rem", marginBottom: 20 }}>
+      <p style={{ color: "#AAB0BD", fontSize: "0.9rem", marginBottom: 20 }}>
         כשהאות שלך ברור - הלקוחות הנכונים מגיעים מאליהם
       </p>
       <a

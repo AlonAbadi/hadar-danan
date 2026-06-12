@@ -74,7 +74,7 @@ export function QuizInsightsButton() {
     borderRadius: 20,
     padding: "3px 12px",
     fontSize: 11,
-    color: "#C9964A",
+    color: "#E8B94A",
     fontWeight: 700,
     letterSpacing: "0.06em",
   };
@@ -102,7 +102,7 @@ export function QuizInsightsButton() {
           {loading ? "מנתח..." : data ? "רענן ניתוח" : "ניתוח תוצאות קוויז"}
         </button>
         {data && !loading && (
-          <span style={{ fontSize: 12, color: "#9E9990" }}>
+          <span style={{ fontSize: 12, color: "#AAB0BD" }}>
             {data.meta.total} תוצאות · {data.meta.period}
           </span>
         )}
@@ -114,7 +114,7 @@ export function QuizInsightsButton() {
         {data && (
           <button
             onClick={() => setOpen(o => !o)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#9E9990", fontSize: 12 }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#AAB0BD", fontSize: 12 }}
           >
             {open ? "הסתר ▲" : "הצג ▼"}
           </button>
@@ -173,7 +173,7 @@ export function QuizInsightsButton() {
               <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
                 {(Array.isArray(data.analysis.top_pains) ? data.analysis.top_pains : []).map((p, i) => (
                   <li key={i} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13, color: "rgba(237,233,225,0.85)" }}>
-                    <span style={{ color: "#C9964A", fontWeight: 700, flexShrink: 0 }}>✓</span>
+                    <span style={{ color: "#E8B94A", fontWeight: 700, flexShrink: 0 }}>✓</span>
                     {p}
                   </li>
                 ))}

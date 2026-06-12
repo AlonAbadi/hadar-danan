@@ -145,7 +145,7 @@ export function SignupForm({ ctaLabel, dark = false }: SignupFormProps) {
 
       {/* Name */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="sf-name" className={labelCls} style={{ color: "#9E9990" }}>שם מלא</label>
+        <label htmlFor="sf-name" className={labelCls} style={{ color: "#AAB0BD" }}>שם מלא</label>
         <input
           id="sf-name" type="text" autoComplete="name" placeholder="ישראל ישראלי"
           value={form.name}
@@ -164,7 +164,7 @@ export function SignupForm({ ctaLabel, dark = false }: SignupFormProps) {
 
       {/* Email */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="sf-email" className={labelCls} style={{ color: "#9E9990" }}>כתובת אימייל</label>
+        <label htmlFor="sf-email" className={labelCls} style={{ color: "#AAB0BD" }}>כתובת אימייל</label>
         <input
           id="sf-email" type="email" autoComplete="email" placeholder="israel@example.com" dir="ltr"
           value={form.email}
@@ -183,7 +183,7 @@ export function SignupForm({ ctaLabel, dark = false }: SignupFormProps) {
 
       {/* Phone */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="sf-phone" className={labelCls} style={{ color: "#9E9990" }}>טלפון נייד</label>
+        <label htmlFor="sf-phone" className={labelCls} style={{ color: "#AAB0BD" }}>טלפון נייד</label>
         <input
           id="sf-phone" type="tel" autoComplete="tel" placeholder="0501234567" dir="ltr"
           value={form.phone}

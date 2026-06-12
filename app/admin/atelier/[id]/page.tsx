@@ -13,7 +13,7 @@ export default async function AtelierDetailPage({ params }: { params: Promise<{ 
 
   if (!data) {
     return (
-      <div dir="rtl" style={{ minHeight: "100vh", background: "#0D1018", padding: 32, fontFamily: "var(--font-assistant), Assistant, sans-serif", color: "#9E9990" }}>
+      <div dir="rtl" style={{ minHeight: "100vh", background: "#0D1018", padding: 32, fontFamily: "var(--font-assistant), Assistant, sans-serif", color: "#AAB0BD" }}>
         בקשה לא נמצאה
       </div>
     );

@@ -70,7 +70,7 @@ const PRODUCT_LABELS: Record<string, string> = {
 };
 
 const HIVE_TIER_MAP: Record<string, { label: string; color: string }> = {
-  basic_59:      { label: "בסיסי",   color: "#C9964A" },
+  basic_59:      { label: "בסיסי",   color: "#E8B94A" },
   full_149:      { label: "מלא",     color: "#E8B94A" },
   // legacy values — kept for backward-compat with rows created before the
   // 2-tier rename. Safe to remove once no rows reference them.
@@ -158,7 +158,7 @@ const S = {
     borderRadius: 8,
     border: "none",
     background: active ? "linear-gradient(135deg, #E8B94A, #9E7C3A)" : "transparent",
-    color: active ? "#080C14" : "#9E9990",
+    color: active ? "#080C14" : "#AAB0BD",
     fontSize: 14,
     fontWeight: active ? 800 : 600,
     cursor: "pointer",
@@ -193,7 +193,7 @@ const S = {
   },
   email: {
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
     margin: "2px 0 0",
   },
   creditBox: {
@@ -215,7 +215,7 @@ const S = {
   },
   creditLabel: {
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
     marginTop: 2,
   },
   sectionTitle: {
@@ -274,7 +274,7 @@ const S = {
     fontSize: 14,
   },
   th: {
-    color: "#9E9990",
+    color: "#AAB0BD",
     fontWeight: 600,
     fontSize: 12,
     padding: "0 0 12px",
@@ -310,7 +310,7 @@ const S = {
   label: {
     display: "block",
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
     marginBottom: 6,
     fontWeight: 600,
   },
@@ -333,7 +333,7 @@ const S = {
     border: "1px solid #1D2430",
     borderRadius: 8,
     padding: "10px 12px",
-    color: "#9E9990",
+    color: "#AAB0BD",
     fontSize: 14,
     fontFamily: "Assistant, sans-serif",
     outline: "none",
@@ -373,12 +373,12 @@ const S = {
     background: "#1D2430",
     border: "1px solid #2C323E",
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
     fontWeight: 600,
   } as React.CSSProperties,
   infoMsg: {
     fontSize: 12,
-    color: "#9E9990",
+    color: "#AAB0BD",
     marginTop: 4,
   },
   successMsg: {
@@ -483,7 +483,7 @@ function PendingPaymentCallout({ pendingPurchases, userId }: { pendingPurchases:
           <div style={{ fontSize: 14, fontWeight: 800, color: "#EDE9E1", marginBottom: 4 }}>
             יש לך רכישה שממתינה לתשלום
           </div>
-          <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.5 }}>
+          <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.5 }}>
             התחלת לרכוש את {productName} אבל לא השלמת את התשלום. ההזמנה ממתינה לך.
           </div>
         </div>
@@ -495,13 +495,13 @@ function PendingPaymentCallout({ pendingPurchases, userId }: { pendingPurchases:
         paddingTop: 14, borderTop: "1px solid rgba(232,185,74,0.2)", marginBottom: 16,
       }}>
         <div>
-          <div style={{ fontSize: 11, color: "#9E9990", marginBottom: 3 }}>סכום לתשלום</div>
+          <div style={{ fontSize: 11, color: "#AAB0BD", marginBottom: 3 }}>סכום לתשלום</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: "#E8B94A" }}>
             ₪{latest.amount.toLocaleString("he-IL")}
           </div>
         </div>
         <div style={{ textAlign: "left" }}>
-          <div style={{ fontSize: 11, color: "#9E9990", marginBottom: 3 }}>נפתח</div>
+          <div style={{ fontSize: 11, color: "#AAB0BD", marginBottom: 3 }}>נפתח</div>
           <div style={{ fontSize: 13, color: "#EDE9E1" }}>{formatDate(latest.created_at)}</div>
         </div>
       </div>
@@ -529,7 +529,7 @@ function PendingPaymentCallout({ pendingPurchases, userId }: { pendingPurchases:
           style={{
             padding: "11px 20px", borderRadius: 8,
             border: "1px solid #2C323E", background: "transparent",
-            color: "#9E9990", fontSize: 14, fontWeight: 700,
+            color: "#AAB0BD", fontSize: 14, fontWeight: 700,
             fontFamily: "Assistant, sans-serif",
             cursor: cancelLoading ? "not-allowed" : "pointer",
             opacity: resumeLoading ? 0.5 : 1,
@@ -541,7 +541,7 @@ function PendingPaymentCallout({ pendingPurchases, userId }: { pendingPurchases:
 
       {/* Extra pending items note */}
       {extra > 0 && (
-        <div style={{ marginTop: 12, fontSize: 12, color: "#9E9990", textAlign: "center" }}>
+        <div style={{ marginTop: 12, fontSize: 12, color: "#AAB0BD", textAlign: "center" }}>
           ויש עוד {extra} פעולות פתוחות
         </div>
       )}
@@ -589,7 +589,7 @@ function QuizRecommendationCard({ quizResult }: { quizResult: QuizResult }) {
       </div>
 
       {/* Subtitle - date */}
-      <p style={{ fontSize: 12, color: "#9E9990", marginTop: -8, marginBottom: 16 }}>
+      <p style={{ fontSize: 12, color: "#AAB0BD", marginTop: -8, marginBottom: 16 }}>
         לפי הקוויז שעשית - {formatHebDate(created_at)}
       </p>
 
@@ -604,14 +604,14 @@ function QuizRecommendationCard({ quizResult }: { quizResult: QuizResult }) {
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(13,18,25,0.92) 0%, rgba(13,18,25,0.3) 50%, transparent 100%)" }} />
           <div style={{ position: "absolute", bottom: 0, right: 0, left: 0, padding: "12px 14px" }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: "#EDE9E1", lineHeight: 1.2, marginBottom: 4 }}>{name}</div>
-            {meta && <div style={{ fontSize: 12, color: "#9E9990" }}>{meta}</div>}
+            {meta && <div style={{ fontSize: 12, color: "#AAB0BD" }}>{meta}</div>}
           </div>
         </div>
       )}
 
       {/* Description */}
       {desc && (
-        <p style={{ fontSize: 14, color: "#9E9990", lineHeight: 1.6, marginBottom: 14, marginTop: 0 }}>{desc}</p>
+        <p style={{ fontSize: 14, color: "#AAB0BD", lineHeight: 1.6, marginBottom: 14, marginTop: 0 }}>{desc}</p>
       )}
 
       {/* Personalized reasons */}
@@ -628,7 +628,7 @@ function QuizRecommendationCard({ quizResult }: { quizResult: QuizResult }) {
                   <path d="M1 3.5L3.5 6L8 1" stroke="#E8B94A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </span>
-              <span style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.6 }}>{reason}</span>
+              <span style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.6 }}>{reason}</span>
             </div>
           ))}
         </div>
@@ -651,7 +651,7 @@ function QuizRecommendationCard({ quizResult }: { quizResult: QuizResult }) {
         </Link>
         <Link
           href="/quiz"
-          style={{ fontSize: 12, color: "#9E9990", textDecoration: "none" }}
+          style={{ fontSize: 12, color: "#AAB0BD", textDecoration: "none" }}
         >
           עשה את הקוויז שוב
         </Link>
@@ -665,7 +665,7 @@ function QuizCTACard() {
   return (
     <div style={S.card}>
       <p style={{ ...S.sectionTitle, marginBottom: 8 }}>עוד לא עשית את הקוויז שלנו</p>
-      <p style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.6, marginTop: 0, marginBottom: 20 }}>
+      <p style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.6, marginTop: 0, marginBottom: 20 }}>
         3 דקות שיעזרו לנו להבין מה הכי מתאים לך - בלי התחייבות
       </p>
       <Link
@@ -698,7 +698,7 @@ function SignalSection({ title, body, tone = "normal" }: { title: string; body: 
         color:        "#EDE9E1",
       }}
     >
-      <div style={{ color: "#C9964A", fontSize: 11, letterSpacing: 0.6, marginBottom: 10, textTransform: "uppercase" as const }}>
+      <div style={{ color: "#E8B94A", fontSize: 11, letterSpacing: 0.6, marginBottom: 10, textTransform: "uppercase" as const }}>
         {title}
       </div>
       <p style={{ fontSize: 14, lineHeight: 1.7, margin: 0 }}>{body}</p>
@@ -951,7 +951,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
               if (upsell.length === 0) return null;
               return (
                 <>
-                  <p style={{ fontSize: 12, color: "#9E9990", margin: "12px 0 8px" }}>המשך המסלול:</p>
+                  <p style={{ fontSize: 12, color: "#AAB0BD", margin: "12px 0 8px" }}>המשך המסלול:</p>
                   {upsell.map((r) => (
                     <div key={r.href} style={{ ...S.contentItem, justifyContent: "space-between" }}>
                       <span style={S.contentLabel}>{r.label}</span>
@@ -966,7 +966,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
           </>
         ) : !isHiveActive ? (
           <>
-            <p style={{ fontSize: 13, color: "#9E9990", marginTop: 0, marginBottom: 16 }}>
+            <p style={{ fontSize: 13, color: "#AAB0BD", marginTop: 0, marginBottom: 16 }}>
               עדיין אין לך גישה לתוכן. בחר מסלול:
             </p>
             {RECOMMENDED.map((r) => (
@@ -1004,7 +1004,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
                 <span style={{ ...S.contentLabel }}>הכוורת</span>
               </div>
               {userData?.hive_next_billing_date && (
-                <div style={{ fontSize: 12, color: "#9E9990", textAlign: "right" }}>
+                <div style={{ fontSize: 12, color: "#AAB0BD", textAlign: "right" }}>
                   חידוש: {formatDate(userData.hive_next_billing_date)}
                 </div>
               )}
@@ -1022,19 +1022,19 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
     : null;
 
   const SignalTab = !signalState.loaded ? (
-    <div style={{ ...S.card, textAlign: "center", color: "#9E9990", fontSize: 14, padding: "40px 20px" }}>
+    <div style={{ ...S.card, textAlign: "center", color: "#AAB0BD", fontSize: 14, padding: "40px 20px" }}>
       טוען…
     </div>
   ) : !signalState.signal ? (
     // Empty state — no signal extracted yet
     <div style={{ ...S.card, padding: "32px 24px", textAlign: "center" }}>
-      <div style={{ fontSize: 12, letterSpacing: 1.4, color: "#C9964A", marginBottom: 12 }}>
+      <div style={{ fontSize: 12, letterSpacing: 1.4, color: "#E8B94A", marginBottom: 12 }}>
         <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
       </div>
       <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 10px", color: "#EDE9E1" }}>
         מנוע האות
       </h2>
-      <p style={{ fontSize: 14, color: "#9E9990", margin: "0 0 22px", lineHeight: 1.65 }}>
+      <p style={{ fontSize: 14, color: "#AAB0BD", margin: "0 0 22px", lineHeight: 1.65 }}>
         חמש שאלות. אות מותגי אחד שמחזיר לך את הבידול האמיתי שלך.
         <br />
         לא מה שאתה מוכר, אלא מה שרק אתה יכול לתת.
@@ -1061,12 +1061,12 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
     // Saved signal — render the 7 fields
     <>
       <div style={{ ...S.card, textAlign: "center", padding: "20px 20px 14px" }}>
-        <div style={{ fontSize: 11, letterSpacing: 1.4, color: "#C9964A", marginBottom: 8 }}>
+        <div style={{ fontSize: 11, letterSpacing: 1.4, color: "#E8B94A", marginBottom: 8 }}>
           <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
         </div>
         <p style={{ ...S.sectionTitle, marginBottom: 4, fontSize: 17 }}>האות שלי</p>
         {dateStr && (
-          <p style={{ fontSize: 12, color: "#9E9990", margin: 0 }}>נחלץ ב-{dateStr}</p>
+          <p style={{ fontSize: 12, color: "#AAB0BD", margin: 0 }}>נחלץ ב-{dateStr}</p>
         )}
       </div>
 
@@ -1082,7 +1082,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
           boxShadow:    "0 8px 24px rgba(232,185,74,0.10)",
         }}
       >
-        <div style={{ color: "#C9964A", fontSize: 11, letterSpacing: 0.6, marginBottom: 10 }}>
+        <div style={{ color: "#E8B94A", fontSize: 11, letterSpacing: 0.6, marginBottom: 10 }}>
           האות
         </div>
         <p style={{ fontSize: 18, lineHeight: 1.55, margin: 0, color: "#EDE9E1", fontWeight: 500 }}>
@@ -1111,7 +1111,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
           style={{
             display:        "inline-block",
             background:     "transparent",
-            color:          "#9E9990",
+            color:          "#AAB0BD",
             border:         "1px solid #2C323E",
             borderRadius:   10,
             padding:        "9px 20px",
@@ -1129,7 +1129,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
   const PurchasesTab = (
     <div style={S.card}>
       <p style={{ ...S.sectionTitle, marginBottom: 4 }}>הרכישות שלי</p>
-      <p style={{ fontSize: 12, color: "#9E9990", marginTop: 0, marginBottom: 20 }}>המוצרים שרכשת בהצלחה</p>
+      <p style={{ fontSize: 12, color: "#AAB0BD", marginTop: 0, marginBottom: 20 }}>המוצרים שרכשת בהצלחה</p>
 
       {completedPurchases.length === 0 ? (
         /* ── Empty state ── */
@@ -1149,7 +1149,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
           <p style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1", margin: "0 0 8px" }}>
             עדיין לא רכשת כלום
           </p>
-          <p style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.6, maxWidth: 280, margin: "0 0 24px" }}>
+          <p style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.6, maxWidth: 280, margin: "0 0 24px" }}>
             כשתרכשי מסלול - אתגר, סדנה, קורס או הכוורת - הוא יופיע כאן ותקבלי גישה לתוכן.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}>
@@ -1204,7 +1204,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
                   <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1", marginBottom: 4 }}>
                     {PRODUCT_LABELS[p.product] ?? p.product}
                   </div>
-                  <div style={{ fontSize: 12, color: "#9E9990" }}>
+                  <div style={{ fontSize: 12, color: "#AAB0BD" }}>
                     {formatDate(p.created_at)} · ₪{p.amount.toLocaleString("he-IL")}
                   </div>
                   {p.invoice_link && (
@@ -1212,7 +1212,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
                       href={p.invoice_link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ fontSize: 12, color: "#C9964A", textDecoration: "underline" }}
+                      style={{ fontSize: 12, color: "#E8B94A", textDecoration: "underline" }}
                     >
                       חשבונית מס קבלה
                     </a>
@@ -1239,7 +1239,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
                     flexShrink: 0,
                     padding: "5px 12px", borderRadius: 20,
                     background: "rgba(158,153,144,0.1)", border: "1px solid rgba(158,153,144,0.2)",
-                    color: "#9E9990", fontSize: 12, fontWeight: 600,
+                    color: "#AAB0BD", fontSize: 12, fontWeight: 600,
                     whiteSpace: "nowrap",
                   }}>
                     {getCompletedBadge(p.product)}
@@ -1251,7 +1251,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
 
           {credit > 0 && (
             <div style={{ marginTop: 8, paddingTop: 16, borderTop: "1px solid #2C323E", fontSize: 13 }}>
-              <span style={{ color: "#9E9990" }}>סה"כ קרדיט זמין: </span>
+              <span style={{ color: "#AAB0BD" }}>סה"כ קרדיט זמין: </span>
               <span style={{ fontWeight: 800, color: "#E8B94A" }}>₪{credit.toLocaleString("he-IL")}</span>
             </div>
           )}
@@ -1303,7 +1303,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
       <div style={S.card}>
         {/* Section header */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <span style={{ fontSize: 14, color: "#9E9990", letterSpacing: "0.05em", fontWeight: 600, whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: 14, color: "#AAB0BD", letterSpacing: "0.05em", fontWeight: 600, whiteSpace: "nowrap" }}>
             העדפות תקשורת
           </span>
           <div style={{ flex: 1, height: 1, background: "rgba(201,150,74,0.2)" }} />
@@ -1369,7 +1369,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
                 <div style={{ fontSize: 14, color: "#EDE9E1", fontWeight: 600, lineHeight: 1.4 }}>
                   קבלת עדכונים שיווקיים
                 </div>
-                <div style={{ fontSize: 12, color: "#9E9990", marginTop: 4, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 12, color: "#AAB0BD", marginTop: 4, lineHeight: 1.5 }}>
                   מבצעים, תכנים חדשים, וטיפים שיווקיים. ניתן לבטל בכל עת.
                 </div>
               </div>
@@ -1413,7 +1413,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
               </svg>
               Google
             </span>
-            <span style={{ fontSize: 13, color: "#9E9990" }}>הכניסה מנוהלת דרך Google</span>
+            <span style={{ fontSize: 13, color: "#AAB0BD" }}>הכניסה מנוהלת דרך Google</span>
           </div>
         ) : (
           <div>

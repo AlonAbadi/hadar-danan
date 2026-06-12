@@ -153,7 +153,7 @@ export function StatsSection() {
               <p
                 style={{
                   fontSize:      "clamp(13px, 2vw, 15px)",
-                  color:         "#9E9990",
+                  color:         "#AAB0BD",
                   letterSpacing: "0.06em",
                   marginTop:     8,
                   opacity:       visible ? 1 : 0,

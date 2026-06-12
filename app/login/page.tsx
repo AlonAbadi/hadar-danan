@@ -46,7 +46,7 @@ const S = {
   },
   subtitle: {
     fontSize: 14,
-    color: "#9E9990",
+    color: "#AAB0BD",
     textAlign: "center" as const,
     marginBottom: 28,
   },
@@ -80,12 +80,12 @@ const S = {
   },
   dividerText: {
     fontSize: 12,
-    color: "#9E9990",
+    color: "#AAB0BD",
   },
   label: {
     display: "block",
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
     marginBottom: 6,
     fontWeight: 600,
   },
@@ -110,7 +110,7 @@ const S = {
   },
   forgotLink: {
     fontSize: 12,
-    color: "#9E9990",
+    color: "#AAB0BD",
     textDecoration: "none",
   },
   submitBtn: {
@@ -152,7 +152,7 @@ const S = {
     textAlign: "center" as const,
     marginTop: 20,
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
   },
 };
 
@@ -301,12 +301,12 @@ function LoginPageInner() {
               שלחנו קישור כניסה ל-<br />
               <strong style={{ color: "#E8B94A" }}>{email}</strong>
             </p>
-            <p style={{ fontSize: 12, color: "#9E9990", marginTop: 16, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 12, color: "#AAB0BD", marginTop: 16, lineHeight: 1.6 }}>
               הקישור בתוקף ל-24 שעות. לא קיבלת? בדקי גם ב-spam.
             </p>
             <button
               onClick={() => { setPhase("found_lead"); }}
-              style={{ marginTop: 16, background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 13, fontFamily: "Assistant, sans-serif", textDecoration: "underline" }}
+              style={{ marginTop: 16, background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 13, fontFamily: "Assistant, sans-serif", textDecoration: "underline" }}
             >
               לא הגיע? שלחי שוב
             </button>
@@ -361,7 +361,7 @@ function LoginPageInner() {
           <div style={S.bottomLink}>
             <button
               onClick={() => { setPhase("idle"); setErrorType(null); setWrongCount(0); setLeadInfo(null); }}
-              style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 13, fontFamily: "Assistant, sans-serif" }}
+              style={{ background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 13, fontFamily: "Assistant, sans-serif" }}
             >
               חזרה
             </button>

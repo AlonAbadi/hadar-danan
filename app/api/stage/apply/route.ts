@@ -164,11 +164,11 @@ export async function POST(req: NextRequest) {
     to:   ["alonabadi9@gmail.com", "hadard1113@gmail.com"],
     subject: `🎯 מועמדות חדשה — 3 ימים פתוחים: ${name} (${score})`,
     html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.8;max-width:560px">
-      <h2 style="color:#C9964A;margin-bottom:12px">מועמדות חדשה — 3 ימים פתוחים</h2>
+      <h2 style="color:#E8B94A;margin-bottom:12px">מועמדות חדשה — 3 ימים פתוחים</h2>
       <p style="margin:4px 0"><strong>שם:</strong> ${name}</p>
       ${email ? `<p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${email}">${email}</a></p>` : ""}
       ${phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${phone}">${phone}</a>${applicantWa ? ` &middot; <a href="https://wa.me/${applicantWa}">WhatsApp</a>` : ""}</p>` : ""}
-      <p style="margin:4px 0"><strong>ציון מחויבות:</strong> <span style="color:#C9964A;font-weight:700">${score}/100</span>
+      <p style="margin:4px 0"><strong>ציון מחויבות:</strong> <span style="color:#E8B94A;font-weight:700">${score}/100</span>
         <span style="color:#888;font-size:13px"> (עומק ${breakdown.depth}/40 · ספציפיות ${breakdown.specificity}/30 · מחויבות ${breakdown.commitment}/30)</span>
       </p>
       <hr style="border:none;border-top:1px solid #eee;margin:12px 0"/>

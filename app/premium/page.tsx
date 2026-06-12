@@ -145,9 +145,9 @@ export default async function PremiumPage() {
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 10 }}>
               <p style={{ fontSize: 52, fontWeight: 900, color: "#EDE9E1", margin: 0, direction: "ltr" }}>₪14,000</p>
-              <p style={{ fontSize: 28, fontWeight: 800, color: "#C9964A", margin: 0 }}>+ מע״מ</p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: "#E8B94A", margin: 0 }}>+ מע״מ</p>
             </div>
-            <p style={{ color: "#9E9990", margin: "6px 0 0", fontSize: 14 }}>
+            <p style={{ color: "#AAB0BD", margin: "6px 0 0", fontSize: 14 }}>
               סה״כ כולל מע״מ: ₪{priceWithVat.toLocaleString("he-IL")} · כולל הכל מהאסטרטגיה העסקית ועד 3 חודשי ליווי
             </p>
           </div>

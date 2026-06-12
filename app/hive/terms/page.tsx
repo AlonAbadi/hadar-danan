@@ -25,7 +25,7 @@ export default function HiveTermsPage() {
           <Link
             href="/hive"
             className="text-sm transition hover:opacity-80"
-            style={{ color: "#9E9990" }}
+            style={{ color: "#AAB0BD" }}
           >
             ← חזור לכוורת
           </Link>
@@ -39,17 +39,17 @@ export default function HiveTermsPage() {
           <h1 className="text-4xl font-black" style={{ color: "#EDE9E1" }}>
             תנאי מנוי הכוורת
           </h1>
-          <p className="text-sm" style={{ color: "#9E9990" }}>
+          <p className="text-sm" style={{ color: "#AAB0BD" }}>
             הדר דנן בע״מ
           </p>
         </div>
 
         {/* ── Section 1 ── */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-black" style={{ color: "#C9964A" }}>
+          <h2 className="text-xl font-black" style={{ color: "#E8B94A" }}>
             1. מהו המנוי וכיצד הוא עובד
           </h2>
-          <p className="leading-relaxed" style={{ color: "#9E9990" }}>
+          <p className="leading-relaxed" style={{ color: "#AAB0BD" }}>
             הכוורת היא קהילה חודשית בתשלום המופעלת על ידי הדר דנן בע״מ. המנוי מקנה גישה לתכנים
             בלעדיים, מפגשי זום חודשיים, וקהילת WhatsApp פעילה. ישנם שני מסלולים: מסלול פתוח לכולם
             (₪97/חודש) ומסלול מיוחד ללקוחות הדר (₪29/חודש).
@@ -58,26 +58,26 @@ export default function HiveTermsPage() {
 
         {/* ── Section 2 ── */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-black" style={{ color: "#C9964A" }}>
+          <h2 className="text-xl font-black" style={{ color: "#E8B94A" }}>
             2. מה כולל המנוי
           </h2>
-          <ul className="flex flex-col gap-2 leading-relaxed" style={{ color: "#9E9990" }}>
+          <ul className="flex flex-col gap-2 leading-relaxed" style={{ color: "#AAB0BD" }}>
             <li className="flex gap-2">
-              <span style={{ color: "#C9964A" }}>•</span>
+              <span style={{ color: "#E8B94A" }}>•</span>
               <span>
                 מפגש זום חודשי עם הדר דנן - שעה אחת בחודש לשאלות, אסטרטגיה, ותוכן
               </span>
             </li>
             <li className="flex gap-2">
-              <span style={{ color: "#C9964A" }}>•</span>
+              <span style={{ color: "#E8B94A" }}>•</span>
               <span>תכנים בלעדיים לחברי הכוורת בלבד</span>
             </li>
             <li className="flex gap-2">
-              <span style={{ color: "#C9964A" }}>•</span>
+              <span style={{ color: "#E8B94A" }}>•</span>
               <span>גישה לקבוצת WhatsApp פעילה של חברי הכוורת</span>
             </li>
             <li className="flex gap-2">
-              <span style={{ color: "#C9964A" }}>•</span>
+              <span style={{ color: "#E8B94A" }}>•</span>
               <span>
                 עדיפות בזום (במסלול ₪29 בלבד)
               </span>
@@ -87,10 +87,10 @@ export default function HiveTermsPage() {
 
         {/* ── Section 3 ── */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-black" style={{ color: "#C9964A" }}>
+          <h2 className="text-xl font-black" style={{ color: "#E8B94A" }}>
             3. תנאי תשלום
           </h2>
-          <p className="leading-relaxed" style={{ color: "#9E9990" }}>
+          <p className="leading-relaxed" style={{ color: "#AAB0BD" }}>
             החיוב מתבצע חודשי באופן אוטומטי באמצעות Cardcom. החיוב הראשון מתבצע עם ההצטרפות.
             החיוב הבא מתבצע 30 יום לאחר ההצטרפות ובכל 30 יום לאחר מכן. המחיר כולל מע״מ.
           </p>
@@ -98,32 +98,32 @@ export default function HiveTermsPage() {
 
         {/* ── Section 4 ── */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-black" style={{ color: "#C9964A" }}>
+          <h2 className="text-xl font-black" style={{ color: "#E8B94A" }}>
             4. מדיניות ביטול
           </h2>
-          <ul className="flex flex-col gap-3 leading-relaxed" style={{ color: "#9E9990" }}>
+          <ul className="flex flex-col gap-3 leading-relaxed" style={{ color: "#AAB0BD" }}>
             <li className="flex gap-2">
-              <span style={{ color: "#C9964A" }}>•</span>
+              <span style={{ color: "#E8B94A" }}>•</span>
               <span>
                 <strong style={{ color: "#EDE9E1" }}>ביטול תוך 14 יום מיום ההצטרפות:</strong> זכאי
                 להחזר כספי מלא, ללא שאלות.
               </span>
             </li>
             <li className="flex gap-2">
-              <span style={{ color: "#C9964A" }}>•</span>
+              <span style={{ color: "#E8B94A" }}>•</span>
               <span>
                 <strong style={{ color: "#EDE9E1" }}>ביטול לאחר 14 יום:</strong> המנוי יסתיים
                 בסוף תקופת החיוב הנוכחית. לא יתבצע חיוב נוסף.
               </span>
             </li>
             <li className="flex gap-2">
-              <span style={{ color: "#C9964A" }}>•</span>
+              <span style={{ color: "#E8B94A" }}>•</span>
               <span>
                 לביטול יש לפנות ל:{" "}
                 <a
                   href="mailto:hive@beegood.online"
                   className="underline hover:opacity-80"
-                  style={{ color: "#C9964A" }}
+                  style={{ color: "#E8B94A" }}
                 >
                   hive@beegood.online
                 </a>{" "}
@@ -131,7 +131,7 @@ export default function HiveTermsPage() {
               </span>
             </li>
             <li className="flex gap-2">
-              <span style={{ color: "#C9964A" }}>•</span>
+              <span style={{ color: "#E8B94A" }}>•</span>
               <span>הודעת הביטול תטופל תוך 2 ימי עסקים.</span>
             </li>
           </ul>
@@ -139,10 +139,10 @@ export default function HiveTermsPage() {
 
         {/* ── Section 5 ── */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-black" style={{ color: "#C9964A" }}>
+          <h2 className="text-xl font-black" style={{ color: "#E8B94A" }}>
             5. מדיניות החזרים
           </h2>
-          <p className="leading-relaxed" style={{ color: "#9E9990" }}>
+          <p className="leading-relaxed" style={{ color: "#AAB0BD" }}>
             החזרים יינתנו בהתאם למדיניות הביטול המפורטת לעיל. החזר כספי יבוצע לאמצעי התשלום
             המקורי תוך 7-14 ימי עסקים.
           </p>
@@ -150,10 +150,10 @@ export default function HiveTermsPage() {
 
         {/* ── Section 6 ── */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-black" style={{ color: "#C9964A" }}>
+          <h2 className="text-xl font-black" style={{ color: "#E8B94A" }}>
             6. שינויים בתנאים
           </h2>
-          <p className="leading-relaxed" style={{ color: "#9E9990" }}>
+          <p className="leading-relaxed" style={{ color: "#AAB0BD" }}>
             הדר דנן בע״מ שומרת לעצמה את הזכות לשנות את תנאי המנוי עם הודעה מוקדמת של 30 יום.
             ההודעה תישלח לאימייל הרשום.
           </p>
@@ -161,15 +161,15 @@ export default function HiveTermsPage() {
 
         {/* ── Section 7 ── */}
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-black" style={{ color: "#C9964A" }}>
+          <h2 className="text-xl font-black" style={{ color: "#E8B94A" }}>
             7. יצירת קשר
           </h2>
-          <p className="leading-relaxed" style={{ color: "#9E9990" }}>
+          <p className="leading-relaxed" style={{ color: "#AAB0BD" }}>
             לכל שאלה:{" "}
             <a
               href="mailto:hive@beegood.online"
               className="underline hover:opacity-80"
-              style={{ color: "#C9964A" }}
+              style={{ color: "#E8B94A" }}
             >
               hive@beegood.online
             </a>
@@ -186,7 +186,7 @@ export default function HiveTermsPage() {
       {/* ── Footer ──────────────────────────────────────────── */}
       <footer
         className="border-t px-4 py-8 text-center text-xs"
-        style={{ background: "#101520", borderColor: "#2C323E", color: "#9E9990" }}
+        style={{ background: "#101520", borderColor: "#2C323E", color: "#AAB0BD" }}
       >
         <p className="mb-2">
           <Link href="/hive" className="hover:text-[#EDE9E1] transition">

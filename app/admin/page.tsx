@@ -97,13 +97,13 @@ export default async function AdminHubPage() {
         .hub { direction: rtl; font-family: 'Assistant', sans-serif; padding: 36px 48px 60px; background: #080C14; min-height: 100vh; color: #EDE9E1; }
         .hub-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 8px; }
         .hub-title { font-size: 22px; font-weight: 800; color: #EDE9E1; }
-        .hub-sub { font-size: 13px; color: #9E9990; }
+        .hub-sub { font-size: 13px; color: #AAB0BD; }
         .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
         .kpi { background: #141820; border: 1px solid #2C323E; border-radius: 12px; padding: 18px 22px; }
         .kpi-val { font-size: 26px; font-weight: 900; background: linear-gradient(135deg, #E8B94A, #C9964A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.2; margin-bottom: 5px; }
         .kpi-val.green { background: linear-gradient(135deg, #34A853, #1e7a38); }
         .kpi-val.blue  { background: linear-gradient(135deg, #4285F4, #2563eb); }
-        .kpi-label { font-size: 12px; color: #9E9990; }
+        .kpi-label { font-size: 12px; color: #AAB0BD; }
         .kpi-change { font-size: 11px; margin-top: 4px; }
         .top-row { display: grid; grid-template-columns: 1fr 320px; gap: 16px; margin-bottom: 36px; align-items: start; }
         .quick-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -111,7 +111,7 @@ export default async function AdminHubPage() {
         .quick-card:hover { border-color: rgba(201,150,74,0.55); background: #1d2535; }
         .quick-card-icon { font-size: 22px; margin-bottom: 10px; }
         .quick-card-title { font-size: 15px; font-weight: 800; color: #EDE9E1; margin-bottom: 4px; }
-        .quick-card-desc { font-size: 12px; color: #9E9990; line-height: 1.5; }
+        .quick-card-desc { font-size: 12px; color: #AAB0BD; line-height: 1.5; }
         .buyers-box { background: #141820; border: 1px solid #2C323E; border-radius: 12px; overflow: hidden; }
         .buyers-head { padding: 12px 18px; border-bottom: 1px solid #2C323E; font-size: 13px; font-weight: 700; color: #EDE9E1; }
         .buyer-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-bottom: 1px solid rgba(44,50,62,0.5); gap: 10px; }
@@ -124,7 +124,7 @@ export default async function AdminHubPage() {
         .card:hover { border-color: rgba(201,150,74,0.35); background: #171d28; }
         .card-icon { font-size: 18px; margin-bottom: 8px; }
         .card-title { font-size: 14px; font-weight: 700; color: #EDE9E1; margin-bottom: 5px; }
-        .card-desc { font-size: 12px; color: #9E9990; line-height: 1.5; }
+        .card-desc { font-size: 12px; color: #AAB0BD; line-height: 1.5; }
         @media (max-width: 1100px) {
           .kpi-grid { grid-template-columns: repeat(2, 1fr); }
           .top-row { grid-template-columns: 1fr; }
@@ -158,24 +158,24 @@ export default async function AdminHubPage() {
           <div className="kpi" style={{ borderTop: '3px solid #4285F4' }}>
             <div className="kpi-val blue">{kd.leads.toLocaleString('he-IL')}</div>
             <div className="kpi-label">לידים חדשים החודש</div>
-            <div className="kpi-change" style={{ color: '#9E9990' }}>היום: {kd.todayLeads}</div>
+            <div className="kpi-change" style={{ color: '#AAB0BD' }}>היום: {kd.todayLeads}</div>
           </div>
           <div className="kpi" style={{ borderTop: '3px solid #34A853' }}>
             <div className="kpi-val green">{kd.conversionRate}%</div>
             <div className="kpi-label">שיעור המרה</div>
-            <div className="kpi-change" style={{ color: '#9E9990' }}>{kd.purchases} רכישות מ-{kd.leads} לידים</div>
+            <div className="kpi-change" style={{ color: '#AAB0BD' }}>{kd.purchases} רכישות מ-{kd.leads} לידים</div>
           </div>
           <div className="kpi" style={{ borderTop: '3px solid #9C27B0' }}>
             <div className="kpi-val" style={{ background: 'linear-gradient(135deg, #CE93D8, #9C27B0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{kd.hiveActive}</div>
             <div className="kpi-label">חברי כוורת פעילים</div>
-            <div className="kpi-change" style={{ color: '#9E9990' }}>פגישות ממתינות: {kd.pendingBookings}</div>
+            <div className="kpi-change" style={{ color: '#AAB0BD' }}>פגישות ממתינות: {kd.pendingBookings}</div>
           </div>
         </div>
 
         {/* Top row: quick-access cards + recent buyers */}
         <div className="top-row">
           <div>
-            <div style={{ fontSize: 10, fontWeight: 800, color: '#C9964A', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>גישה מהירה</div>
+            <div style={{ fontSize: 10, fontWeight: 800, color: '#E8B94A', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>גישה מהירה</div>
             <div className="quick-cards">
               {NAV_CARDS.filter(c => c.group === 'ראשי').map(card => (
                 <Link key={card.href} href={card.href} className="quick-card">
@@ -194,11 +194,11 @@ export default async function AdminHubPage() {
                 <div className="buyer-row" key={i}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#EDE9E1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</div>
-                    <div style={{ fontSize: 11, color: '#9E9990' }}>{b.product}</div>
+                    <div style={{ fontSize: 11, color: '#AAB0BD' }}>{b.product}</div>
                   </div>
                   <div style={{ textAlign: 'left', flexShrink: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: '#34A853' }}>₪{b.amount?.toLocaleString('he-IL')}</div>
-                    <div style={{ fontSize: 10, color: '#9E9990' }}>{relTime(b.time)}</div>
+                    <div style={{ fontSize: 10, color: '#AAB0BD' }}>{relTime(b.time)}</div>
                   </div>
                 </div>
               ))}

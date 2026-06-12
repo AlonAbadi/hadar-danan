@@ -28,7 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
   call_scheduled: "#E8B94A",
   accepted:       "#34A853",
   rejected:       "#EA4335",
-  not_a_fit:      "#9E9990",
+  not_a_fit:      "#AAB0BD",
 };
 
 function relativeTime(iso: string): string {
@@ -60,7 +60,7 @@ function storyScore(story: string): { score: number; label: string; color: strin
   if (hasAudience) score += 2;
   if (score >= 5) return { score, label: "מתאים מאוד", color: "#34A853" };
   if (score >= 3) return { score, label: "מעניין", color: "#E8B94A" };
-  return { score, label: "לא ברור", color: "#9E9990" };
+  return { score, label: "לא ברור", color: "#AAB0BD" };
 }
 
 export default function AtelierAdminPage() {
@@ -87,20 +87,20 @@ export default function AtelierAdminPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
         <div>
           <div style={{ fontSize: 26, fontWeight: 800, color: "#EDE9E1" }}>beegood atelier</div>
-          <div style={{ fontSize: 14, color: "#9E9990", marginTop: 4 }}>לידים להצטרפות לפלטפורמה</div>
+          <div style={{ fontSize: 14, color: "#AAB0BD", marginTop: 4 }}>לידים להצטרפות לפלטפורמה</div>
         </div>
         <div style={{ display: "flex", gap: 16 }}>
           <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 10, padding: "14px 20px", textAlign: "center" }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: "#E8B94A" }}>{applications.length}</div>
-            <div style={{ fontSize: 11, color: "#9E9990", marginTop: 2 }}>סה"כ לידים</div>
+            <div style={{ fontSize: 11, color: "#AAB0BD", marginTop: 2 }}>סה"כ לידים</div>
           </div>
           <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 10, padding: "14px 20px", textAlign: "center" }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: "#34A853" }}>{applications.filter(a => a.status === "accepted").length}</div>
-            <div style={{ fontSize: 11, color: "#9E9990", marginTop: 2 }}>התקבלו</div>
+            <div style={{ fontSize: 11, color: "#AAB0BD", marginTop: 2 }}>התקבלו</div>
           </div>
           <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 10, padding: "14px 20px", textAlign: "center" }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: "#4285F4" }}>{applications.filter(a => a.status === "new").length}</div>
-            <div style={{ fontSize: 11, color: "#9E9990", marginTop: 2 }}>חדשים</div>
+            <div style={{ fontSize: 11, color: "#AAB0BD", marginTop: 2 }}>חדשים</div>
           </div>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function AtelierAdminPage() {
             padding: "6px 16px", borderRadius: 9999, fontFamily: "inherit",
             border: `1px solid ${filterStatus === s ? "#C9964A" : "#2C323E"}`,
             background: filterStatus === s ? "rgba(201,150,74,0.12)" : "transparent",
-            color: filterStatus === s ? "#C9964A" : "#9E9990",
+            color: filterStatus === s ? "#C9964A" : "#AAB0BD",
             fontSize: 13, fontWeight: filterStatus === s ? 700 : 400, cursor: "pointer",
           }}>
             {s === "all" ? `הכל (${applications.length})` : `${STATUS_LABELS[s]} (${applications.filter(a => a.status === s).length})`}
@@ -122,9 +122,9 @@ export default function AtelierAdminPage() {
 
       {/* Cards grid */}
       {loading ? (
-        <div style={{ color: "#9E9990", fontSize: 14 }}>טוען...</div>
+        <div style={{ color: "#AAB0BD", fontSize: 14 }}>טוען...</div>
       ) : filtered.length === 0 ? (
-        <div style={{ color: "#9E9990", fontSize: 14, padding: 40, textAlign: "center" }}>אין לידים בסטטוס זה</div>
+        <div style={{ color: "#AAB0BD", fontSize: 14, padding: 40, textAlign: "center" }}>אין לידים בסטטוס זה</div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
           {filtered.map(app => {
@@ -155,18 +155,18 @@ export default function AtelierAdminPage() {
                     </div>
                     <div>
                       <div style={{ fontSize: 17, fontWeight: 800, color: "#EDE9E1" }}>{app.name}</div>
-                      <div style={{ fontSize: 12, color: "#C9964A", marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: "#E8B94A", marginTop: 2 }}>
                         {app.instagram.replace("https://www.instagram.com/", "@").replace("https://instagram.com/", "@").replace(/\/$/, "")}
                       </div>
-                      <div style={{ fontSize: 12, color: "#9E9990", marginTop: 1, direction: "ltr", textAlign: "right" }}>{app.phone}</div>
+                      <div style={{ fontSize: 12, color: "#AAB0BD", marginTop: 1, direction: "ltr", textAlign: "right" }}>{app.phone}</div>
                     </div>
                   </div>
                   {/* Status */}
                   <span style={{
                     padding: "3px 12px", borderRadius: 9999, fontSize: 11, fontWeight: 700,
-                    background: (STATUS_COLORS[app.status] ?? "#9E9990") + "22",
-                    color: STATUS_COLORS[app.status] ?? "#9E9990",
-                    border: `1px solid ${(STATUS_COLORS[app.status] ?? "#9E9990")}44`,
+                    background: (STATUS_COLORS[app.status] ?? "#AAB0BD") + "22",
+                    color: STATUS_COLORS[app.status] ?? "#AAB0BD",
+                    border: `1px solid ${(STATUS_COLORS[app.status] ?? "#AAB0BD")}44`,
                     whiteSpace: "nowrap",
                   }}>
                     {STATUS_LABELS[app.status] ?? app.status}
@@ -176,7 +176,7 @@ export default function AtelierAdminPage() {
                 {/* Story preview */}
                 <div style={{
                   background: "#1D2430", borderRadius: 8, padding: "12px 14px",
-                  fontSize: 13, color: "#9E9990", lineHeight: 1.65,
+                  fontSize: 13, color: "#AAB0BD", lineHeight: 1.65,
                   display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" as const,
                   overflow: "hidden",
                 }}>
@@ -187,7 +187,7 @@ export default function AtelierAdminPage() {
                 {app.source_utm && (
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {app.source_utm.utm_source && (
-                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 9999, background: "rgba(201,150,74,0.12)", color: "#C9964A", border: "1px solid rgba(201,150,74,0.25)" }}>
+                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 9999, background: "rgba(201,150,74,0.12)", color: "#E8B94A", border: "1px solid rgba(201,150,74,0.25)" }}>
                         {app.source_utm.utm_source}
                       </span>
                     )}
@@ -214,8 +214,8 @@ export default function AtelierAdminPage() {
                     <span style={{ fontSize: 12, color: fit.color, fontWeight: 700 }}>{fit.label}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 11, color: "#9E9990" }}>{relativeTime(app.created_at)}</span>
-                    <span style={{ fontSize: 12, color: "#C9964A", fontWeight: 600 }}>פתח ←</span>
+                    <span style={{ fontSize: 11, color: "#AAB0BD" }}>{relativeTime(app.created_at)}</span>
+                    <span style={{ fontSize: 12, color: "#E8B94A", fontWeight: 600 }}>פתח ←</span>
                   </div>
                 </div>
               </button>

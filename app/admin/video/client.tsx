@@ -5,7 +5,7 @@ import { PageHeader, KpiGrid, KpiCard, SectionCard, DataTable, Badge, PercentBar
 
 const TT = {
   contentStyle: { background: '#141820', border: '1px solid #2C323E', borderRadius: 8, fontSize: 12, color: '#EDE9E1' },
-  labelStyle: { color: '#9E9990', fontWeight: 600 },
+  labelStyle: { color: '#AAB0BD', fontWeight: 600 },
   cursor: { fill: 'rgba(201,150,74,0.06)' },
 };
 
@@ -30,9 +30,9 @@ export default function VideoClient({ vimeo, eventStats }: { vimeo: any; eventSt
 
   const milestoneData = [
     { label: 'התחיל', pct: '0%',   count: eventStats.uniqueViewers,    color: '#4285F4' },
-    { label: '25%',   pct: '25%',  count: eventStats.dropOff[25] ?? 0, color: '#C9964A' },
-    { label: '50%',   pct: '50%',  count: eventStats.dropOff[50] ?? 0, color: '#C9964A' },
-    { label: '75%',   pct: '75%',  count: eventStats.dropOff[75] ?? 0, color: '#C9964A' },
+    { label: '25%',   pct: '25%',  count: eventStats.dropOff[25] ?? 0, color: '#E8B94A' },
+    { label: '50%',   pct: '50%',  count: eventStats.dropOff[50] ?? 0, color: '#E8B94A' },
+    { label: '75%',   pct: '75%',  count: eventStats.dropOff[75] ?? 0, color: '#E8B94A' },
     { label: 'סיים',  pct: '100%', count: eventStats.dropOff[100] ?? 0, color: '#34A853' },
   ];
 
@@ -70,8 +70,8 @@ export default function VideoClient({ vimeo, eventStats }: { vimeo: any; eventSt
             <>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={milestoneData} margin={{ right: 8, left: 0 }}>
-                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9E9990' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#9E9990' }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#AAB0BD' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#AAB0BD' }} axisLine={false} tickLine={false} />
                   <Tooltip {...TT} formatter={(v: any) => [`${v} צופים`, 'הגיעו לנקודה זו']} />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                     {milestoneData.map((d, i) => <Cell key={i} fill={d.color} />)}
@@ -81,7 +81,7 @@ export default function VideoClient({ vimeo, eventStats }: { vimeo: any; eventSt
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 {milestoneData.map((d) => (
                   <div key={d.label} style={{ flex: 1, textAlign: 'center' }}>
-                    <div style={{ fontSize: 11, color: '#9E9990' }}>{d.label}</div>
+                    <div style={{ fontSize: 11, color: '#AAB0BD' }}>{d.label}</div>
                     <div style={{ fontSize: 15, fontWeight: 800, color: d.color }}>{retention(d.count)}%</div>
                   </div>
                 ))}
@@ -102,8 +102,8 @@ export default function VideoClient({ vimeo, eventStats }: { vimeo: any; eventSt
                 }))}
                 margin={{ right: 8, left: 0 }}
               >
-                <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#9E9990' }} axisLine={false} tickLine={false} interval={3} />
-                <YAxis tick={{ fontSize: 11, fill: '#9E9990' }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#AAB0BD' }} axisLine={false} tickLine={false} interval={3} />
+                <YAxis tick={{ fontSize: 11, fill: '#AAB0BD' }} axisLine={false} tickLine={false} />
                 <Tooltip {...TT} formatter={(v: any) => [`${v} צופים`, '']} />
                 <Bar dataKey="צופים" fill="#C9964A" radius={[2, 2, 0, 0]} />
               </BarChart>
@@ -129,7 +129,7 @@ export default function VideoClient({ vimeo, eventStats }: { vimeo: any; eventSt
               milestone: <span style={{ fontWeight: 700 }}>{d.label} ({d.pct})</span>,
               viewers:   <span style={{ fontWeight: 700 }}>{d.count.toLocaleString()}</span>,
               retention: <Badge variant={ret >= 60 ? 'success' : ret >= 30 ? 'gold' : 'danger'}>{ret}%</Badge>,
-              dropped:   <span style={{ color: dropped > 0 ? '#EA4335' : '#9E9990' }}>{i === 0 ? '—' : `-${dropped.toLocaleString()}`}</span>,
+              dropped:   <span style={{ color: dropped > 0 ? '#EA4335' : '#AAB0BD' }}>{i === 0 ? '—' : `-${dropped.toLocaleString()}`}</span>,
               bar:       <PercentBar value={ret} color={d.color} />,
             };
           })}
@@ -143,11 +143,11 @@ export default function VideoClient({ vimeo, eventStats }: { vimeo: any; eventSt
               padding: 16, background: item.bg, borderRadius: 10,
               border: `1px solid ${item.border}`, textAlign: 'center',
             }}>
-              <div style={{ fontSize: 11, color: '#9E9990', marginBottom: 8 }}>{item.label}</div>
+              <div style={{ fontSize: 11, color: '#AAB0BD', marginBottom: 8 }}>{item.label}</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: item.color }}>
                 {Math.max(0, item.count).toLocaleString()}
               </div>
-              <div style={{ fontSize: 10, color: '#9E9990', marginTop: 4 }}>צופים</div>
+              <div style={{ fontSize: 10, color: '#AAB0BD', marginTop: 4 }}>צופים</div>
             </div>
           ))}
         </div>

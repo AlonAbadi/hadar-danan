@@ -156,7 +156,7 @@ export default async function SalesDashboardPage() {
         }
         .kpi-label {
           font-size: 12px;
-          color: #9E9990;
+          color: #AAB0BD;
         }
 
         /* Chart section */
@@ -183,7 +183,7 @@ export default async function SalesDashboardPage() {
         .purchases-table th {
           text-align: right;
           padding: 10px 14px;
-          color: #9E9990;
+          color: #AAB0BD;
           font-weight: 600;
           font-size: 12px;
           border-bottom: 1px solid #2C323E;
@@ -198,10 +198,10 @@ export default async function SalesDashboardPage() {
         }
         .td-amount {
           font-weight: 700;
-          color: #C9964A;
+          color: #E8B94A;
         }
         .td-muted {
-          color: #9E9990;
+          color: #AAB0BD;
         }
 
         @media (max-width: 900px) {
@@ -232,7 +232,7 @@ export default async function SalesDashboardPage() {
           {chartData.length > 0 ? (
             <RevenueBarChart data={chartData} />
           ) : (
-            <p style={{ color: '#9E9990', fontSize: 13, textAlign: 'center', padding: '40px 0' }}>
+            <p style={{ color: '#AAB0BD', fontSize: 13, textAlign: 'center', padding: '40px 0' }}>
               אין נתונים לחודש זה
             </p>
           )}
@@ -263,7 +263,7 @@ export default async function SalesDashboardPage() {
               </tbody>
             </table>
           ) : (
-            <p style={{ color: '#9E9990', fontSize: 13, textAlign: 'center', padding: '40px 0' }}>
+            <p style={{ color: '#AAB0BD', fontSize: 13, textAlign: 'center', padding: '40px 0' }}>
               אין רכישות עדיין
             </p>
           )}

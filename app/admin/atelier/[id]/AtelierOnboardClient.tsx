@@ -209,7 +209,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
   const s = {
     page: { minHeight: "100vh", background: "#0D1018", padding: "32px", fontFamily: "var(--font-assistant), Assistant, sans-serif" } as React.CSSProperties,
     card: { background: "#141820", border: "1px solid #2C323E", borderRadius: 12, padding: 28, marginBottom: 20 } as React.CSSProperties,
-    label: { fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 6 },
+    label: { fontSize: 11, fontWeight: 700, color: "#AAB0BD", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 6 },
     input: { width: "100%", background: "#1D2430", border: "1px solid #2C323E", borderRadius: 8, padding: "10px 14px", color: "#EDE9E1", fontSize: 14, fontFamily: "inherit", outline: "none" } as React.CSSProperties,
     textarea: { width: "100%", background: "#1D2430", border: "1px solid #2C323E", borderRadius: 8, padding: "10px 14px", color: "#EDE9E1", fontSize: 14, fontFamily: "inherit", outline: "none", resize: "vertical" as const, minHeight: 80 } as React.CSSProperties,
     btn: { padding: "12px 28px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: 14 } as React.CSSProperties,
@@ -437,15 +437,15 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
 
   return (
     <div dir="rtl" style={s.page}>
-      <button style={{ color: "#9E9990", fontSize: 13, cursor: "pointer", marginBottom: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", fontFamily: "inherit" }} onClick={() => window.history.back()}>
+      <button style={{ color: "#AAB0BD", fontSize: 13, cursor: "pointer", marginBottom: 24, display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", fontFamily: "inherit" }} onClick={() => window.history.back()}>
         ← חזרה לרשימה
       </button>
 
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 24, fontWeight: 800, color: "#EDE9E1" }}>{app.name}</div>
-        <div style={{ fontSize: 13, color: "#9E9990", marginTop: 4, display: "flex", gap: 12, alignItems: "center" }}>
-          <a href={app.instagram} target="_blank" rel="noreferrer" style={{ color: "#C9964A", textDecoration: "none", fontWeight: 600 }}>
+        <div style={{ fontSize: 13, color: "#AAB0BD", marginTop: 4, display: "flex", gap: 12, alignItems: "center" }}>
+          <a href={app.instagram} target="_blank" rel="noreferrer" style={{ color: "#E8B94A", textDecoration: "none", fontWeight: 600 }}>
             {app.instagram.replace("https://www.instagram.com/", "@").replace("https://instagram.com/", "@").replace(/\/$/, "")} ↗
           </a>
           <span style={{ color: "#2C323E" }}>·</span>
@@ -454,15 +454,15 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
         {/* UTM / marketing source */}
         {app.source_utm && Object.keys(app.source_utm).length > 0 && (
           <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-            <span style={{ fontSize: 11, color: "#9E9990", fontWeight: 600 }}>מקור:</span>
+            <span style={{ fontSize: 11, color: "#AAB0BD", fontWeight: 600 }}>מקור:</span>
             {[
-              { key: "utm_source",   label: "מקור",        color: "#C9964A" },
+              { key: "utm_source",   label: "מקור",        color: "#E8B94A" },
               { key: "utm_medium",   label: "מדיום",        color: "#4285F4" },
               { key: "utm_campaign", label: "קמפיין",       color: "#4285F4" },
               { key: "utm_adset",    label: "אד-סט",        color: "#E8B94A" },
               { key: "utm_ad",       label: "אד",           color: "#E8B94A" },
-              { key: "utm_content",  label: "תוכן",         color: "#9E9990" },
-              { key: "click_id",     label: "click_id",     color: "#9E9990" },
+              { key: "utm_content",  label: "תוכן",         color: "#AAB0BD" },
+              { key: "click_id",     label: "click_id",     color: "#AAB0BD" },
             ].map(({ key, label, color }) =>
               app.source_utm[key] ? (
                 <span key={key} style={{ fontSize: 11, padding: "2px 9px", borderRadius: 9999, background: color + "15", color, border: `1px solid ${color}30` }}>
@@ -481,7 +481,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{
               fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const,
-              color: pipelineStatus === "error" ? "#EA4335" : pipelineStatus === "deployed" || pipelineStatus === "live" ? "#34A853" : pipelineStatus === "awaiting_approval" ? "#E8B94A" : "#9E9990",
+              color: pipelineStatus === "error" ? "#EA4335" : pipelineStatus === "deployed" || pipelineStatus === "live" ? "#34A853" : pipelineStatus === "awaiting_approval" ? "#E8B94A" : "#AAB0BD",
               background: pipelineStatus === "error" ? "rgba(234,67,53,0.1)" : pipelineStatus === "deployed" || pipelineStatus === "live" ? "rgba(52,168,83,0.1)" : pipelineStatus === "awaiting_approval" ? "rgba(232,185,74,0.1)" : "#1D2430",
               padding: "3px 10px", borderRadius: 20,
             }}>{pipelineStatus}</span>
@@ -492,7 +492,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
               style={{
                 ...s.btn,
                 background: orchestrating ? "#2C323E" : "linear-gradient(135deg, #9B59B6, #7D3C98)",
-                color: orchestrating ? "#9E9990" : "#fff",
+                color: orchestrating ? "#AAB0BD" : "#fff",
                 cursor: orchestrating ? "not-allowed" : "pointer",
                 padding: "10px 22px",
                 fontSize: 13,
@@ -561,7 +561,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
         {orchestrationLog.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 180, overflowY: "auto" }}>
             {[...orchestrationLog].reverse().map((entry, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, fontSize: 12, color: "#9E9990", alignItems: "flex-start" }}>
+              <div key={i} style={{ display: "flex", gap: 10, fontSize: 12, color: "#AAB0BD", alignItems: "flex-start" }}>
                 <span style={{ color: "#2C323E", whiteSpace: "nowrap" as const, flexShrink: 0 }}>
                   {new Date(entry.ts).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
                 </span>
@@ -569,7 +569,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   color: entry.status === "error" ? "#EA4335" : entry.status === "deployed" || entry.status === "live" ? "#34A853" : "#C9964A",
                   minWidth: 80, flexShrink: 0,
                 }}>{entry.status}</span>
-                <span style={{ color: "#9E9990" }}>{entry.msg}</span>
+                <span style={{ color: "#AAB0BD" }}>{entry.msg}</span>
               </div>
             ))}
           </div>
@@ -602,7 +602,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
               ...s.btn,
               marginTop: 22,
               background: !clientEmail.trim() || sendingOnboarding ? "#2C323E" : "linear-gradient(135deg, #E8B94A, #C9964A)",
-              color: !clientEmail.trim() || sendingOnboarding ? "#9E9990" : "#0D1018",
+              color: !clientEmail.trim() || sendingOnboarding ? "#AAB0BD" : "#0D1018",
               cursor: !clientEmail.trim() ? "not-allowed" : "pointer",
               whiteSpace: "nowrap",
             }}
@@ -612,7 +612,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
         </div>
         {onboardingSentError && <div style={{ color: "#EA4335", fontSize: 13, marginTop: 8 }}>{onboardingSentError}</div>}
         {onboardingSent && (
-          <div style={{ fontSize: 12, color: "#9E9990", marginTop: 8 }}>
+          <div style={{ fontSize: 12, color: "#AAB0BD", marginTop: 8 }}>
             הלקוחה תקבל מייל עם לינק לטופס שתמלא בעצמה
           </div>
         )}
@@ -623,17 +623,17 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#EDE9E1" }}>ניתוח ליד — Claude</div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {analyzing && <div style={{ fontSize: 12, color: "#9E9990" }}>⏳ מנתח...</div>}
-            {!analyzing && <button type="button" onClick={runAnalysis} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 12, padding: 0 }} title="הרץ מחדש">↻ רענן</button>}
+            {analyzing && <div style={{ fontSize: 12, color: "#AAB0BD" }}>⏳ מנתח...</div>}
+            {!analyzing && <button type="button" onClick={runAnalysis} style={{ background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 12, padding: 0 }} title="הרץ מחדש">↻ רענן</button>}
           </div>
           {analysis && (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{
-                width: 36, height: 36, borderRadius: "50%", border: `3px solid ${analysis.fit_score >= 7 ? "#34A853" : analysis.fit_score >= 5 ? "#E8B94A" : "#9E9990"}`,
+                width: 36, height: 36, borderRadius: "50%", border: `3px solid ${analysis.fit_score >= 7 ? "#34A853" : analysis.fit_score >= 5 ? "#E8B94A" : "#AAB0BD"}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 14, fontWeight: 800, color: "#EDE9E1",
               }}>{analysis.fit_score}</div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: analysis.fit_score >= 7 ? "#34A853" : analysis.fit_score >= 5 ? "#E8B94A" : "#9E9990" }}>{analysis.fit_label}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: analysis.fit_score >= 7 ? "#34A853" : analysis.fit_score >= 5 ? "#E8B94A" : "#AAB0BD" }}>{analysis.fit_label}</span>
             </div>
           )}
         </div>
@@ -645,17 +645,17 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>נישה משוערת</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#AAB0BD", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>נישה משוערת</div>
                 <div style={{ fontSize: 14, color: "#EDE9E1" }}>{analysis.niche_guess}</div>
               </div>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>קהל משוער</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#AAB0BD", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>קהל משוער</div>
                 <div style={{ fontSize: 14, color: "#EDE9E1" }}>{analysis.audience_guess}</div>
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>חוזקות</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#AAB0BD", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>חוזקות</div>
                 {analysis.strengths.map((s, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13, color: "#EDE9E1" }}>
                     <span style={{ color: "#34A853" }}>✓</span> {s}
@@ -663,10 +663,10 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 ))}
               </div>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>שאלות לשיחת גילוי</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#AAB0BD", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 8 }}>שאלות לשיחת גילוי</div>
                 {analysis.questions.map((q, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, fontSize: 13, color: "#EDE9E1" }}>
-                    <span style={{ color: "#C9964A" }}>{i + 1}.</span> {q}
+                    <span style={{ color: "#E8B94A" }}>{i + 1}.</span> {q}
                   </div>
                 ))}
               </div>
@@ -703,7 +703,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   padding: "8px 16px", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "inherit",
                   background: businessType === t ? "rgba(201,150,74,0.15)" : "#1D2430",
                   border: `1px solid ${businessType === t ? "#C9964A" : "#2C323E"}`,
-                  color: businessType === t ? "#C9964A" : "#9E9990", fontWeight: businessType === t ? 700 : 400,
+                  color: businessType === t ? "#C9964A" : "#AAB0BD", fontWeight: businessType === t ? 700 : 400,
                 }}>{t}</button>
               ))}
             </div>
@@ -730,11 +730,11 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 <button type="button" onClick={() => setHeroImageUrl("")} style={{ position: "absolute", top: -8, left: -8, background: "#EA4335", border: "none", borderRadius: "50%", width: 20, height: 20, color: "#fff", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
               </div>
             ) : (
-              <div style={{ width: 120, height: 80, borderRadius: 8, border: "2px dashed #2C323E", display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 12 }}>
+              <div style={{ width: 120, height: 80, borderRadius: 8, border: "2px dashed #2C323E", display: "flex", alignItems: "center", justifyContent: "center", color: "#AAB0BD", fontSize: 12 }}>
                 {uploadingHero ? "⏳" : "אין תמונה"}
               </div>
             )}
-            <label style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990", cursor: "pointer", padding: "10px 18px" }}>
+            <label style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#AAB0BD", cursor: "pointer", padding: "10px 18px" }}>
               {uploadingHero ? "מעלה..." : "בחר תמונה"}
               <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleHeroUpload} disabled={uploadingHero} />
             </label>
@@ -744,7 +744,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
         {/* OG / Cover image */}
         <div style={{ marginBottom: 24 }}>
           <div style={s.label}>תמונת כריכה / OG (1200×630)</div>
-          <div style={{ fontSize: 12, color: "#9E9990", marginBottom: 8 }}>משמשת כתמונה ב-WhatsApp / פייסבוק כשמשתפים את האתר</div>
+          <div style={{ fontSize: 12, color: "#AAB0BD", marginBottom: 8 }}>משמשת כתמונה ב-WhatsApp / פייסבוק כשמשתפים את האתר</div>
           <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 10 }}>
             {ogImageUrl ? (
               <div style={{ position: "relative" }}>
@@ -753,11 +753,11 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 <button type="button" onClick={() => setOgImageUrl("")} style={{ position: "absolute", top: -8, left: -8, background: "#EA4335", border: "none", borderRadius: "50%", width: 20, height: 20, color: "#fff", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
               </div>
             ) : (
-              <div style={{ width: 160, height: 80, borderRadius: 8, border: "2px dashed #2C323E", display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 12 }}>
+              <div style={{ width: 160, height: 80, borderRadius: 8, border: "2px dashed #2C323E", display: "flex", alignItems: "center", justifyContent: "center", color: "#AAB0BD", fontSize: 12 }}>
                 {uploadingOgImage ? "⏳" : "אין תמונה"}
               </div>
             )}
-            <label style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990", cursor: "pointer", padding: "10px 18px" }}>
+            <label style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#AAB0BD", cursor: "pointer", padding: "10px 18px" }}>
               {uploadingOgImage ? "מעלה..." : "בחר תמונה"}
               <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleOgImageUpload} disabled={uploadingOgImage} />
             </label>
@@ -772,13 +772,13 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
               <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1D2430", borderRadius: 8, padding: "10px 14px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 18 }}>{doc.type === "pdf" ? "📄" : "📝"}</span>
-                  <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#C9964A", textDecoration: "none" }}>{doc.name}</a>
+                  <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#E8B94A", textDecoration: "none" }}>{doc.name}</a>
                 </div>
-                <button type="button" onClick={() => setDocuments(documents.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 16 }}>×</button>
+                <button type="button" onClick={() => setDocuments(documents.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 16 }}>×</button>
               </div>
             ))}
           </div>
-          <label style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#9E9990", padding: "8px 16px", fontSize: 13, cursor: "pointer", display: "inline-block" }}>
+          <label style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#AAB0BD", padding: "8px 16px", fontSize: 13, cursor: "pointer", display: "inline-block" }}>
             {uploadingDoc ? "⏳ מעלה..." : "+ הוסף קובץ"}
             <input type="file" accept=".pdf,.doc,.docx" style={{ display: "none" }} onChange={handleDocUpload} disabled={uploadingDoc} />
           </label>
@@ -791,13 +791,13 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
           <div style={s.section}>מוצרים פיזיים (1–3)</div>
           {physicalProducts.length < 3 && (
             <button type="button" onClick={() => setPhysicalProducts([...physicalProducts, { name: "", price: 0, description: "", image_url: "" }])}
-              style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#9E9990", padding: "8px 16px", fontSize: 13 }}>
+              style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#AAB0BD", padding: "8px 16px", fontSize: 13 }}>
               + הוסף מוצר
             </button>
           )}
         </div>
         {physicalProducts.length === 0 && (
-          <div style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0" }}>בושם, תכשיט, מוצר ברנד של המשפיענית — עד 3 מוצרים</div>
+          <div style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0" }}>בושם, תכשיט, מוצר ברנד של המשפיענית — עד 3 מוצרים</div>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {physicalProducts.map((p, i) => (
@@ -808,7 +808,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.image_url} alt="" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #2C323E" }} />
                 ) : (
-                  <div style={{ width: 80, height: 80, borderRadius: 8, border: "2px dashed #2C323E", display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 11, textAlign: "center" }}>תמונה</div>
+                  <div style={{ width: 80, height: 80, borderRadius: 8, border: "2px dashed #2C323E", display: "flex", alignItems: "center", justifyContent: "center", color: "#AAB0BD", fontSize: 11, textAlign: "center" }}>תמונה</div>
                 )}
                 <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { if (e.target.files?.[0]) handlePhysicalProductImageUpload(i, e.target.files[0]); }} />
               </label>
@@ -820,7 +820,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <input style={{ ...s.input, flex: 1 }} value={p.description} onChange={e => setPhysicalProducts(physicalProducts.map((x, j) => j === i ? { ...x, description: e.target.value } : x))} placeholder="תיאור קצר — רכיבים, ייחוד..." />
-                  <button type="button" onClick={() => setPhysicalProducts(physicalProducts.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 18, padding: "0 8px" }}>×</button>
+                  <button type="button" onClick={() => setPhysicalProducts(physicalProducts.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 18, padding: "0 8px" }}>×</button>
                 </div>
               </div>
             </div>
@@ -852,11 +852,11 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={s.label}>מודולים פעילים</div>
-            <span style={{ fontSize: 12, color: "#9E9990" }}>{modules.length} נבחרו</span>
+            <span style={{ fontSize: 12, color: "#AAB0BD" }}>{modules.length} נבחרו</span>
           </div>
           {MODULE_CATEGORIES.map(cat => (
             <div key={cat} style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#9E9990", marginBottom: 8, fontWeight: 700, letterSpacing: "0.05em" }}>{cat}</div>
+              <div style={{ fontSize: 11, color: "#AAB0BD", marginBottom: 8, fontWeight: 700, letterSpacing: "0.05em" }}>{cat}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {PRESET_MODULES.filter(m => m.category === cat).map(mod => {
                   const on = modules.includes(mod.id);
@@ -871,7 +871,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                         fontFamily: "inherit", transition: "all 0.15s",
                         background: on ? "rgba(201,150,74,0.12)" : "#1D2430",
                         border: `1px solid ${on ? "#C9964A" : "#2C323E"}`,
-                        color: on ? "#C9964A" : "#9E9990",
+                        color: on ? "#C9964A" : "#AAB0BD",
                         fontWeight: on ? 700 : 400,
                         display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2, textAlign: "right",
                       }}
@@ -910,7 +910,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                     fontFamily: "inherit", transition: "all 0.15s",
                     background: isSelected ? "rgba(201,150,74,0.15)" : "#1D2430",
                     border: `1px solid ${isSelected ? "#C9964A" : "#2C323E"}`,
-                    color: isSelected ? "#C9964A" : "#9E9990",
+                    color: isSelected ? "#C9964A" : "#AAB0BD",
                     fontWeight: isSelected ? 700 : 400,
                   }}
                 >
@@ -929,13 +929,13 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 120px 36px", gap: 8, alignItems: "center" }}>
                   <input style={s.input} value={p.name} onChange={e => setProducts(products.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} />
                   <input style={{ ...s.input, direction: "ltr" }} type="number" value={p.price || ""} onChange={e => setProducts(products.map((x, j) => j === i ? { ...x, price: Number(e.target.value) } : x))} placeholder="₪" />
-                  <button type="button" onClick={() => setProducts(products.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 16, padding: 0 }}>×</button>
+                  <button type="button" onClick={() => setProducts(products.filter((_, j) => j !== i))} style={{ background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 16, padding: 0 }}>×</button>
                 </div>
               ))}
             </div>
           )}
 
-          <button type="button" onClick={() => setProducts([...products.filter(p => p.name), { name: "", price: 0 }])} style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#9E9990", padding: "7px 14px", fontSize: 13 }}>+ הוסף מוצר ידני</button>
+          <button type="button" onClick={() => setProducts([...products.filter(p => p.name), { name: "", price: 0 }])} style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#AAB0BD", padding: "7px 14px", fontSize: 13 }}>+ הוסף מוצר ידני</button>
         </div>
 
         {/* Testimonials */}
@@ -948,7 +948,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 <textarea style={{ ...s.textarea, background: "transparent", border: "none", padding: 0, minHeight: 60 }} value={t.quote} onChange={e => setTestimonials(testimonials.map((x, j) => j === i ? { ...x, quote: e.target.value } : x))} placeholder="הציטוט שלה..." />
               </div>
             ))}
-            <button onClick={() => setTestimonials([...testimonials, { name: "", quote: "" }])} style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#9E9990", padding: "8px 16px" }}>+ עדות נוספת</button>
+            <button onClick={() => setTestimonials([...testimonials, { name: "", quote: "" }])} style={{ ...s.btn, background: "transparent", border: "1px dashed #2C323E", color: "#AAB0BD", padding: "8px 16px" }}>+ עדות נוספת</button>
           </div>
         </div>
 
@@ -987,7 +987,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   padding: "14px",
                   fontSize: 15,
                   background: orchestrating ? "#2C323E" : "linear-gradient(135deg, #9B59B6, #7D3C98)",
-                  color: orchestrating ? "#9E9990" : "#fff",
+                  color: orchestrating ? "#AAB0BD" : "#fff",
                   cursor: orchestrating ? "not-allowed" : "pointer",
                 }}
               >
@@ -1003,12 +1003,12 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
               <div style={{ background: "#1D2430", borderRadius: 10, padding: 20 }}>
                 <div style={s.label}>דף הבית — Hero</div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: "#EDE9E1", margin: "12px 0 8px" }}>{generated.hero.headline}</div>
-                <div style={{ fontSize: 14, color: "#9E9990", lineHeight: 1.6 }}>{generated.hero.sub}</div>
+                <div style={{ fontSize: 14, color: "#AAB0BD", lineHeight: 1.6 }}>{generated.hero.sub}</div>
               </div>
               <div style={{ background: "#1D2430", borderRadius: 10, padding: 20 }}>
                 <div style={s.label}>עמוד About</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#EDE9E1", margin: "12px 0 8px" }}>{generated.about.title}</div>
-                <div style={{ fontSize: 14, color: "#9E9990", lineHeight: 1.6 }}>{generated.about.body}</div>
+                <div style={{ fontSize: 14, color: "#AAB0BD", lineHeight: 1.6 }}>{generated.about.body}</div>
               </div>
             </div>
 
@@ -1021,9 +1021,9 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   { label: "עגלה נטושה", data: generated.emails.cart_abandon },
                 ].map((e, i) => (
                   <div key={i} style={{ background: "#1D2430", borderRadius: 8, padding: 16 }}>
-                    <div style={{ fontSize: 12, color: "#C9964A", fontWeight: 700, marginBottom: 6 }}>{e.label}</div>
+                    <div style={{ fontSize: 12, color: "#E8B94A", fontWeight: 700, marginBottom: 6 }}>{e.label}</div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: "#EDE9E1", marginBottom: 4 }}>נושא: {e.data.subject}</div>
-                    <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.6 }}>{e.data.preview}</div>
+                    <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.6 }}>{e.data.preview}</div>
                   </div>
                 ))}
               </div>
@@ -1036,7 +1036,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   <div key={i} style={{ background: "#1D2430", borderRadius: 8, padding: 14 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: "#EDE9E1", marginBottom: 8 }}>{i + 1}. {q.question}</div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {q.options.map((o, j) => <span key={j} style={{ padding: "4px 12px", borderRadius: 20, background: "#2C323E", fontSize: 12, color: "#9E9990" }}>{o}</span>)}
+                      {q.options.map((o, j) => <span key={j} style={{ padding: "4px 12px", borderRadius: 20, background: "#2C323E", fontSize: 12, color: "#AAB0BD" }}>{o}</span>)}
                     </div>
                   </div>
                 ))}
@@ -1048,8 +1048,8 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
               <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
                 {Object.values(generated.social_proof).map((stat: { number: string; label: string }, i) => (
                   <div key={i} style={{ background: "#1D2430", borderRadius: 8, padding: "14px 20px", textAlign: "center" }}>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: "#C9964A" }}>{stat.number}</div>
-                    <div style={{ fontSize: 12, color: "#9E9990" }}>{stat.label}</div>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: "#E8B94A" }}>{stat.number}</div>
+                    <div style={{ fontSize: 12, color: "#AAB0BD" }}>{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -1072,7 +1072,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
               ].map((step, i) => (
                 <div key={i} style={{ display: "flex", gap: 10, fontSize: 13, alignItems: "flex-start" }}>
                   <span style={{ color: step.auto ? "#34A853" : "#C9964A", fontWeight: 700, minWidth: 20 }}>{i + 1}.</span>
-                  <span style={{ color: step.auto ? "#34A853" : "#9E9990" }}>{step.text}</span>
+                  <span style={{ color: step.auto ? "#34A853" : "#AAB0BD" }}>{step.text}</span>
                 </div>
               ))}
             </div>
@@ -1083,7 +1083,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={s.section}>צור lib/client.ts</div>
               {!selectedPalette && (
-                <div style={{ fontSize: 12, color: "#9E9990" }}>בחר פלטת צבעים למעלה כדי להמשיך</div>
+                <div style={{ fontSize: 12, color: "#AAB0BD" }}>בחר פלטת צבעים למעלה כדי להמשיך</div>
               )}
             </div>
 
@@ -1093,7 +1093,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
               style={{
                 ...s.btn,
                 background: !selectedPalette ? "#2C323E" : "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-                color: !selectedPalette ? "#9E9990" : "#0D1018",
+                color: !selectedPalette ? "#AAB0BD" : "#0D1018",
                 cursor: !selectedPalette ? "not-allowed" : "pointer",
                 width: "100%",
                 fontSize: 16,
@@ -1138,7 +1138,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                 </pre>
                 <button
                   onClick={() => { navigator.clipboard.writeText(clientCode); }}
-                  style={{ ...s.btn, background: "#1D2430", color: "#9E9990", padding: "8px 20px", fontSize: 12, marginTop: 10, border: "1px solid #2C323E" }}
+                  style={{ ...s.btn, background: "#1D2430", color: "#AAB0BD", padding: "8px 20px", fontSize: 12, marginTop: 10, border: "1px solid #2C323E" }}
                 >
                   העתק ללוח
                 </button>
@@ -1178,7 +1178,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                     dir="ltr"
                   />
                 </div>
-                <div style={{ fontSize: 11, color: "#9E9990", marginTop: 5 }}>
+                <div style={{ fontSize: 11, color: "#AAB0BD", marginTop: 5 }}>
                   האתר יהיה זמין ב־{deploySlug || "client-name"}.vercel.app
                 </div>
               </div>
@@ -1190,7 +1190,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   background: deploying || !deploySlug.trim()
                     ? "#2C323E"
                     : "linear-gradient(135deg, #4285F4, #2B6AE0)",
-                  color: deploying || !deploySlug.trim() ? "#9E9990" : "#fff",
+                  color: deploying || !deploySlug.trim() ? "#AAB0BD" : "#fff",
                   cursor: !deploySlug.trim() ? "not-allowed" : "pointer",
                   whiteSpace: "nowrap",
                   paddingLeft: 28,
@@ -1206,20 +1206,20 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ background: "#1D2430", borderRadius: 8, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 12, color: "#9E9990", marginBottom: 4 }}>האתר יהיה חי תוך ~3 דקות</div>
+                  <div style={{ fontSize: 12, color: "#AAB0BD", marginBottom: 4 }}>האתר יהיה חי תוך ~3 דקות</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#34A853", direction: "ltr" }}>{deployUrl}</div>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button
                     onClick={() => navigator.clipboard.writeText(deployUrl)}
-                    style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#9E9990", padding: "8px 14px", fontSize: 12 }}
+                    style={{ ...s.btn, background: "#1D2430", border: "1px solid #2C323E", color: "#AAB0BD", padding: "8px 14px", fontSize: 12 }}
                   >
                     העתק
                   </button>
                   <button
                     onClick={handleDeploy}
                     disabled={deploying}
-                    style={{ ...s.btn, background: deploying ? "#2C323E" : "linear-gradient(135deg, #4285F4, #2B6AE0)", color: deploying ? "#9E9990" : "#fff", padding: "8px 14px", fontSize: 12, cursor: deploying ? "not-allowed" : "pointer" }}
+                    style={{ ...s.btn, background: deploying ? "#2C323E" : "linear-gradient(135deg, #4285F4, #2B6AE0)", color: deploying ? "#AAB0BD" : "#fff", padding: "8px 14px", fontSize: 12, cursor: deploying ? "not-allowed" : "pointer" }}
                   >
                     {deploying ? "⏳..." : "🔄 פרסם מחדש"}
                   </button>
@@ -1233,7 +1233,7 @@ export function AtelierOnboardClient({ app }: { app: Record<string, any> }) {
                   </a>
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: "#9E9990", lineHeight: 1.6 }}>
+              <div style={{ fontSize: 12, color: "#AAB0BD", lineHeight: 1.6 }}>
                 <strong style={{ color: "#E8B94A" }}>Preview mode:</strong> Supabase, Cardcom ו-Resend מחוברים לסטאבים.
                 כדי להעביר ללייב — חבר Supabase אמיתי, הגדר Cardcom terminal, ורשום את הדומיין.
               </div>

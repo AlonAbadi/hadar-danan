@@ -50,7 +50,7 @@ const C = {
   card:  "#141820",
   cardSoft: "#1D2430",
   fg:    "#EDE9E1",
-  muted: "#9E9990",
+  muted: "#AAB0BD",
   gold:  "#E8B94A",
   goldM: "#C9964A",
   line:  "#2C323E",

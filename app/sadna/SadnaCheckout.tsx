@@ -88,7 +88,7 @@ export function SadnaCheckout() {
       <button type="submit" style={btnStyle} disabled={loading}>
         {loading ? "מעביר לתשלום..." : "לתשלום מאובטח ←"}
       </button>
-      <p style={{ fontSize: 12, color: "#9E9990", textAlign: "center", margin: 0 }}>
+      <p style={{ fontSize: 12, color: "#AAB0BD", textAlign: "center", margin: 0 }}>
         ₪500 · תשלום מאובטח דרך Cardcom
       </p>
     </form>

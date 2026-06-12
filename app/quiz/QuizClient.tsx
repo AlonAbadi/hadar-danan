@@ -237,7 +237,7 @@ const C = {
   quizCard:  "#191F2B",
   quizBorder: "#2C323E",
   quizText:  "#EDE9E1",
-  quizMuted: "#9E9990",
+  quizMuted: "#AAB0BD",
 };
 
 // ── Types ─────────────────────────────────────────────────────────

@@ -54,7 +54,7 @@ export function NotesSection({
   return (
     <div style={{ background: "#141820", border: "1px solid #2C323E", borderRadius: 12, padding: "20px 24px" }}>
       <div style={{
-        fontSize: 12, fontWeight: 700, color: "#9E9990",
+        fontSize: 12, fontWeight: 700, color: "#AAB0BD",
         textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16,
       }}>
         הערות ({notes.length})
@@ -91,7 +91,7 @@ export function NotesSection({
 
       {/* Notes list */}
       {notes.length === 0 ? (
-        <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0" }}>
+        <p style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0" }}>
           אין הערות עדיין
         </p>
       ) : (
@@ -108,10 +108,10 @@ export function NotesSection({
                 display: "flex", justifyContent: "space-between",
                 alignItems: "center", marginBottom: 8,
               }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#C9964A" }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#E8B94A" }}>
                   {note.author}
                 </span>
-                <span style={{ fontSize: 11, color: "#9E9990" }}>
+                <span style={{ fontSize: 11, color: "#AAB0BD" }}>
                   {relativeTime(note.created_at)}
                 </span>
               </div>

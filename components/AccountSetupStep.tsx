@@ -100,7 +100,7 @@ export function AccountSetupStep({ email, redirectTo }: Props) {
         <div style={{ fontSize: 16, fontWeight: 800, color: "#EDE9E1", marginBottom: 4 }}>
           צעד אחרון — הגדר גישה לתוכן
         </div>
-        <div style={{ fontSize: 13, color: "#9E9990" }}>
+        <div style={{ fontSize: 13, color: "#AAB0BD" }}>
           בחר איך להיכנס בפעם הבאה מכל מכשיר
         </div>
       </div>
@@ -136,7 +136,7 @@ export function AccountSetupStep({ email, redirectTo }: Props) {
 
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ flex: 1, height: 1, background: "#2C323E" }} />
-            <span style={{ fontSize: 12, color: "#9E9990" }}>או</span>
+            <span style={{ fontSize: 12, color: "#AAB0BD" }}>או</span>
             <div style={{ flex: 1, height: 1, background: "#2C323E" }} />
           </div>
         </>
@@ -144,7 +144,7 @@ export function AccountSetupStep({ email, redirectTo }: Props) {
 
       {/* Password form */}
       <form onSubmit={handlePassword} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <label style={{ fontSize: 13, color: "#9E9990", fontWeight: 600 }}>
+        <label style={{ fontSize: 13, color: "#AAB0BD", fontWeight: 600 }}>
           בחר סיסמה
         </label>
         <input
@@ -193,7 +193,7 @@ export function AccountSetupStep({ email, redirectTo }: Props) {
             background: loading || password.length < 6
               ? "#2C323E"
               : "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-            color: loading || password.length < 6 ? "#9E9990" : "#2a1d05",
+            color: loading || password.length < 6 ? "#AAB0BD" : "#2a1d05",
             fontSize: 15,
             fontWeight: 800,
             cursor: loading || password.length < 6 ? "not-allowed" : "pointer",
@@ -206,7 +206,7 @@ export function AccountSetupStep({ email, redirectTo }: Props) {
         </button>
       </form>
 
-      <div style={{ fontSize: 12, color: "#9E9990", textAlign: "center" }}>
+      <div style={{ fontSize: 12, color: "#AAB0BD", textAlign: "center" }}>
         האימייל שלך: <span style={{ direction: "ltr", display: "inline-block" }}>{email}</span>
       </div>
     </div>

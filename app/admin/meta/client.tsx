@@ -26,7 +26,7 @@ const C = {
   goldL:  '#E8B94A',
   goldD:  '#9E7C3A',
   fg:     '#EDE9E1',
-  muted:  '#9E9990',
+  muted:  '#AAB0BD',
   green:  '#22c55e',
   red:    '#ef4444',
   blue:   '#3b82f6',
@@ -170,9 +170,9 @@ function AdCreativeCard({ ad, kind }: { ad: TopAd; kind: 'quiz' | 'challenge' })
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div style={{ color: '#9E9990', fontSize: 12, padding: 16, textAlign: 'center' }}>
+          <div style={{ color: '#AAB0BD', fontSize: 12, padding: 16, textAlign: 'center' }}>
             🖼️<br />אין תמונה זמינה<br />
-            <a href={ad.previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#C9964A', fontSize: 11, textDecoration: 'underline' }}>פתח ב-Meta</a>
+            <a href={ad.previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#E8B94A', fontSize: 11, textDecoration: 'underline' }}>פתח ב-Meta</a>
           </div>
         )}
         {ad.status && ad.status !== 'ACTIVE' && (
@@ -187,39 +187,39 @@ function AdCreativeCard({ ad, kind }: { ad: TopAd; kind: 'quiz' | 'challenge' })
         <div style={{ fontSize: 13, fontWeight: 700, color: '#EDE9E1', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ad.name}>
           {ad.name}
         </div>
-        <div style={{ fontSize: 10, color: '#9E9990', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ad.campaign}>
+        <div style={{ fontSize: 10, color: '#AAB0BD', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ad.campaign}>
           {ad.campaign}
         </div>
 
         {/* KPI grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, fontFamily: 'system-ui' }}>
           <div>
-            <div style={{ fontSize: 9, color: '#9E9990', textTransform: 'uppercase', letterSpacing: '0.04em' }}>הוצאה</div>
+            <div style={{ fontSize: 9, color: '#AAB0BD', textTransform: 'uppercase', letterSpacing: '0.04em' }}>הוצאה</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1' }}>₪{Math.round(ad.spend).toLocaleString()}</div>
           </div>
           <div>
-            <div style={{ fontSize: 9, color: '#9E9990', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CTR</div>
+            <div style={{ fontSize: 9, color: '#AAB0BD', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CTR</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1' }}>{ad.ctr.toFixed(2)}%</div>
           </div>
           <div>
-            <div style={{ fontSize: 9, color: '#9E9990', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CPC</div>
+            <div style={{ fontSize: 9, color: '#AAB0BD', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CPC</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1' }}>₪{ad.cpc.toFixed(2)}</div>
           </div>
           <div>
             <div style={{ fontSize: 9, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>{primaryMetric.label}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: accentColor }}>{primaryMetric.value}</div>
-            <div style={{ fontSize: 9, color: '#9E9990' }}>{primaryMetric.sub}</div>
+            <div style={{ fontSize: 9, color: '#AAB0BD' }}>{primaryMetric.sub}</div>
           </div>
         </div>
 
         {/* Links */}
         <div style={{ display: 'flex', gap: 12, marginTop: 12, paddingTop: 10, borderTop: '1px solid #2C323E', fontSize: 11 }}>
           {ad.permalinkUrl && (
-            <a href={ad.permalinkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#C9964A', textDecoration: 'none' }}>
+            <a href={ad.permalinkUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#E8B94A', textDecoration: 'none' }}>
               🔗 צפה בפוסט
             </a>
           )}
-          <a href={ad.previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#C9964A', textDecoration: 'none', marginRight: 'auto' }}>
+          <a href={ad.previewUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#E8B94A', textDecoration: 'none', marginRight: 'auto' }}>
             📊 פתח ב-Ads Manager
           </a>
         </div>
@@ -230,8 +230,8 @@ function AdCreativeCard({ ad, kind }: { ad: TopAd; kind: 'quiz' | 'challenge' })
 
 const KIND_BADGE: Record<CampaignKind, { label: string; color: string }> = {
   lead:  { label: 'לידים',  color: '#3b82f6' },
-  sale:  { label: 'מכירות', color: '#C9964A' },
-  other: { label: 'אחר',    color: '#9E9990' },
+  sale:  { label: 'מכירות', color: '#E8B94A' },
+  other: { label: 'אחר',    color: '#AAB0BD' },
 };
 
 const PRODUCT_LABELS: Record<string, string> = {

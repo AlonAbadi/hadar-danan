@@ -49,7 +49,7 @@ async function generateClientTsDirectly(app: Record<string, any>, anthropic: Ant
 
   const palette = (generated.palettes as { id: string; name?: string; bg: string; accent: string; text: string; muted: string }[])
     ?.find(p => p.id === selectedPalette) ?? generated.palettes?.[0]
-    ?? { bg: "#0D1018", accent: "#C9964A", text: "#EDE9E1", muted: "#9E9990" };
+    ?? { bg: "#0D1018", accent: "#C9964A", text: "#EDE9E1", muted: "#AAB0BD" };
 
   const prods: { name: string; price: number }[] = Array.isArray(app.products) ? app.products : [];
   const productsText = prods.filter(p => p.name).map(p => `${p.name} — ₪${p.price}`).join(", ");
@@ -870,7 +870,7 @@ async function executeTool(
         to: adminEmail,
         subject: input.subject as string,
         html: `<div dir="rtl" style="font-family:sans-serif;padding:20px;max-width:600px">
-          <h2 style="color:#C9964A">BeeGood Atelier</h2>
+          <h2 style="color:#E8B94A">BeeGood Atelier</h2>
           <p style="white-space:pre-wrap;line-height:1.7">${(input.message as string).replace(/</g, "&lt;")}</p>
           <hr style="border:1px solid #eee;margin:20px 0"/>
           <p style="color:#999;font-size:12px">BeeGood Atelier · beegood.online</p>
@@ -985,7 +985,7 @@ export async function POST(req: NextRequest) {
             from: `BeeGood Atelier <${fromEmail}>`,
             to: adminEmail,
             subject: `✅ client.ts מוכן — ${appCheck.name}`,
-            html: `<div dir="rtl" style="font-family:sans-serif;padding:20px"><h2 style="color:#C9964A">BeeGood Atelier</h2><p>client.ts נוצר בהצלחה עבור <strong>${appCheck.name}</strong>.<br/>גש לממשק האדמין כדי לבדוק ולפרסם.</p></div>`,
+            html: `<div dir="rtl" style="font-family:sans-serif;padding:20px"><h2 style="color:#E8B94A">BeeGood Atelier</h2><p>client.ts נוצר בהצלחה עבור <strong>${appCheck.name}</strong>.<br/>גש לממשק האדמין כדי לבדוק ולפרסם.</p></div>`,
           });
         }
       } catch { /* non-fatal */ }

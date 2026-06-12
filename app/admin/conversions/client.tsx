@@ -58,18 +58,18 @@ export default function ConversionsClient({ data, dateRange }: Props) {
 
   const purchaseRow = (r: EventRow) => ({
     eventName: <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: '#E8B94A', fontWeight: 600 }}>{r.eventName}</span>,
-    source:    <span style={{ color: '#9E9990', fontSize: 12 }}>{r.source}</span>,
+    source:    <span style={{ color: '#AAB0BD', fontSize: 12 }}>{r.source}</span>,
     count:     <span style={{ fontWeight: 700 }}>{fmt(r.count)}</span>,
-    totalValue: r.totalValue !== undefined ? <span style={{ color: '#C9964A', fontWeight: 600 }}>₪{fmt(r.totalValue)}</span> : '—',
-    avgValue:   r.avgValue !== undefined && r.avgValue > 0 ? <span style={{ color: '#9E9990' }}>₪{fmt(r.avgValue)}</span> : '—',
-    lastFired:  <span style={{ color: '#9E9990', fontSize: 12 }}>{relTime(r.lastFired)}</span>,
+    totalValue: r.totalValue !== undefined ? <span style={{ color: '#E8B94A', fontWeight: 600 }}>₪{fmt(r.totalValue)}</span> : '—',
+    avgValue:   r.avgValue !== undefined && r.avgValue > 0 ? <span style={{ color: '#AAB0BD' }}>₪{fmt(r.avgValue)}</span> : '—',
+    lastFired:  <span style={{ color: '#AAB0BD', fontSize: 12 }}>{relTime(r.lastFired)}</span>,
   });
 
   const engagementRow = (r: EventRow) => ({
     eventName: <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: '#4285F4', fontWeight: 600 }}>{r.eventName}</span>,
-    source:    <span style={{ color: '#9E9990', fontSize: 12 }}>{r.source}</span>,
+    source:    <span style={{ color: '#AAB0BD', fontSize: 12 }}>{r.source}</span>,
     count:     <span style={{ fontWeight: 700 }}>{fmt(r.count)}</span>,
-    lastFired: <span style={{ color: '#9E9990', fontSize: 12 }}>{relTime(r.lastFired)}</span>,
+    lastFired: <span style={{ color: '#AAB0BD', fontSize: 12 }}>{relTime(r.lastFired)}</span>,
   });
 
   return (
@@ -93,7 +93,7 @@ export default function ConversionsClient({ data, dateRange }: Props) {
         titleEn="Purchase Events"
         actions={<Badge variant="gold">{data.productEventRows.length + 1} אירועים פעילים</Badge>}
       >
-        <p style={{ fontSize: 12, color: '#9E9990', marginTop: 0, marginBottom: 16, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12, color: '#AAB0BD', marginTop: 0, marginBottom: 16, lineHeight: 1.6 }}>
           <strong style={{ color: '#EDE9E1' }}>Purchase</strong> נשלח לכל רכישה מוצלחת.
           {' '}בנוסף, כל מוצר שולח <strong style={{ color: '#EDE9E1' }}>אירוע מותאם</strong> משלו
           (PurchaseChallenge / PurchaseWorkshop / ...) — מאפשר לאופטם קמפיין ספציפי למוצר ב-Ads Manager.
@@ -117,7 +117,7 @@ export default function ConversionsClient({ data, dateRange }: Props) {
         titleEn="Lead & Engagement Events"
         actions={<Badge variant="info">{data.engagementRows.length} אירועים פעילים</Badge>}
       >
-        <p style={{ fontSize: 12, color: '#9E9990', marginTop: 0, marginBottom: 16, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 12, color: '#AAB0BD', marginTop: 0, marginBottom: 16, lineHeight: 1.6 }}>
           אירועים שמוזרמים למטא בכל פעולה משמעותית של המשתמש — לפני שמגיעה רכישה.
           {' '}משמשים לאופטימיזציה של קמפיינים בשלב TOFU/MOFU וליצירת Lookalike Audiences איכותיים.
         </p>
@@ -133,7 +133,7 @@ export default function ConversionsClient({ data, dateRange }: Props) {
         />
       </SectionCard>
 
-      <div style={{ marginTop: 24, padding: '14px 18px', background: '#141820', border: '1px solid #2C323E', borderRadius: 10, fontSize: 12, color: '#9E9990', lineHeight: 1.7 }}>
+      <div style={{ marginTop: 24, padding: '14px 18px', background: '#141820', border: '1px solid #2C323E', borderRadius: 10, fontSize: 12, color: '#AAB0BD', lineHeight: 1.7 }}>
         <strong style={{ color: '#E8B94A' }}>איך לבחור את אירוע האופטימיזציה לקמפיין:</strong><br />
         <strong style={{ color: '#EDE9E1' }}>הכלל:</strong> צריך 50+ אירועים בשבוע ל-ad set כדי לצאת מ-Learning Limited.
         אם אין נפח באירוע הסופי — עלה במשפך לאירוע <em>של אותו קהל</em> שיש לו נפח.<br /><br />
@@ -146,7 +146,7 @@ export default function ConversionsClient({ data, dateRange }: Props) {
           <li><strong>קורס/סדנה/אתגר</strong> → <code style={{ color: '#E8B94A' }}>InitiateXCheckout</code> → <code style={{ color: '#E8B94A' }}>PurchaseX</code></li>
           <li><strong>קמפיין רחב</strong> → <code style={{ color: '#E8B94A' }}>Purchase</code> או <code style={{ color: '#E8B94A' }}>InitiateCheckout</code> הגנרי (אגרגציה)</li>
         </ul>
-        <div style={{ marginTop: 10, color: `${'#9E9990'}aa` }}>
+        <div style={{ marginTop: 10, color: `${'#AAB0BD'}aa` }}>
           הימנע מ-Lead הגנרי בקמפיין ממוקד-מוצר — הוא מערבב בין קהלים ומלמד את האלגוריתם דמוגרפיה שגויה.
         </div>
       </div>

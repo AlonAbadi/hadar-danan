@@ -101,17 +101,17 @@ export function PartnershipBookingFlow() {
         </div>
         <div className="flex flex-col gap-2">
           <h3 className="text-2xl font-black" style={{ color: "#EDE9E1" }}>הפרטים התקבלו!</h3>
-          <p style={{ color: "#9E9990" }}>נחזור אליך תוך 24–48 שעות לשיחת היכרות קצרה.</p>
+          <p style={{ color: "#AAB0BD" }}>נחזור אליך תוך 24–48 שעות לשיחת היכרות קצרה.</p>
         </div>
         <div
           className="w-full rounded-2xl p-5 text-right"
           style={{ background: "rgba(201,150,74,0.06)", border: "1px solid rgba(201,150,74,0.1)" }}
         >
-          <p className="text-sm mb-2" style={{ color: "#9E9990" }}>מה הצפוי בשיחה:</p>
+          <p className="text-sm mb-2" style={{ color: "#AAB0BD" }}>מה הצפוי בשיחה:</p>
           <p className="font-medium" style={{ color: "#EDE9E1" }}>🔍 נבין את העסק והאתגר שלך</p>
-          <p className="text-sm mt-1" style={{ color: "#9E9990" }}>בלי שאלות סטנדרטיות — שיחה אמיתית.</p>
+          <p className="text-sm mt-1" style={{ color: "#AAB0BD" }}>בלי שאלות סטנדרטיות — שיחה אמיתית.</p>
           <p className="font-medium mt-3" style={{ color: "#EDE9E1" }}>✍️ גם אם לא נעבוד יחד</p>
-          <p className="text-sm mt-1" style={{ color: "#9E9990" }}>תצא מהשיחה עם בהירות — זה הבטחה.</p>
+          <p className="text-sm mt-1" style={{ color: "#AAB0BD" }}>תצא מהשיחה עם בהירות — זה הבטחה.</p>
         </div>
       </div>
     );
@@ -126,7 +126,7 @@ export function PartnershipBookingFlow() {
         { id: "email",    label: "אימייל",  type: "email", placeholder: "israel@example.com" },
       ].map(({ id, label, type, placeholder }) => (
         <div key={id} className="flex flex-col gap-1.5">
-          <label htmlFor={`partner-${id}`} className="text-sm font-semibold" style={{ color: "#9E9990" }}>
+          <label htmlFor={`partner-${id}`} className="text-sm font-semibold" style={{ color: "#AAB0BD" }}>
             {label}
           </label>
           <input
@@ -146,7 +146,7 @@ export function PartnershipBookingFlow() {
       ))}
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="partner-challenge" className="text-sm font-semibold" style={{ color: "#9E9990" }}>
+        <label htmlFor="partner-challenge" className="text-sm font-semibold" style={{ color: "#AAB0BD" }}>
           מה האתגר העסקי שלך כרגע?
         </label>
         <textarea

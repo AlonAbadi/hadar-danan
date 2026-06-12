@@ -46,7 +46,7 @@ interface NewLeadParams {
 }
 
 function utmRow(label: string, value: string | null | undefined) {
-  return value ? `<p style="margin:4px 0"><strong>${label}:</strong> <span style="color:#C9964A">${value}</span></p>` : "";
+  return value ? `<p style="margin:4px 0"><strong>${label}:</strong> <span style="color:#E8B94A">${value}</span></p>` : "";
 }
 
 function notifyNewLead(p: NewLeadParams) {

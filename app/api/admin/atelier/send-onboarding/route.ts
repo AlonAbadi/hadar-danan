@@ -95,7 +95,7 @@ function buildEmail(name: string, link: string): string {
     .checklist { background: #f9fafb; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
     .checklist-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 15px; color: #374151; line-height: 1.5; }
     .checklist-item:last-child { margin-bottom: 0; }
-    .check { color: #C9964A; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .check { color: #E8B94A; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
     .cta { display: inline-block; background: #C9964A; color: #fff !important; text-decoration: none; font-weight: 800; font-size: 16px; padding: 15px 36px; border-radius: 10px; margin: 8px 0 20px; }
     .note { font-size: 13px; color: #9ca3af; margin-top: 4px; }
     .footer { padding: 20px 32px; border-top: 1px solid #f3f4f6; font-size: 12px; color: #9ca3af; }

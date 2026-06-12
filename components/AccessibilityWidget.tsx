@@ -153,7 +153,7 @@ export function AccessibilityWidget() {
                 disabled={prefs.fontSize === 0}
                 aria-label="הקטן טקסט"
                 className="w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-sm disabled:opacity-30 hover:bg-amber-50 transition"
-                style={{ borderColor: "#C9964A", color: "#C9964A" }}
+                style={{ borderColor: "#C9964A", color: "#E8B94A" }}
               >
                 א-
               </button>
@@ -169,7 +169,7 @@ export function AccessibilityWidget() {
                 disabled={prefs.fontSize === 2}
                 aria-label="הגדל טקסט"
                 className="w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-sm disabled:opacity-30 hover:bg-amber-50 transition"
-                style={{ borderColor: "#C9964A", color: "#C9964A" }}
+                style={{ borderColor: "#C9964A", color: "#E8B94A" }}
               >
                 א+
               </button>
@@ -228,7 +228,7 @@ export function AccessibilityWidget() {
           <a
             href="/accessibility"
             className="text-center text-xs underline hover:opacity-70 transition"
-            style={{ color: "#C9964A" }}
+            style={{ color: "#E8B94A" }}
           >
             הצהרת נגישות
           </a>

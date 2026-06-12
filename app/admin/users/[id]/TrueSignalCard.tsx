@@ -188,7 +188,7 @@ export function TrueSignalCard({ userId }: { userId: string }) {
               <div style={{ fontSize: 14, fontWeight: 700, color: "#E8B94A" }}>
                 תיק אבחון <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
               </div>
-              <div style={{ fontSize: 12, color: "#9E9990", marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: "#AAB0BD", marginTop: 2 }}>
                 ניתוח AI של הליד - synthesis, התאמת מוצר, פתיחת שיחה
               </div>
             </div>
@@ -263,7 +263,7 @@ export function TrueSignalCard({ userId }: { userId: string }) {
               border: "2px solid rgba(232,185,74,0.2)", borderTopColor: "#E8B94A",
               animation: "spin 0.8s linear infinite", flexShrink: 0,
             }} />
-            <span style={{ fontSize: 13, color: "#9E9990" }}>מנתח מחדש...</span>
+            <span style={{ fontSize: 13, color: "#AAB0BD" }}>מנתח מחדש...</span>
           </div>
         </div>
       )}
@@ -300,7 +300,7 @@ export function TrueSignalCard({ userId }: { userId: string }) {
               className="ts-refresh-btn"
               onClick={runDiagnosis}
               style={{
-                background: "transparent", color: "#9E9990",
+                background: "transparent", color: "#AAB0BD",
                 border: "1px solid #252b38", borderRadius: 7,
                 padding: "5px 11px", fontSize: 12, cursor: "pointer",
                 transition: "border-color 0.15s, color 0.15s",
@@ -358,7 +358,7 @@ export function TrueSignalCard({ userId }: { userId: string }) {
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#EDE9E1" }}>
                       {PRODUCT_NAMES[pm.product_key]}
                     </div>
-                    <div style={{ fontSize: 12, color: "#9E9990", marginTop: 2, lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 12, color: "#AAB0BD", marginTop: 2, lineHeight: 1.4 }}>
                       {pm.reason}
                     </div>
                   </div>
@@ -391,7 +391,7 @@ export function TrueSignalCard({ userId }: { userId: string }) {
                 onClick={copyWhatsApp}
                 style={{
                   background: copied ? "rgba(74,222,128,0.15)" : "rgba(44,50,62,0.8)",
-                  color: copied ? "#4ade80" : "#9E9990",
+                  color: copied ? "#4ade80" : "#AAB0BD",
                   border: `1px solid ${copied ? "rgba(74,222,128,0.4)" : "#2C323E"}`,
                   borderRadius: 6, padding: "4px 10px",
                   fontSize: 11, fontWeight: 700, cursor: "pointer",

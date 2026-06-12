@@ -89,7 +89,7 @@ export default function AboutPage() {
               <br />
               ויש שיווק <span style={{ color: "#E8B94A" }}>שמדהד.</span>
             </h1>
-            <p className="about-byline" style={{ color: "#9E9990", fontSize: 18, marginTop: 32 }}>
+            <p className="about-byline" style={{ color: "#AAB0BD", fontSize: 18, marginTop: 32 }}>
               שיטת <strong style={{ color: "#EDE9E1", fontWeight: 600 }}>TrueSignal</strong> · נבנתה ע״י הדר דנן
             </p>
 
@@ -102,7 +102,7 @@ export default function AboutPage() {
                 <p className="about-intro-p" style={{ fontSize: 19, marginBottom: 22 }}>
                   הדר דנן. בניתי את שיטת TrueSignal אחרי שנים של עבודה עם עסקים שידעו להחזיק הרבה יותר ממה שהצליחו להעביר.
                 </p>
-                <p className="about-intro-p" style={{ color: "#9E9990", fontSize: 17 }}>
+                <p className="about-intro-p" style={{ color: "#AAB0BD", fontSize: 17 }}>
                   לא התחלתי משיטה - התחלתי מפער. הפער בין מי שאני בפנים לבין מה שהשיווק שלי שידר החוצה. ידעתי שאני לא לבד בזה. המטרה שלי היום היא לא להגדיל קהל - היא לחדד אות.
                 </p>
               </div>
@@ -185,7 +185,7 @@ export default function AboutPage() {
                   <div className="about-stat-n" style={{ fontSize: 56, fontWeight: 800, color: "#E8B94A", lineHeight: 1 }}>
                     {s.n}
                   </div>
-                  <div style={{ color: "#9E9990", fontSize: 14, marginTop: 10, letterSpacing: "0.5px" }}>
+                  <div style={{ color: "#AAB0BD", fontSize: 14, marginTop: 10, letterSpacing: "0.5px" }}>
                     {s.t}
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export default function AboutPage() {
                 <br />
                 <span style={{ color: "#E8B94A" }}>היא הייתה ה-Signal.&quot;</span>
               </p>
-              <div style={{ color: "#9E9990", fontSize: 14, letterSpacing: 3, marginTop: 24, textTransform: "uppercase" }}>
+              <div style={{ color: "#AAB0BD", fontSize: 14, letterSpacing: 3, marginTop: 24, textTransform: "uppercase" }}>
                 - הדר דנן
               </div>
             </section>

@@ -22,7 +22,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  lead:             { bg: "rgba(158,153,144,0.15)", color: "#9E9990" },
+  lead:             { bg: "rgba(158,153,144,0.15)", color: "#AAB0BD" },
   engaged:          { bg: "rgba(55,138,221,0.15)",  color: "#378ADD" },
   high_intent:      { bg: "rgba(239,159,39,0.15)",  color: "#EF9F27" },
   buyer:            { bg: "rgba(76,175,130,0.15)",  color: "#4CAF82" },
@@ -290,7 +290,7 @@ function describeEvent(evType: string, meta: Record<string, unknown> | null): {
     case "HIVE_CANCELLED":
       return { label: "ביטל/ה מנוי כוורת", dot: "#E05555", skip: false };
     default:
-      return { label: evType, dot: "#9E9990", skip: false };
+      return { label: evType, dot: "#AAB0BD", skip: false };
   }
 }
 
@@ -302,7 +302,7 @@ function Card({ title, badge, children }: { title?: string; badge?: ReactNode; c
       {(title || badge) && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
           {title && (
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#9E9990", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#AAB0BD", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {title}
             </span>
           )}
@@ -320,7 +320,7 @@ function InfoRow({ label, value, ltr }: { label: string; value?: string | null; 
       display: "flex", gap: 12, alignItems: "flex-start",
       padding: "7px 0", borderBottom: "1px solid rgba(44,50,62,0.5)",
     }}>
-      <span style={{ color: "#9E9990", fontSize: 13, width: 110, flexShrink: 0, lineHeight: 1.5 }}>
+      <span style={{ color: "#AAB0BD", fontSize: 13, width: 110, flexShrink: 0, lineHeight: 1.5 }}>
         {label}
       </span>
       <span style={{
@@ -496,7 +496,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           padding: "14px 24px", display: "flex", alignItems: "center",
           justifyContent: "space-between", gap: 16,
         }}>
-          <Link href="/admin/crm" style={{ color: "#9E9990", fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
+          <Link href="/admin/crm" style={{ color: "#AAB0BD", fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
             &larr; חזור ל-CRM
           </Link>
 
@@ -524,7 +524,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
 
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
             <span style={{ fontSize: 26, fontWeight: 900, color: sc, lineHeight: 1 }}>{leadScore}</span>
-            <span style={{ fontSize: 12, color: "#9E9990" }}>נרשם/ה {relativeTime(user.created_at)}</span>
+            <span style={{ fontSize: 12, color: "#AAB0BD" }}>נרשם/ה {relativeTime(user.created_at)}</span>
           </div>
         </header>
 
@@ -549,7 +549,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                 נטישת עגלה - לפני {cartHoursAgo} שעות
               </div>
               {pendingCart.map((p) => (
-                <div key={p.id} style={{ fontSize: 13, color: "#9E9990", marginTop: 3 }}>
+                <div key={p.id} style={{ fontSize: 13, color: "#AAB0BD", marginTop: 3 }}>
                   {PRODUCT_LABELS[p.product as string] ?? p.product}
                   {PRODUCT_PRICES[p.product as string] ? ` - \u20AA${PRODUCT_PRICES[p.product as string]}` : ""}
                 </div>
@@ -565,7 +565,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               <div style={{ fontSize: 14, fontWeight: 700, color: "#7F77DD", marginBottom: 4 }}>
                 ליד פרימיום פוטנציאלי - לידיעת הדר ואלון
               </div>
-              <div style={{ fontSize: 13, color: "#9E9990" }}>
+              <div style={{ fontSize: 13, color: "#AAB0BD" }}>
                 ציון פרימיום גבוה. שווה לבדוק התאמה לפני הצעת מוצר אחר.
               </div>
             </div>
@@ -579,7 +579,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               <div style={{ fontSize: 14, fontWeight: 700, color: "#7F77DD", marginBottom: 4 }}>
                 ליד שותפות פוטנציאלי - לידיעת הדר ואלון
               </div>
-              <div style={{ fontSize: 13, color: "#9E9990" }}>
+              <div style={{ fontSize: 13, color: "#AAB0BD" }}>
                 ציון שותפות גבוה. שווה לבדוק התאמה לפני הצעת מוצר אחר.
               </div>
             </div>
@@ -637,7 +637,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                               </span>
                             )}
                           </div>
-                          <span style={{ fontSize: 12, color: "#9E9990" }}>{score}</span>
+                          <span style={{ fontSize: 12, color: "#AAB0BD" }}>{score}</span>
                         </div>
                         <div style={{ background: "#0D1219", borderRadius: 4, height: 6, overflow: "hidden" }}>
                           <div style={{
@@ -651,7 +651,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                     ))}
                   </div>
                 ) : (
-                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+                  <p style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
                     אין תוצאות קוויז
                   </p>
                 )}
@@ -660,7 +660,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               {/* ── Completed purchases ───────────────────────────── */}
               <Card title="רכישות">
                 {purchases.filter((p) => p.status === "completed").length === 0 ? (
-                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+                  <p style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
                     אין רכישות עדיין
                   </p>
                 ) : (
@@ -685,7 +685,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                         <span style={{ fontSize: 11, color: "#4CAF82", fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "rgba(76,175,130,0.15)", flexShrink: 0 }}>
                           הושלם
                         </span>
-                        <span style={{ fontSize: 11, color: "#9E9990", flexShrink: 0 }}>
+                        <span style={{ fontSize: 11, color: "#AAB0BD", flexShrink: 0 }}>
                           {fmtDateTime(p.created_at)}
                         </span>
                       </div>
@@ -703,7 +703,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                       ? <Chip bg="rgba(76,175,130,0.15)" color="#4CAF82">סיים את האתגר</Chip>
                       : enrollment
                         ? <Chip bg="rgba(232,185,74,0.15)" color="#E8B94A">בעיצומו</Chip>
-                        : <Chip bg="rgba(158,153,144,0.15)" color="#9E9990">נכנס בלבד</Chip>
+                        : <Chip bg="rgba(158,153,144,0.15)" color="#AAB0BD">נכנס בלבד</Chip>
                   }
                 >
                   {enrollment ? (
@@ -719,7 +719,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
 
                       <div style={{ marginTop: 14 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                          <span style={{ fontSize: 12, color: "#9E9990" }}>התקדמות לפי יום</span>
+                          <span style={{ fontSize: 12, color: "#AAB0BD" }}>התקדמות לפי יום</span>
                           <span style={{ fontSize: 11, color: "#6F6A60" }}>0 = פתיחה · 8 = מפגש סיום</span>
                         </div>
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -752,7 +752,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                     </>
                   ) : (
                     <>
-                      <p style={{ color: "#9E9990", fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+                      <p style={{ color: "#AAB0BD", fontSize: 13, margin: 0, lineHeight: 1.6 }}>
                         הלקוח נכנס לתכני האתגר אבל אין רישום אתגר פעיל.
                       </p>
                       <InfoRow label="כניסות לתוכן" value={String(contentVisits)} />
@@ -765,7 +765,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               {purchases.filter((p) => p.status === "pending" || p.status === "failed").length > 0 && (
                 <Card>
                   <div style={{ marginBottom: 12 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#AAB0BD", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                       עגלות נטושות
                     </span>
                     <span style={{ fontSize: 11, color: "#6B7280", marginRight: 6 }}>
@@ -780,7 +780,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                         flexWrap: "wrap",
                         opacity: 0.8,
                       }}>
-                        <span style={{ fontSize: 13, color: "#9E9990", flex: 1, minWidth: 90 }}>
+                        <span style={{ fontSize: 13, color: "#AAB0BD", flex: 1, minWidth: 90 }}>
                           {PRODUCT_LABELS[p.product as string] ?? p.product}
                         </span>
                         <span style={{ fontSize: 13, color: "#6B7280", flexShrink: 0 }}>
@@ -843,7 +843,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                             {title}
                           </span>
                         </div>
-                        <span style={{ fontSize: 11, color: "#9E9990", flexShrink: 0 }}>
+                        <span style={{ fontSize: 11, color: "#AAB0BD", flexShrink: 0 }}>
                           {relativeTime(lastViewedAt)}
                         </span>
                       </div>
@@ -871,7 +871,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                 {inboundSignals.map((sig) => {
                   const isPositive = sig.sentiment === "positive";
                   const isNegative = sig.sentiment === "negative";
-                  const dotColor   = isPositive ? "#4CAF82" : isNegative ? "#E05555" : "#9E9990";
+                  const dotColor   = isPositive ? "#4CAF82" : isNegative ? "#E05555" : "#AAB0BD";
                   const deltaLabel = sig.score_delta > 0 ? `+${sig.score_delta}` : `${sig.score_delta}`;
                   const typeLabel  = sig.type === "reaction" ? "תגובה" : "הודעה";
                   return (
@@ -881,7 +881,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                     }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
                       <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{sig.content ?? "-"}</span>
-                      <span style={{ fontSize: 12, color: "#9E9990", flexShrink: 0 }}>{typeLabel}</span>
+                      <span style={{ fontSize: 12, color: "#AAB0BD", flexShrink: 0 }}>{typeLabel}</span>
                       <span style={{ fontSize: 12, color: "#EDE9E1", flex: 1 }}>
                         {new Date(sig.created_at).toLocaleString("he-IL", {
                           day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
@@ -899,7 +899,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                 })}
               </div>
               {waBonus !== 0 && (
-                <div style={{ marginTop: 12, fontSize: 12, color: "#9E9990", textAlign: "left" }}>
+                <div style={{ marginTop: 12, fontSize: 12, color: "#AAB0BD", textAlign: "left" }}>
                   סה"כ תוספת ניקוד מ-WhatsApp:{" "}
                   <span style={{ color: waBonus > 0 ? "#4CAF82" : "#E05555", fontWeight: 700 }}>
                     {waBonus > 0 ? `+${waBonus}` : waBonus}
@@ -944,7 +944,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#EDE9E1" }}>{row.title}</div>
-                  <div style={{ fontSize: 12, color: "#9E9990", marginTop: 2 }}>{row.desc}</div>
+                  <div style={{ fontSize: 12, color: "#AAB0BD", marginTop: 2 }}>{row.desc}</div>
                 </div>
                 {row.badge && (
                   <span style={{
@@ -961,7 +961,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           {/* ── Timeline ──────────────────────────────────────────────── */}
           <Card title="מסלול הביקור">
             {sessions.length === 0 ? (
-              <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+              <p style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
                 אין אירועים עדיין
               </p>
             ) : (
@@ -969,7 +969,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                 {sessions.map((session) => (
                   <div key={session.index}>
                     <div style={{
-                      fontSize: 11, fontWeight: 700, color: "#9E9990",
+                      fontSize: 11, fontWeight: 700, color: "#AAB0BD",
                       textTransform: "uppercase", letterSpacing: "0.06em",
                       paddingBottom: 8, marginBottom: 10,
                       borderBottom: "1px solid rgba(44,50,62,0.6)",
@@ -990,7 +990,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                               width: 7, height: 7, borderRadius: "50%",
                               background: dot, flexShrink: 0,
                             }} />
-                            <span style={{ fontSize: 12, color: "#9E9990", width: 38, flexShrink: 0 }}>
+                            <span style={{ fontSize: 12, color: "#AAB0BD", width: 38, flexShrink: 0 }}>
                               {fmtTime(ev.created_at)}
                             </span>
                             <span style={{ fontSize: 13, color: "#EDE9E1" }}>{label}</span>

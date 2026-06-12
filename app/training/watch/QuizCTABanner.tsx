@@ -36,7 +36,7 @@ export function QuizCTABanner() {
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
         }}
       >
-        <p style={{ color: '#9E9990', fontSize: 13, marginBottom: 8 }}>
+        <p style={{ color: '#AAB0BD', fontSize: 13, marginBottom: 8 }}>
           לא בטוח מה הצעד הנכון הבא עבורך?
         </p>
         <p style={{ color: '#EDE9E1', fontSize: 17, fontWeight: 700, marginBottom: 20, lineHeight: 1.5 }}>
@@ -59,7 +59,7 @@ export function QuizCTABanner() {
         >
           לקוויז האבחון ←
         </a>
-        <p style={{ color: '#9E9990', fontSize: 12, marginTop: 12 }}>
+        <p style={{ color: '#AAB0BD', fontSize: 12, marginTop: 12 }}>
           2 דקות · ללא כרטיס אשראי
         </p>
       </div>

@@ -10,7 +10,7 @@ const C = {
   gold:   '#C9964A',
   goldL:  '#E8B94A',
   fg:     '#EDE9E1',
-  muted:  '#9E9990',
+  muted:  '#AAB0BD',
   green:  '#22c55e',
   red:    '#ef4444',
   blue:   '#3b82f6',

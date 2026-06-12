@@ -42,14 +42,14 @@ const S = {
   },
   subtitle: {
     fontSize: 14,
-    color: "#9E9990",
+    color: "#AAB0BD",
     textAlign: "center" as const,
     marginBottom: 28,
   },
   label: {
     display: "block",
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
     marginBottom: 6,
     fontWeight: 600,
   },
@@ -95,7 +95,7 @@ const S = {
     textAlign: "center" as const,
     marginTop: 20,
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
   },
 };
 
@@ -277,7 +277,7 @@ export default function ResetPasswordPage() {
         </form>
 
         <div style={S.bottomLink}>
-          <Link href="/login" style={{ color: "#9E9990", textDecoration: "none" }}>
+          <Link href="/login" style={{ color: "#AAB0BD", textDecoration: "none" }}>
             חזרה להתחברות
           </Link>
         </div>

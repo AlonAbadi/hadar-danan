@@ -79,7 +79,7 @@ export default async function RedeemPage() {
 
         {/* Back */}
         <div style={{ marginBottom: 24 }}>
-          <Link href="/account" style={{ fontSize: 13, fontWeight: 700, color: "#9E9990", textDecoration: "none" }}>
+          <Link href="/account" style={{ fontSize: 13, fontWeight: 700, color: "#AAB0BD", textDecoration: "none" }}>
             חזור לחשבון שלי
           </Link>
         </div>
@@ -89,7 +89,7 @@ export default async function RedeemPage() {
           <h1 style={{ fontSize: 22, fontWeight: 800, color: "#EDE9E1", margin: "0 0 6px" }}>
             מימוש קרדיט
           </h1>
-          <p style={{ fontSize: 14, color: "#9E9990", margin: 0 }}>
+          <p style={{ fontSize: 14, color: "#AAB0BD", margin: 0 }}>
             הקרדיט שצברת ניתן לשימוש לרכישת כל מוצר
           </p>
         </div>
@@ -105,7 +105,7 @@ export default async function RedeemPage() {
           justifyContent: "space-between",
           marginBottom: 28,
         }}>
-          <div style={{ fontSize: 13, color: "#9E9990" }}>קרדיט זמין לשימוש</div>
+          <div style={{ fontSize: 13, color: "#AAB0BD" }}>קרדיט זמין לשימוש</div>
           <div style={{
             fontSize: 26,
             fontWeight: 800,
@@ -202,7 +202,7 @@ export default async function RedeemPage() {
                       </span>
                       {/* Credit line */}
                       {credit > 0 && (
-                        <span style={{ fontSize: 12, color: "#C9964A", direction: "ltr" }}>
+                        <span style={{ fontSize: 12, color: "#E8B94A", direction: "ltr" }}>
                           קרדיט: ₪{Math.min(credit, product.price).toLocaleString("he-IL")}
                         </span>
                       )}

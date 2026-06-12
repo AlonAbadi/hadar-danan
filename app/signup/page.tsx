@@ -43,7 +43,7 @@ const S = {
   },
   subtitle: {
     fontSize: 14,
-    color: "#9E9990",
+    color: "#AAB0BD",
     textAlign: "center" as const,
     marginBottom: 28,
   },
@@ -71,11 +71,11 @@ const S = {
     margin: "20px 0",
   },
   dividerLine: { flex: 1, height: 1, background: "#2C323E" },
-  dividerText: { fontSize: 12, color: "#9E9990" },
+  dividerText: { fontSize: 12, color: "#AAB0BD" },
   label: {
     display: "block",
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
     marginBottom: 6,
     fontWeight: 600,
   },
@@ -132,7 +132,7 @@ const S = {
     textAlign: "center" as const,
     marginTop: 20,
     fontSize: 13,
-    color: "#9E9990",
+    color: "#AAB0BD",
   },
   strengthBar: {
     height: 4,
@@ -281,7 +281,7 @@ function SignupPageInner() {
             </button>
           </div>
           <div style={S.bottomLink}>
-            <Link href="/login" style={{ color: "#9E9990", textDecoration: "none" }}>
+            <Link href="/login" style={{ color: "#AAB0BD", textDecoration: "none" }}>
               חזרה להתחברות
             </Link>
           </div>

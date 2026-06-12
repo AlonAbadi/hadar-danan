@@ -5,7 +5,7 @@ import { PageHeader, KpiGrid, KpiCard, SectionCard, DataTable, Badge, PercentBar
 
 const TT = {
   contentStyle: { background: '#141820', border: '1px solid #2C323E', borderRadius: 8, fontSize: 12, color: '#EDE9E1' },
-  labelStyle: { color: '#9E9990', fontWeight: 600 },
+  labelStyle: { color: '#AAB0BD', fontWeight: 600 },
   cursor: { fill: 'rgba(201,150,74,0.06)' },
 };
 
@@ -78,8 +78,8 @@ export default function EmailClient({ stats }: { stats: any[] }) {
             }))}
             margin={{ right: 8, left: 0 }}
           >
-            <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#9E9990' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#9E9990' }} axisLine={false} tickLine={false} unit="%" />
+            <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#AAB0BD' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#AAB0BD' }} axisLine={false} tickLine={false} unit="%" />
             <Tooltip {...TT} formatter={(v: any) => [`${v}%`]} />
             <Bar dataKey="Open Rate" fill="#C9964A" radius={[4, 4, 0, 0]} />
             <Bar dataKey="CTR"       fill="#4285F4" radius={[4, 4, 0, 0]} />
@@ -110,7 +110,7 @@ export default function EmailClient({ stats }: { stats: any[] }) {
                   <div style={{ fontWeight: 600, color: '#EDE9E1' }}>
                     {TEMPLATE_NAMES[s.templateKey] ?? s.templateKey}
                   </div>
-                  <div style={{ fontSize: 10, color: '#9E9990' }}>
+                  <div style={{ fontSize: 10, color: '#AAB0BD' }}>
                     {s.trigger}{s.delayHours > 0 ? ` · +${s.delayHours}ש׳` : ''}
                   </div>
                 </div>
@@ -140,12 +140,12 @@ export default function EmailClient({ stats }: { stats: any[] }) {
                 padding: 16, background: '#1D2430', borderRadius: 10,
                 border: '1px solid #2C323E', textAlign: 'center',
               }}>
-                <div style={{ fontSize: 11, color: '#9E9990', marginBottom: 8 }}>{b.label}</div>
+                <div style={{ fontSize: 11, color: '#AAB0BD', marginBottom: 8 }}>{b.label}</div>
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 8 }}>
                   <span style={{ fontSize: 22, fontWeight: 800, color: better ? '#34A853' : '#EA4335' }}>
                     {b.yours}{b.unit}
                   </span>
-                  <span style={{ fontSize: 12, color: '#9E9990' }}>
+                  <span style={{ fontSize: 12, color: '#AAB0BD' }}>
                     / {b.benchmark}{b.unit} ממוצע
                   </span>
                 </div>

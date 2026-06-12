@@ -47,7 +47,7 @@ export function UnsubscribeForm({ initialEmail = "" }: { initialEmail?: string }
       >
         <div style={{ fontSize: 40, marginBottom: 12 }}>✓</div>
         <p style={{ fontWeight: 700, fontSize: "1rem", marginBottom: 8 }}>ההסכמה לדיוור בוטלה</p>
-        <p style={{ color: "#9E9990", fontSize: "0.9rem", lineHeight: 1.6 }}>
+        <p style={{ color: "#AAB0BD", fontSize: "0.9rem", lineHeight: 1.6 }}>
           {email} הוסר מרשימת הדיוור שלנו. לא תקבל יותר עדכונים שיווקיים.
         </p>
       </div>
@@ -90,7 +90,7 @@ export function UnsubscribeForm({ initialEmail = "" }: { initialEmail?: string }
           border: "1px solid rgba(201,150,74,0.3)",
           borderRadius: 8,
           padding: "10px 14px",
-          color: "#C9964A",
+          color: "#E8B94A",
           fontSize: "0.875rem",
         }}>
           האימייל הזה לא נמצא במערכת שלנו.

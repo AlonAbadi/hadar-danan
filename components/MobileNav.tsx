@@ -261,12 +261,12 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
               cursor: "pointer",
             }}
           >
-            <span style={{ color: "#C9964A", fontSize: 13, fontWeight: 700, letterSpacing: "0.04em" }}>
+            <span style={{ color: "#E8B94A", fontSize: 13, fontWeight: 700, letterSpacing: "0.04em" }}>
               מסלולים
             </span>
             <span
               style={{
-                color: "#C9964A",
+                color: "#E8B94A",
                 fontSize: 12,
                 display: "inline-block",
                 transform: accordionOpen ? "rotate(180deg)" : "rotate(0deg)",
@@ -329,7 +329,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
                 (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)";
               }}
             >
-              <span style={{ color: "#9E9990", fontSize: 13, fontWeight: 500 }}>
+              <span style={{ color: "#AAB0BD", fontSize: 13, fontWeight: 500 }}>
                 {userInitial}
               </span>
               <button
@@ -401,7 +401,7 @@ function DrawerItem({
     >
       <span style={{ color: active ? "#E8B94A" : "#EDE9E1" }}>{item.label}</span>
       {item.price && (
-        <span style={{ color: "#9E9990", fontSize: 13, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+        <span style={{ color: "#AAB0BD", fontSize: 13, display: 'flex', alignItems: 'baseline', gap: 6 }}>
           {('priceOriginal' in item) && (
             <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: 11 }}>{(item as { priceOriginal: string }).priceOriginal}</span>
           )}

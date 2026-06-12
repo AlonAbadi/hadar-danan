@@ -14,7 +14,7 @@ export default function TestPage() {
         <section className="px-4 pt-20 pb-16">
           <div className="max-w-md mx-auto flex flex-col items-center gap-6 text-center">
             <h1 className="text-4xl font-black" style={{ color: "#EDE9E1" }}>מוצר טסט</h1>
-            <p className="text-lg" style={{ color: "#9E9990" }}>עמוד טסט לבדיקת מערכת התשלום. מחיר: ₪1.</p>
+            <p className="text-lg" style={{ color: "#AAB0BD" }}>עמוד טסט לבדיקת מערכת התשלום. מחיר: ₪1.</p>
 
             <div
               className="w-full rounded-2xl p-6 flex flex-col gap-4"
@@ -24,10 +24,10 @@ export default function TestPage() {
                 className="flex justify-between items-center pb-4"
                 style={{ borderBottom: "1px solid #2C323E" }}
               >
-                <span style={{ color: "#9E9990" }}>מוצר טסט</span>
+                <span style={{ color: "#AAB0BD" }}>מוצר טסט</span>
                 <div className="text-right">
                   <p className="font-black text-2xl" style={{ color: "#EDE9E1" }}>₪1</p>
-                  <p className="text-xs" style={{ color: "#9E9990" }}>כולל מע״מ</p>
+                  <p className="text-xs" style={{ color: "#AAB0BD" }}>כולל מע״מ</p>
                 </div>
               </div>
 
@@ -39,7 +39,7 @@ export default function TestPage() {
 
       <footer
         className="border-t px-4 py-6 text-center text-xs"
-        style={{ borderColor: "#2C323E", background: "#101520", color: "#9E9990" }}
+        style={{ borderColor: "#2C323E", background: "#101520", color: "#AAB0BD" }}
       >
         <p className="mb-1 font-medium" style={{ color: "rgba(158,153,144,0.6)" }}>
           אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. |{" "}

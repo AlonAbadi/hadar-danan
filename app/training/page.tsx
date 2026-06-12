@@ -88,7 +88,7 @@ export default async function TrainingPage() {
               שלח/י לי את ההדרכה
             </p>
             <SignupForm ctaLabel="שלח לי את ההדרכה" />
-            <p style={{ textAlign: "center", fontSize: 12, color: "#9E9990", marginTop: 14 }}>
+            <p style={{ textAlign: "center", fontSize: 12, color: "#AAB0BD", marginTop: 14 }}>
               ללא ספאם. ניתן להסרה בכל עת.
             </p>
             <div style={{

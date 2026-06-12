@@ -131,7 +131,7 @@ export default function ClientVideosCarousel() {
         .cvc-sub {
           margin: 0;
           font-size: 13px;
-          color: #9E9990;
+          color: #AAB0BD;
           text-align: center;
         }
 

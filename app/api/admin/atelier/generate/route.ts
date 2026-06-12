@@ -109,7 +109,7 @@ ${testimonialsText || "- לא צוינו"}
       "bg": "#0D1018",
       "accent": "#C9964A",
       "text": "#EDE9E1",
-      "muted": "#9E9990",
+      "muted": "#AAB0BD",
       "rationale": "הסבר קצר למה הפלטה הזו מתאימה לקהל הספציפי הזה"
     },
     {

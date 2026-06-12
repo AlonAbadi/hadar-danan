@@ -349,7 +349,7 @@ export default function OnboardingClient({ app, token }: { app: Record<string, a
                 <div key={doc.url} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f9fafb", borderRadius: 10, padding: "10px 14px", border: "1px solid #e5e7eb" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 18 }}>{doc.type?.includes("pdf") ? "📄" : "📝"}</span>
-                    <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#C9964A", textDecoration: "none", fontWeight: 600 }}>{doc.name}</a>
+                    <a href={doc.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: "#E8B94A", textDecoration: "none", fontWeight: 600 }}>{doc.name}</a>
                   </div>
                   <button type="button" onClick={() => setDocuments(documents.filter(d => d.url !== doc.url))} style={{ background: "none", border: "none", color: "#d1d5db", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
                 </div>

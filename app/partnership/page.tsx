@@ -52,7 +52,7 @@ export default async function PartnershipPage() {
           </span>
           <div style={{ color: "#EDE9E1", fontSize: 14, lineHeight: 1.5 }}>
             <strong style={{ fontWeight: 700, color: "#EDE9E1" }}>לא בטוח ששותפות מלאה זה בשבילך?</strong>{" "}
-            <span style={{ color: "#9E9990" }}>
+            <span style={{ color: "#AAB0BD" }}>
               יש מסלול מועמדות — שלושה ימים אינטנסיביים, תשלום בסיסי + אחוז מההצלחה. אם יעבוד, נמשיך לשותפות.
             </span>
           </div>
@@ -148,7 +148,7 @@ export default async function PartnershipPage() {
             <h2 style={{ fontWeight: 900, fontSize: 28, color: "#EDE9E1", margin: "0 0 10px" }}>
               בדוק/י אם יש התאמה
             </h2>
-            <p style={{ color: "#9E9990", fontSize: 15 }}>
+            <p style={{ color: "#AAB0BD", fontSize: 15 }}>
               מלא/י את הפרטים ונחזור אליך תוך 24–48 שעות לשיחת היכרות קצרה.
             </p>
             <p style={{ color: "rgba(158,153,144,0.5)", fontSize: 13, marginTop: 8 }}>

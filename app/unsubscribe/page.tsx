@@ -46,7 +46,7 @@ export default async function UnsubscribePage({ searchParams }: Props) {
         </h1>
         <p style={{
           textAlign: "center",
-          color: "#9E9990",
+          color: "#AAB0BD",
           fontSize: "0.95rem",
           lineHeight: 1.7,
           marginBottom: 36,
@@ -79,7 +79,7 @@ export default async function UnsubscribePage({ searchParams }: Props) {
         <div style={{ textAlign: "center", marginTop: 32 }}>
           <a
             href="/"
-            style={{ color: "#C9964A", fontSize: "0.875rem", textDecoration: "none" }}
+            style={{ color: "#E8B94A", fontSize: "0.875rem", textDecoration: "none" }}
           >
             ← חזרה לאתר
           </a>

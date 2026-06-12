@@ -93,7 +93,7 @@ export default function ProductsClient() {
         .map(([pid, d]) => ({
           id: pid,
           name: PRODUCT_MAP[pid]?.name ?? d.name,
-          color: PRODUCT_COLORS[pid] ?? '#9E9990',
+          color: PRODUCT_COLORS[pid] ?? '#AAB0BD',
           revenue: d.revenue,
           count: d.count,
           pct: data.total > 0 ? Math.round((d.revenue / data.total) * 100) : 0,
@@ -115,7 +115,7 @@ export default function ProductsClient() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 800 }}>מוצרים</div>
-          <div style={{ fontSize: 13, color: '#9E9990', marginTop: 2 }}>הכנסות וביצועים לפי מוצר</div>
+          <div style={{ fontSize: 13, color: '#AAB0BD', marginTop: 2 }}>הכנסות וביצועים לפי מוצר</div>
         </div>
 
         {/* Date range */}
@@ -128,7 +128,7 @@ export default function ProductsClient() {
                 padding: '6px 14px', borderRadius: 7, fontSize: 13, fontWeight: 600,
                 border: 'none', cursor: 'pointer', transition: 'all 0.15s',
                 background: range === r.value ? '#C9964A' : 'transparent',
-                color: range === r.value ? '#1A1206' : '#9E9990',
+                color: range === r.value ? '#1A1206' : '#AAB0BD',
               }}
             >
               {r.label}
@@ -145,7 +145,7 @@ export default function ProductsClient() {
           { label: 'רכישות היום',   value: loading ? '...' : String(todayPurchases.length),                         color: '#34A853', icon: '⚡' },
         ].map(k => (
           <div key={k.label} style={{ ...card, borderTop: `3px solid ${k.color}` }}>
-            <div style={{ fontSize: 11, color: '#9E9990', marginBottom: 8 }}>{k.icon} {k.label}</div>
+            <div style={{ fontSize: 11, color: '#AAB0BD', marginBottom: 8 }}>{k.icon} {k.label}</div>
             <div style={{ fontSize: 26, fontWeight: 800, color: k.color, lineHeight: 1 }}>{k.value}</div>
             {k.label === 'סה״כ הכנסות' && data && !loading && (
               <div style={{ fontSize: 11, marginTop: 6, color: data.change >= 0 ? '#34A853' : '#EA4335' }}>
@@ -161,7 +161,7 @@ export default function ProductsClient() {
         <div style={{ ...card, borderColor: 'rgba(52,168,83,0.3)' }}>
           <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ color: '#34A853' }}>⚡</span> רכישות היום
-            <span style={{ fontSize: 12, color: '#9E9990', fontWeight: 400 }}>({todayPurchases.length})</span>
+            <span style={{ fontSize: 12, color: '#AAB0BD', fontWeight: 400 }}>({todayPurchases.length})</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {todayPurchases.map(p => (
@@ -177,11 +177,11 @@ export default function ProductsClient() {
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1' }}>{p.name ?? p.email}</div>
-                    <div style={{ fontSize: 12, color: '#9E9990', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.email}</div>
+                    <div style={{ fontSize: 12, color: '#AAB0BD', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.email}</div>
                   </div>
                   <div style={{ textAlign: 'left', flexShrink: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: PRODUCT_COLORS[p.product] ?? '#C9964A' }}>{p.productName}</div>
-                    <div style={{ fontSize: 11, color: '#9E9990' }}>{relativeTime(p.created_at)}</div>
+                    <div style={{ fontSize: 11, color: '#AAB0BD' }}>{relativeTime(p.created_at)}</div>
                   </div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#34A853', flexShrink: 0 }}>
                     ₪{p.amount.toLocaleString('he-IL')}
@@ -196,9 +196,9 @@ export default function ProductsClient() {
       {/* ── By product ── */}
       <div style={card}>
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 20 }}>ביצועים לפי מוצר</div>
-        {loading && <div style={{ color: '#9E9990', fontSize: 13 }}>טוען...</div>}
+        {loading && <div style={{ color: '#AAB0BD', fontSize: 13 }}>טוען...</div>}
         {!loading && products.length === 0 && (
-          <div style={{ color: '#9E9990', fontSize: 13 }}>אין רכישות בתקופה זו</div>
+          <div style={{ color: '#AAB0BD', fontSize: 13 }}>אין רכישות בתקופה זו</div>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {products.map(p => (
@@ -206,7 +206,7 @@ export default function ProductsClient() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: '#EDE9E1' }}>{p.name}</span>
                 <div style={{ display: 'flex', gap: 16, alignItems: 'baseline', flexShrink: 0 }}>
-                  <span style={{ fontSize: 12, color: '#9E9990' }}>{p.count} רכישות</span>
+                  <span style={{ fontSize: 12, color: '#AAB0BD' }}>{p.count} רכישות</span>
                   <span style={{ fontSize: 14, fontWeight: 800, color: p.color }}>₪{p.revenue.toLocaleString('he-IL')}</span>
                   <span style={{
                     fontSize: 11, fontWeight: 700, minWidth: 36, textAlign: 'center',
@@ -231,9 +231,9 @@ export default function ProductsClient() {
       <div style={card}>
         <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
           <span>רכישות אחרונות</span>
-          {!loading && <span style={{ fontSize: 12, color: '#9E9990', fontWeight: 400 }}>{data?.recentPurchases.length ?? 0} רשומות</span>}
+          {!loading && <span style={{ fontSize: 12, color: '#AAB0BD', fontWeight: 400 }}>{data?.recentPurchases.length ?? 0} רשומות</span>}
         </div>
-        {loading && <div style={{ color: '#9E9990', fontSize: 13 }}>טוען...</div>}
+        {loading && <div style={{ color: '#AAB0BD', fontSize: 13 }}>טוען...</div>}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {(data?.recentPurchases ?? []).map((p, i) => (
             <Link key={p.id} href={`/admin/users/${p.user_id}`} style={{ textDecoration: 'none' }}>
@@ -244,27 +244,27 @@ export default function ProductsClient() {
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#EDE9E1' }}>{p.name ?? '—'}</div>
-                  <div style={{ fontSize: 12, color: '#9E9990', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.email}</div>
+                  <div style={{ fontSize: 12, color: '#AAB0BD', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.email}</div>
                 </div>
                 <div style={{ textAlign: 'center', flexShrink: 0 }}>
                   <span style={{
                     fontSize: 12, fontWeight: 700, padding: '2px 9px', borderRadius: 6,
-                    background: (PRODUCT_COLORS[p.product] ?? '#9E9990') + '1A',
-                    color: PRODUCT_COLORS[p.product] ?? '#9E9990',
-                    border: `1px solid ${(PRODUCT_COLORS[p.product] ?? '#9E9990')}33`,
+                    background: (PRODUCT_COLORS[p.product] ?? '#AAB0BD') + '1A',
+                    color: PRODUCT_COLORS[p.product] ?? '#AAB0BD',
+                    border: `1px solid ${(PRODUCT_COLORS[p.product] ?? '#AAB0BD')}33`,
                   }}>
                     {p.productName}
                   </span>
                 </div>
                 <div style={{ textAlign: 'left', flexShrink: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: '#34A853' }}>₪{p.amount.toLocaleString('he-IL')}</div>
-                  <div style={{ fontSize: 11, color: '#9E9990' }}>{absDate(p.created_at)}</div>
+                  <div style={{ fontSize: 11, color: '#AAB0BD' }}>{absDate(p.created_at)}</div>
                 </div>
               </div>
             </Link>
           ))}
           {!loading && (data?.recentPurchases.length ?? 0) === 0 && (
-            <div style={{ color: '#9E9990', fontSize: 13, textAlign: 'center', padding: 24 }}>אין רכישות בתקופה זו</div>
+            <div style={{ color: '#AAB0BD', fontSize: 13, textAlign: 'center', padding: 24 }}>אין רכישות בתקופה זו</div>
           )}
         </div>
       </div>
@@ -277,7 +277,7 @@ export default function ProductsClient() {
             const p = PRODUCT_MAP[pid];
             const pData = data?.byProduct[pid];
             const hasRevenue = (pData?.revenue ?? 0) > 0;
-            const color = PRODUCT_COLORS[pid] ?? '#9E9990';
+            const color = PRODUCT_COLORS[pid] ?? '#AAB0BD';
             return (
               <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{
@@ -285,11 +285,11 @@ export default function ProductsClient() {
                   background: hasRevenue ? color + '15' : '#141820',
                   border: `1px solid ${hasRevenue ? color + '44' : '#2C323E'}`,
                 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: hasRevenue ? color : '#9E9990' }}>{p.name}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: hasRevenue ? color : '#AAB0BD' }}>{p.name}</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#EDE9E1', marginTop: 4 }}>
                     {p.price === 0 ? 'חינם' : `₪${p.price.toLocaleString()}`}
                   </div>
-                  <div style={{ fontSize: 11, color: '#9E9990', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: '#AAB0BD', marginTop: 2 }}>
                     {pData?.count ?? 0} רכישות
                   </div>
                 </div>

@@ -174,7 +174,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
     display: "inline-flex", alignItems: "center",
     padding: "0 14px", height: 32, borderRadius: 9999,
     fontSize: 11, fontWeight: 600, textDecoration: "none",
-    background: "transparent", color: "#C9964A",
+    background: "transparent", color: "#E8B94A",
     border: "1px solid rgba(201,150,74,0.30)", whiteSpace: "nowrap" as const,
   };
 
@@ -186,12 +186,12 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(201,150,74,0.1)", border: "1px solid rgba(201,150,74,0.28)", borderRadius: 9999, padding: "5px 16px", marginBottom: 20 }}>
             <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C9964A" }} />
-            <span style={{ color: "#C9964A", fontSize: 11, letterSpacing: "0.12em", fontWeight: 600 }}>הדרך</span>
+            <span style={{ color: "#E8B94A", fontSize: 11, letterSpacing: "0.12em", fontWeight: 600 }}>הדרך</span>
           </div>
           <h2 style={{ fontSize: "clamp(1.8rem,3.5vw,2.6rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: 10, transition: "all 0.3s" }}>
             {HEADLINE[stage].h}
           </h2>
-          <p style={{ color: "#9E9990", fontSize: "0.95rem", marginBottom: 28, transition: "all 0.3s" }}>
+          <p style={{ color: "#AAB0BD", fontSize: "0.95rem", marginBottom: 28, transition: "all 0.3s" }}>
             {HEADLINE[stage].sub}
           </p>
 
@@ -205,7 +205,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                   padding: "7px 18px", borderRadius: 9999, fontSize: 13, fontWeight: 600,
                   border:      stage === s ? "1px solid #C9964A"            : "1px solid rgba(201,150,74,0.2)",
                   background:  stage === s ? "rgba(201,150,74,0.15)"        : "transparent",
-                  color:       stage === s ? "#C9964A"                      : "#9E9990",
+                  color:       stage === s ? "#C9964A"                      : "#AAB0BD",
                   cursor: "pointer", transition: "all 0.2s", fontFamily: "inherit",
                 }}
               >
@@ -218,8 +218,8 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         {/* ── Nudge bar (returning visitors) ────────────────────────────── */}
         {showNudge && stage === "הכל" && (
           <div style={{ background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.2)", borderRadius: 10, padding: "10px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
-            <span style={{ fontSize: 13, color: "#C9964A" }}>👋 חזרת! בחר שלב שמתאים לך לחוויה ממוקדת יותר</span>
-            <button onClick={() => setShowNudge(false)} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 16, padding: 0 }}>✕</button>
+            <span style={{ fontSize: 13, color: "#E8B94A" }}>👋 חזרת! בחר שלב שמתאים לך לחוויה ממוקדת יותר</span>
+            <button onClick={() => setShowNudge(false)} style={{ background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 16, padding: 0 }}>✕</button>
           </div>
         )}
 
@@ -284,24 +284,24 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                         )}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#A8A293" }}>
-                        <span style={{ color: "#C9964A", fontWeight: 700 }}>→</span>
+                        <span style={{ color: "#E8B94A", fontWeight: 700 }}>→</span>
                         <span>{p.outcome}</span>
                       </div>
                     </div>
 
                     <div style={{ flexShrink: 0, textAlign: "left" }}>
                       {('priceOriginal' in p) && (
-                        <div style={{ fontSize: 12, textDecoration: 'line-through', color: '#9E9990', direction: 'ltr', marginBottom: 2 }}>
+                        <div style={{ fontSize: 12, textDecoration: 'line-through', color: '#AAB0BD', direction: 'ltr', marginBottom: 2 }}>
                           {(p as { priceOriginal: string }).priceOriginal}
                         </div>
                       )}
-                      <div style={{ fontSize: 20, fontWeight: 800, color: "#C9964A", direction: 'ltr' }}>{p.price}</div>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#E8B94A", direction: 'ltr' }}>{p.price}</div>
                     </div>
                   </div>
 
                   {/* Scarcity bar */}
                   <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "rgba(201,150,74,0.06)", border: "1px solid rgba(201,150,74,0.1)", borderRadius: 8, marginBottom: 16 }}>
-                    {p.scIcon === "⚡" && <span style={{ fontSize: 11, color: "#C9964A", lineHeight: 1 }}>✦</span>}
+                    {p.scIcon === "⚡" && <span style={{ fontSize: 11, color: "#E8B94A", lineHeight: 1 }}>✦</span>}
                     <span style={{ fontSize: 12, color: "#A8A293" }}>{p.scarcity}</span>
                   </div>
 
@@ -317,7 +317,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                       style={{
                         marginRight: "auto", background: "none", border: "none",
                         borderBottom: "1px solid rgba(201,150,74,0.20)",
-                        padding: "0 0 2px", cursor: "pointer", color: "#9E9990",
+                        padding: "0 0 2px", cursor: "pointer", color: "#AAB0BD",
                         fontSize: 11, fontWeight: 600, fontFamily: "inherit",
                         display: "flex", alignItems: "center", gap: 3,
                       }}
@@ -338,14 +338,14 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                     <ul style={{ margin: 0, padding: 0, listStyle: "none", marginBottom: 16 }}>
                       {p.bullets.map((b, bi) => (
                         <li key={bi} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
-                          <span style={{ color: "#C9964A", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>✓</span>
+                          <span style={{ color: "#E8B94A", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>✓</span>
                           <span style={{ fontSize: 14, color: "rgba(237,233,225,0.85)", lineHeight: 1.55 }}>{b}</span>
                         </li>
                       ))}
                     </ul>
                     <div style={{ background: "rgba(201,150,74,0.06)", border: "1px solid rgba(201,150,74,0.15)", borderRadius: 10, padding: "12px 16px" }}>
                       <p style={{ margin: 0, fontSize: 13, color: "rgba(237,233,225,0.8)", lineHeight: 1.6, fontStyle: "italic", marginBottom: 5 }}>{p.quote.text}</p>
-                      <span style={{ fontSize: 12, color: "#9E9990" }}>— {p.quote.author}</span>
+                      <span style={{ fontSize: 12, color: "#AAB0BD" }}>— {p.quote.author}</span>
                     </div>
                   </div>
                 )}
@@ -438,7 +438,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
                 </div>
                 <div style={{ flex: 1, paddingTop: 4 }}>
                   <div style={{ height: 1, background: "rgba(201,150,74,0.14)", marginBottom: 8 }} />
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".24em", color: "#C9964A" }}>{item.kind}</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".24em", color: "#E8B94A" }}>{item.kind}</div>
                 </div>
               </div>
 
@@ -515,7 +515,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
               textDecoration: "none", textTransform: "uppercase",
             }}>קבע שיחת היכרות</a>
             <div style={{ marginTop: 24, fontSize: 11, color: "#8e887e", letterSpacing: ".04em" }}>
-              או: <span style={{ color: "#C9964A" }}>premium@beegood.co.il</span>
+              או: <span style={{ color: "#E8B94A" }}>premium@beegood.co.il</span>
             </div>
           </div>
         </div>
@@ -546,7 +546,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1" }}>הכוורת</div>
-            <div style={{ fontSize: 12, color: "#9E9990" }}>קהילה חודשית — ₪59 / ₪149</div>
+            <div style={{ fontSize: 12, color: "#AAB0BD" }}>קהילה חודשית — ₪59 / ₪149</div>
           </div>
           <div style={{
             flexShrink: 0,
@@ -563,16 +563,16 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         <div style={{ marginBottom: 48 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
             <div style={{ flex: 1, height: 1, background: "rgba(201,150,74,0.15)" }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#9E9990", letterSpacing: "0.12em" }}>בקרוב</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#AAB0BD", letterSpacing: "0.12em" }}>בקרוב</span>
             <div style={{ flex: 1, height: 1, background: "rgba(201,150,74,0.15)" }} />
           </div>
           <div className="ps-soon-rail">
             {/* קורס דיגיטלי */}
             <div className="ps-soon-card">
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: "#C9964A", flexShrink: 0 }}>05</div>
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: "#E8B94A", flexShrink: 0 }}>05</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1" }}>קורס דיגיטלי</div>
-                <div style={{ fontSize: 12, color: "#9E9990" }}>השיטה המלאה — ₪1,800</div>
+                <div style={{ fontSize: 12, color: "#AAB0BD" }}>השיטה המלאה — ₪1,800</div>
               </div>
               <div style={{ flexShrink: 0, background: "linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A)", color: "#1A1206", fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 4 }}>🔜 בקרוב</div>
             </div>
@@ -595,7 +595,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
         }}>
           <div>
             <div style={{ fontSize: 17, fontWeight: 800, color: "#EDE9E1", marginBottom: 4 }}>לא בטוח מאיפה להתחיל?</div>
-            <div style={{ fontSize: 13, color: "#9E9990" }}>שאלון של 3 דקות שמוצא בדיוק איפה אתה נמצא — והצעד הבא שמתאים לך</div>
+            <div style={{ fontSize: 13, color: "#AAB0BD" }}>שאלון של 3 דקות שמוצא בדיוק איפה אתה נמצא — והצעד הבא שמתאים לך</div>
           </div>
           <a href="/quiz" style={{ ...ctaGold, whiteSpace: "nowrap", fontSize: 14, padding: "11px 24px" }}>
             לשאלון ←
@@ -619,7 +619,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             <a href={excludeTraining ? "/challenge" : "/training"} onClick={dismissSticky} style={ctaGold}>
               {excludeTraining ? "להצטרף לאתגר ←" : "התחל חינם ←"}
             </a>
-            <button onClick={dismissSticky} style={{ background: "none", border: "none", color: "#9E9990", cursor: "pointer", fontSize: 18, padding: "4px 8px" }}>✕</button>
+            <button onClick={dismissSticky} style={{ background: "none", border: "none", color: "#AAB0BD", cursor: "pointer", fontSize: 18, padding: "4px 8px" }}>✕</button>
           </div>
         </div>
       )}

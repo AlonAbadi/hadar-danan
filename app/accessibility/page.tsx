@@ -12,7 +12,7 @@ export default function AccessibilityPage() {
       <main id="main-content" className="max-w-3xl mx-auto px-6 py-16">
 
         <h1 className="text-3xl font-black mb-2" style={{ color: "#EDE9E1" }}>הצהרת נגישות</h1>
-        <p className="text-sm mb-10" style={{ color: "#9E9990" }}>תאריך עדכון אחרון: מרץ 2026</p>
+        <p className="text-sm mb-10" style={{ color: "#AAB0BD" }}>תאריך עדכון אחרון: מרץ 2026</p>
 
         {/* Legal statement */}
         <section aria-labelledby="legal-heading" className="mb-10 rounded-2xl p-6" style={{ background: "rgba(201,150,74,0.1)", border: "1px solid rgba(201,150,74,0.08)" }}>
@@ -36,7 +36,7 @@ export default function AccessibilityPage() {
               { term: "גורם מנגיש",     def: "הדר דנן בע״מ" },
             ].map(({ term, def }) => (
               <div key={term} className="flex gap-4 items-baseline pb-3" style={{ borderBottom: "1px solid #2C323E" }}>
-                <dt className="text-sm font-semibold w-36 flex-shrink-0" style={{ color: "#9E9990" }}>{term}</dt>
+                <dt className="text-sm font-semibold w-36 flex-shrink-0" style={{ color: "#AAB0BD" }}>{term}</dt>
                 <dd className="font-medium" style={{ color: "#EDE9E1" }}>{def}</dd>
               </div>
             ))}
@@ -62,7 +62,7 @@ export default function AccessibilityPage() {
               "הגדרות הנגישות נשמרות בדפדפן לביקורים עתידיים",
             ].map((item) => (
               <li key={item} className="flex gap-2">
-                <span className="mt-0.5 flex-shrink-0" style={{ color: "#C9964A" }} aria-hidden="true">✓</span>
+                <span className="mt-0.5 flex-shrink-0" style={{ color: "#E8B94A" }} aria-hidden="true">✓</span>
                 <span>{item}</span>
               </li>
             ))}
@@ -76,9 +76,9 @@ export default function AccessibilityPage() {
             <table className="w-full text-sm border-collapse" aria-label="דפדפנים ותוכנות נתמכות">
               <thead>
                 <tr style={{ background: "#191F2B" }}>
-                  <th scope="col" className="text-right px-4 py-2 font-semibold" style={{ color: "#9E9990", border: "1px solid #2C323E" }}>דפדפן / תוכנה</th>
-                  <th scope="col" className="text-right px-4 py-2 font-semibold" style={{ color: "#9E9990", border: "1px solid #2C323E" }}>מערכת הפעלה</th>
-                  <th scope="col" className="text-right px-4 py-2 font-semibold" style={{ color: "#9E9990", border: "1px solid #2C323E" }}>גרסה מינימלית</th>
+                  <th scope="col" className="text-right px-4 py-2 font-semibold" style={{ color: "#AAB0BD", border: "1px solid #2C323E" }}>דפדפן / תוכנה</th>
+                  <th scope="col" className="text-right px-4 py-2 font-semibold" style={{ color: "#AAB0BD", border: "1px solid #2C323E" }}>מערכת הפעלה</th>
+                  <th scope="col" className="text-right px-4 py-2 font-semibold" style={{ color: "#AAB0BD", border: "1px solid #2C323E" }}>גרסה מינימלית</th>
                 </tr>
               </thead>
               <tbody>
@@ -92,8 +92,8 @@ export default function AccessibilityPage() {
                 ].map(([browser, os, version], idx) => (
                   <tr key={browser} style={{ background: idx % 2 === 0 ? "#191F2B" : "#101520" }}>
                     <td className="px-4 py-2 font-medium" style={{ border: "1px solid #2C323E", color: "#EDE9E1" }}>{browser}</td>
-                    <td className="px-4 py-2" style={{ border: "1px solid #2C323E", color: "#9E9990" }}>{os}</td>
-                    <td className="px-4 py-2" style={{ border: "1px solid #2C323E", color: "#9E9990" }}>{version}</td>
+                    <td className="px-4 py-2" style={{ border: "1px solid #2C323E", color: "#AAB0BD" }}>{os}</td>
+                    <td className="px-4 py-2" style={{ border: "1px solid #2C323E", color: "#AAB0BD" }}>{version}</td>
                   </tr>
                 ))}
               </tbody>
@@ -129,7 +129,7 @@ export default function AccessibilityPage() {
                 <a
                   href="mailto:נגישות@beegood.online"
                   className="underline hover:opacity-70 transition"
-                  style={{ color: "#C9964A" }}
+                  style={{ color: "#E8B94A" }}
                 >
                   נגישות@beegood.online
                 </a>
@@ -141,7 +141,7 @@ export default function AccessibilityPage() {
                 <a
                   href="mailto:hadar@beegood.online"
                   className="underline hover:opacity-70 transition"
-                  style={{ color: "#C9964A" }}
+                  style={{ color: "#E8B94A" }}
                 >
                   hadar@beegood.online
                 </a>
@@ -153,7 +153,7 @@ export default function AccessibilityPage() {
                 <a
                   href="tel:+972539566961"
                   className="underline hover:opacity-70 transition"
-                  style={{ color: "#C9964A" }}
+                  style={{ color: "#E8B94A" }}
                 >
                   053-9566961
                 </a>
@@ -176,10 +176,10 @@ export default function AccessibilityPage() {
         </section>
 
         {/* Footer nav */}
-        <nav aria-label="ניווט בתחתית הצהרת הנגישות" className="pt-6 flex gap-4 text-sm" style={{ borderTop: "1px solid #2C323E", color: "#9E9990" }}>
-          <Link href="/" className="hover:opacity-70 transition" style={{ color: "#9E9990" }}>דף הבית</Link>
-          <Link href="/privacy" className="hover:opacity-70 transition" style={{ color: "#9E9990" }}>מדיניות פרטיות</Link>
-          <Link href="/terms" className="hover:opacity-70 transition" style={{ color: "#9E9990" }}>תנאי שימוש</Link>
+        <nav aria-label="ניווט בתחתית הצהרת הנגישות" className="pt-6 flex gap-4 text-sm" style={{ borderTop: "1px solid #2C323E", color: "#AAB0BD" }}>
+          <Link href="/" className="hover:opacity-70 transition" style={{ color: "#AAB0BD" }}>דף הבית</Link>
+          <Link href="/privacy" className="hover:opacity-70 transition" style={{ color: "#AAB0BD" }}>מדיניות פרטיות</Link>
+          <Link href="/terms" className="hover:opacity-70 transition" style={{ color: "#AAB0BD" }}>תנאי שימוש</Link>
         </nav>
 
       </main>

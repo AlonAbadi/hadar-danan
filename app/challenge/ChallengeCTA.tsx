@@ -241,7 +241,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
     return (
       <form onSubmit={handlePhoneSubmit} className="flex flex-col gap-4" dir="rtl">
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium" style={{ color: "#9E9990" }}>מספר טלפון לחשבונית</label>
+          <label className="text-sm font-medium" style={{ color: "#AAB0BD" }}>מספר טלפון לחשבונית</label>
           <input
             type="tel"
             placeholder="0501234567"
@@ -262,7 +262,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
           priceWas={hasDiscount ? originalPrice : undefined}
         />
         <SecurityNote />
-        <button type="button" onClick={() => setPhase("idle")} className="text-sm text-center transition" style={{ color: "#9E9990" }}>
+        <button type="button" onClick={() => setPhase("idle")} className="text-sm text-center transition" style={{ color: "#AAB0BD" }}>
           ביטול
         </button>
       </form>
@@ -294,7 +294,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 text-sm transition hover:opacity-80"
-              style={{ color: "#9E9990" }}
+              style={{ color: "#AAB0BD" }}
             >
               {WA_ICON}
               שאלות? דבר איתנו בוואטסאפ
@@ -325,7 +325,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 text-sm transition hover:opacity-80"
-            style={{ color: "#9E9990" }}
+            style={{ color: "#AAB0BD" }}
           >
             {WA_ICON}
             שאלות? דבר איתנו בוואטסאפ
@@ -360,7 +360,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
         { id: "phone", label: "טלפון",    type: "tel",   placeholder: "0501234567" },
       ].map(({ id, label, type, placeholder }) => (
         <div key={id} className="flex flex-col gap-1">
-          <label htmlFor={`ch-${id}`} className="text-sm font-medium" style={{ color: "#9E9990" }}>{label}</label>
+          <label htmlFor={`ch-${id}`} className="text-sm font-medium" style={{ color: "#AAB0BD" }}>{label}</label>
           <input
             id={`ch-${id}`}
             type={type}
@@ -399,9 +399,9 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
         type="button"
         onClick={() => { setPhase("idle"); setErrorMsg(null); }}
         className="text-sm transition text-center"
-        style={{ color: "#9E9990" }}
+        style={{ color: "#AAB0BD" }}
         onMouseEnter={(e) => { e.currentTarget.style.color = "#EDE9E1"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = "#9E9990"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = "#AAB0BD"; }}
       >
         ביטול
       </button>

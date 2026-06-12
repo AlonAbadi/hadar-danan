@@ -94,7 +94,7 @@ export default async function ChallengeThankyouPage({
             <h2 className="text-xl font-bold" style={{ color: "#EDE9E1" }}>
               {needsSetup ? "ואחרי זה —" : "השלב הבא —"} התחילו לצפות בשיעור הפתיחה
             </h2>
-            <p className="text-sm leading-relaxed" style={{ color: "#9E9990" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "#AAB0BD" }}>
               האתגר זמין לצפייה עכשיו. התחילו עם שיעור הפתיחה והתקדמו בקצב שלכם.
             </p>
 
@@ -112,7 +112,7 @@ export default async function ChallengeThankyouPage({
             </Link>
           </div>
 
-          <Link href="/" className="text-sm transition-colors hover:underline" style={{ color: "#9E9990" }}>
+          <Link href="/" className="text-sm transition-colors hover:underline" style={{ color: "#AAB0BD" }}>
             חזרה לעמוד הבית
           </Link>
 

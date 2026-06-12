@@ -56,7 +56,7 @@ const ANSWER_ORDER = ["idea", "stage", "stuck", "give", "why"];
 function scoreColor(score: number): string {
   if (score >= 70) return "#34A853";
   if (score >= 45) return "#E8B94A";
-  return "#9E9990";
+  return "#AAB0BD";
 }
 
 function dateLong(iso: string): string {
@@ -126,12 +126,12 @@ export default function StageAppDetailPage() {
   };
 
   if (loading) {
-    return <Wrap><div style={{ color: "#9E9990" }}>טוען...</div></Wrap>;
+    return <Wrap><div style={{ color: "#AAB0BD" }}>טוען...</div></Wrap>;
   }
   if (notFound || !app) {
     return (
       <Wrap>
-        <div style={{ color: "#9E9990", marginBottom: 16 }}>המועמדות לא נמצאה.</div>
+        <div style={{ color: "#AAB0BD", marginBottom: 16 }}>המועמדות לא נמצאה.</div>
         <Link href="/admin/stage" style={backLinkStyle}>← חזרה לרשימה</Link>
       </Wrap>
     );
@@ -158,7 +158,7 @@ export default function StageAppDetailPage() {
           </div>
           <div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "#EDE9E1" }}>{app.name}</div>
-            <div style={{ fontSize: 13, color: "#9E9990", marginTop: 4 }}>
+            <div style={{ fontSize: 13, color: "#AAB0BD", marginTop: 4 }}>
               נשלח ב-{dateLong(app.created_at)}
               {app.reviewed_at && <> · עודכן ב-{dateLong(app.reviewed_at)}</>}
             </div>
@@ -171,9 +171,9 @@ export default function StageAppDetailPage() {
           style={{
             padding: "8px 14px",
             borderRadius: 10,
-            background: (STATUS_COLORS[app.status] ?? "#9E9990") + "18",
-            color: STATUS_COLORS[app.status] ?? "#9E9990",
-            border: `1px solid ${(STATUS_COLORS[app.status] ?? "#9E9990")}44`,
+            background: (STATUS_COLORS[app.status] ?? "#AAB0BD") + "18",
+            color: STATUS_COLORS[app.status] ?? "#AAB0BD",
+            border: `1px solid ${(STATUS_COLORS[app.status] ?? "#AAB0BD")}44`,
             fontSize: 14,
             fontWeight: 700,
             fontFamily: "inherit",
@@ -196,7 +196,7 @@ export default function StageAppDetailPage() {
             if (!v) return null;
             return (
               <Card key={k}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#C9964A", letterSpacing: 2, marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#E8B94A", letterSpacing: 2, marginBottom: 8 }}>
                   {ANSWER_LABELS[k] ?? k}
                 </div>
                 <div style={{ fontSize: 15, color: "#EDE9E1", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
@@ -209,7 +209,7 @@ export default function StageAppDetailPage() {
           {/* Notes */}
           <Card>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#C9964A", letterSpacing: 2 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#E8B94A", letterSpacing: 2 }}>
                 הערות פנימיות
               </div>
               {notesSavedAt && <span style={{ fontSize: 12, color: "#34A853" }}>נשמר ✓</span>}
@@ -239,7 +239,7 @@ export default function StageAppDetailPage() {
               style={{
                 marginTop: 10,
                 background: dirty ? "linear-gradient(90deg, #9E7C3A, #E8B94A)" : "rgba(255,255,255,0.06)",
-                color: dirty ? "#080C14" : "#9E9990",
+                color: dirty ? "#080C14" : "#AAB0BD",
                 border: "none",
                 borderRadius: 8,
                 padding: "8px 18px",
@@ -261,13 +261,13 @@ export default function StageAppDetailPage() {
             <SectionLabel>יצירת קשר</SectionLabel>
             {app.email && (
               <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 11, color: "#9E9990" }}>אימייל</div>
+                <div style={{ fontSize: 11, color: "#AAB0BD" }}>אימייל</div>
                 <a href={`mailto:${app.email}`} style={linkStyle} dir="ltr">{app.email}</a>
               </div>
             )}
             {app.phone && (
               <div style={{ marginTop: 12 }}>
-                <div style={{ fontSize: 11, color: "#9E9990" }}>טלפון</div>
+                <div style={{ fontSize: 11, color: "#AAB0BD" }}>טלפון</div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 2 }}>
                   <a href={`tel:${app.phone}`} style={linkStyle} dir="ltr">{app.phone}</a>
                   <a href={whatsappLink(app.phone)} target="_blank" rel="noopener noreferrer" style={{
@@ -280,7 +280,7 @@ export default function StageAppDetailPage() {
               </div>
             )}
             {!app.email && !app.phone && (
-              <div style={{ color: "#9E9990", fontSize: 13, marginTop: 8 }}>לא סופקו פרטי קשר</div>
+              <div style={{ color: "#AAB0BD", fontSize: 13, marginTop: 8 }}>לא סופקו פרטי קשר</div>
             )}
           </Card>
 
@@ -292,11 +292,11 @@ export default function StageAppDetailPage() {
               <ScoreBar label="ספציפיות" value={bd.specificity} max={30} />
               <ScoreBar label="מחויבות"  value={bd.commitment}  max={30} />
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14, paddingTop: 12, borderTop: "1px solid #2C323E" }}>
-                <span style={{ fontSize: 13, color: "#9E9990" }}>סה״כ</span>
+                <span style={{ fontSize: 13, color: "#AAB0BD" }}>סה״כ</span>
                 <span style={{ fontSize: 18, fontWeight: 800, color: scoreColor(app.score) }}>{app.score}/100</span>
               </div>
               {(bd.totalLen !== undefined || bd.hits !== undefined) && (
-                <div style={{ fontSize: 11, color: "#9E9990", marginTop: 8, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 11, color: "#AAB0BD", marginTop: 8, lineHeight: 1.6 }}>
                   {bd.totalLen !== undefined && <>סה״כ תווים: {bd.totalLen} </>}
                   {bd.hits !== undefined && <>· מילות מחויבות: {bd.hits}</>}
                 </div>
@@ -311,7 +311,7 @@ export default function StageAppDetailPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
                 {Object.entries(app.source_utm).map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 12 }}>
-                    <span style={{ color: "#9E9990" }}>{k}</span>
+                    <span style={{ color: "#AAB0BD" }}>{k}</span>
                     <span style={{ color: "#EDE9E1", textAlign: "left", direction: "ltr", wordBreak: "break-all" }}>{v}</span>
                   </div>
                 ))}
@@ -324,12 +324,12 @@ export default function StageAppDetailPage() {
             <Card>
               <SectionLabel>טכני</SectionLabel>
               {app.ip_address && (
-                <div style={{ fontSize: 12, color: "#9E9990", marginTop: 8 }}>
+                <div style={{ fontSize: 12, color: "#AAB0BD", marginTop: 8 }}>
                   IP: <span style={{ color: "#EDE9E1", direction: "ltr" }}>{app.ip_address}</span>
                 </div>
               )}
               {app.user_agent && (
-                <div style={{ fontSize: 12, color: "#9E9990", marginTop: 6, wordBreak: "break-all" }}>
+                <div style={{ fontSize: 12, color: "#AAB0BD", marginTop: 6, wordBreak: "break-all" }}>
                   UA: <span style={{ color: "#EDE9E1", direction: "ltr" }}>{app.user_agent}</span>
                 </div>
               )}
@@ -374,7 +374,7 @@ function Card({ children }: { children: React.ReactNode }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 700, color: "#C9964A", letterSpacing: 2 }}>
+    <div style={{ fontSize: 11, fontWeight: 700, color: "#E8B94A", letterSpacing: 2 }}>
       {children}
     </div>
   );
@@ -386,7 +386,7 @@ function ScoreBar({ label, value, max }: { label: string; value: number; max: nu
     <div style={{ marginTop: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
         <span style={{ fontSize: 12, color: "#EDE9E1" }}>{label}</span>
-        <span style={{ fontSize: 12, color: "#9E9990" }}>{value}/{max}</span>
+        <span style={{ fontSize: 12, color: "#AAB0BD" }}>{value}/{max}</span>
       </div>
       <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
         <div style={{
@@ -402,7 +402,7 @@ function ScoreBar({ label, value, max }: { label: string; value: number; max: nu
 
 const backLinkStyle: React.CSSProperties = {
   display: "inline-block",
-  color: "#9E9990",
+  color: "#AAB0BD",
   fontSize: 13,
   textDecoration: "none",
   fontWeight: 600,

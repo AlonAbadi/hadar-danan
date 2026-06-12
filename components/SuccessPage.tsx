@@ -112,7 +112,7 @@ export function SuccessPage({
         {/* Label pill */}
         <div
           className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold"
-          style={{ background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.30)", color: "#C9964A" }}
+          style={{ background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.30)", color: "#E8B94A" }}
         >
           הרכישה אושרה בהצלחה ✓
         </div>
@@ -120,7 +120,7 @@ export function SuccessPage({
         {/* Title */}
         <div className="text-center flex flex-col gap-2">
           <h1 className="text-4xl font-black" style={{ color: "#EDE9E1" }}>{confirmationTitle}</h1>
-          <p className="text-lg leading-relaxed" style={{ color: "#9E9990" }}>{confirmationDesc}</p>
+          <p className="text-lg leading-relaxed" style={{ color: "#AAB0BD" }}>{confirmationDesc}</p>
         </div>
 
         {/* Card */}
@@ -135,13 +135,13 @@ export function SuccessPage({
           </div>
 
           {/* Steps */}
-          <p className="text-sm font-bold" style={{ color: "#C9964A" }}>מה קורה עכשיו?</p>
+          <p className="text-sm font-bold" style={{ color: "#E8B94A" }}>מה קורה עכשיו?</p>
           <div className="flex flex-col gap-3">
             {STEPS.map((step) => (
               <div key={step.num} className="flex items-start gap-3">
                 <div
                   className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black"
-                  style={{ background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.25)", color: "#C9964A" }}
+                  style={{ background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.25)", color: "#E8B94A" }}
                 >
                   {step.num}
                 </div>
@@ -165,7 +165,7 @@ export function SuccessPage({
                   ) : (
                     <p className="font-semibold" style={{ color: "#EDE9E1" }}>{step.title}</p>
                   )}
-                  {step.desc && <p className="text-sm" style={{ color: "#9E9990" }}>{step.desc}</p>}
+                  {step.desc && <p className="text-sm" style={{ color: "#AAB0BD" }}>{step.desc}</p>}
                 </div>
               </div>
             ))}
@@ -209,7 +209,7 @@ export function SuccessPage({
         <Link
           href="/"
           className="w-full rounded-full py-3 text-center text-base font-semibold transition hover:opacity-80"
-          style={{ border: "1px solid #2C323E", color: "#9E9990" }}
+          style={{ border: "1px solid #2C323E", color: "#AAB0BD" }}
         >
           לדף הבית
         </Link>
@@ -247,7 +247,7 @@ export function SuccessPage({
             <div style={{ color: "#EDE9E1", fontSize: 16, fontWeight: 700, lineHeight: 1.35, marginTop: 4 }}>
               עברת את {productName}. יש שלב אחד עמוק יותר.
             </div>
-            <div style={{ color: "#9E9990", fontSize: 13, lineHeight: 1.6 }}>
+            <div style={{ color: "#AAB0BD", fontSize: 13, lineHeight: 1.6 }}>
               3 ימים פתוחים — שלושה ימי עבודה אינטנסיביים, בליווי אישי, בסלקציה.
               תשלום בסיסי + אחוז מההצלחה. לעסקים שכבר מוכנים לקפיצה.
             </div>

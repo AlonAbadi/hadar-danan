@@ -9,14 +9,14 @@ export default function TermsPage() {
     <div
       dir="rtl"
       className="font-assistant min-h-screen"
-      style={{ background: "#080C14", color: "#9E9990" }}
+      style={{ background: "#080C14", color: "#AAB0BD" }}
     >
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
         <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "#EDE9E1", marginBottom: 8 }}>
             תנאי שימוש
           </h1>
-          <p style={{ fontSize: 14, color: "#9E9990" }}>עדכון אחרון: אפריל 2026</p>
+          <p style={{ fontSize: 14, color: "#AAB0BD" }}>עדכון אחרון: אפריל 2026</p>
         </div>
 
         <Section title="1. הסכמה לתנאים">

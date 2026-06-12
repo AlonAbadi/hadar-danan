@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   const palette = generated.palettes?.find((p: { id: string }) => p.id === selectedPalette)
     ?? generated.palettes?.[0]
-    ?? { bg: "#0D1018", accent: "#C9964A", text: "#EDE9E1", muted: "#9E9990" };
+    ?? { bg: "#0D1018", accent: "#C9964A", text: "#EDE9E1", muted: "#AAB0BD" };
 
   const productsText = Array.isArray(app.products)
     ? app.products.filter((p: { name: string }) => p.name)

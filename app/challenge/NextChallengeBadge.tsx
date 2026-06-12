@@ -28,7 +28,7 @@ export function NextChallengeBadge() {
   return (
     <div
       className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold"
-      style={{ background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.20)", color: "#C9964A" }}
+      style={{ background: "rgba(201,150,74,0.08)", border: "1px solid rgba(201,150,74,0.20)", color: "#E8B94A" }}
     >
       <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#C9964A" }} />
       {days === 0

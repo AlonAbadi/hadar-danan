@@ -96,7 +96,7 @@ export default function MethodPage() {
           <div style={{ maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
             <p
               style={{
-                color: "#C9964A",
+                color: "#E8B94A",
                 fontSize: 11,
                 letterSpacing: "0.2em",
                 fontWeight: 600,
@@ -126,7 +126,7 @@ export default function MethodPage() {
               style={{
                 fontSize: "clamp(1rem, 2.2vw, 1.2rem)",
                 lineHeight: 1.8,
-                color: "#9E9990",
+                color: "#AAB0BD",
                 maxWidth: 640,
                 margin: "0 auto 40px",
               }}
@@ -157,7 +157,7 @@ export default function MethodPage() {
                   display: "inline-block",
                   background: "transparent",
                   border: "1px solid rgba(201,150,74,0.4)",
-                  color: "#C9964A",
+                  color: "#E8B94A",
                   fontWeight: 600,
                   borderRadius: 9999,
                   padding: "13px 28px",
@@ -177,7 +177,7 @@ export default function MethodPage() {
             <div style={{ textAlign: "center", marginBottom: 56 }}>
               <p
                 style={{
-                  color: "#C9964A",
+                  color: "#E8B94A",
                   fontSize: 12,
                   letterSpacing: "0.15em",
                   fontWeight: 600,
@@ -237,7 +237,7 @@ export default function MethodPage() {
                     >
                       {p.title}
                     </h3>
-                    <p style={{ color: "#9E9990", lineHeight: 1.7, fontSize: "0.95rem", margin: 0 }}>
+                    <p style={{ color: "#AAB0BD", lineHeight: 1.7, fontSize: "0.95rem", margin: 0 }}>
                       {p.desc}
                     </p>
                   </div>
@@ -253,7 +253,7 @@ export default function MethodPage() {
             <div style={{ textAlign: "center", marginBottom: 48 }}>
               <p
                 style={{
-                  color: "#C9964A",
+                  color: "#E8B94A",
                   fontSize: 12,
                   letterSpacing: "0.15em",
                   fontWeight: 600,
@@ -298,7 +298,7 @@ export default function MethodPage() {
                   }}
                 >
                   <div style={{ fontSize: 32, marginBottom: 12 }}>{item.icon}</div>
-                  <p style={{ color: "#9E9990", lineHeight: 1.65, fontSize: "0.9rem", margin: 0 }}>
+                  <p style={{ color: "#AAB0BD", lineHeight: 1.65, fontSize: "0.9rem", margin: 0 }}>
                     {item.text}
                   </p>
                 </div>
@@ -313,7 +313,7 @@ export default function MethodPage() {
             <div style={{ textAlign: "center", marginBottom: 48 }}>
               <p
                 style={{
-                  color: "#C9964A",
+                  color: "#E8B94A",
                   fontSize: 12,
                   letterSpacing: "0.15em",
                   fontWeight: 600,
@@ -353,7 +353,7 @@ export default function MethodPage() {
                   >
                     {faq.question}
                   </h3>
-                  <p style={{ color: "#9E9990", lineHeight: 1.75, fontSize: "0.95rem", margin: 0 }}>
+                  <p style={{ color: "#AAB0BD", lineHeight: 1.75, fontSize: "0.95rem", margin: 0 }}>
                     {faq.answer}
                   </p>
                 </div>
@@ -389,7 +389,7 @@ export default function MethodPage() {
               style={{
                 display: "inline-block",
                 background: "#0D1018",
-                color: "#C9964A",
+                color: "#E8B94A",
                 fontWeight: 700,
                 borderRadius: 9999,
                 padding: "13px 28px",

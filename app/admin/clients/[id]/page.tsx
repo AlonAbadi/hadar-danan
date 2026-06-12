@@ -20,7 +20,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  lead:             { bg: "rgba(158,153,144,0.15)", color: "#9E9990" },
+  lead:             { bg: "rgba(158,153,144,0.15)", color: "#AAB0BD" },
   engaged:          { bg: "rgba(55,138,221,0.15)",  color: "#378ADD" },
   high_intent:      { bg: "rgba(239,159,39,0.15)",  color: "#EF9F27" },
   buyer:            { bg: "rgba(76,175,130,0.15)",  color: "#4CAF82" },
@@ -269,7 +269,7 @@ function describeEvent(evType: string, meta: Record<string, unknown> | null): {
     case "HIVE_CANCELLED":
       return { label: "ביטל/ה מנוי כוורת", dot: "#E05555", skip: false };
     default:
-      return { label: evType, dot: "#9E9990", skip: false };
+      return { label: evType, dot: "#AAB0BD", skip: false };
   }
 }
 
@@ -281,7 +281,7 @@ function Card({ title, badge, children }: { title?: string; badge?: ReactNode; c
       {(title || badge) && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
           {title && (
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#9E9990", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#AAB0BD", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               {title}
             </span>
           )}
@@ -299,7 +299,7 @@ function InfoRow({ label, value, ltr }: { label: string; value?: string | null; 
       display: "flex", gap: 12, alignItems: "flex-start",
       padding: "7px 0", borderBottom: "1px solid rgba(44,50,62,0.5)",
     }}>
-      <span style={{ color: "#9E9990", fontSize: 13, width: 110, flexShrink: 0, lineHeight: 1.5 }}>
+      <span style={{ color: "#AAB0BD", fontSize: 13, width: 110, flexShrink: 0, lineHeight: 1.5 }}>
         {label}
       </span>
       <span style={{
@@ -454,7 +454,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
           padding: "14px 24px", display: "flex", alignItems: "center",
           justifyContent: "space-between", gap: 16,
         }}>
-          <Link href="/admin/clients" style={{ color: "#9E9990", fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
+          <Link href="/admin/clients" style={{ color: "#AAB0BD", fontSize: 13, textDecoration: "none", whiteSpace: "nowrap" }}>
             &larr; חזור ללקוחות
           </Link>
 
@@ -490,7 +490,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
             }}>
               ₪{totalSpent.toLocaleString("he-IL")}
             </span>
-            <span style={{ fontSize: 12, color: "#9E9990" }}>נרשם/ה {relativeTime(user.created_at)}</span>
+            <span style={{ fontSize: 12, color: "#AAB0BD" }}>נרשם/ה {relativeTime(user.created_at)}</span>
           </div>
         </header>
 
@@ -509,7 +509,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                 נטישת עגלה - לפני {cartHoursAgo} שעות
               </div>
               {pendingCart.map((p) => (
-                <div key={p.id} style={{ fontSize: 13, color: "#9E9990", marginTop: 3 }}>
+                <div key={p.id} style={{ fontSize: 13, color: "#AAB0BD", marginTop: 3 }}>
                   {PRODUCT_LABELS[p.product as string] ?? p.product}
                   {PRODUCT_PRICES[p.product as string] ? ` - ₪${PRODUCT_PRICES[p.product as string]}` : ""}
                 </div>
@@ -525,7 +525,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
               <div style={{ fontSize: 14, fontWeight: 700, color: "#7F77DD", marginBottom: 4 }}>
                 ליד פרימיום פוטנציאלי - לידיעת הדר ואלון
               </div>
-              <div style={{ fontSize: 13, color: "#9E9990" }}>
+              <div style={{ fontSize: 13, color: "#AAB0BD" }}>
                 ציון פרימיום גבוה. שווה לבדוק התאמה לפני הצעת מוצר אחר.
               </div>
             </div>
@@ -539,7 +539,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
               <div style={{ fontSize: 14, fontWeight: 700, color: "#7F77DD", marginBottom: 4 }}>
                 ליד שותפות פוטנציאלי - לידיעת הדר ואלון
               </div>
-              <div style={{ fontSize: 13, color: "#9E9990" }}>
+              <div style={{ fontSize: 13, color: "#AAB0BD" }}>
                 ציון שותפות גבוה. שווה לבדוק התאמה לפני הצעת מוצר אחר.
               </div>
             </div>
@@ -597,7 +597,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                               </span>
                             )}
                           </div>
-                          <span style={{ fontSize: 12, color: "#9E9990" }}>{score}</span>
+                          <span style={{ fontSize: 12, color: "#AAB0BD" }}>{score}</span>
                         </div>
                         <div style={{ background: "#0D1219", borderRadius: 4, height: 6, overflow: "hidden" }}>
                           <div style={{
@@ -611,7 +611,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                     ))}
                   </div>
                 ) : (
-                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+                  <p style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
                     אין תוצאות קוויז
                   </p>
                 )}
@@ -620,7 +620,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
               {/* ── Completed purchases ───────────────────────────── */}
               <Card title="רכישות">
                 {completedPurchases.length === 0 ? (
-                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+                  <p style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
                     אין רכישות עדיין
                   </p>
                 ) : (
@@ -645,7 +645,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                         <span style={{ fontSize: 11, color: "#4CAF82", fontWeight: 700, padding: "2px 7px", borderRadius: 5, background: "rgba(76,175,130,0.15)", flexShrink: 0 }}>
                           הושלם
                         </span>
-                        <span style={{ fontSize: 11, color: "#9E9990", flexShrink: 0 }}>
+                        <span style={{ fontSize: 11, color: "#AAB0BD", flexShrink: 0 }}>
                           {fmtDateTime(p.created_at)}
                         </span>
                       </div>
@@ -658,7 +658,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
               {purchases.filter((p) => p.status === "pending" || p.status === "failed").length > 0 && (
                 <Card>
                   <div style={{ marginBottom: 12 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#9E9990", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#AAB0BD", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                       עגלות נטושות
                     </span>
                     <span style={{ fontSize: 11, color: "#6B7280", marginRight: 6 }}>
@@ -673,7 +673,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                         flexWrap: "wrap",
                         opacity: 0.8,
                       }}>
-                        <span style={{ fontSize: 13, color: "#9E9990", flex: 1, minWidth: 90 }}>
+                        <span style={{ fontSize: 13, color: "#AAB0BD", flex: 1, minWidth: 90 }}>
                           {PRODUCT_LABELS[p.product as string] ?? p.product}
                         </span>
                         <span style={{ fontSize: 13, color: "#6B7280", flexShrink: 0 }}>
@@ -698,7 +698,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
               {/* Video summary card */}
               <Card title="צפיות בסרטונים">
                 {videoSummary.length === 0 ? (
-                  <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+                  <p style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
                     אין צפיות מתועדות
                   </p>
                 ) : (
@@ -707,7 +707,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                       <div key={vid}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
                           <span style={{ fontSize: 13, color: "#EDE9E1" }}>{title}</span>
-                          <span style={{ fontSize: 12, color: maxPct >= 90 ? "#4CAF82" : "#9E9990", fontWeight: 600 }}>
+                          <span style={{ fontSize: 12, color: maxPct >= 90 ? "#4CAF82" : "#AAB0BD", fontWeight: 600 }}>
                             {maxPct >= 90 ? "עד הסוף" : `${maxPct}%`}
                           </span>
                         </div>
@@ -731,7 +731,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
           {/* ── Email engagement ──────────────────────────────────────── */}
           <Card title="מיילים שנשלחו">
             {emailLogs.length === 0 ? (
-              <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+              <p style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
                 אין מיילים
               </p>
             ) : (
@@ -749,7 +749,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                       }}>
                         {log.status === "opened" ? "נפתח" : "נשלח"}
                       </span>
-                      <span style={{ fontSize: 11, color: "#9E9990" }}>{fmtDateTime(log.created_at)}</span>
+                      <span style={{ fontSize: 11, color: "#AAB0BD" }}>{fmtDateTime(log.created_at)}</span>
                     </div>
                   );
                 })}
@@ -760,7 +760,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
           {/* ── Timeline ──────────────────────────────────────────────── */}
           <Card title="מסלול הביקור">
             {sessions.length === 0 ? (
-              <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
+              <p style={{ color: "#AAB0BD", fontSize: 13, textAlign: "center", padding: "20px 0", margin: 0 }}>
                 אין אירועים עדיין
               </p>
             ) : (
@@ -768,7 +768,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                 {sessions.map((session) => (
                   <div key={session.index}>
                     <div style={{
-                      fontSize: 11, fontWeight: 700, color: "#9E9990",
+                      fontSize: 11, fontWeight: 700, color: "#AAB0BD",
                       textTransform: "uppercase", letterSpacing: "0.06em",
                       paddingBottom: 8, marginBottom: 10,
                       borderBottom: "1px solid rgba(44,50,62,0.6)",
@@ -789,7 +789,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                               width: 7, height: 7, borderRadius: "50%",
                               background: dot, flexShrink: 0,
                             }} />
-                            <span style={{ fontSize: 12, color: "#9E9990", width: 38, flexShrink: 0 }}>
+                            <span style={{ fontSize: 12, color: "#AAB0BD", width: 38, flexShrink: 0 }}>
                               {fmtTime(ev.created_at)}
                             </span>
                             <span style={{ fontSize: 13, color: "#EDE9E1" }}>{label}</span>

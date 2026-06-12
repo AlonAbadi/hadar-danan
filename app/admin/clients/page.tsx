@@ -20,7 +20,7 @@ export default async function ClientsPage() {
 
   if (!purchases?.length) {
     return (
-      <div dir="rtl" style={{ fontFamily: "Assistant, sans-serif", padding: "40px 48px", background: "#080C14", minHeight: "100vh", color: "#9E9990" }}>
+      <div dir="rtl" style={{ fontFamily: "Assistant, sans-serif", padding: "40px 48px", background: "#080C14", minHeight: "100vh", color: "#AAB0BD" }}>
         אין לקוחות עדיין
       </div>
     );

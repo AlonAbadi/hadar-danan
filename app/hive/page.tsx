@@ -15,7 +15,7 @@ const C = {
   gold:  "#E8B94A",
   goldM: "#C9964A",
   fg:    "#EDE9E1",
-  muted: "#9E9990",
+  muted: "#AAB0BD",
   line:  "rgba(232,185,74,0.14)",
 };
 

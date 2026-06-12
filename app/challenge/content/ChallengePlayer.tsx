@@ -154,7 +154,7 @@ export default function ChallengePlayer({
     if (isActive) return { bg: "rgba(232,185,74,0.18)",   color: "#E8B94A",  border: "rgba(232,185,74,0.5)" };
     if (locked)   return { bg: "rgba(255,255,255,0.05)",  color: "#3A404E",  border: "transparent" };
     if (special)  return { bg: "rgba(139,92,246,0.15)",   color: "#A78BFA",  border: "rgba(139,92,246,0.35)" };
-    return         { bg: "rgba(201,150,74,0.08)",         color: "#C9964A",  border: "rgba(201,150,74,0.2)" };
+    return         { bg: "rgba(201,150,74,0.08)",         color: "#E8B94A",  border: "rgba(201,150,74,0.2)" };
   }
 
   // ── Day list (sidebar + mobile bottom) ──────────────────
@@ -300,7 +300,7 @@ export default function ChallengePlayer({
               alignItems: "center", justifyContent: "center", gap: 12, padding: "0 20px",
             }}>
               <span style={{ fontSize: 36 }}>🔒</span>
-              <div style={{ fontSize: 14, color: "#9E9990", fontWeight: 700, textAlign: "center" }}>
+              <div style={{ fontSize: 14, color: "#AAB0BD", fontWeight: 700, textAlign: "center" }}>
                 {activeDay === 8
                   ? "מפגש הסיום יפתח לאחר שיום 7 יהיה זמין"
                   : "יום זה ייפתח מחר בבוקר"}
@@ -329,7 +329,7 @@ export default function ChallengePlayer({
           <div style={{ fontSize: 15, color: "#EDE9E1", fontWeight: 700, marginBottom: 8 }}>
             {liveMeetingLabel}
           </div>
-          <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.7, maxWidth: 400, margin: "0 auto" }}>
+          <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.7, maxWidth: 400, margin: "0 auto" }}>
             מפגש הסיום יתקיים ב-Zoom עם הדר.
             נסכם את השבוע, נחגוג את ההישגים, ונדבר על הצעדים הבאים.
           </div>
@@ -375,7 +375,7 @@ export default function ChallengePlayer({
             style={{
               padding: "9px 24px", borderRadius: 8, border: "none",
               background: marking ? "#2C323E" : "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-              color: marking ? "#9E9990" : "#2a1d05",
+              color: marking ? "#AAB0BD" : "#2a1d05",
               fontSize: 13, fontWeight: 800,
               cursor: marking ? "not-allowed" : "pointer",
               fontFamily: "Assistant, sans-serif",
@@ -388,7 +388,7 @@ export default function ChallengePlayer({
         </div>
       )}
 
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#9E9990", textAlign: "right", marginTop: 14, marginBottom: 4 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#AAB0BD", textAlign: "right", marginTop: 14, marginBottom: 4 }}>
         {activeDay === 0 ? "שיעור פתיחה" : activeDay === 8 ? "מפגש סיום" : `יום ${activeDay} מתוך 7`}
         {" · "}
         {dayData.aspectRatio === "9:16" ? "ריל" : "וידאו"}
@@ -403,7 +403,7 @@ export default function ChallengePlayer({
           <div style={{ fontSize: 15, fontWeight: 800, color: "#EDE9E1", marginBottom: 6 }}>
             {dayData.title}
           </div>
-          <div style={{ fontSize: 13, color: "#9E9990", lineHeight: 1.7 }}>
+          <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.7 }}>
             {dayData.description}
           </div>
         </div>
@@ -417,7 +417,7 @@ export default function ChallengePlayer({
                 width: "100%", padding: "10px 16px",
                 background: expanded ? "rgba(201,150,74,0.06)" : "transparent",
                 border: "none", borderTop: "1px solid #1D2430",
-                color: "#C9964A", fontSize: 12, fontWeight: 700,
+                color: "#E8B94A", fontSize: 12, fontWeight: 700,
                 cursor: "pointer", textAlign: "right", direction: "rtl",
                 fontFamily: "Assistant, sans-serif",
                 display: "flex", alignItems: "center", gap: 6,
@@ -444,7 +444,7 @@ export default function ChallengePlayer({
                       padding: "8px 0",
                       borderBottom: i < dayData.bullets.length - 1 ? "1px solid #1D2430" : "none",
                     }}>
-                      <span style={{ color: "#C9964A", fontSize: 14, flexShrink: 0, marginTop: 2 }}>◆</span>
+                      <span style={{ color: "#E8B94A", fontSize: 14, flexShrink: 0, marginTop: 2 }}>◆</span>
                       <span style={{ fontSize: 13, color: "#EDE9E1", lineHeight: 1.7 }}>{b}</span>
                     </li>
                   ))}
@@ -460,7 +460,7 @@ export default function ChallengePlayer({
         <div style={{
           background: "rgba(201,150,74,0.05)", border: "1px solid rgba(201,150,74,0.15)",
           borderRadius: 10, padding: "10px 14px", marginBottom: 16,
-          fontSize: 12, color: "#9E9990", textAlign: "center",
+          fontSize: 12, color: "#AAB0BD", textAlign: "center",
         }}>
           יום {activeDay + 1} ייפתח מחר בבוקר אוטומטית
         </div>
@@ -484,7 +484,7 @@ export default function ChallengePlayer({
         <div style={{ fontSize: 13, color: "#EDE9E1", fontWeight: 700, marginBottom: 4 }}>
           מפגש חי עם הדר — {liveMeetingLabel}
         </div>
-        <div style={{ fontSize: 12, color: "#9E9990", marginBottom: 16, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: "#AAB0BD", marginBottom: 16, lineHeight: 1.6 }}>
           מפגש הסיום בזום מחכה לך — קישור ישלח לפני המפגש
         </div>
         <button
@@ -511,7 +511,7 @@ export default function ChallengePlayer({
       <div style={{ fontSize: 18, fontWeight: 800, color: "#E8B94A", marginBottom: 6 }}>
         סיימת את האתגר!
       </div>
-      <div style={{ fontSize: 13, color: "#9E9990", marginBottom: 16 }}>
+      <div style={{ fontSize: 13, color: "#AAB0BD", marginBottom: 16 }}>
         הצעד הבא — סדנה יום אחד לבניית המסר שמוכר
       </div>
       <Link href="/workshop" style={{
@@ -549,7 +549,7 @@ export default function ChallengePlayer({
         <div style={{ fontSize: 17, fontWeight: 800, color: "#EDE9E1", marginBottom: 8 }}>
           היום נעול
         </div>
-        <div style={{ fontSize: 14, color: "#9E9990", lineHeight: 1.7, marginBottom: 20 }}>
+        <div style={{ fontSize: 14, color: "#AAB0BD", lineHeight: 1.7, marginBottom: 20 }}>
           תגיע מחר — תשלח לך הודעה בווצאפ 📱
         </div>
         <button
@@ -579,7 +579,7 @@ export default function ChallengePlayer({
       <div className="ch-mob-hdr">
         <span />
         <span style={{
-          fontSize: 12, fontWeight: 700, color: "#C9964A",
+          fontSize: 12, fontWeight: 700, color: "#E8B94A",
           padding: "3px 10px", borderRadius: 20,
           background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.25)",
         }}>
@@ -597,7 +597,7 @@ export default function ChallengePlayer({
           }}>
             אתגר 7 הימים
           </span>
-          <span style={{ fontSize: 12, color: "#9E9990" }}>
+          <span style={{ fontSize: 12, color: "#AAB0BD" }}>
             {completedCount}/{totalDays} ימים הושלמו
           </span>
         </div>
