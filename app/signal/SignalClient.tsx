@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
 import { VoiceInput } from "@/components/signal/VoiceInput";
+import { CopyButton } from "@/components/signal/CopyButton";
+import { PrintButton } from "@/components/signal/PrintButton";
 
 type SignalAnswers = Record<string, string>;
 
@@ -47,6 +49,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
   const [step, setStep]           = useState(0);
   const [answers, setAnswers]     = useState<SignalAnswers>({});
   const [signal, setSignal]       = useState<SignalOutput | null>(null);
+  const [extractionId, setExtractionId] = useState<string | null>(null);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
   const [cacheChecked, setCacheChecked] = useState(false);
@@ -81,6 +84,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
           const data = await res.json();
           if (data?.signal) {
             setSignal(data.signal);
+            setExtractionId(data.id ?? null);
             setGeneratedAt(data.generated_at ?? null);
             setPhase("result");
           }
@@ -138,6 +142,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
         return;
       }
       setSignal(data.signal as SignalOutput);
+      setExtractionId((data.id as string | null) ?? null);
       setGeneratedAt(data.generated_at ?? null);
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       setPhase("result");
@@ -171,6 +176,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
 
   const restart = () => {
     setSignal(null);
+    setExtractionId(null);
     setGeneratedAt(null);
     setAnswers({});
     setStep(0);
@@ -259,6 +265,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
           <Result
             firstName={firstName}
             signal={signal}
+            extractionId={extractionId}
             generatedAt={generatedAt}
             onRestart={restart}
           />
@@ -716,13 +723,14 @@ function ErrorCard({ message, onRetry }: { message: string | null; onRetry: () =
 }
 
 interface ResultProps {
-  firstName?:   string;
-  signal:       SignalOutput;
-  generatedAt:  string | null;
-  onRestart:    () => void;
+  firstName?:    string;
+  signal:        SignalOutput;
+  extractionId:  string | null;
+  generatedAt:   string | null;
+  onRestart:     () => void;
 }
 
-function Result({ firstName, signal, generatedAt, onRestart }: ResultProps) {
+function Result({ firstName, signal, extractionId, generatedAt, onRestart }: ResultProps) {
   const dateStr = generatedAt
     ? new Date(generatedAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
     : null;
@@ -753,6 +761,7 @@ function Result({ firstName, signal, generatedAt, onRestart }: ResultProps) {
 
       {/* The signal itself — center stage */}
       <div
+        className="signal-hero"
         style={{
           background:   `linear-gradient(145deg, ${C.cardSoft}, ${C.card})`,
           border:       `1px solid ${C.gold}`,
@@ -765,16 +774,53 @@ function Result({ firstName, signal, generatedAt, onRestart }: ResultProps) {
         <div style={{ color: C.goldMid, fontSize: 13, marginBottom: 12, letterSpacing: 0.6 }}>
           האות
         </div>
-        <p style={{ fontSize: 22, lineHeight: 1.5, margin: 0, color: C.fg, fontWeight: 500 }}>
+        <p style={{ fontSize: 22, lineHeight: 1.5, margin: "0 0 18px", color: C.fg, fontWeight: 500 }}>
           {signal.signal}
         </p>
+        <div className="result-actions" style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+          <CopyButton text={signal.signal} label="העתק את האות" />
+        </div>
       </div>
 
-      {/* What the signal promises — quiet card directly under the signal */}
+      {/* What the signal promises — forward-leaning card, visually distinct */}
       {signal.signal_promise && (
-        <Card title="מה שהאות שלך מבטיח">
-          <p style={{ margin: 0, lineHeight: 1.7 }}>{signal.signal_promise}</p>
-        </Card>
+        <div
+          style={{
+            background:   "linear-gradient(180deg, rgba(232,185,74,0.05) 0%, transparent 100%)",
+            border:       "1px solid rgba(232,185,74,0.22)",
+            borderRadius: 16,
+            padding:      "20px 22px",
+            position:     "relative",
+          }}
+        >
+          {/* Upward-pointing accent — signals "next direction" */}
+          <div
+            aria-hidden
+            style={{
+              position:   "absolute",
+              top:        -1,
+              right:      22,
+              width:      0,
+              height:     0,
+              borderLeft: "7px solid transparent",
+              borderRight: "7px solid transparent",
+              borderBottom: "8px solid rgba(232,185,74,0.55)",
+            }}
+          />
+          <div style={{
+            color:         C.goldMid,
+            fontSize:      11,
+            letterSpacing: 0.6,
+            marginBottom:  8,
+            textTransform: "uppercase" as const,
+            display:       "flex",
+            alignItems:    "center",
+            gap:           6,
+          }}>
+            <span style={{ fontSize: 13 }}>↗</span> מה שהאות שלך מבטיח
+          </div>
+          <p style={{ margin: 0, lineHeight: 1.7, color: C.fg }}>{signal.signal_promise}</p>
+        </div>
       )}
 
       {/* Warm note */}
@@ -810,6 +856,7 @@ function Result({ firstName, signal, generatedAt, onRestart }: ResultProps) {
 
       {/* Hive CTA — the natural next step after seeing your signal */}
       <div
+        className="hive-cta-card"
         style={{
           background:   `linear-gradient(145deg, ${C.cardSoft}, ${C.card})`,
           border:       `1px solid ${C.line}`,
@@ -845,23 +892,48 @@ function Result({ firstName, signal, generatedAt, onRestart }: ResultProps) {
         </Link>
       </div>
 
-      {/* Footer */}
-      <div style={{ textAlign: "center", paddingTop: 4 }}>
+      {/* Footer — utility actions: print + restart */}
+      <div className="result-footer" style={{ textAlign: "center", paddingTop: 4, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+        <PrintButton />
         <button
           onClick={onRestart}
           style={{
             background:   "transparent",
             color:        C.muted,
             border:       `1px solid ${C.line}`,
-            borderRadius: 12,
+            borderRadius: 999,
             padding:      "10px 22px",
             cursor:       "pointer",
-            fontSize:     14,
+            fontSize:     13,
+            fontWeight:   600,
           }}
         >
           להתחיל מחדש
         </button>
       </div>
+
+      {/* Print-friendly styles. Hide nav/CTAs/footer chrome and reflow cards for paper. */}
+      <style>{`
+        @media print {
+          @page { margin: 18mm 14mm; }
+          /* Hide everything that's not the diagnostic itself */
+          nav, header, footer,
+          .result-actions,
+          .result-footer,
+          .hive-cta-card { display: none !important; }
+          body {
+            background: #ffffff !important;
+            color: #1a1a1a !important;
+          }
+          .signal-hero {
+            background: #ffffff !important;
+            border: 1px solid #C9964A !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+          }
+          .signal-hero p { color: #1a1a1a !important; }
+        }
+      `}</style>
     </div>
   );
 }

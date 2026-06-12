@@ -282,21 +282,27 @@ export async function POST(req: NextRequest) {
 
   // ── Save to DB — soft-fail (return signal even if save fails) ────────────
   const generatedAt = new Date().toISOString();
+  let extractionId: string | null = null;
   try {
-    const { error: saveError } = await safeFrom(db, "signal_extractions").insert({
-      user_id:      userId,
-      answers,
-      signal:       parsed,
-      model_used:   SIGNAL_ENGINE_MODEL,
-      raw_response: parsed,
-      generated_at: generatedAt,
-    });
+    const { data: inserted, error: saveError } = await safeFrom(db, "signal_extractions")
+      .insert({
+        user_id:      userId,
+        answers,
+        signal:       parsed,
+        model_used:   SIGNAL_ENGINE_MODEL,
+        raw_response: parsed,
+        generated_at: generatedAt,
+      })
+      .select("id")
+      .single();
     if (saveError) {
       await db.from("error_logs").insert({
         context: "api/signal/extract POST — db insert",
         error:   String(saveError.message ?? saveError),
         payload: { userId },
       });
+    } else if (inserted?.id) {
+      extractionId = inserted.id as string;
     }
   } catch (e) {
     await db.from("error_logs").insert({
@@ -361,6 +367,7 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
+    id:           extractionId,
     signal:       parsed,
     generated_at: generatedAt,
   });
