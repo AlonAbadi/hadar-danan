@@ -332,7 +332,7 @@ function ProductCardItem({ product }: { product: ProductCard }) {
           )}
           <span style={{
             fontSize: isSelection ? 13 : 17, fontWeight: 800,
-            color: product.price === "חינם" ? "#22C55E" : "#E8B94A",
+            color: product.price === "חינם" ? "#7FD49B" : "#E8B94A",
             whiteSpace: "nowrap", lineHeight: 1.2,
           }}>
             {product.price}
