@@ -490,7 +490,7 @@ export default async function LandingPage() {
           {/* ══════════════════════════════════════════════════════
               5. המסלול האחר — standalone selective application track
           ══════════════════════════════════════════════════════ */}
-          <section style={{ background: "#080C14", padding: "72px 20px 64px" }}>
+          <section style={{ background: "#080C14", padding: "0 20px 64px" }}>
             <style>{`
               .other-path-wrap { max-width: 560px; margin: 0 auto; }
               .other-path-card { position: relative; display: flex; flex-direction: column; background: linear-gradient(145deg, #141820, #0F131B); border-radius: 18px; padding: 36px 32px; text-decoration: none; color: #EDE9E1; transition: transform 0.2s, border-color 0.2s; border: 1px solid rgba(232,185,74,0.45); box-shadow: 0 0 0 1px rgba(232,185,74,0.08), 0 20px 60px -20px rgba(232,185,74,0.18); }
