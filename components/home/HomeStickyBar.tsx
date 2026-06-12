@@ -55,10 +55,10 @@ export default function HomeStickyBar({
       }}
     >
       <div style={{ color: "#EDE9E1", fontSize: 14, fontWeight: 600, lineHeight: 1.3, flex: 1 }}>
-        לא בטוח/ה איפה להתחיל?
+        לא בטוחים איפה להתחיל?
         <br />
         <span style={{ color: "#AAB0BD", fontWeight: 400, fontSize: 12 }}>
-          קוויז קצר - ונדע בדיוק מה מתאים לך
+          קוויז קצר - ונדע בדיוק מה מתאים לכם
         </span>
       </div>
       <a

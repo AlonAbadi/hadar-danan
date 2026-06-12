@@ -456,9 +456,9 @@ export default async function LandingPage() {
                     maxWidth:   480,
                   }}
                 >
-                  חמש שאלות. אות מותגי אחד שמחזיר לך את הבידול האמיתי שלך.
+                  חמש שאלות. אות מותגי אחד שמחזיר לכם את הבידול האמיתי שלכם.
                   <br />
-                  לא מה שאתה מוכר, אלא מה שרק אתה יכול לתת.
+                  לא מה שאתם מוכרים, אלא מה שרק אתם יכולים לתת.
                 </p>
                 <Link
                   href="/signal"
@@ -518,7 +518,7 @@ export default async function LandingPage() {
                 <div className="other-path-head">אנחנו על אותו צד</div>
                 <p className="other-path-lede">
                   שלושה ימי עבודה אינטנסיביים, בליווי אסטרטגי אישי. אנחנו לא לוקחים
-                  מחיר מסחרי מראש — אנחנו שותפים להצלחה שלך.
+                  מחיר מסחרי מראש — אנחנו שותפים להצלחה שלכם.
                 </p>
                 <ul className="other-path-points">
                   <li className="other-path-point"><span className="other-path-dot" />תשלום בסיסי סמלי בלבד בהתחלה</li>

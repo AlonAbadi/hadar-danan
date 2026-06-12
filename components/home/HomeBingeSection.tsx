@@ -252,7 +252,7 @@ export default function HomeBingeSection() {
           letterSpacing: ".14em",
           textAlign: "right",
         }}>
-          לפי השלב שלך
+          לפי השלב שלכם
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 32 }}>
           {STAGES.map((stage) => {

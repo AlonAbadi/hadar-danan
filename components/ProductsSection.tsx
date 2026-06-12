@@ -26,7 +26,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
     {
       name:        "הדרכה חינמית",
       price:       "חינם",
-      description: "להבין למה השיווק שלך לא עובד",
+      description: "להבין למה השיווק שלכם לא עובד",
       href:        "/training",
       ctaLabel:    "צפה בהדרכה ←",
       variant:     "primary",
@@ -135,7 +135,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             color: "#AAB0BD", fontSize: 15, lineHeight: 1.6,
             maxWidth: 440, margin: "0 auto",
           }}>
-            שתי דרכים להתקדם — לבד, בקצב שלך, או יחד איתנו לעומק.
+            שתי דרכים להתקדם — לבד, בקצב שלכם, או יחד איתנו לעומק.
           </p>
         </div>
 
@@ -164,10 +164,10 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1", marginBottom: 2 }}>
-              לא בטוח/ה מה מתאים?
+              לא בטוחים מה מתאים?
             </div>
             <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.5 }}>
-              ענה על הקוויז — נתאים לך מוצר ב-2 דקות
+              ענו על הקוויז — נתאים לכם מוצר ב-2 דקות
             </div>
           </div>
           <span style={{
