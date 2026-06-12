@@ -7,6 +7,7 @@ import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
 import { PrintButton } from "@/components/signal/PrintButton";
 import { EmailMeButton } from "@/components/signal/EmailMeButton";
+import { ShareButton } from "@/components/signal/ShareButton";
 
 type SignalAnswers = Record<string, string>;
 
@@ -782,6 +783,7 @@ function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRe
         </p>
         <div className="result-actions" style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
           <CopyButton text={signal.signal} label="העתק את האות" />
+          {extractionId && <ShareButton extractionId={extractionId} firstName={firstName} />}
         </div>
       </div>
 
