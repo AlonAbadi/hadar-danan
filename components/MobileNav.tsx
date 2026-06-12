@@ -13,7 +13,7 @@ const ITEMS_GROUP1 = [
 ];
 
 const ITEMS_GROUP2 = [
-  { label: "קוויז - איפה אתה?", href: "/quiz" },
+  { label: "האות שלך", href: "/signal" },
 ];
 
 const ITEMS_GROUP3 = [

@@ -6,9 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 const NAV_LINKS = [
-  { label: "אודות",  href: "/about" }, // הצוות מאוחד כאן (קישור פנימי /team עדיין חי)
-  { label: "בינג׳",  href: "/binge" },
-  { label: "קוויז",  href: "/quiz" },
+  { label: "אודות",      href: "/about" }, // הצוות מאוחד כאן (קישור פנימי /team עדיין חי)
+  { label: "בינג׳",      href: "/binge" },
+  { label: "האות שלך",   href: "/signal" },
 ];
 
 const DROPDOWN_ITEMS = [
