@@ -129,7 +129,7 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
             fontSize: "clamp(1.9rem,4.5vw,2.6rem)", fontWeight: 800,
             lineHeight: 1.15, margin: "0 0 12px", color: "#EDE9E1",
           }}>
-            בחר את הדרך שלך
+            בחרו את הדרך שלכם
           </h2>
           <p style={{
             color: "#AAB0BD", fontSize: 15, lineHeight: 1.6,
