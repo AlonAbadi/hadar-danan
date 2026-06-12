@@ -195,17 +195,31 @@ function ExtractionCard({ row }: { row: ExtractionRow }) {
             </div>
           )}
         </div>
-        {userHref && (
-          <Link
-            href={userHref}
+        <div style={{ display: "flex", gap: 8, flexDirection: "column", alignItems: "stretch" }}>
+          <a
+            href={`/api/signal/${row.id}/share-card`}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
-              fontSize: 13, color: C.goldM, textDecoration: "none",
-              padding: "6px 14px", borderRadius: 8, border: `1px solid ${C.line}`,
+              fontSize: 13, color: C.goldM, textDecoration: "none", textAlign: "center",
+              padding: "6px 14px", borderRadius: 8, border: `1px solid ${C.lineGold}`,
+              background: "rgba(232,185,74,0.06)",
             }}
           >
-            פתח פרופיל ←
-          </Link>
-        )}
+            כרטיס PNG ↗
+          </a>
+          {userHref && (
+            <Link
+              href={userHref}
+              style={{
+                fontSize: 13, color: C.goldM, textDecoration: "none", textAlign: "center",
+                padding: "6px 14px", borderRadius: 8, border: `1px solid ${C.line}`,
+              }}
+            >
+              פתח פרופיל ←
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* The signal sentence — featured */}

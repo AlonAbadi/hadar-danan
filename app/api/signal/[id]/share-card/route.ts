@@ -174,9 +174,18 @@ export async function GET(
     return new NextResponse("signal not found", { status: 404 });
   }
 
-  // No personal address on the card — it's a public branding statement the
-  // customer posts to their own audience. So we don't fetch their name here.
-  const { html, css } = buildHtml(String(row.signal.signal));
+  // The card is a PUBLIC statement the customer posts to THEIR audience —
+  // so the text must address that audience, never the diagnostic-taker
+  // themselves. public_card_statement is the field specifically authored
+  // for that voice. We fall back to the personal signal sentence only for
+  // legacy extractions made before this field existed; new extractions
+  // always include it (REQUIRED in validator).
+  const cardText: string =
+    typeof row.signal.public_card_statement === "string" && row.signal.public_card_statement.trim().length > 0
+      ? row.signal.public_card_statement.trim()
+      : String(row.signal.signal);
+
+  const { html, css } = buildHtml(cardText);
 
   const result = await createHctiImage({
     html,
@@ -217,7 +226,10 @@ export async function GET(
     status: 200,
     headers: {
       "content-type":  "image/png",
-      "cache-control": "public, max-age=86400, s-maxage=86400, immutable",
+      // Short cache — the underlying public_card_statement can be regenerated
+      // (e.g. backfill on legacy extractions, or a future "regenerate card"
+      // admin action). `immutable` would freeze stale PNGs in CDN/browser.
+      "cache-control": "public, max-age=300, s-maxage=300, stale-while-revalidate=86400",
     },
   });
 }

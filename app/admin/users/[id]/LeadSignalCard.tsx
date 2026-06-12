@@ -101,12 +101,22 @@ export async function LeadSignalCard({ userId }: { userId: string }) {
           )}
           <span style={{ fontSize: 12, color: C.muted }}>נחלץ ב-{dateHe(row.generated_at)}</span>
         </div>
-        <Link
-          href="/admin/signal"
-          style={{ fontSize: 12, color: C.muted, textDecoration: "none" }}
-        >
-          כל האבחונים ←
-        </Link>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <a
+            href={`/api/signal/${row.id}/share-card`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 12, color: C.goldM, textDecoration: "none" }}
+          >
+            כרטיס PNG ↗
+          </a>
+          <Link
+            href="/admin/signal"
+            style={{ fontSize: 12, color: C.muted, textDecoration: "none" }}
+          >
+            כל האבחונים ←
+          </Link>
+        </div>
       </div>
 
       {/* The signal itself — featured */}
