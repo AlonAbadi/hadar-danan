@@ -13,7 +13,7 @@ interface ProductCard {
   href: string;
   ctaLabel: string;
   badge?: string;
-  variant: "primary" | "outline" | "selection";
+  variant: "primary" | "outline";
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -103,15 +103,6 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       href:        "/atelier",
       ctaLabel:    "פנה לתיאום ←",
       variant:     "outline",
-    },
-    {
-      name:        "מסלול בסלקציה",
-      price:       "תשלום סמלי",
-      priceNote:   "+ אחוז מהצלחה",
-      description: "3 ימי עבודה — אנחנו שותפים להצלחה שלך",
-      href:        "/apply",
-      ctaLabel:    "התחל מועמדות ←",
-      variant:     "selection",
     },
   ];
 
@@ -242,16 +233,10 @@ function LaneHeader({ eyebrow, title, sub }: { eyebrow: string; title: string; s
 // ─── ProductCardItem ────────────────────────────────────────────────────────
 
 function ProductCardItem({ product }: { product: ProductCard }) {
-  const isSelection = product.variant === "selection";
-
   const cardStyle: React.CSSProperties = {
     position: "relative",
-    background: isSelection
-      ? "transparent"
-      : "linear-gradient(180deg, #131A29, #0F1523)",
-    border: isSelection
-      ? "1px dashed rgba(201,150,74,0.40)"
-      : "1px solid #1F2A40",
+    background: "linear-gradient(180deg, #131A29, #0F1523)",
+    border: "1px solid #1F2A40",
     borderRadius: 14,
     padding: "16px 16px 14px",
   };
@@ -325,7 +310,7 @@ function ProductCardItem({ product }: { product: ProductCard }) {
             </span>
           )}
           <span style={{
-            fontSize: isSelection ? 13 : 17, fontWeight: 800,
+            fontSize: 17, fontWeight: 800,
             color: product.price === "חינם" ? "#7FD49B" : "#E8B94A",
             whiteSpace: "nowrap", lineHeight: 1.2,
           }}>

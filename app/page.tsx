@@ -634,94 +634,44 @@ export default async function LandingPage() {
           </section>
 
           {/* ══════════════════════════════════════════════════════
-              5.5 TWO PATHS — קנייה ישירה vs. מסלול מועמדות
+              5.5 המסלול האחר — standalone selective application track
           ══════════════════════════════════════════════════════ */}
-          <section style={{ background: "#080C14", padding: "96px 20px 80px" }}>
+          <section style={{ background: "#080C14", padding: "72px 20px 64px" }}>
             <style>{`
-              .paths-wrap { max-width: 1080px; margin: 0 auto; }
-              .paths-eyebrow { color: #E8B94A; font-size: 12px; letter-spacing: 4px; font-weight: 700; text-align: center; margin-bottom: 14px; }
-              .paths-title { font-size: 38px; font-weight: 800; text-align: center; line-height: 1.15; margin: 0 auto 16px; color: #EDE9E1; max-width: 720px; }
-              .paths-sub { font-size: 17px; text-align: center; color: #AAB0BD; max-width: 560px; margin: 0 auto 56px; line-height: 1.6; }
-              .paths-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: stretch; }
-              .path-card { position: relative; background: linear-gradient(145deg, #141820, #0F131B); border-radius: 18px; padding: 36px 32px; display: flex; flex-direction: column; text-decoration: none; color: #EDE9E1; transition: transform 0.2s, border-color 0.2s; }
-              .path-card.buy { border: 1px solid #2C323E; }
-              .path-card.buy:hover { border-color: rgba(201,150,74,0.30); transform: translateY(-2px); }
-              .path-card.apply { border: 1px solid rgba(232,185,74,0.45); box-shadow: 0 0 0 1px rgba(232,185,74,0.08), 0 20px 60px -20px rgba(232,185,74,0.18); }
-              .path-card.apply:hover { border-color: rgba(232,185,74,0.75); transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(232,185,74,0.18), 0 24px 70px -20px rgba(232,185,74,0.28); }
-              .path-flag { position: absolute; top: 16px; left: 16px; font-size: 10px; letter-spacing: 3px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
-              .path-flag.standard { color: #AAB0BD; border: 1px solid #2C323E; background: rgba(255,255,255,0.02); }
-              .path-flag.selective { color: #080C14; background: linear-gradient(90deg, #9E7C3A, #E8B94A); }
-              .path-kicker { color: #AAB0BD; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
-              .path-kicker.gold { color: #E8B94A; }
-              .path-head { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; }
-              .path-lede { color: #AAB0BD; font-size: 15px; line-height: 1.65; margin: 0 0 24px; }
-              .path-points { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 12px; }
-              .path-point { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.55; color: #EDE9E1; }
-              .path-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; }
-              .path-dot.muted { background: #2C323E; }
-              .path-dot.gold { background: #E8B94A; box-shadow: 0 0 8px rgba(232,185,74,0.45); }
-              .path-cta { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; transition: filter 0.15s; }
-              .path-cta.muted { border: 1px solid #2C323E; color: #EDE9E1; background: rgba(255,255,255,0.02); }
-              .path-card.buy:hover .path-cta.muted { background: rgba(201,150,74,0.08); border-color: rgba(201,150,74,0.35); }
-              .path-cta.gold { background: linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%); color: #2a1d05; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55); }
-              .path-card.apply:hover .path-cta.gold { filter: brightness(1.08); }
-              .paths-foot { text-align: center; color: #AAB0BD; font-size: 13px; margin-top: 28px; line-height: 1.7; }
-              .paths-foot strong { color: #E8B94A; font-weight: 600; }
+              .other-path-wrap { max-width: 560px; margin: 0 auto; }
+              .other-path-card { position: relative; display: flex; flex-direction: column; background: linear-gradient(145deg, #141820, #0F131B); border-radius: 18px; padding: 36px 32px; text-decoration: none; color: #EDE9E1; transition: transform 0.2s, border-color 0.2s; border: 1px solid rgba(232,185,74,0.45); box-shadow: 0 0 0 1px rgba(232,185,74,0.08), 0 20px 60px -20px rgba(232,185,74,0.18); }
+              .other-path-card:hover { border-color: rgba(232,185,74,0.75); transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(232,185,74,0.18), 0 24px 70px -20px rgba(232,185,74,0.28); }
+              .other-path-flag { position: absolute; top: 16px; left: 16px; font-size: 10px; letter-spacing: 3px; font-weight: 700; padding: 4px 10px; border-radius: 999px; color: #080C14; background: linear-gradient(90deg, #9E7C3A, #E8B94A); }
+              .other-path-kicker { color: #E8B94A; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+              .other-path-head { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; color: #EDE9E1; }
+              .other-path-lede { color: #AAB0BD; font-size: 15px; line-height: 1.65; margin: 0 0 24px; }
+              .other-path-points { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 12px; }
+              .other-path-point { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.55; color: #EDE9E1; }
+              .other-path-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; background: #E8B94A; box-shadow: 0 0 8px rgba(232,185,74,0.45); }
+              .other-path-cta { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; transition: filter 0.15s; background: linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%); color: #2a1d05; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 4px 10px -4px rgba(0, 0, 0, 0.45); }
+              .other-path-card:hover .other-path-cta { filter: brightness(1.08); }
               @media (max-width: 760px) {
-                .paths-title { font-size: 28px; }
-                .paths-grid { grid-template-columns: 1fr; gap: 16px; }
-                .path-card { padding: 28px 22px; }
-                .path-head { font-size: 22px; }
+                .other-path-card { padding: 28px 22px; }
+                .other-path-head { font-size: 22px; }
               }
             `}</style>
 
-            <div className="paths-wrap">
-              <div className="paths-eyebrow">איך לעבוד איתנו</div>
-              <h2 className="paths-title">שתי דרכים להתחיל לעבוד יחד</h2>
-              <p className="paths-sub">
-                בכל המוצרים למעלה — אתה משלם תוצר. יש דרך אחת שונה.
-              </p>
-
-              <div className="paths-grid">
-                {/* LEFT — Direct purchase */}
-                <Link href="#products" className="path-card buy">
-                  <span className="path-flag standard">קנייה ישירה</span>
-                  <div className="path-kicker">המסלול הרגיל</div>
-                  <div className="path-head">אתה משלם, אנחנו מספקים</div>
-                  <p className="path-lede">
-                    תשעה מוצרים. לכל אחד תוצר ברור ומחיר ברור. מאתגר ₪197 עד שותפות
-                    ₪10k לחודש. בוחר, מקבל, מתחיל.
-                  </p>
-                  <ul className="path-points">
-                    <li className="path-point"><span className="path-dot muted" />תוצר מוגדר מראש, אתה יודע מה תקבל</li>
-                    <li className="path-point"><span className="path-dot muted" />התחלה מיידית, בלי תהליך התאמה</li>
-                    <li className="path-point"><span className="path-dot muted" />הסיכון הכספי על הקונה</li>
-                  </ul>
-                  <span className="path-cta muted">לכל המוצרים ↑</span>
-                </Link>
-
-                {/* RIGHT — Application track */}
-                <Link href="/apply" className="path-card apply">
-                  <span className="path-flag selective">בסלקציה</span>
-                  <div className="path-kicker gold">המסלול האחר</div>
-                  <div className="path-head">אנחנו על אותו צד</div>
-                  <p className="path-lede">
-                    שלושה ימי עבודה אינטנסיביים, בליווי אסטרטגי אישי. אנחנו לא לוקחים
-                    מחיר מסחרי מראש — אנחנו שותפים להצלחה שלך.
-                  </p>
-                  <ul className="path-points">
-                    <li className="path-point"><span className="path-dot gold" />תשלום בסיסי סמלי בלבד בהתחלה</li>
-                    <li className="path-point"><span className="path-dot gold" />אחוז מההכנסות שייצרנו יחד</li>
-                    <li className="path-point"><span className="path-dot gold" />3-5 עסקים בלבד בכל מחזור, בסינון ידני</li>
-                  </ul>
-                  <span className="path-cta gold">התחלת המועמדות ←</span>
-                </Link>
-              </div>
-
-              <p className="paths-foot">
-                לא בטוח לאן ללכת? <strong>קח את הקוויז</strong> — שלוש שאלות שיגידו לך
-                איפה אתה ומה הצעד הבא.
-              </p>
+            <div className="other-path-wrap">
+              <Link href="/apply" className="other-path-card">
+                <span className="other-path-flag">בסלקציה</span>
+                <div className="other-path-kicker">המסלול האחר</div>
+                <div className="other-path-head">אנחנו על אותו צד</div>
+                <p className="other-path-lede">
+                  שלושה ימי עבודה אינטנסיביים, בליווי אסטרטגי אישי. אנחנו לא לוקחים
+                  מחיר מסחרי מראש — אנחנו שותפים להצלחה שלך.
+                </p>
+                <ul className="other-path-points">
+                  <li className="other-path-point"><span className="other-path-dot" />תשלום בסיסי סמלי בלבד בהתחלה</li>
+                  <li className="other-path-point"><span className="other-path-dot" />אחוז מההכנסות שייצרנו יחד</li>
+                  <li className="other-path-point"><span className="other-path-dot" />3-5 עסקים בלבד בכל מחזור, בסינון ידני</li>
+                </ul>
+                <span className="other-path-cta">הגשת מועמדות ←</span>
+              </Link>
             </div>
           </section>
 
