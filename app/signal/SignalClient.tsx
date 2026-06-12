@@ -7,7 +7,6 @@ import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
 import { PrintButton } from "@/components/signal/PrintButton";
 import { EmailMeButton } from "@/components/signal/EmailMeButton";
-import { ShareButton } from "@/components/signal/ShareButton";
 
 type SignalAnswers = Record<string, string>;
 
@@ -782,8 +781,10 @@ function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRe
           {signal.signal}
         </p>
         <div className="result-actions" style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-          <CopyButton text={signal.signal} label="העתק את האות" />
-          {extractionId && <ShareButton extractionId={extractionId} firstName={firstName} />}
+          <CopyButton
+            text={`${signal.signal}\n\nTrueSignal© · beegood.online`}
+            label="העתק לשיתוף"
+          />
         </div>
       </div>
 
@@ -833,23 +834,13 @@ function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRe
         <p style={{ margin: 0, lineHeight: 1.7 }}>{signal.warm_note}</p>
       </Card>
 
-      {/* Pain + element grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <Card title="מקור הכאב">
-          <p style={{ margin: 0, lineHeight: 1.7 }}>{signal.pain_source}</p>
-        </Card>
-        <Card title="האלמנט">
-          <p style={{ margin: 0, lineHeight: 1.7 }}>{signal.element}</p>
-        </Card>
-      </div>
-
-      <Card title="הכלי המרכזי">
-        <p style={{ margin: 0, lineHeight: 1.7 }}>{signal.central_tool}</p>
-      </Card>
-
-      <Card title="האנשים שלך">
-        <p style={{ margin: 0, lineHeight: 1.7 }}>{signal.people}</p>
-      </Card>
+      {/*
+        Analytic fields (pain_source, element, central_tool, people) are
+        intentionally NOT rendered to the customer. They remain in the DB
+        and on /admin/* views — Hadar uses them for sales prep. Showing them
+        to the customer turned the result into a "report"; this view keeps it
+        a revelation: signal → promise → warm note → actionable directions.
+      */}
 
       <Card title="שלושה כיווני תוכן להתחיל מהם">
         <ol style={{ margin: 0, paddingInlineStart: 22, lineHeight: 1.75 }}>
