@@ -71,12 +71,13 @@ export default function CoursePage() {
           style={{
             display: "inline-block",
             padding: "0.75rem 2rem",
-            background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-            color: "#0D1018",
+            background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+            color: "#2a1d05",
             fontWeight: 700,
             borderRadius: "0.5rem",
             textDecoration: "none",
             fontSize: "1rem",
+            boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
           }}
         >
           חזרה לדף הבית ←

@@ -242,9 +242,10 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
               href="/quiz"
               className="w-full py-4 rounded-full font-bold text-lg text-center transition hover:opacity-90 active:scale-[0.98]"
               style={{
-                background: "linear-gradient(135deg, #E8B94A 0%, #C9964A 50%, #9E7C3A 100%)",
-                color: "#1A1206",
+                background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                color: "#2a1d05",
                 display: "block",
+                boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
               }}
             >
               בוא נתחיל ←

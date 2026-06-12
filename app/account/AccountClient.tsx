@@ -257,14 +257,15 @@ const S = {
     padding: "8px 18px",
     borderRadius: 7,
     border: "none",
-    background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
-    color: "#080C14",
+    background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+    color: "#2a1d05",
     fontSize: 13,
     fontWeight: 800,
     cursor: "pointer",
     fontFamily: "Assistant, sans-serif",
     textDecoration: "none",
     display: "inline-block",
+    boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
   } as React.CSSProperties,
   // Purchases tab
   table: {
@@ -343,13 +344,14 @@ const S = {
     padding: "11px 28px",
     borderRadius: 8,
     border: "none",
-    background: "linear-gradient(135deg, #E8B94A, #9E7C3A)",
-    color: "#080C14",
+    background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+    color: "#2a1d05",
     fontSize: 14,
     fontWeight: 800,
     cursor: "pointer",
     fontFamily: "Assistant, sans-serif",
     transition: "opacity 0.15s",
+    boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
   } as React.CSSProperties,
   logoutBtn: {
     padding: "11px 28px",
@@ -512,10 +514,11 @@ function PendingPaymentCallout({ pendingPurchases, userId }: { pendingPurchases:
           style={{
             flex: 1, textAlign: "center",
             padding: "11px 0", borderRadius: 8, border: "none",
-            background: resumeLoading ? "rgba(232,185,74,0.4)" : "linear-gradient(135deg,#E8B94A,#9E7C3A)",
-            color: "#080C14", fontSize: 14, fontWeight: 800,
+            background: resumeLoading ? "rgba(232,185,74,0.4)" : "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+            color: "#2a1d05", fontSize: 14, fontWeight: 800,
             fontFamily: "Assistant, sans-serif", cursor: resumeLoading ? "not-allowed" : "pointer",
             opacity: cancelLoading ? 0.5 : 1,
+            boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
           }}
         >
           {resumeLoading ? "ממתין..." : "השלם תשלום"}
@@ -637,10 +640,11 @@ function QuizRecommendationCard({ quizResult }: { quizResult: QuizResult }) {
           href={href}
           style={{
             padding: "11px 24px", borderRadius: 8, border: "none",
-            background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
-            color: "#080C14", fontSize: 14, fontWeight: 800,
+            background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+            color: "#2a1d05", fontSize: 14, fontWeight: 800,
             cursor: "pointer", fontFamily: "Assistant, sans-serif",
             textDecoration: "none", display: "inline-block",
+            boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
           }}
         >
           {cta}
@@ -668,10 +672,11 @@ function QuizCTACard() {
         href="/quiz"
         style={{
           padding: "11px 24px", borderRadius: 8, border: "none",
-          background: "linear-gradient(135deg,#E8B94A,#9E7C3A)",
-          color: "#080C14", fontSize: 14, fontWeight: 800,
+          background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+          color: "#2a1d05", fontSize: 14, fontWeight: 800,
           cursor: "pointer", fontFamily: "Assistant, sans-serif",
           textDecoration: "none", display: "inline-block",
+          boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
         }}
       >
         עשה את הקוויז
@@ -1038,14 +1043,15 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
         href="/signal"
         style={{
           display:      "inline-block",
-          background:   "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-          color:        "#0D1018",
+          background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+          color:        "#2a1d05",
           fontWeight:   800,
           fontSize:     14,
           border:       "none",
           borderRadius: 10,
           padding:      "11px 26px",
           textDecoration: "none",
+          boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
         }}
       >
         להתחיל את האבחון

@@ -137,10 +137,11 @@ export default async function LandingPage() {
                 </p>
                 <a href="/quiz" data-home-hero-cta="" style={{
                   display: "block", textAlign: "center",
-                  background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-                  color: "#1A1206", fontWeight: 800, fontSize: "clamp(0.95rem, 2vw, 1.05rem)",
+                  background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                  color: "#2a1d05", fontWeight: 800, fontSize: "clamp(0.95rem, 2vw, 1.05rem)",
                   borderRadius: 9999, padding: "14px", marginBottom: 14, textDecoration: "none",
                   width: "100%",
+                  boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
                 }}>
                   {content.cta}
                 </a>
@@ -229,11 +230,11 @@ export default async function LandingPage() {
                 {/* CTA */}
                 <a href="/quiz" data-home-hero-cta="" style={{
                   display: "inline-block",
-                  background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-                  color: "#1A1206", fontWeight: 800, fontSize: "1.05rem",
+                  background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                  color: "#2a1d05", fontWeight: 800, fontSize: "1.05rem",
                   borderRadius: 9999, padding: "16px 52px",
                   textDecoration: "none", marginBottom: 22,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -2px 6px rgba(0,0,0,0.25), 0 10px 28px rgba(0,0,0,0.35), 0 0 40px rgba(201,150,74,0.15)",
+                  boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
                 }}>
                   {content.cta}
                 </a>
@@ -371,14 +372,14 @@ export default async function LandingPage() {
                   href="/signal"
                   style={{
                     display:        "inline-block",
-                    background:     "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-                    color:          "#0D1018",
+                    background:     "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                    color:          "#2a1d05",
                     fontWeight:     800,
                     fontSize:       16,
                     borderRadius:   999,
                     padding:        "14px 34px",
                     textDecoration: "none",
-                    boxShadow:      "0 8px 24px rgba(232,185,74,0.22)",
+                    boxShadow:      "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
                   }}
                 >
                   להתחיל את האבחון ←
@@ -449,9 +450,10 @@ export default async function LandingPage() {
                 color: #080C14 !important;
               }
               .binge-card:hover .binge-enter-btn {
-                background: linear-gradient(135deg,#E8B94A,#C9964A,#9E7C3A) !important;
-                color: #080C14 !important;
+                background: linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%) !important;
+                color: #2a1d05 !important;
                 border-color: transparent !important;
+                box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55) !important;
               }
               .binge-thumb-img {
                 transition: transform 0.5s ease;
@@ -593,7 +595,7 @@ export default async function LandingPage() {
               .path-cta { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; transition: filter 0.15s; }
               .path-cta.muted { border: 1px solid #2C323E; color: #EDE9E1; background: rgba(255,255,255,0.02); }
               .path-card.buy:hover .path-cta.muted { background: rgba(201,150,74,0.08); border-color: rgba(201,150,74,0.35); }
-              .path-cta.gold { background: linear-gradient(90deg, #9E7C3A, #E8B94A); color: #080C14; }
+              .path-cta.gold { background: linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%); color: #2a1d05; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55); }
               .path-card.apply:hover .path-cta.gold { filter: brightness(1.08); }
               .paths-foot { text-align: center; color: #9E9990; font-size: 13px; margin-top: 28px; line-height: 1.7; }
               .paths-foot strong { color: #C9964A; font-weight: 600; }
