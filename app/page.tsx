@@ -394,29 +394,6 @@ export default async function LandingPage() {
           {/* ══════════════════════════════════════════════════════
               4. PRODUCTS - LADDER + NETFLIX
           ══════════════════════════════════════════════════════ */}
-          {/* Quiz bridge — recovers visitors overwhelmed by product choices */}
-          <div
-            style={{
-              background: "#080C14",
-              paddingTop: 8,
-              paddingBottom: 8,
-              textAlign: "center",
-            }}
-          >
-            <a
-              href="/quiz"
-              style={{
-                color: "#E8B94A",
-                fontSize: 14,
-                fontWeight: 600,
-                textDecoration: "none",
-                direction: "rtl",
-              }}
-            >
-              לא בטוח/ה מה מתאים לך? ← קח את הקוויז וקבל המלצה אישית
-            </a>
-          </div>
-          <div id="products" />
           <ProductsSection />
 
           {/* ══════════════════════════════════════════════════════
