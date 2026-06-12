@@ -26,6 +26,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/admin/community':   'הכוורת',
   '/admin/mmm':         'מודל MMM',
   '/admin/system':      'מערכת ולוגים',
+  '/admin/upcoming':    'אירועים קרובים',
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
