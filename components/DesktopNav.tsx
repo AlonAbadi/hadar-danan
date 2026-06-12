@@ -6,21 +6,21 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 const NAV_LINKS = [
-  { label: "אודות",          href: "/about" },
-  { label: "בינג׳",          href: "/binge" },
-  { label: "הצוות",          href: "/team" },
-  { label: "הדרכה חינמית",   href: "/training" },
-  { label: "קוויז",          href: "/quiz" },
-  { label: "3 ימים פתוחים",  href: "/apply", accent: true },
+  { label: "אודות",  href: "/about" }, // הצוות מאוחד כאן (קישור פנימי /team עדיין חי)
+  { label: "בינג׳",  href: "/binge" },
+  { label: "קוויז",  href: "/quiz" },
 ];
 
 const DROPDOWN_ITEMS = [
-  { label: "אתגר 7 ימים",      price: "₪197",    priceOriginal: "₪297", href: "/challenge" },
-  { label: "סדנה יום אחד",     price: "₪1,080",  href: "/workshop" },
-  { label: "קורס דיגיטלי",     price: "₪1,800",  href: "/course" },
-  { label: "פגישת אסטרטגיה",   price: "₪4,000",  href: "/strategy" },
-  { label: "יום צילום פרמיום", price: "₪14,000", href: "/premium" },
-  { label: "שותפות",           price: "₪10k+",   href: "/partnership" },
+  { label: "הדרכה חינמית",      price: "חינם",    href: "/training" },
+  { label: "אתגר 7 ימים",       price: "₪197",    priceOriginal: "₪297", href: "/challenge" },
+  { label: "סדנה יום אחד",      price: "₪1,080",  href: "/workshop" },
+  { label: "קורס דיגיטלי",      price: "₪1,800",  href: "/course" },
+  { label: "פגישת אסטרטגיה",    price: "₪4,000",  href: "/strategy" },
+  { label: "יום צילום פרמיום",  price: "₪14,000", href: "/premium" },
+  { label: "שותפות",            price: "₪10k+",   href: "/partnership" },
+  { label: "אטלייה ליוצרי תוכן", price: "בהתאמה", href: "/atelier" },
+  { label: "המסלול האחר",       price: "בסלקציה", href: "/apply", accent: true },
 ];
 
 const EXTRA_LINKS = [
@@ -190,33 +190,43 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
                 boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
               }}
             >
-              {DROPDOWN_ITEMS.map((item, i) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "12px 24px",
-                    borderBottom: i < DROPDOWN_ITEMS.length - 1 ? "1px solid #2C323E" : "none",
-                    color: pathname === item.href ? "#E8B94A" : "#EDE9E1",
-                    fontSize: 14,
-                    fontFamily: "var(--font-assistant), Assistant, sans-serif",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#1D2430"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                >
-                  <span style={{ color: "#AAB0BD", fontSize: 13, display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                    {('priceOriginal' in item) && (
-                      <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: 11 }}>{(item as { priceOriginal: string }).priceOriginal}</span>
-                    )}
-                    <span>{item.price}</span>
-                  </span>
-                  <span>{item.label}</span>
-                </Link>
-              ))}
+              {DROPDOWN_ITEMS.map((item, i) => {
+                const isAccent = "accent" in item && item.accent;
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "12px 24px",
+                      borderBottom: i < DROPDOWN_ITEMS.length - 1 ? "1px solid #2C323E" : "none",
+                      color: isAccent || isActive ? "#E8B94A" : "#EDE9E1",
+                      fontSize: 14,
+                      fontWeight: isAccent ? 700 : 400,
+                      fontFamily: "var(--font-assistant), Assistant, sans-serif",
+                      textDecoration: "none",
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#1D2430"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    <span style={{ color: "#AAB0BD", fontSize: 13, display: "flex", alignItems: "baseline", gap: 6 }}>
+                      {"priceOriginal" in item && (
+                        <span style={{ textDecoration: "line-through", opacity: 0.6, fontSize: 11 }}>{(item as { priceOriginal: string }).priceOriginal}</span>
+                      )}
+                      <span>{item.price}</span>
+                    </span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      {isAccent && (
+                        <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: "#E8B94A", boxShadow: "0 0 8px rgba(232,185,74,0.45)" }} />
+                      )}
+                      <span>{item.label}</span>
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

@@ -8,24 +8,24 @@ import { Menu, X } from "lucide-react";
 import { createBrowserClient } from "@/lib/supabase/browser";
 
 const ITEMS_GROUP1 = [
-  { label: "אודות",  href: "/about" },
-  { label: "בינג׳",  href: "/binge" },
-  { label: "הצוות", href: "/team" },
+  { label: "אודות", href: "/about" }, // הצוות מאוחד כאן
+  { label: "בינג׳", href: "/binge" },
 ];
 
 const ITEMS_GROUP2 = [
-  { label: "הדרכה חינמית",      href: "/training" },
   { label: "קוויז - איפה אתה?", href: "/quiz" },
-  { label: "3 ימים פתוחים",     href: "/apply" },
 ];
 
 const ITEMS_GROUP3 = [
-  { label: "אתגר 7 ימים",      price: "₪197",    priceOriginal: "₪297", href: "/challenge" },
-  { label: "סדנה יום אחד",     price: "₪1,080",  href: "/workshop" },
-  { label: "קורס דיגיטלי",     price: "₪1,800",  href: "/course" },
-  { label: "פגישת אסטרטגיה",   price: "₪4,000",  href: "/strategy" },
-  { label: "יום צילום פרמיום", price: "₪14,000", href: "/premium" },
-  { label: "שותפות",           price: "+₪10k",   href: "/partnership" },
+  { label: "הדרכה חינמית",       price: "חינם",    href: "/training" },
+  { label: "אתגר 7 ימים",        price: "₪197",    priceOriginal: "₪297", href: "/challenge" },
+  { label: "סדנה יום אחד",       price: "₪1,080",  href: "/workshop" },
+  { label: "קורס דיגיטלי",       price: "₪1,800",  href: "/course" },
+  { label: "פגישת אסטרטגיה",     price: "₪4,000",  href: "/strategy" },
+  { label: "יום צילום פרמיום",   price: "₪14,000", href: "/premium" },
+  { label: "שותפות",             price: "+₪10k",   href: "/partnership" },
+  { label: "אטלייה ליוצרי תוכן", price: "בהתאמה", href: "/atelier" },
+  { label: "המסלול האחר",        price: "בסלקציה", href: "/apply", accent: true },
 ];
 
 const ITEMS_GROUP4 = [{ label: "הכוורת 🐝",        href: "/hive" }];
@@ -376,10 +376,12 @@ function DrawerItem({
   active,
   onClose,
 }: {
-  item: { label: string; href: string; price?: string };
+  item: { label: string; href: string; price?: string; accent?: boolean };
   active: boolean;
   onClose: () => void;
 }) {
+  const isAccent = item.accent === true;
+  const labelColor = isAccent || active ? "#E8B94A" : "#EDE9E1";
   return (
     <Link
       href={item.href}
@@ -391,19 +393,24 @@ function DrawerItem({
         direction: "rtl",
         padding: "16px 24px",
         borderBottom: "1px solid #2C323E",
-        color: active ? "#E8B94A" : "#EDE9E1",
-        fontWeight: active ? 700 : 400,
+        color: labelColor,
+        fontWeight: isAccent || active ? 700 : 400,
         fontSize: 15,
         textDecoration: "none",
       }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#1D2430"; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
     >
-      <span style={{ color: active ? "#E8B94A" : "#EDE9E1" }}>{item.label}</span>
+      <span style={{ color: labelColor, display: "inline-flex", alignItems: "center", gap: 8 }}>
+        {isAccent && (
+          <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: "#E8B94A", boxShadow: "0 0 8px rgba(232,185,74,0.45)" }} />
+        )}
+        {item.label}
+      </span>
       {item.price && (
-        <span style={{ color: "#AAB0BD", fontSize: 13, display: 'flex', alignItems: 'baseline', gap: 6 }}>
-          {('priceOriginal' in item) && (
-            <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: 11 }}>{(item as { priceOriginal: string }).priceOriginal}</span>
+        <span style={{ color: "#AAB0BD", fontSize: 13, display: "flex", alignItems: "baseline", gap: 6 }}>
+          {"priceOriginal" in item && (
+            <span style={{ textDecoration: "line-through", opacity: 0.6, fontSize: 11 }}>{(item as { priceOriginal: string }).priceOriginal}</span>
           )}
           <span>{item.price}</span>
         </span>
