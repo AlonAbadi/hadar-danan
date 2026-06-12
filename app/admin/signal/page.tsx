@@ -27,10 +27,11 @@ interface ExtractionRow {
   answers:      Record<string, string>;
   generated_at: string;
   users: {
-    id:    string;
-    name:  string | null;
-    email: string | null;
-    phone: string | null;
+    id:         string;
+    name:       string | null;
+    email:      string | null;
+    phone:      string | null;
+    occupation: string | null;
   } | null;
 }
 
@@ -63,7 +64,7 @@ export default async function AdminSignalPage() {
 
   // Fetch extractions joined with user info. Newest first.
   const { data: rows, error } = await safeFrom(supabase, "signal_extractions")
-    .select("id, user_id, signal, answers, generated_at, users(id, name, email, phone)")
+    .select("id, user_id, signal, answers, generated_at, users(id, name, email, phone, occupation)")
     .order("generated_at", { ascending: false })
     .limit(200);
 
@@ -129,10 +130,11 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
 }
 
 function ExtractionCard({ row }: { row: ExtractionRow }) {
-  const name      = row.users?.name?.trim() || "—";
-  const email     = row.users?.email ?? null;
-  const phone     = row.users?.phone ?? null;
-  const userHref  = row.users?.id ? `/admin/users/${row.users.id}` : null;
+  const name       = row.users?.name?.trim() || "—";
+  const email      = row.users?.email ?? null;
+  const phone      = row.users?.phone ?? null;
+  const occupation = row.users?.occupation?.trim() || null;
+  const userHref   = row.users?.id ? `/admin/users/${row.users.id}` : null;
   const waPhone   = phone ? phone.replace(/\D/g, "").replace(/^0/, "972") : null;
   const signal    = row.signal;
 
@@ -143,7 +145,22 @@ function ExtractionCard({ row }: { row: ExtractionRow }) {
       {/* Header row: name + meta + open profile */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
         <div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{name}</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 17, fontWeight: 700 }}>{name}</div>
+            {occupation && (
+              <span style={{
+                fontSize:      11,
+                color:         C.goldM,
+                background:    "rgba(232,185,74,0.08)",
+                border:        `1px solid ${C.lineGold}`,
+                borderRadius:  999,
+                padding:       "2px 10px",
+                letterSpacing: 0.2,
+              }}>
+                {occupation}
+              </span>
+            )}
+          </div>
           <div style={{ fontSize: 13, color: C.muted, marginTop: 4, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
             {email && <span dir="ltr">{email}</span>}
             {email && phone && <span>·</span>}

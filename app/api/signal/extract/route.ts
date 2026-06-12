@@ -106,25 +106,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { answers, first_name, email, name, phone } = (body ?? {}) as {
+  const { answers, first_name, email, name, phone, occupation } = (body ?? {}) as {
     answers?:    unknown;
     first_name?: unknown;
     email?:      unknown;
     name?:       unknown;
     phone?:      unknown;
+    occupation?: unknown;
   };
+
+  const occupationStr = typeof occupation === "string"
+    ? occupation.trim().slice(0, 200)
+    : "";
 
   const db = createServerClient();
   const authUser = await getSessionUser();
 
   let userId:        string;
   let userNameForPrompt: string | undefined;
+  let occupationForPrompt: string | undefined;
 
   if (authUser) {
-    // Authenticated path — find their public.users row
-    const { data: userRow } = await db
+    // Authenticated path — find their public.users row.
+    // Pull stored occupation as well; we use whichever is freshest (request
+    // body wins if provided, otherwise fall back to stored value).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: userRow } = await (db as any)
       .from("users")
-      .select("id, name")
+      .select("id, name, occupation")
       .eq("auth_id", authUser.id)
       .maybeSingle();
     if (!userRow) {
@@ -134,6 +143,8 @@ export async function POST(req: NextRequest) {
     if (typeof userRow.name === "string" && userRow.name.trim().length > 0) {
       userNameForPrompt = userRow.name.split(" ")[0];
     }
+    const storedOcc = typeof userRow.occupation === "string" ? userRow.occupation.trim() : "";
+    occupationForPrompt = occupationStr || storedOcc || undefined;
   } else {
     // Anonymous path — require email + name + phone, upsert lead
     const emailStr = typeof email === "string" ? email.trim().toLowerCase() : "";
@@ -162,7 +173,7 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (db as any)
       .from("users")
-      .select("id, name, phone")
+      .select("id, name, phone, occupation")
       .eq("email", emailStr)
       .maybeSingle();
 
@@ -170,17 +181,28 @@ export async function POST(req: NextRequest) {
       userId = existing.id as string;
       // Backfill missing fields without overwriting existing values
       const patch: Record<string, string> = {};
-      if (!existing.name  && nameStr)  patch.name  = nameStr;
-      if (!existing.phone && phoneStr) patch.phone = phoneStr;
+      if (!existing.name  && nameStr)        patch.name        = nameStr;
+      if (!existing.phone && phoneStr)       patch.phone       = phoneStr;
+      if (!existing.occupation && occupationStr) patch.occupation = occupationStr;
       if (Object.keys(patch).length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (db as any).from("users").update(patch).eq("id", userId);
       }
+      const storedOcc = typeof existing.occupation === "string" ? existing.occupation.trim() : "";
+      occupationForPrompt = occupationStr || storedOcc || undefined;
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const insertPayload: Record<string, string> = {
+        email:  emailStr,
+        name:   nameStr,
+        phone:  phoneStr,
+        status: "lead",
+      };
+      if (occupationStr) insertPayload.occupation = occupationStr;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: created, error: insErr } = await (db as any)
         .from("users")
-        .insert({ email: emailStr, name: nameStr, phone: phoneStr, status: "lead" })
+        .insert(insertPayload)
         .select("id")
         .single();
       if (insErr || !created?.id) {
@@ -192,6 +214,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "לא הצלחנו לשמור את הפרטים. נסה שוב." }, { status: 500 });
       }
       userId = created.id as string;
+      occupationForPrompt = occupationStr || undefined;
       // Note: we intentionally do NOT fire USER_SIGNED_UP here. The generic
       // welcome pitches the full ladder, which doesn't fit a lead who just
       // generated their signal. Instead, SIGNAL_EXTRACTED fires below for
@@ -232,7 +255,7 @@ export async function POST(req: NextRequest) {
       system:     SIGNAL_ENGINE_SYSTEM_PROMPT,
       messages: [{
         role:    "user" as const,
-        content: buildSignalUserMessage(answers, nameForPrompt),
+        content: buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt),
       }],
     };
 

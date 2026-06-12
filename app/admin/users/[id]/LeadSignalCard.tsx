@@ -58,6 +58,19 @@ export async function LeadSignalCard({ userId }: { userId: string }) {
   const row = latest as ExtractionRow;
   const sig = row.signal;
 
+  // Surface occupation alongside the signal — useful context when reading the
+  // result, especially when filtering /admin/signal by field.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: userRow } = await (supabase as any)
+    .from("users")
+    .select("occupation")
+    .eq("id", userId)
+    .maybeSingle();
+  const occupation: string | null =
+    typeof userRow?.occupation === "string" && userRow.occupation.trim().length > 0
+      ? userRow.occupation.trim()
+      : null;
+
   return (
     <div
       dir="rtl"
@@ -70,10 +83,22 @@ export async function LeadSignalCard({ userId }: { userId: string }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14, gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
           <span style={{ fontSize: 11, letterSpacing: 1.4, color: C.goldM, textTransform: "uppercase" as const, fontWeight: 700 }}>
             <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · האות של הליד
           </span>
+          {occupation && (
+            <span style={{
+              fontSize:      11,
+              color:         C.goldM,
+              background:    "rgba(232,185,74,0.08)",
+              border:        `1px solid ${C.lineGold}`,
+              borderRadius:  999,
+              padding:       "2px 10px",
+            }}>
+              {occupation}
+            </span>
+          )}
           <span style={{ fontSize: 12, color: C.muted }}>נחלץ ב-{dateHe(row.generated_at)}</span>
         </div>
         <Link

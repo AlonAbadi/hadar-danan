@@ -60,6 +60,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
   const [leadName, setLeadName]   = useState(firstName ?? "");
   const [leadEmail, setLeadEmail] = useState(prefillEmail ?? "");
   const [leadPhone, setLeadPhone] = useState("");
+  const [leadOccupation, setLeadOccupation] = useState("");
 
   // Load any draft + check for an existing cached signal on mount.
   // GET only returns a signal for authenticated users — anonymous starts fresh.
@@ -130,6 +131,8 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
         payload.email = leadEmail.trim().toLowerCase();
         payload.name  = leadName.trim();
         payload.phone = leadPhone.trim();
+        const occ = leadOccupation.trim();
+        if (occ.length > 0) payload.occupation = occ;
       }
 
       const res = await fetch("/api/signal/extract", {
@@ -248,9 +251,11 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
             name={leadName}
             email={leadEmail}
             phone={leadPhone}
+            occupation={leadOccupation}
             setName={setLeadName}
             setEmail={setLeadEmail}
             setPhone={setLeadPhone}
+            setOccupation={setLeadOccupation}
             onSubmit={() => void submit()}
             onBack={() => setPhase("form")}
             errorMsg={errorMsg}
@@ -549,18 +554,20 @@ function Loading() {
 }
 
 interface LeadGateProps {
-  name:     string;
-  email:    string;
-  phone:    string;
-  setName:  (v: string) => void;
-  setEmail: (v: string) => void;
-  setPhone: (v: string) => void;
-  onSubmit: () => void;
-  onBack:   () => void;
-  errorMsg: string | null;
+  name:          string;
+  email:         string;
+  phone:         string;
+  occupation:    string;
+  setName:       (v: string) => void;
+  setEmail:      (v: string) => void;
+  setPhone:      (v: string) => void;
+  setOccupation: (v: string) => void;
+  onSubmit:      () => void;
+  onBack:        () => void;
+  errorMsg:      string | null;
 }
 
-function LeadGate({ name, email, phone, setName, setEmail, setPhone, onSubmit, onBack, errorMsg }: LeadGateProps) {
+function LeadGate({ name, email, phone, occupation, setName, setEmail, setPhone, setOccupation, onSubmit, onBack, errorMsg }: LeadGateProps) {
   const trimmedName  = name.trim();
   const trimmedEmail = email.trim();
   const trimmedPhone = phone.trim();
@@ -674,6 +681,33 @@ function LeadGate({ name, email, phone, setName, setEmail, setPhone, onSubmit, o
               textAlign:    "left",
             }}
           />
+        </label>
+
+        <label style={{ display: "block" }}>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>
+            במה אתה עוסק היום? <span style={{ opacity: 0.6 }}>(לא חובה)</span>
+          </div>
+          <input
+            type="text"
+            value={occupation}
+            onChange={(e) => setOccupation(e.target.value)}
+            placeholder="מאמן כלבים, קוסמטיקאית, יוצר פודקאסט"
+            maxLength={200}
+            style={{
+              width:        "100%",
+              background:   C.cardSoft,
+              color:        C.fg,
+              border:       `1px solid ${C.line}`,
+              borderRadius: 12,
+              padding:      "12px 16px",
+              fontSize:     16,
+              fontFamily:   "inherit",
+              outline:      "none",
+            }}
+          />
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 6, lineHeight: 1.5 }}>
+            תיאור קצר של העיסוק או התחום שלך. אם נוסיף את זה, הניסוח של האות יחדד את הבידול שלך בתוך התחום.
+          </div>
         </label>
 
         {errorMsg && (
