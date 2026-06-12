@@ -7,27 +7,35 @@ export interface VariantContent {
 }
 
 // Homepage hero A/B test: "landing_headline"
-// Variant A: contrarian / problem-focused hook (current control)
-// Variant B: outcome / social-proof hook
-// Variant C: camera-on / content-up / no-clients hook
+// Phase 2 (2026-06-12): Hero CTA now leads to /signal (TrueSignal© engine),
+// not /quiz. CTA copy on all three variants pivoted to Signal-extraction
+// framing. Three framings being tested:
+//   A — action ("חלץ"):     proprietary verb, claims a tangible output
+//   B — identity (question): self-question, deeper hook
+//   C — process ("התחל"):    soft, consistent with /hive CTA
+// Headlines + descriptions kept as-is — they still describe the broader
+// positioning. If conversions stay flat we'll rewrite them next.
+// After deploying, reset counters in Supabase:
+//   UPDATE experiments SET visitors_a=0, visitors_b=0, conversions_a=0,
+//   conversions_b=0 WHERE name='landing_headline';
 export const AB_CONTENT: Record<AbVariant, VariantContent> = {
   A: {
     headline: "אתה יכול למכור רק את מה שאתה.\nהשאלה אם השיווק שלך משדר את זה.",
     description:
       "אנחנו מזהים את הפער - והופכים אותו לאסטרטגיה ולתוכן שמביא תוצאות ביום צילום אחד.",
-    cta: "בדוק מה באמת חסר בשיווק שלך ←",
+    cta: "לחלץ את האות שלך ←",
   },
   B: {
     headline: "לא כל תוכן עובד.\nרק תוכן שנבנה נכון.",
     description:
       "אנחנו מתחילים באסטרטגיה - ומסיימים ביום צילום שמייצר תוכן שבאמת עובד.",
-    cta: "רוצה להבין מה נכון לעסק שלך? ←",
+    cta: "מה רק אתה יכול לתת? ←",
   },
   C: {
     headline: "המצלמה דולקת. התוכן עולה. הלקוחות לא מגיעים.\nיש סיבה לזה. ואנחנו יודעים מה היא.",
     description:
       "3,500+ עסקים עברו אבחון מדויק עם שיטת TrueSignal© וגילו בדיוק מה עצר אותם. 6 שאלות. 2 דקות. המלצה אישית.",
-    cta: "גלה מה עוצר אותך ←",
+    cta: "להתחיל מהאות שלך ←",
   },
 };
 
