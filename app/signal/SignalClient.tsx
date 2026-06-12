@@ -286,23 +286,6 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
 function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void }) {
-  const sectionHeading: React.CSSProperties = {
-    fontSize:      12,
-    letterSpacing: 1.6,
-    color:         C.goldMid,
-    textTransform: "uppercase",
-    fontWeight:    700,
-    marginBottom:  10,
-  };
-  const bulletList: React.CSSProperties = {
-    listStyle:  "none",
-    padding:    0,
-    margin:     0,
-    color:      C.fg,
-    opacity:    0.88,
-    fontSize:   15,
-    lineHeight: 1.8,
-  };
   return (
     <div
       style={{
@@ -338,23 +321,13 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
 
       <div style={{ borderTop: `1px solid ${C.line}`, margin: "0 0 20px" }} />
 
-      <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.65, margin: "0 0 22px", textAlign: "right" }}>
+      <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.65, margin: "0 0 18px", textAlign: "right" }}>
         כעשר דקות. כתיבה או הקלטה בקול. שאלה 3 על תקופה קשה, מותר לדלג. הטיוטה נשמרת.
       </p>
 
-      <div style={{ marginBottom: 26, textAlign: "right" }}>
-        <div style={sectionHeading}>מה חוזר אליך</div>
-        <ul style={bulletList}>
-          <li>· משפט האות, חד וייחודי לך</li>
-          <li>· מה שהאות מבטיח, הכיוון שעוד לא מומש</li>
-          <li>· הערה אישית</li>
-          <li>· מקור הכאב</li>
-          <li>· האלמנט שאחרים פספסו</li>
-          <li>· הכלי המרכזי שפיתחת</li>
-          <li>· האנשים שאתה משרת</li>
-          <li>· שלושה כיווני תוכן ספציפיים</li>
-        </ul>
-      </div>
+      <p style={{ fontSize: 16, color: C.fg, opacity: 0.94, lineHeight: 1.75, margin: "0 0 30px", textAlign: "right" }}>
+        בסוף נשאר אצלך משפט אחד להגיד בקול בלי להתנצל, הקהל שמחפש בדיוק אותך, ושלושה כיווני תוכן להתחיל מהם בלי לחכות.
+      </p>
 
       <div style={{ textAlign: "center" }}>
         <button
