@@ -205,8 +205,8 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
         display:        "flex",
         flexDirection:  "column",
         alignItems:     "center",
-        justifyContent: phase === "result" ? "flex-start" : "center",
-        padding:        phase === "result" ? "48px 24px 80px" : 24,
+        justifyContent: "flex-start",
+        padding:        "40px 20px 80px",
         position:       "relative",
         overflow:       "hidden",
       }}
@@ -281,66 +281,103 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
 function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void }) {
+  const sectionHeading: React.CSSProperties = {
+    fontSize:      12,
+    letterSpacing: 1.6,
+    color:         C.goldMid,
+    textTransform: "uppercase",
+    fontWeight:    700,
+    marginBottom:  10,
+  };
+  const bulletList: React.CSSProperties = {
+    listStyle:  "none",
+    padding:    0,
+    margin:     0,
+    color:      C.fg,
+    opacity:    0.88,
+    fontSize:   15,
+    lineHeight: 1.8,
+  };
   return (
     <div
       style={{
-        background:    C.card,
-        border:        `1px solid ${C.line}`,
-        borderRadius:  20,
-        padding:       "44px 32px",
-        textAlign:     "center",
+        background:   C.card,
+        border:       `1px solid ${C.line}`,
+        borderRadius: 20,
+        padding:      "36px 28px",
       }}
     >
-      <div
-        style={{
-          display:    "inline-block",
-          fontSize:   12,
-          letterSpacing: 1.6,
-          color:      C.goldMid,
-          marginBottom: 16,
-          textTransform: "uppercase",
-        }}
-      >
-        <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
+      <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            display:       "inline-block",
+            fontSize:      12,
+            letterSpacing: 1.6,
+            color:         C.goldMid,
+            marginBottom:  14,
+            textTransform: "uppercase",
+          }}
+        >
+          <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
+        </div>
+        <h1 style={{ fontSize: 30, fontWeight: 700, margin: "0 0 14px", lineHeight: 1.25 }}>
+          {firstName ? `${firstName}, ` : ""}מנוע האות
+        </h1>
+        <p style={{ color: C.fg, opacity: 0.92, fontSize: 17, margin: "0 0 4px", lineHeight: 1.6 }}>
+          חמש שאלות. אות מותגי אחד.
+        </p>
+        <p style={{ color: C.fg, opacity: 0.92, fontSize: 17, margin: "0 0 28px", lineHeight: 1.6 }}>
+          לא מה שאתה מוכר, אלא מה שרק אתה יכול לתת.
+        </p>
       </div>
-      <h1 style={{ fontSize: 32, fontWeight: 700, margin: "0 0 12px", lineHeight: 1.25 }}>
-        {firstName ? `${firstName}, ` : ""}מנוע האות
-      </h1>
-      <p style={{ color: C.fg, opacity: 0.92, fontSize: 17, margin: "0 0 22px", lineHeight: 1.65 }}>
-        חמש שאלות. אות מותגי אחד.
-        <br />
-        לא מה שאתה מוכר, אלא מה שרק אתה יכול לתת.
-      </p>
-      <ul style={{
-        listStyle: "none",
-        padding:   0,
-        margin:    "0 auto 28px",
-        maxWidth:  420,
-        textAlign: "right",
-        color:     C.muted,
-        fontSize:  15,
-        lineHeight: 1.85,
-      }}>
-        <li>· נמשך כעשר דקות. אפשר לעצור באמצע, הטיוטה נשמרת.</li>
-        <li>· אחרי השאלה השלישית יש בקשה לדבר על תקופה קשה. מותר לדלג.</li>
-        <li>· התשובה חוזרת אליך כשבעה שדות, בעברית, בלי שיווק.</li>
-      </ul>
-      <button
-        onClick={onStart}
-        style={{
-          background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-          color:        "#2a1d05",
-          fontWeight:   700,
-          fontSize:     16,
-          border:       "none",
-          borderRadius: 12,
-          padding:      "14px 32px",
-          cursor:       "pointer",
-          boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
-        }}
-      >
-        להתחיל
-      </button>
+
+      <div style={{ borderTop: `1px solid ${C.line}`, margin: "0 0 22px" }} />
+
+      <div style={{ marginBottom: 24, textAlign: "right" }}>
+        <div style={sectionHeading}>התהליך</div>
+        <ul style={bulletList}>
+          <li>· חמש שאלות פתוחות, כעשר דקות</li>
+          <li>· אפשר להקליד או להקליט בקול</li>
+          <li>· הטיוטה נשמרת אם עוצרים באמצע</li>
+          <li>· שאלה שלוש מדברת על תקופה קשה. מותר לדלג</li>
+        </ul>
+      </div>
+
+      <div style={{ marginBottom: 28, textAlign: "right" }}>
+        <div style={sectionHeading}>מה חוזר אליך</div>
+        <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, margin: "0 0 10px" }}>
+          שמונה שדות, בעברית, בלי שיווק. הכל נגזר מהתשובות שלך, לא תוכן גנרי.
+        </p>
+        <ul style={bulletList}>
+          <li>· משפט האות, ניסוח חד וייחודי לך</li>
+          <li>· מה שהאות שלך מבטיח, הכיוון שעוד לא מומש</li>
+          <li>· מקור הכאב, מאיפה זה גדל</li>
+          <li>· האלמנט, מה שאתה רואה ואחרים פספסו</li>
+          <li>· הכלי המרכזי שפיתחת בדרך החוצה</li>
+          <li>· האנשים שאתה משרת</li>
+          <li>· שלושה כיווני תוכן להתחיל מהם</li>
+          <li>· הערה אישית קצרה</li>
+        </ul>
+      </div>
+
+      <div style={{ textAlign: "center" }}>
+        <button
+          onClick={onStart}
+          style={{
+            background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+            color:        "#2a1d05",
+            fontWeight:   700,
+            fontSize:     16,
+            border:       "none",
+            borderRadius: 12,
+            padding:      "14px 36px",
+            cursor:       "pointer",
+            boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
+          }}
+        >
+          להתחיל
+        </button>
+      </div>
     </div>
   );
 }
