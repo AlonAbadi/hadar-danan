@@ -786,7 +786,7 @@ export default async function LandingPage() {
         </footer>
 
       </div>
-      <HomeStickyBar ctaText={content.cta} />
+      <HomeStickyBar ctaText="לקוויז ←" />
     </>
   );
 }
