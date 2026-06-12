@@ -404,8 +404,7 @@ function FormCard(props: FormCardProps) {
         value={props.value}
         onChange={(e) => props.setValue(e.target.value)}
         rows={6}
-        autoFocus
-        placeholder="תכתוב כפי שאתה מדבר. בלי לערוך."
+        placeholder="או הקלד כאן — בלי לערוך, כפי שאתה מדבר."
         style={{
           width:        "100%",
           background:   C.cardSoft,
