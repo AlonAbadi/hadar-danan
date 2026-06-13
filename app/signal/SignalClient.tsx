@@ -497,31 +497,231 @@ function FormCard(props: FormCardProps) {
   );
 }
 
+// Static fallback facts — used if the AI fact endpoint is slow or fails.
+const STATIC_BEE_FACTS = [
+  "דבורת הדבש מבקרת בין 50 ל-100 פרחים במהלך טיסה אחת לאיסוף צוף",
+  "כדי לייצר כף מלאה אחת של דבש, דבורה אחת צריכה לטוס מרחק ששווה לפעמיים סיבוב כדור הארץ",
+  "דבורים מתקשרות זו עם זו דרך ריקוד מיוחד שמראה לחברות לכוון לפרחים",
+  "המלכה יכולה להטיל עד 2,000 ביצים ביום אחד - יותר ממשקלה שלה",
+  "דבורים זוכרות פרצופים אנושיים ומסוגלות לזהות את אותו האדם שוב לאחר ימים",
+  "כוורת בריאה מכילה בין 50,000 ל-80,000 דבורות, כמעט כולן נקבות",
+  "דבורים ישנות כ-5 עד 8 שעות ביממה, לפעמים בתוך פרחים",
+  "כנפי הדבורה מרפרפות 200 פעם בשנייה - זה מה שיוצר את הזמזום המוכר",
+  "דבורים יכולות לזהות צבעים שאנחנו לא רואים בכלל, כולל אולטרה-סגול",
+  "הדבש לא מתקלקל - נמצא דבש בן 3,000 שנה בקברי פרעונים שעדיין היה אכיל",
+  "דבורה אחת מייצרת בכל חייה רק שתים-עשרה כפיות קטנות של דבש",
+  "דבורים שומרות על טמפרטורת 35 מעלות בתוך הכוורת גם בקור עז, על ידי רעידות שרירים",
+];
+
+function pickRandomFacts(n: number): string[] {
+  const shuffled = [...STATIC_BEE_FACTS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+const SIGNAL_STEPS = [
+  "קורא את התשובות שלך",
+  "מחלץ את האלמנט",
+  "מזהה את הקרקע שצמחת ממנה",
+  "מנסח את האות שלך",
+] as const;
+
 function Loading() {
+  const [progress, setProgress]         = useState(0);
+  const [stepIdx, setStepIdx]           = useState(0);
+  const [facts, setFacts]               = useState<string[]>(() => pickRandomFacts(6));
+  const [factIdx, setFactIdx]           = useState(0);
+
+  // Try to refresh facts with AI-generated ones; fall back silently to static.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/bee-facts")
+      .then((r) => r.json())
+      .then(({ facts }: { facts?: string[] }) => {
+        if (cancelled || !Array.isArray(facts) || facts.length === 0) return;
+        setFacts(facts);
+        setFactIdx(0);
+      })
+      .catch(() => { /* keep static facts */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Progress bar: random walk up to ~88%, then idle until parent flips phase.
+  useEffect(() => {
+    const id = setInterval(() => {
+      setProgress((p) => (p >= 88 ? p : p + Math.random() * 4 + 1));
+    }, 300);
+    return () => clearInterval(id);
+  }, []);
+
+  // Step pulse cycle — synced loosely to the same window the engine takes.
+  useEffect(() => {
+    const t1 = setTimeout(() => setStepIdx(1), 1400);
+    const t2 = setTimeout(() => setStepIdx(2), 3200);
+    const t3 = setTimeout(() => setStepIdx(3), 5200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
+  // Rotate facts every 4s.
+  useEffect(() => {
+    if (facts.length === 0) return;
+    const id = setInterval(() => setFactIdx((i) => (i + 1) % facts.length), 4000);
+    return () => clearInterval(id);
+  }, [facts]);
+
+  const clampedProgress = Math.min(progress, 96);
+
   return (
     <div
       style={{
-        background:   C.card,
-        border:       `1px solid ${C.line}`,
-        borderRadius: 20,
-        padding:      "60px 32px",
-        textAlign:    "center",
+        background:    C.card,
+        border:        `1px solid ${C.line}`,
+        borderRadius:  20,
+        padding:       "40px 28px 36px",
+        textAlign:     "center",
+        display:       "flex",
+        flexDirection: "column",
+        alignItems:    "center",
+        gap:           24,
       }}
     >
-      <div
-        style={{
-          width:        46,
-          height:       46,
-          margin:       "0 auto 22px",
-          border:       `3px solid rgba(232,185,74,0.18)`,
-          borderTopColor: C.gold,
-          borderRadius: "50%",
-          animation:    "spin 0.9s linear infinite",
-        }}
-      />
-      <p style={{ fontSize: 17, color: C.fg, margin: 0 }}>מחלץ את האות שלך…</p>
-      <p style={{ fontSize: 14, color: C.muted, margin: "8px 0 0" }}>זה יכול לקחת בין עשר לעשרים שניות.</p>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      {/* Bee facts rotator */}
+      {facts.length > 0 && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 360,
+            background: C.cardSoft,
+            borderRadius: 12,
+            padding: "14px 18px",
+            border: `1px solid ${C.line}`,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11, fontWeight: 700, color: C.goldMid,
+              letterSpacing: ".14em", marginBottom: 6,
+            }}
+          >
+            ידעת על הדבורים?
+          </div>
+          <div
+            key={factIdx}
+            style={{
+              fontSize: 15, color: C.fg, lineHeight: 1.65,
+              animation: "vi-fadeMsg 4s ease infinite",
+            }}
+          >
+            {facts[factIdx]}
+          </div>
+        </div>
+      )}
+
+      <div style={{ fontSize: 19, fontWeight: 800, color: C.goldMid, lineHeight: 1.3 }}>
+        מחלצים את האות שלך
+      </div>
+
+      {/* Progress bar with flying bee logo on top */}
+      <div style={{ width: "100%", maxWidth: 360, position: "relative", paddingTop: 48 }}>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            insetInlineStart: `calc(${clampedProgress}% - 22px)`,
+            transition: "inset-inline-start 0.6s ease",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/beegood_logo.png"
+            alt=""
+            width={44}
+            height={44}
+            style={{
+              objectFit: "contain",
+              display: "block",
+              animation: "vi-beeFly 1.2s ease-in-out infinite",
+            }}
+          />
+        </div>
+        <div style={{ width: "100%", height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 20 }}>
+          <div
+            style={{
+              height: 6,
+              borderRadius: 20,
+              background: `linear-gradient(90deg, ${C.goldDeep}, ${C.goldMid}, ${C.gold})`,
+              width: `${progress}%`,
+              transition: "width 0.6s ease",
+            }}
+          />
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+          <span style={{ fontSize: 12, color: C.muted }}>0%</span>
+          <span style={{ fontSize: 13, color: C.goldMid, fontWeight: 700 }}>{Math.round(progress)}%</span>
+          <span style={{ fontSize: 12, color: C.muted }}>100%</span>
+        </div>
+      </div>
+
+      {/* 4 sequential stages */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 360, textAlign: "right" }}>
+        {SIGNAL_STEPS.map((label, i) => {
+          const done   = i < stepIdx;
+          const active = i === stepIdx;
+          return (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, direction: "rtl" }}>
+              <div
+                style={{
+                  width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+                  border: done ? "none" : active ? `2px solid ${C.goldMid}` : `2px solid ${C.line}`,
+                  background: done ? C.goldMid : "transparent",
+                  animation: active ? "vi-stepPulse 1s infinite" : "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {done && (
+                  <div
+                    style={{
+                      width: 7, height: 5,
+                      borderLeft: "2px solid #0D1018",
+                      borderBottom: "2px solid #0D1018",
+                      transform: "rotate(-45deg)",
+                      marginTop: -2,
+                    }}
+                  />
+                )}
+              </div>
+              <span
+                style={{
+                  fontSize: 14,
+                  color: done ? C.fg : active ? C.goldMid : C.muted,
+                  animation: active ? "vi-stepPulse 1s infinite" : "none",
+                }}
+              >
+                {label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <style>{`
+        @keyframes vi-beeFly {
+          0%   { transform: translateY(0px) rotate(-8deg); }
+          25%  { transform: translateY(-8px) rotate(2deg); }
+          50%  { transform: translateY(-2px) rotate(8deg); }
+          75%  { transform: translateY(-10px) rotate(0deg); }
+          100% { transform: translateY(0px) rotate(-8deg); }
+        }
+        @keyframes vi-stepPulse {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.4; }
+        }
+        @keyframes vi-fadeMsg {
+          0%   { opacity: 0; }
+          10%  { opacity: 1; }
+          80%  { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
