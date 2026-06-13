@@ -20,13 +20,12 @@
  *     never generic content that could apply to anyone in the field
  */
 
-// Haiku 4.5 is ~3x faster than Sonnet 4.6 at structured-output generation,
-// which keeps each parallel pack call comfortably under 30s and the whole
-// Promise.all under Vercel's 60s function ceiling. Quality is more than
-// sufficient for bios + structured lists; we already used Sonnet for the
-// upstream signal extraction (the hard creative work). The kit's content
-// is downstream-mechanical and benefits more from speed than from depth.
-export const CONTENT_KIT_MODEL = "claude-haiku-4-5";
+// Haiku 4.5 (full dated ID — short form sometimes 404s) is ~3x faster than
+// Sonnet 4.6 at structured-output generation, keeping each parallel pack
+// call comfortably under 30s. Quality is more than sufficient for bios +
+// structured lists; we already used Sonnet for the upstream signal
+// extraction (the hard creative work).
+export const CONTENT_KIT_MODEL = "claude-haiku-4-5-20251001";
 
 export type ContentKit = {
   bio_short:                   string;

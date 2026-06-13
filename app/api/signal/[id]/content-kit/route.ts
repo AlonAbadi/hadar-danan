@@ -106,30 +106,39 @@ export async function GET(
     });
 
     async function callPack(systemPrompt: string, maxTokens: number, label: string): Promise<Record<string, unknown>> {
-      let aiRes: Awaited<ReturnType<typeof client.messages.create>> | null = null;
-      let lastErr: unknown = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          aiRes = await client.messages.create({
-            model:      CONTENT_KIT_MODEL,
-            max_tokens: maxTokens,
-            system:     systemPrompt,
-            messages: [{ role: "user", content: userMessage }],
-          });
-          break;
-        } catch (e: unknown) {
-          lastErr = e;
-          const status = (e as { status?: number })?.status;
-          if (status !== 429 && status !== 529) throw e;
-          if (attempt === 2) throw e;
-          await new Promise(r => setTimeout(r, 1500 * Math.pow(2, attempt)));
+      // Per-call abort controller — if any single pack hangs past 45s, abort
+      // so the other parallel packs (and the overall function) don't get
+      // pulled down with it.
+      const ac = new AbortController();
+      const tid = setTimeout(() => ac.abort(), 45_000);
+      try {
+        let aiRes: Awaited<ReturnType<typeof client.messages.create>> | null = null;
+        let lastErr: unknown = null;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            aiRes = await client.messages.create({
+              model:      CONTENT_KIT_MODEL,
+              max_tokens: maxTokens,
+              system:     systemPrompt,
+              messages: [{ role: "user", content: userMessage }],
+            }, { signal: ac.signal });
+            break;
+          } catch (e: unknown) {
+            lastErr = e;
+            const status = (e as { status?: number })?.status;
+            if (status !== 429 && status !== 529) throw e;
+            if (attempt === 1) throw e;
+            await new Promise(r => setTimeout(r, 1500));
+          }
         }
+        if (!aiRes) throw lastErr ?? new Error(`Anthropic call failed (${label})`);
+        const block = aiRes.content[0];
+        if (!block || block.type !== "text") throw new Error(`Non-text block (${label})`);
+        const clean = block.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+        return JSON.parse(clean) as Record<string, unknown>;
+      } finally {
+        clearTimeout(tid);
       }
-      if (!aiRes) throw lastErr ?? new Error(`Anthropic call failed (${label})`);
-      const block = aiRes.content[0];
-      if (!block || block.type !== "text") throw new Error(`Non-text block (${label})`);
-      const clean = block.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
-      return JSON.parse(clean) as Record<string, unknown>;
     }
 
     const [voicePack, identityPack, strategyPack] = await Promise.all([
