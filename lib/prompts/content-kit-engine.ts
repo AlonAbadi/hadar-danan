@@ -113,7 +113,9 @@ ${SHARED_RULES}
 {"lead_magnet_ideas":["...","...","..."],"first_product_recommendation":"...","speaking_topics":["...","...","...","...","..."]}`;
 
 // ── Pack 4: 30 content ideas only ─────────────────────────────────────
-export const CONTENT_PACK_MAX_TOKENS = 1800;
+// 2500 tokens gives ~80 tokens per idea — plenty for the 25-word target
+// (~30 tokens each) plus JSON overhead. Previous 1800 was getting truncated.
+export const CONTENT_PACK_MAX_TOKENS = 2500;
 export const CONTENT_PACK_SYSTEM = `אתה יועץ תוכן ב-beegood. אתה מקבל אות מותגי, ומחזיר 30 רעיונות תוכן ספציפיים.
 
 ${SHARED_RULES}
