@@ -267,12 +267,11 @@ function AssetCard({ asset, url }: { asset: VisualAsset; url: string }) {
   return (
     <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 12, padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ background: "#000", borderRadius: 8, aspectRatio: asset.ratio.replace(":", " / "), overflow: "hidden", position: "relative" }}>
-        {/* Use a lazy iframe so cards generate only when scrolled into view */}
-        <iframe
+        <img
           src={url}
           loading="lazy"
-          style={{ border: "none", width: "100%", height: "100%", display: "block", background: "#000" }}
-          title={asset.label}
+          alt={asset.label}
+          style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
         />
       </div>
       <div>
