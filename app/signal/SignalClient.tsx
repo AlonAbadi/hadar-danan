@@ -322,7 +322,7 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
           חמש שאלות. אות מותגי אחד.
         </p>
         <p style={{ color: C.fg, opacity: 0.92, fontSize: 17, margin: "0 0 28px", lineHeight: 1.6 }}>
-          לא מה שאתה/את מוכר/ת, אלא מה שרק אתה/את יכול/ה לתת.
+          לא מה שאתם מוכרים, אלא מה שרק אתם יכולים לתת.
         </p>
       </div>
 
