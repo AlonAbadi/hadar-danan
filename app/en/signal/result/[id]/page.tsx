@@ -89,9 +89,14 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
         }}
       >
         <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", color: ink }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: "#111113", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img src="/beegood_logo.png" alt="beegood" width={20} height={20} style={{ width: "64%", height: "auto", display: "block" }} />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/beegood_logo.png"
+            alt="beegood"
+            width={33}
+            height={26}
+            style={{ width: "auto", height: 26, display: "block" }}
+          />
           <span style={{ fontFamily: "var(--font-spectral), Georgia, serif", fontSize: 21, fontWeight: 500, letterSpacing: "-0.01em" }}>
             beegood
           </span>
@@ -372,9 +377,14 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
           }}
         >
           <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: ink }}>
-            <div style={{ width: 24, height: 24, borderRadius: 7, background: "#111113", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <img src="/beegood_logo.png" alt="" width={15} height={15} style={{ width: "64%", height: "auto", display: "block" }} />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/beegood_logo.png"
+              alt=""
+              width={25}
+              height={20}
+              style={{ width: "auto", height: 20, display: "block" }}
+            />
             <span style={{ fontFamily: "var(--font-spectral), Georgia, serif", fontSize: 17 }}>beegood</span>
           </Link>
           <div style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 11.5, color: inkFaint }}>

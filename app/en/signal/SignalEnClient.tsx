@@ -259,25 +259,20 @@ function Header() {
           color:          C.ink,
         }}
       >
-        <div
-          style={{
-            width:          32,
-            height:         32,
-            borderRadius:   9,
-            background:     "#111113",
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-          }}
-        >
-          <img src="/beegood_logo.png" alt="beegood" width={20} height={20} style={{ width: "64%", height: "auto", display: "block" }} />
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/beegood_logo.png"
+          alt="beegood"
+          width={33}
+          height={26}
+          style={{ width: "auto", height: 26, display: "block" }}
+        />
         <span
           style={{
             fontFamily:    "var(--font-spectral), Georgia, serif",
             fontSize:      21,
-            fontWeight:    500,
-            letterSpacing: "-0.01em",
+            fontWeight:    400,
+            letterSpacing: "-0.005em",
           }}
         >
           beegood

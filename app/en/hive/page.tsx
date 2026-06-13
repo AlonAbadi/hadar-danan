@@ -34,27 +34,21 @@ export default function EnHivePage() {
       >
         <Link
           href="/en"
-          style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", color: "#0F1011" }}
+          style={{ display: "flex", alignItems: "center", gap: 13, textDecoration: "none", color: "#0F1011" }}
         >
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 9,
-              background: "#111113",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Image src={BEE} alt="beegood" width={22} height={22} style={{ width: "64%", height: "auto", display: "block" }} />
-          </div>
+          <Image
+            src={BEE}
+            alt="beegood"
+            width={33}
+            height={26}
+            style={{ width: "auto", height: 26, display: "block" }}
+          />
           <span
             style={{
               fontFamily:    "var(--font-space-grotesk), sans-serif",
               fontSize:      19,
-              fontWeight:    500,
-              letterSpacing: "-0.02em",
+              fontWeight:    400,
+              letterSpacing: "-0.015em",
             }}
           >
             beegood
@@ -450,14 +444,13 @@ export default function EnHivePage() {
           “We do not sell the signal back to you. We carry it. Every month, the work of carrying it farther is what you pay for.”
         </p>
         <div style={{ display: "flex", justifyContent: "center", marginTop: 36 }}>
-          <div
-            style={{
-              width: 32, height: 32, borderRadius: 8, background: "#111113",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <Image src={BEE} alt="" width={20} height={20} style={{ width: "64%", height: "auto", display: "block" }} />
-          </div>
+          <Image
+            src={BEE}
+            alt=""
+            width={36}
+            height={28}
+            style={{ width: "auto", height: 28, display: "block" }}
+          />
         </div>
         <div
           style={{
@@ -599,10 +592,14 @@ export default function EnHivePage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 26, height: 26, borderRadius: 7, background: "#111113", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Image src={BEE} alt="" width={17} height={17} style={{ width: "64%", height: "auto", display: "block" }} />
-            </div>
-            <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: 15, fontWeight: 500, color: "#0F1011" }}>
+            <Image
+              src={BEE}
+              alt=""
+              width={25}
+              height={20}
+              style={{ width: "auto", height: 20, display: "block" }}
+            />
+            <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: 15, fontWeight: 400, letterSpacing: "-0.015em", color: "#0F1011" }}>
               beegood
             </span>
           </div>
