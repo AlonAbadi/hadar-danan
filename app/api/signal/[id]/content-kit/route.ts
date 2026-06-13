@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 import {
-  CONTENT_KIT_MODEL,
+  CONTENT_KIT_MODEL, CONTENT_PACK_MODEL,
   VOICE_PACK_MAX_TOKENS,    VOICE_PACK_SYSTEM,
   IDENTITY_PACK_MAX_TOKENS, IDENTITY_PACK_SYSTEM,
   STRATEGY_PACK_MAX_TOKENS, STRATEGY_PACK_SYSTEM,
@@ -126,11 +126,11 @@ export async function GET(
       return t.slice(firstBrace, end + 1);
     }
 
-    async function callPack(systemPrompt: string, maxTokens: number, label: string): Promise<Record<string, unknown>> {
-      // Per-call abort — keep parallel packs independent. 55s leaves 5s
+    async function callPack(systemPrompt: string, maxTokens: number, label: string, model: string = CONTENT_KIT_MODEL): Promise<Record<string, unknown>> {
+      // Per-call abort — keep parallel packs independent. 56s leaves 4s
       // margin under Vercel's 60s function ceiling.
       const ac = new AbortController();
-      const tid = setTimeout(() => ac.abort(), 55_000);
+      const tid = setTimeout(() => ac.abort(), 56_000);
       let lastErr: unknown = null;
       try {
         // 2 attempts — first failure is usually malformed JSON from a model
@@ -138,7 +138,7 @@ export async function GET(
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
             const aiRes = await client.messages.create({
-              model:      CONTENT_KIT_MODEL,
+              model,
               max_tokens: maxTokens,
               system:     systemPrompt,
               messages: [{ role: "user", content: userMessage }],
@@ -167,7 +167,7 @@ export async function GET(
       callPack(VOICE_PACK_SYSTEM,    VOICE_PACK_MAX_TOKENS,    "voice"),
       callPack(IDENTITY_PACK_SYSTEM, IDENTITY_PACK_MAX_TOKENS, "identity"),
       callPack(STRATEGY_PACK_SYSTEM, STRATEGY_PACK_MAX_TOKENS, "strategy"),
-      callPack(CONTENT_PACK_SYSTEM,  CONTENT_PACK_MAX_TOKENS,  "content"),
+      callPack(CONTENT_PACK_SYSTEM,  CONTENT_PACK_MAX_TOKENS,  "content", CONTENT_PACK_MODEL),
     ]);
 
     const merged = { ...voicePack, ...identityPack, ...strategyPack, ...contentPack };

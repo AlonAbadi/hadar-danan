@@ -20,11 +20,12 @@
  *     never generic content that could apply to anyone in the field
  */
 
-// Sonnet 4.6 is the right tool for these structured JSON outputs — Haiku
-// truncates mid-string when output approaches max_tokens, producing invalid
-// JSON. With four small parallel packs (rather than one big one) Sonnet
-// fits comfortably under Vercel's 60s function timeout: wall time ~25s.
+// Voice + identity + strategy packs use Sonnet (quality matters for bios,
+// manifesto, positioning). The bulkier content_ideas pack uses Haiku 4.5
+// (much faster, fewer parallel-call timeouts, and 20 short post ideas
+// don't need Sonnet's depth).
 export const CONTENT_KIT_MODEL = "claude-sonnet-4-6";
+export const CONTENT_PACK_MODEL = "claude-haiku-4-5-20251001";
 
 export type ContentKit = {
   bio_short:                   string;
