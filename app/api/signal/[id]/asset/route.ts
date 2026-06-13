@@ -26,6 +26,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { createHctiImage, isHctiConfigured } from "@/lib/htmlcsstoimage";
 import { isReplicateConfigured, generateBackgroundImage, type FluxAspectRatio } from "@/lib/replicate";
 import { buildVisualPrompt, isValidStyle, DEFAULT_STYLE, type VisualStyle } from "@/lib/signal-visual-prompter";
+import { writeCardText, needsCardWriter } from "@/lib/signal-card-writer";
 
 // Per-style overlay. v2: very light tint only. White text legibility is owned
 // by the multi-layer text-shadow on .signal — the overlay is just for visual
@@ -335,8 +336,8 @@ export async function GET(
   if (!row?.signal?.signal) return new NextResponse("signal not found", { status: 404 });
 
   const spec = ASSET_SPECS[typeParam];
-  const text = spec.fieldFor(row.signal).trim();
-  if (text.length === 0) {
+  const sourceText = spec.fieldFor(row.signal).trim();
+  if (sourceText.length === 0) {
     return new NextResponse(`asset type '${typeParam}' has no source field on this signal`, { status: 404 });
   }
 
@@ -354,6 +355,52 @@ export async function GET(
 
   if (!allowAi) {
     return new NextResponse("Asset library is a Hive perk", { status: 403 });
+  }
+
+  // ── Card text resolution ──────────────────────────────────────────────
+  // For quote-* card types, the source field is an internal meta description
+  // ("האות שלך מצביע אל...", "פוסט על...") that reads like a description of
+  // the card instead of the card's message. We run those through the card
+  // writer to convert them into finished audience-facing copy, cached on the
+  // signal JSONB so each (extraction, type) pair pays for one Haiku call.
+  // For share-card-default / linkedin-banner / instagram-story the source is
+  // already public_card_statement (audience-facing) so we use it directly.
+  let text: string;
+  if (needsCardWriter(typeParam)) {
+    const textCacheKey = `card_text_v1_${typeParam}`;
+    const cachedText = typeof row.signal[textCacheKey] === "string" && row.signal[textCacheKey].length > 0
+      ? (row.signal[textCacheKey] as string)
+      : null;
+
+    if (cachedText) {
+      text = cachedText;
+    } else {
+      const occupation = typeof userRow?.occupation === "string" ? userRow.occupation : null;
+      const writeResult = await writeCardText({
+        type:       typeParam,
+        sourceText,
+        signal:     String(row.signal.signal ?? ""),
+        occupation,
+      });
+
+      if (writeResult.ok) {
+        text = writeResult.text;
+        const updatedSignal = { ...row.signal, [textCacheKey]: text };
+        await safeFrom(supabase, "signal_extractions")
+          .update({ signal: updatedSignal })
+          .eq("id", id);
+      } else {
+        await supabase.from("error_logs").insert({
+          context: "api/signal/[id]/asset — card writer",
+          error:   writeResult.error,
+          payload: { extractionId: id, type: typeParam },
+        });
+        // Soft fallback: render with the meta source so the card still works.
+        text = sourceText;
+      }
+    }
+  } else {
+    text = sourceText;
   }
 
   // ── Background generation (per-type, per-style cache) ──────────────
