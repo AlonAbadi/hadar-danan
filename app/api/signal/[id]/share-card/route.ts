@@ -21,6 +21,28 @@ import {
   type VisualStyle,
 } from "@/lib/signal-visual-prompter";
 
+// Per-style overlay gradient stops. Editorial/warm/minimal share the original
+// moody gradient. Luminous opens the top so the bright AI image shows through,
+// keeping the bottom dark enough for white-text contrast.
+function overlayGradient(style: VisualStyle): string {
+  if (style === "luminous") {
+    return `linear-gradient(
+      to bottom,
+      rgba(8,12,20,0.08) 0%,
+      rgba(8,12,20,0.18) 35%,
+      rgba(8,12,20,0.62) 65%,
+      rgba(8,12,20,0.88) 100%
+    )`;
+  }
+  return `linear-gradient(
+    to bottom,
+    rgba(8,12,20,0.45) 0%,
+    rgba(8,12,20,0.55) 35%,
+    rgba(8,12,20,0.75) 65%,
+    rgba(8,12,20,0.92) 100%
+  )`;
+}
+
 export const runtime     = "nodejs";
 export const dynamic     = "force-dynamic";
 // Replicate generation runs 5-10s, HCTI another 2-3s. 60s is plenty.
@@ -52,7 +74,7 @@ function signalFontSize(text: string): number {
   return 36;
 }
 
-function buildHtml(signalText: string, bgUrl: string | null, clean: boolean): { html: string; css: string } {
+function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, style: VisualStyle): { html: string; css: string } {
   const fontSize = signalFontSize(signalText);
 
   // When we have an AI-generated background, lay it down first under a dark
@@ -116,13 +138,7 @@ body { margin: 0; padding: 0; }
 .bg-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(8,12,20,0.45) 0%,
-    rgba(8,12,20,0.55) 35%,
-    rgba(8,12,20,0.75) 65%,
-    rgba(8,12,20,0.92) 100%
-  );
+  background: ${overlayGradient(style)};
   z-index: 1;
 }
 
@@ -320,7 +336,7 @@ export async function GET(
     }
   }
 
-  const { html, css } = buildHtml(cardText, bgUrl, clean);
+  const { html, css } = buildHtml(cardText, bgUrl, clean, style);
 
   const result = await createHctiImage({
     html,

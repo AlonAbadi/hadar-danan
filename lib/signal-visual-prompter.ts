@@ -25,7 +25,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 
-export type VisualStyle = "editorial" | "warm" | "minimal";
+export type VisualStyle = "editorial" | "warm" | "minimal" | "luminous";
 
 const STYLE_DIRECTIVES: Record<VisualStyle, string> = {
   editorial:
@@ -37,6 +37,13 @@ const STYLE_DIRECTIVES: Record<VisualStyle, string> = {
   minimal:
     "Minimalist abstract composition. Clean geometric forms, monochromatic palette with one accent color, " +
     "lots of negative space, fine art photography sensibility. Like Wolfgang Tillmans or Hiroshi Sugimoto.",
+  luminous:
+    "Bright, joyful, optimistic photography. Abundant natural daylight, airy weightless atmosphere, " +
+    "luminous pastel palette (cream, soft gold, peach, dusty sky blue, fresh white). Sun flares, " +
+    "dust motes catching light, soft glow, hopeful and energetic mood. Like a Kinfolk magazine cover " +
+    "or a modern Apple keynote still — premium and uplifting, never garish or oversaturated. " +
+    "Important: keep the lower third of the frame brighter and softer (no dark vignettes there) so the " +
+    "overall image reads as luminous, not moody.",
 };
 
 const MODEL  = "claude-sonnet-4-6";
@@ -108,7 +115,7 @@ export async function buildVisualPrompt(args: {
 }
 
 export function isValidStyle(s: string): s is VisualStyle {
-  return s === "editorial" || s === "warm" || s === "minimal";
+  return s === "editorial" || s === "warm" || s === "minimal" || s === "luminous";
 }
 
 export const DEFAULT_STYLE: VisualStyle = "editorial";

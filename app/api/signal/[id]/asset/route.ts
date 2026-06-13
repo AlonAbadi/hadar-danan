@@ -27,6 +27,46 @@ import { createHctiImage, isHctiConfigured } from "@/lib/htmlcsstoimage";
 import { isReplicateConfigured, generateBackgroundImage, type FluxAspectRatio } from "@/lib/replicate";
 import { buildVisualPrompt, isValidStyle, DEFAULT_STYLE, type VisualStyle } from "@/lib/signal-visual-prompter";
 
+// Per-style overlay gradient. Luminous lets the bright AI image breathe through
+// the top; other styles keep the original moody gradient. Direction stays the
+// same per layout (banner = right→left, others = bottom-up).
+function overlayGradient(style: VisualStyle, isBanner: boolean): string {
+  if (style === "luminous") {
+    if (isBanner) {
+      return `linear-gradient(
+        to right,
+        rgba(8,12,20,0.78) 0%,
+        rgba(8,12,20,0.40) 60%,
+        rgba(8,12,20,0.10) 100%,
+        rgba(8,12,20,0.10) 100%
+      )`;
+    }
+    return `linear-gradient(
+      to bottom,
+      rgba(8,12,20,0.08) 0%,
+      rgba(8,12,20,0.18) 35%,
+      rgba(8,12,20,0.62) 65%,
+      rgba(8,12,20,0.88) 100%
+    )`;
+  }
+  if (isBanner) {
+    return `linear-gradient(
+      to right,
+      rgba(8,12,20,0.85) 0%,
+      rgba(8,12,20,0.55) 60%,
+      rgba(8,12,20,0.30) 100%,
+      rgba(8,12,20,0.30) 100%
+    )`;
+  }
+  return `linear-gradient(
+    to bottom,
+    rgba(8,12,20,0.45) 0%,
+    rgba(8,12,20,0.55) 35%,
+    rgba(8,12,20,0.75) 65%,
+    rgba(8,12,20,0.92) 100%
+  )`;
+}
+
 export const runtime     = "nodejs";
 export const dynamic     = "force-dynamic";
 export const maxDuration = 60;
@@ -112,6 +152,7 @@ function buildHtml(args: {
   width:   number;
   height:  number;
   type:    AssetType;
+  style:   VisualStyle;
 }): { html: string; css: string } {
   const isBanner = args.type === "linkedin-banner";
   const isStory  = args.type === "instagram-story";
@@ -170,13 +211,7 @@ body { margin: 0; padding: 0; }
 
 .bg-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(
-    ${isBanner ? "to right" : "to bottom"},
-    rgba(8,12,20,${isBanner ? "0.85" : "0.45"}) 0%,
-    rgba(8,12,20,${isBanner ? "0.55" : "0.55"}) ${isBanner ? "60%" : "35%"},
-    rgba(8,12,20,${isBanner ? "0.30" : "0.75"}) ${isBanner ? "100%" : "65%"},
-    rgba(8,12,20,${isBanner ? "0.30" : "0.92"}) 100%
-  );
+  background: ${overlayGradient(args.style, isBanner)};
   z-index: 1;
 }
 
@@ -344,6 +379,7 @@ export async function GET(
     text, bgUrl, clean,
     width: spec.width, height: spec.height,
     type: typeParam,
+    style,
   });
 
   const result = await createHctiImage({

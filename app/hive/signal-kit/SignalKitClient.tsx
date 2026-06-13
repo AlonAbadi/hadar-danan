@@ -203,7 +203,7 @@ const VISUAL_ASSETS: VisualAsset[] = [
 ];
 
 function VisualTab({ extractionId }: { extractionId: string }) {
-  const [style, setStyle] = useState<"editorial" | "warm" | "minimal">("editorial");
+  const [style, setStyle] = useState<"editorial" | "warm" | "minimal" | "luminous">("editorial");
   const [clean, setClean] = useState(true);
 
   function urlFor(asset: VisualAsset): string {
@@ -219,7 +219,7 @@ function VisualTab({ extractionId }: { extractionId: string }) {
         <div style={{ flex: "1 0 auto", minWidth: 160 }}>
           <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>סגנון</div>
           <div style={{ display: "flex", gap: 6 }}>
-            {(["editorial", "warm", "minimal"] as const).map((s) => (
+            {(["editorial", "warm", "minimal", "luminous"] as const).map((s) => (
               <button key={s} onClick={() => setStyle(s)} style={pillStyle(style === s)}>
                 {STYLE_LABEL[s]}
               </button>
@@ -247,6 +247,7 @@ const STYLE_LABEL: Record<string, string> = {
   editorial: "Editorial",
   warm:      "Warm",
   minimal:   "Minimal",
+  luminous:  "זוהר",
 };
 
 function pillStyle(active: boolean): React.CSSProperties {
