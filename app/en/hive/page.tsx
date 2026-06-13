@@ -25,7 +25,7 @@ export default function EnHivePage() {
         style={{
           maxWidth:       1200,
           margin:         "0 auto",
-          padding:        "26px clamp(20px, 4vw, 40px)",
+          padding:        "40px clamp(20px, 4vw, 40px) 32px",
           display:        "flex",
           alignItems:     "center",
           justifyContent: "space-between",
@@ -34,21 +34,21 @@ export default function EnHivePage() {
       >
         <Link
           href="/en"
-          style={{ display: "flex", alignItems: "center", gap: 13, textDecoration: "none", color: "#0F1011" }}
+          style={{ display: "flex", alignItems: "center", gap: 16, textDecoration: "none", color: "#0F1011" }}
         >
           <Image
             src={BEE}
             alt="beegood"
-            width={33}
-            height={26}
-            style={{ width: "auto", height: 26, display: "block" }}
+            width={50}
+            height={40}
+            style={{ width: "auto", height: 40, display: "block" }}
           />
           <span
             style={{
               fontFamily:    "var(--font-space-grotesk), sans-serif",
-              fontSize:      19,
+              fontSize:      24,
               fontWeight:    400,
-              letterSpacing: "-0.015em",
+              letterSpacing: "-0.02em",
             }}
           >
             beegood

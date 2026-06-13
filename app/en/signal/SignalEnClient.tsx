@@ -241,7 +241,7 @@ function Header() {
         maxWidth:       1120,
         width:          "100%",
         margin:         "0 auto",
-        padding:        "30px clamp(22px, 5vw, 40px) 0",
+        padding:        "40px clamp(22px, 5vw, 40px) 0",
         display:        "flex",
         alignItems:     "center",
         justifyContent: "space-between",
@@ -254,7 +254,7 @@ function Header() {
         style={{
           display:        "flex",
           alignItems:     "center",
-          gap:            11,
+          gap:            16,
           textDecoration: "none",
           color:          C.ink,
         }}
@@ -263,16 +263,16 @@ function Header() {
         <img
           src="/beegood_logo.png"
           alt="beegood"
-          width={33}
-          height={26}
-          style={{ width: "auto", height: 26, display: "block" }}
+          width={50}
+          height={40}
+          style={{ width: "auto", height: 40, display: "block" }}
         />
         <span
           style={{
             fontFamily:    "var(--font-spectral), Georgia, serif",
-            fontSize:      21,
+            fontSize:      26,
             fontWeight:    400,
-            letterSpacing: "-0.005em",
+            letterSpacing: "-0.015em",
           }}
         >
           beegood

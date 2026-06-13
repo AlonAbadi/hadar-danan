@@ -80,7 +80,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
         style={{
           maxWidth:       1120,
           margin:         "0 auto",
-          padding:        "30px clamp(22px, 5vw, 40px) 0",
+          padding:        "40px clamp(22px, 5vw, 40px) 0",
           display:        "flex",
           alignItems:     "center",
           justifyContent: "space-between",
@@ -88,16 +88,16 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
           flexWrap:       "wrap",
         }}
       >
-        <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", color: ink }}>
+        <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 16, textDecoration: "none", color: ink }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/beegood_logo.png"
             alt="beegood"
-            width={33}
-            height={26}
-            style={{ width: "auto", height: 26, display: "block" }}
+            width={50}
+            height={40}
+            style={{ width: "auto", height: 40, display: "block" }}
           />
-          <span style={{ fontFamily: "var(--font-spectral), Georgia, serif", fontSize: 21, fontWeight: 500, letterSpacing: "-0.01em" }}>
+          <span style={{ fontFamily: "var(--font-spectral), Georgia, serif", fontSize: 26, fontWeight: 400, letterSpacing: "-0.015em" }}>
             beegood
           </span>
         </Link>
