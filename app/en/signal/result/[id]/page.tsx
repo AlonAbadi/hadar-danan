@@ -4,11 +4,27 @@ import { notFound } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { validateSignalOutputEn, type SignalOutputEn } from "@/lib/prompts/signal-engine-en";
 
-export const metadata: Metadata = {
-  title: "Your signal",
-  description: "Your TrueSignal© diagnostic, prepared by hand.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+  const cardUrl = `${baseUrl}/en/signal/result/${id}/card.png`;
+  return {
+    title: "Your signal",
+    description: "Your TrueSignal© diagnostic, prepared by hand.",
+    robots: { index: false, follow: false },
+    openGraph: {
+      title: "TrueSignal© · beegood",
+      description: "Your signal, prepared by hand.",
+      images: [{ url: cardUrl, width: 1200, height: 1200, alt: "Your TrueSignal card" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "TrueSignal© · beegood",
+      description: "Your signal, prepared by hand.",
+      images: [cardUrl],
+    },
+  };
+}
 
 type ResultRow = {
   id:           string;
@@ -176,6 +192,79 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
           ink={ink}
           isLast
         />
+      </section>
+
+      {/* Made to share — PNG card with public_card_statement */}
+      <section style={{ maxWidth: 660, margin: "0 auto", padding: "24px clamp(22px, 5vw, 40px) clamp(60px, 10vw, 90px)" }}>
+        <div
+          style={{
+            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
+            fontSize:      11,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color:         inkFaint,
+            margin:        "0 0 16px",
+          }}
+        >
+          Made to share —
+        </div>
+        <div
+          style={{
+            border:       `1px solid ${line}`,
+            borderRadius: 6,
+            overflow:     "hidden",
+            background:   card,
+            boxShadow:    "0 1px 0 rgba(26,23,18,0.03), 0 30px 60px -46px rgba(26,23,18,0.26)",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/en/signal/result/${id}/card.png`}
+            alt="Your TrueSignal card"
+            style={{ display: "block", width: "100%", height: "auto" }}
+          />
+        </div>
+        <div
+          style={{
+            display:        "flex",
+            justifyContent: "center",
+            alignItems:     "center",
+            gap:            18,
+            marginTop:      20,
+            flexWrap:       "wrap",
+          }}
+        >
+          <a
+            href={`/en/signal/result/${id}/card.png`}
+            download={`truesignal-${id.slice(0, 8)}.png`}
+            style={{
+              fontFamily:     "var(--font-hanken-grotesk), sans-serif",
+              fontSize:       12.5,
+              fontWeight:     500,
+              letterSpacing:  "0.16em",
+              textTransform:  "uppercase",
+              color:          ctaFg,
+              background:     ctaBg,
+              border:         "none",
+              borderRadius:   4,
+              padding:        "13px 26px",
+              textDecoration: "none",
+            }}
+          >
+            Download card ↓
+          </a>
+          <p
+            style={{
+              fontFamily: "var(--font-spectral), Georgia, serif",
+              fontStyle:  "italic",
+              fontSize:   15,
+              color:      inkFaint,
+              margin:     0,
+            }}
+          >
+            Yours to post, today.
+          </p>
+        </div>
       </section>
 
       {/* Warm note from founders */}
