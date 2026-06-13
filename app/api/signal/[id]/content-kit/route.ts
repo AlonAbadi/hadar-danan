@@ -132,8 +132,27 @@ export async function GET(
         if (!aiRes) throw lastErr ?? new Error(`Anthropic call failed (${label})`);
         const block = aiRes.content[0];
         if (!block || block.type !== "text") throw new Error(`Non-text block (${label})`);
-        const clean = block.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
-        return JSON.parse(clean) as Record<string, unknown>;
+        // Be tolerant: Sonnet sometimes adds prose after the JSON ("This is..."
+        // / "Here is..."). Extract only the first balanced {...} object.
+        const text = block.text.trim();
+        const firstBrace = text.indexOf("{");
+        if (firstBrace < 0) throw new Error(`No JSON object in ${label} output`);
+        let depth = 0, end = -1, inStr = false, esc = false;
+        for (let i = firstBrace; i < text.length; i++) {
+          const ch = text[i];
+          if (inStr) {
+            if (esc) esc = false;
+            else if (ch === "\\") esc = true;
+            else if (ch === '"') inStr = false;
+          } else {
+            if (ch === '"') inStr = true;
+            else if (ch === "{") depth++;
+            else if (ch === "}") { depth--; if (depth === 0) { end = i; break; } }
+          }
+        }
+        if (end < 0) throw new Error(`Unbalanced JSON in ${label} output`);
+        const jsonOnly = text.slice(firstBrace, end + 1);
+        return JSON.parse(jsonOnly) as Record<string, unknown>;
       } finally {
         clearTimeout(tid);
       }
