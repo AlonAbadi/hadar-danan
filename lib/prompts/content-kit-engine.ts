@@ -20,12 +20,11 @@
  *     never generic content that could apply to anyone in the field
  */
 
-// Haiku 4.5 (full dated ID — short form sometimes 404s) is ~3x faster than
-// Sonnet 4.6 at structured-output generation, keeping each parallel pack
-// call comfortably under 30s. Quality is more than sufficient for bios +
-// structured lists; we already used Sonnet for the upstream signal
-// extraction (the hard creative work).
-export const CONTENT_KIT_MODEL = "claude-haiku-4-5-20251001";
+// Sonnet 4.6 is the right tool for these structured JSON outputs — Haiku
+// truncates mid-string when output approaches max_tokens, producing invalid
+// JSON. With four small parallel packs (rather than one big one) Sonnet
+// fits comfortably under Vercel's 60s function timeout: wall time ~25s.
+export const CONTENT_KIT_MODEL = "claude-sonnet-4-6";
 
 export type ContentKit = {
   bio_short:                   string;
@@ -93,16 +92,16 @@ ${SHARED_RULES}
 החזר JSON תקין בלבד, ללא markdown:
 {"manifesto":"...","positioning_statement":"...","persona_description":"..."}`;
 
-// ── Pack 3: Strategy + Content pack ──────────────────────────────────
-export const STRATEGY_PACK_MAX_TOKENS = 2500;
-export const STRATEGY_PACK_SYSTEM = `אתה יועץ אסטרטגי ב-beegood. אתה מקבל אות מותגי, ומחזיר חבילת אסטרטגיה ו-30 רעיונות תוכן.
+// ── Pack 3: Strategy basics (lead magnets + first product + speaking) ─
+export const STRATEGY_PACK_MAX_TOKENS = 1500;
+export const STRATEGY_PACK_SYSTEM = `אתה יועץ אסטרטגי ב-beegood. אתה מקבל אות מותגי, ומחזיר חבילת אסטרטגיה: מגנטי לידים, מוצר ראשון, נושאי הרצאה.
 
 ${SHARED_RULES}
 
 קולות:
 - כל השדות בגוף ראשון של המפרסם או פנייה לקהל. אסור גוף שני אל האדם עצמו.
 
-תיאור 4 השדות:
+תיאור 3 השדות:
 
 1. lead_magnet_ideas — בדיוק 3 פריטים. כל פריט הוא משפט אחד או שניים שמתאר מה האדם יכול לתת חינם. ספציפי לאות שלו, לא רעיון גנרי. דוגמה: "PDF של 5 שאלות שאת שואלת כל זוג ב-15 הדקות הראשונות בטיפול". 3 פריטים שונים מהותית.
 
@@ -110,10 +109,21 @@ ${SHARED_RULES}
 
 3. speaking_topics — בדיוק 5 פריטים. כל פריט: [כותרת ההרצאה] שורה ריווח [תקציר 35-55 מילים]. ההרצאות חייבות להיות נושאים שהאדם הוא הסמכות הטבעית להם, נגזרים מהבידול, לא נושאים גנריים.
 
-4. content_ideas_30 — 30 רעיונות פוסט/וידאו/סיפור קצרים, כל אחד משפט אחד עד 25 מילים. שונים זה מזה במהותם. מערב: סיפור אישי, תובנה מקצועית, דעה שנויה במחלוקת, איך-לעשות, מאחורי הקלעים. כל אחד נגזר מהבידול, לא רעיון שיתאים לכל אחד בתחום.
+החזר JSON תקין בלבד, ללא markdown:
+{"lead_magnet_ideas":["...","...","..."],"first_product_recommendation":"...","speaking_topics":["...","...","...","...","..."]}`;
+
+// ── Pack 4: 30 content ideas only ─────────────────────────────────────
+export const CONTENT_PACK_MAX_TOKENS = 1800;
+export const CONTENT_PACK_SYSTEM = `אתה יועץ תוכן ב-beegood. אתה מקבל אות מותגי, ומחזיר 30 רעיונות תוכן ספציפיים.
+
+${SHARED_RULES}
+
+הקול: גוף ראשון של המפרסם או פנייה לקהל.
+
+content_ideas_30 — 30 רעיונות פוסט/וידאו/סיפור קצרים. כל אחד משפט אחד, עד 25 מילים. שונים זה מזה במהותם. מערב את הסוגים האלה: סיפור אישי, תובנה מקצועית, דעה שנויה במחלוקת, איך-לעשות, מאחורי הקלעים, רשימה, השוואה, פנייה לקהל ספציפי. כל רעיון חייב להיות נגזר מהבידול האישי שכבר חולץ. לא רעיון גנרי שיתאים לכל אחד בתחום.
 
 החזר JSON תקין בלבד, ללא markdown:
-{"lead_magnet_ideas":["...","...","..."],"first_product_recommendation":"...","speaking_topics":["...","...","...","...","..."],"content_ideas_30":[/* 30 פריטים */]}`;
+{"content_ideas_30":[/* 30 פריטים, כל אחד מחרוזת אחת */]}`;
 
 // ── Builder for the user-message context (same for all 3 packs) ──────
 export function buildContextMessage(args: {

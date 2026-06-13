@@ -15,12 +15,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 import {
   CONTENT_KIT_MODEL,
-  VOICE_PACK_MAX_TOKENS,
-  VOICE_PACK_SYSTEM,
-  IDENTITY_PACK_MAX_TOKENS,
-  IDENTITY_PACK_SYSTEM,
-  STRATEGY_PACK_MAX_TOKENS,
-  STRATEGY_PACK_SYSTEM,
+  VOICE_PACK_MAX_TOKENS,    VOICE_PACK_SYSTEM,
+  IDENTITY_PACK_MAX_TOKENS, IDENTITY_PACK_SYSTEM,
+  STRATEGY_PACK_MAX_TOKENS, STRATEGY_PACK_SYSTEM,
+  CONTENT_PACK_MAX_TOKENS,  CONTENT_PACK_SYSTEM,
   buildContextMessage,
   validateContentKit,
   type ContentKit,
@@ -141,13 +139,14 @@ export async function GET(
       }
     }
 
-    const [voicePack, identityPack, strategyPack] = await Promise.all([
+    const [voicePack, identityPack, strategyPack, contentPack] = await Promise.all([
       callPack(VOICE_PACK_SYSTEM,    VOICE_PACK_MAX_TOKENS,    "voice"),
       callPack(IDENTITY_PACK_SYSTEM, IDENTITY_PACK_MAX_TOKENS, "identity"),
       callPack(STRATEGY_PACK_SYSTEM, STRATEGY_PACK_MAX_TOKENS, "strategy"),
+      callPack(CONTENT_PACK_SYSTEM,  CONTENT_PACK_MAX_TOKENS,  "content"),
     ]);
 
-    const merged = { ...voicePack, ...identityPack, ...strategyPack };
+    const merged = { ...voicePack, ...identityPack, ...strategyPack, ...contentPack };
     if (!validateContentKit(merged)) {
       throw new Error("Merged kit failed validation");
     }
