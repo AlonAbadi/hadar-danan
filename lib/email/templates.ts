@@ -8,6 +8,13 @@
 
 const APP_URL  = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 const FROM_NAME = "הדר דנן";
+const FROM_NAME_EN = "Hadar & Alon · beegood";
+
+// English templates use a Latin From-line so English recipients don't see
+// Hebrew in their inbox. Identified by `_en` template-key suffix.
+export function fromNameFor(templateKey: string): string {
+  return templateKey.endsWith("_en") ? FROM_NAME_EN : FROM_NAME;
+}
 
 // ── Base layout ───────────────────────────────────────────────
 function base(content: string): string {
@@ -1062,6 +1069,92 @@ export function adminAlert(ctx: {
   };
 }
 
+// ─────────────────────────────────────────────────────────────
+// EN signal welcome (SIGNAL_EXTRACTED_EN · 0h)
+// Editorial Daylight aesthetic to mirror /en/signal/result/[id].
+// ─────────────────────────────────────────────────────────────
+
+function enBase(content: string): string {
+  return `<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #F4EFE4;
+      font-family: Georgia, 'Times New Roman', serif;
+      color: #211B12;
+    }
+    .en-wrap { max-width: 600px; margin: 32px auto; padding: 0 16px 40px; }
+    .en-card { background: #FCFAF3; border: 1px solid rgba(33,27,18,0.10); border-radius: 6px; overflow: hidden; }
+    .en-header { background: #211B12; color: #F4EFE4; padding: 32px 36px 36px; }
+    .en-eyebrow { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: #BE9540; margin-bottom: 16px; }
+    .en-header h1 { font-family: Georgia, serif; font-style: italic; font-size: 28px; font-weight: 400; line-height: 1.25; letter-spacing: -0.01em; color: #F4EFE4; }
+    .en-body { padding: 36px; }
+    .en-body p { font-size: 16px; line-height: 1.7; color: #211B12; margin-bottom: 16px; }
+    .en-body p.lede { font-family: Georgia, serif; font-style: italic; font-size: 17px; color: #594F41; }
+    .en-cta {
+      display: inline-block;
+      background: #211B12;
+      color: #F4EFE4 !important;
+      text-decoration: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border-radius: 4px;
+      margin: 6px 0 22px;
+    }
+    .en-rule { width: 34px; height: 1px; background: #BE9540; margin: 24px 0; }
+    .en-signoff { font-family: Georgia, serif; font-size: 16px; color: #211B12; margin-top: 6px; }
+    .en-signoff-line { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; letter-spacing: 0.06em; color: #988D7B; margin-top: 4px; }
+    .en-footer { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; letter-spacing: 0.06em; color: #988D7B; text-align: center; padding: 24px 16px 0; }
+    a { color: #6F521A; }
+  </style>
+</head>
+<body>
+  <div class="en-wrap">
+    <div class="en-card">
+${content}
+    </div>
+    <div class="en-footer">The TrueSignal© Method · Wherever you are, in every language</div>
+  </div>
+</body>
+</html>`;
+}
+
+function signalWelcomeEn(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
+  const extractionId = typeof ctx.extraction_id === "string" ? ctx.extraction_id : "";
+  const resultUrl = extractionId ? `${APP_URL}/en/signal/result/${extractionId}` : `${APP_URL}/en`;
+  return {
+    subject: `${firstName}, your signal`,
+    html: enBase(`
+      <div class="en-header">
+        <div class="en-eyebrow">TrueSignal©</div>
+        <h1>${firstName}, we read every answer ourselves.</h1>
+      </div>
+      <div class="en-body">
+        <p class="lede">What you wrote was worth saying back to you.</p>
+        <p>Your signal is saved. Yours for life, returnable any time. The page is set up the way a letter is — slow, signed, and meant for one reader.</p>
+        <a class="en-cta" href="${resultUrl}">Open your signal &rarr;</a>
+
+        <div class="en-rule"></div>
+
+        <p>One thing we ask: read it once out loud before you change a word. The shape of the sentence carries more than the content of it.</p>
+        <p>When you are ready to build a body of work from it — the posts, the rhythm, the reach — we will make the rest with you, in your voice. That part is coming. We will write back when it opens.</p>
+
+        <div class="en-signoff">Hadar &amp; Alon</div>
+        <div class="en-signoff-line">Founders of beegood</div>
+      </div>
+    `),
+  };
+}
+
 // ── Template registry ─────────────────────────────────────────
 type TemplateFn = (ctx: EmailTemplateContext) => RenderedEmail;
 
@@ -1072,6 +1165,8 @@ const TEMPLATES: Record<string, TemplateFn> = {
   followup_72h:                followup72h,
   // SIGNAL_EXTRACTED welcome
   signal_welcome:              signalWelcome,
+  // SIGNAL_EXTRACTED_EN welcome (English /en/signal flow)
+  signal_welcome_en:           signalWelcomeEn,
   // Manual on-demand full result email
   signal_result_full:          signalResultFull,
   // Hive monthly content drop announcement
@@ -1112,4 +1207,4 @@ export function renderTemplate(
   return fn(ctx);
 }
 
-export { FROM_NAME };
+export { FROM_NAME, FROM_NAME_EN };

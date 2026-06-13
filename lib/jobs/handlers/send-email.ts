@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { renderTemplate, FROM_NAME } from "@/lib/email/templates";
+import { renderTemplate, fromNameFor } from "@/lib/email/templates";
 import { generateMagicLink, magicLinkFooterHtml } from "@/lib/email/magic-link";
 import type { Database } from "@/lib/supabase/types";
 
@@ -70,7 +70,7 @@ export async function handleSendEmail(
 
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({
-    from: `${FROM_NAME} <${FROM_ADDRESS}>`,
+    from: `${fromNameFor(template_key)} <${FROM_ADDRESS}>`,
     to: email,
     subject: rendered.subject,
     html: trackedHtml,

@@ -228,16 +228,45 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Fire SIGNAL_EXTRACTED event so admin/CRM sees the funnel step. Soft-fail.
+  // Fire SIGNAL_EXTRACTED_EN event + enqueue the English welcome email.
+  // Separate event type from the Hebrew SIGNAL_EXTRACTED keeps the two
+  // language welcomes from cross-firing through the email_sequences table.
+  // Soft-fail throughout — the user already has their signal on screen.
   try {
     await db.from("events").insert({
       user_id:  userId,
-      type:     "SIGNAL_EXTRACTED",
-      metadata: { source: "en_anonymous_gate", locale: "en" },
+      type:     "SIGNAL_EXTRACTED_EN",
+      metadata: { source: "en_anonymous_gate", locale: "en", extraction_id: extractionId },
     });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: welcomeSeq } = await (db as any)
+      .from("email_sequences")
+      .select("id, subject, template_key")
+      .eq("trigger_event", "SIGNAL_EXTRACTED_EN")
+      .eq("delay_hours", 0)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (welcomeSeq && extractionId) {
+      await db.from("jobs").insert({
+        type:    "SEND_EMAIL",
+        payload: {
+          user_id:       userId,
+          email:         emailStr,
+          name:          fullName,
+          sequence_id:   welcomeSeq.id,
+          subject:       welcomeSeq.subject,
+          template_key:  welcomeSeq.template_key,
+          extraction_id: extractionId,
+        },
+        run_at: new Date().toISOString(),
+        status: "pending",
+      });
+    }
   } catch (e) {
     await db.from("error_logs").insert({
-      context: "api/en/signal/extract POST — event insert",
+      context: "api/en/signal/extract POST — SIGNAL_EXTRACTED_EN enqueue",
       error:   String(e),
       payload: { userId },
     });
