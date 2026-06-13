@@ -56,10 +56,12 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
   const [cacheChecked, setCacheChecked] = useState(false);
 
-  // Lead-gate fields (anonymous only)
-  const [leadName, setLeadName]   = useState(firstName ?? "");
-  const [leadEmail, setLeadEmail] = useState(prefillEmail ?? "");
-  const [leadPhone, setLeadPhone] = useState("");
+  // Lead-gate fields (anonymous only). First + last name are captured separately
+  // so we can store the full name and still personalize emails with the first name.
+  const [leadFirstName, setLeadFirstName] = useState(firstName ?? "");
+  const [leadLastName,  setLeadLastName]  = useState("");
+  const [leadEmail,     setLeadEmail]     = useState(prefillEmail ?? "");
+  const [leadPhone,     setLeadPhone]     = useState("");
   const [leadOccupation, setLeadOccupation] = useState("");
 
   // Load any draft + check for an existing cached signal on mount.
@@ -123,13 +125,16 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
     setPhase("loading");
     setErrorMsg(null);
     try {
+      const trimmedFirst = leadFirstName.trim();
+      const trimmedLast  = leadLastName.trim();
+      const fullName     = [trimmedFirst, trimmedLast].filter(Boolean).join(" ");
       const payload: Record<string, unknown> = {
         answers,
-        first_name: firstName ?? leadName.split(" ")[0],
+        first_name: firstName ?? trimmedFirst,
       };
       if (!isAuthenticated) {
         payload.email = leadEmail.trim().toLowerCase();
-        payload.name  = leadName.trim();
+        payload.name  = fullName;
         payload.phone = leadPhone.trim();
         const occ = leadOccupation.trim();
         if (occ.length > 0) payload.occupation = occ;
@@ -248,11 +253,13 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
         )}
         {phase === "gate"    && (
           <LeadGate
-            name={leadName}
+            firstName={leadFirstName}
+            lastName={leadLastName}
             email={leadEmail}
             phone={leadPhone}
             occupation={leadOccupation}
-            setName={setLeadName}
+            setFirstName={setLeadFirstName}
+            setLastName={setLeadLastName}
             setEmail={setLeadEmail}
             setPhone={setLeadPhone}
             setOccupation={setLeadOccupation}
@@ -315,7 +322,7 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
           חמש שאלות. אות מותגי אחד.
         </p>
         <p style={{ color: C.fg, opacity: 0.92, fontSize: 17, margin: "0 0 28px", lineHeight: 1.6 }}>
-          לא מה שאתה מוכר, אלא מה שרק אתה יכול לתת.
+          לא מה שאתה/את מוכר/ת, אלא מה שרק אתה/את יכול/ה לתת.
         </p>
       </div>
 
@@ -420,7 +427,7 @@ function FormCard(props: FormCardProps) {
         value={props.value}
         onChange={(e) => props.setValue(e.target.value)}
         rows={6}
-        placeholder="או הקלד כאן — בלי לערוך, כפי שאתה מדבר."
+        placeholder="או הקלד/י כאן — בלי לערוך, כפי שאתה/את מדבר/ת."
         style={{
           width:        "100%",
           background:   C.cardSoft,
@@ -518,11 +525,13 @@ function Loading() {
 }
 
 interface LeadGateProps {
-  name:          string;
+  firstName:     string;
+  lastName:      string;
   email:         string;
   phone:         string;
   occupation:    string;
-  setName:       (v: string) => void;
+  setFirstName:  (v: string) => void;
+  setLastName:   (v: string) => void;
   setEmail:      (v: string) => void;
   setPhone:      (v: string) => void;
   setOccupation: (v: string) => void;
@@ -531,15 +540,16 @@ interface LeadGateProps {
   errorMsg:      string | null;
 }
 
-function LeadGate({ name, email, phone, occupation, setName, setEmail, setPhone, setOccupation, onSubmit, onBack, errorMsg }: LeadGateProps) {
-  const trimmedName  = name.trim();
+function LeadGate({ firstName, lastName, email, phone, occupation, setFirstName, setLastName, setEmail, setPhone, setOccupation, onSubmit, onBack, errorMsg }: LeadGateProps) {
+  const trimmedFirst = firstName.trim();
+  const trimmedLast  = lastName.trim();
   const trimmedEmail = email.trim();
   const trimmedPhone = phone.trim();
   const validEmail   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
   // Israeli mobile pattern is loose on purpose — accept 05X-XXXXXXX, with or
   // without dashes / spaces / international prefix. Server re-validates.
   const validPhone   = /^[0-9+\-\s()]{9,20}$/.test(trimmedPhone);
-  const canSubmit    = trimmedName.length >= 2 && validEmail && validPhone;
+  const canSubmit    = trimmedFirst.length >= 2 && trimmedLast.length >= 2 && validEmail && validPhone;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -573,32 +583,56 @@ function LeadGate({ name, email, phone, occupation, setName, setEmail, setPhone,
           כמעט שם
         </h2>
         <p style={{ color: C.muted, fontSize: 15, margin: 0, lineHeight: 1.6 }}>
-          השאר שם ואימייל, האות שלך נשמר אצלך לחיים ואפשר לחזור אליו בכל רגע.
+          השאר/י שם ואימייל, האות שלך נשמר אצלך לחיים ואפשר לחזור אליו בכל רגע.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <label style={{ display: "block" }}>
-          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>שם פרטי</div>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="איך לקרוא לך"
-            autoFocus
-            style={{
-              width:        "100%",
-              background:   C.cardSoft,
-              color:        C.fg,
-              border:       `1px solid ${C.line}`,
-              borderRadius: 12,
-              padding:      "12px 16px",
-              fontSize:     16,
-              fontFamily:   "inherit",
-              outline:      "none",
-            }}
-          />
-        </label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <label style={{ display: "block" }}>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>שם פרטי</div>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="איך לקרוא לך"
+              autoComplete="given-name"
+              autoFocus
+              style={{
+                width:        "100%",
+                background:   C.cardSoft,
+                color:        C.fg,
+                border:       `1px solid ${C.line}`,
+                borderRadius: 12,
+                padding:      "12px 16px",
+                fontSize:     16,
+                fontFamily:   "inherit",
+                outline:      "none",
+              }}
+            />
+          </label>
+          <label style={{ display: "block" }}>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>שם משפחה</div>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="שם המשפחה שלך"
+              autoComplete="family-name"
+              style={{
+                width:        "100%",
+                background:   C.cardSoft,
+                color:        C.fg,
+                border:       `1px solid ${C.line}`,
+                borderRadius: 12,
+                padding:      "12px 16px",
+                fontSize:     16,
+                fontFamily:   "inherit",
+                outline:      "none",
+              }}
+            />
+          </label>
+        </div>
 
         <label style={{ display: "block" }}>
           <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>אימייל</div>
@@ -649,7 +683,7 @@ function LeadGate({ name, email, phone, occupation, setName, setEmail, setPhone,
 
         <label style={{ display: "block" }}>
           <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>
-            במה אתה עוסק היום? <span style={{ opacity: 0.6 }}>(לא חובה)</span>
+            במה אתה/את עוסק/ת היום? <span style={{ opacity: 0.6 }}>(לא חובה)</span>
           </div>
           <input
             type="text"
