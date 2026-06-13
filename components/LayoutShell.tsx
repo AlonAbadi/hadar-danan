@@ -12,7 +12,7 @@ export function LayoutShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideNav = FULL_SCREEN_ROUTES.includes(pathname);
+  const hideNav = FULL_SCREEN_ROUTES.includes(pathname) || pathname.startsWith("/en");
 
   return (
     <>

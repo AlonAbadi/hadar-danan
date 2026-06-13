@@ -55,7 +55,10 @@ export async function middleware(request: NextRequest) {
   // ── Supabase session refresh ─────────────────────────────────
   // `response` may be replaced inside setAll() to forward updated request
   // cookies. All subsequent cookie writes go onto the final `response`.
-  let response = NextResponse.next({ request });
+  // x-pathname is read by app/layout.tsx to skip Hebrew chrome on /en/*.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createMiddlewareClient({
     getCookies() {
@@ -63,7 +66,7 @@ export async function middleware(request: NextRequest) {
     },
     setCookies(cookiesToSet) {
       cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-      response = NextResponse.next({ request });
+      response = NextResponse.next({ request: { headers: requestHeaders } });
       cookiesToSet.forEach(({ name, value, options }) =>
         response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
       );

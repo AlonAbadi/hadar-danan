@@ -6,7 +6,6 @@ import type { Database } from "@/lib/supabase/types";
 
 export async function DesktopNavServer() {
   let userInitial: string | null = null;
-  let hiveActive = false;
 
   try {
     const cookieStore = await cookies();
@@ -26,17 +25,16 @@ export async function DesktopNavServer() {
       const db = createServerClient();
       const { data: userData } = await db
         .from("users")
-        .select("name, email, hive_status")
+        .select("name, email")
         .eq("auth_id", user.id)
         .maybeSingle();
 
       const displayName = userData?.name || userData?.email || user.email || "?";
       userInitial = displayName.split(" ")[0]; // first name (or email prefix)
-      hiveActive = userData?.hive_status === "active";
     }
   } catch {
     // Session read failed — show logged-out state
   }
 
-  return <DesktopNav userInitial={userInitial} hiveActive={hiveActive} />;
+  return <DesktopNav userInitial={userInitial} />;
 }

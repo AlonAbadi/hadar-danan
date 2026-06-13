@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Assistant } from "next/font/google";
 import Script from "next/script";
+import { headers } from "next/headers";
 import "./globals.css";
 import { Pixels }              from "@/components/analytics/Pixels";
 import { AccessibilityWidget } from "@/components/AccessibilityWidget";
@@ -61,30 +62,41 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const hdrs = await headers();
+  const pathname = hdrs.get("x-pathname") ?? "/";
+  const isEn = pathname.startsWith("/en");
+
   return (
     <html
-      lang="he"
-      dir="rtl"
+      lang={isEn ? "en" : "he"}
+      dir={isEn ? "ltr" : "rtl"}
       className={`${assistant.variable} h-full`}
     >
       <meta name="facebook-domain-verification" content="remqmo1rv45m6h18tkiu3r15mki3bs" />
-      {/* LCP preload — mobile hero image must be discovered before JS runs */}
-      <link rel="preload" as="image" href="/_next/image?url=%2Fhadar1.jpg&w=828&q=80" media="(max-width: 767px)" fetchPriority="high" />
-      <link rel="preload" as="image" href="/_next/image?url=%2Fhadar1.jpg&w=1080&q=80" media="(min-width: 768px)" fetchPriority="high" />
+      {!isEn && (
+        <>
+          {/* LCP preload — mobile hero image must be discovered before JS runs */}
+          <link rel="preload" as="image" href="/_next/image?url=%2Fhadar1.jpg&w=828&q=80" media="(max-width: 767px)" fetchPriority="high" />
+          <link rel="preload" as="image" href="/_next/image?url=%2Fhadar1.jpg&w=1080&q=80" media="(min-width: 768px)" fetchPriority="high" />
+        </>
+      )}
       {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
         <>
           <Script id="meta-pixel" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('set','autoConfig',false,'${process.env.NEXT_PUBLIC_META_PIXEL_ID}');fbq('init','${process.env.NEXT_PUBLIC_META_PIXEL_ID}');fbq('track','PageView');`}</Script>
           <noscript><img height="1" width="1" style={{display:"none"}} src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_META_PIXEL_ID}&ev=PageView&noscript=1`} alt="" /></noscript>
         </>
       )}
-<body className="min-h-full flex flex-col font-assistant antialiased" style={{ background: "#101520", color: "#EDE9E1" }}>
-        <SchemaMarkup />
-        <a href="#main-content" className="skip-link">דלג לתוכן הראשי</a>
+      <body
+        className={`min-h-full flex flex-col antialiased ${isEn ? "" : "font-assistant"}`}
+        style={{ background: isEn ? "#FBFBF9" : "#101520", color: isEn ? "#0F1011" : "#EDE9E1" }}
+      >
+        {!isEn && <SchemaMarkup />}
+        {!isEn && <a href="#main-content" className="skip-link">דלג לתוכן הראשי</a>}
         <Pixels />
-        <AccessibilityWidget />
+        {!isEn && <AccessibilityWidget />}
         <LayoutShell nav={<><MobileNavServer /><DesktopNavServer /></>}>
           <div id="main-content" tabIndex={-1} style={{ outline: "none" }} />
           {children}
