@@ -15,9 +15,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 import {
   CONTENT_KIT_MODEL,
-  CONTENT_KIT_MAX_TOKENS,
-  CONTENT_KIT_SYSTEM_PROMPT,
-  buildContentKitUserMessage,
+  VOICE_PACK_MAX_TOKENS,
+  VOICE_PACK_SYSTEM,
+  IDENTITY_PACK_MAX_TOKENS,
+  IDENTITY_PACK_SYSTEM,
+  STRATEGY_PACK_MAX_TOKENS,
+  STRATEGY_PACK_SYSTEM,
+  buildContextMessage,
   validateContentKit,
   type ContentKit,
 } from "@/lib/prompts/content-kit-engine";
@@ -82,12 +86,14 @@ export async function GET(
     });
   }
 
-  // ── Generate via Claude ──────────────────────────────────────────────
+  // ── Generate via 3 parallel Claude calls ────────────────────────────
+  // Splitting the kit across three packs keeps each individual call well
+  // under the 60s function timeout: each pack runs ~15-25s and they execute
+  // in parallel via Promise.all, total wall time ~25-30s.
   let parsed: ContentKit;
-  let raw: unknown = null;
   try {
     const client = new Anthropic();
-    const userMessage = buildContentKitUserMessage({
+    const userMessage = buildContextMessage({
       signal:         String(row.signal.signal         ?? ""),
       signal_promise: String(row.signal.signal_promise ?? ""),
       pain_source:    String(row.signal.pain_source    ?? ""),
@@ -99,46 +105,49 @@ export async function GET(
       firstName:      typeof userRow.name === "string" ? userRow.name.split(" ")[0] : null,
     });
 
-    let aiRes: Awaited<ReturnType<typeof client.messages.create>> | null = null;
-    let lastErr: unknown = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        aiRes = await client.messages.create({
-          model:      CONTENT_KIT_MODEL,
-          max_tokens: CONTENT_KIT_MAX_TOKENS,
-          system:     CONTENT_KIT_SYSTEM_PROMPT,
-          messages: [{ role: "user", content: userMessage }],
-        });
-        break;
-      } catch (e: unknown) {
-        lastErr = e;
-        const status = (e as { status?: number })?.status;
-        if (status !== 429 && status !== 529) throw e;
-        if (attempt === 2) throw e;
-        await new Promise(r => setTimeout(r, 1500 * Math.pow(2, attempt)));
+    async function callPack(systemPrompt: string, maxTokens: number, label: string): Promise<Record<string, unknown>> {
+      let aiRes: Awaited<ReturnType<typeof client.messages.create>> | null = null;
+      let lastErr: unknown = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          aiRes = await client.messages.create({
+            model:      CONTENT_KIT_MODEL,
+            max_tokens: maxTokens,
+            system:     systemPrompt,
+            messages: [{ role: "user", content: userMessage }],
+          });
+          break;
+        } catch (e: unknown) {
+          lastErr = e;
+          const status = (e as { status?: number })?.status;
+          if (status !== 429 && status !== 529) throw e;
+          if (attempt === 2) throw e;
+          await new Promise(r => setTimeout(r, 1500 * Math.pow(2, attempt)));
+        }
       }
+      if (!aiRes) throw lastErr ?? new Error(`Anthropic call failed (${label})`);
+      const block = aiRes.content[0];
+      if (!block || block.type !== "text") throw new Error(`Non-text block (${label})`);
+      const clean = block.text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+      return JSON.parse(clean) as Record<string, unknown>;
     }
-    if (!aiRes) throw lastErr ?? new Error("Anthropic call failed");
 
-    const block = aiRes.content[0];
-    if (!block || block.type !== "text") {
-      throw new Error("Model returned non-text block");
-    }
-    const cleanText = block.text
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```\s*$/, "")
-      .trim();
-    raw = JSON.parse(cleanText);
+    const [voicePack, identityPack, strategyPack] = await Promise.all([
+      callPack(VOICE_PACK_SYSTEM,    VOICE_PACK_MAX_TOKENS,    "voice"),
+      callPack(IDENTITY_PACK_SYSTEM, IDENTITY_PACK_MAX_TOKENS, "identity"),
+      callPack(STRATEGY_PACK_SYSTEM, STRATEGY_PACK_MAX_TOKENS, "strategy"),
+    ]);
 
-    if (!validateContentKit(raw)) {
-      throw new Error("Model returned invalid Content Kit shape");
+    const merged = { ...voicePack, ...identityPack, ...strategyPack };
+    if (!validateContentKit(merged)) {
+      throw new Error("Merged kit failed validation");
     }
-    parsed = raw;
+    parsed = merged;
   } catch (e) {
     await supabase.from("error_logs").insert({
       context: "api/signal/[id]/content-kit — claude call",
       error:   String(e),
-      payload: { extractionId: id, raw },
+      payload: { extractionId: id },
     });
     return NextResponse.json(
       { error: "Content Kit generation failed. Try again in a moment." },
