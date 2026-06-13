@@ -265,27 +265,118 @@ function pillStyle(active: boolean): React.CSSProperties {
 }
 
 function AssetCard({ asset, url }: { asset: VisualAsset; url: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 12, padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ background: "#000", borderRadius: 8, aspectRatio: asset.ratio.replace(":", " / "), overflow: "hidden", position: "relative" }}>
-        <img
-          src={url}
-          loading="lazy"
-          alt={asset.label}
-          style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
-        />
+    <>
+      <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 12, padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+        <button
+          onClick={() => setOpen(true)}
+          aria-label={`פתח ${asset.label}`}
+          style={{
+            background: "#000", borderRadius: 8, aspectRatio: asset.ratio.replace(":", " / "),
+            overflow: "hidden", position: "relative", border: "none", padding: 0,
+            cursor: "zoom-in", fontFamily: "inherit",
+          }}
+        >
+          <img
+            src={url}
+            loading="lazy"
+            alt={asset.label}
+            style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
+          />
+        </button>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.fg }}>{asset.label}</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{asset.desc}</div>
+        </div>
+        <a href={url} download style={{
+          background: "rgba(232,185,74,0.08)", color: C.gold, textAlign: "center",
+          padding: "10px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+          textDecoration: "none", border: `1px solid ${C.lineGold}`,
+        }}>
+          הורד PNG ↓
+        </a>
       </div>
-      <div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: C.fg }}>{asset.label}</div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{asset.desc}</div>
+      {open && <Lightbox asset={asset} url={url} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+function Lightbox({ asset, url, onClose }: { asset: VisualAsset; url: string; onClose: () => void }) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={onClose}
+      role="dialog"
+      aria-label={asset.label}
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999,
+        background: "rgba(8,12,20,0.88)",
+        backdropFilter: "blur(8px)",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: "40px 24px", gap: 20,
+      }}
+    >
+      <button
+        onClick={onClose}
+        aria-label="סגור"
+        style={{
+          position: "absolute", top: 20, right: 20,
+          background: "rgba(237,233,225,0.08)", color: C.fg,
+          border: `1px solid ${C.line}`, borderRadius: 999,
+          width: 44, height: 44, fontSize: 22,
+          cursor: "pointer", fontFamily: "inherit",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}
+      >
+        ×
+      </button>
+
+      <img
+        src={url}
+        alt={asset.label}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth:  "min(94vw, 1080px)",
+          maxHeight: "78vh",
+          width:     "auto",
+          height:    "auto",
+          objectFit: "contain",
+          borderRadius: 10,
+          boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+          cursor: "default",
+        }}
+      />
+
+      <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        <div style={{ color: C.fg, fontSize: 15, fontWeight: 700 }}>{asset.label}</div>
+        <a
+          href={url}
+          download
+          style={{
+            background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+            color: "#2a1d05", fontWeight: 700, fontSize: 15,
+            padding: "12px 28px", borderRadius: 10,
+            textDecoration: "none", fontFamily: "inherit",
+            display: "inline-block",
+          }}
+        >
+          הורד PNG ↓
+        </a>
       </div>
-      <a href={url} download style={{
-        background: "rgba(232,185,74,0.08)", color: C.gold, textAlign: "center",
-        padding: "10px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-        textDecoration: "none", border: `1px solid ${C.lineGold}`,
-      }}>
-        הורד PNG ↓
-      </a>
     </div>
   );
 }
