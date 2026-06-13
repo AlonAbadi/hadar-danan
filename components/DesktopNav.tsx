@@ -23,10 +23,14 @@ const DROPDOWN_ITEMS = [
   { label: "המסלול האחר",       price: "במועמדות", href: "/apply", accent: true },
 ];
 
-const EXTRA_LINKS = [
+// Base extra links — shown to everyone
+const BASE_EXTRA_LINKS = [
   { label: "הכוורת 🐝",        href: "/hive" },
-  { label: "האזור האישי שלי", href: "/my" },
+  { label: "האזור האישי שלי", href: "/account" },
 ];
+
+// Hive-active members get one more link: direct access to their Signal Kit
+const SIGNAL_KIT_LINK = { label: "כרטיסי הסושיאל", href: "/hive/signal-kit" };
 
 const LINK_STYLE = (active: boolean): React.CSSProperties => ({
   color: active ? "#E8B94A" : "#EDE9E1",
@@ -40,9 +44,14 @@ const LINK_STYLE = (active: boolean): React.CSSProperties => ({
 
 interface DesktopNavProps {
   userInitial?: string | null;
+  hiveActive?: boolean;
 }
 
-export function DesktopNav({ userInitial = null }: DesktopNavProps) {
+export function DesktopNav({ userInitial = null, hiveActive = false }: DesktopNavProps) {
+  // Hive members get the Signal Kit link slotted between Hive and Personal Area
+  const EXTRA_LINKS = hiveActive
+    ? [BASE_EXTRA_LINKS[0], SIGNAL_KIT_LINK, BASE_EXTRA_LINKS[1]]
+    : BASE_EXTRA_LINKS;
   const pathname = usePathname();
   const router = useRouter();
   const [dropOpen, setDropOpen]   = useState(false);

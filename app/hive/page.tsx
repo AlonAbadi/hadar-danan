@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { createServerClient as createSSRClient } from "@supabase/ssr";
+import { createServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
 import { HivePricingSection } from "./HivePricingSection";
 
 export const metadata: Metadata = {
@@ -19,7 +24,36 @@ const C = {
   line:  "rgba(232,185,74,0.14)",
 };
 
-export default function HivePage() {
+// Active members shouldn't see the pricing page — they already pay. Route them
+// straight to the community/members hub. URL flag ?stay=1 escapes the redirect
+// (useful for testing/admin previews).
+export default async function HivePage({ searchParams }: { searchParams: Promise<{ stay?: string }> }) {
+  const sp = await searchParams;
+  if (sp?.stay !== "1") {
+    try {
+      const cookieStore = await cookies();
+      const sb = createSSRClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { cookies: { getAll() { return cookieStore.getAll(); }, setAll() {} } },
+      );
+      const { data: { user } } = await sb.auth.getUser();
+      if (user) {
+        const db = createServerClient();
+        const { data: userData } = await db
+          .from("users")
+          .select("hive_status")
+          .eq("auth_id", user.id)
+          .maybeSingle();
+        if (userData?.hive_status === "active") {
+          redirect("/hive/members");
+        }
+      }
+    } catch {
+      // Session check failed — fall through and render the marketing page.
+    }
+  }
+
   return (
     <main
       dir="rtl"

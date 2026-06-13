@@ -42,11 +42,12 @@ interface Props {
   firstName?:       string;
   isAuthenticated?: boolean;
   prefillEmail?:    string;
+  hiveActive?:      boolean;
 }
 
 type Phase = "intro" | "form" | "gate" | "loading" | "result" | "error";
 
-export function SignalClient({ firstName, isAuthenticated = false, prefillEmail }: Props) {
+export function SignalClient({ firstName, isAuthenticated = false, prefillEmail, hiveActive = false }: Props) {
   const [phase, setPhase]         = useState<Phase>("intro");
   const [step, setStep]           = useState(0);
   const [answers, setAnswers]     = useState<SignalAnswers>({});
@@ -283,6 +284,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail 
             ownerEmail={(isAuthenticated ? prefillEmail : leadEmail.trim().toLowerCase()) || ""}
             generatedAt={generatedAt}
             onRestart={restart}
+            hiveActive={hiveActive}
           />
         )}
       </div>
@@ -801,9 +803,10 @@ interface ResultProps {
   ownerEmail:    string;
   generatedAt:   string | null;
   onRestart:     () => void;
+  hiveActive?:   boolean;
 }
 
-function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRestart }: ResultProps) {
+function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRestart, hiveActive = false }: ResultProps) {
   const dateStr = generatedAt
     ? new Date(generatedAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
     : null;
@@ -921,7 +924,9 @@ function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRe
         </ol>
       </Card>
 
-      {/* Hive CTA — the natural next step after seeing your signal */}
+      {/* Post-result CTA. Hive members see a direct path to their Signal Kit
+          (the hub where this signal becomes real content); everyone else sees
+          the enrollment pitch. */}
       <div
         className="hive-cta-card"
         style={{
@@ -933,30 +938,77 @@ function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRe
           marginTop:    12,
         }}
       >
-        <p style={{ fontSize: 16, lineHeight: 1.65, color: C.fg, margin: "0 0 6px" }}>
-          האות שלך נוצר. עכשיו אפשר להפוך אותו לתוכן.
-        </p>
-        <p style={{ fontSize: 14, lineHeight: 1.6, color: C.muted, margin: "0 0 20px" }}>
-          חברי הכוורת מקבלים כל חודש שני רעיונות תוכן מותאמים אישית לאות שלהם.
-        </p>
-        <Link
-          href="/hive"
-          style={{
-            display:      "inline-block",
-            background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-            color:        "#2a1d05",
-            fontWeight:   800,
-            fontSize:     15,
-            border:       "none",
-            borderRadius: 999,
-            padding:      "12px 28px",
-            cursor:       "pointer",
-            textDecoration: "none",
-            boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
-          }}
-        >
-          לראות את מסלולי הכוורת ←
-        </Link>
+        {hiveActive ? (
+          <>
+            <p style={{ fontSize: 16, lineHeight: 1.65, color: C.fg, margin: "0 0 6px" }}>
+              האות שלך מוכן. החבילה שלך מחכה לך.
+            </p>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: C.muted, margin: "0 0 20px" }}>
+              טקסטים, כרטיסי סושיאל, אסטרטגיה ורעיונות חודשיים — כולם נגזרים מהאות הזה.
+            </p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+              <Link
+                href="/hive/signal-kit"
+                style={{
+                  display:      "inline-block",
+                  background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                  color:        "#2a1d05",
+                  fontWeight:   800,
+                  fontSize:     15,
+                  borderRadius: 999,
+                  padding:      "12px 28px",
+                  textDecoration: "none",
+                  boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
+                }}
+              >
+                לחבילת התוכן שלי ←
+              </Link>
+              <Link
+                href="/account"
+                style={{
+                  display:      "inline-block",
+                  background:   "transparent",
+                  color:        C.gold,
+                  fontWeight:   600,
+                  fontSize:     14,
+                  borderRadius: 999,
+                  padding:      "12px 22px",
+                  textDecoration: "none",
+                  border:       `1px solid ${C.line}`,
+                }}
+              >
+                האזור האישי שלי
+              </Link>
+            </div>
+          </>
+        ) : (
+          <>
+            <p style={{ fontSize: 16, lineHeight: 1.65, color: C.fg, margin: "0 0 6px" }}>
+              האות שלך נוצר. עכשיו אפשר להפוך אותו לתוכן.
+            </p>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: C.muted, margin: "0 0 20px" }}>
+              חברי הכוורת מקבלים מהאות הזה: בייו לאינסטגרם ולינקדאין, מניפסט, 8 כרטיסי סושיאל מעוצבים, 30 רעיונות תוכן ועוד.
+            </p>
+            <Link
+              href="/hive"
+              style={{
+                display:      "inline-block",
+                background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                color:        "#2a1d05",
+                fontWeight:   800,
+                fontSize:     15,
+                border:       "none",
+                borderRadius: 999,
+                padding:      "12px 28px",
+                cursor:       "pointer",
+                textDecoration: "none",
+                boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
+              }}
+            >
+              להפוך את האות שלי לחבילת תוכן ←
+            </Link>
+          </>
+        )}
       </div>
 
       {/* Footer — utility actions: email + print + restart */}

@@ -28,14 +28,18 @@ const ITEMS_GROUP3 = [
   { label: "המסלול האחר",        price: "במועמדות", href: "/apply", accent: true },
 ];
 
-const ITEMS_GROUP4 = [{ label: "הכוורת 🐝",        href: "/hive" }];
+const ITEMS_GROUP4_BASE = [{ label: "הכוורת 🐝",        href: "/hive" }];
+const SIGNAL_KIT_ITEM   =   { label: "כרטיסי הסושיאל", href: "/hive/signal-kit" };
 const ITEMS_GROUP5 = [{ label: "האזור האישי שלי", href: "/account" }];
 
 interface MobileNavProps {
   userInitial?: string | null;
+  hiveActive?: boolean;
 }
 
-export function MobileNav({ userInitial = null }: MobileNavProps) {
+export function MobileNav({ userInitial = null, hiveActive = false }: MobileNavProps) {
+  // Hive members get the Signal Kit link right under "הכוורת"
+  const ITEMS_GROUP4 = hiveActive ? [...ITEMS_GROUP4_BASE, SIGNAL_KIT_ITEM] : ITEMS_GROUP4_BASE;
   const [open, setOpen]               = useState(false);
   const [accordionOpen, setAccordion] = useState(false);
   const [signingOut, setSigningOut]   = useState(false);
