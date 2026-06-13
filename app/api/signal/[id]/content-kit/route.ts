@@ -103,56 +103,61 @@ export async function GET(
       firstName:      typeof userRow.name === "string" ? userRow.name.split(" ")[0] : null,
     });
 
+    // Extract the first balanced {...} object from a free-form Claude reply.
+    // Throws if no balanced JSON object can be found.
+    function extractJsonObject(text: string): string {
+      const t = text.trim();
+      const firstBrace = t.indexOf("{");
+      if (firstBrace < 0) throw new Error("no opening brace");
+      let depth = 0, end = -1, inStr = false, esc = false;
+      for (let i = firstBrace; i < t.length; i++) {
+        const ch = t[i];
+        if (inStr) {
+          if (esc) esc = false;
+          else if (ch === "\\") esc = true;
+          else if (ch === '"') inStr = false;
+        } else {
+          if (ch === '"') inStr = true;
+          else if (ch === "{") depth++;
+          else if (ch === "}") { depth--; if (depth === 0) { end = i; break; } }
+        }
+      }
+      if (end < 0) throw new Error("unbalanced JSON");
+      return t.slice(firstBrace, end + 1);
+    }
+
     async function callPack(systemPrompt: string, maxTokens: number, label: string): Promise<Record<string, unknown>> {
-      // Per-call abort controller — if any single pack hangs past 45s, abort
-      // so the other parallel packs (and the overall function) don't get
-      // pulled down with it.
+      // Per-call abort — keep parallel packs independent. 55s leaves 5s
+      // margin under Vercel's 60s function ceiling.
       const ac = new AbortController();
       const tid = setTimeout(() => ac.abort(), 55_000);
+      let lastErr: unknown = null;
       try {
-        let aiRes: Awaited<ReturnType<typeof client.messages.create>> | null = null;
-        let lastErr: unknown = null;
+        // 2 attempts — first failure is usually malformed JSON from a model
+        // verbosity spike; the second tends to be cleaner.
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
-            aiRes = await client.messages.create({
+            const aiRes = await client.messages.create({
               model:      CONTENT_KIT_MODEL,
               max_tokens: maxTokens,
               system:     systemPrompt,
               messages: [{ role: "user", content: userMessage }],
             }, { signal: ac.signal });
-            break;
+            const block = aiRes.content[0];
+            if (!block || block.type !== "text") throw new Error(`non-text (${label})`);
+            const json = extractJsonObject(block.text);
+            return JSON.parse(json) as Record<string, unknown>;
           } catch (e: unknown) {
             lastErr = e;
             const status = (e as { status?: number })?.status;
-            if (status !== 429 && status !== 529) throw e;
-            if (attempt === 1) throw e;
-            await new Promise(r => setTimeout(r, 1500));
+            const isRetryable = status === 429 || status === 529 ||
+                                (e instanceof SyntaxError) ||
+                                (e instanceof Error && /unbalanced|no opening|no JSON/i.test(e.message));
+            if (!isRetryable || attempt === 1) throw e;
+            await new Promise(r => setTimeout(r, 1000));
           }
         }
-        if (!aiRes) throw lastErr ?? new Error(`Anthropic call failed (${label})`);
-        const block = aiRes.content[0];
-        if (!block || block.type !== "text") throw new Error(`Non-text block (${label})`);
-        // Be tolerant: Sonnet sometimes adds prose after the JSON ("This is..."
-        // / "Here is..."). Extract only the first balanced {...} object.
-        const text = block.text.trim();
-        const firstBrace = text.indexOf("{");
-        if (firstBrace < 0) throw new Error(`No JSON object in ${label} output`);
-        let depth = 0, end = -1, inStr = false, esc = false;
-        for (let i = firstBrace; i < text.length; i++) {
-          const ch = text[i];
-          if (inStr) {
-            if (esc) esc = false;
-            else if (ch === "\\") esc = true;
-            else if (ch === '"') inStr = false;
-          } else {
-            if (ch === '"') inStr = true;
-            else if (ch === "{") depth++;
-            else if (ch === "}") { depth--; if (depth === 0) { end = i; break; } }
-          }
-        }
-        if (end < 0) throw new Error(`Unbalanced JSON in ${label} output`);
-        const jsonOnly = text.slice(firstBrace, end + 1);
-        return JSON.parse(jsonOnly) as Record<string, unknown>;
+        throw lastErr ?? new Error(`failed (${label})`);
       } finally {
         clearTimeout(tid);
       }
