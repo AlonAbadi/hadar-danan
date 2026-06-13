@@ -6,13 +6,14 @@
  * market today butchers Hebrew). The prompt explicitly says "no text, no
  * logos" and leaves negative space in the lower third for the HCTI overlay.
  *
- * Model: Flux 1.1 Pro by Black Forest Labs. Best-in-class cinematic quality,
- * ~4-7 second generation time, ~$0.04 per image.
+ * Model: Flux 1.1 Pro Ultra by Black Forest Labs. 4MP native resolution
+ * (2048×2048), best-in-class photorealism for premium brand assets.
+ * ~6-9 second generation time, ~$0.06 per image.
  */
 
 import Replicate from "replicate";
 
-const MODEL = "black-forest-labs/flux-1.1-pro" as const;
+const MODEL = "black-forest-labs/flux-1.1-pro-ultra" as const;
 
 export function isReplicateConfigured(): boolean {
   return Boolean(process.env.REPLICATE_API_TOKEN);
@@ -37,11 +38,12 @@ export async function generateBackgroundImage(
     const output = await client.run(MODEL, {
       input: {
         prompt,
-        aspect_ratio:    aspectRatio,
-        output_format:   "png",
-        output_quality:  90,
+        aspect_ratio:     aspectRatio,
+        output_format:    "png",
         safety_tolerance: 2,
-        prompt_upsampling: false,
+        // raw=false → Ultra's polished cinematic look (raw=true is more like a
+        // smartphone photo). For brand assets we always want polished.
+        raw: false,
       },
     });
 

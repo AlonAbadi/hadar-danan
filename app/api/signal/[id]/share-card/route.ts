@@ -21,25 +21,25 @@ import {
   type VisualStyle,
 } from "@/lib/signal-visual-prompter";
 
-// Per-style overlay gradient stops. Editorial/warm/minimal share the original
-// moody gradient. Luminous opens the top so the bright AI image shows through,
-// keeping the bottom dark enough for white-text contrast.
+// Per-style overlay. Premium v2: very light tint across the whole card — just
+// enough to unify color and ground the image visually. White text legibility is
+// guaranteed by an aggressive multi-layer text-shadow on the .signal class (see
+// CSS below), not by darkening the image. This lets the Ultra-quality photo
+// actually show through.
 function overlayGradient(style: VisualStyle): string {
   if (style === "luminous") {
     return `linear-gradient(
       to bottom,
-      rgba(8,12,20,0.08) 0%,
-      rgba(8,12,20,0.18) 35%,
-      rgba(8,12,20,0.62) 65%,
-      rgba(8,12,20,0.88) 100%
+      rgba(8,12,20,0.00) 0%,
+      rgba(8,12,20,0.05) 55%,
+      rgba(8,12,20,0.20) 100%
     )`;
   }
   return `linear-gradient(
     to bottom,
-    rgba(8,12,20,0.45) 0%,
-    rgba(8,12,20,0.55) 35%,
-    rgba(8,12,20,0.75) 65%,
-    rgba(8,12,20,0.92) 100%
+    rgba(8,12,20,0.08) 0%,
+    rgba(8,12,20,0.18) 55%,
+    rgba(8,12,20,0.42) 100%
   )`;
 }
 
@@ -98,12 +98,14 @@ function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, sty
   <div class="footer">beegood.online</div>`;
 
   // Designed as a public branding statement for the customer to post to
-  // their own audience. No personal address.
+  // their own audience. No personal address. The accent-line above the text
+  // is a thin gold divider that frames the quote magazine-style.
   const html = `
 <div class="card">
   ${bgLayer}
   <div class="glow"></div>${brandingBlock}
   <div class="signal-wrap">
+    <div class="accent-line"></div>
     <div class="signal" style="font-size:${fontSize}px;">${esc(signalText)}</div>
   </div>
 </div>`;
@@ -155,72 +157,91 @@ body { margin: 0; padding: 0; }
 
 .bee {
   position: absolute;
-  top: 100px;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%);
-  width: 100px;
+  width: 72px;
   height: auto;
   z-index: 3;
-  /* Subtle glow to match the brand */
-  filter: drop-shadow(0 0 24px rgba(232,185,74,0.25));
+  opacity: 0.95;
+  filter: drop-shadow(0 0 32px rgba(232,185,74,0.35));
 }
 
 .signal-wrap {
   position: absolute;
   top: 50%;
-  left: 80px;
-  right: 80px;
+  left: 100px;
+  right: 100px;
   transform: translateY(-50%);
   text-align: center;
   direction: rtl;
   z-index: 3;
 }
 
+.accent-line {
+  width: 64px;
+  height: 2px;
+  margin: 0 auto 36px;
+  background: linear-gradient(90deg, transparent, #E8B94A, transparent);
+  opacity: 0.85;
+}
+
+/* Premium typography: pure white for max contrast against ANY background,
+   multi-layer text-shadow gives the text its own dark halo so it's always
+   readable without darkening the underlying image. */
 .signal {
   font-weight: 700;
-  color: #EDE9E1;
-  line-height: 1.4;
+  color: #FFFFFF;
+  line-height: 1.38;
+  letter-spacing: -0.005em;
   direction: rtl;
   unicode-bidi: plaintext;
+  text-shadow:
+    0 2px 14px rgba(0,0,0,0.85),
+    0 4px 28px rgba(0,0,0,0.65),
+    0 0 48px rgba(0,0,0,0.45);
 }
 
 .divider {
   position: absolute;
-  bottom: 180px;
+  bottom: 168px;
   left: 50%;
   transform: translateX(-50%);
-  width: 80px;
-  height: 2px;
+  width: 56px;
+  height: 1px;
   background: linear-gradient(90deg, transparent, #C9964A, transparent);
+  opacity: 0.7;
   z-index: 3;
 }
 
 .attribution {
   position: absolute;
-  bottom: 135px;
+  bottom: 124px;
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 500;
   color: #C9964A;
-  opacity: 0.78;
+  opacity: 0.72;
   direction: rtl;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   z-index: 3;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
 }
 
 .footer {
   position: absolute;
-  bottom: 85px;
+  bottom: 78px;
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   color: #C9964A;
   z-index: 3;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
 }
 `;
 
@@ -288,15 +309,14 @@ export async function GET(
   // Each visual style is generated and cached independently. Reading the
   // already-cached URL for a style is free; only the first request per
   // (extraction, style) pair pays the Replicate cost.
-  const cacheKey = `card_bg_url_${style}`;
+  // Cache key v2 — bumped when we upgraded to Flux 1.1 Pro Ultra + the rewritten
+  // visual prompter. v1 URLs (lower-quality Pro model, dim prompt) are orphaned
+  // in the JSONB but stop being read. Each style still caches independently.
+  const cacheKey = `card_bg_url_v2_${style}`;
   let bgUrl: string | null =
     typeof row.signal[cacheKey] === "string" && row.signal[cacheKey].startsWith("http")
       ? row.signal[cacheKey]
-      // Back-compat: the very first cards were stored under the styleless
-      // `card_bg_url` field and counted as editorial.
-      : (style === "editorial" && typeof row.signal.card_bg_url === "string" && row.signal.card_bg_url.startsWith("http")
-          ? row.signal.card_bg_url
-          : null);
+      : null;
 
   if (!bgUrl && allowAi && isReplicateConfigured()) {
     // Stage 1: Claude writes the visual prompt with full occupation context.

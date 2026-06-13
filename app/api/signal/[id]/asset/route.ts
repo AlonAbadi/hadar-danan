@@ -27,43 +27,40 @@ import { createHctiImage, isHctiConfigured } from "@/lib/htmlcsstoimage";
 import { isReplicateConfigured, generateBackgroundImage, type FluxAspectRatio } from "@/lib/replicate";
 import { buildVisualPrompt, isValidStyle, DEFAULT_STYLE, type VisualStyle } from "@/lib/signal-visual-prompter";
 
-// Per-style overlay gradient. Luminous lets the bright AI image breathe through
-// the top; other styles keep the original moody gradient. Direction stays the
-// same per layout (banner = right→left, others = bottom-up).
+// Per-style overlay. v2: very light tint only. White text legibility is owned
+// by the multi-layer text-shadow on .signal — the overlay is just for visual
+// unification, not for hiding the photo. For banners (horizontal), the text
+// sits on the right so the tint runs right→left and softens that side only.
 function overlayGradient(style: VisualStyle, isBanner: boolean): string {
   if (style === "luminous") {
     if (isBanner) {
       return `linear-gradient(
         to right,
-        rgba(8,12,20,0.78) 0%,
-        rgba(8,12,20,0.40) 60%,
-        rgba(8,12,20,0.10) 100%,
-        rgba(8,12,20,0.10) 100%
+        rgba(8,12,20,0.45) 0%,
+        rgba(8,12,20,0.18) 55%,
+        rgba(8,12,20,0.00) 100%
       )`;
     }
     return `linear-gradient(
       to bottom,
-      rgba(8,12,20,0.08) 0%,
-      rgba(8,12,20,0.18) 35%,
-      rgba(8,12,20,0.62) 65%,
-      rgba(8,12,20,0.88) 100%
+      rgba(8,12,20,0.00) 0%,
+      rgba(8,12,20,0.05) 55%,
+      rgba(8,12,20,0.20) 100%
     )`;
   }
   if (isBanner) {
     return `linear-gradient(
       to right,
-      rgba(8,12,20,0.85) 0%,
-      rgba(8,12,20,0.55) 60%,
-      rgba(8,12,20,0.30) 100%,
-      rgba(8,12,20,0.30) 100%
+      rgba(8,12,20,0.62) 0%,
+      rgba(8,12,20,0.28) 55%,
+      rgba(8,12,20,0.08) 100%
     )`;
   }
   return `linear-gradient(
     to bottom,
-    rgba(8,12,20,0.45) 0%,
-    rgba(8,12,20,0.55) 35%,
-    rgba(8,12,20,0.75) 65%,
-    rgba(8,12,20,0.92) 100%
+    rgba(8,12,20,0.08) 0%,
+    rgba(8,12,20,0.18) 55%,
+    rgba(8,12,20,0.42) 100%
   )`;
 }
 
@@ -172,11 +169,16 @@ function buildHtml(args: {
   <div class="attribution">התגלה באמצעות שיטת <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
   <div class="footer">beegood.online</div>`);
 
+  // For banners the accent line would compete with the asymmetric right-aligned
+  // text, so we omit it there. Square + story formats get the gold divider.
+  const accentLine = isBanner ? "" : `<div class="accent-line"></div>`;
+
   const html = `
 <div class="card">
   ${bgLayer}
   <div class="glow"></div>${brandingBlock}
   <div class="signal-wrap">
+    ${accentLine}
     <div class="signal" style="font-size:${fontSize}px;">${esc(args.text)}</div>
   </div>
 </div>`;
@@ -226,9 +228,10 @@ body { margin: 0; padding: 0; }
 .bee {
   position: absolute; top: ${beeTop}px; left: 50%;
   transform: translateX(-50%);
-  width: ${isStory ? 110 : 100}px; height: auto;
+  width: ${isStory ? 80 : 72}px; height: auto;
   z-index: 3;
-  filter: drop-shadow(0 0 24px rgba(232,185,74,0.25));
+  opacity: 0.95;
+  filter: drop-shadow(0 0 32px rgba(232,185,74,0.35));
 }
 
 .signal-wrap {
@@ -240,45 +243,64 @@ body { margin: 0; padding: 0; }
   z-index: 3;
 }
 
+.accent-line {
+  width: ${isStory ? 72 : 56}px;
+  height: 2px;
+  margin: 0 auto ${isStory ? 40 : 32}px;
+  background: linear-gradient(90deg, transparent, #E8B94A, transparent);
+  opacity: 0.85;
+}
+
+/* Premium typography — multi-layer text-shadow guarantees legibility on ANY
+   background, so we can keep the overlay very light and let the photo breathe. */
 .signal {
   font-weight: 700;
-  color: #EDE9E1;
-  line-height: 1.4;
+  color: #FFFFFF;
+  line-height: 1.38;
+  letter-spacing: -0.005em;
   direction: rtl;
   unicode-bidi: plaintext;
+  text-shadow:
+    0 2px 14px rgba(0,0,0,0.85),
+    0 4px 28px rgba(0,0,0,0.65),
+    0 0 48px rgba(0,0,0,0.45);
 }
 
 .divider {
   position: absolute; bottom: ${dividerBot}px; left: 50%;
   transform: translateX(-50%);
-  width: 80px; height: 2px;
+  width: 56px; height: 1px;
   background: linear-gradient(90deg, transparent, #C9964A, transparent);
+  opacity: 0.7;
   z-index: 3;
 }
 
 .attribution {
   position: absolute; bottom: ${attrBot}px; left: 0; right: 0;
   text-align: center;
-  font-size: ${isStory ? 26 : 22}px; font-weight: 600;
-  color: #C9964A; opacity: 0.78;
-  direction: rtl; letter-spacing: 0.5px;
+  font-size: ${isStory ? 22 : 18}px; font-weight: 500;
+  color: #C9964A; opacity: 0.72;
+  direction: rtl; letter-spacing: 0.6px;
   z-index: 3;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
 }
 
 .footer {
   position: absolute; bottom: ${footerBot}px; left: 0; right: 0;
   text-align: center;
-  font-size: ${isStory ? 32 : 28}px; font-weight: 700;
-  letter-spacing: 1px; color: #C9964A;
+  font-size: ${isStory ? 26 : 22}px; font-weight: 700;
+  letter-spacing: 1.2px; color: #C9964A;
   z-index: 3;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
 }
 
 .footer-banner {
   position: absolute; bottom: 28px; right: 60px;
-  font-size: 22px; font-weight: 600;
-  color: #C9964A; opacity: 0.82; letter-spacing: 0.4px;
+  font-size: 18px; font-weight: 600;
+  color: #C9964A; opacity: 0.82; letter-spacing: 0.5px;
   direction: rtl;
   z-index: 3;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
 }
 `;
   return { html, css };
@@ -335,7 +357,9 @@ export async function GET(
   }
 
   // ── Background generation (per-type, per-style cache) ──────────────
-  const cacheKey = `asset_bg_url_${typeParam}_${style}`;
+  // v2 cache key — bumped when we moved to Flux 1.1 Pro Ultra + rewritten
+  // prompter + lighter overlay. v1 URLs in the JSONB stop being read.
+  const cacheKey = `asset_bg_url_v2_${typeParam}_${style}`;
   let bgUrl: string | null =
     typeof row.signal[cacheKey] === "string" && row.signal[cacheKey].startsWith("http")
       ? row.signal[cacheKey]

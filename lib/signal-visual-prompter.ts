@@ -29,42 +29,52 @@ export type VisualStyle = "editorial" | "warm" | "minimal" | "luminous";
 
 const STYLE_DIRECTIVES: Record<VisualStyle, string> = {
   editorial:
-    "Moody editorial photography. Deep cinematic palette (dark navy, charcoal, warm gold rim light). " +
-    "Dramatic chiaroscuro lighting, shallow depth of field, film grain. Magazine-cover quality.",
+    "Magazine editorial photography. Hasselblad H6D-100c with 85mm f/1.4 wide open. " +
+    "Dramatic single-source lighting (Profoto strobe through a softbox left, warm tungsten rim right). " +
+    "Rich dimensional shadows — never muddy black. Kodak Portra 800 push-1 grain. Vogue cover quality. " +
+    "Palette: deep navy, warm charcoal, gold rim light, cream highlights.",
   warm:
-    "Natural documentary photography. Soft golden-hour lighting, warm earthy tones, " +
-    "lifestyle/editorial feel. Authentic, lived-in, photo-realistic. Like a New York Times Magazine feature.",
+    "Documentary lifestyle photography. Leica M11 with 50mm Summilux f/1.4. " +
+    "Golden-hour natural light, warm earth tones, lived-in textures. " +
+    "Kodak Portra 400 film — natural skin tones, gentle grain, subtle halation. " +
+    "Aperture Magazine feel: quiet observed moments, unposed composition.",
   minimal:
-    "Minimalist abstract composition. Clean geometric forms, monochromatic palette with one accent color, " +
-    "lots of negative space, fine art photography sensibility. Like Wolfgang Tillmans or Hiroshi Sugimoto.",
+    "Fine-art still-life photography. Phase One IQ4 150MP with 80mm leaf-shutter, f/8. " +
+    "Single soft directional light on a clean backdrop (raw concrete, pale plaster, linen). " +
+    "Mostly monochromatic with one quiet accent color, generous negative space, asymmetric. " +
+    "Hiroshi Sugimoto or Wolfgang Tillmans sensibility — restraint as elegance.",
   luminous:
-    "Bright, joyful, optimistic photography. Abundant natural daylight, airy weightless atmosphere, " +
-    "luminous pastel palette (cream, soft gold, peach, dusty sky blue, fresh white). Sun flares, " +
-    "dust motes catching light, soft glow, hopeful and energetic mood. Like a Kinfolk magazine cover " +
-    "or a modern Apple keynote still — premium and uplifting, never garish or oversaturated. " +
-    "Important: keep the lower third of the frame brighter and softer (no dark vignettes there) so the " +
-    "overall image reads as luminous, not moody.",
+    "Bright lifestyle photography, Kinfolk magazine cover energy. " +
+    "Hasselblad X2D 100c with 55mm XCD, slightly overexposed for an airy feel. " +
+    "Abundant overcast daylight OR sun-flooded interior with soft window glow. " +
+    "Kodak Ektar 100 — luminous color, gentle blooming highlights. " +
+    "Palette: cream, soft gold, peach blush, dusty sky blue, fresh white. " +
+    "Sun flares, dust motes catching light. Optimistic, hopeful, weightless. " +
+    "The entire frame stays bright and open — no dark vignettes anywhere.",
 };
 
 const MODEL  = "claude-sonnet-4-6";
 const MAX_TK = 600;
 
-const SYSTEM_PROMPT = `You are a brand-photography art director writing image-generation prompts for Black Forest Labs Flux 1.1 Pro.
+const SYSTEM_PROMPT = `You are a brand-photography art director writing image-generation prompts for Black Forest Labs Flux 1.1 Pro Ultra — the highest-fidelity photographic model available in 2026.
 
-Your job: given a Hebrew personal-brand signal (the "essence" of who a person is professionally), their occupation (in Hebrew), and a chosen visual style, write ONE English Flux prompt that produces a high-end social-media-ready square 1080×1080 image that:
+Your job: given a Hebrew personal-brand signal, the person's occupation (in Hebrew), and a visual style directive, write ONE English Flux Ultra prompt (90-150 words) that produces a premium, social-media-ready image suitable for a personal-brand magazine cover.
 
-1. **Visually reads the occupation immediately.** A marketer (משווק) gets data screens / urban office / abstract growth visualizations — NOT a generic person in a room. A potter (קדר) gets clay / wheel / studio hands. A coach (מאמן עסקי) gets boardroom / mountain horizons / strategic objects. A therapist gets soft warm intimate spaces. Match the field's visual vocabulary.
+NON-NEGOTIABLE QUALITY BAR — every prompt must specify, by name, all four of:
 
-2. **Embodies the signal's emotional truth**, not its literal words. If the signal is about building when no one believes — you get a lone figure against impossible scale, or sunrise on an unfinished structure. If it's about reading silence — you get a contemplative still life or a single object lit by window light.
+1. **A specific camera body + lens** (e.g. Hasselblad H6D-100c, 85mm f/1.4). Pull from the style directive verbatim if it names one.
+2. **A specific lighting setup** (e.g. golden-hour rim light + softbox fill, single-source window light, overcast diffusion, sun-flooded interior). Match the style's mood.
+3. **A specific film stock or processing reference** (e.g. Kodak Portra 400, Fuji 400H, Ektar 100, Ektachrome). Match the style.
+4. **An occupation-literate scene.** A marketer (משווק) → data dashboards, urban office, abstract growth — not a generic person. A potter (קדר) → clay, wheel, studio hands. A coach (מאמן) → boardroom, mountain horizons. A therapist → soft intimate space. Match the field's visual vocabulary.
 
-3. **Honors the chosen style directive** to the letter.
+The image must also embody the signal's emotional truth (not its literal words): building when no one believes → a lone figure against impossible scale; reading silence → a contemplative still life lit by a single window.
 
-4. **Leaves the lower half of the frame compositionally empty** — that's where the Hebrew text overlay will sit.
+**Composition rule:** the lower half of the frame must stay visually CALMER (less detail, softer focus) but never dark or empty — text will be overlaid there and we want a premium magazine feel, not a black void.
 
-Hard constraints you MUST end every prompt with verbatim:
-"Square 1:1 composition. Significant negative space in the lower half. Strict: no text, no letters, no words, no logos, no watermarks, no captions, no signage, no people facing camera. Photorealistic, highly detailed, editorial quality, 8k."
+**Hard constraint, append VERBATIM at the very end:**
+"No text, no letters, no words, no logos, no watermarks, no captions, no signage. No close-up faces directly toward the camera. Square 1:1 composition."
 
-Output: ONLY the prompt text itself. No preamble, no explanation, no quotes around it. One block of prose ending with the constraint sentence above. 80-160 words total.`;
+Output: ONLY the prompt text. No preamble, no explanation, no quotes around it. One block of prose, 90-150 words, ending with the constraint sentence.`;
 
 export async function buildVisualPrompt(args: {
   signal:          string;       // The signal sentence (Hebrew)
