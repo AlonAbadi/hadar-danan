@@ -18,8 +18,14 @@ export function isReplicateConfigured(): boolean {
   return Boolean(process.env.REPLICATE_API_TOKEN);
 }
 
+// Flux 1.1 Pro supported aspect ratios per Black Forest Labs docs. For
+// wider ratios (e.g. LinkedIn banner 4:1), generate at 16:9 and crop with
+// background-size:cover in the HCTI container.
+export type FluxAspectRatio = "1:1" | "9:16" | "16:9" | "2:3" | "3:2" | "4:5" | "5:4" | "21:9" | "9:21";
+
 export async function generateBackgroundImage(
   prompt: string,
+  aspectRatio: FluxAspectRatio = "1:1",
 ): Promise<{ ok: true; imageUrl: string } | { ok: false; error: string }> {
   if (!isReplicateConfigured()) {
     return { ok: false, error: "REPLICATE_API_TOKEN not configured" };
@@ -31,7 +37,7 @@ export async function generateBackgroundImage(
     const output = await client.run(MODEL, {
       input: {
         prompt,
-        aspect_ratio:    "1:1",      // matches the 1080x1080 HCTI canvas
+        aspect_ratio:    aspectRatio,
         output_format:   "png",
         output_quality:  90,
         safety_tolerance: 2,

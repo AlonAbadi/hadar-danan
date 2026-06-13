@@ -320,6 +320,30 @@ function signalResultFull(ctx: EmailTemplateContext): RenderedEmail {
 // just took and points to the Hive as the natural next step.
 // ─────────────────────────────────────────────────────────────
 
+function hiveMonthlyDrop(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const month = String((ctx as any).year_month ?? "");
+  return {
+    subject: `${firstName}, 10 רעיונות חדשים מהאות שלך`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood · הכוורת</div>
+        <h1>${firstName}, החודש שלך מוכן</h1>
+      </div>
+      <div class="body">
+        <p>10 רעיונות תוכן חדשים מחכים לך במערכת.</p>
+        <p>כל אחד מהם נגזר מהאות הספציפי שלך — לא רעיונות גנריים שכל אחד בתחום שלך יכול לכתוב, אלא דווקא דברים שרק את/ה יכול/ה.</p>
+        <p>הם נשמרים אצלך, אפשר לחזור אליהם כל החודש:</p>
+        <a class="cta" href="${APP_URL}/hive/signal-kit">לראות את הרעיונות שלי ←</a>
+        <p style="margin-top:24px">תזכורת קטנה: עבור כל רעיון יש לך בדף גם כפתור "בדוק טיוטה" ש-AI יקרא את הפוסט שלך ויגיד אם זה במדויק האות שלך או שיש דרך לחדד.</p>
+        <hr class="divider"/>
+        <p style="font-size:14px;color:#6b7280">${month ? "החודש: " + month : ""} · אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#6b7280">הוואטסאפ פתוח</a>.</p>
+      </div>
+    `),
+  };
+}
+
 function signalWelcome(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
   return {
@@ -1050,6 +1074,8 @@ const TEMPLATES: Record<string, TemplateFn> = {
   signal_welcome:              signalWelcome,
   // Manual on-demand full result email
   signal_result_full:          signalResultFull,
+  // Hive monthly content drop announcement
+  hive_monthly_drop:           hiveMonthlyDrop,
   // Sequence 2 - challenge buyers
   challenge_access:            challengeAccess,
   challenge_upsell_workshop:   challengeUpsellWorkshop,

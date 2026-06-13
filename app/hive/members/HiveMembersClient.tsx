@@ -192,6 +192,33 @@ export default function HiveMembersClient({
         )}
       </div>
 
+      {/* Signal Kit — Hive perk hub */}
+      <Link
+        href="/hive/signal-kit"
+        style={{
+          display: "block", textDecoration: "none",
+          background: "linear-gradient(135deg, rgba(232,185,74,0.10), rgba(158,124,58,0.05))",
+          border: "1px solid rgba(232,185,74,0.30)",
+          borderRadius: 14, padding: "18px 20px",
+          marginTop: 14,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, letterSpacing: 1.4, color: "#E8B94A", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
+              חבילת התוכן שלך
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#EDE9E1", marginBottom: 2 }}>
+              האות שלך, ארוז לפעולה
+            </div>
+            <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.5 }}>
+              ביו לכל פלטפורמה, מניפסט, 30 רעיונות, אסטרטגיה, כרטיסי PNG, ביקורת פוסטים
+            </div>
+          </div>
+          <div style={{ color: "#E8B94A", fontSize: 22 }}>←</div>
+        </div>
+      </Link>
+
       {/* Latest content */}
       <div style={sectionTitle}>השבוע בכוורת</div>
       {latest ? (
