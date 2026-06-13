@@ -126,7 +126,7 @@ export function QuestionCard() {
         Reveal my signal <span style={{ fontSize: 16 }}>→</span>
       </button>
       <p style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 12.5, lineHeight: 1.5, color: "#9A9C9E", margin: "14px 0 0", textAlign: "center" }}>
-        ≈ 10 minutes · free · the third question can be skipped
+        ≈ 10 minutes · saved as you write · the third question can be skipped
       </p>
     </div>
   );
