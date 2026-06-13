@@ -13,8 +13,13 @@ import { createHctiImage, isHctiConfigured } from "@/lib/htmlcsstoimage";
 import {
   isReplicateConfigured,
   generateBackgroundImage,
-  buildBackgroundPrompt,
 } from "@/lib/replicate";
+import {
+  buildVisualPrompt,
+  isValidStyle,
+  DEFAULT_STYLE,
+  type VisualStyle,
+} from "@/lib/signal-visual-prompter";
 
 export const runtime     = "nodejs";
 export const dynamic     = "force-dynamic";
@@ -47,7 +52,7 @@ function signalFontSize(text: string): number {
   return 36;
 }
 
-function buildHtml(signalText: string, bgUrl: string | null): { html: string; css: string } {
+function buildHtml(signalText: string, bgUrl: string | null, clean: boolean): { html: string; css: string } {
   const fontSize = signalFontSize(signalText);
 
   // When we have an AI-generated background, lay it down first under a dark
@@ -59,21 +64,26 @@ function buildHtml(signalText: string, bgUrl: string | null): { html: string; cs
        <div class="bg-overlay"></div>`
     : "";
 
+  // Clean variant (Hive perk) strips the bee logo + brand attribution + the
+  // beegood.online footer. The asset becomes the customer's own — a polished
+  // editorial post they can put on Instagram without our marks. Non-Hive
+  // users get the watermarked version with full branding (the bee, the
+  // attribution, the footer URL).
+  const brandingBlock = clean ? "" : `
+  <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
+  <div class="divider"></div>
+  <div class="attribution">התגלה באמצעות שיטת <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
+  <div class="footer">beegood.online</div>`;
+
   // Designed as a public branding statement for the customer to post to
-  // their own audience. No personal address. Discovery attribution lives
-  // quietly at the bottom — turns into a soft funnel back to /signal when
-  // their followers see it.
+  // their own audience. No personal address.
   const html = `
 <div class="card">
   ${bgLayer}
-  <div class="glow"></div>
-  <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
+  <div class="glow"></div>${brandingBlock}
   <div class="signal-wrap">
     <div class="signal" style="font-size:${fontSize}px;">${esc(signalText)}</div>
   </div>
-  <div class="divider"></div>
-  <div class="attribution">התגלה באמצעות שיטת <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
-  <div class="footer">beegood.online</div>
 </div>`;
 
   const css = `
@@ -234,39 +244,68 @@ export async function GET(
       ? row.signal.public_card_statement.trim()
       : String(row.signal.signal);
 
-  // ── AI background gating ──────────────────────────────────────────────
-  // The cinematic AI background is a Hive perk: members get a unique
-  // Replicate-generated image behind the text; non-members get the existing
-  // pure-dark v1 look. `?force_ai=1` is an escape hatch for manual testing
-  // on any extraction regardless of the owner's status.
-  const forceAi = req.nextUrl.searchParams.get("force_ai") === "1";
+  // ── Query parameters ──────────────────────────────────────────────────
+  // ?style=editorial|warm|minimal  — visual direction (default: editorial)
+  // ?clean=1                       — strip bee logo + attribution + footer
+  //                                  (Hive perk: their card, no watermarks)
+  // ?force_ai=1                    — escape hatch for manual testing on any
+  //                                  extraction regardless of hive_status
+  const styleParam = req.nextUrl.searchParams.get("style") ?? "";
+  const style: VisualStyle = isValidStyle(styleParam) ? styleParam : DEFAULT_STYLE;
+  const cleanParam = req.nextUrl.searchParams.get("clean") === "1";
+  const forceAi    = req.nextUrl.searchParams.get("force_ai") === "1";
+
+  // ── User permissions ──────────────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: userRow } = await (supabase as any)
+    .from("users")
+    .select("hive_status, occupation")
+    .eq("id", row.user_id)
+    .maybeSingle();
+
+  const isHive  = userRow?.hive_status === "active";
+  const allowAi    = forceAi || isHive;
+  const allowClean = forceAi || isHive;  // clean variant is also a Hive perk
+  const clean      = cleanParam && allowClean;
+
+  // ── AI background generation (per-style cache) ───────────────────────
+  // Each visual style is generated and cached independently. Reading the
+  // already-cached URL for a style is free; only the first request per
+  // (extraction, style) pair pays the Replicate cost.
+  const cacheKey = `card_bg_url_${style}`;
   let bgUrl: string | null =
-    typeof row.signal.card_bg_url === "string" && row.signal.card_bg_url.startsWith("http")
-      ? row.signal.card_bg_url
-      : null;
+    typeof row.signal[cacheKey] === "string" && row.signal[cacheKey].startsWith("http")
+      ? row.signal[cacheKey]
+      // Back-compat: the very first cards were stored under the styleless
+      // `card_bg_url` field and counted as editorial.
+      : (style === "editorial" && typeof row.signal.card_bg_url === "string" && row.signal.card_bg_url.startsWith("http")
+          ? row.signal.card_bg_url
+          : null);
 
-  if (!bgUrl && isReplicateConfigured()) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: userRow } = await (supabase as any)
-      .from("users")
-      .select("hive_status, occupation")
-      .eq("id", row.user_id)
-      .maybeSingle();
+  if (!bgUrl && allowAi && isReplicateConfigured()) {
+    // Stage 1: Claude writes the visual prompt with full occupation context.
+    const promptResult = await buildVisualPrompt({
+      signal:         String(row.signal.signal         ?? ""),
+      signal_promise: String(row.signal.signal_promise ?? ""),
+      element:        String(row.signal.element        ?? ""),
+      central_tool:   String(row.signal.central_tool   ?? ""),
+      occupation:     typeof userRow?.occupation === "string" ? userRow.occupation : null,
+      style,
+    });
 
-    const isHive  = userRow?.hive_status === "active";
-    const allowAi = forceAi || isHive;
-
-    if (allowAi) {
-      const prompt = buildBackgroundPrompt({
-        element:      String(row.signal.element       ?? ""),
-        central_tool: String(row.signal.central_tool  ?? ""),
-        occupation:   typeof userRow?.occupation === "string" ? userRow.occupation : null,
+    if (!promptResult.ok) {
+      await supabase.from("error_logs").insert({
+        context: "api/signal/[id]/share-card — visual prompter",
+        error:   promptResult.error,
+        payload: { extractionId: id, style },
       });
-      const gen = await generateBackgroundImage(prompt);
+    } else {
+      // Stage 2: Flux renders the scene from Claude's prompt.
+      const gen = await generateBackgroundImage(promptResult.prompt);
       if (gen.ok) {
         bgUrl = gen.imageUrl;
-        // Persist on the extraction so future card views skip the regen.
-        const updatedSignal = { ...row.signal, card_bg_url: bgUrl };
+        // Persist per-style so future requests skip the regen.
+        const updatedSignal = { ...row.signal, [cacheKey]: bgUrl };
         await safeFrom(supabase, "signal_extractions")
           .update({ signal: updatedSignal })
           .eq("id", id);
@@ -274,14 +313,14 @@ export async function GET(
         await supabase.from("error_logs").insert({
           context: "api/signal/[id]/share-card — Replicate gen",
           error:   gen.error,
-          payload: { extractionId: id },
+          payload: { extractionId: id, style, prompt: promptResult.prompt },
         });
         // Soft-fail: render the v1 card without AI bg.
       }
     }
   }
 
-  const { html, css } = buildHtml(cardText, bgUrl);
+  const { html, css } = buildHtml(cardText, bgUrl, clean);
 
   const result = await createHctiImage({
     html,
