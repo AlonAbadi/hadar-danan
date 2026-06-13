@@ -7,6 +7,27 @@ import { validateSignalOutputEn } from "@/lib/prompts/signal-engine-en";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Spectral Italic 400 — fetched once per warm instance from Google Fonts CSS API.
+// Crucial: send NO User-Agent so Google returns format('truetype'). With a
+// modern browser UA it returns woff2 which satori can't decode.
+let cachedSpectralItalic: ArrayBuffer | null = null;
+async function loadSpectralItalic(): Promise<ArrayBuffer | null> {
+  if (cachedSpectralItalic) return cachedSpectralItalic;
+  try {
+    const css = await fetch(
+      "https://fonts.googleapis.com/css2?family=Spectral:ital@1&display=swap",
+      { headers: {} }
+    ).then((r) => r.text());
+    const match = css.match(/src:\s*url\((https:\/\/[^)]+\.ttf)\)\s*format\('truetype'\)/);
+    if (!match) return null;
+    const fontData = await fetch(match[1]).then((r) => r.arrayBuffer());
+    cachedSpectralItalic = fontData;
+    return fontData;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -29,6 +50,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const beeBuf = await fs.readFile(path.join(process.cwd(), "public", "beegood_logo.png"));
     beeDataUri = `data:image/png;base64,${beeBuf.toString("base64")}`;
   } catch {}
+
+  const spectralItalic = await loadSpectralItalic();
 
   return new ImageResponse(
     (
@@ -84,6 +107,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
               lineHeight: 1.2,
               letterSpacing: "-0.02em",
               color: "#211B12",
+              fontFamily: spectralItalic ? "Spectral" : "Georgia, serif",
               fontStyle: "italic",
               display: "flex",
             }}
@@ -110,6 +134,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     {
       width: 1200,
       height: 1200,
+      fonts: spectralItalic
+        ? [
+            {
+              name: "Spectral",
+              data: spectralItalic,
+              style: "italic" as const,
+              weight: 400 as const,
+            },
+          ]
+        : undefined,
       headers: {
         "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
       },
