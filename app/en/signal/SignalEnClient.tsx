@@ -931,27 +931,274 @@ function Field(p: FieldProps) {
   );
 }
 
+// Static fallback facts for /en — used until the AI endpoint returns.
+const STATIC_BEE_FACTS_EN = [
+  "A honeybee visits between 50 and 100 flowers on a single foraging trip.",
+  "To produce one tablespoon of honey, a single bee must fly the equivalent of twice around the Earth.",
+  "Bees communicate through a precise waggle dance that points others toward flowers.",
+  "A queen bee can lay up to 2,000 eggs in a single day — more than her own body weight.",
+  "Bees can recognize human faces and remember the same person days later.",
+  "A healthy hive holds between 50,000 and 80,000 bees, nearly all of them female.",
+  "Bees sleep five to eight hours a day, sometimes inside flowers.",
+  "A bee's wings beat 200 times per second — that is what creates the familiar buzz.",
+  "Bees see colors we cannot, including ultraviolet.",
+  "Honey never spoils. Three-thousand-year-old honey from Egyptian tombs was still edible.",
+  "Each bee produces only about twelve small teaspoons of honey in its entire lifetime.",
+  "A hive holds 35°C inside even in deep cold, warmed by the muscle vibration of the bees.",
+];
+
+function pickRandomFactsEn(n: number): string[] {
+  const shuffled = [...STATIC_BEE_FACTS_EN].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+const SIGNAL_STEPS_EN = [
+  "Reading your answers",
+  "Extracting the element",
+  "Mapping the ground you grew from",
+  "Composing your signal",
+] as const;
+
 function Loading() {
+  const [progress, setProgress] = useState(0);
+  const [stepIdx, setStepIdx]   = useState(0);
+  const [facts, setFacts]       = useState<string[]>(() => pickRandomFactsEn(6));
+  const [factIdx, setFactIdx]   = useState(0);
+
+  // Refresh with AI-generated facts; silently fall back to static.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/en/bee-facts")
+      .then((r) => r.json())
+      .then(({ facts }: { facts?: string[] }) => {
+        if (cancelled || !Array.isArray(facts) || facts.length === 0) return;
+        setFacts(facts);
+        setFactIdx(0);
+      })
+      .catch(() => { /* keep static */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Random-walk progress up to ~88%, then idle.
+  useEffect(() => {
+    const id = setInterval(() => {
+      setProgress((p) => (p >= 88 ? p : p + Math.random() * 4 + 1));
+    }, 300);
+    return () => clearInterval(id);
+  }, []);
+
+  // Step cadence matches the typical extraction window.
+  useEffect(() => {
+    const t1 = setTimeout(() => setStepIdx(1), 1400);
+    const t2 = setTimeout(() => setStepIdx(2), 3200);
+    const t3 = setTimeout(() => setStepIdx(3), 5200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
+  // Rotate facts every 4s.
+  useEffect(() => {
+    if (facts.length === 0) return;
+    const id = setInterval(() => setFactIdx((i) => (i + 1) % facts.length), 4000);
+    return () => clearInterval(id);
+  }, [facts]);
+
+  const clampedProgress = Math.min(progress, 96);
+
   return (
-    <div style={{ textAlign: "center", padding: "60px 20px" }}>
+    <div
+      style={{
+        background:    C.card,
+        border:        `1px solid ${C.line}`,
+        borderRadius:  20,
+        padding:       "40px 28px 36px",
+        textAlign:     "center",
+        display:       "flex",
+        flexDirection: "column",
+        alignItems:    "center",
+        gap:           24,
+        boxShadow:     "0 8px 24px rgba(33,27,18,0.06)",
+      }}
+    >
+      {/* Bee facts rotator */}
+      {facts.length > 0 && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 380,
+            background: C.paperDeep,
+            borderRadius: 12,
+            padding: "16px 20px",
+            border: `1px solid ${C.lineSoft}`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "var(--font-hanken-grotesk), sans-serif",
+              fontSize: 10.5,
+              fontWeight: 700,
+              color: C.gold,
+              letterSpacing: ".18em",
+              textTransform: "uppercase",
+              marginBottom: 8,
+            }}
+          >
+            Did you know about bees?
+          </div>
+          <div
+            key={factIdx}
+            style={{
+              fontFamily: "var(--font-spectral), Georgia, serif",
+              fontStyle: "italic",
+              fontSize: 16,
+              color: C.ink,
+              lineHeight: 1.6,
+              animation: "bg-en-fadeMsg 4s ease infinite",
+            }}
+          >
+            {facts[factIdx]}
+          </div>
+        </div>
+      )}
+
       <div
         style={{
-          width:          46,
-          height:         46,
-          margin:         "0 auto 22px",
-          border:         `2px solid rgba(154,117,38,0.22)`,
-          borderTopColor: C.gold,
-          borderRadius:   "50%",
-          animation:      "bg-en-spin 0.9s linear infinite",
+          fontFamily: "var(--font-spectral), Georgia, serif",
+          fontStyle: "italic",
+          fontSize: 22,
+          color: C.gold,
+          lineHeight: 1.3,
         }}
-      />
-      <p style={{ fontFamily: "var(--font-spectral), Georgia, serif", fontStyle: "italic", fontSize: 18, color: C.ink, margin: 0 }}>
-        Reading your answers…
-      </p>
-      <p style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 13, color: C.inkFaint, margin: "10px 0 0" }}>
-        This usually takes ten to twenty seconds.
-      </p>
-      <style>{`@keyframes bg-en-spin { to { transform: rotate(360deg); } }`}</style>
+      >
+        Composing your Signal
+      </div>
+
+      {/* Progress bar with flying bee logo */}
+      <div style={{ width: "100%", maxWidth: 380, position: "relative", paddingTop: 48 }}>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            insetInlineStart: `calc(${clampedProgress}% - 22px)`,
+            transition: "inset-inline-start 0.6s ease",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/beegood_logo.png"
+            alt=""
+            width={44}
+            height={44}
+            style={{
+              objectFit: "contain",
+              display: "block",
+              animation: "bg-en-beeFly 1.2s ease-in-out infinite",
+            }}
+          />
+        </div>
+        <div
+          style={{
+            width: "100%",
+            height: 6,
+            background: "rgba(33,27,18,0.08)",
+            borderRadius: 20,
+          }}
+        >
+          <div
+            style={{
+              height: 6,
+              borderRadius: 20,
+              background: `linear-gradient(90deg, ${C.goldDeep}, ${C.gold}, ${C.goldLeaf})`,
+              width: `${progress}%`,
+              transition: "width 0.6s ease",
+            }}
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 8,
+            fontFamily: "var(--font-hanken-grotesk), sans-serif",
+          }}
+        >
+          <span style={{ fontSize: 11.5, color: C.inkFaint }}>0%</span>
+          <span style={{ fontSize: 12.5, color: C.gold, fontWeight: 700 }}>{Math.round(progress)}%</span>
+          <span style={{ fontSize: 11.5, color: C.inkFaint }}>100%</span>
+        </div>
+      </div>
+
+      {/* 4 sequential stages */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          width: "100%",
+          maxWidth: 380,
+          textAlign: "left",
+        }}
+      >
+        {SIGNAL_STEPS_EN.map((label, i) => {
+          const done   = i < stepIdx;
+          const active = i === stepIdx;
+          return (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+                  border: done ? "none" : active ? `2px solid ${C.gold}` : `2px solid ${C.line}`,
+                  background: done ? C.gold : "transparent",
+                  animation: active ? "bg-en-stepPulse 1s infinite" : "none",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {done && (
+                  <div
+                    style={{
+                      width: 7, height: 5,
+                      borderLeft: `2px solid ${C.paper}`,
+                      borderBottom: `2px solid ${C.paper}`,
+                      transform: "rotate(-45deg)",
+                      marginTop: -2,
+                    }}
+                  />
+                )}
+              </div>
+              <span
+                style={{
+                  fontFamily: "var(--font-hanken-grotesk), sans-serif",
+                  fontSize: 14,
+                  color: done ? C.ink : active ? C.gold : C.inkFaint,
+                  animation: active ? "bg-en-stepPulse 1s infinite" : "none",
+                }}
+              >
+                {label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <style>{`
+        @keyframes bg-en-spin { to { transform: rotate(360deg); } }
+        @keyframes bg-en-beeFly {
+          0%   { transform: translateY(0px) rotate(-8deg); }
+          25%  { transform: translateY(-8px) rotate(2deg); }
+          50%  { transform: translateY(-2px) rotate(8deg); }
+          75%  { transform: translateY(-10px) rotate(0deg); }
+          100% { transform: translateY(0px) rotate(-8deg); }
+        }
+        @keyframes bg-en-stepPulse {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.4; }
+        }
+        @keyframes bg-en-fadeMsg {
+          0%   { opacity: 0; }
+          10%  { opacity: 1; }
+          80%  { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }
