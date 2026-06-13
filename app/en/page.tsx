@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { QuestionCard } from "./QuestionCard";
 
-const BEE = "/beelogo.png";
+const BEE = "/beegood_logo.png";
 
 export default function EnHomePage() {
   return (

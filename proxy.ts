@@ -44,7 +44,7 @@ function checkBasicAuth(request: NextRequest): boolean {
   );
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   // ── Basic Auth for /admin/* ──────────────────────────────────
