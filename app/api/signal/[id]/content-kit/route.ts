@@ -108,7 +108,7 @@ export async function GET(
       // so the other parallel packs (and the overall function) don't get
       // pulled down with it.
       const ac = new AbortController();
-      const tid = setTimeout(() => ac.abort(), 45_000);
+      const tid = setTimeout(() => ac.abort(), 55_000);
       try {
         let aiRes: Awaited<ReturnType<typeof client.messages.create>> | null = null;
         let lastErr: unknown = null;

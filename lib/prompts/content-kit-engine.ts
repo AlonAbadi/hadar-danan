@@ -112,20 +112,25 @@ ${SHARED_RULES}
 החזר JSON תקין בלבד, ללא markdown:
 {"lead_magnet_ideas":["...","...","..."],"first_product_recommendation":"...","speaking_topics":["...","...","...","...","..."]}`;
 
-// ── Pack 4: 30 content ideas only ─────────────────────────────────────
-// 2500 tokens gives ~80 tokens per idea — plenty for the 25-word target
-// (~30 tokens each) plus JSON overhead. Previous 1800 was getting truncated.
-export const CONTENT_PACK_MAX_TOKENS = 2500;
-export const CONTENT_PACK_SYSTEM = `אתה יועץ תוכן ב-beegood. אתה מקבל אות מותגי, ומחזיר 30 רעיונות תוכן ספציפיים.
+// ── Pack 4: content ideas ──────────────────────────────────────────
+// Pragmatic trade-off: we ask for 20 (not 30) ideas at 1800 tokens. Sonnet
+// generates this in ~20s. The 30-idea version with 2500 tokens took
+// ~50s, blowing past the per-call AbortController. Members can request a
+// monthly drop for fresh ideas — fewer up-front beats none at all.
+export const CONTENT_PACK_MAX_TOKENS = 1800;
+export const CONTENT_PACK_TARGET = 20;
+export const CONTENT_PACK_SYSTEM = `אתה יועץ תוכן ב-beegood. אתה מקבל אות מותגי, ומחזיר 20 רעיונות תוכן ספציפיים.
 
 ${SHARED_RULES}
 
 הקול: גוף ראשון של המפרסם או פנייה לקהל.
 
-content_ideas_30 — 30 רעיונות פוסט/וידאו/סיפור קצרים. כל אחד משפט אחד, עד 25 מילים. שונים זה מזה במהותם. מערב את הסוגים האלה: סיפור אישי, תובנה מקצועית, דעה שנויה במחלוקת, איך-לעשות, מאחורי הקלעים, רשימה, השוואה, פנייה לקהל ספציפי. כל רעיון חייב להיות נגזר מהבידול האישי שכבר חולץ. לא רעיון גנרי שיתאים לכל אחד בתחום.
+20 רעיונות פוסט/וידאו/סיפור קצרים. כל אחד משפט אחד, עד 20 מילים. שונים זה מזה במהותם. מערב את הסוגים האלה: סיפור אישי, תובנה מקצועית, דעה שנויה במחלוקת, איך-לעשות, מאחורי הקלעים, רשימה, השוואה. כל רעיון חייב להיות נגזר מהבידול האישי שכבר חולץ. לא רעיון גנרי שיתאים לכל אחד בתחום.
+
+חשוב: השם של השדה הוא content_ideas_30 (גם אם יש בו 20 פריטים — תחזיר תחת המפתח הזה).
 
 החזר JSON תקין בלבד, ללא markdown:
-{"content_ideas_30":[/* 30 פריטים, כל אחד מחרוזת אחת */]}`;
+{"content_ideas_30":[/* 20 פריטים, כל אחד מחרוזת אחת קצרה */]}`;
 
 // ── Builder for the user-message context (same for all 3 packs) ──────
 export function buildContextMessage(args: {
@@ -182,7 +187,7 @@ export function validateContentKit(value: unknown): value is ContentKit {
   if (!topics.every(s => typeof s === "string" && s.trim().length > 0)) return false;
 
   const content = v.content_ideas_30;
-  if (!Array.isArray(content) || content.length < 25 || content.length > 35) return false;
+  if (!Array.isArray(content) || content.length < 15 || content.length > 35) return false;
   if (!content.every(s => typeof s === "string" && s.trim().length > 0)) return false;
 
   return true;
