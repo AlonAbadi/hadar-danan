@@ -54,6 +54,22 @@ function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string
   return (supabase as any).from(table);
 }
 
+// Atomic JSONB single-field merge — see asset route for the race-condition
+// context. Requires migration 049 (signal_merge_field Postgres function).
+async function mergeSignalField(
+  supabase: ReturnType<typeof createServerClient>,
+  id:    string,
+  field: string,
+  value: string,
+): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any).rpc("signal_merge_field", {
+    p_id:    id,
+    p_field: field,
+    p_value: value,
+  });
+}
+
 // HTML-escape user-controlled strings going into the template
 function esc(s: string): string {
   return s
@@ -341,10 +357,7 @@ export async function GET(
       if (gen.ok) {
         bgUrl = gen.imageUrl;
         // Persist per-style so future requests skip the regen.
-        const updatedSignal = { ...row.signal, [cacheKey]: bgUrl };
-        await safeFrom(supabase, "signal_extractions")
-          .update({ signal: updatedSignal })
-          .eq("id", id);
+        await mergeSignalField(supabase, id, cacheKey, bgUrl);
       } else {
         await supabase.from("error_logs").insert({
           context: "api/signal/[id]/share-card — Replicate gen",

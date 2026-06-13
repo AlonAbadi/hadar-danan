@@ -75,6 +75,27 @@ function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string
   return (supabase as any).from(table);
 }
 
+// Atomic single-field merge into signal_extractions.signal JSONB. Uses the
+// signal_merge_field Postgres function (migration 049) so concurrent writes
+// from parallel asset requests don't overwrite each other. If the function
+// isn't installed yet, the write fails silently — the card still renders, but
+// the cache stays cold and the next request pays for regeneration. We do NOT
+// fall back to the spread-update pattern because that's exactly the race that
+// the function exists to fix.
+async function mergeSignalField(
+  supabase: ReturnType<typeof createServerClient>,
+  id:    string,
+  field: string,
+  value: string,
+): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any).rpc("signal_merge_field", {
+    p_id:    id,
+    p_field: field,
+    p_value: value,
+  });
+}
+
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
@@ -385,10 +406,7 @@ export async function GET(
 
       if (writeResult.ok) {
         text = writeResult.text;
-        const updatedSignal = { ...row.signal, [textCacheKey]: text };
-        await safeFrom(supabase, "signal_extractions")
-          .update({ signal: updatedSignal })
-          .eq("id", id);
+        await mergeSignalField(supabase, id, textCacheKey, text);
       } else {
         await supabase.from("error_logs").insert({
           context: "api/signal/[id]/asset — card writer",
@@ -426,10 +444,7 @@ export async function GET(
       const gen = await generateBackgroundImage(promptResult.prompt, spec.aspect);
       if (gen.ok) {
         bgUrl = gen.imageUrl;
-        const updatedSignal = { ...row.signal, [cacheKey]: bgUrl };
-        await safeFrom(supabase, "signal_extractions")
-          .update({ signal: updatedSignal })
-          .eq("id", id);
+        await mergeSignalField(supabase, id, cacheKey, bgUrl);
       } else {
         await supabase.from("error_logs").insert({
           context: "api/signal/[id]/asset — Replicate gen",
