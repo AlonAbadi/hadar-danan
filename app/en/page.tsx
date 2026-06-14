@@ -103,7 +103,7 @@ export default function EnHomePage() {
             margin: "30px auto 0",
           }}
         >
-          Five questions reveal the one signal that is yours alone — the way you already help people, named clearly enough to build on. Then we help it reach the people who are waiting for it.
+          Five questions reveal the one signal that is yours alone — the way you already help people, named clearly enough to build on.
         </p>
 
         <QuestionCard />
@@ -215,7 +215,7 @@ export default function EnHomePage() {
               marginBottom: 24,
             }}
           >
-            Reach, in service of meaning
+            Not more. Truer.
           </div>
           <h2
             style={{
@@ -228,7 +228,10 @@ export default function EnHomePage() {
               color: "#F7F5F0",
             }}
           >
-            The world has never had more reach, and rarely less signal. We put the engine of reach behind the one thing worth multiplying — <span style={{ color: "#C2973F" }}>what is yours.</span>
+            Everyone is teaching you to post more.<br />
+            We help you find the one thing worth posting.<br />
+            A personal brand is not built by producing more.<br />
+            It is built by discovering <span style={{ color: "#C2973F" }}>the one signal only you can give.</span>
           </h2>
         </div>
       </section>
