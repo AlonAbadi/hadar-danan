@@ -53,6 +53,7 @@ async function getHubKPIs() {
 const NAV_CARDS = [
   { title: 'רשימת חיוגים',     desc: 'הלידים הכי חמים להיום + היסטוריה ותוצאות שיחה',  href: '/admin/call-list',   group: 'ראשי',     icon: '📞' },
   { title: 'אסטרטג שיווק AI',  desc: 'ניתוח חי + המלצות אסטרטגיות (Claude Opus 4.7)', href: '/admin/strategist',  group: 'ראשי',     icon: '🧠' },
+  { title: 'מנוע התנועה',      desc: 'תיאור לקוח → תדריך בימוי לסרטון (לא תסריט)',  href: '/admin/movement',    group: 'תוכן',     icon: '🎯' },
   { title: 'ניתוח קמפיינים — Meta', desc: 'ROAS אמיתי, CPL, CPA, השוואת Meta vs CRM', href: '/admin/meta',        group: 'ראשי',     icon: '📊' },
   { title: 'לקוחות',          desc: 'היסטוריה, רכישות, צפיות, מיילים',        href: '/admin/clients',     group: 'ראשי',     icon: '⭐' },
   { title: 'ניהול לידים CRM', desc: 'כל הלידים, סינון, חיפוש, פרופיל ליד',   href: '/admin/crm',         group: 'ראשי',     icon: '👥' },
