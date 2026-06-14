@@ -151,7 +151,7 @@ export function NotifyForm({ centered = false }: { centered?: boolean }) {
           lineHeight:    1.55,
         }}
       >
-        We will email you once when the door opens — and never again unless you ask.
+        We will email you once when the door opens - and never again unless you ask.
       </p>
     </form>
   );

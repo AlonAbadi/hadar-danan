@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   const db = createServerClient();
 
-  // Upsert lead. Only writes utm_source on a new row — never overwrites an
+  // Upsert lead. Only writes utm_source on a new row - never overwrites an
   // existing utm_source so the original acquisition attribution survives.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: existing } = await (db as any)
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     });
     if (insErr) {
       await db.from("error_logs").insert({
-        context: "api/en/hive/notify POST — user insert",
+        context: "api/en/hive/notify POST - user insert",
         error:   String(insErr?.message ?? insErr),
         payload: { emailStr },
       });

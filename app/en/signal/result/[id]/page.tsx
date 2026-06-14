@@ -106,7 +106,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
         </div>
       </header>
 
-      {/* Hero — the signal sentence */}
+      {/* Hero - the signal sentence */}
       <section
         style={{
           maxWidth:  840,
@@ -171,7 +171,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
 
       <div style={{ maxWidth: 640, margin: "0 auto", height: 1, background: lineSoft }} />
 
-      {/* What we saw — 3 fields */}
+      {/* What we saw - 3 fields */}
       <section style={{ maxWidth: 660, margin: "0 auto", padding: "clamp(72px, 11vw, 96px) clamp(22px, 5vw, 40px) 40px" }}>
         <div style={{ width: 26, height: 2, background: goldLeaf, marginBottom: 22 }} />
         <div
@@ -199,7 +199,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
         />
       </section>
 
-      {/* Made to share — PNG card with public_card_statement */}
+      {/* Made to share - PNG card with public_card_statement */}
       <section style={{ maxWidth: 660, margin: "0 auto", padding: "24px clamp(22px, 5vw, 40px) clamp(60px, 10vw, 90px)" }}>
         <div
           style={{
@@ -211,7 +211,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
             margin:        "0 0 16px",
           }}
         >
-          Made to share —
+          Made to share -
         </div>
         <div
           style={{
@@ -295,7 +295,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
         </div>
       </section>
 
-      {/* Soft upgrade CTA — Signal Kit teaser */}
+      {/* Soft upgrade CTA - Signal Kit teaser */}
       <section style={{ background: paperDeep }}>
         <div style={{ maxWidth: 680, margin: "0 auto", padding: "clamp(76px, 12vw, 100px) clamp(22px, 5vw, 40px)", textAlign: "center" }}>
           <h2
@@ -309,7 +309,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
               margin:        0,
             }}
           >
-            The signal is yours — free, and forever.
+            The signal is yours - free, and forever.
           </h2>
           <p
             style={{
@@ -321,7 +321,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
               maxWidth:   "46ch",
             }}
           >
-            When you are ready to build a body of work from it — the posts, the rhythm, the reach — we will make the rest with you, in your voice.
+            When you are ready to build a body of work from it - the posts, the rhythm, the reach - we will make the rest with you, in your voice.
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 22, flexWrap: "wrap", marginTop: 36 }}>
             <Link

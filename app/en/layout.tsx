@@ -28,7 +28,7 @@ const OG_IMAGE = "https://beegood.online/og-image.jpg";
 
 const TITLE = "BeeGood · The TrueSignal© Method";
 const DESCRIPTION =
-  "Five questions reveal the one signal that is yours alone — the way you already help people, named clearly enough to build on.";
+  "Five questions reveal the one signal that is yours alone - the way you already help people, named clearly enough to build on.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE, template: "%s · BeeGood" },

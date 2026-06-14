@@ -93,7 +93,7 @@ export default function EnHivePage() {
             marginBottom:  28,
           }}
         >
-          The Hive — beegood
+          The Hive - beegood
         </div>
         <h1
           style={{
@@ -118,7 +118,7 @@ export default function EnHivePage() {
             margin:     "30px auto 0",
           }}
         >
-          Each month: a fresh creative kit drawn from your signal, a new lesson from Hadar and Alon, and a quiet place to keep building. The signal is yours forever — the work of making it reach people is what we build together.
+          Each month: a fresh creative kit drawn from your signal, a new lesson from Hadar and Alon, and a quiet place to keep building. The signal is yours forever - the work of making it reach people is what we build together.
         </p>
       </section>
 
@@ -616,7 +616,7 @@ export default function EnHivePage() {
                 marginTop:  6,
               }}
             >
-              Tel Aviv · New York · London · Tokyo · São Paulo — a signal, everywhere
+              Tel Aviv · New York · London · Tokyo · São Paulo - a signal, everywhere
             </div>
           </div>
         </div>
@@ -633,7 +633,7 @@ const PILLARS = [
       "30 post hooks for LinkedIn, X, IG",
       "8 quote cards designed from your signal (PNG)",
       "Bios for LinkedIn, IG, X, WhatsApp",
-      "Manifesto — a long-form positioning piece",
+      "Manifesto - a long-form positioning piece",
       "5 email subject lines",
     ],
   },
@@ -653,7 +653,7 @@ const PILLARS = [
     items: [
       "A new lesson every month, from Hadar and Alon",
       "On using your signal in the world",
-      "Voice, video, written — whichever the lesson asks for",
+      "Voice, video, written - whichever the lesson asks for",
       "Library grows as you stay",
     ],
   },
@@ -663,7 +663,7 @@ const RHYTHM = [
   {
     when: "Day 1",
     title: "A fresh creative kit lands in your dashboard.",
-    body:  "Generated from your signal that morning. Yours to download, post, edit, ignore — yours.",
+    body:  "Generated from your signal that morning. Yours to download, post, edit, ignore - yours.",
   },
   {
     when: "Day 15",
@@ -688,7 +688,7 @@ const INCLUDED = [
 const FAQ = [
   {
     q: "Do I need to take the diagnostic first?",
-    a: "Yes — the signal is the input the entire Hive draws from. If you have not taken the five questions yet, you can do that free here: /en/signal.",
+    a: "Yes - the signal is the input the entire Hive draws from. If you have not taken the five questions yet, you can do that free here: /en/signal.",
   },
   {
     q: "What happens to my kits if I cancel?",
@@ -700,10 +700,10 @@ const FAQ = [
   },
   {
     q: "Is everything in English?",
-    a: "Yes. The Hive (English) is for global members. If you read and write in Hebrew, the Israel edition is what you want — same brand, same method.",
+    a: "Yes. The Hive (English) is for global members. If you read and write in Hebrew, the Israel edition is what you want - same brand, same method.",
   },
   {
     q: "When does it open?",
-    a: "When checkout is wired and the first kit is ready. Leave your email above — you will be the first to know, and the first cohort is small on purpose.",
+    a: "When checkout is wired and the first kit is ready. Leave your email above - you will be the first to know, and the first cohort is small on purpose.",
   },
 ] as const;

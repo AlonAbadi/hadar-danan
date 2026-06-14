@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
       .single();
     if (insErr || !created?.id) {
       await db.from("error_logs").insert({
-        context: "api/en/signal/extract POST — user upsert",
+        context: "api/en/signal/extract POST - user upsert",
         error:   String(insErr?.message ?? insErr ?? "no row"),
         payload: { emailStr },
       });
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
     parsed = rawJson;
   } catch (error) {
     await db.from("error_logs").insert({
-      context: "api/en/signal/extract POST — claude call",
+      context: "api/en/signal/extract POST - claude call",
       error:   String(error),
       payload: { userId, raw: rawJson },
     });
@@ -213,7 +213,7 @@ export async function POST(req: NextRequest) {
       .single();
     if (saveError) {
       await db.from("error_logs").insert({
-        context: "api/en/signal/extract POST — db insert",
+        context: "api/en/signal/extract POST - db insert",
         error:   String(saveError.message ?? saveError),
         payload: { userId },
       });
@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (e) {
     await db.from("error_logs").insert({
-      context: "api/en/signal/extract POST — db insert threw",
+      context: "api/en/signal/extract POST - db insert threw",
       error:   String(e),
       payload: { userId },
     });
@@ -231,7 +231,7 @@ export async function POST(req: NextRequest) {
   // Fire SIGNAL_EXTRACTED_EN event + enqueue the English welcome email.
   // Separate event type from the Hebrew SIGNAL_EXTRACTED keeps the two
   // language welcomes from cross-firing through the email_sequences table.
-  // Soft-fail throughout — the user already has their signal on screen.
+  // Soft-fail throughout - the user already has their signal on screen.
   try {
     await db.from("events").insert({
       user_id:  userId,
@@ -266,7 +266,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (e) {
     await db.from("error_logs").insert({
-      context: "api/en/signal/extract POST — SIGNAL_EXTRACTED_EN enqueue",
+      context: "api/en/signal/extract POST - SIGNAL_EXTRACTED_EN enqueue",
       error:   String(e),
       payload: { userId },
     });

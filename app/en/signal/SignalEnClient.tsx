@@ -13,13 +13,13 @@ const QUESTIONS = [
   {
     key: "effortless_mastery",
     label: "What comes so easily to you that you can't explain how you do it?",
-    meta: "The thing so natural to you that you stopped seeing it as a talent — you just do it.",
+    meta: "The thing so natural to you that you stopped seeing it as a talent - you just do it.",
     skippable: false,
   },
   {
     key: "hard_period",
     label: "Name a hard chapter that changed the way you see things.",
-    meta: "This one can be skipped — share only what you want to.",
+    meta: "This one can be skipped - share only what you want to.",
     skippable: true,
   },
   {
@@ -73,7 +73,7 @@ export function SignalEnClient() {
 
   const taRef = useRef<HTMLTextAreaElement>(null);
 
-  // Hydrate from localStorage — draft + Q1 from landing card
+  // Hydrate from localStorage - draft + Q1 from landing card
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
@@ -444,7 +444,7 @@ function FormStep(p: FormStepProps) {
             marginBottom:  20,
           }}
         >
-          Question {indexLabel} <span style={{ color: C.goldLeaf }}>— {totalLabel}</span>
+          Question {indexLabel} <span style={{ color: C.goldLeaf }}>- {totalLabel}</span>
         </div>
 
         <label
@@ -542,7 +542,7 @@ function FormStep(p: FormStepProps) {
             </button>
           </div>
           <span style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 11, letterSpacing: "0.03em", color: C.inkFaint }}>
-            or say it aloud — we'll write it down
+            or say it aloud - we'll write it down
           </span>
         </div>
 
@@ -588,10 +588,10 @@ function FormStep(p: FormStepProps) {
               }}
             >
               {!speechSupported
-                ? "Voice input isn't supported in this browser — please type instead."
+                ? "Voice input isn't supported in this browser - please type instead."
                 : listening
-                ? `Listening… ${formatTime(elapsed)} — tap to stop`
-                : "Tap to speak — we'll write it down as you go"}
+                ? `Listening… ${formatTime(elapsed)} - tap to stop`
+                : "Tap to speak - we'll write it down as you go"}
             </div>
             <style>{`@keyframes bg-en-pulse {
               0% { box-shadow: 0 0 0 0 rgba(181,101,74,0.30); }
@@ -926,16 +926,16 @@ function Field(p: FieldProps) {
   );
 }
 
-// Static fallback facts for /en — used until the AI endpoint returns.
+// Static fallback facts for /en - used until the AI endpoint returns.
 const STATIC_BEE_FACTS_EN = [
   "A honeybee visits between 50 and 100 flowers on a single foraging trip.",
   "To produce one tablespoon of honey, a single bee must fly the equivalent of twice around the Earth.",
   "Bees communicate through a precise waggle dance that points others toward flowers.",
-  "A queen bee can lay up to 2,000 eggs in a single day — more than her own body weight.",
+  "A queen bee can lay up to 2,000 eggs in a single day - more than her own body weight.",
   "Bees can recognize human faces and remember the same person days later.",
   "A healthy hive holds between 50,000 and 80,000 bees, nearly all of them female.",
   "Bees sleep five to eight hours a day, sometimes inside flowers.",
-  "A bee's wings beat 200 times per second — that is what creates the familiar buzz.",
+  "A bee's wings beat 200 times per second - that is what creates the familiar buzz.",
   "Bees see colors we cannot, including ultraviolet.",
   "Honey never spoils. Three-thousand-year-old honey from Egyptian tombs was still edible.",
   "Each bee produces only about twelve small teaspoons of honey in its entire lifetime.",

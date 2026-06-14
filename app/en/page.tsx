@@ -103,7 +103,7 @@ export default function EnHomePage() {
             margin: "30px auto 0",
           }}
         >
-          Five questions reveal the one signal that is yours alone — the way you already help people, named clearly enough to build on.
+          Five questions reveal the one signal that is yours alone - the way you already help people, named clearly enough to build on.
         </p>
 
         <QuestionCard />
@@ -119,7 +119,7 @@ export default function EnHomePage() {
             margin: "28px 0 0",
           }}
         >
-          What you receive is yours to keep — free.
+          What you receive is yours to keep - free.
         </p>
       </section>
 
@@ -167,7 +167,7 @@ export default function EnHomePage() {
             maxWidth: "62ch",
           }}
         >
-          A generic tool returns a generic answer. Two people in the same field differ in who they are — not in what they do.
+          A generic tool returns a generic answer. Two people in the same field differ in who they are - not in what they do.
         </p>
         <p
           style={{
@@ -191,7 +191,7 @@ export default function EnHomePage() {
             maxWidth: "62ch",
           }}
         >
-          This starts from you. The element you work in without effort. The chapter that taught you something. The tool you built to get through it. Where those meet is a signal no one can copy — because it was never about the work. It was about you.
+          This starts from you. The element you work in without effort. The chapter that taught you something. The tool you built to get through it. Where those meet is a signal no one can copy - because it was never about the work. It was about you.
         </p>
       </section>
 
@@ -320,7 +320,7 @@ export default function EnHomePage() {
         </div>
       </section>
 
-      {/* Specimen card — sample of a real signal so visitors see the shape of what they receive */}
+      {/* Specimen card - sample of a real signal so visitors see the shape of what they receive */}
       <section
         style={{
           background: "#F4EFE4",
@@ -339,7 +339,7 @@ export default function EnHomePage() {
               marginBottom: 28,
             }}
           >
-            One signal, in full —
+            One signal, in full -
           </div>
 
           <div
@@ -383,7 +383,7 @@ export default function EnHomePage() {
                   color: "#6F521A",
                 }}
               >
-                A signal — specimen · No. 001
+                A signal - specimen · No. 001
               </div>
             </div>
 
@@ -427,7 +427,7 @@ export default function EnHomePage() {
             maxWidth: "32ch",
           }}
         >
-          “Reach can be borrowed. A signal cannot. Ours is to carry yours farther into the world — and to keep it, unmistakably, yours.”
+          “Reach can be borrowed. A signal cannot. Ours is to carry yours farther into the world - and to keep it, unmistakably, yours.”
         </p>
 
         <div style={{ display: "flex", justifyContent: "center", marginTop: 40 }}>
@@ -557,7 +557,7 @@ export default function EnHomePage() {
                 marginTop: 6,
               }}
             >
-              Tel Aviv · New York · London · Tokyo · São Paulo — a signal, everywhere
+              Tel Aviv · New York · London · Tokyo · São Paulo - a signal, everywhere
             </div>
           </div>
         </div>
@@ -617,12 +617,12 @@ const THREE = [
   {
     n: "i",
     title: "One sentence to say out loud, without apology",
-    body: "The signal itself — what only you can give, in a line you can stand behind in any room.",
+    body: "The signal itself - what only you can give, in a line you can stand behind in any room.",
   },
   {
     n: "ii",
     title: "The people already looking for you",
-    body: "Your audience named as a place in life, not a demographic — the ones who need what you carry.",
+    body: "Your audience named as a place in life, not a demographic - the ones who need what you carry.",
   },
   {
     n: "iii",

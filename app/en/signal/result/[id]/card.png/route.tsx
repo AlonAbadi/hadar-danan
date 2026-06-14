@@ -7,7 +7,7 @@ import { validateSignalOutputEn } from "@/lib/prompts/signal-engine-en";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Spectral Italic 400 — fetched once per warm instance from Google Fonts CSS API.
+// Spectral Italic 400 - fetched once per warm instance from Google Fonts CSS API.
 // Crucial: send NO User-Agent so Google returns format('truetype'). With a
 // modern browser UA it returns woff2 which satori can't decode.
 let cachedSpectralItalic: ArrayBuffer | null = null;

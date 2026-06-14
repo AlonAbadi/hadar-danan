@@ -1140,13 +1140,13 @@ function signalWelcomeEn(ctx: EmailTemplateContext): RenderedEmail {
       </div>
       <div class="en-body">
         <p class="lede">What you wrote was worth saying back to you.</p>
-        <p>Your signal is saved. Yours for life, returnable any time. The page is set up the way a letter is — slow, signed, and meant for one reader.</p>
+        <p>Your signal is saved. Yours for life, returnable any time. The page is set up the way a letter is - slow, signed, and meant for one reader.</p>
         <a class="en-cta" href="${resultUrl}">Open your signal &rarr;</a>
 
         <div class="en-rule"></div>
 
         <p>One thing we ask: read it once out loud before you change a word. The shape of the sentence carries more than the content of it.</p>
-        <p>When you are ready to build a body of work from it — the posts, the rhythm, the reach — we will make the rest with you, in your voice. That part is coming. We will write back when it opens.</p>
+        <p>When you are ready to build a body of work from it - the posts, the rhythm, the reach - we will make the rest with you, in your voice. That part is coming. We will write back when it opens.</p>
 
         <div class="en-signoff">Hadar &amp; Alon</div>
         <div class="en-signoff-line">Founders of beegood</div>
