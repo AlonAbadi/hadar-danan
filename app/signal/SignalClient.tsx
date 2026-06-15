@@ -459,10 +459,12 @@ function FormCard(props: FormCardProps) {
         }}
       />
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 12, color: C.muted }}>
-        <span>{len < MIN_CHARS ? `עוד ${MIN_CHARS - len} תווים לפחות` : "מספיק. אפשר להמשיך."}</span>
-        <span>{len} / {MIN_CHARS}+</span>
-      </div>
+      {len < MIN_CHARS && (
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 12, color: C.muted }}>
+          <span>{`עוד ${MIN_CHARS - len} תווים לפחות`}</span>
+          <span>{len} / {MIN_CHARS}+</span>
+        </div>
+      )}
 
       {props.errorMsg && (
         <div role="alert" style={{ marginTop: 16, color: "#FF8888", fontSize: 14 }}>
