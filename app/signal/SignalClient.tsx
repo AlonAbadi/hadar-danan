@@ -7,6 +7,7 @@ import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
 import { EmailMeButton } from "@/components/signal/EmailMeButton";
 import { ShareButton } from "@/components/signal/ShareButton";
+import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 
 type SignalAnswers = Record<string, string>;
 type Gender = "m" | "f";
@@ -67,6 +68,8 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
   const [leadEmail,     setLeadEmail]     = useState(prefillEmail ?? "");
   const [leadPhone,     setLeadPhone]     = useState("");
   const [leadOccupation, setLeadOccupation] = useState("");
+  const [leadConsent,   setLeadConsent]   = useState(false);
+  const [leadConsentErr, setLeadConsentErr] = useState(false);
 
   // Load any draft + check for an existing cached signal on mount.
   // GET only returns a signal for authenticated users — anonymous starts fresh.
@@ -144,8 +147,8 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
         payload.email = leadEmail.trim().toLowerCase();
         payload.name  = fullName;
         payload.phone = leadPhone.trim();
-        const occ = leadOccupation.trim();
-        if (occ.length > 0) payload.occupation = occ;
+        payload.occupation = leadOccupation.trim();
+        payload.marketing_consent = leadConsent;
       }
 
       const res = await fetch("/api/signal/extract", {
@@ -270,11 +273,15 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             email={leadEmail}
             phone={leadPhone}
             occupation={leadOccupation}
+            consent={leadConsent}
+            consentErr={leadConsentErr}
             setFirstName={setLeadFirstName}
             setLastName={setLeadLastName}
             setEmail={setLeadEmail}
             setPhone={setLeadPhone}
             setOccupation={setLeadOccupation}
+            setConsent={(v) => { setLeadConsent(v); if (v) setLeadConsentErr(false); }}
+            setConsentErr={setLeadConsentErr}
             onSubmit={() => void submit()}
             onBack={() => setPhase("form")}
             errorMsg={errorMsg}
@@ -747,30 +754,44 @@ interface LeadGateProps {
   email:         string;
   phone:         string;
   occupation:    string;
+  consent:       boolean;
+  consentErr:    boolean;
   setFirstName:  (v: string) => void;
   setLastName:   (v: string) => void;
   setEmail:      (v: string) => void;
   setPhone:      (v: string) => void;
   setOccupation: (v: string) => void;
+  setConsent:    (v: boolean) => void;
+  setConsentErr: (v: boolean) => void;
   onSubmit:      () => void;
   onBack:        () => void;
   errorMsg:      string | null;
 }
 
-function LeadGate({ firstName, lastName, email, phone, occupation, setFirstName, setLastName, setEmail, setPhone, setOccupation, onSubmit, onBack, errorMsg }: LeadGateProps) {
+function LeadGate({
+  firstName, lastName, email, phone, occupation, consent, consentErr,
+  setFirstName, setLastName, setEmail, setPhone, setOccupation, setConsent, setConsentErr,
+  onSubmit, onBack, errorMsg,
+}: LeadGateProps) {
   const trimmedFirst = firstName.trim();
   const trimmedLast  = lastName.trim();
   const trimmedEmail = email.trim();
   const trimmedPhone = phone.trim();
+  const trimmedOcc   = occupation.trim();
   const validEmail   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
   // Israeli mobile pattern is loose on purpose — accept 05X-XXXXXXX, with or
   // without dashes / spaces / international prefix. Server re-validates.
   const validPhone   = /^[0-9+\-\s()]{9,20}$/.test(trimmedPhone);
-  const canSubmit    = trimmedFirst.length >= 2 && trimmedLast.length >= 2 && validEmail && validPhone;
+  const canSubmit    = trimmedFirst.length >= 2
+                    && trimmedLast.length >= 2
+                    && validEmail
+                    && validPhone
+                    && trimmedOcc.length >= 2;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
+    if (!consent) { setConsentErr(true); return; }
     onSubmit();
   }
 
@@ -812,7 +833,6 @@ function LeadGate({ firstName, lastName, email, phone, occupation, setFirstName,
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              placeholder="איך לקרוא לך"
               autoComplete="given-name"
               autoFocus
               style={{
@@ -834,7 +854,6 @@ function LeadGate({ firstName, lastName, email, phone, occupation, setFirstName,
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              placeholder="שם המשפחה שלך"
               autoComplete="family-name"
               style={{
                 width:        "100%",
@@ -899,14 +918,11 @@ function LeadGate({ firstName, lastName, email, phone, occupation, setFirstName,
         </label>
 
         <label style={{ display: "block" }}>
-          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>
-            במה אתה/את עוסק/ת היום? <span style={{ opacity: 0.6 }}>(לא חובה)</span>
-          </div>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>תאר/י את תחום העיסוק</div>
           <input
             type="text"
             value={occupation}
             onChange={(e) => setOccupation(e.target.value)}
-            placeholder="מאמן כלבים, קוסמטיקאית, יוצר פודקאסט"
             maxLength={200}
             style={{
               width:        "100%",
@@ -920,10 +936,16 @@ function LeadGate({ firstName, lastName, email, phone, occupation, setFirstName,
               outline:      "none",
             }}
           />
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 6, lineHeight: 1.5 }}>
-            תיאור קצר של העיסוק או התחום שלך. אם נוסיף את זה, הניסוח של האות יחדד את הבידול שלך בתוך התחום.
-          </div>
         </label>
+
+        <div style={{ marginTop: 4 }}>
+          <ConsentCheckbox
+            checked={consent}
+            onChange={setConsent}
+            error={consentErr}
+            dark
+          />
+        </div>
 
         {errorMsg && (
           <div role="alert" style={{ color: "#FF8888", fontSize: 14, marginTop: 4 }}>

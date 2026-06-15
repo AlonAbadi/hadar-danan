@@ -110,18 +110,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { answers, first_name, email, name, phone, occupation } = (body ?? {}) as {
-    answers?:    unknown;
-    first_name?: unknown;
-    email?:      unknown;
-    name?:       unknown;
-    phone?:      unknown;
-    occupation?: unknown;
+  const { answers, first_name, email, name, phone, occupation, marketing_consent } = (body ?? {}) as {
+    answers?:           unknown;
+    first_name?:        unknown;
+    email?:             unknown;
+    name?:              unknown;
+    phone?:             unknown;
+    occupation?:        unknown;
+    marketing_consent?: unknown;
   };
 
   const occupationStr = typeof occupation === "string"
     ? occupation.trim().slice(0, 200)
     : "";
+  const consentGranted = marketing_consent === true;
 
   const db = createServerClient();
   const authUser = await getSessionUser();
@@ -168,6 +170,12 @@ export async function POST(req: NextRequest) {
     if (!/^[0-9+\-\s()]{9,20}$/.test(phoneStr)) {
       return NextResponse.json({ error: "טלפון לא תקין" }, { status: 400 });
     }
+    if (occupationStr.length < 2) {
+      return NextResponse.json({ error: "נדרש לתאר את תחום העיסוק" }, { status: 400 });
+    }
+    if (!consentGranted) {
+      return NextResponse.json({ error: "יש לאשר קבלת עדכונים כדי להמשיך" }, { status: 400 });
+    }
 
     // Rate-limit anonymous extractions by IP — 3/hr
     const ip = getRequestIp(req);
@@ -192,10 +200,14 @@ export async function POST(req: NextRequest) {
       userHiveActive = existing.hive_status === "active";
       storedGender   = (existing.gender as Gender | null) ?? null;
       // Backfill missing fields without overwriting existing values
-      const patch: Record<string, string> = {};
+      const patch: Record<string, unknown> = {};
       if (!existing.name  && nameStr)        patch.name        = nameStr;
       if (!existing.phone && phoneStr)       patch.phone       = phoneStr;
       if (!existing.occupation && occupationStr) patch.occupation = occupationStr;
+      if (consentGranted) {
+        patch.marketing_consent = true;
+        patch.consent_at        = new Date().toISOString();
+      }
       if (Object.keys(patch).length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (db as any).from("users").update(patch).eq("id", userId);
@@ -204,13 +216,17 @@ export async function POST(req: NextRequest) {
       occupationForPrompt = occupationStr || storedOcc || undefined;
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const insertPayload: Record<string, string> = {
+      const insertPayload: Record<string, unknown> = {
         email:  emailStr,
         name:   nameStr,
         phone:  phoneStr,
         status: "lead",
       };
       if (occupationStr) insertPayload.occupation = occupationStr;
+      if (consentGranted) {
+        insertPayload.marketing_consent = true;
+        insertPayload.consent_at        = new Date().toISOString();
+      }
       // Detect gender from first name and persist it on the new lead row so
       // future re-extractions and personalized emails get it for free.
       const detectedAtCreate = detectGender(nameStr.split(" ")[0]);
