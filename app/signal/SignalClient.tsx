@@ -1214,6 +1214,10 @@ function Result({
         {extractionId && <ShareButton extractionId={extractionId} firstName={firstName} />}
       </div>
 
+      {/* Bridge — connects the personal moment to the offer below. Skipped
+          for bucket=none, where no offer follows. */}
+      <ResultBridge gender={gender} bucket={inviteBucket} />
+
       {/* Conditional invite block — drives the funnel. Bucket comes from
           determineBucket() server-side. */}
       <InviteCard bucket={inviteBucket} />
@@ -1267,6 +1271,54 @@ function Result({
           .signal-letter p { color: #1a1a1a !important; }
         }
       `}</style>
+    </div>
+  );
+}
+
+// ── Bridge · connects the letter to the offer ──────────────────────────────
+// Visitor just had a personal moment. Pivoting straight to a product card
+// is jarring. The bridge holds her there for one more breath and points at
+// what naturally follows for her bucket. Skipped when bucket=none (no offer
+// to bridge to).
+
+const BRIDGE_TAILS: Record<Exclude<Bucket, "none">, string> = {
+  challenge: "שבעה ימים, וזה הופך לתוכן.",
+  strategy:  "פנים אל פנים, על העסק שלך.",
+  hive:      "מקום שממשיכים לעבוד בו עליו.",
+};
+
+function ResultBridge({ gender, bucket }: { gender: Gender; bucket: Bucket }) {
+  if (bucket === "none") return null;
+  const opener = gender === "m"
+    ? "אתה חילצת את האות שלך. עכשיו צריך לתת לו צורה."
+    : "את חילצת את האות שלך. עכשיו צריך לתת לו צורה.";
+  const tail = BRIDGE_TAILS[bucket];
+
+  return (
+    <div style={{
+      textAlign:  "center",
+      padding:    "8px 12px 0",
+      maxWidth:   480,
+      marginInline: "auto",
+    }}>
+      <p style={{
+        margin:        "0 0 6px",
+        fontSize:      15.5,
+        lineHeight:    1.65,
+        color:         C.fg,
+        fontStyle:     "italic",
+      }}>
+        {opener}
+      </p>
+      <p style={{
+        margin:        0,
+        fontSize:      14,
+        lineHeight:    1.55,
+        color:         C.goldMid,
+        letterSpacing: 0.2,
+      }}>
+        {tail}
+      </p>
     </div>
   );
 }
