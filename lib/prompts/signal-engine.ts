@@ -129,12 +129,30 @@ export function buildSignalUserMessage(
   answers: SignalAnswers,
   firstName?: string,
   occupation?: string,
+  gender?: "m" | "f",
 ): string {
   const lines: string[] = [];
   if (firstName) lines.push(`שם פרטי: ${firstName}`);
   if (occupation && occupation.trim().length > 0) {
     lines.push(`תחום עיסוק (מטא-נתון לקונטקסט בלבד, לא תשובה לשאלה): ${occupation.trim()}`);
   }
+
+  // Gender directive — overrides the prompt's generic "אתה/את" fallback so
+  // the entire output reads as a real letter to one specific person, not a
+  // form with slashes. Default fallback (when gender is not supplied) keeps
+  // the legacy mixed-form behavior.
+  if (gender) {
+    const label = gender === "m" ? "זכר" : "נקבה";
+    const youForm = gender === "m" ? "אתה" : "את";
+    lines.push(
+      `מגדר הפנייה: ${label}. ` +
+      `כל הפלט חייב להיכתב בלשון יחיד ${label} בלבד. ` +
+      `השתמש ב"${youForm}", בפעלים, ובכינויי שייכות בנטיית ${label}. ` +
+      `אסור לחלוטין להשתמש בשני המינים יחד (לא "אתה/את", לא "מצאת/מצאה"). ` +
+      `אסור להשתמש בלשון רבים. בחר את הצורה ${label} בכל מילה ומילה.`
+    );
+  }
+
   const meta = lines.length > 0 ? `${lines.join("\n")}\n\n` : "";
   const sections = SIGNAL_QUESTIONS.map((q) => {
     const a = (answers[q.key] ?? "").trim() || "(לא נענה)";

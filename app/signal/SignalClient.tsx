@@ -5,11 +5,12 @@ import Link from "next/link";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
 import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
-import { PrintButton } from "@/components/signal/PrintButton";
 import { EmailMeButton } from "@/components/signal/EmailMeButton";
 import { ShareButton } from "@/components/signal/ShareButton";
 
 type SignalAnswers = Record<string, string>;
+type Gender = "m" | "f";
+type Bucket = "challenge" | "strategy" | "hive" | "none";
 
 type SignalOutput = {
   pain_source:        string;
@@ -54,6 +55,8 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
   const [signal, setSignal]       = useState<SignalOutput | null>(null);
   const [extractionId, setExtractionId] = useState<string | null>(null);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
+  const [gender, setGender]       = useState<Gender>("f");
+  const [bucket, setBucket]       = useState<Bucket>("challenge");
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
   const [cacheChecked, setCacheChecked] = useState(false);
 
@@ -92,6 +95,10 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             setSignal(data.signal);
             setExtractionId(data.id ?? null);
             setGeneratedAt(data.generated_at ?? null);
+            if (data.gender === "m" || data.gender === "f") setGender(data.gender);
+            if (data.bucket === "challenge" || data.bucket === "strategy" || data.bucket === "hive" || data.bucket === "none") {
+              setBucket(data.bucket);
+            }
             setPhase("result");
           }
         }
@@ -155,6 +162,10 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
       setSignal(data.signal as SignalOutput);
       setExtractionId((data.id as string | null) ?? null);
       setGeneratedAt(data.generated_at ?? null);
+      if (data.gender === "m" || data.gender === "f") setGender(data.gender);
+      if (data.bucket === "challenge" || data.bucket === "strategy" || data.bucket === "hive" || data.bucket === "none") {
+        setBucket(data.bucket);
+      }
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       setPhase("result");
     } catch {
@@ -285,6 +296,8 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             generatedAt={generatedAt}
             onRestart={restart}
             hiveActive={hiveActive}
+            gender={gender}
+            bucket={bucket}
           />
         )}
       </div>
@@ -1004,219 +1017,188 @@ interface ResultProps {
   generatedAt:   string | null;
   onRestart:     () => void;
   hiveActive?:   boolean;
+  gender:        Gender;
+  bucket:        Bucket;
 }
 
-function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRestart, hiveActive = false }: ResultProps) {
+// Gender-aware static labels. Most pronouns in unvowelled Hebrew are written
+// identically across masc/fem (שלך, עבורך, לך), so only the imperatives diverge.
+const labelsByGender = {
+  m: {
+    copy:      "העתק את האות",
+    share:     "שתף בקישור",
+    moreEmail: "שלח אליי את האות במייל",
+    restart:   "להתחיל מחדש",
+  },
+  f: {
+    copy:      "העתיקי את האות",
+    share:     "שתפי בקישור",
+    moreEmail: "שלחי אליי את האות במייל",
+    restart:   "להתחיל מחדש",
+  },
+} as const;
+
+function Result({
+  firstName, signal, extractionId, ownerEmail, generatedAt, onRestart,
+  hiveActive = false, gender, bucket,
+}: ResultProps) {
   const dateStr = generatedAt
     ? new Date(generatedAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
     : null;
+  const t = labelsByGender[gender];
+
+  // Hive members always get the signal-kit path regardless of bucket — that
+  // hub is the rest-of-membership experience and is the natural home for the
+  // signal. We treat hiveActive as the strongest override.
+  const inviteBucket: Bucket = hiveActive ? "hive" : bucket;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Header */}
-      <div style={{ textAlign: "center", padding: "12px 0 4px" }}>
-        <div
-          style={{
-            display:       "inline-block",
-            fontSize:      12,
-            letterSpacing: 1.6,
-            color:         C.goldMid,
-            marginBottom:  10,
-            textTransform: "uppercase",
-          }}
-        >
-          <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
-        </div>
-        <h1 style={{ fontSize: 30, fontWeight: 700, margin: "0 0 8px", lineHeight: 1.25 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+      {/* Header — soft, personal, no brand kicker */}
+      <div style={{ textAlign: "center", padding: "8px 0 2px" }}>
+        <h1 style={{
+          fontSize:     30,
+          fontWeight:   700,
+          margin:       "0 0 6px",
+          lineHeight:   1.25,
+          letterSpacing: "-0.3px",
+        }}>
           {firstName ? `${firstName}, האות שלך` : "האות שלך"}
         </h1>
         {dateStr && (
-          <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>נחלץ ב-{dateStr}</p>
+          <p style={{ color: C.muted, fontSize: 13, margin: 0, fontStyle: "italic" }}>
+            חולץ עבורך ב-{dateStr}
+          </p>
         )}
       </div>
 
-      {/* The signal itself — center stage */}
+      {/* The signal itself — center stage. Buttons moved below the letter so
+          the peak moment is uninterrupted. */}
       <div
         className="signal-hero"
         style={{
+          position:     "relative",
           background:   `linear-gradient(145deg, ${C.cardSoft}, ${C.card})`,
-          border:       `1px solid ${C.gold}`,
-          borderRadius: 22,
-          padding:      "32px 28px",
+          border:       `1px solid ${C.goldMid}`,
+          borderRadius: 24,
+          padding:      "42px 32px 38px",
           textAlign:    "center",
-          boxShadow:    "0 12px 32px rgba(232,185,74,0.12)",
+          boxShadow:    "0 16px 40px rgba(232,185,74,0.14), 0 1px 0 rgba(255,255,255,0.04) inset",
         }}
       >
-        <div style={{ color: C.goldMid, fontSize: 13, marginBottom: 12, letterSpacing: 0.6 }}>
+        {/* Decorative gold line above the kicker */}
+        <div
+          aria-hidden
+          style={{
+            position:   "absolute",
+            top:        14,
+            right:      "50%",
+            transform:  "translateX(50%)",
+            width:      42,
+            height:     1,
+            background: "linear-gradient(90deg, transparent, #C9964A, transparent)",
+          }}
+        />
+        <div style={{
+          color:         C.goldMid,
+          fontSize:      11.5,
+          letterSpacing: 2,
+          marginBottom:  18,
+          textTransform: "uppercase",
+          fontWeight:    600,
+        }}>
           האות
         </div>
-        <p style={{ fontSize: 22, lineHeight: 1.5, margin: "0 0 18px", color: C.fg, fontWeight: 500 }}>
+        <p style={{
+          fontSize:     23,
+          lineHeight:   1.5,
+          margin:       0,
+          color:        C.fg,
+          fontWeight:   500,
+          letterSpacing: "-0.2px",
+        }}>
           {signal.signal}
         </p>
-        <div className="result-actions" style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-          <CopyButton
-            text={`${signal.signal}\n\nTrueSignal© · beegood.online`}
-            label="העתק לשיתוף"
-          />
-          {extractionId && <ShareButton extractionId={extractionId} firstName={firstName} />}
-        </div>
       </div>
 
-      {/* What the signal promises — forward-leaning card, visually distinct */}
-      {signal.signal_promise && (
-        <div
-          style={{
-            background:   "linear-gradient(180deg, rgba(232,185,74,0.05) 0%, transparent 100%)",
-            border:       "1px solid rgba(232,185,74,0.22)",
-            borderRadius: 16,
-            padding:      "20px 22px",
-            position:     "relative",
-          }}
-        >
-          {/* Upward-pointing accent — signals "next direction" */}
-          <div
-            aria-hidden
-            style={{
-              position:   "absolute",
-              top:        -1,
-              right:      22,
-              width:      0,
-              height:     0,
-              borderLeft: "7px solid transparent",
-              borderRight: "7px solid transparent",
-              borderBottom: "8px solid rgba(232,185,74,0.55)",
-            }}
-          />
-          <div style={{
-            color:         C.goldMid,
-            fontSize:      11,
-            letterSpacing: 0.6,
-            marginBottom:  8,
-            textTransform: "uppercase" as const,
-            display:       "flex",
-            alignItems:    "center",
-            gap:           6,
-          }}>
-            <span style={{ fontSize: 13 }}>↗</span> מה שהאות שלך מבטיח
-          </div>
-          <p style={{ margin: 0, lineHeight: 1.7, color: C.fg }}>{signal.signal_promise}</p>
-        </div>
-      )}
-
-      {/* Warm note */}
-      <Card title="הערה אישית" tone="warm">
-        <p style={{ margin: 0, lineHeight: 1.7 }}>{signal.warm_note}</p>
-      </Card>
-
-      {/*
-        Analytic fields (pain_source, element, central_tool, people) are
-        intentionally NOT rendered to the customer. They remain in the DB
-        and on /admin/* views — Hadar uses them for sales prep. Showing them
-        to the customer turned the result into a "report"; this view keeps it
-        a revelation: signal → promise → warm note → actionable directions.
-      */}
-
-      <Card title="שלושה כיווני תוכן להתחיל מהם">
-        <ol style={{ margin: 0, paddingInlineStart: 22, lineHeight: 1.75 }}>
-          {signal.content_directions.map((d, i) => (
-            <li key={i} style={{ marginBottom: 8 }}>{d}</li>
-          ))}
-        </ol>
-      </Card>
-
-      {/* Post-result CTA. Hive members see a direct path to their Signal Kit
-          (the hub where this signal becomes real content); everyone else sees
-          the enrollment pitch. */}
+      {/* The letter — signal_promise + element + warm_note as one flowing block,
+          signed "הדר". This is the heart of the result page. */}
       <div
-        className="hive-cta-card"
+        className="signal-letter"
         style={{
-          background:   `linear-gradient(145deg, ${C.cardSoft}, ${C.card})`,
-          border:       `1px solid ${C.line}`,
+          background:   "linear-gradient(180deg, rgba(232,185,74,0.045) 0%, transparent 100%)",
+          border:       "1px solid rgba(232,185,74,0.22)",
           borderRadius: 18,
-          padding:      "26px 24px",
-          textAlign:    "center",
-          marginTop:    12,
+          padding:      "36px 32px 28px",
         }}
       >
-        {hiveActive ? (
-          <>
-            <p style={{ fontSize: 16, lineHeight: 1.65, color: C.fg, margin: "0 0 6px" }}>
-              האות שלך מוכן. החבילה שלך מחכה לך.
-            </p>
-            <p style={{ fontSize: 14, lineHeight: 1.6, color: C.muted, margin: "0 0 20px" }}>
-              טקסטים, כרטיסי סושיאל, אסטרטגיה ורעיונות חודשיים — כולם נגזרים מהאות הזה.
-            </p>
-            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-              <Link
-                href="/hive/signal-kit"
-                style={{
-                  display:      "inline-block",
-                  background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-                  color:        "#2a1d05",
-                  fontWeight:   800,
-                  fontSize:     15,
-                  borderRadius: 999,
-                  padding:      "12px 28px",
-                  textDecoration: "none",
-                  boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
-                }}
-              >
-                לחבילת התוכן שלי ←
-              </Link>
-              <Link
-                href="/account"
-                style={{
-                  display:      "inline-block",
-                  background:   "transparent",
-                  color:        C.gold,
-                  fontWeight:   600,
-                  fontSize:     14,
-                  borderRadius: 999,
-                  padding:      "12px 22px",
-                  textDecoration: "none",
-                  border:       `1px solid ${C.line}`,
-                }}
-              >
-                האזור האישי שלי
-              </Link>
-            </div>
-          </>
-        ) : (
-          <>
-            <p style={{ fontSize: 16, lineHeight: 1.65, color: C.fg, margin: "0 0 6px" }}>
-              האות שלך נוצר. עכשיו אפשר להפוך אותו לתוכן.
-            </p>
-            <p style={{ fontSize: 14, lineHeight: 1.6, color: C.muted, margin: "0 0 20px" }}>
-              חברי הכוורת מקבלים מהאות הזה: בייו לאינסטגרם ולינקדאין, מניפסט, 8 כרטיסי סושיאל מעוצבים, 30 רעיונות תוכן ועוד.
-            </p>
-            <Link
-              href="/hive"
-              style={{
-                display:      "inline-block",
-                background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-                color:        "#2a1d05",
-                fontWeight:   800,
-                fontSize:     15,
-                border:       "none",
-                borderRadius: 999,
-                padding:      "12px 28px",
-                cursor:       "pointer",
-                textDecoration: "none",
-                boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
-              }}
-            >
-              להפוך את האות שלי לחבילת תוכן ←
-            </Link>
-          </>
+        <div style={{
+          color:         C.goldMid,
+          fontSize:      11,
+          letterSpacing: 1.6,
+          marginBottom:  18,
+          textTransform: "uppercase",
+          textAlign:     "right",
+          fontWeight:    600,
+        }}>
+          מהדר
+        </div>
+
+        {signal.signal_promise && (
+          <p style={{ margin: "0 0 18px", lineHeight: 1.85, fontSize: 16, color: C.fg }}>
+            {signal.signal_promise}
+          </p>
         )}
+
+        {signal.element && (
+          <p style={{
+            margin:       "0 0 18px",
+            lineHeight:   1.85,
+            fontSize:     16,
+            color:        C.fg,
+            paddingRight: 12,
+            borderRight:  "2px solid rgba(232,185,74,0.4)",
+          }}>
+            {signal.element}
+          </p>
+        )}
+
+        {signal.warm_note && (
+          <p style={{ margin: "0 0 0", lineHeight: 1.85, fontSize: 16, color: C.fg }}>
+            {signal.warm_note}
+          </p>
+        )}
+
+        <p style={{
+          fontFamily:    "'Frank Ruhl Libre', Georgia, serif",
+          fontSize:      24,
+          color:         C.gold,
+          fontWeight:    500,
+          margin:        "22px 0 0",
+          letterSpacing: "-0.3px",
+        }}>
+          הדר
+        </p>
       </div>
 
-      {/* Footer — utility actions: email + print + restart */}
+      {/* Quiet actions — copy + share. Visually lower-priority than the invite. */}
+      <div className="result-actions" style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+        <CopyButton
+          text={`${signal.signal}\n\nTrueSignal© · beegood.online`}
+          label={t.copy}
+        />
+        {extractionId && <ShareButton extractionId={extractionId} firstName={firstName} />}
+      </div>
+
+      {/* Conditional invite block — drives the funnel. Bucket comes from
+          determineBucket() server-side. */}
+      <InviteCard bucket={inviteBucket} />
+
+      {/* Quiet footer — utility actions kept small and out of the way */}
       <div className="result-footer" style={{ textAlign: "center", paddingTop: 4, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
         {extractionId && ownerEmail && (
           <EmailMeButton extractionId={extractionId} ownerEmail={ownerEmail} />
         )}
-        <PrintButton />
         <button
           onClick={onRestart}
           style={{
@@ -1230,19 +1212,18 @@ function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRe
             fontWeight:   600,
           }}
         >
-          להתחיל מחדש
+          {t.restart}
         </button>
       </div>
 
-      {/* Print-friendly styles. Hide nav/CTAs/footer chrome and reflow cards for paper. */}
+      {/* Print-friendly styles. Hide nav/CTAs/footer chrome and reflow for paper. */}
       <style>{`
         @media print {
           @page { margin: 18mm 14mm; }
-          /* Hide everything that's not the diagnostic itself */
           nav, header, footer,
           .result-actions,
           .result-footer,
-          .hive-cta-card { display: none !important; }
+          .invite-card { display: none !important; }
           body {
             background: #ffffff !important;
             color: #1a1a1a !important;
@@ -1254,45 +1235,401 @@ function Result({ firstName, signal, extractionId, ownerEmail, generatedAt, onRe
             page-break-inside: avoid;
           }
           .signal-hero p { color: #1a1a1a !important; }
+          .signal-letter {
+            background: #ffffff !important;
+            border: 1px solid #C9964A !important;
+            page-break-inside: avoid;
+          }
+          .signal-letter p { color: #1a1a1a !important; }
         }
       `}</style>
     </div>
   );
 }
 
-function Card({
-  title,
-  children,
-  tone = "normal",
-}: {
-  title:    string;
-  children: React.ReactNode;
-  tone?:    "normal" | "warm";
-}) {
-  return (
-    <div
-      style={{
-        background:   tone === "warm"
-          ? `linear-gradient(145deg, rgba(232,185,74,0.08), ${C.card})`
-          : C.card,
-        border:       `1px solid ${tone === "warm" ? "rgba(232,185,74,0.25)" : C.line}`,
-        borderRadius: 16,
-        padding:      "22px 22px",
-        color:        C.fg,
-      }}
-    >
-      <div
-        style={{
-          color:         C.goldMid,
-          fontSize:      12,
-          letterSpacing: 0.6,
-          marginBottom:  10,
-          textTransform: "uppercase",
-        }}
-      >
-        {title}
+// ── Invite cards · one per bucket ───────────────────────────────────────────
+// Visual design intentionally mirrors /test: gradient card, header row with
+// product name + price, dividers between sections.
+
+const INVITE_STYLES = {
+  card:        "linear-gradient(145deg, #1D2430, #111620)",
+  borderSoft:  "rgba(201,150,74,0.16)",
+  borderHot:   "rgba(201,150,74,0.45)",
+  text:        "#EDE9E1",
+  muted:       "#AAB0BD",
+  border:      "#2C323E",
+  gold:        "#E8B94A",
+  goldDeep:    "#C9964A",
+  success:     "#7FD49B",
+} as const;
+
+function InviteCard({ bucket }: { bucket: Bucket }) {
+  if (bucket === "none") {
+    return (
+      <div className="invite-card" style={{
+        background:   "#1D2430",
+        border:       `1px solid ${INVITE_STYLES.border}`,
+        borderRadius: 14,
+        padding:      "24px 22px",
+        textAlign:    "center",
+      }}>
+        <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7, color: INVITE_STYLES.muted }}>
+          האות שלך נשמר. תוכלו לחזור אליו בכל רגע.
+        </p>
       </div>
-      <div style={{ fontSize: 16 }}>{children}</div>
+    );
+  }
+
+  if (bucket === "strategy") return <StrategyInvite />;
+  if (bucket === "hive")     return <HiveInvite />;
+  return <ChallengeInvite />;
+}
+
+function PriceBlock({
+  amount, anchor, suffix,
+}: { amount: string; anchor?: string; suffix?: string }) {
+  return (
+    <div style={{ textAlign: "left" }}>
+      {anchor && (
+        <span style={{
+          fontSize:      13,
+          color:         INVITE_STYLES.muted,
+          textDecoration: "line-through",
+          marginBottom:  2,
+          display:       "block",
+        }}>{anchor}</span>
+      )}
+      <p style={{
+        fontSize:   24,
+        fontWeight: 900,
+        color:      INVITE_STYLES.text,
+        margin:     0,
+        lineHeight: 1.1,
+      }}>
+        <small style={{ fontSize: 18, fontWeight: 700, marginLeft: 2, color: INVITE_STYLES.muted }}>₪</small>
+        {amount}
+        {suffix && <small style={{ fontSize: 14, fontWeight: 600, color: INVITE_STYLES.muted }}>{suffix}</small>}
+      </p>
+      <p style={{ fontSize: 11, color: INVITE_STYLES.muted, margin: "2px 0 0" }}>כולל מע״מ</p>
     </div>
   );
 }
+
+function InviteHeader({ name, price }: { name: string; price: React.ReactNode }) {
+  return (
+    <div style={{
+      display:        "flex",
+      justifyContent: "space-between",
+      alignItems:     "center",
+      paddingBottom:  16,
+      borderBottom:   `1px solid ${INVITE_STYLES.border}`,
+    }}>
+      <span style={{ color: INVITE_STYLES.muted, fontSize: 15 }}>{name}</span>
+      {price}
+    </div>
+  );
+}
+
+function InviteBullets({ items }: { items: string[] }) {
+  return (
+    <ul style={{
+      margin:        0,
+      padding:       0,
+      listStyle:     "none",
+      display:       "flex",
+      flexDirection: "column",
+      gap:           10,
+      paddingTop:    4,
+    }}>
+      {items.map((item, i) => (
+        <li key={i} style={{
+          display:    "flex",
+          alignItems: "flex-start",
+          gap:        10,
+          fontSize:   14.5,
+          lineHeight: 1.6,
+          color:      INVITE_STYLES.text,
+        }}>
+          <span aria-hidden style={{
+            width:        6,
+            height:       6,
+            borderRadius: "50%",
+            background:   INVITE_STYLES.goldDeep,
+            flexShrink:   0,
+            marginTop:    9,
+          }} />
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function InviteStats({ stats }: { stats: { v: string; l: string }[] }) {
+  return (
+    <div style={{
+      display:        "flex",
+      justifyContent: "space-around",
+      gap:            12,
+      padding:        "14px 0",
+      borderTop:      `1px solid ${INVITE_STYLES.border}`,
+      borderBottom:   `1px solid ${INVITE_STYLES.border}`,
+    }}>
+      {stats.map((s, i) => (
+        <div key={i} style={{ textAlign: "center", flex: 1 }}>
+          <span style={{
+            fontSize:   18,
+            fontWeight: 800,
+            color:      INVITE_STYLES.goldDeep,
+            display:    "block",
+            lineHeight: 1,
+          }}>{s.v}</span>
+          <span style={{
+            fontSize:      11,
+            color:         INVITE_STYLES.muted,
+            letterSpacing: 0.3,
+            marginTop:     5,
+            display:       "block",
+          }}>{s.l}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InviteCTA({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      style={{
+        display:        "inline-block",
+        background:     "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+        color:          "#2a1d05",
+        fontWeight:     800,
+        fontSize:       15.5,
+        borderRadius:   10,
+        padding:        "14px 28px",
+        textDecoration: "none",
+        boxShadow:      "0 1px 0 rgba(255,255,255,0.55) inset, 0 -8px 18px rgba(157,110,12,0.3) inset, 0 12px 24px -10px rgba(214,155,31,0.5), 0 4px 10px -4px rgba(0,0,0,0.5)",
+        width:          "100%",
+        textAlign:      "center",
+        boxSizing:      "border-box",
+      }}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function InviteGuarantee({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      display:    "flex",
+      alignItems: "flex-start",
+      gap:        10,
+      paddingTop: 14,
+      borderTop:  `1px solid ${INVITE_STYLES.border}`,
+      fontSize:   12.5,
+      color:      INVITE_STYLES.muted,
+      lineHeight: 1.6,
+    }}>
+      <span aria-hidden style={{
+        width:        18,
+        height:       18,
+        borderRadius: "50%",
+        background:   "rgba(127,212,155,0.12)",
+        color:        INVITE_STYLES.success,
+        display:      "flex",
+        alignItems:   "center",
+        justifyContent: "center",
+        fontSize:     11,
+        flexShrink:   0,
+        marginTop:    2,
+        fontWeight:   700,
+      }}>✓</span>
+      <p style={{ margin: 0 }}>{children}</p>
+    </div>
+  );
+}
+
+function InviteLadder({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      textAlign:   "center",
+      paddingTop:  14,
+      borderTop:   `1px dashed ${INVITE_STYLES.border}`,
+      fontSize:    12.5,
+      color:       INVITE_STYLES.muted,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function ChallengeInvite() {
+  return (
+    <div
+      className="invite-card"
+      style={{
+        background:   INVITE_STYLES.card,
+        border:       `1px solid ${INVITE_STYLES.borderSoft}`,
+        borderRadius: 16,
+        padding:      24,
+        display:      "flex",
+        flexDirection: "column",
+        gap:          16,
+      }}
+    >
+      <InviteHeader name="אתגר 7 הימים" price={<PriceBlock amount="197" anchor="₪297" />} />
+
+      <h3 style={{
+        margin:       0,
+        fontSize:     20,
+        lineHeight:   1.4,
+        fontWeight:   700,
+        color:        INVITE_STYLES.text,
+        letterSpacing: "-0.2px",
+      }}>
+        7 ימים, 7 סרטונים שמייצרים מכירות
+      </h3>
+      <p style={{ margin: 0, color: INVITE_STYLES.muted, fontSize: 14.5, lineHeight: 1.65 }}>
+        קורס און דימנד. גישה מיידית לשיעור הפתיחה תוך שניות אחרי התשלום. אין מחזורים, אין המתנה.
+      </p>
+
+      <InviteBullets items={[
+        "גישה מיידית לשיעור פתיחה מוקלט על שיווק ב-2026",
+        "7 סרטונים יומיים מהדר על סוג תוכן שמקדם מכירות",
+        "אתגר יומי לצילום והעלאה לאינסטגרם",
+        "מפגש סיום חי בזום, פתוח רק למי שסיימו את כל 7 הימים",
+        "הקלטות לצפייה חוזרת לאורך זמן",
+      ]} />
+
+      <InviteStats stats={[
+        { v: "3,500+", l: "בעלי עסק עברו" },
+        { v: "7",      l: "ימים" },
+        { v: "97%",    l: "המליצו" },
+      ]} />
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: INVITE_STYLES.muted, lineHeight: 1.5 }}>
+        <span aria-hidden style={{ width: 5, height: 5, borderRadius: "50%", background: INVITE_STYLES.success, flexShrink: 0 }} />
+        <span><strong style={{ color: INVITE_STYLES.text, fontWeight: 600 }}>גישה מיידית</strong> · מתחילים תוך שניות אחרי התשלום</span>
+      </div>
+
+      <InviteCTA href="/challenge" label="להצטרף לאתגר ←" />
+
+      <InviteGuarantee>
+        <strong style={{ color: INVITE_STYLES.success, fontWeight: 600 }}>החזר מלא תוך 7 ימים</strong> אם לא הרגשתם שזה עבד. בלי שאלות.
+      </InviteGuarantee>
+
+      <InviteLadder>
+        השלב הבא לאחר האתגר · <strong style={{ color: INVITE_STYLES.goldDeep, fontWeight: 600 }}>סדנת יום אחד · ₪1,080</strong>
+      </InviteLadder>
+    </div>
+  );
+}
+
+function StrategyInvite() {
+  return (
+    <div
+      className="invite-card"
+      style={{
+        background:   INVITE_STYLES.card,
+        border:       `1px solid ${INVITE_STYLES.borderHot}`,
+        borderRadius: 16,
+        padding:      24,
+        display:      "flex",
+        flexDirection: "column",
+        gap:          16,
+        boxShadow:    "0 16px 40px rgba(201,150,74,0.08)",
+      }}
+    >
+      <InviteHeader name="פגישת אסטרטגיה" price={<PriceBlock amount="4,000" />} />
+
+      <h3 style={{
+        margin:       0,
+        fontSize:     20,
+        lineHeight:   1.4,
+        fontWeight:   700,
+        color:        INVITE_STYLES.text,
+        letterSpacing: "-0.2px",
+      }}>
+        90 דקות מולי. בהירות מלאה לאן הולכים.
+      </h3>
+      <p style={{ margin: 0, color: INVITE_STYLES.muted, fontSize: 14.5, lineHeight: 1.65 }}>
+        האות הוא האבחנה. הפגישה היא חשיבה יצירתית בלייב על העסק שלך דווקא. אסטרטגיה עסקית קודמת לאסטרטגיה שיווקית.
+      </p>
+
+      <InviteBullets items={[
+        "מה אתה רוצה לעומת מה אתה צריך · נפרק את הדחוף, נזהה מה באמת עוצר",
+        "אסטרטגיה עסקית לפני שיווק · לאן העסק הולך, מה הבידול, מה המודל",
+        "חשיבה יצירתית בלייב · לא המלצות מן המוכן, פתרון ספציפי לעסק שלך",
+        "מפת דרכים מדויקת · מה לעשות עכשיו, מה לדחות, מה להפסיק",
+        "פגישה שנייה ללא עלות נוספת אם הדר תחליט שצריך",
+      ]} />
+
+      <InviteStats stats={[
+        { v: "90",   l: "דקות פנים אל פנים" },
+        { v: "500+", l: "עסקים" },
+        { v: "4",    l: "שנות ניסיון" },
+      ]} />
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: INVITE_STYLES.muted, lineHeight: 1.5 }}>
+        <span aria-hidden style={{ width: 5, height: 5, borderRadius: "50%", background: INVITE_STYLES.success, flexShrink: 0 }} />
+        <span><strong style={{ color: INVITE_STYLES.text, fontWeight: 600 }}>פגישה פרונטלית</strong> · תיאום מועד תוך 24 שעות · 2-3 פגישות זמינות בכל יום</span>
+      </div>
+
+      <InviteCTA href="/strategy/book" label="לקבוע פגישת אסטרטגיה ←" />
+
+      <InviteGuarantee>
+        <strong style={{ color: INVITE_STYLES.success, fontWeight: 600 }}>לא פיצחנו בפגישה הראשונה? השנייה עלי, ללא עלות נוספת.</strong> ערבות אמיתית, לא כותרת.
+      </InviteGuarantee>
+
+      <InviteLadder>
+        בהמשך הדרך · <strong style={{ color: INVITE_STYLES.goldDeep, fontWeight: 600 }}>יום צילום פרימיום · ₪14,000</strong>
+      </InviteLadder>
+    </div>
+  );
+}
+
+function HiveInvite() {
+  return (
+    <div
+      className="invite-card"
+      style={{
+        background:   INVITE_STYLES.card,
+        border:       `1px solid ${INVITE_STYLES.borderSoft}`,
+        borderRadius: 16,
+        padding:      24,
+        display:      "flex",
+        flexDirection: "column",
+        gap:          16,
+      }}
+    >
+      <InviteHeader name="הכוורת" price={<PriceBlock amount="97" suffix="/חודש" />} />
+
+      <h3 style={{
+        margin:       0,
+        fontSize:     20,
+        lineHeight:   1.4,
+        fontWeight:   700,
+        color:        INVITE_STYLES.text,
+        letterSpacing: "-0.2px",
+      }}>
+        האות נשאר חי בקהילה.
+      </h3>
+      <p style={{ margin: 0, color: INVITE_STYLES.muted, fontSize: 14.5, lineHeight: 1.65 }}>
+        ריטיינר חודשי. לא קורס חדש. רק מקום להמשיך לעבוד בו על האות הזה.
+      </p>
+
+      <InviteBullets items={[
+        "קבוצת ווטסאפ פעילה",
+        "זום חודשי איתי",
+        "שני רעיונות תוכן בחודש, מותאמים לאות שלך",
+        "גישה לספריית בינג'",
+      ]} />
+
+      <InviteCTA href="/hive" label="להצטרף לכוורת ←" />
+    </div>
+  );
+}
+

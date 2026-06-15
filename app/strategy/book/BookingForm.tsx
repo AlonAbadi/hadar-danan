@@ -183,7 +183,7 @@ export function BookingForm({ bookedSlots, onSuccess, initialForm }: Props) {
           <p className="font-bold text-white">🕙 {booking.time}</p>
         </div>
         <p className="text-sm text-slate-400">
-          קישור ל-Zoom ישלח 24 שעות לפני הפגישה
+          הפגישה מתקיימת בכתובת רחוב החילזון 5, רמת גן · פרטי הגעה ישלחו 24 שעות לפני הפגישה
         </p>
       </div>
     );

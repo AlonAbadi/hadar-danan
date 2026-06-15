@@ -15,6 +15,8 @@ import {
   type SignalAnswers,
   type SignalOutput,
 } from "@/lib/prompts/signal-engine";
+import { detectGender, type Gender } from "@/lib/gender/detect";
+import { determineBucket } from "@/lib/signal/score";
 
 // Typed escape hatch — signal_extractions isn't in the generated Database types yet.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,7 +71,7 @@ export async function GET() {
   if (!userRow) return NextResponse.json({ signal: null });
 
   const { data: latest } = await safeFrom(db, "signal_extractions")
-    .select("id, signal, generated_at")
+    .select("id, signal, generated_at, gender, bucket")
     .eq("user_id", userRow.id)
     .order("generated_at", { ascending: false })
     .limit(1)
@@ -80,6 +82,8 @@ export async function GET() {
     signal:       latest.signal as SignalOutput,
     generated_at: latest.generated_at,
     id:           latest.id,
+    gender:       (latest.gender as Gender | null) ?? null,
+    bucket:       (latest.bucket as string | null) ?? null,
   });
 }
 
@@ -125,15 +129,17 @@ export async function POST(req: NextRequest) {
   let userId:        string;
   let userNameForPrompt: string | undefined;
   let occupationForPrompt: string | undefined;
+  let userStatus: string | null = null;
+  let userHiveActive: boolean = false;
+  let storedGender: Gender | null = null;
 
   if (authUser) {
     // Authenticated path — find their public.users row.
-    // Pull stored occupation as well; we use whichever is freshest (request
-    // body wins if provided, otherwise fall back to stored value).
+    // Pull stored occupation, status, hive_status, and gender as well.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: userRow } = await (db as any)
       .from("users")
-      .select("id, name, occupation")
+      .select("id, name, occupation, status, hive_status, gender")
       .eq("auth_id", authUser.id)
       .maybeSingle();
     if (!userRow) {
@@ -145,6 +151,9 @@ export async function POST(req: NextRequest) {
     }
     const storedOcc = typeof userRow.occupation === "string" ? userRow.occupation.trim() : "";
     occupationForPrompt = occupationStr || storedOcc || undefined;
+    userStatus     = (userRow.status as string | null) ?? null;
+    userHiveActive = userRow.hive_status === "active";
+    storedGender   = (userRow.gender as Gender | null) ?? null;
   } else {
     // Anonymous path — require email + name + phone, upsert lead
     const emailStr = typeof email === "string" ? email.trim().toLowerCase() : "";
@@ -173,12 +182,15 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (db as any)
       .from("users")
-      .select("id, name, phone, occupation")
+      .select("id, name, phone, occupation, status, hive_status, gender")
       .eq("email", emailStr)
       .maybeSingle();
 
     if (existing?.id) {
       userId = existing.id as string;
+      userStatus     = (existing.status as string | null) ?? null;
+      userHiveActive = existing.hive_status === "active";
+      storedGender   = (existing.gender as Gender | null) ?? null;
       // Backfill missing fields without overwriting existing values
       const patch: Record<string, string> = {};
       if (!existing.name  && nameStr)        patch.name        = nameStr;
@@ -199,6 +211,10 @@ export async function POST(req: NextRequest) {
         status: "lead",
       };
       if (occupationStr) insertPayload.occupation = occupationStr;
+      // Detect gender from first name and persist it on the new lead row so
+      // future re-extractions and personalized emails get it for free.
+      const detectedAtCreate = detectGender(nameStr.split(" ")[0]);
+      insertPayload.gender = detectedAtCreate;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: created, error: insErr } = await (db as any)
         .from("users")
@@ -215,6 +231,7 @@ export async function POST(req: NextRequest) {
       }
       userId = created.id as string;
       occupationForPrompt = occupationStr || undefined;
+      storedGender = detectedAtCreate;
       // Note: we intentionally do NOT fire USER_SIGNED_UP here. The generic
       // welcome pitches the full ladder, which doesn't fit a lead who just
       // generated their signal. Instead, SIGNAL_EXTRACTED fires below for
@@ -223,6 +240,23 @@ export async function POST(req: NextRequest) {
     }
 
     userNameForPrompt = nameStr.split(" ")[0];
+  }
+
+  // Resolve the gender we'll address the visitor with. Order: existing
+  // stored value (most authoritative) → detection from the first name → 'f'
+  // as a safe default.
+  const genderForPrompt: Gender = storedGender
+    ?? detectGender(userNameForPrompt);
+
+  // Backfill the gender on the users row if we have one and the row doesn't
+  // (e.g. legacy authenticated users from before migration 051).
+  if (!storedGender) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (db as any).from("users").update({ gender: genderForPrompt }).eq("id", userId);
+    } catch {
+      // Non-fatal; we still pass it to Claude for this extraction.
+    }
   }
 
   // Rate-limit per user (in addition to the per-IP anon limit above)
@@ -255,7 +289,7 @@ export async function POST(req: NextRequest) {
       system:     SIGNAL_ENGINE_SYSTEM_PROMPT,
       messages: [{
         role:    "user" as const,
-        content: buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt),
+        content: buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt),
       }],
     };
 
@@ -303,6 +337,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // ── Compute bucket (drives the conditional CTA on the result page) ──────
+  const bucketDecision = determineBucket({
+    answers,
+    occupation: occupationForPrompt ?? null,
+    userStatus,
+    hiveActive: userHiveActive,
+  });
+
   // ── Save to DB — soft-fail (return signal even if save fails) ────────────
   const generatedAt = new Date().toISOString();
   let extractionId: string | null = null;
@@ -315,6 +357,8 @@ export async function POST(req: NextRequest) {
         model_used:   SIGNAL_ENGINE_MODEL,
         raw_response: parsed,
         generated_at: generatedAt,
+        gender:       genderForPrompt,
+        bucket:       bucketDecision.bucket,
       })
       .select("id")
       .single();
@@ -393,5 +437,7 @@ export async function POST(req: NextRequest) {
     id:           extractionId,
     signal:       parsed,
     generated_at: generatedAt,
+    gender:       genderForPrompt,
+    bucket:       bucketDecision.bucket,
   });
 }

@@ -750,6 +750,7 @@ function bookingConfirmation(ctx: EmailTemplateContext): RenderedEmail {
         <p>לא "תחשוב על זה".</p>
         <p>מפה.</p>
         <p>בימים הקרובים יחזרו אליך לתאם תאריך.</p>
+        <p>הפגישה מתקיימת פנים אל פנים במשרד של הדר ברחוב החילזון 5, רמת גן.</p>
         <p>תהיה מוכן.</p>
         <p>צוות beegood</p>
       </div>
