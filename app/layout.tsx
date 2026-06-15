@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Assistant } from "next/font/google";
 import Script from "next/script";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
+import { createServerClient as createSSRClient } from "@supabase/ssr";
+import { createServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
 import "./globals.css";
 import { Pixels }              from "@/components/analytics/Pixels";
 import { AccessibilityWidget } from "@/components/AccessibilityWidget";
@@ -9,6 +12,27 @@ import { MobileNavServer }     from "@/components/MobileNavServer";
 import { DesktopNavServer }    from "@/components/DesktopNavServer";
 import { LayoutShell }         from "@/components/LayoutShell";
 import { SchemaMarkup }        from "@/components/SchemaMarkup";
+
+function buildAamData(u: {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  name: string | null;
+}): Record<string, string> {
+  const data: Record<string, string> = { country: "il" };
+  if (u.email) data.em = u.email.trim().toLowerCase();
+  if (u.phone) {
+    const digits = u.phone.replace(/\D/g, "");
+    data.ph = digits.startsWith("0") ? "972" + digits.slice(1) : digits;
+  }
+  if (u.name) {
+    const parts = u.name.trim().toLowerCase().split(/\s+/);
+    if (parts[0]) data.fn = parts[0];
+    if (parts.length > 1) data.ln = parts.slice(1).join(" ");
+  }
+  if (u.id) data.external_id = u.id;
+  return data;
+}
 
 const assistant = Assistant({
   subsets:  ["hebrew", "latin"],
@@ -69,6 +93,33 @@ export default async function RootLayout({
   const pathname = hdrs.get("x-pathname") ?? "/";
   const isEn = pathname.startsWith("/en");
 
+  let aamData: Record<string, string> = {};
+  try {
+    const cookieStore = await cookies();
+    const supabaseAuth = createSSRClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll(); },
+          setAll() {},
+        },
+      }
+    );
+    const { data: { user: authUser } } = await supabaseAuth.auth.getUser();
+    if (authUser) {
+      const db = createServerClient();
+      const { data: u } = await db
+        .from("users")
+        .select("id, email, phone, name, marketing_consent")
+        .eq("auth_id", authUser.id)
+        .maybeSingle();
+      if (u?.marketing_consent) aamData = buildAamData(u);
+    }
+  } catch {
+    // Auth or DB lookup failed — fall back to empty AAM (anonymous behavior)
+  }
+
   return (
     <html
       lang={isEn ? "en" : "he"}
@@ -85,7 +136,7 @@ export default async function RootLayout({
       )}
       {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
         <>
-          <Script id="meta-pixel" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('set','autoConfig',false,'${process.env.NEXT_PUBLIC_META_PIXEL_ID}');fbq('init','${process.env.NEXT_PUBLIC_META_PIXEL_ID}');fbq('track','PageView');`}</Script>
+          <Script id="meta-pixel" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${process.env.NEXT_PUBLIC_META_PIXEL_ID}',${JSON.stringify(aamData)});fbq('track','PageView');`}</Script>
           <noscript><img height="1" width="1" style={{display:"none"}} src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_META_PIXEL_ID}&ev=PageView&noscript=1`} alt="" /></noscript>
         </>
       )}
