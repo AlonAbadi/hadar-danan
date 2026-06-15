@@ -567,11 +567,18 @@ function Loading() {
     return () => { cancelled = true; };
   }, []);
 
-  // Progress bar: random walk up to ~88%, then idle until parent flips phase.
+  // Progress bar: asymptotic approach toward ~97%. Each tick adds a fraction
+  // of the remaining gap, so early progress is fast and visible while the
+  // later stretch slows naturally. The bar always inches forward — it never
+  // sticks at a single number, which would read as a bug.
   useEffect(() => {
     const id = setInterval(() => {
-      setProgress((p) => (p >= 88 ? p : p + Math.random() * 4 + 1));
-    }, 300);
+      setProgress((p) => {
+        const target = 97;
+        const gap    = target - p;
+        return p + Math.max(0.08, gap * 0.025);
+      });
+    }, 250);
     return () => clearInterval(id);
   }, []);
 
