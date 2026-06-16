@@ -618,14 +618,29 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
     (async () => {
       try {
         const res  = await fetch(`/api/signal/${extractionId}/shoot-day`);
-        const data = await res.json();
-        if (!res.ok || !data?.plan) {
-          setError(data?.error ?? "Shoot Day generation failed");
+
+        // Read as text first — Vercel function errors are HTML, not JSON
+        const text = await res.text();
+
+        if (!res.ok) {
+          // Try JSON first, fallback to raw text
+          try {
+            const data = JSON.parse(text);
+            setError(data?.error ?? `HTTP ${res.status}: ${text.slice(0, 200)}`);
+          } catch {
+            setError(`HTTP ${res.status} (Vercel function error): ${text.slice(0, 300)}`);
+          }
+          return;
+        }
+
+        const data = JSON.parse(text);
+        if (!data?.plan) {
+          setError(data?.error ?? "Shoot Day generation failed (no plan returned)");
           return;
         }
         setPlan(data.plan);
       } catch (e) {
-        setError(String(e));
+        setError(`Client error: ${String(e)}`);
       } finally {
         setLoading(false);
       }
