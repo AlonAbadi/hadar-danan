@@ -310,19 +310,29 @@ export async function POST(req: NextRequest) {
   let rawJson: unknown = null;
   try {
     const client = new Anthropic();
-    // System block reverted to plain string after observing repeat 502s in
-    // production after the cache_control wrapping landed (commit a046816).
-    // The cache_control format itself was valid but something in the
-    // serialization path was throwing under load; reverting until we can
-    // re-introduce it with the proper SDK escape hatch.
+    // The system prompt grew with routing_signal + palette_id schemas and
+    // Sonnet started slipping out of "JSON only" mode in prod — surfacing
+    // as `SyntaxError: Unexpected token 'I', "I need to ..."` in the catch
+    // (model preamble like "I need to analyze..." instead of `{`).
+    //
+    // Fix: assistant-prefill with `{` so the model has no choice but to
+    // continue the JSON from there. Classic Anthropic-prescribed technique
+    // for guaranteed structured output. The opening brace is stripped from
+    // the response then re-prefixed before JSON.parse.
     const requestParams = {
       model:      SIGNAL_ENGINE_MODEL,
       max_tokens: SIGNAL_ENGINE_MAX_TOKENS,
       system:     SIGNAL_ENGINE_SYSTEM_PROMPT,
-      messages: [{
-        role:    "user" as const,
-        content: buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt),
-      }],
+      messages: [
+        {
+          role:    "user" as const,
+          content: buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt),
+        },
+        {
+          role:    "assistant" as const,
+          content: "{",
+        },
+      ],
     };
 
     // Retry on 429/529 with exponential backoff (same pattern as truesignal-diagnosis)
@@ -347,10 +357,14 @@ export async function POST(req: NextRequest) {
       throw new Error("Model returned non-text block");
     }
 
-    const cleanText = firstBlock.text
+    // Re-add the `{` that we prefilled — the model continues from there so
+    // the returned text is the JSON body without the opening brace. Also
+    // tolerate any closing ``` the model might still tack on.
+    const rawText = firstBlock.text
       .replace(/^```(?:json)?\s*/i, "")
       .replace(/\s*```\s*$/, "")
       .trim();
+    const cleanText = rawText.startsWith("{") ? rawText : "{" + rawText;
     rawJson = JSON.parse(cleanText);
 
     if (!validateSignalOutput(rawJson)) {
