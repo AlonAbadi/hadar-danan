@@ -20,6 +20,7 @@ import {
   DEFAULT_STYLE,
   type VisualStyle,
 } from "@/lib/signal-visual-prompter";
+import { resolvePalette, type Palette } from "@/lib/signal/palettes";
 
 // Per-style overlay. Premium v2: very light tint across the whole card — just
 // enough to unify color and ground the image visually. White text legibility is
@@ -90,7 +91,7 @@ function signalFontSize(text: string): number {
   return 36;
 }
 
-function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, style: VisualStyle): { html: string; css: string } {
+function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, style: VisualStyle, palette: Palette): { html: string; css: string } {
   const fontSize = signalFontSize(signalText);
 
   // When we have an AI-generated background, lay it down first under a dark
@@ -133,7 +134,7 @@ body { margin: 0; padding: 0; }
 .card {
   width: 1080px;
   height: 1080px;
-  background: #080C14;
+  background: ${palette.bg};
   position: relative;
   font-family: 'Assistant', 'Heebo', system-ui, sans-serif;
   overflow: hidden;
@@ -160,6 +161,8 @@ body { margin: 0; padding: 0; }
   z-index: 1;
 }
 
+/* Radial glow behind the bee logo — uses the palette's accent at low opacity
+   so each palette has its own atmospheric glow color. */
 .glow {
   position: absolute;
   top: -25%;
@@ -167,7 +170,7 @@ body { margin: 0; padding: 0; }
   transform: translateX(-50%);
   width: 150%;
   height: 90%;
-  background: radial-gradient(ellipse at center, rgba(232,185,74,0.20) 0%, rgba(232,185,74,0.08) 35%, transparent 70%);
+  background: radial-gradient(ellipse at center, ${palette.glow} 0%, transparent 70%);
   z-index: 2;
 }
 
@@ -180,7 +183,7 @@ body { margin: 0; padding: 0; }
   height: auto;
   z-index: 3;
   opacity: 0.95;
-  filter: drop-shadow(0 0 32px rgba(232,185,74,0.35));
+  filter: drop-shadow(0 0 32px ${palette.glow});
 }
 
 .signal-wrap {
@@ -198,16 +201,16 @@ body { margin: 0; padding: 0; }
   width: 64px;
   height: 2px;
   margin: 0 auto 36px;
-  background: linear-gradient(90deg, transparent, #E8B94A, transparent);
+  background: linear-gradient(90deg, transparent, ${palette.accent}, transparent);
   opacity: 0.85;
 }
 
-/* Premium typography: pure white for max contrast against ANY background,
-   multi-layer text-shadow gives the text its own dark halo so it's always
-   readable without darkening the underlying image. */
+/* Statement text uses the palette's text color. All 11 curated palettes ship
+   with dark backgrounds + light text (validated AAA contrast), so the dark
+   text-shadow halo always works for legibility on AI backgrounds. */
 .signal {
   font-weight: 700;
-  color: #FFFFFF;
+  color: ${palette.text};
   line-height: 1.38;
   letter-spacing: -0.005em;
   direction: rtl;
@@ -225,7 +228,7 @@ body { margin: 0; padding: 0; }
   transform: translateX(-50%);
   width: 56px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #C9964A, transparent);
+  background: linear-gradient(90deg, transparent, ${palette.accent}, transparent);
   opacity: 0.7;
   z-index: 3;
 }
@@ -238,7 +241,7 @@ body { margin: 0; padding: 0; }
   text-align: center;
   font-size: 18px;
   font-weight: 500;
-  color: #C9964A;
+  color: ${palette.accent};
   opacity: 0.72;
   direction: rtl;
   letter-spacing: 0.6px;
@@ -255,7 +258,7 @@ body { margin: 0; padding: 0; }
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 1.2px;
-  color: #C9964A;
+  color: ${palette.accent};
   z-index: 3;
   text-shadow: 0 2px 12px rgba(0,0,0,0.7);
 }
@@ -303,10 +306,20 @@ export async function GET(
   //                                  (Hive perk: their card, no watermarks)
   // ?force_ai=1                    — escape hatch for manual testing on any
   //                                  extraction regardless of hive_status
+  // ?palette=<id>                  — override the LLM-chosen palette for
+  //                                  testing (otherwise pulls signal.palette_id)
   const styleParam = req.nextUrl.searchParams.get("style") ?? "";
   const style: VisualStyle = isValidStyle(styleParam) ? styleParam : DEFAULT_STYLE;
   const cleanParam = req.nextUrl.searchParams.get("clean") === "1";
   const forceAi    = req.nextUrl.searchParams.get("force_ai") === "1";
+  const paletteOverride = req.nextUrl.searchParams.get("palette");
+
+  // Resolve palette: query override beats stored value beats default.
+  // resolvePalette() always returns a valid palette (falls back to midnight
+  // on missing/invalid input), so the card never fails to render on bad data.
+  const palette = resolvePalette(
+    paletteOverride ?? (typeof row.signal.palette_id === "string" ? row.signal.palette_id : null)
+  );
 
   // ── User permissions ──────────────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -369,7 +382,7 @@ export async function GET(
     }
   }
 
-  const { html, css } = buildHtml(cardText, bgUrl, clean, style);
+  const { html, css } = buildHtml(cardText, bgUrl, clean, style, palette);
 
   const result = await createHctiImage({
     html,

@@ -51,6 +51,7 @@ export type SignalOutput = {
   warm_note:          string;            // הערה חמה - direct, personal, "I saw you" not "I analyzed you"
   public_card_statement: string;         // משפט לכרטיס PNG ציבורי - האמירה היחידה שלא נכתבת לאדם עצמו אלא לקהל שלו
   routing_signal?:    RoutingSignal;     // Internal-only routing assessment. Never rendered. Optional — soft-fail to rules-only routing if missing.
+  palette_id?:        string;            // One of 11 curated palette IDs (see lib/signal/palettes.ts). Drives the share-card colors. Optional — falls back to midnight on missing/invalid.
 };
 
 // Internal routing assessment produced by the LLM alongside the user-facing
@@ -191,6 +192,31 @@ export const SIGNAL_ENGINE_SYSTEM_PROMPT = `אתה מנוע האות של שיט
 3. ציטוטים ב-buyer_signals ו-vague_signals חייבים להיות מילוליים מהתשובות. אסור פרפראזה.
 4. השדה הוא חלק מ-JSON תקין. אם תפר את הסכמה, הניתוב יחזור לרולים הרגילים והאות עדיין יוצג למשתמש.
 
+---
+
+שדה palette_id (פלטת צבע לכרטיס השיתופי):
+
+זה שדה טכני שקובע את צבעי הכרטיס המותג (PNG 1080×1080) שהמשתמש ישתף ברשתות. בחר אחת מ-11 פלטות אוצרות שעברו בדיקת קונטרסט (AAA) ובדיקה תרבותית. כל פלטה מתאימה לאנרגיה אחרת של אות.
+
+הפלטות והמילות אות שמעוררות בחירה בהן:
+
+- "midnight" — ברירת מחדל. אסטרטגיה, יזמות, טכנולוגיה, פיננסים, מבנה, מערכות, מנכ"ל. אם לא ברור או אם אין רמזי אנרגיה ספציפיים אחרים, בחר את זה.
+- "grief-burgundy" — אבדן, אבל, החזקה, פצע, מעברים קשים, ליווי בכאב, עבודה עם שכול או טראומה.
+- "ink-blade" — כתיבה חדה, אמת ללא פשרות, ניסוח חד, צמצום, אומץ לומר, ביקורת, התנגדות לקלישאות.
+- "cave-hearth" — אינטואיציה, ידיעה פנימית, רוחני עמוק, "יודעות יותר ממה שיכולות להסביר", אנרגטי, נשמתי.
+- "clay-body" — גוף, סומטי, חזרה לפיזי, אדמה, חישה, "כשהראש כבר ניסה הכל".
+- "dawn-pivot" — מעברי חיים, אמהוּת, פרק שני, גיל ביניים, הסבה מקצועית, התחלה מחדש.
+- "forest-quiet" — טבע, נטורופתיה, יוגה, האטה, מדיטציה, נשימה, פשטות, אקולוגיה.
+- "bronze-master" — וותק, פרימיום, ליווי בכירים, מומחיות עמוקה (15+ שנה), בוטיק.
+- "slate-clarity" — שקט, בהירות, מינדפולנס, האזנה פנימית, "להוריד רעש", נוכחות מודעת.
+- "plum-knowing" — אינטואיציה עתיקה, אסטרולוגיה, אנרגיה, נשי עמוק, רוחני־מסורתי.
+- "terracotta-warmth" — יצירה, אומנות, חומריות, עיצוב, "רעיונות שאנשים רוצים לגעת בהם", קונספט.
+
+חוקים:
+- חייב להיות אחד מ-11 הערכים המדויקים למעלה.
+- אם האנרגיה לא ברורה, או אם זה אדם בעיסוקים פיננסיים/טכנולוגיים/אסטרטגיים סטנדרטיים — בחר "midnight".
+- ערך לא תקני יחזיר את הניתוב ל-"midnight" (fallback אוטומטי). האות עדיין יוצג.
+
 אתה חייב להחזיר JSON תקין בלבד, ללא טקסט נוסף לפני או אחרי, ללא markdown code fences, ללא הסברים.
 
 הפורמט (זכור: כל השדות בגוף שני, פנייה ישירה):
@@ -218,14 +244,16 @@ export const SIGNAL_ENGINE_SYSTEM_PROMPT = `אתה מנוע האות של שיט
     "thin_answer_keys": [],
     "founder_stage": "practicing",
     "reasoning": "משפט אחד בעברית שמסביר למה בחרת בערך הזה. פנימי בלבד."
-  }
+  },
+  "palette_id": "midnight"
 }
 
 חוקים נוקשים:
-- כל השדות חובה (כולל routing_signal).
+- כל השדות חובה (כולל routing_signal ו-palette_id).
 - כל השדות הרגשיים (1-9) בגוף שני בלבד (פרט ל-public_card_statement לפי הכללים שלו). הפרת הכלל הזה פוסלת את הפלט.
 - content_directions חייב להכיל בדיוק שלושה פריטים.
 - routing_signal חייב לעמוד בסכמה (enums, גבולות מספרים, אורכי מערכים). הוא נפרד לחלוטין מ-1-9.
+- palette_id חייב להיות אחד מ-11 הערכים המוגדרים. ערך לא תקין יחזיר fallback ל-midnight.
 - אסור להחזיר ערכי placeholder או "לא ידוע".
 - אסור להמציא פרטים שלא נמצאים בתשובות.`;
 
