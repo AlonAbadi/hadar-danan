@@ -1,14 +1,21 @@
 /**
- * POST /api/signal/[id]/shoot-day/finish  (Phase 2)
+ * POST /api/signal/[id]/shoot-day/finish  (Phase 2 — V1: single video)
  *
- * Receives identity_statement + pillars from the Phase 1 endpoint and
- * generates the remaining ShootDayPlan packs in parallel:
- *   - videos pack (Sonnet, big)
+ * V1 scope (June 2026): generates ONLY Video #1 (Identity, 15s) in
+ * parallel with strategy + gift sentences. Total wall time ~10-15s,
+ * well under the 60s Vercel Hobby limit.
+ *
+ * The full 12-video generation (VIDEOS_PACK) was too slow (~30-45s for
+ * the 8000-token pack alone) and pushed Phase 2 over the limit. V2+
+ * will progressively generate the remaining 11 videos via per-card
+ * "צור את הסרטון הבא" CTAs.
+ *
+ * Packs (all parallel):
+ *   - single video #1 (Sonnet, fast)
  *   - strategy pack (Sonnet, medium)
  *   - gift_sentences pack (Haiku, fast)
  *
- * Total wall time ~25-30s (within the 60s Vercel Hobby limit).
- * Caches the full plan on signal_extractions.signal.shoot_day so
+ * Caches the assembled plan on signal_extractions.signal.shoot_day so
  * subsequent calls to the GET endpoint return instantly.
  */
 import { NextRequest, NextResponse } from "next/server";
@@ -17,16 +24,16 @@ import { createServerClient } from "@/lib/supabase/server";
 import {
   SHOOT_DAY_MODEL_SONNET,
   SHOOT_DAY_MODEL_HAIKU,
-  VIDEOS_PACK_SYSTEM,
-  VIDEOS_PACK_MAX_TOKENS,
+  SINGLE_VIDEO_PACK_SYSTEM,
+  SINGLE_VIDEO_PACK_MAX_TOKENS,
   STRATEGY_PACK_SYSTEM,
   STRATEGY_PACK_MAX_TOKENS,
   GIFT_SENTENCES_PACK_SYSTEM,
   GIFT_SENTENCES_PACK_MAX_TOKENS,
-  buildVideosContextMessage,
+  buildSingleVideoContextMessage,
   buildStrategyContextMessage,
   buildGiftSentencesContextMessage,
-  validateVideosPack,
+  validateSingleVideoPack,
   validateStrategyPack,
   validateGiftSentencesPack,
   validateShootDayPlan,
@@ -136,23 +143,23 @@ export async function POST(
     positioning_statement: row.signal.content_kit?.positioning_statement ?? undefined,
   };
 
-  // ── Phase 2: 3 parallel Claude calls ────────────────────────────────
-  type VideosPack       = { videos: Video[] };
+  // ── Phase 2: 3 parallel Claude calls (V1 = single video) ────────────
+  type SingleVideoPack  = { video: Video };
   type StrategyPack     = { visual_direction: VisualDirection; schedule: ScheduleBlock[]; decisions: Decision[] };
   type GiftSentencesPack = { gift_sentences: string[] };
 
-  let videosPack: VideosPack;
+  let videoPack: SingleVideoPack;
   let strategyPack: StrategyPack;
   let giftPack: GiftSentencesPack;
 
   try {
     const client = new Anthropic();
-    const [videosRes, strategyRes, giftRes] = await Promise.all([
+    const [videoRes, strategyRes, giftRes] = await Promise.all([
       client.messages.create({
         model:      SHOOT_DAY_MODEL_SONNET,
-        max_tokens: VIDEOS_PACK_MAX_TOKENS,
-        system:     VIDEOS_PACK_SYSTEM,
-        messages:   [{ role: "user", content: buildVideosContextMessage(ctx, identity_statement, pillars) }],
+        max_tokens: SINGLE_VIDEO_PACK_MAX_TOKENS,
+        system:     SINGLE_VIDEO_PACK_SYSTEM,
+        messages:   [{ role: "user", content: buildSingleVideoContextMessage(ctx, identity_statement, pillars) }],
       }),
       client.messages.create({
         model:      SHOOT_DAY_MODEL_SONNET,
@@ -168,15 +175,15 @@ export async function POST(
       }),
     ]);
 
-    const videosText   = videosRes.content   .filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
+    const videoText    = videoRes.content    .filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
     const strategyText = strategyRes.content .filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
     const giftText     = giftRes.content     .filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
 
-    const videosParsed = parseJsonResponse(videosText);
-    if (!validateVideosPack(videosParsed)) {
-      return NextResponse.json({ error: "Videos pack invalid shape", raw: videosText.slice(0, 500) }, { status: 500 });
+    const videoParsed = parseJsonResponse(videoText);
+    if (!validateSingleVideoPack(videoParsed)) {
+      return NextResponse.json({ error: "Single video pack invalid shape", raw: videoText.slice(0, 500) }, { status: 500 });
     }
-    videosPack = videosParsed;
+    videoPack = videoParsed;
 
     const strategyParsed = parseJsonResponse(strategyText);
     if (!validateStrategyPack(strategyParsed)) {
@@ -197,7 +204,7 @@ export async function POST(
   const plan: ShootDayPlan = {
     identity_statement,
     pillars: pillars as [Pillar, Pillar, Pillar, Pillar],
-    videos:          videosPack.videos,
+    videos:          [videoPack.video],
     visual_direction: strategyPack.visual_direction,
     schedule:         strategyPack.schedule,
     decisions:        strategyPack.decisions as [Decision, Decision, Decision],

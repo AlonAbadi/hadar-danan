@@ -684,7 +684,7 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
       <Loading
         text={phase === "phase1"
           ? "מחלץ את משפט הזהות ו-4 העמודים שלך…"
-          : "בונה 12 סרטונים + visual direction + 5 משפטי-מתנה…"}
+          : "בונה את הסרטון הראשון שלך + visual direction + 5 משפטי-מתנה…"}
       />
     );
   }
@@ -703,8 +703,10 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
       {/* 4 Pillars overview */}
       <PillarsOverview pillars={plan.pillars} />
 
-      {/* 12 Videos in 3 acts (Lever #3: Act Structure 4+4+4) */}
+      {/* Videos in 3 acts (Lever #3: Act Structure 4+4+4). V1 ships only
+          Video #1 (IDENTITY). V2+ unlocks the rest via per-card CTAs. */}
       <VideosByAct videos={plan.videos} />
+      {plan.videos.length < 12 && <NextVideoTeaser current={plan.videos.length} />}
 
       {/* Visual Direction (Lever #5 via "הפוך מהקטגוריה") */}
       <VisualDirectionCard visual={plan.visual_direction} />
@@ -885,7 +887,29 @@ function VideosByAct({ videos }: { videos: Video[] }) {
   );
 }
 
+function NextVideoTeaser({ current }: { current: number }) {
+  const remaining = 12 - current;
+  return (
+    <div style={{
+      background: C.card, border: `1px dashed ${C.lineGold}`, borderRadius: 12,
+      padding: 16, display: "flex", flexDirection: "column", gap: 6,
+    }}>
+      <div style={{ fontSize: 12, color: C.goldMid, fontWeight: 700, letterSpacing: 1.4 }}>
+        ✦ הסרטונים הבאים
+      </div>
+      <div style={{ fontSize: 14, color: C.fg, lineHeight: 1.6 }}>
+        בנינו לך את הסרטון הראשון בקפידה. עוד {remaining} סרטונים מחכים לך —
+        4 הוקי-עמוד, 3 סיפורי-תיק, 2 frameworks, 1 myth, ו-CTA.
+      </div>
+      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+        בקרוב נשחרר ייצור-לפי-דרישה לכל סרטון בנפרד. בינתיים — תתרגלו את הסרטון הראשון הזה עד שהוא בעצמות.
+      </div>
+    </div>
+  );
+}
+
 function ActBlock({ title, subtitle, videos }: { title: string; subtitle: string; videos: Video[] }) {
+  if (videos.length === 0) return null;
   return (
     <div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 12 }}>

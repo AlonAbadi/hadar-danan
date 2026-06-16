@@ -207,6 +207,53 @@ ${HADAR_SIGNATURE_MOVES}
   ]
 }`;
 
+// ── Pack 2a: Single Video #1 (V1 — fast path, ~10-15s wall) ──────────
+// V1 of the Shoot Day generates ONLY the first video (Identity statement,
+// 15s, Mode B) to stay well under the Vercel Hobby 60s function limit.
+// V2+ will progressively generate the remaining 11 via a "צור את הסרטון
+// הבא" CTA on each card.
+
+export const SINGLE_VIDEO_PACK_MAX_TOKENS = 1500;
+
+export const SINGLE_VIDEO_PACK_SYSTEM = `אתה הבמאית של הדר דנן. אתה מקבל אות מותגי + משפט זהות + 4 עמודי מסר, ומחזיר את **הסרטון הראשון בלבד** מתוך 12 הסרטונים של יום הצילום.
+
+${SHARED_RULES}
+
+${HADAR_SIGNATURE_MOVES}
+
+## הסרטון הראשון: IDENTITY
+
+זה סרטון הפתיחה של יום הצילום. 15 שניות. Mode B. ACT 1 (זהות). Set A. ללא pillar.
+
+תפקידו: להבטיח את משפט הזהות לקהל, בקול הלקוח/ה, בלי להסביר אותו.
+
+המבנה הקנוני:
+- hook: 3 השניות הראשונות. פותח בבעיה או בשלילה, לא ב-"שלום".
+- body: 8-10 שניות. הלקוח/ה אומר/ת את משפט הזהות בקולו/ה הוא/היא, נשען על מהלך אחד של הדר.
+- אין CTA על הסרטון הראשון.
+
+## פלט — סרטון אחד בלבד
+
+החזר JSON תקין בלבד:
+
+{
+  "video": {
+    "number": 1,
+    "act": 1,
+    "type": "IDENTITY",
+    "mode": "B",
+    "pillar": null,
+    "set": "A",
+    "duration": "15s",
+    "title": "...",
+    "script": {"hook": "...", "body": "..."},
+    "direction": {"visual": "...", "body_language": "...", "tone": "...", "eye_contact": "..."},
+    "signature_move": {"name": "...", "explanation": "..."},
+    "anti_category": {"competitor_norm": "...", "your_inversion": "..."},
+    "hadar_quote": {"text": "...", "source": "..."}
+  }
+}`;
+
 // ── Pack 2: 12 Videos (the biggest pack) ─────────────────────────────
 
 export const VIDEOS_PACK_MAX_TOKENS = 8000;
@@ -484,6 +531,30 @@ ${ctx.positioning_statement ? `הצהרת מיקום:\n${ctx.positioning_stateme
 עכשיו ייצר את הפלט לפי ההוראות במערכת.`;
 }
 
+// ── Pack 2a context — single video #1 ────────────────────────────────
+
+export function buildSingleVideoContextMessage(
+  ctx: ShootDayContext,
+  identity_statement: string,
+  pillars: Pillar[],
+): string {
+  const pillarsBlock = pillars.map((p) =>
+    `עמוד ${p.number}: ${p.title} — ${p.message}`
+  ).join("\n");
+
+  return `${buildContextMessage(ctx)}
+
+---
+
+משפט הזהות (חובה להישען עליו):
+"${identity_statement}"
+
+4 עמודי המסר (לקונטקסט):
+${pillarsBlock}
+
+עכשיו ייצר את הסרטון הראשון בלבד (IDENTITY, 15s, Mode B).`;
+}
+
 // ── Pack 2 context — accepts identity + pillars from Pack 1 ──────────
 
 export function buildVideosContextMessage(
@@ -607,6 +678,12 @@ export function validateVideosPack(data: unknown): data is { videos: Video[] } {
   return x.videos.every(validateVideo);
 }
 
+export function validateSingleVideoPack(data: unknown): data is { video: Video } {
+  if (!data || typeof data !== "object") return false;
+  const x = data as Record<string, unknown>;
+  return validateVideo(x.video);
+}
+
 export function validateStrategyPack(data: unknown): data is { visual_direction: VisualDirection; schedule: ScheduleBlock[]; decisions: Decision[] } {
   if (!data || typeof data !== "object") return false;
   const x = data as Record<string, unknown>;
@@ -628,7 +705,9 @@ export function validateShootDayPlan(data: unknown): data is ShootDayPlan {
   const x = data as Record<string, unknown>;
   if (typeof x.identity_statement !== "string") return false;
   if (!Array.isArray(x.pillars) || x.pillars.length !== 4) return false;
-  if (!Array.isArray(x.videos) || x.videos.length !== 12) return false;
+  // V1: at least 1 video (the IDENTITY video). V2+ will accept up to 12.
+  if (!Array.isArray(x.videos) || x.videos.length < 1 || x.videos.length > 12) return false;
+  if (!x.videos.every(validateVideo)) return false;
   if (!x.visual_direction || typeof x.visual_direction !== "object") return false;
   if (!Array.isArray(x.schedule)) return false;
   if (!Array.isArray(x.decisions) || x.decisions.length !== 3) return false;
