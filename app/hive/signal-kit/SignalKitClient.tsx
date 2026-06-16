@@ -693,7 +693,7 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
       <Loading
         text={phase === "phase1"
           ? "מחלץ את משפט הזהות ו-4 העמודים שלך…"
-          : "בונה את הסרטון הראשון שלך + visual direction + 5 משפטי-מתנה…"}
+          : "בונה את הסרטון הראשון שלך…"}
       />
     );
   }
@@ -717,17 +717,17 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
       <VideosByAct videos={plan.videos} />
       {plan.videos.length < 12 && <NextVideoTeaser current={plan.videos.length} />}
 
-      {/* Visual Direction (Lever #5 via "הפוך מהקטגוריה") */}
-      <VisualDirectionCard visual={plan.visual_direction} />
+      {/* Visual Direction (Lever #5 via "הפוך מהקטגוריה") — optional in V1 */}
+      {plan.visual_direction && <VisualDirectionCard visual={plan.visual_direction} />}
 
-      {/* Schedule */}
-      <ScheduleCard schedule={plan.schedule} />
+      {/* Schedule — optional in V1 */}
+      {plan.schedule && <ScheduleCard schedule={plan.schedule} />}
 
-      {/* 5 Gift Sentences (Magic #6: Gift Sentence Lab) */}
-      <GiftSentencesCard sentences={plan.gift_sentences} />
+      {/* 5 Gift Sentences (Magic #6: Gift Sentence Lab) — optional in V1 */}
+      {plan.gift_sentences && <GiftSentencesCard sentences={plan.gift_sentences} />}
 
-      {/* 3 Closing Decisions (Lever #4: Urgency-Loaded CTA) */}
-      <DecisionsCard decisions={plan.decisions} />
+      {/* 3 Closing Decisions (Lever #4: Urgency-Loaded CTA) — optional in V1 */}
+      {plan.decisions && <DecisionsCard decisions={plan.decisions} />}
 
       {/* Hadar's signoff */}
       <HadarSignoff />
@@ -1064,7 +1064,7 @@ function VideoCard({ video }: { video: Video }) {
   );
 }
 
-function VisualDirectionCard({ visual }: { visual: ShootDayPlan["visual_direction"] }) {
+function VisualDirectionCard({ visual }: { visual: NonNullable<ShootDayPlan["visual_direction"]> }) {
   return (
     <Section title="הקטגוריה הויזואלית החדשה שלך" hint="הפוך מהקטגוריה הקיימת">
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
@@ -1121,7 +1121,7 @@ function ColorChip({ hex, label }: { hex: string; label: string }) {
   );
 }
 
-function ScheduleCard({ schedule }: { schedule: ShootDayPlan["schedule"] }) {
+function ScheduleCard({ schedule }: { schedule: NonNullable<ShootDayPlan["schedule"]> }) {
   return (
     <Section title="לו״ז יום הצילום" hint="08:30 → 17:00. שני סטים, 12 סרטונים. הפסקה חובה ב-13:00.">
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1168,7 +1168,7 @@ function GiftSentencesCard({ sentences }: { sentences: string[] }) {
   );
 }
 
-function DecisionsCard({ decisions }: { decisions: ShootDayPlan["decisions"] }) {
+function DecisionsCard({ decisions }: { decisions: NonNullable<ShootDayPlan["decisions"]> }) {
   const [checked, setChecked] = useState<Set<number>>(new Set());
 
   function toggle(num: number) {

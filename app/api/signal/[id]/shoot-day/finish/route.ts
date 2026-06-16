@@ -1,19 +1,14 @@
 /**
- * POST /api/signal/[id]/shoot-day/finish  (Phase 2 — V1: single video)
+ * POST /api/signal/[id]/shoot-day/finish  (Phase 2 — V1: single video only)
  *
- * V1 scope (June 2026): generates ONLY Video #1 (Identity, 15s) in
- * parallel with strategy + gift sentences. Total wall time ~10-15s,
- * well under the 60s Vercel Hobby limit.
+ * V1 scope (June 2026): generates ONLY Video #1 (Identity, 15s) in a single
+ * Claude call. The earlier attempt to run 3 parallel calls (video +
+ * strategy + gift) still hit FUNCTION_INVOCATION_TIMEOUT on Vercel Hobby
+ * (60s cap), even with reduced max_tokens. One sequential Sonnet call for
+ * ~1500 tokens of output is ~5-10s wall — well clear of the limit.
  *
- * The full 12-video generation (VIDEOS_PACK) was too slow (~30-45s for
- * the 8000-token pack alone) and pushed Phase 2 over the limit. V2+
- * will progressively generate the remaining 11 videos via per-card
- * "צור את הסרטון הבא" CTAs.
- *
- * Packs (all parallel):
- *   - single video #1 (Sonnet, fast)
- *   - strategy pack (Sonnet, medium)
- *   - gift_sentences pack (Haiku, fast)
+ * V2+ will add a separate Phase 3 endpoint to generate visual_direction +
+ * schedule + decisions + gift_sentences on demand (also one call each).
  *
  * Caches the assembled plan on signal_extractions.signal.shoot_day so
  * subsequent calls to the GET endpoint return instantly.
@@ -23,28 +18,15 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 import {
   SHOOT_DAY_MODEL_SONNET,
-  SHOOT_DAY_MODEL_HAIKU,
   SINGLE_VIDEO_PACK_SYSTEM,
   SINGLE_VIDEO_PACK_MAX_TOKENS,
-  STRATEGY_PACK_SYSTEM,
-  STRATEGY_PACK_MAX_TOKENS,
-  GIFT_SENTENCES_PACK_SYSTEM,
-  GIFT_SENTENCES_PACK_MAX_TOKENS,
   buildSingleVideoContextMessage,
-  buildStrategyContextMessage,
-  buildGiftSentencesContextMessage,
   validateSingleVideoPack,
-  validateStrategyPack,
-  validateGiftSentencesPack,
   validateShootDayPlan,
   validatePillar,
   type ShootDayPlan,
   type ShootDayContext,
   type Pillar,
-  type Video,
-  type VisualDirection,
-  type ScheduleBlock,
-  type Decision,
 } from "@/lib/prompts/shoot-day-engine";
 
 export const runtime     = "nodejs";
@@ -143,72 +125,36 @@ export async function POST(
     positioning_statement: row.signal.content_kit?.positioning_statement ?? undefined,
   };
 
-  // ── Phase 2: 3 parallel Claude calls (V1 = single video) ────────────
-  type SingleVideoPack  = { video: Video };
-  type StrategyPack     = { visual_direction: VisualDirection; schedule: ScheduleBlock[]; decisions: Decision[] };
-  type GiftSentencesPack = { gift_sentences: string[] };
-
-  let videoPack: SingleVideoPack;
-  let strategyPack: StrategyPack;
-  let giftPack: GiftSentencesPack;
-
+  // ── Phase 2: single Claude call — Video #1 (IDENTITY) ───────────────
+  let videoText = "";
   try {
     const client = new Anthropic();
-    const [videoRes, strategyRes, giftRes] = await Promise.all([
-      client.messages.create({
-        model:      SHOOT_DAY_MODEL_SONNET,
-        max_tokens: SINGLE_VIDEO_PACK_MAX_TOKENS,
-        system:     SINGLE_VIDEO_PACK_SYSTEM,
-        messages:   [{ role: "user", content: buildSingleVideoContextMessage(ctx, identity_statement, pillars) }],
-      }),
-      client.messages.create({
-        model:      SHOOT_DAY_MODEL_SONNET,
-        max_tokens: STRATEGY_PACK_MAX_TOKENS,
-        system:     STRATEGY_PACK_SYSTEM,
-        messages:   [{ role: "user", content: buildStrategyContextMessage(ctx, identity_statement, pillars) }],
-      }),
-      client.messages.create({
-        model:      SHOOT_DAY_MODEL_HAIKU,
-        max_tokens: GIFT_SENTENCES_PACK_MAX_TOKENS,
-        system:     GIFT_SENTENCES_PACK_SYSTEM,
-        messages:   [{ role: "user", content: buildGiftSentencesContextMessage(ctx, identity_statement, pillars) }],
-      }),
-    ]);
-
-    const videoText    = videoRes.content    .filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
-    const strategyText = strategyRes.content .filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
-    const giftText     = giftRes.content     .filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
-
-    const videoParsed = parseJsonResponse(videoText);
-    if (!validateSingleVideoPack(videoParsed)) {
-      return NextResponse.json({ error: "Single video pack invalid shape", raw: videoText.slice(0, 500) }, { status: 500 });
-    }
-    videoPack = videoParsed;
-
-    const strategyParsed = parseJsonResponse(strategyText);
-    if (!validateStrategyPack(strategyParsed)) {
-      return NextResponse.json({ error: "Strategy pack invalid shape", raw: strategyText.slice(0, 500) }, { status: 500 });
-    }
-    strategyPack = strategyParsed;
-
-    const giftParsed = parseJsonResponse(giftText);
-    if (!validateGiftSentencesPack(giftParsed)) {
-      return NextResponse.json({ error: "Gift sentences pack invalid shape", raw: giftText.slice(0, 500) }, { status: 500 });
-    }
-    giftPack = giftParsed;
+    const videoRes = await client.messages.create({
+      model:      SHOOT_DAY_MODEL_SONNET,
+      max_tokens: SINGLE_VIDEO_PACK_MAX_TOKENS,
+      system:     SINGLE_VIDEO_PACK_SYSTEM,
+      messages:   [{ role: "user", content: buildSingleVideoContextMessage(ctx, identity_statement, pillars) }],
+    });
+    videoText = videoRes.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
   } catch (e) {
     return NextResponse.json({ error: "Phase 2 failed", details: String(e) }, { status: 500 });
+  }
+
+  let videoParsed: unknown;
+  try {
+    videoParsed = parseJsonResponse(videoText);
+  } catch (e) {
+    return NextResponse.json({ error: "Video JSON parse failed", details: String(e), raw: videoText.slice(0, 500) }, { status: 500 });
+  }
+  if (!validateSingleVideoPack(videoParsed)) {
+    return NextResponse.json({ error: "Single video pack invalid shape", raw: videoText.slice(0, 500) }, { status: 500 });
   }
 
   // ── Assemble + cache ─────────────────────────────────────────────────
   const plan: ShootDayPlan = {
     identity_statement,
     pillars: pillars as [Pillar, Pillar, Pillar, Pillar],
-    videos:          [videoPack.video],
-    visual_direction: strategyPack.visual_direction,
-    schedule:         strategyPack.schedule,
-    decisions:        strategyPack.decisions as [Decision, Decision, Decision],
-    gift_sentences:   giftPack.gift_sentences,
+    videos:  [videoParsed.video],
   };
 
   if (!validateShootDayPlan(plan)) {

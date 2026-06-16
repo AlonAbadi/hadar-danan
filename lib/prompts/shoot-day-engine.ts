@@ -119,11 +119,13 @@ export type Decision = {
 export type ShootDayPlan = {
   identity_statement:  string;          // "כשהמערכת אומרת לא — אני מתחיל לעבוד"
   pillars:             [Pillar, Pillar, Pillar, Pillar];
-  videos:              Video[];          // exactly 12
-  visual_direction:    VisualDirection;
-  schedule:            ScheduleBlock[];
-  decisions:           [Decision, Decision, Decision];
-  gift_sentences:      string[];         // exactly 5
+  videos:              Video[];          // V1: 1 video. V2+: up to 12.
+  // V1: the following are optional — generated lazily in Phase 3 to keep
+  // Phase 2 under the 60s Vercel Hobby function-invocation limit.
+  visual_direction?:   VisualDirection;
+  schedule?:           ScheduleBlock[];
+  decisions?:          [Decision, Decision, Decision];
+  gift_sentences?:     string[];         // 5 when present
 };
 
 // ── Shared rules baked into every sub-prompt ──────────────────────────
@@ -708,9 +710,8 @@ export function validateShootDayPlan(data: unknown): data is ShootDayPlan {
   // V1: at least 1 video (the IDENTITY video). V2+ will accept up to 12.
   if (!Array.isArray(x.videos) || x.videos.length < 1 || x.videos.length > 12) return false;
   if (!x.videos.every(validateVideo)) return false;
-  if (!x.visual_direction || typeof x.visual_direction !== "object") return false;
-  if (!Array.isArray(x.schedule)) return false;
-  if (!Array.isArray(x.decisions) || x.decisions.length !== 3) return false;
-  if (!Array.isArray(x.gift_sentences) || x.gift_sentences.length !== 5) return false;
+  // visual_direction / schedule / decisions / gift_sentences are optional
+  // in V1. They get generated in a follow-up Phase 3 to keep each Vercel
+  // function invocation under the 60s limit.
   return true;
 }
