@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { ShootDayPlan, Video, Pillar } from "@/lib/prompts/shoot-day-engine";
+import { playHadarVoice } from "@/lib/hadar-voice";
 
 const C = {
   bg:       "#080C14",
@@ -74,7 +76,7 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
   const [kit, setKit] = useState<ContentKit | null>(null);
   const [kitLoading, setKitLoading] = useState(true);
   const [kitError, setKitError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"text" | "visual" | "strategy" | "monthly" | "review">("text");
+  const [tab, setTab] = useState<"text" | "visual" | "strategy" | "shoot_day" | "monthly" | "review">("text");
 
   useEffect(() => {
     (async () => {
@@ -117,7 +119,7 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, borderBottom: `1px solid ${C.line}`, marginBottom: 28, overflowX: "auto" }}>
-          {(["text", "visual", "strategy", "monthly", "review"] as const).map((t) => (
+          {(["text", "visual", "strategy", "shoot_day", "monthly", "review"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -139,22 +141,24 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
         </div>
 
         {/* Tab body */}
-        {tab === "text"     && <TextTab kit={kit} loading={kitLoading} error={kitError} />}
-        {tab === "visual"   && <VisualTab extractionId={extraction.id} />}
-        {tab === "strategy" && <StrategyTab kit={kit} loading={kitLoading} />}
-        {tab === "monthly"  && <MonthlyTab extraction={extraction} />}
-        {tab === "review"   && <PostReviewTab extractionId={extraction.id} />}
+        {tab === "text"      && <TextTab kit={kit} loading={kitLoading} error={kitError} />}
+        {tab === "visual"    && <VisualTab extractionId={extraction.id} />}
+        {tab === "strategy"  && <StrategyTab kit={kit} loading={kitLoading} />}
+        {tab === "shoot_day" && <ShootDayTab extractionId={extraction.id} />}
+        {tab === "monthly"   && <MonthlyTab extraction={extraction} />}
+        {tab === "review"    && <PostReviewTab extractionId={extraction.id} />}
       </div>
     </div>
   );
 }
 
 const TAB_LABELS: Record<string, string> = {
-  text:     "טקסטים",
-  visual:   "ויזואלי",
-  strategy: "אסטרטגיה",
-  monthly:  "החודש",
-  review:   "ביקורת פוסטים",
+  text:      "טקסטים",
+  visual:    "ויזואלי",
+  strategy:  "אסטרטגיה",
+  shoot_day: "יום הצילום",
+  monthly:   "החודש",
+  review:    "ביקורת פוסטים",
 };
 
 // ── Text tab ───────────────────────────────────────────────
@@ -590,6 +594,576 @@ function ErrorBox({ text }: { text: string }) {
   return (
     <div style={{ background: "rgba(255,136,136,0.05)", border: "1px solid rgba(255,136,136,0.25)", borderRadius: 12, padding: 18, color: "#FF8888", fontSize: 14 }}>
       {text}
+    </div>
+  );
+}
+
+// ── Shoot Day tab ──────────────────────────────────────────
+// The flagship product output — Mode E (Strategic Architect) of Hadar's
+// Director Engine. Renders the 12-video shoot day plan with visual
+// direction, schedule, decisions, and gift sentences.
+//
+// Magic Layer #2 (Methodology Visibility) — each video card has a "למה זה?"
+// button that opens a tooltip with Hadar's quote explaining the pattern.
+//
+// Magic Layer #7 (5-tier affirmation system) — placeholder hooks wired up;
+// voice clips swap in V2 after Hadar recording day.
+
+function ShootDayTab({ extractionId }: { extractionId: string }) {
+  const [plan, setPlan]       = useState<ShootDayPlan | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res  = await fetch(`/api/signal/${extractionId}/shoot-day`);
+        const data = await res.json();
+        if (!res.ok || !data?.plan) {
+          setError(data?.error ?? "Shoot Day generation failed");
+          return;
+        }
+        setPlan(data.plan);
+      } catch (e) {
+        setError(String(e));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [extractionId]);
+
+  if (loading) return <Loading text="בונה לך יום צילום שלם…" />;
+  if (error)   return <ErrorBox text={error} />;
+  if (!plan)   return null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Hadar voice intro — replaces planned video. Uses her actual signature
+          lines from the corpus, typeset as a 3-line manifesto. */}
+      <ShootDayVoiceIntro />
+
+      {/* Identity statement card */}
+      <ShootDayHero identity={plan.identity_statement} />
+
+      {/* 4 Pillars overview */}
+      <PillarsOverview pillars={plan.pillars} />
+
+      {/* 12 Videos in 3 acts (Lever #3: Act Structure 4+4+4) */}
+      <VideosByAct videos={plan.videos} />
+
+      {/* Visual Direction (Lever #5 via "הפוך מהקטגוריה") */}
+      <VisualDirectionCard visual={plan.visual_direction} />
+
+      {/* Schedule */}
+      <ScheduleCard schedule={plan.schedule} />
+
+      {/* 5 Gift Sentences (Magic #6: Gift Sentence Lab) */}
+      <GiftSentencesCard sentences={plan.gift_sentences} />
+
+      {/* 3 Closing Decisions (Lever #4: Urgency-Loaded CTA) */}
+      <DecisionsCard decisions={plan.decisions} />
+
+      {/* Hadar's signoff */}
+      <HadarSignoff />
+    </div>
+  );
+}
+
+// Hadar voice intro — replaces the planned hero video with text in her voice.
+// Three signature lines from the corpus, sequenced as a manifesto. All quotes
+// are real Hadar lines (Hadar-lesson-1 + michael-kadosh canonical sources).
+// V2: drop in actual video footage on top, keep this as the fallback / poster.
+function ShootDayVoiceIntro() {
+  return (
+    <div style={{
+      position: "relative",
+      background: "linear-gradient(145deg, #14110D 0%, #1D2430 100%)",
+      border: `1px solid ${C.lineGold}`,
+      borderRadius: 16,
+      padding: "44px 32px 38px",
+      overflow: "hidden",
+    }}>
+      {/* Subtle gold corner accent */}
+      <div style={{
+        position: "absolute", top: 0, right: 0,
+        width: 120, height: 120,
+        background: "radial-gradient(circle at top right, rgba(232,185,74,0.10), transparent 70%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* Tiny header */}
+      <div style={{
+        fontSize: 10, letterSpacing: 2.4, color: C.goldMid,
+        fontWeight: 700, textTransform: "uppercase", marginBottom: 28,
+        opacity: 0.85,
+      }}>
+        מהדר אלייך
+      </div>
+
+      {/* The three manifesto lines */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 22, position: "relative" }}>
+
+        {/* Line 1 — the iconic opener from Hadar-lesson-1 */}
+        <div style={{
+          fontSize: 22, lineHeight: 1.5, color: C.fg, fontWeight: 600,
+          fontFamily: "'Frank Ruhl Libre', Georgia, serif",
+          animation: "fadeUp 0.7s ease-out 0.1s both",
+        }}>
+          אם השיווק שלכם לא עובד היום, זה לא בגלל שאתם גרועים.
+        </div>
+
+        {/* Line 2 — the paradigm shift */}
+        <div style={{
+          fontSize: 22, lineHeight: 1.5, color: C.fg, fontWeight: 600,
+          fontFamily: "'Frank Ruhl Libre', Georgia, serif",
+          animation: "fadeUp 0.7s ease-out 0.5s both",
+        }}>
+          זה כי אתם משחקים משחק שכבר לא מתקיים.
+        </div>
+
+        {/* Gold separator line */}
+        <div style={{
+          height: 1,
+          background: `linear-gradient(to right, transparent, ${C.lineGold}, transparent)`,
+          margin: "8px 0",
+          animation: "fadeIn 0.7s ease-out 0.9s both",
+        }} />
+
+        {/* Line 3 — the gift sentence / promise (BeeGood positioning) */}
+        <div style={{
+          fontSize: 24, lineHeight: 1.45, color: C.gold, fontWeight: 700,
+          fontFamily: "'Frank Ruhl Libre', Georgia, serif",
+          animation: "fadeUp 0.7s ease-out 1.0s both",
+        }}>
+          בואי נבנה לך יום אחד שבו את משחקת משחק חדש.
+        </div>
+
+        {/* Hadar signature */}
+        <div style={{
+          marginTop: 12, display: "flex", alignItems: "center", gap: 10,
+          animation: "fadeIn 0.7s ease-out 1.4s both",
+        }}>
+          <div style={{
+            width: 32, height: 1, background: C.goldMid,
+          }} />
+          <div style={{
+            fontSize: 13, color: C.goldMid, fontWeight: 600, letterSpacing: 0.4,
+          }}>
+            — הדר
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function ShootDayHero({ identity }: { identity: string }) {
+  return (
+    <div style={{
+      background: "linear-gradient(145deg, #1D2430, #111620)",
+      border: `1px solid ${C.lineGold}`,
+      borderRadius: 16, padding: "28px 24px",
+      display: "flex", flexDirection: "column", gap: 14,
+    }}>
+      <div style={{ fontSize: 11, letterSpacing: 1.6, color: C.goldMid, fontWeight: 700, textTransform: "uppercase" }}>
+        משפט הזהות שלך
+      </div>
+      <div style={{
+        fontSize: 24, fontWeight: 700, color: C.fg, lineHeight: 1.4,
+      }}>
+        {identity}
+      </div>
+      <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginTop: 4 }}>
+        זה לא תיאור שירות. זה הצהרת אופי. המשפט שצריך לפתוח כל סרטון, כל עמוד, כל שיחה ראשונה.
+      </div>
+    </div>
+  );
+}
+
+function PillarsOverview({ pillars }: { pillars: Pillar[] }) {
+  return (
+    <Section title="4 עמודי המסר שלך" hint="כל פיסת תוכן שתוציא/י השנה תשב על אחד מהם">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+        {pillars.map((p) => (
+          <div key={p.number} style={{
+            background: C.cardSoft, borderRadius: 10, padding: "14px 16px",
+            border: `1px solid ${C.line}`,
+          }}>
+            <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, letterSpacing: 1.2, marginBottom: 6 }}>
+              עמוד {p.number}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.fg, marginBottom: 8, lineHeight: 1.4 }}>
+              {p.title}
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+              {p.message}
+            </div>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function VideosByAct({ videos }: { videos: Video[] }) {
+  const act1 = videos.filter((v) => v.act === 1);
+  const act2 = videos.filter((v) => v.act === 2);
+  const act3 = videos.filter((v) => v.act === 3);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <ActBlock title="ACT 1 — זהות" subtitle="מי אתה לעצמך" videos={act1} />
+      <ActBlock title="ACT 2 — סיפור" subtitle="הסיפורים שמוכיחים את זה" videos={act2} />
+      <ActBlock title="ACT 3 — סמכות" subtitle="איך אתה חושב, לא איך אתה עובד" videos={act3} />
+    </div>
+  );
+}
+
+function ActBlock({ title, subtitle, videos }: { title: string; subtitle: string; videos: Video[] }) {
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 12 }}>
+        <div style={{
+          fontSize: 13, fontWeight: 700, color: C.gold, letterSpacing: 1.4,
+        }}>
+          {title}
+        </div>
+        <div style={{ fontSize: 12, color: C.muted }}>{subtitle}</div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+        {videos.map((v) => <VideoCard key={v.number} video={v} />)}
+      </div>
+    </div>
+  );
+}
+
+function VideoCard({ video }: { video: Video }) {
+  const [open, setOpen]           = useState(false);
+  const [whyOpen, setWhyOpen]     = useState(false);
+
+  function handleExpand() {
+    setOpen(!open);
+    if (!open) playHadarVoice("expanded_video_card");
+  }
+
+  function handleWhy() {
+    setWhyOpen(!whyOpen);
+    if (!whyOpen) playHadarVoice("clicked_why_button");
+  }
+
+  return (
+    <div style={{
+      background: C.card, border: `1px solid ${C.line}`, borderRadius: 12,
+      padding: 16, display: "flex", flexDirection: "column", gap: 10,
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, letterSpacing: 1.2, marginBottom: 4 }}>
+            #{video.number} · {video.type} · {video.duration}
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.fg, lineHeight: 1.4 }}>
+            {video.title}
+          </div>
+        </div>
+        <button
+          onClick={handleWhy}
+          aria-label="למה זה?"
+          style={{
+            background: "transparent", color: C.goldMid, border: `1px solid ${C.lineGold}`,
+            borderRadius: 999, padding: "4px 10px", fontSize: 11, cursor: "pointer",
+            fontFamily: "inherit", whiteSpace: "nowrap",
+          }}
+        >
+          {whyOpen ? "סגור" : "למה זה?"}
+        </button>
+      </div>
+
+      {/* Magic #2: Methodology Visibility tooltip */}
+      {whyOpen && (
+        <div style={{
+          background: C.cardSoft, borderRadius: 8, padding: "10px 12px",
+          fontSize: 12, color: C.fg, lineHeight: 1.6,
+          border: `1px solid ${C.line}`,
+        }}>
+          <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 4, letterSpacing: 1 }}>
+            Mode {video.mode} · {video.signature_move.name}
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            {video.signature_move.explanation}
+          </div>
+          <div style={{
+            borderTop: `1px solid ${C.line}`, paddingTop: 8, marginTop: 6,
+            fontStyle: "italic", color: C.muted,
+          }}>
+            &ldquo;{video.hadar_quote.text}&rdquo;
+            <div style={{ fontSize: 10, marginTop: 2 }}>— {video.hadar_quote.source}</div>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={handleExpand}
+        style={{
+          background: open ? "rgba(232,185,74,0.08)" : "transparent",
+          color: C.gold, border: `1px solid ${C.lineGold}`,
+          borderRadius: 8, padding: "8px 12px", fontSize: 12, cursor: "pointer",
+          fontFamily: "inherit", textAlign: "right",
+        }}
+      >
+        {open ? "סגור פירוט ↑" : "ראה תסריט + בימוי ↓"}
+      </button>
+
+      {open && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Script */}
+          <div style={{ background: C.cardSoft, padding: 12, borderRadius: 8 }}>
+            <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 4 }}>הוק</div>
+            <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6, marginBottom: 10 }}>
+              {video.script.hook}
+            </div>
+            <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 4 }}>גוף</div>
+            <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6 }}>
+              {video.script.body}
+            </div>
+            {video.script.cta && (
+              <>
+                <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 4, marginTop: 10 }}>CTA</div>
+                <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6 }}>{video.script.cta}</div>
+              </>
+            )}
+          </div>
+
+          {/* Direction */}
+          <div style={{ background: C.cardSoft, padding: 12, borderRadius: 8 }}>
+            <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 6 }}>הוראות בימוי</div>
+            <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.8 }}>
+              <div><strong>ויזואלי:</strong> {video.direction.visual}</div>
+              <div><strong>גוף:</strong> {video.direction.body_language}</div>
+              <div><strong>טון:</strong> {video.direction.tone}</div>
+              <div><strong>קשר עין:</strong> {video.direction.eye_contact}</div>
+            </div>
+          </div>
+
+          {/* Anti-category cue */}
+          <div style={{
+            background: "rgba(232,185,74,0.04)", padding: 12, borderRadius: 8,
+            border: `1px solid ${C.lineGold}`,
+          }}>
+            <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 6 }}>
+              הפוך מהקטגוריה
+            </div>
+            <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 4 }}>
+              <strong style={{ color: C.fg }}>הם:</strong> {video.anti_category.competitor_norm}
+            </div>
+            <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.6 }}>
+              <strong style={{ color: C.gold }}>אתה:</strong> {video.anti_category.your_inversion}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VisualDirectionCard({ visual }: { visual: ShootDayPlan["visual_direction"] }) {
+  return (
+    <Section title="הקטגוריה הויזואלית החדשה שלך" hint="הפוך מהקטגוריה הקיימת">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 8 }}>פלטה</div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <ColorChip hex={visual.palette.primary} label="ראשי" />
+            <ColorChip hex={visual.palette.text} label="טקסט" />
+            <ColorChip hex={visual.palette.accent} label="מבטא" />
+          </div>
+          {visual.palette.forbidden && visual.palette.forbidden.length > 0 && (
+            <div style={{ marginTop: 10, fontSize: 11, color: C.muted, lineHeight: 1.5 }}>
+              אסור: {visual.palette.forbidden.join(", ")}
+            </div>
+          )}
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 8 }}>טיפוגרפיה</div>
+          <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.7 }}>
+            <div>כותרות: {visual.typography.headlines}</div>
+            <div>גוף: {visual.typography.body}</div>
+            <div>טכני: {visual.typography.technical}</div>
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 8 }}>צילום</div>
+          <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.7 }}>
+            <div>עדשה: {visual.cinematography.lens}</div>
+            <div>פוקוס: {visual.cinematography.focus}</div>
+            <div>אור: {visual.cinematography.light}</div>
+            <div>מסגור: {visual.cinematography.framing}</div>
+          </div>
+        </div>
+      </div>
+      {visual.references && visual.references.length > 0 && (
+        <div style={{ marginTop: 16, padding: "12px 14px", background: C.cardSoft, borderRadius: 8 }}>
+          <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 8 }}>הנחיות לצלם/ת</div>
+          {visual.references.map((r, i) => (
+            <div key={i} style={{ fontSize: 12, color: C.fg, lineHeight: 1.7, marginBottom: 4 }}>· {r}</div>
+          ))}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function ColorChip({ hex, label }: { hex: string; label: string }) {
+  return (
+    <div style={{ textAlign: "center" }}>
+      <div style={{ width: 36, height: 36, background: hex, borderRadius: 8, border: `1px solid ${C.line}` }} />
+      <div style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>{label}</div>
+      <div style={{ fontSize: 9, color: C.muted, fontFamily: "monospace" }}>{hex}</div>
+    </div>
+  );
+}
+
+function ScheduleCard({ schedule }: { schedule: ShootDayPlan["schedule"] }) {
+  return (
+    <Section title="לו״ז יום הצילום" hint="08:30 → 17:00. שני סטים, 12 סרטונים. הפסקה חובה ב-13:00.">
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {schedule.map((block, i) => (
+          <div key={i} style={{
+            display: "grid", gridTemplateColumns: "100px 1fr", gap: 14,
+            padding: "10px 12px", background: C.cardSoft, borderRadius: 8,
+            border: `1px solid ${C.line}`,
+          }}>
+            <div style={{ fontSize: 13, color: C.gold, fontWeight: 700, fontFamily: "monospace" }}>
+              {block.time}
+            </div>
+            <div>
+              <div style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 2 }}>
+                {block.activity}
+                {block.videos.length > 0 && (
+                  <span style={{ fontSize: 11, color: C.goldMid, fontWeight: 500, marginRight: 8 }}>
+                    · סרטונים {block.videos.join(", ")}
+                  </span>
+                )}
+              </div>
+              {block.hint && (
+                <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.5, fontStyle: "italic" }}>
+                  &ldquo;{block.hint}&rdquo;
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function GiftSentencesCard({ sentences }: { sentences: string[] }) {
+  return (
+    <Section title="5 משפטי-מתנה ספציפיים לך" hint="השתמש בהם בסרטונים, בקפשנים, באתר, בהתחלות שיחות. הם שלך.">
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {sentences.map((s, i) => (
+          <CopyBlock key={i} text={s} />
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function DecisionsCard({ decisions }: { decisions: ShootDayPlan["decisions"] }) {
+  const [checked, setChecked] = useState<Set<number>>(new Set());
+
+  function toggle(num: number) {
+    const next = new Set(checked);
+    if (next.has(num)) {
+      next.delete(num);
+    } else {
+      next.add(num);
+      // Magic #7 — fire tier-appropriate voice on each decision marked
+      if (num === 1)                         playHadarVoice("marked_decision_1");
+      else if (num === 2)                    playHadarVoice("marked_decision_2");
+      else if (num === 3)                    playHadarVoice("marked_decision_3");
+      if (next.size === 3)                   playHadarVoice("completed_shoot_day");
+    }
+    setChecked(next);
+  }
+
+  return (
+    <Section title="3 החלטות שאתה לוקח עכשיו" hint="לא בקרוב. עכשיו.">
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {decisions.map((d) => {
+          const isChecked = checked.has(d.number);
+          return (
+            <button
+              key={d.number}
+              onClick={() => toggle(d.number)}
+              style={{
+                background: isChecked ? "rgba(232,185,74,0.06)" : C.cardSoft,
+                borderRadius: 10, padding: "14px 16px",
+                border: `1px solid ${isChecked ? C.lineGold : C.line}`,
+                textAlign: "right", cursor: "pointer", fontFamily: "inherit",
+                display: "flex", alignItems: "flex-start", gap: 12,
+              }}
+            >
+              <div style={{
+                width: 22, height: 22, borderRadius: 6, marginTop: 2,
+                border: `2px solid ${isChecked ? C.gold : C.lineGold}`,
+                background: isChecked ? C.gold : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#2a1d05", fontWeight: 700, fontSize: 14,
+                flexShrink: 0,
+              }}>
+                {isChecked ? "✓" : ""}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, letterSpacing: 1.2, marginBottom: 6 }}>
+                  החלטה {d.number} · {d.type}
+                </div>
+                <div style={{
+                  fontSize: 14, color: C.fg, lineHeight: 1.6, marginBottom: 6,
+                  textDecoration: isChecked ? "line-through" : "none",
+                  opacity: isChecked ? 0.7 : 1,
+                }}>
+                  {d.text}
+                </div>
+                <div style={{
+                  display: "inline-block", fontSize: 11, color: C.gold, fontWeight: 700,
+                  background: "rgba(232,185,74,0.10)", padding: "3px 10px", borderRadius: 999,
+                }}>
+                  {d.urgency}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
+
+function HadarSignoff() {
+  return (
+    <div style={{
+      textAlign: "center", padding: "24px 20px",
+      background: "linear-gradient(145deg, #1D2430, #111620)",
+      borderRadius: 12, border: `1px solid ${C.lineGold}`,
+    }}>
+      <div style={{ fontSize: 22, fontWeight: 700, color: C.gold, marginBottom: 6 }}>
+        תהיו טובים.
+      </div>
+      <div style={{ fontSize: 12, color: C.muted }}>
+        — הדר
+      </div>
     </div>
   );
 }

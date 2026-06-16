@@ -199,6 +199,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 045 | `045_hive_product_types.sql` | Applied — adds `hive_basic_59` and `hive_full_149` to the product_type enum so Cardcom recurring (Stage 4) can write Hive subscription purchases |
 | 046 | `046_signal_email_sequence.sql` | Applied — adds the SIGNAL_EXTRACTED row to email_sequences (template_key=signal_welcome, 0h delay) so /signal leads get a dedicated welcome that references the diagnostic instead of the generic ladder pitch |
 | 047 | `047_hive_cardcom_token.sql` | Pending — adds `cardcom_recurring_id`, `cardcom_account_id`, `cardcom_token`, card validity + last-4 columns to users, plus index `idx_users_cardcom_recurring_id`. Stage 4 Phase 1 — schema only, no user-facing change. Cardcom runs the recurring schedule natively via BillGoldService.AddUpdateRecurringOrder; we just store the RecurringId so we can cancel/update later |
+| 048 | `048_shoot_day.sql` | Pending — adds JSONB shape constraint + index for `signal_extractions.signal.shoot_day`. Foundation for the Shoot Day feature (Mode E of the Hadar Director Engine). No new table — cached on existing JSONB column. |
 
 ### Tables (20 total)
 
@@ -593,6 +594,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 - **Invoice tracking** — Cardcom webhook saves `invoice_number` + `invoice_link` (PDF URL) on `purchases` rows.
 - **User status archive** — `handled` and `not_relevant` added to user_status enum (migration 028) for CRM cleanup.
 - **Deals CRM** — `deals` table (migration 024) + `/admin/deals` page for tracking brand deals.
+- **Shoot Day feature (V1, June 2026)** — flagship Hive perk at `/hive/signal-kit` (new 6th tab "יום הצילום"). Mode E of the Hadar Director Engine generates a complete shoot day plan from the user's signal: משפט-זהות + 4 עמודי מסר + 12 סרטונים מובנים ב-3 acts (זהות/סיפור/סמכות) + visual direction ("הפוך מהקטגוריה") + לו"ז 08:30-17:00 + 3 החלטות + 5 משפטי-מתנה. **Engine:** `lib/prompts/shoot-day-engine.ts` (4-pack architecture: identity+pillars in Sonnet → videos+strategy+gift_sentences in parallel = ~30-40s wall). **API:** `GET /api/signal/[id]/shoot-day` — cached on `signal.shoot_day`, ~$0.20 first call. **Magic #2 (Methodology Visibility):** each video card has "למה זה?" button revealing Hadar's actual corpus quote + mode + signature move. **Magic #7 (5-tier affirmation system):** `lib/hadar-voice.ts` orchestrates Hadar voice clips at key interaction triggers — placeholders in V1 (no audio), `HADAR_VOICE_ENABLED=false`. After Hadar recording day, drop 80 MP3s into `/public/voice/hadar/` and flip the flag (zero code changes). See `/Users/work/hadar-transcripts/BEEGOOD_PRODUCT_BUILD_PLAN.md` for full build plan + recording brief.
 
 ---
 
