@@ -354,42 +354,46 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
         >
           <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
         </div>
-        <h1 style={{ fontSize: 30, fontWeight: 700, margin: "0 0 14px", lineHeight: 1.25 }}>
+        <h1 style={{ fontSize: 30, fontWeight: 700, margin: "0 0 16px", lineHeight: 1.2 }}>
           {firstName ? `${firstName}, ` : ""}מנוע האות
         </h1>
-        <p style={{ color: C.fg, opacity: 0.92, fontSize: 17, margin: "0 0 4px", lineHeight: 1.6 }}>
-          חמש שאלות. אות מותגי אחד.
+        {/* Thesis: the methodology insight, in two beats. Replaces the
+            old descriptive intro ("חמש שאלות. אות מותגי אחד.") with the
+            actual claim of the work — customers buy through who you are,
+            not what you sell. Pre-frames the soul-extraction as the route
+            to no-pressure sales. */}
+        <p style={{ color: C.fg, opacity: 0.95, fontSize: 17, fontWeight: 500, margin: "0 0 4px", lineHeight: 1.55 }}>
+          הלקוחות שלכם יקנו רק דרך מי שאתם.
         </p>
-        <p style={{ color: C.fg, opacity: 0.92, fontSize: 17, margin: "0 0 28px", lineHeight: 1.6 }}>
-          לא מה שאתם מוכרים, אלא מה שרק אתם יכולים לתת.
+        <p style={{ color: C.fg, opacity: 0.78, fontSize: 17, margin: "0 0 26px", lineHeight: 1.55 }}>
+          לא דרך מה שאתם מוכרים.
         </p>
       </div>
 
-      <div style={{ borderTop: `1px solid ${C.line}`, margin: "0 0 20px" }} />
+      <div style={{ borderTop: `1px solid ${C.line}`, margin: "0 auto 24px", width: 60 }} />
 
-      {/* Meta line — voice first (the simpler-modality teaching), then time +
-          draft. Q3 skip permission moved out of the intro (was double-permission
-          with the in-question skip; was inflating Q3 skip rate). */}
-      <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.65, margin: "0 0 22px", textAlign: "right" }}>
-        <p style={{ margin: "0 0 4px" }}>בכתיבה או בהקלטה בקול.</p>
-        <p style={{ margin: "0 0 4px" }}>בקול הדברים יוצאים פשוטים יותר. בלי לערוך תוך כדי.</p>
-        <p style={{ margin: 0 }}>כעשר דקות. הטיוטה נשמרת.</p>
+      {/* Promise of the experience (what we'll do) + the methodology framing
+          (what gets returned to you). Compact, two beats. */}
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <p style={{ color: C.fg, opacity: 0.95, fontSize: 16, fontWeight: 600, margin: "0 0 6px", lineHeight: 1.55 }}>
+          חמש שאלות שיחזירו לכם את האות שלכם.
+        </p>
+        <p style={{ color: C.muted, fontSize: 15, margin: 0, lineHeight: 1.55 }}>
+          מה שכבר מבדל אתכם וטרם גיליתם.
+        </p>
       </div>
 
-      {/* Outcome promise — broken into beats for ARS lift on mobile.
-          Three blocks:
-            1. Artifacts (what you'll keep)
-            2. Mechanic + consequence (truth → sharp signal → no selling)
-            3. Optional next step (the commercial hook, conditioned on fit) */}
-      <div style={{ fontSize: 16, color: C.fg, opacity: 0.94, lineHeight: 1.75, margin: "0 0 30px", textAlign: "right" }}>
-        <p style={{ margin: "0 0 6px" }}>בסוף יישאר אצלך משפט אחד להגיד בקול בלי להתנצל.</p>
-        <p style={{ margin: "0 0 6px" }}>הקהל שמחפש בדיוק אותך.</p>
-        <p style={{ margin: "0 0 16px" }}>שלושה כיווני תוכן להתחיל מהם בלי לחכות.</p>
-
-        <p style={{ margin: "0 0 6px" }}>האות עשוי מהתשובות שלך. כשהן אמת, הוא חד.</p>
-        <p style={{ margin: "0 0 16px" }}>כשהאות מדויק, אין מכירה. האנשים הנכונים פשוט קונים.</p>
-
-        <p style={{ margin: 0 }}>ואם יתאים, גם הצעד הבא הנכון לך מכאן.</p>
+      {/* Voice + depth pairing. "פשוט לדבר" is the operational ease, "מהלב"
+          is the principle. Together: speaking is the easy mode, the heart
+          is what produces sharpness. The depth line replaces the older
+          "אז למה להתאמץ" which subtly anti-motivated investment. */}
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <p style={{ color: C.fg, opacity: 0.95, fontSize: 15.5, margin: "0 0 6px", lineHeight: 1.55 }}>
+          אפשר לכתוב. <strong style={{ color: C.gold, fontWeight: 700 }}>אפשר פשוט לדבר.</strong>
+        </p>
+        <p style={{ color: C.muted, fontSize: 14, margin: 0, lineHeight: 1.55 }}>
+          מהלב, האות יוצא חד.
+        </p>
       </div>
 
       <div style={{ textAlign: "center" }}>
@@ -401,15 +405,28 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
             fontWeight:   700,
             fontSize:     16,
             border:       "none",
-            borderRadius: 12,
-            padding:      "14px 36px",
+            borderRadius: 999,
+            padding:      "14px 44px",
             cursor:       "pointer",
             boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
           }}
         >
-          לפתוח את השאלה הראשונה
+          להתחיל
         </button>
       </div>
+
+      {/* Draft + time note — moved to the bottom (was at the top in the
+          old meta-line). Smaller, muted, doesn't compete with the CTA above
+          but reassures anyone hesitating to commit. */}
+      <p style={{
+        textAlign: "center",
+        fontSize:  12.5,
+        color:     C.muted,
+        opacity:   0.7,
+        margin:    "20px 0 0",
+      }}>
+        מספר דקות. הטיוטה נשמרת.
+      </p>
     </div>
   );
 }
