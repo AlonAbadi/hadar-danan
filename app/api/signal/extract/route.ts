@@ -310,17 +310,15 @@ export async function POST(req: NextRequest) {
   let rawJson: unknown = null;
   try {
     const client = new Anthropic();
+    // System block reverted to plain string after observing repeat 502s in
+    // production after the cache_control wrapping landed (commit a046816).
+    // The cache_control format itself was valid but something in the
+    // serialization path was throwing under load; reverting until we can
+    // re-introduce it with the proper SDK escape hatch.
     const requestParams = {
       model:      SIGNAL_ENGINE_MODEL,
       max_tokens: SIGNAL_ENGINE_MAX_TOKENS,
-      // System block as a cached array — the static prompt is identical across
-      // requests, so wrapping it in cache_control: ephemeral cuts the input
-      // cost on the system portion by ~85-88% on warm cache (5-min TTL).
-      system: [{
-        type: "text" as const,
-        text: SIGNAL_ENGINE_SYSTEM_PROMPT,
-        cache_control: { type: "ephemeral" as const },
-      }],
+      system:     SIGNAL_ENGINE_SYSTEM_PROMPT,
       messages: [{
         role:    "user" as const,
         content: buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt),
@@ -360,10 +358,23 @@ export async function POST(req: NextRequest) {
     }
     parsed = rawJson;
   } catch (error) {
+    // Verbose error capture so we can diagnose what's actually failing.
+    // Common causes after the schema grew: max_tokens truncation (parsed
+    // text ends mid-JSON), schema-validation failures, transient Anthropic
+    // 5xx, prompt-too-long, or model-name typos.
+    const err = error as { name?: string; message?: string; status?: number; constructor?: { name?: string } };
     await db.from("error_logs").insert({
       context: "api/signal/extract POST — claude call",
       error:   String(error),
-      payload: { userId, raw: rawJson },
+      payload: {
+        userId,
+        errName:    err?.name ?? err?.constructor?.name ?? "unknown",
+        errMessage: err?.message ?? "",
+        errStatus:  err?.status ?? null,
+        rawPreview: typeof rawJson === "string"
+          ? (rawJson as string).slice(0, 400)
+          : rawJson,
+      },
     });
     return NextResponse.json(
       { error: "מנוע האות נתקל בשגיאה זמנית. נסה שוב בעוד רגע." },

@@ -4,7 +4,11 @@
 // TrueSignal© method. Output language: Hebrew. No em dashes, no emoji, no markdown.
 
 export const SIGNAL_ENGINE_MODEL = "claude-sonnet-4-6";
-export const SIGNAL_ENGINE_MAX_TOKENS = 2000;
+// Bumped 2000 → 3500 after the schema grew with routing_signal + palette_id.
+// Output budget per field rough estimate: 8 strings × ~60 tokens + 3 content
+// directions × ~30 tokens + routing_signal ~200 tokens + JSON envelope ~100
+// tokens. 3500 leaves ~30% headroom so Claude doesn't truncate mid-JSON.
+export const SIGNAL_ENGINE_MAX_TOKENS = 3500;
 
 // The 5 extraction questions, in the order they're asked. Order is intentional:
 // element first (soft entry), pain only after trust is built, audience last (bridge).
