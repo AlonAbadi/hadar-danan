@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
+import { detectGender } from "@/lib/gender/detect";
 import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
 import { EmailMeButton } from "@/components/signal/EmailMeButton";
@@ -70,6 +71,19 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
   const [leadOccupation, setLeadOccupation] = useState("");
   const [leadConsent,   setLeadConsent]   = useState(false);
   const [leadConsentErr, setLeadConsentErr] = useState(false);
+  // Gender of address — defaults to detection from first name. Tracked
+  // separately so the explicit radio always reflects either the user's
+  // override or our current best guess. Once the user clicks a radio,
+  // leadGenderTouched=true stops the auto-sync from typing.
+  const [leadGender, setLeadGender] = useState<Gender>(() => detectGender(firstName ?? ""));
+  const [leadGenderTouched, setLeadGenderTouched] = useState(false);
+
+  // Re-detect from first name as the user types, until they manually pick.
+  useEffect(() => {
+    if (leadGenderTouched) return;
+    if (leadFirstName.trim().length < 2) return;
+    setLeadGender(detectGender(leadFirstName));
+  }, [leadFirstName, leadGenderTouched]);
 
   // Load any draft + check for an existing cached signal on mount.
   // GET only returns a signal for authenticated users — anonymous starts fresh.
@@ -149,6 +163,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
         payload.phone = leadPhone.trim();
         payload.occupation = leadOccupation.trim();
         payload.marketing_consent = leadConsent;
+        payload.gender = leadGender;
       }
 
       const res = await fetch("/api/signal/extract", {
@@ -273,6 +288,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             email={leadEmail}
             phone={leadPhone}
             occupation={leadOccupation}
+            gender={leadGender}
             consent={leadConsent}
             consentErr={leadConsentErr}
             setFirstName={setLeadFirstName}
@@ -280,6 +296,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             setEmail={setLeadEmail}
             setPhone={setLeadPhone}
             setOccupation={setLeadOccupation}
+            setGender={(g) => { setLeadGender(g); setLeadGenderTouched(true); }}
             setConsent={(v) => { setLeadConsent(v); if (v) setLeadConsentErr(false); }}
             setConsentErr={setLeadConsentErr}
             onSubmit={() => void submit()}
@@ -761,6 +778,7 @@ interface LeadGateProps {
   email:         string;
   phone:         string;
   occupation:    string;
+  gender:        Gender;
   consent:       boolean;
   consentErr:    boolean;
   setFirstName:  (v: string) => void;
@@ -768,6 +786,7 @@ interface LeadGateProps {
   setEmail:      (v: string) => void;
   setPhone:      (v: string) => void;
   setOccupation: (v: string) => void;
+  setGender:     (v: Gender) => void;
   setConsent:    (v: boolean) => void;
   setConsentErr: (v: boolean) => void;
   onSubmit:      () => void;
@@ -776,8 +795,8 @@ interface LeadGateProps {
 }
 
 function LeadGate({
-  firstName, lastName, email, phone, occupation, consent, consentErr,
-  setFirstName, setLastName, setEmail, setPhone, setOccupation, setConsent, setConsentErr,
+  firstName, lastName, email, phone, occupation, gender, consent, consentErr,
+  setFirstName, setLastName, setEmail, setPhone, setOccupation, setGender, setConsent, setConsentErr,
   onSubmit, onBack, errorMsg,
 }: LeadGateProps) {
   const trimmedFirst = firstName.trim();
@@ -944,6 +963,53 @@ function LeadGate({
             }}
           />
         </label>
+
+        {/* Gender of address — pre-filled from first-name detection. Users
+            see two pronoun choices (intentionally not "מין" — the question is
+            "how should we speak to you," not "what are you"). The default
+            value is whatever detectGender() returned, so 90% of users just
+            confirm without thinking. */}
+        <fieldset style={{ border: "none", padding: 0, margin: 0 }}>
+          <legend style={{ fontSize: 13, color: C.muted, marginBottom: 8 }}>איך נכון לפנות אליך?</legend>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {([
+              { value: "f" as Gender, label: "את" },
+              { value: "m" as Gender, label: "אתה" },
+            ]).map((opt) => {
+              const selected = gender === opt.value;
+              return (
+                <label
+                  key={opt.value}
+                  style={{
+                    display:        "flex",
+                    alignItems:     "center",
+                    justifyContent: "center",
+                    gap:            8,
+                    padding:        "12px 14px",
+                    background:     selected ? "rgba(232,185,74,0.10)" : C.cardSoft,
+                    border:         `1px solid ${selected ? C.goldMid : C.line}`,
+                    borderRadius:   12,
+                    cursor:         "pointer",
+                    fontSize:       15,
+                    fontWeight:     selected ? 700 : 500,
+                    color:          selected ? C.fg : C.muted,
+                    transition:     "background 0.15s, border-color 0.15s, color 0.15s",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="gender"
+                    value={opt.value}
+                    checked={selected}
+                    onChange={() => setGender(opt.value)}
+                    style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
+                  />
+                  {opt.label}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
 
         <div style={{ marginTop: 4 }}>
           <ConsentCheckbox

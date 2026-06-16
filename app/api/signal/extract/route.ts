@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { answers, first_name, email, name, phone, occupation, marketing_consent } = (body ?? {}) as {
+  const { answers, first_name, email, name, phone, occupation, marketing_consent, gender: requestedGender } = (body ?? {}) as {
     answers?:           unknown;
     first_name?:        unknown;
     email?:             unknown;
@@ -118,12 +118,19 @@ export async function POST(req: NextRequest) {
     phone?:             unknown;
     occupation?:        unknown;
     marketing_consent?: unknown;
+    gender?:            unknown;
   };
 
   const occupationStr = typeof occupation === "string"
     ? occupation.trim().slice(0, 200)
     : "";
   const consentGranted = marketing_consent === true;
+  // Client-supplied gender (from the LeadGate radio). When present, it
+  // overrides server-side detection and any stored value — the user just
+  // explicitly told us how they want to be addressed.
+  const explicitGender: Gender | null = requestedGender === "m" || requestedGender === "f"
+    ? requestedGender
+    : null;
 
   const db = createServerClient();
   const authUser = await getSessionUser();
@@ -258,15 +265,19 @@ export async function POST(req: NextRequest) {
     userNameForPrompt = nameStr.split(" ")[0];
   }
 
-  // Resolve the gender we'll address the visitor with. Order: existing
-  // stored value (most authoritative) → detection from the first name → 'f'
-  // as a safe default.
-  const genderForPrompt: Gender = storedGender
+  // Resolve the gender we'll address the visitor with. Order:
+  //   1. Explicit value from the LeadGate radio (user just picked)
+  //   2. Existing stored value on the users row (authoritative for return visits)
+  //   3. Detection from the first name (best-effort fallback)
+  //   4. 'f' as a safe default (handled inside detectGender)
+  const genderForPrompt: Gender = explicitGender
+    ?? storedGender
     ?? detectGender(userNameForPrompt);
 
-  // Backfill the gender on the users row if we have one and the row doesn't
-  // (e.g. legacy authenticated users from before migration 051).
-  if (!storedGender) {
+  // Persist the resolved gender on the users row when:
+  //   - the row has none yet (legacy auth users from before migration 051), OR
+  //   - the user explicitly picked one in the gate (override stored detection)
+  if (!storedGender || (explicitGender && explicitGender !== storedGender)) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (db as any).from("users").update({ gender: genderForPrompt }).eq("id", userId);
