@@ -25,6 +25,36 @@ function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string
   return (supabase as any).from(table);
 }
 
+// Pull the first balanced JSON object out of `text`. Tolerates any prose
+// preamble/suffix from the model ("I'll analyze...", trailing ```), strings
+// containing `{`/`}`, and escaped quotes. Returns `null` if no balanced
+// object is present (e.g. truncated output mid-object).
+function extractJsonObject(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+
+  let depth    = 0;
+  let inString = false;
+  let escape   = false;
+
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (escape) { escape = false; continue; }
+    if (inString) {
+      if (c === "\\") { escape = true; continue; }
+      if (c === '"')  { inString = false; }
+      continue;
+    }
+    if (c === '"') { inString = true; continue; }
+    if (c === "{") { depth++; continue; }
+    if (c === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
 async function getSessionUser() {
   const cookieStore = await cookies();
   const supabaseAuth = createSSRClient<Database>(
@@ -308,17 +338,20 @@ export async function POST(req: NextRequest) {
   // ── Call Claude ───────────────────────────────────────────────────────────
   let parsed: SignalOutput;
   let rawJson: unknown = null;
+  let rawTextForDiag: string | null = null;
   try {
     const client = new Anthropic();
-    // The system prompt grew with routing_signal + palette_id schemas and
-    // Sonnet started slipping out of "JSON only" mode in prod — surfacing
-    // as `SyntaxError: Unexpected token 'I', "I need to ..."` in the catch
-    // (model preamble like "I need to analyze..." instead of `{`).
-    //
-    // Fix: assistant-prefill with `{` so the model has no choice but to
-    // continue the JSON from there. Classic Anthropic-prescribed technique
-    // for guaranteed structured output. The opening brace is stripped from
-    // the response then re-prefixed before JSON.parse.
+    // Sonnet 4.6 rejects assistant-message prefill ("This model does not
+    // support assistant message prefill"), so the earlier {"role:assistant",
+    // content:"{"} workaround for the "I need to analyze..." preambles
+    // started returning 400. Replacement strategy:
+    //   1. Append a hard JSON-only instruction to the user message
+    //   2. Use extractJsonObject() to pull the first balanced {...} block
+    //      out of whatever the model returns, ignoring prose around it
+    // The extractor is the real insurance — it works regardless of how
+    // disciplined the model's output is.
+    const userMessage = buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt)
+      + "\n\nהחזר אך ורק את אובייקט ה-JSON. בלי טקסט לפניו, בלי טקסט אחריו, בלי גושי קוד. התחל את התשובה בתו { וסיים בתו }.";
     const requestParams = {
       model:      SIGNAL_ENGINE_MODEL,
       max_tokens: SIGNAL_ENGINE_MAX_TOKENS,
@@ -326,11 +359,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role:    "user" as const,
-          content: buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt),
-        },
-        {
-          role:    "assistant" as const,
-          content: "{",
+          content: userMessage,
         },
       ],
     };
@@ -357,15 +386,12 @@ export async function POST(req: NextRequest) {
       throw new Error("Model returned non-text block");
     }
 
-    // Re-add the `{` that we prefilled — the model continues from there so
-    // the returned text is the JSON body without the opening brace. Also
-    // tolerate any closing ``` the model might still tack on.
-    const rawText = firstBlock.text
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```\s*$/, "")
-      .trim();
-    const cleanText = rawText.startsWith("{") ? rawText : "{" + rawText;
-    rawJson = JSON.parse(cleanText);
+    rawTextForDiag = firstBlock.text;
+    const jsonSlice = extractJsonObject(firstBlock.text);
+    if (!jsonSlice) {
+      throw new Error("No JSON object found in model output");
+    }
+    rawJson = JSON.parse(jsonSlice);
 
     if (!validateSignalOutput(rawJson)) {
       throw new Error("Model returned invalid signal shape");
@@ -385,7 +411,8 @@ export async function POST(req: NextRequest) {
         errName:    err?.name ?? err?.constructor?.name ?? "unknown",
         errMessage: err?.message ?? "",
         errStatus:  err?.status ?? null,
-        rawPreview: typeof rawJson === "string"
+        rawTextPreview: rawTextForDiag ? rawTextForDiag.slice(0, 600) : null,
+        parsedPreview: typeof rawJson === "string"
           ? (rawJson as string).slice(0, 400)
           : rawJson,
       },
