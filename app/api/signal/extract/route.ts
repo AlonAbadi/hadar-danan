@@ -339,6 +339,7 @@ export async function POST(req: NextRequest) {
   let parsed: SignalOutput;
   let rawJson: unknown = null;
   let rawTextForDiag: string | null = null;
+  let parseRetryUsed = false;
   try {
     const client = new Anthropic();
     // Sonnet 4.6 rejects assistant-message prefill ("This model does not
@@ -348,55 +349,69 @@ export async function POST(req: NextRequest) {
     //   1. Append a hard JSON-only instruction to the user message
     //   2. Use extractJsonObject() to pull the first balanced {...} block
     //      out of whatever the model returns, ignoring prose around it
-    // The extractor is the real insurance — it works regardless of how
-    // disciplined the model's output is.
-    const userMessage = buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt)
+    //   3. If parse/validation still fails, retry ONCE with a sharper
+    //      follow-up message — covers max_tokens truncation, malformed
+    //      JSON, and missing-required-field cases
+    const baseUserMessage = buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt)
       + "\n\nהחזר אך ורק את אובייקט ה-JSON. בלי טקסט לפניו, בלי טקסט אחריו, בלי גושי קוד. התחל את התשובה בתו { וסיים בתו }.";
-    const requestParams = {
-      model:      SIGNAL_ENGINE_MODEL,
-      max_tokens: SIGNAL_ENGINE_MAX_TOKENS,
-      system:     SIGNAL_ENGINE_SYSTEM_PROMPT,
-      messages: [
-        {
-          role:    "user" as const,
-          content: userMessage,
-        },
-      ],
-    };
 
-    // Retry on 429/529 with exponential backoff (same pattern as truesignal-diagnosis)
-    let aiResponse: Awaited<ReturnType<typeof client.messages.create>> | null = null;
-    let lastErr: unknown = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        aiResponse = await client.messages.create(requestParams);
-        break;
-      } catch (e: unknown) {
-        lastErr = e;
-        const status = (e as { status?: number })?.status;
-        if (status !== 429 && status !== 529) throw e;
-        if (attempt === 2) throw e;
-        await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+    // Inner helper: one full LLM call + parse + validate. Throws on any
+    // failure so the outer logic can decide whether to retry.
+    async function callAndParse(userContent: string): Promise<SignalOutput> {
+      const requestParams = {
+        model:      SIGNAL_ENGINE_MODEL,
+        max_tokens: SIGNAL_ENGINE_MAX_TOKENS,
+        system:     SIGNAL_ENGINE_SYSTEM_PROMPT,
+        messages: [{ role: "user" as const, content: userContent }],
+      };
+
+      // Network-level retry on 429/529 only (same as truesignal-diagnosis)
+      let aiResponse: Awaited<ReturnType<typeof client.messages.create>> | null = null;
+      let lastErr: unknown = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          aiResponse = await client.messages.create(requestParams);
+          break;
+        } catch (e: unknown) {
+          lastErr = e;
+          const status = (e as { status?: number })?.status;
+          if (status !== 429 && status !== 529) throw e;
+          if (attempt === 2) throw e;
+          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+        }
       }
-    }
-    if (!aiResponse) throw lastErr ?? new Error("Anthropic call failed");
+      if (!aiResponse) throw lastErr ?? new Error("Anthropic call failed");
 
-    const firstBlock = aiResponse.content[0];
-    if (!firstBlock || firstBlock.type !== "text") {
-      throw new Error("Model returned non-text block");
+      const firstBlock = aiResponse.content[0];
+      if (!firstBlock || firstBlock.type !== "text") {
+        throw new Error("Model returned non-text block");
+      }
+      rawTextForDiag = firstBlock.text;
+
+      const jsonSlice = extractJsonObject(firstBlock.text);
+      if (!jsonSlice) throw new Error("No JSON object found in model output");
+      const obj = JSON.parse(jsonSlice);
+      rawJson = obj;
+
+      if (!validateSignalOutput(obj)) {
+        throw new Error("Model returned invalid signal shape");
+      }
+      return obj;
     }
 
-    rawTextForDiag = firstBlock.text;
-    const jsonSlice = extractJsonObject(firstBlock.text);
-    if (!jsonSlice) {
-      throw new Error("No JSON object found in model output");
-    }
-    rawJson = JSON.parse(jsonSlice);
+    try {
+      parsed = await callAndParse(baseUserMessage);
+    } catch (firstErr: unknown) {
+      // Don't retry on auth/billing/permission errors — only on parse/shape
+      // failures and Anthropic-side hiccups.
+      const status = (firstErr as { status?: number })?.status;
+      if (status === 401 || status === 403 || status === 400) throw firstErr;
 
-    if (!validateSignalOutput(rawJson)) {
-      throw new Error("Model returned invalid signal shape");
+      parseRetryUsed = true;
+      const sharperMessage = baseUserMessage
+        + "\n\nהתשובה הקודמת לא הייתה JSON תקין או הייתה חסרה שדות חובה. החזר עכשיו אך ורק את אובייקט ה-JSON המלא, על פי הסכמה במדויק, התחל בתו { וסיים בתו }. בלי שום טקסט נוסף.";
+      parsed = await callAndParse(sharperMessage);
     }
-    parsed = rawJson;
   } catch (error) {
     // Verbose error capture so we can diagnose what's actually failing.
     // Common causes after the schema grew: max_tokens truncation (parsed
@@ -411,7 +426,8 @@ export async function POST(req: NextRequest) {
         errName:    err?.name ?? err?.constructor?.name ?? "unknown",
         errMessage: err?.message ?? "",
         errStatus:  err?.status ?? null,
-        rawTextPreview: rawTextForDiag ? rawTextForDiag.slice(0, 600) : null,
+        parseRetryUsed,
+        rawTextPreview: typeof rawTextForDiag === "string" ? (rawTextForDiag as string).slice(0, 600) : null,
         parsedPreview: typeof rawJson === "string"
           ? (rawJson as string).slice(0, 400)
           : rawJson,
