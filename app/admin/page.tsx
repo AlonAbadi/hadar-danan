@@ -9,7 +9,10 @@ async function getHubKPIs() {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
-  const [purchasesThisMonth, purchasesLastMonth, leadsMonth, todayLeads, hiveActive, pendingBookings, recentBuyers] = await Promise.all([
+  const [
+    purchasesThisMonth, purchasesLastMonth, leadsMonth, todayLeads, hiveActive,
+    pendingBookings, recentBuyers, boilingLeadsRes,
+  ] = await Promise.all([
     supabase.from('purchases').select('amount').eq('status', 'completed').gte('created_at', monthStart),
     supabase.from('purchases').select('amount').eq('status', 'completed').gte('created_at', prevMonthStart).lt('created_at', monthStart),
     supabase.from('users').select('id', { count: 'exact', head: true }).gte('created_at', monthStart),
@@ -17,6 +20,12 @@ async function getHubKPIs() {
     supabase.from('users').select('id', { count: 'exact', head: true }).eq('hive_status', 'active'),
     supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('purchases').select('user_id, amount, product, created_at').eq('status', 'completed').order('created_at', { ascending: false }).limit(5),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from('users')
+      .select('id, name, email, phone, occupation, signal_temperature_at')
+      .eq('signal_temperature', 'boiling')
+      .order('signal_temperature_at', { ascending: false })
+      .limit(10),
   ]);
 
   const revenue = (purchasesThisMonth.data ?? []).reduce((s, r) => s + (r.amount ?? 0), 0);
@@ -36,6 +45,22 @@ async function getHubKPIs() {
     strategy_4000: 'אסטרטגיה', premium_14000: 'פרמיום', hive_starter_160: 'כוורת',
   };
 
+  type BoilingRow = {
+    id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    occupation: string | null;
+    signal_temperature_at: string | null;
+  };
+  const boilingLeads = ((boilingLeadsRes.data as BoilingRow[] | null) ?? []).map((u) => ({
+    id:         u.id,
+    name:       u.name ?? u.email ?? '—',
+    phone:      u.phone ?? '',
+    occupation: u.occupation ?? '',
+    time:       u.signal_temperature_at ?? '',
+  }));
+
   return {
     revenue, revenueChange, leads, todayLeads: todayLeads.count ?? 0,
     purchases, conversionRate,
@@ -47,6 +72,7 @@ async function getHubKPIs() {
       amount: p.amount,
       time: p.created_at,
     })),
+    boilingLeads,
   };
 }
 
@@ -174,6 +200,63 @@ export default async function AdminHubPage() {
             <div className="kpi-change" style={{ color: '#AAB0BD' }}>פגישות ממתינות: {kd.pendingBookings}</div>
           </div>
         </div>
+
+        {/* Boiling leads from /signal — strategy bucket. These need to be
+            called within hours, not days. */}
+        {kd.boilingLeads.length > 0 && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(124,10,2,0.18) 0%, rgba(124,10,2,0.06) 100%)',
+            border: '1px solid rgba(255,80,80,0.35)',
+            borderRadius: 14,
+            padding: '14px 18px 16px',
+            marginBottom: 28,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#FF6B6B', letterSpacing: '0.04em' }}>
+                🔥 לידים רותחים — אות שיצא לפגישת אסטרטגיה
+              </div>
+              <div style={{ fontSize: 11, color: '#AAB0BD' }}>{kd.boilingLeads.length} ממתינים</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+              {kd.boilingLeads.map((b) => {
+                const wa = b.phone ? `https://wa.me/${b.phone.replace(/\D/g, '').replace(/^0/, '972')}` : '';
+                return (
+                  <div key={b.id} style={{
+                    background: '#141820',
+                    border: '1px solid rgba(255,107,107,0.2)',
+                    borderRadius: 10,
+                    padding: '10px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                  }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {b.name}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#AAB0BD', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {b.occupation || '—'} · {b.time ? relTime(b.time) : ''}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                      <Link href={`/admin/users/${b.id}`} style={{
+                        background: '#C9964A', color: '#fff', fontSize: 11, fontWeight: 700,
+                        padding: '6px 10px', borderRadius: 6, textDecoration: 'none',
+                      }}>CRM</Link>
+                      {wa && (
+                        <a href={wa} target="_blank" rel="noopener noreferrer" style={{
+                          background: '#25D366', color: '#fff', fontSize: 11, fontWeight: 700,
+                          padding: '6px 10px', borderRadius: 6, textDecoration: 'none',
+                        }}>WA</a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Top row: quick-access cards + recent buyers */}
         <div className="top-row">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { Resend } from "resend";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { createServerClient } from "@/lib/supabase/server";
@@ -16,7 +17,18 @@ import {
   type SignalOutput,
 } from "@/lib/prompts/signal-engine";
 import { detectGender, type Gender } from "@/lib/gender/detect";
-import { determineBucket } from "@/lib/signal/score";
+import { determineBucket, type Bucket } from "@/lib/signal/score";
+
+// Same recipients as /api/stage/apply and /api/quiz-result. Hardcoded by
+// design — we never want a config typo to silently lose hot-lead alerts.
+const HOT_LEAD_RECIPIENTS = ["alonabadi9@gmail.com", "hadard1113@gmail.com"] as const;
+
+function bucketToTemperature(bucket: Bucket): "boiling" | "warm" | "nurture" | null {
+  if (bucket === "strategy")  return "boiling";
+  if (bucket === "challenge") return "warm";
+  if (bucket === "nurture")   return "nurture";
+  return null; // hive (existing customer) and none (too thin) — no temperature
+}
 
 // Typed escape hatch — signal_extractions isn't in the generated Database types yet.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -535,6 +547,125 @@ export async function POST(req: NextRequest) {
       context: "api/signal/extract POST — SIGNAL_EXTRACTED enqueue",
       error:   String(e),
       payload: { userId },
+    });
+  }
+
+  // ── Lead temperature + boiling-lead notification ────────────────────────
+  // This is the "lead machine" — every signal extraction stamps a temperature
+  // on the user row so /admin can sort by heat. Strategy bucket → boiling →
+  // immediate email to Alon + Hadar with the full signal so they can act on
+  // it within minutes. Soft-fail throughout (the user already has their
+  // signal on screen — alert misses must not break their UX).
+  try {
+    const temperature = bucketToTemperature(bucketDecision.bucket);
+    if (temperature) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (db as any)
+        .from("users")
+        .update({
+          signal_temperature:    temperature,
+          signal_temperature_at: generatedAt,
+        })
+        .eq("id", userId);
+    }
+
+    if (temperature === "boiling") {
+      // Pull full lead details for the alert. We already know userId and
+      // bucketDecision; just need contact info + name.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: leadRow } = await (db as any)
+        .from("users")
+        .select("name, email, phone, occupation, gender")
+        .eq("id", userId)
+        .maybeSingle();
+
+      const resendKey = process.env.RESEND_API_KEY;
+      const fromAddr  = process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online";
+      const resend    = resendKey ? new Resend(resendKey) : null;
+
+      if (resend && leadRow) {
+        const name       = (leadRow.name as string | null) ?? "ללא שם";
+        const email      = (leadRow.email as string | null) ?? "";
+        const phone      = (leadRow.phone as string | null) ?? "";
+        const occupation = (leadRow.occupation as string | null) ?? "";
+        const waLink     = phone ? `https://wa.me/${phone.replace(/\D/g, "").replace(/^0/, "972")}` : "";
+
+        const esc = (s: string) =>
+          s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        const directionLines = (parsed.content_directions ?? [])
+          .map((d, i) => `<li style="margin:4px 0">${i + 1}. ${esc(d)}</li>`)
+          .join("");
+
+        const answerLines = SIGNAL_QUESTIONS
+          .map((q) => {
+            const a = (answers as Record<string, string | undefined>)[q.key];
+            if (!a) return "";
+            return `<p style="margin:8px 0"><strong style="color:#9E7C3A">${esc(q.label)}</strong><br/><span style="color:#444">${esc(a).replace(/\n/g, "<br/>")}</span></p>`;
+          })
+          .filter(Boolean)
+          .join("");
+
+        const html = `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;max-width:640px;color:#222">
+  <div style="background:#7c0a02;color:#fff;padding:14px 18px;border-radius:10px 10px 0 0">
+    <div style="font-size:13px;letter-spacing:1px;opacity:.85">ליד רותח — פגישת אסטרטגיה</div>
+    <div style="font-size:22px;font-weight:700;margin-top:4px">${esc(name)}</div>
+  </div>
+  <div style="border:1px solid #eee;border-top:none;padding:18px;border-radius:0 0 10px 10px">
+    ${email ? `<p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${esc(email)}">${esc(email)}</a></p>` : ""}
+    ${phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${esc(phone)}">${esc(phone)}</a>${waLink ? ` &middot; <a href="${waLink}">WhatsApp</a>` : ""}</p>` : ""}
+    ${occupation ? `<p style="margin:4px 0"><strong>תחום:</strong> ${esc(occupation)}</p>` : ""}
+    <p style="margin:4px 0;color:#888;font-size:13px">${esc(bucketDecision.reason)}</p>
+
+    <hr style="border:none;border-top:1px solid #eee;margin:14px 0"/>
+    <div style="background:#fdf6e7;border-right:3px solid #C9964A;padding:12px 14px;border-radius:6px;margin:10px 0">
+      <div style="color:#9E7C3A;font-size:12px;letter-spacing:1px;margin-bottom:6px">האות</div>
+      <div style="font-size:17px;color:#222;font-weight:600">${esc(parsed.signal ?? "")}</div>
+    </div>
+
+    ${parsed.element ? `<p style="margin:10px 0"><strong style="color:#9E7C3A">האלמנט:</strong><br/>${esc(parsed.element)}</p>` : ""}
+    ${parsed.signal_promise ? `<p style="margin:10px 0"><strong style="color:#9E7C3A">מה האות מבטיח:</strong><br/>${esc(parsed.signal_promise)}</p>` : ""}
+    ${parsed.central_tool ? `<p style="margin:10px 0"><strong style="color:#9E7C3A">הכלי המרכזי:</strong><br/>${esc(parsed.central_tool)}</p>` : ""}
+    ${parsed.people ? `<p style="margin:10px 0"><strong style="color:#9E7C3A">הקהל:</strong><br/>${esc(parsed.people)}</p>` : ""}
+    ${directionLines ? `<p style="margin:10px 0"><strong style="color:#9E7C3A">3 כיווני תוכן:</strong></p><ol style="margin:4px 0 10px 0;padding-right:20px">${directionLines}</ol>` : ""}
+
+    <hr style="border:none;border-top:1px solid #eee;margin:14px 0"/>
+    <div style="color:#666;font-size:13px;margin-bottom:6px">התשובות המקוריות:</div>
+    ${answerLines}
+
+    <hr style="border:none;border-top:1px solid #eee;margin:14px 0"/>
+    <a href="https://www.beegood.online/admin/users/${userId}" style="display:inline-block;background:#C9964A;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">פתח פרופיל ב-CRM ←</a>
+    ${waLink ? `<a href="${waLink}" style="display:inline-block;background:#25D366;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold;margin-right:8px">פתח WhatsApp ←</a>` : ""}
+  </div>
+</div>`;
+
+        const sendResult = await resend.emails.send({
+          from:    `הדר דנן <${fromAddr}>`,
+          to:      Array.from(HOT_LEAD_RECIPIENTS),
+          subject: `🔥 ליד רותח — ${name}${occupation ? ` (${occupation})` : ""}`,
+          html,
+        });
+        if (sendResult.error) {
+          await db.from("error_logs").insert({
+            context: "api/signal/extract POST — boiling lead email",
+            error:   `Resend rejected: ${sendResult.error.name ?? "unknown"} — ${sendResult.error.message ?? ""}`,
+            payload: { userId, extractionId },
+          });
+        }
+      } else if (!resend) {
+        await db.from("error_logs").insert({
+          context: "api/signal/extract POST — boiling lead email",
+          error:   "RESEND_API_KEY missing — boiling alert skipped",
+          payload: { userId, extractionId },
+        });
+      }
+    }
+  } catch (e) {
+    // Never fail the user flow over a notification error.
+    await db.from("error_logs").insert({
+      context: "api/signal/extract POST — temperature/alert",
+      error:   String(e),
+      payload: { userId, extractionId, bucket: bucketDecision.bucket },
     });
   }
 
