@@ -89,12 +89,15 @@ export function ShareButton({ extractionId, firstName }: Props) {
   if (status === "checking" || status === "disabled") return null;
 
   const busy = status === "preparing" || status === "sharing";
+  // Note: was using ↗ which renders as tofu in the bundled font on some
+  // platforms. Switched to ← to match the rest of the site's CTA arrows
+  // (RTL "forward" indicator).
   const label =
     status === "preparing" ? "מכין…" :
     status === "sharing"   ? "פתח שיתוף…" :
     status === "shared"    ? "✓ מוכן" :
     status === "error"     ? "תקלה, נסה שוב" :
-    "↗ שתף את האות שלי";
+    "שתף את האות שלי ←";
 
   return (
     <button

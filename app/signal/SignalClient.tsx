@@ -1597,11 +1597,15 @@ function ContestBox() {
         marginBottom: 6,
       }}>
         שתפו את הכרטיס באינסטגרם, פייסבוק, טיקטוק או לינקדאין, תייגו{" "}
-        <span style={{
-          fontFamily: "Monaco, monospace",
-          color:      C.goldMid,
-          fontWeight: 700,
-        }}>
+        <span
+          dir="ltr"
+          style={{
+            fontFamily:  "Monaco, monospace",
+            color:       C.goldMid,
+            fontWeight:  700,
+            unicodeBidi: "embed",
+          }}
+        >
           @hadar_danan
         </span>
         . מי שעורר הכי הרבה שיחה החודש (תגובות ולייקים) מקבל תהליך הפקת תוכן עם הדר. שלושה סרטונים שלמים, בשווי אלפי שקלים.

@@ -65,7 +65,7 @@ export default function ContestTermsPage() {
           </h3>
           <ul style={{ listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: 4 }}>
             <Bullet>שתפו את הכרטיס של מנוע האות שלכם באינסטגרם, פייסבוק, טיקטוק או לינקדאין</Bullet>
-            <Bullet>תייגו את <B>@hadar_danan</B> בפוסט</Bullet>
+            <Bullet>תייגו את <B><span dir="ltr" style={{ unicodeBidi: "embed" }}>@hadar_danan</span></B> בפוסט</Bullet>
             <Bullet>מי שאסף הכי הרבה תגובות ולייקים החודש — מקבל הפקת 3 סרטונים מהדר</Bullet>
             <Bullet>בדיקה ב-1 לכל חודש קלנדרי</Bullet>
             <Bullet>ניתן לזכות פעם אחת בכל 12 חודשים</Bullet>
@@ -101,7 +101,7 @@ export default function ContestTermsPage() {
             <li>לינקדאין</li>
           </ul>
           <p style={{ marginTop: 12 }}>
-            בכל פוסט יש לתייג את <B>@hadar_danan</B> באופן ברור (תיוג תקני בפוסט עצמו, לא בתגובה).
+            בכל פוסט יש לתייג את <B><span dir="ltr" style={{ unicodeBidi: "embed" }}>@hadar_danan</span></B> באופן ברור (תיוג תקני בפוסט עצמו, לא בתגובה).
           </p>
           <p>
             הפוסט חייב להיות ציבורי (פתוח לכל המבקרים בפרופיל), אחרת לא ניתן יהיה לזהות ולספור אותו.
@@ -118,7 +118,7 @@ export default function ContestTermsPage() {
         </Section>
 
         <Section title="5. מתי הבדיקה וההכרזה">
-          <p><B>בדיקה:</B> ב-1 של כל חודש קלנדרי, בודקים את כל הפוסטים מהחודש הקודם שתויגו עם <B>@hadar_danan</B>.</p>
+          <p><B>בדיקה:</B> ב-1 של כל חודש קלנדרי, בודקים את כל הפוסטים מהחודש הקודם שתויגו עם <B><span dir="ltr" style={{ unicodeBidi: "embed" }}>@hadar_danan</span></B>.</p>
           <p><B>הודעה לזוכה:</B> עד 5 ימי עסקים מהבדיקה, דרך הודעה ישירה (DM) בפלטפורמה שדרכה התויגו, או דרך מייל אם הזוכה השאיר/ה במנוע האות.</p>
           <p><B>פרסום:</B> שם הזוכה והכרטיס שלו/ה יפורסמו בערוצי BeeGood (בהסכמת הזוכה).</p>
         </Section>
