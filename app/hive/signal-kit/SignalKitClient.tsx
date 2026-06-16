@@ -592,7 +592,11 @@ function Loading({ text }: { text: string }) {
 
 function ErrorBox({ text }: { text: string }) {
   return (
-    <div style={{ background: "rgba(255,136,136,0.05)", border: "1px solid rgba(255,136,136,0.25)", borderRadius: 12, padding: 18, color: "#FF8888", fontSize: 14 }}>
+    <div style={{
+      background: "rgba(255,136,136,0.05)", border: "1px solid rgba(255,136,136,0.25)",
+      borderRadius: 12, padding: 18, color: "#FF8888", fontSize: 14,
+      whiteSpace: "pre-wrap", wordBreak: "break-word",
+    }}>
       {text}
     </div>
   );
@@ -658,7 +662,7 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
           }),
         });
         const txt2 = await res2.text();
-        let data2: { plan?: ShootDayPlan; error?: string };
+        let data2: { plan?: ShootDayPlan; error?: string; details?: string; raw?: string };
         try {
           data2 = JSON.parse(txt2);
         } catch {
@@ -666,7 +670,12 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
           return;
         }
         if (!res2.ok || !data2.plan) {
-          if (!cancelled) setError(data2?.error ?? `Phase 2 failed (HTTP ${res2.status})`);
+          const msg = [
+            data2?.error ?? `Phase 2 failed (HTTP ${res2.status})`,
+            data2?.details ? `· ${data2.details}` : null,
+            data2?.raw     ? `· raw: ${data2.raw}`  : null,
+          ].filter(Boolean).join("\n");
+          if (!cancelled) setError(msg);
           return;
         }
         if (!cancelled) setPlan(data2.plan);
