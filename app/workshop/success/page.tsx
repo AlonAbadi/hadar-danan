@@ -13,7 +13,7 @@ export default function WorkshopSuccessPage() {
       productName="סדנה יום אחד"
       emoji="⚡"
       confirmationTitle="הסדנה שלך נקבעה"
-      confirmationDesc="25 ביוני 2026 · יום חמישי · 10:00 · בית ציוני אמריקה, תל אביב"
+      confirmationDesc="25 ביוני 2026 · יום חמישי · 10:00 · משרדי הדר דנן, רחוב החילזון 5, רמת גן"
       step2Title="תכין את עצמך"
       nextStepDesc="חשוב על 3 לקוחות אידיאליים — מי הם, מה קיבלו ממך, ומה אמרו עליך"
       nextStepLabel="לאזור האישי"
