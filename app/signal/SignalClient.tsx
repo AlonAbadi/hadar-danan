@@ -367,13 +367,30 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
 
       <div style={{ borderTop: `1px solid ${C.line}`, margin: "0 0 20px" }} />
 
-      <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.65, margin: "0 0 18px", textAlign: "right" }}>
-        כעשר דקות. כתיבה או הקלטה בקול. שאלה 3 על תקופה קשה, מותר לדלג. הטיוטה נשמרת.
-      </p>
+      {/* Meta line — voice first (the simpler-modality teaching), then time +
+          draft. Q3 skip permission moved out of the intro (was double-permission
+          with the in-question skip; was inflating Q3 skip rate). */}
+      <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.65, margin: "0 0 22px", textAlign: "right" }}>
+        <p style={{ margin: "0 0 4px" }}>בכתיבה או בהקלטה בקול.</p>
+        <p style={{ margin: "0 0 4px" }}>בקול הדברים יוצאים פשוטים יותר. בלי לערוך תוך כדי.</p>
+        <p style={{ margin: 0 }}>כעשר דקות. הטיוטה נשמרת.</p>
+      </div>
 
-      <p style={{ fontSize: 16, color: C.fg, opacity: 0.94, lineHeight: 1.75, margin: "0 0 30px", textAlign: "right" }}>
-        בסוף נשאר אצלך משפט אחד להגיד בקול בלי להתנצל, הקהל שמחפש בדיוק אותך, ושלושה כיווני תוכן להתחיל מהם בלי לחכות. ואם יתאים, גם הצעד הבא הנכון לך מכאן.
-      </p>
+      {/* Outcome promise — broken into beats for ARS lift on mobile.
+          Three blocks:
+            1. Artifacts (what you'll keep)
+            2. Mechanic + consequence (truth → sharp signal → no selling)
+            3. Optional next step (the commercial hook, conditioned on fit) */}
+      <div style={{ fontSize: 16, color: C.fg, opacity: 0.94, lineHeight: 1.75, margin: "0 0 30px", textAlign: "right" }}>
+        <p style={{ margin: "0 0 6px" }}>בסוף יישאר אצלך משפט אחד להגיד בקול בלי להתנצל.</p>
+        <p style={{ margin: "0 0 6px" }}>הקהל שמחפש בדיוק אותך.</p>
+        <p style={{ margin: "0 0 16px" }}>שלושה כיווני תוכן להתחיל מהם בלי לחכות.</p>
+
+        <p style={{ margin: "0 0 6px" }}>האות עשוי מהתשובות שלך. כשהן אמת, הוא חד.</p>
+        <p style={{ margin: "0 0 16px" }}>כשהאות מדויק, אין מכירה. האנשים הנכונים פשוט קונים.</p>
+
+        <p style={{ margin: 0 }}>ואם יתאים, גם הצעד הבא הנכון לך מכאן.</p>
+      </div>
 
       <div style={{ textAlign: "center" }}>
         <button
@@ -390,7 +407,7 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
             boxShadow:    "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
           }}
         >
-          להתחיל
+          לפתוח את השאלה הראשונה
         </button>
       </div>
     </div>
