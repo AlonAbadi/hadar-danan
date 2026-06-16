@@ -63,6 +63,37 @@ const FOUNDER_HINTS_OCCUPATION = [
 ] as const;
 
 /**
+ * Senior / high-ticket professional occupations. These roles imply
+ * substantial revenue potential by virtue of the practice itself — a
+ * working lawyer or doctor is already commercial, even when their
+ * answers to soul-questions don't surface "business vocabulary"
+ * (clients/team/quarter/decision). Used as a SECOND strategy path,
+ * gated on substantial depth to avoid pushing early-career juniors
+ * into a ₪4,000 offer they aren't ready for.
+ *
+ * Origin: דובי וינרוט (עו"ד) returned long, mature answers but zero
+ * commit-words → rules defaulted him to ₪197 challenge, when his real
+ * fit is the strategy meeting.
+ */
+const SENIOR_PROFESSIONAL_HINTS = [
+  // Lawyer variants — Hebrew users write the role many ways
+  "עו\"ד", "עוד", "עורך דין", "עורכת דין", "עריכת דין", "משפטן", "משפטנית", "משפטים",
+  // Doctor / physician
+  "רופא", "רופאה", "רפואה", "ד\"ר", "דוקטור",
+  // Mental health
+  "פסיכולוג", "פסיכולוגית", "פסיכולוגיה", "פסיכיאטר", "פסיכיאטרית",
+  "פסיכותרפיסט", "פסיכותרפיסטית",
+  // Accounting
+  "רו\"ח", "רואה חשבון", "רואת חשבון", "חשבונאות",
+  // Real estate
+  "נדל\"ן", "נדלן", "סוכן נדלן", "סוכנת נדלן",
+  // Architecture / engineering (senior)
+  "אדריכל", "אדריכלית", "אדריכלות",
+  // Domain expert / mentor by title
+  "מומחה", "מומחית",
+] as const;
+
+/**
  * Founder-shape detection from inside the answer text — business-owner
  * identity language that surfaces naturally when someone actually runs a
  * business, even if their occupation field says "מטפלת" or "מעצבת". This
@@ -93,11 +124,12 @@ interface DetermineInput {
   routingSignal?: RoutingSignal | unknown;   // optional — LLM's commercial-fit assessment
 }
 
-const STRATEGY_MIN_DEPTH         = 480;  // total chars across 5 answers
-const STRATEGY_MIN_COMMIT_HITS   = 2;
-const NURTURE_MIN_DEPTH          = 40;   // below this → none (genuinely empty)
-const NURTURE_MAX_DEPTH          = 80;   // between NURTURE_MIN and this → nurture path
-const LLM_OVERRIDE_MIN_CONFIDENCE = 0.7; // LLM must clear this to override rules
+const STRATEGY_MIN_DEPTH               = 480;  // total chars across 5 answers
+const STRATEGY_MIN_COMMIT_HITS         = 2;
+const STRATEGY_SENIOR_PRO_MIN_DEPTH    = 700;  // gate for the senior-pro path — proves depth, not just title
+const NURTURE_MIN_DEPTH                = 40;   // below this → none (genuinely empty)
+const NURTURE_MAX_DEPTH                = 80;   // between NURTURE_MIN and this → nurture path
+const LLM_OVERRIDE_MIN_CONFIDENCE      = 0.7;  // LLM must clear this to override rules
 
 export function determineBucket(input: DetermineInput): BucketDecision {
   const { answers, occupation, userStatus, hiveActive, routingSignal } = input;
@@ -118,6 +150,7 @@ export function determineBucket(input: DetermineInput): BucketDecision {
   const occHit = FOUNDER_HINTS_OCCUPATION.some((h) => occLower.includes(h.toLowerCase()));
   const answerHit = FOUNDER_HINTS_ANSWERS.some((h) => fullText.includes(h));
   const founderHint = occHit || answerHit;
+  const seniorProHit = SENIOR_PROFESSIONAL_HINTS.some((h) => occLower.includes(h.toLowerCase()));
 
   // Rule 1: existing customer → Hive (continuation, not new sale). This rule
   // always wins regardless of LLM signal — retention overrides acquisition.
@@ -160,11 +193,23 @@ export function determineBucket(input: DetermineInput): BucketDecision {
     // "uncertain" falls through to rules
   }
 
-  // Rule 3 (rules fallback): strategy qualification — founder + deep + committed
+  // Rule 3a (rules fallback): strategy qualification — founder + deep + committed
   if (founderHint && depth >= STRATEGY_MIN_DEPTH && commitHits >= STRATEGY_MIN_COMMIT_HITS) {
     return {
       bucket:      "strategy",
       reason:      `rules: founder + depth ${depth} + ${commitHits} commit hits`,
+      depth, commitHits, founderHint,
+    };
+  }
+
+  // Rule 3b (rules fallback): senior professional + substantial depth →
+  // strategy. Independent of commit-word vocabulary, which soul-questions
+  // don't naturally elicit from established practitioners. Depth gate proves
+  // they're showing up substantively, not just claiming the title.
+  if (seniorProHit && depth >= STRATEGY_SENIOR_PRO_MIN_DEPTH) {
+    return {
+      bucket:      "strategy",
+      reason:      `rules: senior pro (${occupation}) + depth ${depth}`,
       depth, commitHits, founderHint,
     };
   }

@@ -2242,7 +2242,7 @@ function ChallengeInvite({ signal }: { signal: SignalOutput }) {
           borderRadius: 10,
         }}>
           <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.7, color: INVITE_STYLES.text, fontStyle: "italic" }}>
-            מה שחילצתם היום — <span style={{ color: INVITE_STYLES.gold, fontStyle: "normal", fontWeight: 600 }}>{element}</span> — הוא בדיוק הסוג של אות שהאתגר בנוי סביבו. הסרטון של יום 1 ייפתח מהכיוון: <span style={{ color: INVITE_STYLES.text, fontStyle: "normal" }}>{firstDirection}</span>
+            סרטון יום 1 ייפתח מהכיוון שלכם: <span style={{ color: INVITE_STYLES.text, fontStyle: "normal" }}>{firstDirection}</span>
           </p>
         </div>
       )}
