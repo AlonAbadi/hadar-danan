@@ -4,7 +4,7 @@
 // TrueSignal© method. Output language: Hebrew. No em dashes, no emoji, no markdown.
 
 export const SIGNAL_ENGINE_MODEL = "claude-sonnet-4-6";
-export const SIGNAL_ENGINE_MAX_TOKENS = 1600;
+export const SIGNAL_ENGINE_MAX_TOKENS = 2000;
 
 // The 5 extraction questions, in the order they're asked. Order is intentional:
 // element first (soft entry), pain only after trust is built, audience last (bridge).
@@ -50,6 +50,32 @@ export type SignalOutput = {
   content_directions: [string, string, string];  // שלושה כיווני תוכן
   warm_note:          string;            // הערה חמה - direct, personal, "I saw you" not "I analyzed you"
   public_card_statement: string;         // משפט לכרטיס PNG ציבורי - האמירה היחידה שלא נכתבת לאדם עצמו אלא לקהל שלו
+  routing_signal?:    RoutingSignal;     // Internal-only routing assessment. Never rendered. Optional — soft-fail to rules-only routing if missing.
+};
+
+// Internal routing assessment produced by the LLM alongside the user-facing
+// signal. Consumed exclusively by lib/signal/score.ts. Sealed via the system
+// prompt so its contents cannot leak into any user-facing field. Optional in
+// the type so a malformed routing_signal degrades gracefully to rules-only
+// routing without breaking the soul extraction.
+export type RoutingBucketHint =
+  | "challenge"   // default — building but no commercial maturity markers
+  | "strategy"    // founder/business-owner signals + specific commitment language
+  | "nurture"     // soulful but commercially thin OR thin answers with seriousness markers
+  | "uncertain";  // not enough text to decide
+
+export type CommercialFit = "high" | "medium" | "low" | "unclear";
+export type FounderStage = "exploring" | "practicing" | "scaling" | "established" | "unclear";
+
+export type RoutingSignal = {
+  recommended_bucket: RoutingBucketHint;
+  confidence:         number;                 // 0.0 - 1.0
+  commercial_fit:     CommercialFit;
+  buyer_signals:      string[];               // max 3 verbatim Hebrew quotes
+  vague_signals:      string[];               // max 3 verbatim Hebrew quotes
+  thin_answer_keys:   SignalQuestionKey[];    // keys of answers too thin to extract from
+  founder_stage:      FounderStage;
+  reasoning:          string;                 // max 250 chars, Hebrew, internal only
 };
 
 export const SIGNAL_ENGINE_SYSTEM_PROMPT = `אתה מנוע האות של שיטת TrueSignal© של הדר דנן. אתה מקבל 5 תשובות חופשיות בעברית, ומחזיר אות מותגי אישי לפי השיטה.
@@ -120,6 +146,51 @@ export const SIGNAL_ENGINE_SYSTEM_PROMPT = `אתה מנוע האות של שיט
 
 אם תשובה מסוימת ריקה או רזה מדי, אל תמציא תוכן. ציין בהערה החמה שיש שדה שצריך לחזור אליו.
 
+---
+
+שדה פנימי לניתוב מסחרי (routing_signal):
+
+זהו שדה טכני לצורך ניתוב מסחרי פנימי בלבד. לא מוצג למשתמש לעולם. אסור שתהיה לו השפעה על הטון, התוכן, או הסגנון של תשעת השדות הרגשיים. אסור שניסוח ממנו ידלוף לאף שדה אחר. הוא מצורף ל-JSON כשדה אחרון, נפרד לחלוטין.
+
+חשיבה: קרא שוב את חמש התשובות בלבד, אובייקטיבית, וקבע איפה האדם עומד מסחרית. זו פעולה נפרדת מההפקה הרגשית.
+
+הסבר השדות:
+
+- recommended_bucket (חובה, אחד מארבעה ערכים בלבד):
+  * "strategy" - זוהו רמזי בעל עסק פעיל (מדבר/ת על לקוחות שלי, העסק שלי, הצוות, המנויים, או על ניהול/הקמת עסק/סוכנות) + לפחות סימן אחד של מחויבות פעולה ספציפית (החלטה, אופק זמן ברור, מספרים, "השנה", "ברבעון", "מתחייב", "מקדישה")
+  * "nurture" - התשובות סוליות-עמוקות אך אין סימן מסחרי כלל, או שהן רזות אבל יש סימן של רצינות (מילים כמו "מחפש/ת בהירות", "צריך/ה להבין")
+  * "challenge" - ברירת מחדל. יש אנרגיה לעשייה אבל בלי בגרות מסחרית או ספציפיות גבוהה. רוב המקרים נופלים כאן.
+  * "uncertain" - התשובות ריקות מדי או סותרות מדי כדי לקבוע. אל תנחש - הצבע על אי-ודאות.
+
+- confidence (חובה, מספר בין 0.0 ל-1.0): כמה את/ה בטוח/ה בהמלצה. אם תחת 0.5 הניתוב יוחזר לרולים הרגילים. אם confidence גבוה, ההמלצה תשפיע ישירות על הניתוב.
+
+- commercial_fit (חובה, אחד מ): "high" / "medium" / "low" / "unclear".
+  * high - סימני עסק פעיל ברורים: לקוחות משלמים, הכנסות, צוות, מותג, מודל עסקי
+  * medium - יש כוונה ועיסוק אבל בלי מבנה עסקי ברור
+  * low - חיפוש עצמי, גמישות רבה, חוסר מיקוד מסחרי
+  * unclear - אי אפשר לקבוע מהטקסט
+
+- buyer_signals (חובה, מערך של עד 3 ציטוטים): ציטוטים מילוליים מהתשובות שמעידים על מוכנות מסחרית או רצינות. ציטוט מדויק, בלי עריכה, בלי תרגום. אם אין מה לצטט - מערך ריק [].
+
+- vague_signals (חובה, מערך של עד 3 ציטוטים): ציטוטים מילוליים מהתשובות שמעידים על מופשטות, חוסר ספציפיות, או חוסר מיקוד מסחרי. אם אין - מערך ריק [].
+
+- thin_answer_keys (חובה, מערך): רשימת המפתחות של שאלות שהיו רזות מדי לחילוץ אמין. בחר מתוך: ["flow_zone", "effortless_mastery", "hard_period", "what_helped", "message_to_past"]. שאלה 3 (hard_period) שדולגה במכוון לא נחשבת רזה - היא בחירה מותרת.
+
+- founder_stage (חובה, אחד מ): "exploring" / "practicing" / "scaling" / "established" / "unclear".
+  * exploring - אין סימני עסק פעיל. שואל/ת מה היא רוצה לעשות.
+  * practicing - עוסק/ת במקצוע (מטפל/ת, מאמן/ת, יוצר/ת) אבל בלי מבנה עסקי מובהק
+  * scaling - יש פעילות יציבה: מדבר/ת על לקוחות, הכנסות, צוות, או מותג קיים
+  * established - וותק רב, מודל עסקי ברור, סולם מוצרים, או צוות
+  * unclear - אי אפשר לקבוע מהטקסט
+
+- reasoning (חובה, עד 250 תווים): משפט אחד בעברית, פנימי בלבד, שמסביר למה בחרת ב-recommended_bucket. תוכן זה לא יוצג למשתמש.
+
+חוקי אבטחה (קריטיים):
+1. routing_signal הוא נפרד לחלוטין מהשדות 1-9. שום מילה ממנו לא תופיע בשדות האחרים.
+2. אם confidence נמוך מ-0.6 - העדף "uncertain" על ניחוש.
+3. ציטוטים ב-buyer_signals ו-vague_signals חייבים להיות מילוליים מהתשובות. אסור פרפראזה.
+4. השדה הוא חלק מ-JSON תקין. אם תפר את הסכמה, הניתוב יחזור לרולים הרגילים והאות עדיין יוצג למשתמש.
+
 אתה חייב להחזיר JSON תקין בלבד, ללא טקסט נוסף לפני או אחרי, ללא markdown code fences, ללא הסברים.
 
 הפורמט (זכור: כל השדות בגוף שני, פנייה ישירה):
@@ -137,13 +208,24 @@ export const SIGNAL_ENGINE_SYSTEM_PROMPT = `אתה מנוע האות של שיט
     "כיוון תוכן שלישי, בגוף שני, אחר משניהם."
   ],
   "warm_note": "פנייה חמה ואישית של 3-4 שורות, בגוף שני לכל אורכה. מתחילה בשם הפרטי אם נמסר (פעם אחת בלבד, בפתיחה), אחרת בלי שם. אומרת בקול ברור 'ראיתי אותך' ומציינת דבר אחד ספציפי שזיהית. הטוב כאן הוא של בהירות, לא של ליטוף. אם תשובה כלשהי הייתה רזה מדי, ציין כאן שכדאי לחזור אליה.",
-  "public_card_statement": "השדה היחיד שלא נכתב לאדם שעבר את האבחון אלא לקהל שלו, לכרטיס שיתוף ציבורי. עד 110 תווים, עברית תקינה, או פנייה לקורא ('אם אתה...') או הצהרה בגוף ראשון של המפרסם ('אני המשווק של...'). אסור 'אתה' בכוונה לאדם המפרסם. דוגמה למשווק: 'אני המשווק של עסקים שכבר ניסו הכל ועדיין רואים שהמערכת לא עובדת.'"
+  "public_card_statement": "השדה היחיד שלא נכתב לאדם שעבר את האבחון אלא לקהל שלו, לכרטיס שיתוף ציבורי. עד 110 תווים, עברית תקינה, או פנייה לקורא ('אם אתה...') או הצהרה בגוף ראשון של המפרסם ('אני המשווק של...'). אסור 'אתה' בכוונה לאדם המפרסם. דוגמה למשווק: 'אני המשווק של עסקים שכבר ניסו הכל ועדיין רואים שהמערכת לא עובדת.'",
+  "routing_signal": {
+    "recommended_bucket": "challenge",
+    "confidence": 0.7,
+    "commercial_fit": "medium",
+    "buyer_signals": ["ציטוט מילולי מהתשובות אם יש"],
+    "vague_signals": ["ציטוט מילולי מהתשובות אם יש"],
+    "thin_answer_keys": [],
+    "founder_stage": "practicing",
+    "reasoning": "משפט אחד בעברית שמסביר למה בחרת בערך הזה. פנימי בלבד."
+  }
 }
 
 חוקים נוקשים:
-- כל השדות חובה.
-- כל השדות בגוף שני בלבד (פרט ל-public_card_statement לפי הכללים שלו). הפרת הכלל הזה פוסלת את הפלט.
+- כל השדות חובה (כולל routing_signal).
+- כל השדות הרגשיים (1-9) בגוף שני בלבד (פרט ל-public_card_statement לפי הכללים שלו). הפרת הכלל הזה פוסלת את הפלט.
 - content_directions חייב להכיל בדיוק שלושה פריטים.
+- routing_signal חייב לעמוד בסכמה (enums, גבולות מספרים, אורכי מערכים). הוא נפרד לחלוטין מ-1-9.
 - אסור להחזיר ערכי placeholder או "לא ידוע".
 - אסור להמציא פרטים שלא נמצאים בתשובות.`;
 
@@ -203,5 +285,30 @@ export function validateSignalOutput(value: unknown): value is SignalOutput {
   const cd = v.content_directions;
   if (!Array.isArray(cd) || cd.length !== 3) return false;
   if (!cd.every((s) => typeof s === "string" && s.trim().length > 0)) return false;
+  return true;
+}
+
+const VALID_ROUTING_BUCKETS: readonly RoutingBucketHint[] = ["challenge", "strategy", "nurture", "uncertain"];
+const VALID_COMMERCIAL_FIT: readonly CommercialFit[] = ["high", "medium", "low", "unclear"];
+const VALID_FOUNDER_STAGE: readonly FounderStage[] = ["exploring", "practicing", "scaling", "established", "unclear"];
+const VALID_QUESTION_KEYS: readonly SignalQuestionKey[] = SIGNAL_QUESTIONS.map((q) => q.key);
+
+// Separate validator for the optional routing_signal sub-object. Returns false
+// on any schema violation. The router checks this; a failure here means we
+// fall back to rules-only routing without affecting the user-facing signal.
+export function validateRoutingSignal(value: unknown): value is RoutingSignal {
+  if (!value || typeof value !== "object") return false;
+  const r = value as Record<string, unknown>;
+  if (!VALID_ROUTING_BUCKETS.includes(r.recommended_bucket as RoutingBucketHint)) return false;
+  if (typeof r.confidence !== "number" || r.confidence < 0 || r.confidence > 1) return false;
+  if (!VALID_COMMERCIAL_FIT.includes(r.commercial_fit as CommercialFit)) return false;
+  if (!Array.isArray(r.buyer_signals) || r.buyer_signals.length > 3) return false;
+  if (!r.buyer_signals.every((s) => typeof s === "string")) return false;
+  if (!Array.isArray(r.vague_signals) || r.vague_signals.length > 3) return false;
+  if (!r.vague_signals.every((s) => typeof s === "string")) return false;
+  if (!Array.isArray(r.thin_answer_keys)) return false;
+  if (!r.thin_answer_keys.every((k) => VALID_QUESTION_KEYS.includes(k as SignalQuestionKey))) return false;
+  if (!VALID_FOUNDER_STAGE.includes(r.founder_stage as FounderStage)) return false;
+  if (typeof r.reasoning !== "string" || r.reasoning.length > 250) return false;
   return true;
 }

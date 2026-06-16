@@ -11,7 +11,7 @@ import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 
 type SignalAnswers = Record<string, string>;
 type Gender = "m" | "f";
-type Bucket = "challenge" | "strategy" | "hive" | "none";
+type Bucket = "challenge" | "strategy" | "hive" | "nurture" | "none";
 
 type SignalOutput = {
   pain_source:        string;
@@ -99,7 +99,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             setExtractionId(data.id ?? null);
             setGeneratedAt(data.generated_at ?? null);
             if (data.gender === "m" || data.gender === "f") setGender(data.gender);
-            if (data.bucket === "challenge" || data.bucket === "strategy" || data.bucket === "hive" || data.bucket === "none") {
+            if (data.bucket === "challenge" || data.bucket === "strategy" || data.bucket === "hive" || data.bucket === "nurture" || data.bucket === "none") {
               setBucket(data.bucket);
             }
             setPhase("result");
@@ -166,7 +166,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
       setExtractionId((data.id as string | null) ?? null);
       setGeneratedAt(data.generated_at ?? null);
       if (data.gender === "m" || data.gender === "f") setGender(data.gender);
-      if (data.bucket === "challenge" || data.bucket === "strategy" || data.bucket === "hive" || data.bucket === "none") {
+      if (data.bucket === "challenge" || data.bucket === "strategy" || data.bucket === "hive" || data.bucket === "nurture" || data.bucket === "none") {
         setBucket(data.bucket);
       }
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
@@ -1226,8 +1226,9 @@ function Result({
       <ResultBridge gender={gender} bucket={inviteBucket} />
 
       {/* Conditional invite block — drives the funnel. Bucket comes from
-          determineBucket() server-side. */}
-      <InviteCard bucket={inviteBucket} />
+          determineBucket() server-side. Signal is passed so per-bucket cards
+          can personalize copy from the user's just-extracted soul fields. */}
+      <InviteCard bucket={inviteBucket} signal={signal} />
 
       {/* Quiet footer — utility actions kept small and out of the way */}
       <div className="result-footer" style={{ textAlign: "center", paddingTop: 4, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
@@ -1292,6 +1293,7 @@ const BRIDGE_TAILS: Record<Exclude<Bucket, "none">, string> = {
   challenge: "שבעה ימים, וזה הופך לתוכן.",
   strategy:  "פנים אל פנים, על העסק שלך.",
   hive:      "מקום שממשיכים לעבוד בו עליו.",
+  nurture:   "ההמשך מתחיל מההדרכה. חינמית, עשרים דקות.",
 };
 
 function ResultBridge({ gender, bucket }: { gender: Gender; bucket: Bucket }) {
@@ -1346,26 +1348,123 @@ const INVITE_STYLES = {
   success:     "#7FD49B",
 } as const;
 
-function InviteCard({ bucket }: { bucket: Bucket }) {
+function InviteCard({ bucket, signal }: { bucket: Bucket; signal: SignalOutput }) {
   if (bucket === "none") {
+    // Truly thin answers (<40 chars total). Don't push commerce. Save +
+    // invite to retry. Honest framing — not "we rejected you" but "this
+    // didn't ripen yet". One CTA: come back when you have 10 quiet minutes.
     return (
       <div className="invite-card" style={{
         background:   "#1D2430",
         border:       `1px solid ${INVITE_STYLES.border}`,
         borderRadius: 14,
-        padding:      "24px 22px",
+        padding:      "28px 24px",
         textAlign:    "center",
       }}>
-        <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7, color: INVITE_STYLES.muted }}>
-          האות שלך נשמר. תוכלו לחזור אליו בכל רגע.
+        <h3 style={{ margin: "0 0 10px", fontSize: 18, lineHeight: 1.4, color: INVITE_STYLES.text, fontWeight: 700 }}>
+          האות שלכם עוד לא הבשיל.
+        </h3>
+        <p style={{ margin: "0 0 22px", fontSize: 14.5, lineHeight: 1.7, color: INVITE_STYLES.muted }}>
+          התשובות היו קצרות מדי בשביל לחלץ אות חד. זה לא אומר שאין אות, זה אומר שצריך עוד רגע אחד.
+          כשיש לכם עשר דקות שקטות, חזרו לשאלות. השאלות נשמרו.
         </p>
+        <Link
+          href="/signal?retry=1"
+          style={{
+            display:        "inline-block",
+            padding:        "11px 22px",
+            background:     `linear-gradient(135deg, ${INVITE_STYLES.gold}, ${INVITE_STYLES.goldDeep})`,
+            color:          "#1A1A1A",
+            fontSize:       14,
+            fontWeight:     700,
+            borderRadius:   8,
+            textDecoration: "none",
+          }}
+        >
+          לחזור לשאלות ←
+        </Link>
       </div>
     );
   }
 
+  if (bucket === "nurture") return <NurtureInvite />;
   if (bucket === "strategy") return <StrategyInvite />;
   if (bucket === "hive")     return <HiveInvite />;
-  return <ChallengeInvite />;
+  return <ChallengeInvite signal={signal} />;
+}
+
+// Nurture invite — for users whose answers were thin-but-engaged (40-79 chars)
+// or whose LLM routing_signal said "nurture" (soulful but commercially not
+// ready). Goal: convert this segment from a dead-end into a list-build.
+// Primary CTA: free training (₪0). Secondary: retry. The "save+share" option
+// is implicit via the share card already rendered elsewhere on the page.
+function NurtureInvite() {
+  return (
+    <div className="invite-card" style={{
+      background:   INVITE_STYLES.card,
+      border:       `1px solid ${INVITE_STYLES.borderSoft}`,
+      borderRadius: 14,
+      padding:      "26px 24px 22px",
+    }}>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: INVITE_STYLES.success, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 6 }}>
+          חינם · ההמשך הנכון לכם
+        </div>
+        <h3 style={{ margin: 0, fontSize: 19, lineHeight: 1.4, color: INVITE_STYLES.text, fontWeight: 700 }}>
+          האות שלכם בפנים, וזו רק ההתחלה.
+        </h3>
+      </div>
+
+      <p style={{ margin: "0 0 18px", fontSize: 14.5, lineHeight: 1.7, color: INVITE_STYLES.muted }}>
+        מה שיצא היום הוא כיוון, לא תוצר סופי. לפני שמשקיעים בקורס או בפגישה, ההדרכה החינמית של הדר על שיווק ב-2026 היא המקום להתחיל בו.
+      </p>
+
+      <ul style={{ margin: "0 0 22px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+        {[
+          "עשרים דקות. ללא תשלום, ללא כרטיס אשראי.",
+          "השיעור הפתיחה של הדר על מה שעובד היום בשיווק.",
+          "תרגיל מעשי לחידוד האות שכבר חילצתם.",
+        ].map((b, i) => (
+          <li key={i} style={{ fontSize: 13.5, color: INVITE_STYLES.text, lineHeight: 1.55, paddingInlineStart: 16, position: "relative" }}>
+            <span style={{ position: "absolute", insetInlineStart: 0, top: 1, color: INVITE_STYLES.success, fontWeight: 800 }}>✓</span>
+            {b}
+          </li>
+        ))}
+      </ul>
+
+      <Link
+        href="/training"
+        style={{
+          display:        "block",
+          padding:        "14px 22px",
+          background:     `linear-gradient(135deg, ${INVITE_STYLES.gold}, ${INVITE_STYLES.goldDeep})`,
+          color:          "#1A1A1A",
+          fontSize:       15,
+          fontWeight:     800,
+          borderRadius:   10,
+          textDecoration: "none",
+          textAlign:      "center",
+          marginBottom:   10,
+        }}
+      >
+        אני רוצה לראות את ההדרכה ←
+      </Link>
+
+      <Link
+        href="/signal?retry=1"
+        style={{
+          display:        "block",
+          fontSize:       12.5,
+          color:          INVITE_STYLES.muted,
+          textAlign:      "center",
+          textDecoration: "underline",
+          textUnderlineOffset: 3,
+        }}
+      >
+        או חזרו לשאלות לחדד את האות
+      </Link>
+    </div>
+  );
 }
 
 function PriceBlock({
@@ -1549,7 +1648,14 @@ function InviteLadder({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ChallengeInvite() {
+function ChallengeInvite({ signal }: { signal: SignalOutput }) {
+  // Personalization band — uses just-extracted soul fields to anchor the
+  // commercial offer to *this user's* signal. Fall back to the static
+  // headline when fields are missing or empty.
+  const element = signal.element?.trim();
+  const firstDirection = signal.content_directions?.[0]?.trim();
+  const hasPersonalization = Boolean(element && firstDirection);
+
   return (
     <div
       className="invite-card"
@@ -1573,18 +1679,32 @@ function ChallengeInvite() {
         color:        INVITE_STYLES.text,
         letterSpacing: "-0.2px",
       }}>
-        7 ימים, 7 סרטונים שמייצרים מכירות
+        שבעה ימים לתרגם את האות שלכם לתוכן שמוכר
       </h3>
       <p style={{ margin: 0, color: INVITE_STYLES.muted, fontSize: 14.5, lineHeight: 1.65 }}>
         קורס און דימנד. גישה מיידית לשיעור הפתיחה תוך שניות אחרי התשלום. אין מחזורים, אין המתנה.
       </p>
 
+      {hasPersonalization && (
+        <div style={{
+          marginTop:    2,
+          padding:      "12px 14px",
+          background:   "rgba(232,185,74,0.06)",
+          border:       `1px solid rgba(232,185,74,0.18)`,
+          borderRadius: 10,
+        }}>
+          <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.7, color: INVITE_STYLES.text, fontStyle: "italic" }}>
+            מה שחילצתם היום — <span style={{ color: INVITE_STYLES.gold, fontStyle: "normal", fontWeight: 600 }}>{element}</span> — הוא בדיוק הסוג של אות שהאתגר בנוי סביבו. הסרטון של יום 1 ייפתח מהכיוון: <span style={{ color: INVITE_STYLES.text, fontStyle: "normal" }}>{firstDirection}</span>
+          </p>
+        </div>
+      )}
+
       <InviteBullets items={[
+        "האות שחילצתם היום הופך לקו תוכן אחד שמתחילים לצלם מחר",
         "גישה מיידית לשיעור פתיחה מוקלט על שיווק ב-2026",
         "7 סרטונים יומיים מהדר על סוג תוכן שמקדם מכירות",
         "אתגר יומי לצילום והעלאה לאינסטגרם",
         "מפגש סיום חי בזום, פתוח רק למי שסיימו את כל 7 הימים",
-        "הקלטות לצפייה חוזרת לאורך זמן",
       ]} />
 
       <InviteStats stats={[

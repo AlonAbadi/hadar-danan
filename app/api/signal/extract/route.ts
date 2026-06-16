@@ -302,7 +302,14 @@ export async function POST(req: NextRequest) {
     const requestParams = {
       model:      SIGNAL_ENGINE_MODEL,
       max_tokens: SIGNAL_ENGINE_MAX_TOKENS,
-      system:     SIGNAL_ENGINE_SYSTEM_PROMPT,
+      // System block as a cached array — the static prompt is identical across
+      // requests, so wrapping it in cache_control: ephemeral cuts the input
+      // cost on the system portion by ~85-88% on warm cache (5-min TTL).
+      system: [{
+        type: "text" as const,
+        text: SIGNAL_ENGINE_SYSTEM_PROMPT,
+        cache_control: { type: "ephemeral" as const },
+      }],
       messages: [{
         role:    "user" as const,
         content: buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt),
@@ -354,11 +361,14 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Compute bucket (drives the conditional CTA on the result page) ──────
+  // LLM's routing_signal (if returned and valid) drives the decision; rules
+  // are the guardrail. Missing/invalid routing_signal degrades gracefully.
   const bucketDecision = determineBucket({
     answers,
-    occupation: occupationForPrompt ?? null,
+    occupation:    occupationForPrompt ?? null,
     userStatus,
-    hiveActive: userHiveActive,
+    hiveActive:    userHiveActive,
+    routingSignal: parsed.routing_signal,
   });
 
   // ── Save to DB — soft-fail (return signal even if save fails) ────────────
