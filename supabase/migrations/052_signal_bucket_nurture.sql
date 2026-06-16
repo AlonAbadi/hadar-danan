@@ -10,23 +10,11 @@
 -- extractionId comes back null, breaking the embedded share-card preview
 -- and the share/copy/contest UI.
 
--- Find and drop the existing bucket CHECK constraint by definition rather
--- than by assumed name — Postgres auto-names from migration 051 might not
--- match the conventional pattern across all environments.
-DO $$
-DECLARE
-  cname text;
-BEGIN
-  SELECT conname INTO cname
-  FROM pg_constraint
-  WHERE conrelid = 'signal_extractions'::regclass
-    AND contype = 'c'
-    AND pg_get_constraintdef(oid) ILIKE '%bucket%IN%';
-
-  IF cname IS NOT NULL THEN
-    EXECUTE format('ALTER TABLE signal_extractions DROP CONSTRAINT %I', cname);
-  END IF;
-END $$;
+-- The constraint added by migration 051 is named signal_extractions_bucket_check
+-- (Postgres auto-name from `ADD COLUMN bucket TEXT CHECK (...)`). IF EXISTS
+-- so reruns are safe.
+ALTER TABLE signal_extractions
+  DROP CONSTRAINT IF EXISTS signal_extractions_bucket_check;
 
 ALTER TABLE signal_extractions
   ADD CONSTRAINT signal_extractions_bucket_check
