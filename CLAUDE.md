@@ -203,7 +203,8 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 049 | `049_signal_atomic_merge.sql` | Applied — atomic JSONB merge RPC for signal_extractions.signal, fixes parallel-render race condition. |
 | 050 | `050_signal_welcome_en_sequence.sql` | Applied — adds /en/signal welcome email sequence row. |
 | 051 | `051_users_gender.sql` | Applied — adds `gender` column on users + signal_extractions (m/f), plus `bucket` column on signal_extractions with CHECK constraint (challenge/strategy/hive/none). |
-| 052 | `052_signal_bucket_nurture.sql` | **Pending — APPLY ASAP.** Extends signal_extractions.bucket CHECK to also allow 'nurture'. Without this, all inserts that route to the new nurture bucket (commit a046816) silently fail the CHECK, leaving extractionId null and breaking the embedded share-card + share button + contest box on the result page. |
+| 052 | `052_signal_bucket_nurture.sql` | Applied — extends signal_extractions.bucket CHECK to also allow 'nurture'. Without this, all inserts that route to the new nurture bucket (commit a046816) silently failed the CHECK, leaving extractionId null and breaking the embedded share-card + share button + contest box on the result page. |
+| 053 | `053_signal_feedback.sql` | Pending — adds `feedback_rating` (CHECK in precise/close/missed) + `feedback_note` + `feedback_at` to signal_extractions. Powers the customer quality-of-result feedback widget at the bottom of the /signal result page (POST /api/signal/[id]/feedback). Used to iterate the LLM prompt against real signal — pull "missed" extractions, audit the answers→signal mapping, refine. |
 
 ### Tables (20 total)
 
@@ -755,7 +756,7 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
-- Next migration number: 053
+- Next migration number: 054
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes
