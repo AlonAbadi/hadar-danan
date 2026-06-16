@@ -28,25 +28,50 @@ import { validateRoutingSignal } from "@/lib/prompts/signal-engine";
 
 export type Bucket = "strategy" | "challenge" | "hive" | "nurture" | "none";
 
-/** Commitment lexicon — same as /apply, kept in sync deliberately. */
+/**
+ * Commitment lexicon — forked from /apply (`lib/stageScore.ts`).
+ *
+ * Why forked: /apply is an explicit commitment form where coached buzzwords
+ * (להשקיע, רצינות, להעז) are real signal — people deliberately surface them.
+ * /signal is a soul-extraction; the same buzzwords there are usually coached
+ * vocabulary, not lived intent. We keep only words that predict commercial
+ * intent when they appear in *spontaneous* answers to non-commercial questions.
+ *
+ * Removed (noisy or coached in this context): אעשה, להגיע, ללכת, שעות, מתחיל,
+ * מתחילה, מוכן, מוכנה, אשקיע, להשקיע, להעז, רצינות, אני עושה, נדרש, אין דבר.
+ * Added (concrete time-binding, present spontaneously in high-intent answers):
+ * השנה, ברבעון, החודש, החלטה, סגרתי על, שמתי לעצמי.
+ */
 const COMMIT_WORDS = [
-  "אעשה", "אשקיע", "להשקיע", "להגיע", "מחויבות", "מתחייב", "מתחייבת",
-  "אני נחושה", "נחוש", "על הסף", "נדרש", "להעז", "ללכת",
-  "אין לוותר", "אין דבר", "שעות", "מקדישה", "מסור", "רצינות",
-  "מוכן", "מוכנה", "מתחיל", "מתחילה", "החלטתי", "אני עושה",
+  "מחויבות", "מתחייב", "מתחייבת",
+  "אני נחושה", "נחוש", "על הסף",
+  "אין לוותר", "מקדישה", "מסור",
+  "החלטתי", "החלטה",
+  "השנה", "ברבעון", "החודש",
+  "סגרתי על", "שמתי לעצמי",
 ] as const;
 
 /**
- * Heuristic check for "founder-shape" occupations: someone who self-identifies
- * as running a business, agency, or independent practice. The exact match
- * doesn't have to be perfect — it just has to bias the bucket decision when
- * combined with deep answers + commitment language.
+ * Founder-shape detection from the occupation field. Pruned to remove the
+ * self-labels that anyone can claim without traction (יזם, בעל עסק, מייסד,
+ * פרילנס, עצמאי). Kept only the structural / role-based markers.
  */
-const FOUNDER_HINTS = [
-  "יזם", "יזמית", "בעל עסק", "בעלת עסק", "מנכ", "מנהל", "מנהלת",
-  "סוכנות", "חברה", "ייעוץ", "מייסד", "מייסדת", "פרילנס", "עצמאי",
-  "עצמאית", "בעל סטודיו", "בעלת סטודיו", "מאמן עסקי", "מאמנת עסקית",
-  "יועץ", "יועצת", "אסטרטג", "אסטרטגית",
+const FOUNDER_HINTS_OCCUPATION = [
+  "מנכ", "סוכנות", "חברה", "ייעוץ", "סטודיו",
+  "מאמן עסקי", "מאמנת עסקית", "יועץ", "יועצת",
+  "אסטרטג", "אסטרטגית",
+] as const;
+
+/**
+ * Founder-shape detection from inside the answer text — business-owner
+ * identity language that surfaces naturally when someone actually runs a
+ * business, even if their occupation field says "מטפלת" or "מעצבת". This
+ * catches the practitioner-with-revenue cases the occupation regex misses.
+ */
+const FOUNDER_HINTS_ANSWERS = [
+  "הלקוחות שלי", "הלקוחה שלי", "העסק שלי", "הצוות שלי",
+  "המנויים שלי", "הקהילה שלי", "השיעורים שלי",
+  "ניהלתי", "ניהלת", "בנינו", "בניתי", "ייסדתי", "הקמתי",
 ] as const;
 
 /**
@@ -85,8 +110,14 @@ export function determineBucket(input: DetermineInput): BucketDecision {
     0,
   );
 
+  // Two-source founder detection: pruned occupation regex OR business-owner
+  // identity language inside the answer text. Either firing is enough — the
+  // single-source check was missing practitioners-with-revenue (e.g. "מטפלת"
+  // with 80 paying clients/year) who don't self-label as founders.
   const occLower = (occupation ?? "").toLowerCase();
-  const founderHint = FOUNDER_HINTS.some((h) => occLower.includes(h.toLowerCase()));
+  const occHit = FOUNDER_HINTS_OCCUPATION.some((h) => occLower.includes(h.toLowerCase()));
+  const answerHit = FOUNDER_HINTS_ANSWERS.some((h) => fullText.includes(h));
+  const founderHint = occHit || answerHit;
 
   // Rule 1: existing customer → Hive (continuation, not new sale). This rule
   // always wins regardless of LLM signal — retention overrides acquisition.

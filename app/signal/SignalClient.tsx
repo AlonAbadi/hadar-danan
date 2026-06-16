@@ -372,7 +372,7 @@ function Intro({ firstName, onStart }: { firstName?: string; onStart: () => void
       </p>
 
       <p style={{ fontSize: 16, color: C.fg, opacity: 0.94, lineHeight: 1.75, margin: "0 0 30px", textAlign: "right" }}>
-        בסוף נשאר אצלך משפט אחד להגיד בקול בלי להתנצל, הקהל שמחפש בדיוק אותך, ושלושה כיווני תוכן להתחיל מהם בלי לחכות.
+        בסוף נשאר אצלך משפט אחד להגיד בקול בלי להתנצל, הקהל שמחפש בדיוק אותך, ושלושה כיווני תוכן להתחיל מהם בלי לחכות. ואם יתאים, גם הצעד הבא הנכון לך מכאן.
       </p>
 
       <div style={{ textAlign: "center" }}>
@@ -1367,6 +1367,10 @@ function ResultBridge({ gender, bucket }: { gender: Gender; bucket: Bucket }) {
   const opener = gender === "m"
     ? "אתה חילצת את האות שלך. עכשיו צריך לתת לו צורה."
     : "את חילצת את האות שלך. עכשיו צריך לתת לו צורה.";
+  // Middle line — names the principle that earns the offer reveal:
+  // signal → outcome needs a working partner, not just an artifact.
+  // Gender-neutral (לך works for m/f unvowelled; עזרה agrees with Hadar f).
+  const principle = "הדרך הקצרה ביותר מאות לתוצאה היא לעבוד עליו עם מי שעזרה לך לחלץ אותו.";
   const tail = BRIDGE_TAILS[bucket];
 
   return (
@@ -1384,6 +1388,14 @@ function ResultBridge({ gender, bucket }: { gender: Gender; bucket: Bucket }) {
         fontStyle:     "italic",
       }}>
         {opener}
+      </p>
+      <p style={{
+        margin:        "0 0 6px",
+        fontSize:      14,
+        lineHeight:    1.65,
+        color:         C.muted,
+      }}>
+        {principle}
       </p>
       <p style={{
         margin:        0,
