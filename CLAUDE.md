@@ -200,6 +200,10 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 046 | `046_signal_email_sequence.sql` | Applied — adds the SIGNAL_EXTRACTED row to email_sequences (template_key=signal_welcome, 0h delay) so /signal leads get a dedicated welcome that references the diagnostic instead of the generic ladder pitch |
 | 047 | `047_hive_cardcom_token.sql` | Pending — adds `cardcom_recurring_id`, `cardcom_account_id`, `cardcom_token`, card validity + last-4 columns to users, plus index `idx_users_cardcom_recurring_id`. Stage 4 Phase 1 — schema only, no user-facing change. Cardcom runs the recurring schedule natively via BillGoldService.AddUpdateRecurringOrder; we just store the RecurringId so we can cancel/update later |
 | 048 | `048_shoot_day.sql` | Pending — adds JSONB shape constraint + index for `signal_extractions.signal.shoot_day`. Foundation for the Shoot Day feature (Mode E of the Hadar Director Engine). No new table — cached on existing JSONB column. |
+| 049 | `049_signal_atomic_merge.sql` | Applied — atomic JSONB merge RPC for signal_extractions.signal, fixes parallel-render race condition. |
+| 050 | `050_signal_welcome_en_sequence.sql` | Applied — adds /en/signal welcome email sequence row. |
+| 051 | `051_users_gender.sql` | Applied — adds `gender` column on users + signal_extractions (m/f), plus `bucket` column on signal_extractions with CHECK constraint (challenge/strategy/hive/none). |
+| 052 | `052_signal_bucket_nurture.sql` | **Pending — APPLY ASAP.** Extends signal_extractions.bucket CHECK to also allow 'nurture'. Without this, all inserts that route to the new nurture bucket (commit a046816) silently fail the CHECK, leaving extractionId null and breaking the embedded share-card + share button + contest box on the result page. |
 
 ### Tables (20 total)
 
@@ -751,7 +755,7 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
-- Next migration number: 048
+- Next migration number: 053
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes
