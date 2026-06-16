@@ -71,7 +71,7 @@ export async function GET(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: userRow } = await (supabase as any)
     .from("users")
-    .select("name, hive_status, occupation")
+    .select("name, hive_status, occupation, gender")
     .eq("id", row.user_id)
     .maybeSingle();
 
@@ -86,6 +86,23 @@ export async function GET(
       { error: "Shoot Day is a Hive perk", upgrade_url: "/hive" },
       { status: 403 },
     );
+  }
+
+  // Force-refresh escape hatch: ?refresh=1 wipes the cache so the next call
+  // regenerates from scratch. Used when prompt rules change and the cached
+  // output no longer reflects them.
+  const refresh = req.nextUrl.searchParams.get("refresh") === "1";
+  if (refresh) {
+    const wiped = { ...row.signal };
+    delete (wiped as Record<string, unknown>).shoot_day;
+    delete (wiped as Record<string, unknown>).shoot_day_phase1;
+    delete (wiped as Record<string, unknown>).shoot_day_generated_at;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("signal_extractions")
+      .update({ signal: wiped })
+      .eq("id", id);
+    row.signal = wiped;
   }
 
   // Cached complete plan? return immediately
@@ -118,6 +135,7 @@ export async function GET(
     people:         String(row.signal.people         ?? ""),
     warm_note:      String(row.signal.warm_note      ?? ""),
     occupation:     userRow.occupation ?? null,
+    gender:         (userRow.gender === "m" || userRow.gender === "f") ? userRow.gender : null,
     bio_long:       row.signal.content_kit?.bio_long ?? undefined,
     positioning_statement: row.signal.content_kit?.positioning_statement ?? undefined,
   };

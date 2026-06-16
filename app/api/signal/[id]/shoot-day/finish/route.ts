@@ -85,7 +85,7 @@ export async function POST(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: userRow } = await (supabase as any)
     .from("users")
-    .select("name, hive_status, occupation")
+    .select("name, hive_status, occupation, gender")
     .eq("id", row.user_id)
     .maybeSingle();
 
@@ -121,6 +121,7 @@ export async function POST(
     people:         String(row.signal.people         ?? ""),
     warm_note:      String(row.signal.warm_note      ?? ""),
     occupation:     userRow.occupation ?? null,
+    gender:         (userRow.gender === "m" || userRow.gender === "f") ? userRow.gender : null,
     bio_long:       row.signal.content_kit?.bio_long ?? undefined,
     positioning_statement: row.signal.content_kit?.positioning_statement ?? undefined,
   };

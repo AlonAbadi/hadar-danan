@@ -394,7 +394,7 @@ function StrategyTab({ kit, loading }: { kit: ContentKit | null; loading: boolea
       <Section title="הצהרת המיקום שלך" hint="לעיניך בלבד, לא לפרסום">
         <CopyBlock text={kit.positioning_statement} />
       </Section>
-      <Section title="הלקוח האידיאלי שלך" hint="פרסונה — לעיניך בלבד">
+      <Section title="הלקוח האידיאלי שלך" hint="פרסונה. לעיניכם בלבד.">
         <CopyBlock text={kit.persona_description} longForm />
       </Section>
       <Section title="3 רעיונות למגנט לידים" hint="מה לתת חינם כדי לבנות רשימה">
@@ -801,7 +801,7 @@ function ShootDayVoiceIntro() {
           fontFamily: "'Frank Ruhl Libre', Georgia, serif",
           animation: "fadeUp 0.7s ease-out 1.0s both",
         }}>
-          בואי נבנה לך יום אחד שבו את משחקת משחק חדש.
+          בואו נבנה לכם יום אחד שבו אתם משחקים משחק חדש.
         </div>
 
         {/* Hadar signature */}
@@ -815,7 +815,7 @@ function ShootDayVoiceIntro() {
           <div style={{
             fontSize: 13, color: C.goldMid, fontWeight: 600, letterSpacing: 0.4,
           }}>
-            — הדר
+            הדר
           </div>
         </div>
       </div>
@@ -834,6 +834,15 @@ function ShootDayVoiceIntro() {
   );
 }
 
+// Strip em-dashes from any Hebrew text the engine produced before we caught
+// the rule in the prompt. Replaces " — " with ", " and bare "—" with "."
+function sanitizeHebrew(text: string): string {
+  return text
+    .replace(/\s*—\s*/g, ", ")
+    .replace(/\s+,\s+/g, ", ")
+    .replace(/,\s*$/, ".");
+}
+
 function ShootDayHero({ identity }: { identity: string }) {
   return (
     <div style={{
@@ -843,12 +852,12 @@ function ShootDayHero({ identity }: { identity: string }) {
       display: "flex", flexDirection: "column", gap: 14,
     }}>
       <div style={{ fontSize: 11, letterSpacing: 1.6, color: C.goldMid, fontWeight: 700, textTransform: "uppercase" }}>
-        משפט הזהות שלך
+        משפט הזהות שלכם
       </div>
       <div style={{
         fontSize: 24, fontWeight: 700, color: C.fg, lineHeight: 1.4,
       }}>
-        {identity}
+        {sanitizeHebrew(identity)}
       </div>
       <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginTop: 4 }}>
         זה לא תיאור שירות. זה הצהרת אופי. המשפט שצריך לפתוח כל סרטון, כל עמוד, כל שיחה ראשונה.
@@ -859,7 +868,7 @@ function ShootDayHero({ identity }: { identity: string }) {
 
 function PillarsOverview({ pillars }: { pillars: Pillar[] }) {
   return (
-    <Section title="4 עמודי המסר שלך" hint="כל פיסת תוכן שתוציא/י השנה תשב על אחד מהם">
+    <Section title="4 עמודי המסר שלכם" hint="כל פיסת תוכן שתוציאו השנה תשב על אחד מהם">
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
         {pillars.map((p) => (
           <div key={p.number} style={{
@@ -889,9 +898,9 @@ function VideosByAct({ videos }: { videos: Video[] }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <ActBlock title="ACT 1 — זהות" subtitle="מי אתה לעצמך" videos={act1} />
-      <ActBlock title="ACT 2 — סיפור" subtitle="הסיפורים שמוכיחים את זה" videos={act2} />
-      <ActBlock title="ACT 3 — סמכות" subtitle="איך אתה חושב, לא איך אתה עובד" videos={act3} />
+      <ActBlock title="ACT 1 · זהות" subtitle="מי אתם לעצמכם" videos={act1} />
+      <ActBlock title="ACT 2 · סיפור" subtitle="הסיפורים שמוכיחים את זה" videos={act2} />
+      <ActBlock title="ACT 3 · סמכות" subtitle="איך אתם חושבים, לא איך אתם עובדים" videos={act3} />
     </div>
   );
 }
@@ -907,11 +916,11 @@ function NextVideoTeaser({ current }: { current: number }) {
         ✦ הסרטונים הבאים
       </div>
       <div style={{ fontSize: 14, color: C.fg, lineHeight: 1.6 }}>
-        בנינו לך את הסרטון הראשון בקפידה. עוד {remaining} סרטונים מחכים לך —
+        בנינו לכם את הסרטון הראשון בקפידה. עוד {remaining} סרטונים מחכים לכם:
         4 הוקי-עמוד, 3 סיפורי-תיק, 2 frameworks, 1 myth, ו-CTA.
       </div>
       <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
-        בקרוב נשחרר ייצור-לפי-דרישה לכל סרטון בנפרד. בינתיים — תתרגלו את הסרטון הראשון הזה עד שהוא בעצמות.
+        בקרוב נשחרר ייצור-לפי-דרישה לכל סרטון בנפרד. בינתיים, תתרגלו את הסרטון הראשון הזה עד שהוא בעצמות.
       </div>
     </div>
   );
@@ -988,14 +997,14 @@ function VideoCard({ video }: { video: Video }) {
             Mode {video.mode} · {video.signature_move.name}
           </div>
           <div style={{ marginBottom: 8 }}>
-            {video.signature_move.explanation}
+            {sanitizeHebrew(video.signature_move.explanation)}
           </div>
           <div style={{
             borderTop: `1px solid ${C.line}`, paddingTop: 8, marginTop: 6,
             fontStyle: "italic", color: C.muted,
           }}>
-            &ldquo;{video.hadar_quote.text}&rdquo;
-            <div style={{ fontSize: 10, marginTop: 2 }}>— {video.hadar_quote.source}</div>
+            &ldquo;{sanitizeHebrew(video.hadar_quote.text)}&rdquo;
+            <div style={{ fontSize: 10, marginTop: 2 }}>· {video.hadar_quote.source}</div>
           </div>
         </div>
       )}
@@ -1018,16 +1027,16 @@ function VideoCard({ video }: { video: Video }) {
           <div style={{ background: C.cardSoft, padding: 12, borderRadius: 8 }}>
             <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 4 }}>הוק</div>
             <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6, marginBottom: 10 }}>
-              {video.script.hook}
+              {sanitizeHebrew(video.script.hook)}
             </div>
             <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 4 }}>גוף</div>
             <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6 }}>
-              {video.script.body}
+              {sanitizeHebrew(video.script.body)}
             </div>
             {video.script.cta && (
               <>
                 <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 4, marginTop: 10 }}>CTA</div>
-                <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6 }}>{video.script.cta}</div>
+                <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6 }}>{sanitizeHebrew(video.script.cta)}</div>
               </>
             )}
           </div>
@@ -1036,10 +1045,10 @@ function VideoCard({ video }: { video: Video }) {
           <div style={{ background: C.cardSoft, padding: 12, borderRadius: 8 }}>
             <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 6 }}>הוראות בימוי</div>
             <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.8 }}>
-              <div><strong>ויזואלי:</strong> {video.direction.visual}</div>
-              <div><strong>גוף:</strong> {video.direction.body_language}</div>
-              <div><strong>טון:</strong> {video.direction.tone}</div>
-              <div><strong>קשר עין:</strong> {video.direction.eye_contact}</div>
+              <div><strong>ויזואלי:</strong> {sanitizeHebrew(video.direction.visual)}</div>
+              <div><strong>גוף:</strong> {sanitizeHebrew(video.direction.body_language)}</div>
+              <div><strong>טון:</strong> {sanitizeHebrew(video.direction.tone)}</div>
+              <div><strong>קשר עין:</strong> {sanitizeHebrew(video.direction.eye_contact)}</div>
             </div>
           </div>
 
@@ -1052,10 +1061,10 @@ function VideoCard({ video }: { video: Video }) {
               הפוך מהקטגוריה
             </div>
             <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 4 }}>
-              <strong style={{ color: C.fg }}>הם:</strong> {video.anti_category.competitor_norm}
+              <strong style={{ color: C.fg }}>הם:</strong> {sanitizeHebrew(video.anti_category.competitor_norm)}
             </div>
             <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.6 }}>
-              <strong style={{ color: C.gold }}>אתה:</strong> {video.anti_category.your_inversion}
+              <strong style={{ color: C.gold }}>אתם:</strong> {sanitizeHebrew(video.anti_category.your_inversion)}
             </div>
           </div>
         </div>
@@ -1250,7 +1259,7 @@ function HadarSignoff() {
         תהיו טובים.
       </div>
       <div style={{ fontSize: 12, color: C.muted }}>
-        — הדר
+        הדר
       </div>
     </div>
   );
