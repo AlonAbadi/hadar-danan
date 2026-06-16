@@ -618,16 +618,19 @@ function Loading() {
     return () => { cancelled = true; };
   }, []);
 
-  // Progress bar: asymptotic approach toward ~97%. Each tick adds a fraction
-  // of the remaining gap, so early progress is fast and visible while the
-  // later stretch slows naturally. The bar always inches forward — it never
-  // sticks at a single number, which would read as a bug.
+  // Progress bar: accelerating curve. Slow at the start (builds
+  // anticipation, no "almost done already?" misread on a 15-25s wait),
+  // fast at the end (closes the bar before the API actually returns so
+  // the reveal feels punctual rather than dragging). The increment grows
+  // linearly with current progress — at p=0 the bar barely moves; at p=90
+  // each tick is ~10× faster.
   useEffect(() => {
     const id = setInterval(() => {
       setProgress((p) => {
         const target = 97;
-        const gap    = target - p;
-        return p + Math.max(0.08, gap * 0.025);
+        if (p >= target) return p;
+        const increment = 0.25 + (p / 100) * 2.2;
+        return Math.min(p + increment, target);
       });
     }, 250);
     return () => clearInterval(id);
