@@ -610,44 +610,84 @@ function ErrorBox({ text }: { text: string }) {
 // voice clips swap in V2 after Hadar recording day.
 
 function ShootDayTab({ extractionId }: { extractionId: string }) {
-  const [plan, setPlan]       = useState<ShootDayPlan | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
+  const [plan, setPlan]         = useState<ShootDayPlan | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [phase, setPhase]       = useState<"phase1" | "phase2">("phase1");
+  const [error, setError]       = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
-        const res  = await fetch(`/api/signal/${extractionId}/shoot-day`);
-
-        // Read as text first — Vercel function errors are HTML, not JSON
-        const text = await res.text();
-
-        if (!res.ok) {
-          // Try JSON first, fallback to raw text
-          try {
-            const data = JSON.parse(text);
-            setError(data?.error ?? `HTTP ${res.status}: ${text.slice(0, 200)}`);
-          } catch {
-            setError(`HTTP ${res.status} (Vercel function error): ${text.slice(0, 300)}`);
-          }
+        // ── Phase 1: identity + pillars ────────────────────────────────
+        setPhase("phase1");
+        const res1  = await fetch(`/api/signal/${extractionId}/shoot-day`);
+        const txt1  = await res1.text();
+        let data1: { phase?: string; plan?: ShootDayPlan; identity_statement?: string; pillars?: Pillar[]; error?: string };
+        try {
+          data1 = JSON.parse(txt1);
+        } catch {
+          if (!cancelled) setError(`Phase 1 (HTTP ${res1.status}, ${res1.statusText}): ${txt1.slice(0, 300)}`);
+          return;
+        }
+        if (!res1.ok) {
+          if (!cancelled) setError(data1?.error ?? `Phase 1 failed (HTTP ${res1.status})`);
           return;
         }
 
-        const data = JSON.parse(text);
-        if (!data?.plan) {
-          setError(data?.error ?? "Shoot Day generation failed (no plan returned)");
+        // Complete plan already cached? skip phase 2
+        if (data1.phase === "complete" && data1.plan) {
+          if (!cancelled) setPlan(data1.plan);
           return;
         }
-        setPlan(data.plan);
+
+        if (!data1.identity_statement || !data1.pillars) {
+          if (!cancelled) setError("Phase 1 returned no identity/pillars");
+          return;
+        }
+
+        // ── Phase 2: videos + strategy + gift_sentences ────────────────
+        if (cancelled) return;
+        setPhase("phase2");
+        const res2 = await fetch(`/api/signal/${extractionId}/shoot-day/finish`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({
+            identity_statement: data1.identity_statement,
+            pillars:            data1.pillars,
+          }),
+        });
+        const txt2 = await res2.text();
+        let data2: { plan?: ShootDayPlan; error?: string };
+        try {
+          data2 = JSON.parse(txt2);
+        } catch {
+          if (!cancelled) setError(`Phase 2 (HTTP ${res2.status}, ${res2.statusText}): ${txt2.slice(0, 300)}`);
+          return;
+        }
+        if (!res2.ok || !data2.plan) {
+          if (!cancelled) setError(data2?.error ?? `Phase 2 failed (HTTP ${res2.status})`);
+          return;
+        }
+        if (!cancelled) setPlan(data2.plan);
       } catch (e) {
-        setError(`Client error: ${String(e)}`);
+        if (!cancelled) setError(`Client error: ${String(e)}`);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => { cancelled = true; };
   }, [extractionId]);
 
-  if (loading) return <Loading text="בונה לך יום צילום שלם…" />;
+  if (loading) {
+    return (
+      <Loading
+        text={phase === "phase1"
+          ? "מחלץ את משפט הזהות ו-4 העמודים שלך…"
+          : "בונה 12 סרטונים + visual direction + 5 משפטי-מתנה…"}
+      />
+    );
+  }
   if (error)   return <ErrorBox text={error} />;
   if (!plan)   return null;
 
