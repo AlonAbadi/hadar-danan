@@ -1295,14 +1295,31 @@ function Result({
         </p>
       </div>
 
-      {/* Quiet actions — copy + share. Visually lower-priority than the invite. */}
-      <div className="result-actions" style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-        <CopyButton
-          text={`${signal.signal}\n\nTrueSignal© · beegood.online`}
-          label={t.copy}
+      {/* Content directions block — the 3 starting angles the LLM extracted.
+          Visible inline so the user keeps them, not buried in shared cards. */}
+      {Array.isArray(signal.content_directions) && signal.content_directions.length === 3 && (
+        <ContentDirectionsBlock directions={signal.content_directions} />
+      )}
+
+      {/* Card preview + share + contest. The card is rendered inline via the
+          existing /api/signal/[id]/share-card PNG endpoint, wrapped in a gold
+          frame so it doesn't blend with the dark Santosha page. Below: share
+          actions and the compact monthly-contest box pointing to /contest. */}
+      {extractionId ? (
+        <CardPreviewBlock
+          extractionId={extractionId}
+          firstName={firstName}
+          signalText={signal.signal}
+          copyLabel={t.copy}
         />
-        {extractionId && <ShareButton extractionId={extractionId} firstName={firstName} />}
-      </div>
+      ) : (
+        <div className="result-actions" style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+          <CopyButton
+            text={`${signal.signal}\n\nTrueSignal© · beegood.online`}
+            label={t.copy}
+          />
+        </div>
+      )}
 
       {/* Bridge — connects the personal moment to the offer below. Skipped
           for bucket=none, where no offer follows. */}
@@ -1378,6 +1395,216 @@ const BRIDGE_TAILS: Record<Exclude<Bucket, "none">, string> = {
   hive:      "מקום שממשיכים לעבוד בו עליו.",
   nurture:   "ההמשך מתחיל מההדרכה. חינמית, עשרים דקות.",
 };
+
+// ── Content directions block ───────────────────────────────────────────────
+// Renders the 3 content directions the LLM extracted, as a numbered list. The
+// user keeps these visibly on-page (not only inside the share card), so they
+// have actionable starting points the moment they finish the signal.
+function ContentDirectionsBlock({ directions }: { directions: readonly string[] }) {
+  return (
+    <div style={{
+      background:   C.cardSoft,
+      border:       `1px solid ${C.line}`,
+      borderRadius: 16,
+      padding:      "26px 26px 22px",
+    }}>
+      <div style={{
+        color:         C.goldMid,
+        fontSize:      11,
+        letterSpacing: 1.6,
+        marginBottom:  6,
+        textTransform: "uppercase",
+        textAlign:     "right",
+        fontWeight:    600,
+      }}>
+        כיווני תוכן
+      </div>
+      <h4 style={{
+        fontSize:     17,
+        fontWeight:   700,
+        color:        C.fg,
+        marginBottom: 16,
+        textAlign:    "right",
+        margin:       "0 0 16px",
+      }}>
+        שלושה כיוונים להתחיל מהם
+      </h4>
+      <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        {directions.map((d, i) => (
+          <li
+            key={i}
+            style={{
+              padding:           "13px 0",
+              paddingInlineStart: 38,
+              position:          "relative",
+              fontSize:          14.5,
+              lineHeight:        1.75,
+              color:             C.fg,
+              borderBottom:      i < directions.length - 1 ? `1px solid ${C.line}` : "none",
+              textAlign:         "right",
+            }}
+          >
+            <span style={{
+              position:      "absolute",
+              insetInlineStart: 0,
+              top:           13,
+              width:         24,
+              height:        24,
+              borderRadius:  "50%",
+              background:    C.gold,
+              color:         C.bg,
+              fontSize:      12,
+              fontWeight:    800,
+              display:       "grid",
+              placeItems:    "center",
+            }}>
+              {i + 1}
+            </span>
+            {d}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+// ── Card preview + share + contest block ──────────────────────────────────
+// The 1080×1080 share-card PNG is rendered inline as <img>, wrapped in a
+// gold-tinted frame so it doesn't blend with the dark Santosha page. Below
+// the card: share + copy buttons + the compact monthly-contest box.
+function CardPreviewBlock({
+  extractionId,
+  firstName,
+  signalText,
+  copyLabel,
+}: {
+  extractionId: string;
+  firstName?:   string;
+  signalText:   string;
+  copyLabel:    string;
+}) {
+  return (
+    <div style={{
+      background:   C.cardSoft,
+      border:       `1px solid ${C.line}`,
+      borderRadius: 16,
+      padding:      "26px 22px 22px",
+      textAlign:    "center",
+    }}>
+      <div style={{
+        color:         C.goldMid,
+        fontSize:      11,
+        letterSpacing: 1.6,
+        marginBottom:  18,
+        textTransform: "uppercase",
+        fontWeight:    600,
+      }}>
+        הכרטיס שלך
+      </div>
+
+      {/* Gold-tinted frame — makes the card pop against the dark page */}
+      <div style={{
+        display:      "inline-block",
+        padding:      10,
+        background:   "rgba(232,185,74,0.03)",
+        border:       "1px solid rgba(201,150,74,0.40)",
+        borderRadius: 16,
+        boxShadow:    "0 0 36px rgba(201,150,74,0.15), 0 0 0 3px rgba(0,0,0,0.35), 0 20px 50px rgba(0,0,0,0.55)",
+      }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`/api/signal/${extractionId}/share-card`}
+          alt="הכרטיס שלך"
+          width={300}
+          height={300}
+          style={{
+            display:      "block",
+            width:        300,
+            height:       300,
+            maxWidth:     "100%",
+            borderRadius: 8,
+          }}
+        />
+      </div>
+
+      {/* Share + copy actions */}
+      <div className="result-actions" style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginTop: 18 }}>
+        <ShareButton extractionId={extractionId} firstName={firstName} />
+        <CopyButton
+          text={`${signalText}\n\nTrueSignal© · beegood.online`}
+          label={copyLabel}
+        />
+      </div>
+
+      {/* Monthly contest — compact, doesn't dominate the page. Links to /contest. */}
+      <ContestBox />
+    </div>
+  );
+}
+
+// ── Monthly contest box ───────────────────────────────────────────────────
+// Compact attention element under the share buttons. Encourages tagging
+// @hadar_danan on Instagram/Facebook/TikTok/LinkedIn. Full terms at /contest.
+function ContestBox() {
+  return (
+    <div style={{
+      marginTop:    14,
+      padding:      "12px 16px",
+      background:   "rgba(232,185,74,0.04)",
+      border:       "1px solid rgba(232,185,74,0.18)",
+      borderRadius: 10,
+      textAlign:    "center",
+    }}>
+      <div style={{
+        fontSize:      9.5,
+        fontWeight:    800,
+        color:         C.goldMid,
+        letterSpacing: "0.18em",
+        textTransform: "uppercase",
+        marginBottom:  6,
+      }}>
+        כנסו לתחרות
+      </div>
+      <div style={{
+        fontSize:     13.5,
+        fontWeight:   700,
+        color:        C.gold,
+        marginBottom: 6,
+      }}>
+        כל חודש זוכה אחד. שלושה סרטונים.
+      </div>
+      <div style={{
+        fontSize:     11.5,
+        lineHeight:   1.65,
+        color:        C.muted,
+        marginBottom: 6,
+      }}>
+        שתפו את הכרטיס באינסטגרם, פייסבוק, טיקטוק או לינקדאין, תייגו{" "}
+        <span style={{
+          fontFamily: "Monaco, monospace",
+          color:      C.goldMid,
+          fontWeight: 700,
+        }}>
+          @hadar_danan
+        </span>
+        . מי שעורר הכי הרבה שיחה החודש (תגובות ולייקים) מקבל תהליך הפקת תוכן עם הדר. שלושה סרטונים שלמים, בשווי אלפי שקלים.
+      </div>
+      <Link
+        href="/contest"
+        style={{
+          display:             "inline-block",
+          fontSize:            10.5,
+          color:               C.goldMid,
+          textDecoration:      "underline",
+          textUnderlineOffset: 3,
+          opacity:             0.85,
+        }}
+      >
+        תקנון מלא ←
+      </Link>
+    </div>
+  );
+}
 
 function ResultBridge({ gender, bucket }: { gender: Gender; bucket: Bucket }) {
   if (bucket === "none") return null;
