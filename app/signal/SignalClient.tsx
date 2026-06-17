@@ -7,7 +7,7 @@ import { detectGender } from "@/lib/gender/detect";
 import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
 import { EmailMeButton } from "@/components/signal/EmailMeButton";
-import { ShareButton } from "@/components/signal/ShareButton";
+import { ShareButtons } from "@/components/signal/ShareButtons";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 
 type SignalAnswers = Record<string, string>;
@@ -1552,9 +1552,12 @@ function CardPreviewBlock({
         />
       </div>
 
-      {/* Share + copy actions */}
-      <div className="result-actions" style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginTop: 18 }}>
-        <ShareButton extractionId={extractionId} firstName={firstName} />
+      {/* Three explicit share actions — WhatsApp / Story / PNG — under a
+          visible "שתפו את האות שלכם" header. The copy-text affordance moves
+          below as a quieter secondary action. */}
+      <ShareButtons extractionId={extractionId} firstName={firstName} />
+
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
         <CopyButton
           text={`${signalText}\n\nTrueSignal© · beegood.online`}
           label={copyLabel}
