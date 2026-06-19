@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import ChallengeProofWall from "@/components/landing/ChallengeProofWall";
@@ -5,10 +6,12 @@ import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { ChallengeHeroText } from "@/components/landing/ChallengeHeroText";
+import { ChallengeTestimonialStrip } from "@/components/landing/ChallengeTestimonialStrip";
+import { ChallengeProofTracker } from "./ChallengeProofTracker";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP, CHALLENGE_ORIGINAL_PRICE } from "@/lib/products";
 import { computeNextLiveMeetingDate } from "@/lib/challenge-config";
-import { CHALLENGE_HERO_WINNER } from "@/lib/ab";
+import { CHALLENGE_HERO_WINNER, parseVariant } from "@/lib/ab";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
@@ -65,6 +68,15 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
   // CHALLENGE_HERO_WINNER in lib/ab.ts.
   const heroContent = CHALLENGE_HERO_WINNER;
 
+  // A/B test "challenge_proof_position" (launched 2026-06-19): the deep
+  // proof wall is currently rendered at the bottom of the page where
+  // mobile drop-off is severe. Variant B surfaces a horizontal testimonial
+  // strip right after the hero AND moves the full proof wall up to the
+  // slot between Problem and Solution. Variant A keeps the existing order.
+  const cookieStore = await cookies();
+  const abVariant   = parseVariant(cookieStore.get("ab_variant")?.value);
+  const earlyProof  = abVariant === "B";
+
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   return (
@@ -83,6 +95,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         { name: "אתגר 7 הימים", url: `${APP_URL}/challenge` },
       ]} />
       <ViewContentTracker product="challenge_197" value={197} />
+      <ChallengeProofTracker variant={abVariant} />
       <ProductLandingPage
         productName="אתגר 7 הימים"
         price={PRODUCT_MAP.challenge_197.price}
@@ -137,13 +150,15 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         whoRole="אסטרטגיסטית שיווק ותוכן"
         whoText={'3,500 בעלי עסקים עברו דרכי. ראיתי את אותן תקיעויות חוזרות, לא חוסר ביכולת אלא חוסר בודאות. האתגר בנוי על אותה מתודולוגיה שעבדה עבורם: להבין מי את/ה בתוך השירות שלך, ולבנות מסביב לזה תוכן שמוכר. בלי מניפולציות, בלי פטנטים.'}
 
-        proofStats={[
+        proofStats={earlyProof ? undefined : [
           { val: "מאות", label: "משתתפים באתגר" },
           { val: "7",    label: "ימים, סרטונים, פעולה" },
           { val: "4",    label: "שנות ניסיון" },
         ]}
         testimonials={[]}
-        proofSlot={<ChallengeProofWall />}
+        proofSlot={earlyProof ? undefined : <ChallengeProofWall />}
+        postHeroSlot={earlyProof ? <ChallengeTestimonialStrip /> : undefined}
+        postProblemSlot={earlyProof ? <ChallengeProofWall /> : undefined}
 
         questions={[
           {

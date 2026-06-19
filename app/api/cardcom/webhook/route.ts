@@ -229,10 +229,11 @@ async function fulfillPurchase(
   }
 
   // Pick which experiment this purchase contributes to (if any). The
-  // challenge_hero_format experiment concluded 2026-06-19 (B won, +123.8%
-  // uplift at P=97.4%), so we no longer attribute challenge purchases to
-  // it. Set to null until the next purchase-tracked experiment launches.
-  const purchaseExperimentName: string | null = null;
+  // challenge_hero_format experiment concluded 2026-06-19; the follow-on
+  // test challenge_proof_position (launched same day) now claims the
+  // challenge purchase as its conversion metric.
+  const purchaseExperimentName: string | null =
+    purchase.product === "challenge_197" ? "challenge_proof_position" : null;
 
   // Fire PURCHASE_COMPLETED — drives state machine + downstream sequences
   await supabase.from("events").insert({

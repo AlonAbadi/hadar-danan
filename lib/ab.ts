@@ -121,3 +121,19 @@ export const CHALLENGE_HERO_AB: Record<AbVariant, ChallengeHeroVariant> = {
 // — kept as a separate constant so production reads from a non-AB
 // surface and the AB map can be deleted later without touching the page.
 export const CHALLENGE_HERO_WINNER: ChallengeHeroVariant = CHALLENGE_HERO_AB.B;
+
+// ── Challenge proof position A/B test ─────────────────────────────
+// Launched 2026-06-19. After the hero-format test concluded with the
+// designed text block as winner, the deepest unused asset on /challenge
+// is ChallengeProofWall (10 real screenshot testimonials) — but it sits
+// ~7 mobile screens deep, where only ~10-15% of visitors reach it.
+//
+// Variant A (control): current layout — proof wall lives below "Who".
+// Variant B (test):    proof wall moves to between Problem and Solution,
+//                      and a horizontal testimonial strip surfaces 3
+//                      cards immediately after the hero.
+//
+// Primary metric: PURCHASE of challenge_197.
+// Same ab_variant cookie as landing_headline — stacked-variant pattern,
+// consistent with the previous challenge experiment.
+export const CHALLENGE_PROOF_EXPERIMENT = "challenge_proof_position";

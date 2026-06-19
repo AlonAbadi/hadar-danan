@@ -178,14 +178,19 @@ export async function POST(req: NextRequest) {
       // counts as a win: signup, quiz lead, checkout start, or purchase.
       let isConversion = false;
       if (experimentName === "challenge_hero_format") {
-        // Primary: actual purchase of the challenge
+        // Concluded 2026-06-19 (B won). Kept for any tail-end events.
         isConversion =
           type === "PURCHASE_COMPLETED" &&
           (metadata as { product?: string }).product === "challenge_197";
       } else if (experimentName === "challenge_hero_format_checkout") {
-        // Secondary: clicked through to checkout
+        // Concluded 2026-06-19 (B won). Kept for any tail-end events.
         isConversion =
           type === "CHECKOUT_STARTED" &&
+          (metadata as { product?: string }).product === "challenge_197";
+      } else if (experimentName === "challenge_proof_position") {
+        // Launched 2026-06-19. Primary metric: actual challenge purchase.
+        isConversion =
+          type === "PURCHASE_COMPLETED" &&
           (metadata as { product?: string }).product === "challenge_197";
       } else {
         // Landing-headline / quiz-Q1 / default: signup or quiz lead

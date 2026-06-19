@@ -57,6 +57,15 @@ export interface ProductLandingPageProps {
   proofSlot?:   React.ReactNode;
   logoSrcs?:    string[];
 
+  /** Optional content rendered immediately after the hero block, before
+      the definition section. Used by the challenge_proof_position A/B
+      to show a horizontal testimonial strip on mobile. */
+  postHeroSlot?:    React.ReactNode;
+  /** Optional content rendered immediately after the problem section,
+      before the solution accordion. Used by the same A/B to surface the
+      full proof wall earlier in the scroll than the default position. */
+  postProblemSlot?: React.ReactNode;
+
   anchorItems?: { val: string; label: string }[];
   anchorTotal?: string;
 
@@ -520,6 +529,7 @@ export default function ProductLandingPage({
   notForItems, forItems,
   whoName, whoRole, whoText, whoPhotoSrc,
   proofStats, testimonials, proofSlot, logoSrcs,
+  postHeroSlot, postProblemSlot,
   anchorItems, anchorTotal,
   questions = [], resultMessages = {}, hideMicroCommitment,
   creditNote,
@@ -668,6 +678,9 @@ export default function ProductLandingPage({
         )}
       </div>
 
+      {/* ── Optional: post-hero slot (A/B variant) ───────────────── */}
+      {postHeroSlot}
+
       {/* ── Definition block (AI-extractable) ──────────────────── */}
       {definitionBlock && (
         <div style={{ background: CARD, borderTop: `1px solid ${BORDER}`, padding: '28px 20px' }}>
@@ -701,6 +714,9 @@ export default function ProductLandingPage({
           </div>
         </>
       )}
+
+      {/* ── Optional: post-problem slot (A/B variant) ───────────── */}
+      {postProblemSlot}
 
       {/* ── Solution accordion ──────────────────────────────────── */}
       {solutionItems.length > 0 && (

@@ -88,10 +88,13 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
           metadata: {
             product: "challenge_197",
             price: toPay,
-            // ab_variant + experiment_name removed 2026-06-19: the
-            // challenge_hero_format experiment concluded with B as winner
-            // (now hard-coded). Keeping the event itself for funnel tracking.
             ab_variant: getCookie("ab_variant"),
+            // Drives the challenge_proof_position experiment (launched
+            // 2026-06-19). Only the PURCHASE_COMPLETED event counts as a
+            // conversion for this test; the CHECKOUT_STARTED event still
+            // carries the experiment name so we have a secondary funnel
+            // metric available in /admin/abtesting if we want to graph it.
+            experiment_name: "challenge_proof_position",
           },
         }),
       }).catch(() => {});
@@ -172,10 +175,13 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
           metadata: {
             product: "challenge_197",
             price: toPay,
-            // ab_variant + experiment_name removed 2026-06-19: the
-            // challenge_hero_format experiment concluded with B as winner
-            // (now hard-coded). Keeping the event itself for funnel tracking.
             ab_variant: getCookie("ab_variant"),
+            // Drives the challenge_proof_position experiment (launched
+            // 2026-06-19). Only the PURCHASE_COMPLETED event counts as a
+            // conversion for this test; the CHECKOUT_STARTED event still
+            // carries the experiment name so we have a secondary funnel
+            // metric available in /admin/abtesting if we want to graph it.
+            experiment_name: "challenge_proof_position",
           },
         }),
       }).catch(() => {});
