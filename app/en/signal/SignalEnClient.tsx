@@ -252,24 +252,16 @@ function TopBar({ step, total, phase }: { step: number; total: number; phase: Ph
     >
       <Link
         href="/en"
-        style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: C.text }}
+        style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: C.text }}
       >
-        <span
-          style={{
-            width:          34,
-            height:         34,
-            borderRadius:   9,
-            background:     "#1E1C18",
-            border:         "1px solid rgba(194,151,63,0.28)",
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-            flexShrink:     0,
-          }}
-        >
-          <Image src={BEE} alt="beegood" width={22} height={22} style={{ width: "64%", height: "auto", display: "block" }} />
-        </span>
-        <span style={{ fontSize: 19, fontWeight: 500, letterSpacing: "-0.02em", color: C.text }}>
+        <Image
+          src={BEE}
+          alt="beegood"
+          width={50}
+          height={40}
+          style={{ width: "auto", height: 40, display: "block" }}
+        />
+        <span style={{ fontSize: 22, fontWeight: 500, letterSpacing: "-0.02em", color: C.text }}>
           beegood
         </span>
       </Link>

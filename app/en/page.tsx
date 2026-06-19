@@ -31,23 +31,15 @@ export default function EnHomePage() {
             gap: 16,
           }}
         >
-          <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none" }}>
-            <span
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 9,
-                background: "#1E1C18",
-                border: "1px solid rgba(194,151,63,0.28)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Image src={BEE} alt="beegood" width={22} height={22} style={{ width: "64%", height: "auto", display: "block" }} />
-            </span>
-            <span style={{ fontSize: 19, fontWeight: 500, letterSpacing: "-0.02em", color: "#F2EDE4" }}>
+          <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none" }}>
+            <Image
+              src={BEE}
+              alt="beegood"
+              width={50}
+              height={40}
+              style={{ width: "auto", height: 40, display: "block" }}
+            />
+            <span style={{ fontSize: 22, fontWeight: 500, letterSpacing: "-0.02em", color: "#F2EDE4" }}>
               beegood
             </span>
           </Link>
@@ -599,21 +591,13 @@ export default function EnHomePage() {
               &ldquo;BeeGood does not help personal brands do more. It helps them know what truly matters, and execute accordingly.&rdquo;
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 36 }}>
-              <span
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 11,
-                  background: "#1E1C18",
-                  border: "1px solid rgba(194,151,63,0.25)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Image src={BEE} alt="" width={28} height={28} style={{ width: "64%", height: "auto", display: "block" }} />
-              </span>
+              <Image
+                src={BEE}
+                alt=""
+                width={50}
+                height={40}
+                style={{ width: "auto", height: 40, display: "block", flexShrink: 0 }}
+              />
               <div>
                 <div style={{ fontSize: 17, fontWeight: 600, color: "#F2EDE4" }}>
                   Hadar Danan &amp; Alon Abadi
@@ -712,22 +696,15 @@ export default function EnHomePage() {
             flexWrap: "wrap",
           }}
         >
-          <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-            <span
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 8,
-                background: "#1E1C18",
-                border: "1px solid rgba(194,151,63,0.22)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Image src={BEE} alt="" width={19} height={19} style={{ width: "64%", height: "auto", display: "block" }} />
-            </span>
-            <span style={{ fontSize: 16, fontWeight: 500, letterSpacing: "-0.015em", color: "#F2EDE4" }}>beegood</span>
+          <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+            <Image
+              src={BEE}
+              alt=""
+              width={36}
+              height={28}
+              style={{ width: "auto", height: 28, display: "block" }}
+            />
+            <span style={{ fontSize: 17, fontWeight: 500, letterSpacing: "-0.015em", color: "#F2EDE4" }}>beegood</span>
           </Link>
           <span style={{ fontSize: 13, color: "rgba(242,237,228,0.24)" }}>
             Business OS for Personal Brands · TrueSignal© Method
