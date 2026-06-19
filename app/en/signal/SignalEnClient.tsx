@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+const BEE = "/beegood_logo.png";
 
 const QUESTIONS = [
   {
@@ -13,13 +17,13 @@ const QUESTIONS = [
   {
     key: "effortless_mastery",
     label: "What comes so easily to you that you can't explain how you do it?",
-    meta: "The thing so natural to you that you stopped seeing it as a talent - you just do it.",
+    meta: "The thing so natural to you that you stopped seeing it as a talent, you just do it.",
     skippable: false,
   },
   {
     key: "hard_period",
     label: "Name a hard chapter that changed the way you see things.",
-    meta: "This one can be skipped - share only what you want to.",
+    meta: "This one can be skipped, share only what you want to.",
     skippable: true,
   },
   {
@@ -38,29 +42,32 @@ const QUESTIONS = [
 
 const DRAFT_KEY = "bg_en_signal_draft_v1";
 const LANDING_Q1_KEY = "bg_ts_q1";
+const MIN_CHARS = 8;
 
-type Phase = "form" | "gate" | "loading" | "error";
+type Phase = "intro" | "form" | "gate" | "loading" | "error";
 type Answers = Record<string, string>;
 
+// Business OS palette (matches /en homepage)
 const C = {
-  paper:    "#F4EFE4",
-  paperDeep: "#EBE3D2",
-  card:     "#FCFAF3",
-  ink:      "#211B12",
-  inkSoft:  "#594F41",
-  inkFaint: "#988D7B",
-  gold:     "#9A7526",
-  goldDeep: "#6F521A",
-  goldLeaf: "#BE9540",
-  line:     "rgba(33,27,18,0.12)",
-  lineSoft: "rgba(33,27,18,0.08)",
-  ctaBg:    "#211B12",
-  ctaFg:    "#F4EFE4",
+  bg:        "#0D0C0A",
+  panel:     "#111009",
+  card:      "#161410",
+  border:    "rgba(242,237,228,0.10)",
+  borderHi:  "rgba(194,151,63,0.55)",
+  gold:      "#C2973F",
+  goldDeep:  "#9A7526",
+  text:      "#F2EDE4",
+  textMute:  "rgba(242,237,228,0.55)",
+  textFaint: "rgba(242,237,228,0.36)",
+  textDim:   "rgba(242,237,228,0.28)",
+  ctaFg:     "#0D0C0A",
+  ctaBg:     "#C2973F",
+  recRed:    "#C2973F", // gold for recording (per mockup)
 };
 
 export function SignalEnClient() {
   const router = useRouter();
-  const [phase, setPhase] = useState<Phase>("form");
+  const [phase, setPhase] = useState<Phase>("intro");
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -71,9 +78,7 @@ export function SignalEnClient() {
   const [emailAddr, setEmailAddr] = useState("");
   const [occupation, setOccupation] = useState("");
 
-  const taRef = useRef<HTMLTextAreaElement>(null);
-
-  // Hydrate from localStorage - draft + Q1 from landing card
+  // Hydrate draft + Q1 from landing
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
@@ -91,23 +96,15 @@ export function SignalEnClient() {
     } catch {}
   }, []);
 
-  // Persist draft on every change
+  // Persist draft on change
   useEffect(() => {
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ answers })); } catch {}
   }, [answers]);
 
-  // Autosize textarea when value changes
-  useEffect(() => {
-    const ta = taRef.current;
-    if (!ta) return;
-    ta.style.height = "auto";
-    ta.style.height = `${ta.scrollHeight}px`;
-  }, [step, answers, phase]);
-
   const current = QUESTIONS[step];
   const value = answers[current.key] ?? "";
   const lastStep = step === QUESTIONS.length - 1;
-  const canAdvance = current.skippable || value.trim().length >= 8;
+  const canAdvance = current.skippable || value.trim().length >= MIN_CHARS;
 
   function setValue(v: string) {
     setAnswers((a) => ({ ...a, [current.key]: v }));
@@ -164,20 +161,18 @@ export function SignalEnClient() {
     }
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────
-
   return (
     <div
       style={{
-        background:    C.paper,
-        color:         C.ink,
         minHeight:     "100vh",
+        background:    C.bg,
+        color:         C.text,
         display:       "flex",
         flexDirection: "column",
-        fontFamily:    "var(--font-spectral), Georgia, serif",
+        fontFamily:    "var(--font-jakarta), -apple-system, system-ui, sans-serif",
       }}
     >
-      <Header />
+      <TopBar step={step} total={QUESTIONS.length} phase={phase} />
 
       <main
         style={{
@@ -185,10 +180,11 @@ export function SignalEnClient() {
           display:        "flex",
           alignItems:     "center",
           justifyContent: "center",
-          padding:        "clamp(40px, 7vh, 90px) clamp(22px, 5vw, 40px)",
+          padding:        "clamp(36px, 6vh, 80px) clamp(20px, 4vw, 48px)",
         }}
       >
-        <div style={{ width: "100%", maxWidth: 640 }}>
+        <div style={{ width: "100%", maxWidth: phase === "intro" ? 720 : 660 }}>
+          {phase === "intro" && <Intro onStart={() => setPhase("form")} />}
           {phase === "form" && (
             <FormStep
               step={step}
@@ -198,7 +194,6 @@ export function SignalEnClient() {
               skippable={!!current.skippable}
               value={value}
               setValue={setValue}
-              taRef={taRef}
               canAdvance={canAdvance}
               isLast={lastStep}
               onNext={next}
@@ -229,85 +224,196 @@ export function SignalEnClient() {
         </div>
       </main>
 
-      <Footer phase={phase} />
+      <BottomBar phase={phase} />
     </div>
   );
 }
 
-function Header() {
+// ── Top + bottom chrome ───────────────────────────────────────────────
+
+function TopBar({ step, total, phase }: { step: number; total: number; phase: Phase }) {
+  const n = step + 1;
+  const pad = n < 10 ? `0${n}` : `${n}`;
+  const padTotal = total < 10 ? `0${total}` : `${total}`;
+  const showCounter = phase === "form";
+
   return (
     <header
       style={{
-        maxWidth:       1120,
+        maxWidth:       1200,
         width:          "100%",
         margin:         "0 auto",
-        padding:        "40px clamp(22px, 5vw, 40px) 0",
+        padding:        "24px clamp(20px, 4vw, 48px) 0",
         display:        "flex",
         alignItems:     "center",
         justifyContent: "space-between",
-        gap:            14,
-        flexWrap:       "wrap",
+        gap:            16,
       }}
     >
-      <a
+      <Link
         href="/en"
-        style={{
-          display:        "flex",
-          alignItems:     "center",
-          gap:            16,
-          textDecoration: "none",
-          color:          C.ink,
-        }}
+        style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: C.text }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/beegood_logo.png"
-          alt="beegood"
-          width={50}
-          height={40}
-          style={{ width: "auto", height: 40, display: "block" }}
-        />
         <span
           style={{
-            fontFamily:    "var(--font-spectral), Georgia, serif",
-            fontSize:      26,
-            fontWeight:    400,
-            letterSpacing: "-0.015em",
+            width:          32,
+            height:         32,
+            borderRadius:   8,
+            background:     "#1E1C18",
+            border:         "1px solid rgba(194,151,63,0.28)",
+            display:        "flex",
+            alignItems:     "center",
+            justifyContent: "center",
+            flexShrink:     0,
           }}
         >
+          <Image src={BEE} alt="beegood" width={28} height={22} style={{ width: "68%", height: "auto", display: "block" }} />
+        </span>
+        <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.025em", color: C.text }}>
           beegood
         </span>
-      </a>
+      </Link>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: C.textFaint }}>
+          TrueSignal© · Layer 01
+        </span>
+        {showCounter && (
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.gold }}>
+            {pad} / {padTotal}
+          </span>
+        )}
+      </div>
     </header>
   );
 }
 
-function Footer({ phase }: { phase: Phase }) {
+function BottomBar({ phase }: { phase: Phase }) {
   if (phase === "loading") return null;
   return (
     <footer
       style={{
-        maxWidth:    1120,
-        width:       "100%",
-        margin:      "0 auto",
-        padding:     "0 clamp(22px, 5vw, 40px) 30px",
-        textAlign:   "center",
+        maxWidth: 1200,
+        width:    "100%",
+        margin:   "0 auto",
+        padding:  "0 clamp(20px, 4vw, 48px) 28px",
+        textAlign: "center",
       }}
     >
-      <p
-        style={{
-          fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-          fontSize:      10.5,
-          letterSpacing: "0.1em",
-          color:         C.inkFaint,
-          margin:        0,
-        }}
-      >
-        Your answers are saved as you write · nothing is shared until you choose
+      <p style={{ fontSize: 11, letterSpacing: "0.08em", color: C.textDim, margin: 0 }}>
+        Saved as you write · nothing is shared until you choose
       </p>
     </footer>
   );
 }
+
+// ── Intro ─────────────────────────────────────────────────────────────
+
+function Intro({ onStart }: { onStart: () => void }) {
+  return (
+    <div
+      style={{
+        background:   C.panel,
+        border:       `1px solid ${C.border}`,
+        borderRadius: 20,
+        padding:      "clamp(40px, 6vw, 64px) clamp(28px, 5vw, 48px)",
+        textAlign:    "left",
+      }}
+    >
+      <div
+        style={{
+          fontSize:      11,
+          fontWeight:    700,
+          letterSpacing: "0.22em",
+          textTransform: "uppercase",
+          color:         C.gold,
+          marginBottom:  20,
+        }}
+      >
+        TrueSignal© · Layer 01 · Free
+      </div>
+      <h1
+        style={{
+          fontSize:      "clamp(34px, 5.4vw, 64px)",
+          fontWeight:    800,
+          lineHeight:    0.98,
+          letterSpacing: "-0.04em",
+          margin:        "0 0 24px",
+          color:         C.text,
+        }}
+      >
+        The signal engine.
+      </h1>
+      <p
+        style={{
+          fontSize:    "clamp(17px, 2vw, 21px)",
+          fontWeight:  500,
+          lineHeight:  1.45,
+          color:       C.text,
+          margin:      "0 0 8px",
+        }}
+      >
+        Five questions. One brand signal.
+      </p>
+      <p
+        style={{
+          fontSize:    "clamp(17px, 2vw, 21px)",
+          fontWeight:  500,
+          lineHeight:  1.45,
+          color:       C.textMute,
+          margin:      "0 0 36px",
+        }}
+      >
+        Not what you sell, but what only you can give.
+      </p>
+
+      <div style={{ height: 1, background: C.border, margin: "0 0 28px" }} />
+
+      <p
+        style={{
+          fontSize:    14.5,
+          lineHeight:  1.65,
+          color:       C.textMute,
+          margin:      "0 0 18px",
+        }}
+      >
+        About ten minutes. Type or speak. Question 3 (about a hard chapter) can be skipped. Your draft saves as you write.
+      </p>
+      <p
+        style={{
+          fontSize:    15,
+          lineHeight:  1.7,
+          color:       C.text,
+          opacity:     0.85,
+          margin:      "0 0 36px",
+        }}
+      >
+        At the end, you walk away with one sentence to say out loud, the audience already looking for you, and three content directions to begin from this week.
+      </p>
+
+      <button
+        onClick={onStart}
+        style={{
+          fontFamily:    "var(--font-jakarta), sans-serif",
+          fontSize:      15,
+          fontWeight:    700,
+          color:         C.ctaFg,
+          background:    C.ctaBg,
+          border:        "none",
+          borderRadius:  12,
+          padding:       "16px 34px",
+          cursor:        "pointer",
+          display:       "inline-flex",
+          alignItems:    "center",
+          gap:           10,
+        }}
+      >
+        Begin <span style={{ fontSize: 17 }}>→</span>
+      </button>
+    </div>
+  );
+}
+
+// ── FormStep with voice ───────────────────────────────────────────────
 
 interface FormStepProps {
   step:       number;
@@ -317,7 +423,6 @@ interface FormStepProps {
   skippable:  boolean;
   value:      string;
   setValue:   (v: string) => void;
-  taRef:      React.RefObject<HTMLTextAreaElement | null>;
   canAdvance: boolean;
   isLast:     boolean;
   onNext:     () => void;
@@ -329,8 +434,8 @@ interface FormStepProps {
 function FormStep(p: FormStepProps) {
   const dots = Array.from({ length: p.total }, (_, i) => (i <= p.step ? "●" : "○")).join("");
   const n = p.step + 1;
-  const indexLabel = n < 10 ? `0${n}` : `${n}`;
-  const totalLabel = p.total < 10 ? `0${p.total}` : `${p.total}`;
+  const padN = n < 10 ? `0${n}` : `${n}`;
+  const padT = p.total < 10 ? `0${p.total}` : `${p.total}`;
 
   const [mode, setMode] = useState<"type" | "speak">("type");
   const [listening, setListening] = useState(false);
@@ -340,6 +445,7 @@ function FormStep(p: FormStepProps) {
   const recRef = useRef<any>(null);
   const baseTextRef = useRef("");
   const startedAtRef = useRef(0);
+  const taRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -348,6 +454,14 @@ function FormStep(p: FormStepProps) {
       setSpeechSupported(false);
     }
   }, []);
+
+  // Autosize textarea
+  useEffect(() => {
+    const ta = taRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${ta.scrollHeight}px`;
+  }, [p.value, p.step]);
 
   // Stop recording when leaving speak mode, switching question, or unmounting
   useEffect(() => {
@@ -392,12 +506,7 @@ function FormStep(p: FormStepProps) {
     rec.onend = () => setListening(false);
 
     recRef.current = rec;
-    try {
-      rec.start();
-      setListening(true);
-    } catch {
-      setListening(false);
-    }
+    try { rec.start(); setListening(true); } catch { setListening(false); }
   }
 
   function stopRec() {
@@ -423,131 +532,94 @@ function FormStep(p: FormStepProps) {
     <>
       <div
         style={{
-          fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-          fontSize:      12,
-          letterSpacing: "0.35em",
+          fontSize:      13,
+          fontWeight:    600,
+          letterSpacing: "0.3em",
           color:         C.gold,
-          marginBottom:  "clamp(36px, 6vh, 56px)",
+          marginBottom:  "clamp(32px, 5vh, 52px)",
         }}
       >
         {dots}
       </div>
 
-      <div>
+      <div style={{ transition: "opacity .32s ease", opacity: 1 }}>
         <div
           style={{
-            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-            fontSize:      11.5,
-            letterSpacing: "0.24em",
+            fontSize:      12,
+            fontWeight:    700,
+            letterSpacing: "0.2em",
             textTransform: "uppercase",
-            color:         C.goldDeep,
-            marginBottom:  20,
+            color:         C.textFaint,
+            marginBottom:  22,
           }}
         >
-          Question {indexLabel} <span style={{ color: C.goldLeaf }}>- {totalLabel}</span>
+          Question {padN} <span style={{ color: C.gold }}>, {padT}</span>
         </div>
 
         <label
-          htmlFor="bg-en-answer"
+          htmlFor="signal-answer"
           style={{
             display:       "block",
-            fontFamily:    "var(--font-spectral), Georgia, serif",
-            fontWeight:    400,
-            fontSize:      "clamp(28px, 4vw, 42px)",
-            lineHeight:    1.2,
-            letterSpacing: "-0.022em",
-            color:         C.ink,
-            marginBottom:  28,
+            fontSize:      "clamp(28px, 4.2vw, 46px)",
+            fontWeight:    700,
+            lineHeight:    1.12,
+            letterSpacing: "-0.035em",
+            color:         C.text,
+            marginBottom:  30,
           }}
         >
           {p.label}
         </label>
 
         <textarea
-          ref={p.taRef}
-          id="bg-en-answer"
+          ref={taRef}
+          id="signal-answer"
           rows={2}
           placeholder="Take your time. There are no wrong answers here."
           value={p.value}
           onChange={(e) => p.setValue(e.target.value)}
           style={{
-            width:          "100%",
-            background:     "transparent",
-            border:         "none",
-            borderBottom:   `1px solid ${C.line}`,
-            fontFamily:     "var(--font-hanken-grotesk), sans-serif",
-            fontSize:       16,
-            lineHeight:     1.7,
-            color:          C.ink,
-            padding:        "10px 0 14px",
-            resize:         "none",
-            outline:        "none",
+            width:         "100%",
+            background:    C.card,
+            border:        `1px solid ${C.border}`,
+            borderRadius:  14,
+            fontFamily:    "var(--font-jakarta), sans-serif",
+            fontSize:      16,
+            lineHeight:    1.65,
+            color:         C.text,
+            padding:       18,
+            resize:        "none",
+            outline:       "none",
+            transition:    "border-color .2s ease",
           }}
-          onFocus={(e) => { e.currentTarget.style.borderBottomColor = C.gold; }}
-          onBlur={(e) => { e.currentTarget.style.borderBottomColor = C.line; }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = C.borderHi; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
         />
 
-        <p
-          style={{
-            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-            fontSize:      11.5,
-            lineHeight:    1.6,
-            letterSpacing: "0.03em",
-            color:         C.inkFaint,
-            margin:        "16px 0 0",
-          }}
-        >
+        <p style={{ fontSize: 13, lineHeight: 1.6, color: C.textMute, opacity: 0.7, margin: "16px 0 0" }}>
           {p.meta}
         </p>
 
-        <div style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "inline-flex", border: `1px solid ${C.line}`, borderRadius: 999, padding: 3 }}>
-            <button
-              type="button"
-              onClick={() => setMode("type")}
-              style={{
-                fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-                fontSize:      10.5,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                border:        "none",
-                borderRadius:  999,
-                padding:       "7px 15px",
-                cursor:        "pointer",
-                background:    mode === "type" ? C.ink : "transparent",
-                color:         mode === "type" ? C.paper : C.inkSoft,
-                transition:    "background .2s ease, color .2s ease",
-              }}
-            >
-              Type
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("speak")}
-              style={{
-                fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-                fontSize:      10.5,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                border:        "none",
-                borderRadius:  999,
-                padding:       "7px 15px",
-                cursor:        "pointer",
-                background:    mode === "speak" ? C.ink : "transparent",
-                color:         mode === "speak" ? C.paper : C.inkSoft,
-                transition:    "background .2s ease, color .2s ease",
-              }}
-            >
-              Speak
-            </button>
+        <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display:      "inline-flex",
+              background:   C.card,
+              border:       `1px solid ${C.border}`,
+              borderRadius: 999,
+              padding:      3,
+            }}
+          >
+            <ModeBtn active={mode === "type"} onClick={() => setMode("type")}>Type</ModeBtn>
+            <ModeBtn active={mode === "speak"} onClick={() => setMode("speak")}>Speak</ModeBtn>
           </div>
-          <span style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 11, letterSpacing: "0.03em", color: C.inkFaint }}>
-            or say it aloud - we'll write it down
+          <span style={{ fontSize: 13, color: C.textFaint }}>
+            or say it aloud, we&apos;ll write it down
           </span>
         </div>
 
         {mode === "speak" && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginTop: 28 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginTop: 30 }}>
             <button
               type="button"
               onClick={toggleMic}
@@ -557,13 +629,13 @@ function FormStep(p: FormStepProps) {
                 width:          72,
                 height:         72,
                 borderRadius:   "50%",
-                border:         `1px solid ${listening ? "#B5654A" : C.gold}`,
+                border:         `1px solid ${listening ? C.gold : "rgba(194,151,63,0.55)"}`,
                 background:     C.card,
                 cursor:         speechSupported ? "pointer" : "not-allowed",
                 display:        "flex",
                 alignItems:     "center",
                 justifyContent: "center",
-                animation:      listening ? "bg-en-pulse 1.6s infinite" : "none",
+                animation:      listening ? "bgPulseEn 1.6s infinite" : "none",
                 opacity:        speechSupported ? 1 : 0.5,
               }}
             >
@@ -572,37 +644,29 @@ function FormStep(p: FormStepProps) {
                   width:        listening ? 16 : 20,
                   height:       listening ? 16 : 20,
                   borderRadius: listening ? 4 : "50%",
-                  background:   listening ? "#B5654A" : C.gold,
+                  background:   listening ? "#E0B45A" : C.gold,
                   transition:   "all .2s ease",
                   display:      "block",
                 }}
               />
             </button>
-            <div
-              style={{
-                fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-                fontSize:      11.5,
-                letterSpacing: "0.05em",
-                color:         C.inkFaint,
-                textAlign:     "center",
-              }}
-            >
+            <div style={{ fontSize: 13, color: C.textMute, opacity: 0.7, textAlign: "center" }}>
               {!speechSupported
-                ? "Voice input isn't supported in this browser - please type instead."
+                ? "Voice input isn't supported in this browser, please type instead."
                 : listening
-                ? `Listening… ${formatTime(elapsed)} - tap to stop`
-                : "Tap to speak - we'll write it down as you go"}
+                ? `Listening… ${formatTime(elapsed)}, tap to stop`
+                : "Tap to speak, we'll write it down as you go"}
             </div>
-            <style>{`@keyframes bg-en-pulse {
-              0% { box-shadow: 0 0 0 0 rgba(181,101,74,0.30); }
-              70% { box-shadow: 0 0 0 16px rgba(181,101,74,0); }
-              100% { box-shadow: 0 0 0 0 rgba(181,101,74,0); }
+            <style>{`@keyframes bgPulseEn {
+              0% { box-shadow: 0 0 0 0 rgba(194,151,63,0.34); }
+              70% { box-shadow: 0 0 0 16px rgba(194,151,63,0); }
+              100% { box-shadow: 0 0 0 0 rgba(194,151,63,0); }
             }`}</style>
           </div>
         )}
 
         {p.errorMsg && (
-          <p role="alert" style={{ color: "#B5654A", fontSize: 14, margin: "16px 0 0", fontFamily: "var(--font-hanken-grotesk), sans-serif" }}>
+          <p role="alert" style={{ marginTop: 16, color: "#E0916A", fontSize: 14 }}>
             {p.errorMsg}
           </p>
         )}
@@ -624,11 +688,10 @@ function FormStep(p: FormStepProps) {
               type="button"
               onClick={p.onBack}
               style={{
-                fontFamily:    "var(--font-hanken-grotesk), sans-serif",
                 fontSize:      12,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color:         C.inkSoft,
+                fontWeight:    600,
+                letterSpacing: "0.06em",
+                color:         C.textMute,
                 background:    "none",
                 border:        "none",
                 cursor:        "pointer",
@@ -649,14 +712,14 @@ function FormStep(p: FormStepProps) {
               type="button"
               onClick={p.onSkip}
               style={{
-                fontFamily:    "var(--font-hanken-grotesk), sans-serif",
                 fontSize:      12,
-                letterSpacing: "0.06em",
-                color:         C.inkFaint,
+                fontWeight:    600,
+                letterSpacing: "0.04em",
+                color:         C.textFaint,
                 background:    "none",
                 border:        "none",
                 cursor:        "pointer",
-                borderBottom:  `1px solid ${C.line}`,
+                borderBottom:  `1px solid ${C.border}`,
                 padding:       "0 0 2px",
               }}
             >
@@ -668,30 +731,55 @@ function FormStep(p: FormStepProps) {
             onClick={p.onNext}
             disabled={!p.canAdvance}
             style={{
-              fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-              fontSize:      12.5,
-              fontWeight:    500,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color:         C.ctaFg,
-              background:    p.canAdvance ? C.ctaBg : "rgba(33,27,18,0.3)",
+              fontFamily:    "var(--font-jakarta), sans-serif",
+              fontSize:      14,
+              fontWeight:    700,
+              letterSpacing: "-0.01em",
+              color:         p.canAdvance ? C.ctaFg : "rgba(13,12,10,0.5)",
+              background:    p.canAdvance ? C.ctaBg : "rgba(194,151,63,0.35)",
               border:        "none",
-              borderRadius:  4,
-              padding:       "15px 28px",
+              borderRadius:  12,
+              padding:       "15px 30px",
               cursor:        p.canAdvance ? "pointer" : "not-allowed",
               display:       "inline-flex",
               alignItems:    "center",
               gap:           10,
-              transition:    "background .25s ease",
             }}
           >
-            {p.isLast ? "Reveal my signal" : "Continue"} <span style={{ fontSize: 15 }}>→</span>
+            {p.isLast ? "Reveal my signal" : "Continue"} <span style={{ fontSize: 16 }}>→</span>
           </button>
         </div>
       </div>
     </>
   );
 }
+
+function ModeBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        fontFamily:    "var(--font-jakarta), sans-serif",
+        fontSize:      11,
+        fontWeight:    700,
+        letterSpacing: "0.1em",
+        textTransform: "uppercase",
+        border:        "none",
+        borderRadius:  999,
+        padding:       "8px 16px",
+        cursor:        "pointer",
+        background:    active ? C.gold : "transparent",
+        color:         active ? C.ctaFg : C.textMute,
+        transition:    "background .2s ease, color .2s ease",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── LeadGate ─────────────────────────────────────────────────────────
 
 interface LeadGateProps {
   firstName:     string;
@@ -715,32 +803,31 @@ function LeadGate(p: LeadGateProps) {
     <form
       onSubmit={(e) => { e.preventDefault(); if (canSubmit) p.onSubmit(); }}
       style={{
-        background:   C.card,
-        border:       `1px solid ${C.line}`,
+        background:   C.panel,
+        border:       `1px solid ${C.border}`,
         borderRadius: 20,
-        padding:      "40px 32px",
+        padding:      "clamp(36px, 5vw, 56px) clamp(24px, 4vw, 44px)",
       }}
     >
       <div
         style={{
-          fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-          fontSize:      11.5,
-          letterSpacing: "0.24em",
+          fontSize:      11,
+          fontWeight:    700,
+          letterSpacing: "0.2em",
           textTransform: "uppercase",
-          color:         C.goldDeep,
-          marginBottom:  14,
+          color:         C.gold,
+          marginBottom:  16,
         }}
       >
         Almost there
       </div>
       <h2
         style={{
-          fontFamily:    "var(--font-spectral), Georgia, serif",
-          fontWeight:    400,
-          fontSize:      "clamp(28px, 4vw, 38px)",
-          lineHeight:    1.2,
-          letterSpacing: "-0.02em",
-          color:         C.ink,
+          fontSize:      "clamp(28px, 4vw, 40px)",
+          fontWeight:    700,
+          lineHeight:    1.1,
+          letterSpacing: "-0.035em",
+          color:         C.text,
           margin:        "0 0 14px",
         }}
       >
@@ -748,49 +835,26 @@ function LeadGate(p: LeadGateProps) {
       </h2>
       <p
         style={{
-          fontFamily: "var(--font-hanken-grotesk), sans-serif",
-          fontSize:   15,
-          lineHeight: 1.6,
-          color:      C.inkSoft,
-          margin:     "0 0 28px",
+          fontSize:    15,
+          lineHeight:  1.6,
+          color:       C.textMute,
+          margin:      "0 0 32px",
         }}
       >
-        Leave a name and an email. Your signal is yours for life, and you can return to it any time.
+        Leave a name and an email. Your signal is yours for life, returnable any time.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <Field
-          label="First name"
-          value={p.firstName}
-          onChange={p.setFirstName}
-          placeholder="What we should call you"
-          autoComplete="given-name"
-          autoFocus
-        />
-        <Field
-          label="Last name"
-          value={p.lastName}
-          onChange={p.setLastName}
-          placeholder="Optional"
-          autoComplete="family-name"
-        />
+        <Field label="First name" value={p.firstName} onChange={p.setFirstName} placeholder="How to call you" autoComplete="given-name" autoFocus />
+        <Field label="Last name" value={p.lastName} onChange={p.setLastName} placeholder="Optional" autoComplete="family-name" />
       </div>
-
       <div style={{ marginTop: 14 }}>
-        <Field
-          label="Email"
-          value={p.emailAddr}
-          onChange={p.setEmailAddr}
-          placeholder="you@example.com"
-          type="email"
-          autoComplete="email"
-        />
+        <Field label="Email" value={p.emailAddr} onChange={p.setEmailAddr} placeholder="you@example.com" type="email" autoComplete="email" />
       </div>
-
       <div style={{ marginTop: 14 }}>
         <Field
           label="What do you do today?"
-          hint="(optional) A short line about your work, so the signal can sharpen against the field you're in."
+          hint="Optional. A short line about your work so the signal can sharpen against the field you're in."
           value={p.occupation}
           onChange={p.setOccupation}
           placeholder="Coach, founder, designer, podcaster…"
@@ -799,21 +863,21 @@ function LeadGate(p: LeadGateProps) {
       </div>
 
       {p.errorMsg && (
-        <p role="alert" style={{ color: "#B5654A", fontSize: 14, margin: "16px 0 0", fontFamily: "var(--font-hanken-grotesk), sans-serif" }}>
+        <p role="alert" style={{ color: "#E0916A", fontSize: 14, margin: "16px 0 0" }}>
           {p.errorMsg}
         </p>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, marginTop: 28, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, marginTop: 32, flexWrap: "wrap" }}>
         <button
           type="button"
           onClick={p.onBack}
           style={{
-            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
             fontSize:      12,
+            fontWeight:    600,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
-            color:         C.inkSoft,
+            color:         C.textMute,
             background:    "none",
             border:        "none",
             cursor:        "pointer",
@@ -825,36 +889,26 @@ function LeadGate(p: LeadGateProps) {
           type="submit"
           disabled={!canSubmit}
           style={{
-            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-            fontSize:      12.5,
-            fontWeight:    500,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color:         C.ctaFg,
-            background:    canSubmit ? C.ctaBg : "rgba(33,27,18,0.3)",
+            fontFamily:    "var(--font-jakarta), sans-serif",
+            fontSize:      14,
+            fontWeight:    700,
+            letterSpacing: "-0.01em",
+            color:         canSubmit ? C.ctaFg : "rgba(13,12,10,0.5)",
+            background:    canSubmit ? C.ctaBg : "rgba(194,151,63,0.35)",
             border:        "none",
-            borderRadius:  4,
-            padding:       "15px 28px",
+            borderRadius:  12,
+            padding:       "15px 30px",
             cursor:        canSubmit ? "pointer" : "not-allowed",
             display:       "inline-flex",
             alignItems:    "center",
             gap:           10,
           }}
         >
-          Reveal my signal <span style={{ fontSize: 15 }}>→</span>
+          Reveal my signal <span style={{ fontSize: 16 }}>→</span>
         </button>
       </div>
 
-      <p
-        style={{
-          fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-          fontSize:      11.5,
-          color:         C.inkFaint,
-          textAlign:     "center",
-          margin:        "20px 0 0",
-          lineHeight:    1.55,
-        }}
-      >
+      <p style={{ fontSize: 11.5, color: C.textFaint, textAlign: "center", margin: "22px 0 0", lineHeight: 1.55 }}>
         We keep your details private. You can remove yourself at any time.
       </p>
     </form>
@@ -878,11 +932,11 @@ function Field(p: FieldProps) {
     <label style={{ display: "block" }}>
       <div
         style={{
-          fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-          fontSize:      11.5,
+          fontSize:      11,
+          fontWeight:    700,
           letterSpacing: "0.14em",
           textTransform: "uppercase",
-          color:         C.inkSoft,
+          color:         C.textMute,
           marginBottom:  8,
         }}
       >
@@ -898,27 +952,19 @@ function Field(p: FieldProps) {
         maxLength={p.maxLength}
         style={{
           width:        "100%",
-          background:   "#F5F5F2",
-          color:        C.ink,
-          border:       `1px solid ${C.lineSoft}`,
+          background:   C.card,
+          color:        C.text,
+          border:       `1px solid ${C.border}`,
           borderRadius: 12,
-          padding:      "12px 14px",
-          fontFamily:   "var(--font-hanken-grotesk), sans-serif",
+          padding:      "13px 14px",
+          fontFamily:   "var(--font-jakarta), sans-serif",
           fontSize:     15,
           lineHeight:   1.6,
           outline:      "none",
         }}
       />
       {p.hint && (
-        <div
-          style={{
-            fontFamily: "var(--font-hanken-grotesk), sans-serif",
-            fontSize:   11.5,
-            color:      C.inkFaint,
-            marginTop:  6,
-            lineHeight: 1.55,
-          }}
-        >
+        <div style={{ fontSize: 11.5, color: C.textFaint, marginTop: 6, lineHeight: 1.55 }}>
           {p.hint}
         </div>
       )}
@@ -926,274 +972,29 @@ function Field(p: FieldProps) {
   );
 }
 
-// Static fallback facts for /en - used until the AI endpoint returns.
-const STATIC_BEE_FACTS_EN = [
-  "A honeybee visits between 50 and 100 flowers on a single foraging trip.",
-  "To produce one tablespoon of honey, a single bee must fly the equivalent of twice around the Earth.",
-  "Bees communicate through a precise waggle dance that points others toward flowers.",
-  "A queen bee can lay up to 2,000 eggs in a single day - more than her own body weight.",
-  "Bees can recognize human faces and remember the same person days later.",
-  "A healthy hive holds between 50,000 and 80,000 bees, nearly all of them female.",
-  "Bees sleep five to eight hours a day, sometimes inside flowers.",
-  "A bee's wings beat 200 times per second - that is what creates the familiar buzz.",
-  "Bees see colors we cannot, including ultraviolet.",
-  "Honey never spoils. Three-thousand-year-old honey from Egyptian tombs was still edible.",
-  "Each bee produces only about twelve small teaspoons of honey in its entire lifetime.",
-  "A hive holds 35°C inside even in deep cold, warmed by the muscle vibration of the bees.",
-];
-
-function pickRandomFactsEn(n: number): string[] {
-  const shuffled = [...STATIC_BEE_FACTS_EN].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, n);
-}
-
-const SIGNAL_STEPS_EN = [
-  "Reading your answers",
-  "Extracting the element",
-  "Mapping the ground you grew from",
-  "Composing your signal",
-] as const;
+// ── Loading + Error ──────────────────────────────────────────────────
 
 function Loading() {
-  const [progress, setProgress] = useState(0);
-  const [stepIdx, setStepIdx]   = useState(0);
-  const [facts, setFacts]       = useState<string[]>(() => pickRandomFactsEn(6));
-  const [factIdx, setFactIdx]   = useState(0);
-
-  // Refresh with AI-generated facts; silently fall back to static.
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/en/bee-facts")
-      .then((r) => r.json())
-      .then(({ facts }: { facts?: string[] }) => {
-        if (cancelled || !Array.isArray(facts) || facts.length === 0) return;
-        setFacts(facts);
-        setFactIdx(0);
-      })
-      .catch(() => { /* keep static */ });
-    return () => { cancelled = true; };
-  }, []);
-
-  // Random-walk progress up to ~88%, then idle.
-  useEffect(() => {
-    const id = setInterval(() => {
-      setProgress((p) => (p >= 88 ? p : p + Math.random() * 4 + 1));
-    }, 300);
-    return () => clearInterval(id);
-  }, []);
-
-  // Step cadence matches the typical extraction window.
-  useEffect(() => {
-    const t1 = setTimeout(() => setStepIdx(1), 1400);
-    const t2 = setTimeout(() => setStepIdx(2), 3200);
-    const t3 = setTimeout(() => setStepIdx(3), 5200);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, []);
-
-  // Rotate facts every 4s.
-  useEffect(() => {
-    if (facts.length === 0) return;
-    const id = setInterval(() => setFactIdx((i) => (i + 1) % facts.length), 4000);
-    return () => clearInterval(id);
-  }, [facts]);
-
-  const clampedProgress = Math.min(progress, 96);
-
   return (
-    <div
-      style={{
-        background:    C.card,
-        border:        `1px solid ${C.line}`,
-        borderRadius:  20,
-        padding:       "40px 28px 36px",
-        textAlign:     "center",
-        display:       "flex",
-        flexDirection: "column",
-        alignItems:    "center",
-        gap:           24,
-        boxShadow:     "0 8px 24px rgba(33,27,18,0.06)",
-      }}
-    >
-      {/* Bee facts rotator */}
-      {facts.length > 0 && (
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 380,
-            background: C.paperDeep,
-            borderRadius: 12,
-            padding: "16px 20px",
-            border: `1px solid ${C.lineSoft}`,
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "var(--font-hanken-grotesk), sans-serif",
-              fontSize: 10.5,
-              fontWeight: 700,
-              color: C.gold,
-              letterSpacing: ".18em",
-              textTransform: "uppercase",
-              marginBottom: 8,
-            }}
-          >
-            Did you know about bees?
-          </div>
-          <div
-            key={factIdx}
-            style={{
-              fontFamily: "var(--font-spectral), Georgia, serif",
-              fontStyle: "italic",
-              fontSize: 16,
-              color: C.ink,
-              lineHeight: 1.6,
-              animation: "bg-en-fadeMsg 4s ease infinite",
-            }}
-          >
-            {facts[factIdx]}
-          </div>
-        </div>
-      )}
-
+    <div style={{ textAlign: "center", padding: "60px 20px" }}>
       <div
         style={{
-          fontFamily: "var(--font-spectral), Georgia, serif",
-          fontStyle: "italic",
-          fontSize: 22,
-          color: C.gold,
-          lineHeight: 1.3,
+          width:          46,
+          height:         46,
+          margin:         "0 auto 22px",
+          border:         "2px solid rgba(194,151,63,0.22)",
+          borderTopColor: C.gold,
+          borderRadius:   "50%",
+          animation:      "spinEn 0.9s linear infinite",
         }}
-      >
-        Composing your Signal
-      </div>
-
-      {/* Progress bar with flying bee logo */}
-      <div style={{ width: "100%", maxWidth: 380, position: "relative", paddingTop: 48 }}>
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            insetInlineStart: `calc(${clampedProgress}% - 22px)`,
-            transition: "inset-inline-start 0.6s ease",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/beegood_logo.png"
-            alt=""
-            width={44}
-            height={44}
-            style={{
-              objectFit: "contain",
-              display: "block",
-              animation: "bg-en-beeFly 1.2s ease-in-out infinite",
-            }}
-          />
-        </div>
-        <div
-          style={{
-            width: "100%",
-            height: 6,
-            background: "rgba(33,27,18,0.08)",
-            borderRadius: 20,
-          }}
-        >
-          <div
-            style={{
-              height: 6,
-              borderRadius: 20,
-              background: `linear-gradient(90deg, ${C.goldDeep}, ${C.gold}, ${C.goldLeaf})`,
-              width: `${progress}%`,
-              transition: "width 0.6s ease",
-            }}
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: 8,
-            fontFamily: "var(--font-hanken-grotesk), sans-serif",
-          }}
-        >
-          <span style={{ fontSize: 11.5, color: C.inkFaint }}>0%</span>
-          <span style={{ fontSize: 12.5, color: C.gold, fontWeight: 700 }}>{Math.round(progress)}%</span>
-          <span style={{ fontSize: 11.5, color: C.inkFaint }}>100%</span>
-        </div>
-      </div>
-
-      {/* 4 sequential stages */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-          width: "100%",
-          maxWidth: 380,
-          textAlign: "left",
-        }}
-      >
-        {SIGNAL_STEPS_EN.map((label, i) => {
-          const done   = i < stepIdx;
-          const active = i === stepIdx;
-          return (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div
-                style={{
-                  width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
-                  border: done ? "none" : active ? `2px solid ${C.gold}` : `2px solid ${C.line}`,
-                  background: done ? C.gold : "transparent",
-                  animation: active ? "bg-en-stepPulse 1s infinite" : "none",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}
-              >
-                {done && (
-                  <div
-                    style={{
-                      width: 7, height: 5,
-                      borderLeft: `2px solid ${C.paper}`,
-                      borderBottom: `2px solid ${C.paper}`,
-                      transform: "rotate(-45deg)",
-                      marginTop: -2,
-                    }}
-                  />
-                )}
-              </div>
-              <span
-                style={{
-                  fontFamily: "var(--font-hanken-grotesk), sans-serif",
-                  fontSize: 14,
-                  color: done ? C.ink : active ? C.gold : C.inkFaint,
-                  animation: active ? "bg-en-stepPulse 1s infinite" : "none",
-                }}
-              >
-                {label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      <style>{`
-        @keyframes bg-en-spin { to { transform: rotate(360deg); } }
-        @keyframes bg-en-beeFly {
-          0%   { transform: translateY(0px) rotate(-8deg); }
-          25%  { transform: translateY(-8px) rotate(2deg); }
-          50%  { transform: translateY(-2px) rotate(8deg); }
-          75%  { transform: translateY(-10px) rotate(0deg); }
-          100% { transform: translateY(0px) rotate(-8deg); }
-        }
-        @keyframes bg-en-stepPulse {
-          0%, 100% { opacity: 1; }
-          50%      { opacity: 0.4; }
-        }
-        @keyframes bg-en-fadeMsg {
-          0%   { opacity: 0; }
-          10%  { opacity: 1; }
-          80%  { opacity: 1; }
-          100% { opacity: 0; }
-        }
-      `}</style>
+      />
+      <p style={{ fontSize: 18, fontWeight: 600, color: C.text, margin: 0 }}>
+        Reading your answers…
+      </p>
+      <p style={{ fontSize: 13, color: C.textMute, opacity: 0.7, margin: "10px 0 0" }}>
+        This usually takes ten to twenty seconds.
+      </p>
+      <style>{`@keyframes spinEn { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
@@ -1202,32 +1003,30 @@ function ErrorCard({ message, onRetry }: { message: string | null; onRetry: () =
   return (
     <div
       style={{
-        background:   C.card,
-        border:       `1px solid ${C.line}`,
+        background:   C.panel,
+        border:       `1px solid ${C.border}`,
         borderRadius: 20,
         padding:      "44px 32px",
         textAlign:    "center",
       }}
     >
-      <h2 style={{ fontFamily: "var(--font-spectral), Georgia, serif", fontSize: 24, margin: "0 0 12px", color: C.ink }}>
-        Something didn't land.
+      <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 12px", color: C.text }}>
+        Something didn&apos;t land.
       </h2>
-      <p style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", color: C.inkSoft, fontSize: 15, margin: "0 0 24px", lineHeight: 1.6 }}>
+      <p style={{ color: C.textMute, fontSize: 15, margin: "0 0 24px", lineHeight: 1.6 }}>
         {message ?? "The engine didn't return a signal. Let's try once more."}
       </p>
       <button
         onClick={onRetry}
         style={{
-          fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-          fontSize:      12.5,
-          fontWeight:    500,
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
+          fontFamily:    "var(--font-jakarta), sans-serif",
+          fontSize:      14,
+          fontWeight:    700,
           color:         C.ctaFg,
           background:    C.ctaBg,
           border:        "none",
-          borderRadius:  4,
-          padding:       "13px 26px",
+          borderRadius:  12,
+          padding:       "14px 28px",
           cursor:        "pointer",
         }}
       >
