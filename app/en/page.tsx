@@ -31,12 +31,12 @@ export default function EnHomePage() {
             gap: 16,
           }}
         >
-          <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none" }}>
             <span
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
+                width: 34,
+                height: 34,
+                borderRadius: 9,
                 background: "#1E1C18",
                 border: "1px solid rgba(194,151,63,0.28)",
                 display: "flex",
@@ -45,9 +45,9 @@ export default function EnHomePage() {
                 flexShrink: 0,
               }}
             >
-              <Image src={BEE} alt="beegood" width={28} height={22} style={{ width: "68%", height: "auto", display: "block" }} />
+              <Image src={BEE} alt="beegood" width={22} height={22} style={{ width: "64%", height: "auto", display: "block" }} />
             </span>
-            <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.025em", color: "#F2EDE4" }}>
+            <span style={{ fontSize: 19, fontWeight: 500, letterSpacing: "-0.02em", color: "#F2EDE4" }}>
               beegood
             </span>
           </Link>
@@ -288,58 +288,78 @@ export default function EnHomePage() {
               overflow: "hidden",
             }}
           >
-            {LAYERS.map((l, i) => (
-              <div key={l.num} style={{ background: i === 0 ? "#FFFFFF" : "#FAFAF8", padding: "36px 28px" }}>
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 9,
-                    background: i === 0 ? "#0D0C0A" : "rgba(13,12,10,0.08)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 22,
-                  }}
-                >
-                  {i === 0 ? (
-                    <Image src={BEE} alt="" width={28} height={22} style={{ width: "64%", height: "auto", display: "block" }} />
-                  ) : (
-                    <span style={{ fontSize: 16, fontWeight: 800, color: "#0D0C0A" }}>{l.num}</span>
-                  )}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.16em",
-                    textTransform: "uppercase",
-                    color: "#9A7526",
-                    marginBottom: 12,
-                  }}
-                >
-                  Layer {l.num}
-                </div>
-                <div
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 700,
-                    letterSpacing: "-0.025em",
-                    lineHeight: 1.2,
-                    color: "#0D0C0A",
-                    marginBottom: 12,
-                  }}
-                >
-                  {l.title}
-                </div>
-                <div style={{ fontSize: 15, lineHeight: 1.65, color: "#5C5549" }}>{l.body}</div>
-                {l.cta && (
-                  <div style={{ marginTop: 20, fontSize: 12.5, fontWeight: 600, color: "#C2973F" }}>
-                    {l.cta}
+            {LAYERS.map((l, i) => {
+              const cardInner = (
+                <>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 9,
+                      background: i === 0 ? "#0D0C0A" : "rgba(13,12,10,0.08)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 22,
+                    }}
+                  >
+                    {i === 0 ? (
+                      <Image src={BEE} alt="" width={22} height={22} style={{ width: "64%", height: "auto", display: "block" }} />
+                    ) : (
+                      <span style={{ fontSize: 16, fontWeight: 800, color: "#0D0C0A" }}>{l.num}</span>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.16em",
+                      textTransform: "uppercase",
+                      color: "#9A7526",
+                      marginBottom: 12,
+                    }}
+                  >
+                    Layer {l.num}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      letterSpacing: "-0.025em",
+                      lineHeight: 1.2,
+                      color: "#0D0C0A",
+                      marginBottom: 12,
+                    }}
+                  >
+                    {l.title}
+                  </div>
+                  <div style={{ fontSize: 15, lineHeight: 1.65, color: "#5C5549" }}>{l.body}</div>
+                  {l.cta && (
+                    <div style={{ marginTop: 20, fontSize: 12.5, fontWeight: 700, color: "#C2973F" }}>
+                      {l.cta}
+                    </div>
+                  )}
+                </>
+              );
+
+              const cardStyle = {
+                background: i === 0 ? "#FFFFFF" : "#FAFAF8",
+                padding: "36px 28px",
+                display: "block",
+                textDecoration: "none",
+                color: "inherit",
+              } as const;
+
+              return l.href ? (
+                <Link key={l.num} href={l.href} style={cardStyle}>
+                  {cardInner}
+                </Link>
+              ) : (
+                <div key={l.num} style={cardStyle}>
+                  {cardInner}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -581,8 +601,8 @@ export default function EnHomePage() {
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 36 }}>
               <span
                 style={{
-                  width: 42,
-                  height: 42,
+                  width: 44,
+                  height: 44,
                   borderRadius: 11,
                   background: "#1E1C18",
                   border: "1px solid rgba(194,151,63,0.25)",
@@ -592,7 +612,7 @@ export default function EnHomePage() {
                   flexShrink: 0,
                 }}
               >
-                <Image src={BEE} alt="" width={36} height={28} style={{ width: "68%", height: "auto", display: "block" }} />
+                <Image src={BEE} alt="" width={28} height={28} style={{ width: "64%", height: "auto", display: "block" }} />
               </span>
               <div>
                 <div style={{ fontSize: 17, fontWeight: 600, color: "#F2EDE4" }}>
@@ -695,9 +715,9 @@ export default function EnHomePage() {
           <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
             <span
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: 7,
+                width: 30,
+                height: 30,
+                borderRadius: 8,
                 background: "#1E1C18",
                 border: "1px solid rgba(194,151,63,0.22)",
                 display: "flex",
@@ -705,9 +725,9 @@ export default function EnHomePage() {
                 justifyContent: "center",
               }}
             >
-              <Image src={BEE} alt="" width={24} height={19} style={{ width: "68%", height: "auto", display: "block" }} />
+              <Image src={BEE} alt="" width={19} height={19} style={{ width: "64%", height: "auto", display: "block" }} />
             </span>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#F2EDE4" }}>beegood</span>
+            <span style={{ fontSize: 16, fontWeight: 500, letterSpacing: "-0.015em", color: "#F2EDE4" }}>beegood</span>
           </Link>
           <span style={{ fontSize: 13, color: "rgba(242,237,228,0.24)" }}>
             Business OS for Personal Brands · TrueSignal© Method
@@ -744,24 +764,28 @@ const LAYERS = [
     num: "01",
     title: "Signal Intelligence",
     body: "Who are you, and what can only you uniquely offer? This layer extracts the authentic signal that no competitor can copy.",
-    cta: "Start here, free ↓",
+    cta: "Start here, free →",
+    href: "/en/signal",
   },
   {
     num: "02",
     title: "Business Architecture",
     body: "Signal alone has no business value until translated. What offer, what model, what funnel, what pricing, all designed around who you are.",
     cta: null,
+    href: null,
   },
   {
     num: "03",
     title: "Content Intelligence",
     body: "How should the brand speak? What hooks, what themes, what voice? Signal translated into content that attracts the right people.",
     cta: null,
+    href: null,
   },
   {
     num: "04",
     title: "BeeGood OS",
     body: "The execution engine. Unified data, AI decision intelligence, CRM, automations, all answering one question: what matters most right now?",
-    cta: null,
+    cta: "Learn more →",
+    href: "/en/hive",
   },
 ] as const;
