@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { validateSignalOutputEn, type SignalOutputEn } from "@/lib/prompts/signal-engine-en";
+import { CopyButton, ShareButton, PrintButton, RestartButton } from "./ActionButtons";
+
+const BEE = "/beegood_logo.png";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -48,6 +52,26 @@ async function fetchResult(id: string): Promise<ResultRow | null> {
   return data as ResultRow;
 }
 
+// Business OS palette
+const C = {
+  bg:        "#0D0C0A",
+  panel:     "#111009",
+  card:      "#161410",
+  cardSoft:  "#1A1814",
+  border:    "rgba(242,237,228,0.10)",
+  borderHi:  "#C2973F",
+  gold:      "#C2973F",
+  goldDeep:  "#9A7526",
+  goldFaint: "rgba(194,151,63,0.22)",
+  text:      "#F2EDE4",
+  textSoft:  "rgba(242,237,228,0.78)",
+  textMute:  "rgba(242,237,228,0.55)",
+  textFaint: "rgba(242,237,228,0.36)",
+  textDim:   "rgba(242,237,228,0.28)",
+  ctaBg:     "#C2973F",
+  ctaFg:     "#0D0C0A",
+};
+
 export default async function EnSignalResultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const row = await fetchResult(id);
@@ -60,22 +84,11 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
     month: "long",
     year:  "numeric",
   });
-
-  const paper     = "#F4EFE4";
-  const paperDeep = "#EBE3D2";
-  const card      = "#FCFAF3";
-  const ink       = "#211B12";
-  const inkSoft   = "#594F41";
-  const inkFaint  = "#988D7B";
-  const goldDeep  = "#6F521A";
-  const goldLeaf  = "#BE9540";
-  const line      = "rgba(33,27,18,0.12)";
-  const lineSoft  = "rgba(33,27,18,0.08)";
-  const ctaBg     = "#211B12";
-  const ctaFg     = "#F4EFE4";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+  const shareUrl = `${baseUrl}/en/signal/result/${id}`;
 
   return (
-    <div style={{ background: paper, color: ink, minHeight: "100vh", fontFamily: "var(--font-spectral), Georgia, serif" }}>
+    <div style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "var(--font-jakarta), sans-serif" }}>
       <header
         style={{
           maxWidth:       1120,
@@ -88,138 +101,208 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
           flexWrap:       "wrap",
         }}
       >
-        <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 16, textDecoration: "none", color: ink }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/beegood_logo.png"
+        <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: C.text }}>
+          <Image
+            src={BEE}
             alt="beegood"
             width={50}
             height={40}
             style={{ width: "auto", height: 40, display: "block" }}
           />
-          <span style={{ fontFamily: "var(--font-spectral), Georgia, serif", fontSize: 26, fontWeight: 400, letterSpacing: "-0.015em" }}>
+          <span style={{ fontSize: 22, fontWeight: 500, letterSpacing: "-0.02em" }}>
             beegood
           </span>
         </Link>
-        <div style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: goldDeep }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: C.gold, fontWeight: 700 }}>
           Prepared for you · No. {letterNo}
         </div>
       </header>
 
-      {/* Hero - the signal sentence */}
+      {/* Hero - Your signal */}
       <section
         style={{
-          maxWidth:  840,
+          maxWidth:  900,
           margin:    "0 auto",
-          padding:   "clamp(56px, 9vh, 104px) clamp(22px, 5vw, 40px) clamp(60px, 9vh, 100px)",
+          padding:   "clamp(48px, 8vh, 96px) clamp(22px, 5vw, 40px) clamp(40px, 6vh, 72px)",
           textAlign: "center",
         }}
       >
         <div
           style={{
-            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
             fontSize:      12,
+            fontWeight:    700,
             letterSpacing: "0.28em",
             textTransform: "uppercase",
-            color:         goldDeep,
-            marginBottom:  22,
+            color:         C.gold,
+            marginBottom:  18,
           }}
         >
-          Your signal
+          TrueSignal© · Layer 01
         </div>
-        <p
-          style={{
-            fontFamily: "var(--font-spectral), Georgia, serif",
-            fontStyle:  "italic",
-            fontSize:   "clamp(17px, 2vw, 20px)",
-            lineHeight: 1.5,
-            color:      inkSoft,
-            margin:     "0 0 40px",
-          }}
-        >
-          From your five answers, one thing came through clearly.
-        </p>
-        <div style={{ width: 34, height: 1, background: goldLeaf, margin: "0 auto 36px" }} />
         <h1
           style={{
-            fontFamily:    "var(--font-spectral), Georgia, serif",
-            fontStyle:     "italic",
-            fontWeight:    400,
-            fontSize:      "clamp(32px, 5.2vw, 62px)",
-            lineHeight:    1.18,
-            letterSpacing: "-0.02em",
-            color:         ink,
-            margin:        "0 auto",
-            maxWidth:      "18ch",
+            fontSize:      "clamp(36px, 5.4vw, 64px)",
+            fontWeight:    800,
+            lineHeight:    0.98,
+            letterSpacing: "-0.045em",
+            color:         C.text,
+            margin:        0,
           }}
         >
-          {s.signal}
+          Your signal.
         </h1>
-        <div style={{ width: 34, height: 1, background: goldLeaf, margin: "36px auto 0" }} />
         <p
           style={{
-            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-            fontSize:      12.5,
+            fontSize:      14,
             letterSpacing: "0.06em",
-            color:         inkFaint,
-            margin:        "30px 0 0",
+            color:         C.textFaint,
+            margin:        "18px 0 0",
           }}
         >
-          This is yours. You can say it out loud.
+          Extracted on {dateStr}
         </p>
       </section>
 
-      <div style={{ maxWidth: 640, margin: "0 auto", height: 1, background: lineSoft }} />
-
-      {/* What we saw - 3 fields */}
-      <section style={{ maxWidth: 660, margin: "0 auto", padding: "clamp(72px, 11vw, 96px) clamp(22px, 5vw, 40px) 40px" }}>
-        <div style={{ width: 26, height: 2, background: goldLeaf, marginBottom: 22 }} />
+      {/* Signal hero card - the centerpiece */}
+      <section style={{ maxWidth: 760, margin: "0 auto", padding: "0 clamp(22px, 5vw, 40px) clamp(40px, 6vw, 64px)" }}>
         <div
+          className="signal-hero"
           style={{
-            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-            fontSize:      11.5,
-            letterSpacing: "0.24em",
-            textTransform: "uppercase",
-            color:         goldDeep,
-            marginBottom:  34,
+            background:   `linear-gradient(145deg, ${C.cardSoft}, ${C.card})`,
+            border:       `1px solid ${C.gold}`,
+            borderRadius: 22,
+            padding:      "clamp(36px, 5vw, 56px) clamp(28px, 4vw, 44px)",
+            textAlign:    "center",
+            boxShadow:    "0 12px 32px rgba(194,151,63,0.12)",
           }}
         >
-          What we saw
+          <div
+            style={{
+              fontSize:      11,
+              fontWeight:    700,
+              letterSpacing: "0.24em",
+              textTransform: "uppercase",
+              color:         C.gold,
+              marginBottom:  18,
+            }}
+          >
+            The signal
+          </div>
+          <p
+            style={{
+              fontSize:      "clamp(22px, 3.2vw, 30px)",
+              fontStyle:     "italic",
+              fontWeight:    500,
+              lineHeight:    1.45,
+              letterSpacing: "-0.022em",
+              color:         C.text,
+              margin:        "0 0 32px",
+            }}
+          >
+            “{s.signal}”
+          </p>
+          <div className="hero-actions" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <CopyButton text={`${s.signal}\n\nTrueSignal© · beegood.online/en`} />
+            <ShareButton
+              title="My signal - TrueSignal© beegood"
+              text={s.signal}
+              url={shareUrl}
+            />
+          </div>
         </div>
-
-        <Row label="The element you work in" body={s.element} lineColor={lineSoft} inkFaint={inkFaint} ink={ink} />
-        <Row label="Who is looking for you" body={s.people} lineColor={lineSoft} inkFaint={inkFaint} ink={ink} />
-        <BulletRow
-          label="Where to begin, this week"
-          items={s.content_directions}
-          lineColor={lineSoft}
-          inkFaint={inkFaint}
-          ink={ink}
-          isLast
-        />
       </section>
 
-      {/* Made to share - PNG card with public_card_statement */}
-      <section style={{ maxWidth: 660, margin: "0 auto", padding: "24px clamp(22px, 5vw, 40px) clamp(60px, 10vw, 90px)" }}>
+      {/* Signal promise */}
+      {s.signal_promise && (
+        <section style={{ maxWidth: 760, margin: "0 auto", padding: "0 clamp(22px, 5vw, 40px) clamp(28px, 4vw, 48px)" }}>
+          <div
+            style={{
+              background:   "linear-gradient(180deg, rgba(194,151,63,0.06) 0%, transparent 100%)",
+              border:       `1px solid ${C.goldFaint}`,
+              borderRadius: 16,
+              padding:      "24px 26px",
+              position:     "relative",
+            }}
+          >
+            <div
+              aria-hidden
+              style={{
+                position:     "absolute",
+                top:          -1,
+                left:         26,
+                width:        0,
+                height:       0,
+                borderLeft:   "7px solid transparent",
+                borderRight:  "7px solid transparent",
+                borderBottom: `8px solid ${C.gold}`,
+              }}
+            />
+            <div
+              style={{
+                color:         C.gold,
+                fontSize:      11,
+                fontWeight:    700,
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                marginBottom:  10,
+                display:       "flex",
+                alignItems:    "center",
+                gap:           6,
+              }}
+            >
+              <span style={{ fontSize: 13 }}>↗</span> What your signal promises
+            </div>
+            <p style={{ margin: 0, lineHeight: 1.7, color: C.text, fontSize: 16 }}>{s.signal_promise}</p>
+          </div>
+        </section>
+      )}
+
+      {/* Element + People + Content directions stack */}
+      <section style={{ maxWidth: 760, margin: "0 auto", padding: "clamp(28px, 4vw, 48px) clamp(22px, 5vw, 40px) clamp(40px, 6vw, 64px)" }}>
+        <Card label="The element you work in">
+          <p style={{ margin: 0, lineHeight: 1.65, color: C.text, fontSize: 16 }}>{s.element}</p>
+        </Card>
+
+        <Card label="Who is looking for you">
+          <p style={{ margin: 0, lineHeight: 1.65, color: C.text, fontSize: 16 }}>{s.people}</p>
+        </Card>
+
+        <Card label="Three directions to start this week">
+          <ol style={{ margin: 0, paddingInlineStart: 22, lineHeight: 1.75, color: C.text, fontSize: 16 }}>
+            {s.content_directions.map((d, i) => (
+              <li key={i} style={{ marginBottom: 8 }}>{d}</li>
+            ))}
+          </ol>
+        </Card>
+
+        <Card label="A note from us" tone="warm">
+          <p style={{ margin: "0 0 16px", lineHeight: 1.7, color: C.text, fontSize: 16 }}>{s.warm_note}</p>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Hadar &amp; Alon</div>
+          <div style={{ fontSize: 12, color: C.textFaint, marginTop: 3 }}>Founders · beegood</div>
+        </Card>
+      </section>
+
+      {/* Made to share - PNG card */}
+      <section className="share-section" style={{ maxWidth: 760, margin: "0 auto", padding: "0 clamp(22px, 5vw, 40px) clamp(48px, 8vw, 88px)" }}>
         <div
           style={{
-            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
             fontSize:      11,
+            fontWeight:    700,
             letterSpacing: "0.22em",
             textTransform: "uppercase",
-            color:         inkFaint,
+            color:         C.gold,
             margin:        "0 0 16px",
           }}
         >
-          Made to share -
+          Made to share
         </div>
         <div
           style={{
-            border:       `1px solid ${line}`,
-            borderRadius: 6,
+            border:       `1px solid ${C.border}`,
+            borderRadius: 12,
             overflow:     "hidden",
-            background:   card,
-            boxShadow:    "0 1px 0 rgba(26,23,18,0.03), 0 30px 60px -46px rgba(26,23,18,0.26)",
+            background:   C.card,
+            boxShadow:    "0 1px 0 rgba(0,0,0,0.3), 0 30px 60px -46px rgba(0,0,0,0.6)",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -243,16 +326,15 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
             href={`/en/signal/result/${id}/card.png`}
             download={`truesignal-${id.slice(0, 8)}.png`}
             style={{
-              fontFamily:     "var(--font-hanken-grotesk), sans-serif",
-              fontSize:       12.5,
-              fontWeight:     500,
-              letterSpacing:  "0.16em",
-              textTransform:  "uppercase",
-              color:          ctaFg,
-              background:     ctaBg,
-              border:         "none",
-              borderRadius:   4,
-              padding:        "13px 26px",
+              fontFamily:    "var(--font-jakarta), sans-serif",
+              fontSize:      13,
+              fontWeight:    700,
+              letterSpacing: "0.04em",
+              color:         C.ctaFg,
+              background:    C.ctaBg,
+              border:        "none",
+              borderRadius:  10,
+              padding:       "11px 22px",
               textDecoration: "none",
             }}
           >
@@ -260,10 +342,10 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
           </a>
           <p
             style={{
-              fontFamily: "var(--font-spectral), Georgia, serif",
+              fontFamily: "var(--font-jakarta), sans-serif",
+              fontSize:   14,
               fontStyle:  "italic",
-              fontSize:   15,
-              color:      inkFaint,
+              color:      C.textFaint,
               margin:     0,
             }}
           >
@@ -272,88 +354,82 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
         </div>
       </section>
 
-      {/* Warm note from founders */}
-      <section style={{ maxWidth: 660, margin: "0 auto", padding: "clamp(40px, 6vw, 60px) clamp(22px, 5vw, 40px)", textAlign: "center" }}>
-        <p
-          style={{
-            fontFamily: "var(--font-spectral), Georgia, serif",
-            fontStyle:  "italic",
-            fontSize:   "clamp(17px, 2vw, 20px)",
-            lineHeight: 1.55,
-            color:      inkSoft,
-            margin:     "0 auto",
-            maxWidth:   "40ch",
-          }}
-        >
-          {s.warm_note}
-        </p>
-        <div style={{ fontFamily: "var(--font-spectral), Georgia, serif", fontSize: 18, letterSpacing: "-0.01em", color: ink, marginTop: 28 }}>
-          Hadar &amp; Alon
-        </div>
-        <div style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 11, letterSpacing: "0.06em", color: inkFaint, marginTop: 5 }}>
-          Founders of beegood
-        </div>
-      </section>
-
-      {/* Soft upgrade CTA - Signal Kit teaser */}
-      <section style={{ background: paperDeep }}>
-        <div style={{ maxWidth: 680, margin: "0 auto", padding: "clamp(76px, 12vw, 100px) clamp(22px, 5vw, 40px)", textAlign: "center" }}>
-          <h2
+      {/* OS upgrade CTA */}
+      <section
+        className="upgrade-section"
+        style={{
+          background: C.panel,
+          borderTop: `1px solid ${C.border}`,
+          borderBottom: `1px solid ${C.border}`,
+        }}
+      >
+        <div style={{ maxWidth: 880, margin: "0 auto", padding: "clamp(64px, 10vw, 108px) clamp(22px, 5vw, 40px)" }}>
+          <div
             style={{
-              fontFamily:    "var(--font-spectral), Georgia, serif",
-              fontWeight:    400,
-              fontSize:      "clamp(26px, 3.6vw, 36px)",
-              lineHeight:    1.3,
-              letterSpacing: "-0.02em",
-              color:         ink,
-              margin:        0,
+              fontSize:      12,
+              fontWeight:    700,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color:         C.textFaint,
+              marginBottom:  16,
             }}
           >
-            The signal is yours - free, and forever.
+            What comes next
+          </div>
+          <h2
+            style={{
+              fontSize:      "clamp(26px, 3.8vw, 44px)",
+              fontWeight:    700,
+              lineHeight:    1.08,
+              letterSpacing: "-0.035em",
+              color:         C.text,
+              margin:        "0 0 24px",
+              maxWidth:      "26ch",
+            }}
+          >
+            Your signal is the foundation. The work of carrying it is what we build with you.
           </h2>
           <p
             style={{
-              fontFamily: "var(--font-spectral), Georgia, serif",
-              fontSize:   "clamp(17px, 2vw, 19px)",
-              lineHeight: 1.7,
-              color:      inkSoft,
-              margin:     "22px auto 0",
-              maxWidth:   "46ch",
+              fontSize:   "clamp(15px, 1.7vw, 17px)",
+              lineHeight: 1.65,
+              color:      C.textMute,
+              margin:     "0 0 36px",
+              maxWidth:   "58ch",
             }}
           >
-            When you are ready to build a body of work from it - the posts, the rhythm, the reach - we will make the rest with you, in your voice.
+            Layer 01 (this) is yours, free, forever. Layers 02, 03, 04 translate the signal into business architecture, content intelligence, and the BeeGood OS execution engine.
           </p>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 22, flexWrap: "wrap", marginTop: 36 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap" }}>
             <Link
-              href="/en"
+              href="/en/hive"
               style={{
-                fontFamily:     "var(--font-hanken-grotesk), sans-serif",
-                fontSize:       12.5,
-                fontWeight:     500,
-                letterSpacing:  "0.18em",
-                textTransform:  "uppercase",
-                color:          ctaFg,
-                background:     ctaBg,
-                border:         "none",
-                borderRadius:   4,
-                padding:        "15px 30px",
+                fontFamily:    "var(--font-jakarta), sans-serif",
+                fontSize:      15,
+                fontWeight:    700,
+                color:         C.ctaFg,
+                background:    C.ctaBg,
+                border:        "none",
+                borderRadius:  12,
+                padding:       "16px 32px",
+                cursor:        "pointer",
                 textDecoration: "none",
-                display:        "inline-flex",
-                alignItems:     "center",
-                gap:            10,
+                display:       "inline-flex",
+                alignItems:    "center",
+                gap:           10,
               }}
             >
-              Continue with beegood <span style={{ fontSize: 15 }}>→</span>
+              See what comes next <span style={{ fontSize: 18 }}>→</span>
             </Link>
             <Link
               href="/en/signal"
               style={{
-                fontFamily:     "var(--font-hanken-grotesk), sans-serif",
-                fontSize:       12,
-                letterSpacing:  "0.06em",
-                color:          inkSoft,
+                fontSize:       13,
+                fontWeight:     600,
+                letterSpacing:  "0.04em",
+                color:          C.textMute,
                 textDecoration: "none",
-                borderBottom:   `1px solid ${line}`,
+                borderBottom:   `1px solid ${C.border}`,
                 paddingBottom:  2,
               }}
             >
@@ -363,12 +439,31 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
         </div>
       </section>
 
-      <footer style={{ borderTop: `1px solid ${lineSoft}` }}>
+      {/* Action footer + restart */}
+      <section
+        className="footer-actions"
+        style={{
+          maxWidth: 760,
+          margin: "0 auto",
+          padding: "clamp(48px, 8vw, 88px) clamp(22px, 5vw, 40px) clamp(48px, 8vw, 88px)",
+          textAlign: "center",
+          display: "flex",
+          gap: 12,
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <PrintButton />
+        <RestartButton />
+      </section>
+
+      {/* Bottom footer */}
+      <footer style={{ borderTop: `1px solid ${C.border}` }}>
         <div
           style={{
             maxWidth:       1120,
             margin:         "0 auto",
-            padding:        "42px clamp(22px, 5vw, 40px) 56px",
+            padding:        "32px clamp(22px, 5vw, 40px) 44px",
             display:        "flex",
             alignItems:     "center",
             justifyContent: "space-between",
@@ -376,101 +471,71 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
             flexWrap:       "wrap",
           }}
         >
-          <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: ink }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/beegood_logo.png"
+          <Link href="/en" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", color: C.text }}>
+            <Image
+              src={BEE}
               alt=""
-              width={25}
-              height={20}
-              style={{ width: "auto", height: 20, display: "block" }}
+              width={36}
+              height={28}
+              style={{ width: "auto", height: 28, display: "block" }}
             />
-            <span style={{ fontFamily: "var(--font-spectral), Georgia, serif", fontSize: 17 }}>beegood</span>
+            <span style={{ fontSize: 17, fontWeight: 500, letterSpacing: "-0.015em" }}>beegood</span>
           </Link>
-          <div style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 11.5, color: inkFaint }}>
-            The TrueSignal© Method · Wherever you are, in every language · {dateStr}
+          <div style={{ fontSize: 12, letterSpacing: "0.06em", color: C.textFaint }}>
+            The TrueSignal© Method · Business OS for Personal Brands · {dateStr}
           </div>
         </div>
       </footer>
+
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          @page { margin: 18mm 14mm; }
+          .hero-actions, .footer-actions, .upgrade-section, .share-section { display: none !important; }
+          body { background: #ffffff !important; color: #1a1a1a !important; }
+          .signal-hero { background: #ffffff !important; border: 1px solid #C2973F !important; box-shadow: none !important; page-break-inside: avoid; }
+          .signal-hero p { color: #1a1a1a !important; }
+        }
+      `}</style>
     </div>
   );
 }
 
-function Row({
-  label, body, lineColor, inkFaint, ink,
-}: { label: string; body: string; lineColor: string; inkFaint: string; ink: string }) {
-  return (
-    <div style={{ padding: "26px 0", borderTop: `1px solid ${lineColor}` }}>
-      <div
-        style={{
-          fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-          fontSize:      10.5,
-          letterSpacing: "0.2em",
-          textTransform: "uppercase",
-          color:         inkFaint,
-          marginBottom:  10,
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontFamily:    "var(--font-spectral), Georgia, serif",
-          fontSize:      "clamp(19px, 2.4vw, 22px)",
-          lineHeight:    1.5,
-          letterSpacing: "-0.01em",
-          color:         ink,
-        }}
-      >
-        {body}
-      </div>
-    </div>
-  );
-}
-
-function BulletRow({
-  label, items, lineColor, inkFaint, ink, isLast,
+function Card({
+  label,
+  children,
+  tone = "normal",
 }: {
-  label: string;
-  items: [string, string, string];
-  lineColor: string;
-  inkFaint: string;
-  ink: string;
-  isLast?: boolean;
+  label:    string;
+  children: React.ReactNode;
+  tone?:    "normal" | "warm";
 }) {
   return (
     <div
       style={{
-        padding:       "26px 0",
-        borderTop:     `1px solid ${lineColor}`,
-        borderBottom:  isLast ? `1px solid ${lineColor}` : undefined,
+        background:    tone === "warm"
+          ? `linear-gradient(145deg, rgba(194,151,63,0.10), ${C.card})`
+          : C.card,
+        border:        `1px solid ${tone === "warm" ? "rgba(194,151,63,0.30)" : C.border}`,
+        borderRadius:  16,
+        padding:       "24px 24px",
+        color:         C.text,
+        marginBottom:  14,
       }}
     >
       <div
         style={{
-          fontFamily:    "var(--font-hanken-grotesk), sans-serif",
-          fontSize:      10.5,
-          letterSpacing: "0.2em",
+          color:         C.gold,
+          fontSize:      11,
+          fontWeight:    700,
+          letterSpacing: "0.22em",
           textTransform: "uppercase",
-          color:         inkFaint,
           marginBottom:  12,
         }}
       >
         {label}
       </div>
-      <div
-        style={{
-          fontFamily:    "var(--font-spectral), Georgia, serif",
-          fontSize:      "clamp(19px, 2.4vw, 22px)",
-          lineHeight:    1.85,
-          letterSpacing: "-0.01em",
-          color:         ink,
-        }}
-      >
-        {items.map((it, i) => (
-          <div key={i}>{it}</div>
-        ))}
-      </div>
+      <div style={{ fontSize: 16 }}>{children}</div>
     </div>
   );
 }

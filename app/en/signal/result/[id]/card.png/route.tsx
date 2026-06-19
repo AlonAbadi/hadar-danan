@@ -7,21 +7,21 @@ import { validateSignalOutputEn } from "@/lib/prompts/signal-engine-en";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Spectral Italic 400 - fetched once per warm instance from Google Fonts CSS API.
-// Crucial: send NO User-Agent so Google returns format('truetype'). With a
-// modern browser UA it returns woff2 which satori can't decode.
-let cachedSpectralItalic: ArrayBuffer | null = null;
-async function loadSpectralItalic(): Promise<ArrayBuffer | null> {
-  if (cachedSpectralItalic) return cachedSpectralItalic;
+// Plus Jakarta Sans Italic 500 - fetched once per warm instance from Google
+// Fonts CSS API. NO User-Agent so Google returns truetype (satori can't
+// decode woff2).
+let cachedJakartaItalic: ArrayBuffer | null = null;
+async function loadJakartaItalic(): Promise<ArrayBuffer | null> {
+  if (cachedJakartaItalic) return cachedJakartaItalic;
   try {
     const css = await fetch(
-      "https://fonts.googleapis.com/css2?family=Spectral:ital@1&display=swap",
+      "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@1,500&display=swap",
       { headers: {} }
     ).then((r) => r.text());
     const match = css.match(/src:\s*url\((https:\/\/[^)]+\.ttf)\)\s*format\('truetype'\)/);
     if (!match) return null;
     const fontData = await fetch(match[1]).then((r) => r.arrayBuffer());
-    cachedSpectralItalic = fontData;
+    cachedJakartaItalic = fontData;
     return fontData;
   } catch {
     return null;
@@ -51,7 +51,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     beeDataUri = `data:image/png;base64,${beeBuf.toString("base64")}`;
   } catch {}
 
-  const spectralItalic = await loadSpectralItalic();
+  const jakartaItalic = await loadJakartaItalic();
 
   return new ImageResponse(
     (
@@ -63,39 +63,28 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "90px 100px",
-          background: "#F4EFE4",
-          color: "#211B12",
+          background: "#0D0C0A",
+          color: "#F2EDE4",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 16,
-              background: "#111113",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {beeDataUri && (
-              <img src={beeDataUri} width={36} height={36} alt="" style={{ display: "block" }} />
-            )}
-          </div>
-          <div style={{ fontSize: 38, fontWeight: 500, letterSpacing: "-0.02em", display: "flex" }}>
+          {beeDataUri && (
+            <img src={beeDataUri} width={70} height={56} alt="" style={{ display: "block", height: 56, width: "auto" }} />
+          )}
+          <div style={{ fontSize: 40, fontWeight: 500, letterSpacing: "-0.02em", display: "flex", color: "#F2EDE4" }}>
             beegood
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-          <div style={{ width: 42, height: 1, background: "#BE9540" }} />
+          <div style={{ width: 42, height: 1, background: "#C2973F" }} />
           <div
             style={{
               fontSize: 22,
               letterSpacing: 6,
               textTransform: "uppercase",
-              color: "#6F521A",
+              color: "#C2973F",
+              fontWeight: 700,
               display: "flex",
             }}
           >
@@ -106,8 +95,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
               fontSize: 58,
               lineHeight: 1.2,
               letterSpacing: "-0.02em",
-              color: "#211B12",
-              fontFamily: spectralItalic ? "Spectral" : "Georgia, serif",
+              color: "#F2EDE4",
+              fontFamily: jakartaItalic ? "Jakarta" : "Georgia, serif",
               fontStyle: "italic",
               display: "flex",
             }}
@@ -123,24 +112,24 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
             alignItems: "flex-end",
             fontSize: 22,
             letterSpacing: 1.5,
-            color: "#988D7B",
+            color: "rgba(242,237,228,0.48)",
           }}
         >
           <div style={{ display: "flex" }}>beegood.online/en</div>
-          <div style={{ width: 60, height: 1, background: "#BE9540" }} />
+          <div style={{ width: 60, height: 1, background: "#C2973F" }} />
         </div>
       </div>
     ),
     {
       width: 1200,
       height: 1200,
-      fonts: spectralItalic
+      fonts: jakartaItalic
         ? [
             {
-              name: "Spectral",
-              data: spectralItalic,
+              name: "Jakarta",
+              data: jakartaItalic,
               style: "italic" as const,
-              weight: 400 as const,
+              weight: 500 as const,
             },
           ]
         : undefined,
