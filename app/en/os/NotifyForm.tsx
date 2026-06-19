@@ -3,14 +3,14 @@
 import { useState } from "react";
 
 const C = {
-  ink:      "#211B12",
-  inkSoft:  "#594F41",
-  inkFaint: "#988D7B",
-  gold:     "#9A7526",
-  goldDeep: "#6F521A",
-  paper:    "#F4EFE4",
-  lineSoft: "rgba(33,27,18,0.10)",
-  card:     "#FCFAF3",
+  text:     "#F2EDE4",
+  textMute: "rgba(242,237,228,0.55)",
+  textFaint: "rgba(242,237,228,0.36)",
+  gold:     "#C2973F",
+  border:   "rgba(242,237,228,0.10)",
+  card:     "#161410",
+  ctaBg:    "#C2973F",
+  ctaFg:    "#0D0C0A",
 };
 
 export function NotifyForm({ centered = false }: { centered?: boolean }) {
@@ -27,7 +27,7 @@ export function NotifyForm({ centered = false }: { centered?: boolean }) {
     setState("sending");
     setMsg(null);
     try {
-      const res = await fetch("/api/en/hive/notify", {
+      const res = await fetch("/api/en/os/notify", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: email.trim().toLowerCase() }),
@@ -50,11 +50,11 @@ export function NotifyForm({ centered = false }: { centered?: boolean }) {
       <div
         style={{
           textAlign: centered ? "center" : "left",
-          fontFamily: "var(--font-spectral), Georgia, serif",
+          fontFamily: "var(--font-jakarta), sans-serif",
           fontStyle: "italic",
           fontSize: 18,
           lineHeight: 1.55,
-          color: C.ink,
+          color: C.text,
           maxWidth: "44ch",
           margin: centered ? "0 auto" : undefined,
         }}
@@ -78,12 +78,12 @@ export function NotifyForm({ centered = false }: { centered?: boolean }) {
     >
       <div
         style={{
-          display: "flex",
-          gap: 8,
+          display:    "flex",
+          gap:        8,
           background: C.card,
-          border: `1px solid ${C.lineSoft}`,
-          borderRadius: 6,
-          padding: 6,
+          border:     `1px solid ${C.border}`,
+          borderRadius: 8,
+          padding:    6,
           alignItems: "stretch",
         }}
       >
@@ -99,24 +99,23 @@ export function NotifyForm({ centered = false }: { centered?: boolean }) {
             border: "none",
             outline: "none",
             padding: "12px 14px",
-            fontFamily: "var(--font-hanken-grotesk), sans-serif",
+            fontFamily: "var(--font-jakarta), sans-serif",
             fontSize: 15,
-            color: C.ink,
+            color: C.text,
           }}
         />
         <button
           type="submit"
           disabled={!canSubmit}
           style={{
-            fontFamily:    "var(--font-hanken-grotesk), sans-serif",
+            fontFamily:    "var(--font-jakarta), sans-serif",
             fontSize:      12.5,
-            fontWeight:    500,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color:         "#F4EFE4",
-            background:    canSubmit ? C.ink : "rgba(33,27,18,0.4)",
+            fontWeight:    700,
+            letterSpacing: "0.06em",
+            color:         canSubmit ? C.ctaFg : "rgba(13,12,10,0.5)",
+            background:    canSubmit ? C.ctaBg : "rgba(194,151,63,0.35)",
             border:        "none",
-            borderRadius:  4,
+            borderRadius:  6,
             padding:       "13px 22px",
             cursor:        canSubmit ? "pointer" : "not-allowed",
             transition:    "background .2s ease",
@@ -130,9 +129,9 @@ export function NotifyForm({ centered = false }: { centered?: boolean }) {
         <p
           role="alert"
           style={{
-            fontFamily: "var(--font-hanken-grotesk), sans-serif",
+            fontFamily: "var(--font-jakarta), sans-serif",
             fontSize: 13,
-            color: "#B5654A",
+            color: "#E0916A",
             margin: 0,
             textAlign: centered ? "center" : "left",
           }}
@@ -142,16 +141,16 @@ export function NotifyForm({ centered = false }: { centered?: boolean }) {
       )}
       <p
         style={{
-          fontFamily:    "var(--font-hanken-grotesk), sans-serif",
+          fontFamily:    "var(--font-jakarta), sans-serif",
           fontSize:      11.5,
           letterSpacing: "0.06em",
-          color:         C.inkFaint,
+          color:         C.textFaint,
           margin:        0,
           textAlign:     centered ? "center" : "left",
           lineHeight:    1.55,
         }}
       >
-        We will email you once when the door opens - and never again unless you ask.
+        We will email you once when the door opens, and never again unless you ask.
       </p>
     </form>
   );

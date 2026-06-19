@@ -402,7 +402,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap" }}>
             <Link
-              href="/en/hive"
+              href="/en/os"
               style={{
                 fontFamily:    "var(--font-jakarta), sans-serif",
                 fontSize:      15,

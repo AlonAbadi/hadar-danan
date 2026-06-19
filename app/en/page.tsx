@@ -779,6 +779,6 @@ const LAYERS = [
     title: "BeeGood OS",
     body: "The execution engine. Unified data, AI decision intelligence, CRM, automations, all answering one question: what matters most right now?",
     cta: "Learn more →",
-    href: "/en/hive",
+    href: "/en/os",
   },
 ] as const;
