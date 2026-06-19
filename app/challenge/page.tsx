@@ -1,17 +1,14 @@
-import { cookies } from "next/headers";
 import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import ChallengeProofWall from "@/components/landing/ChallengeProofWall";
 import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
-import { InstantAccessStrip } from "./InstantAccessStrip";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { ChallengeHeroText } from "@/components/landing/ChallengeHeroText";
-import { ChallengeHeroTracker } from "./ChallengeHeroTracker";
 import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP, CHALLENGE_ORIGINAL_PRICE } from "@/lib/products";
 import { computeNextLiveMeetingDate } from "@/lib/challenge-config";
-import { parseVariant, CHALLENGE_HERO_AB } from "@/lib/ab";
+import { CHALLENGE_HERO_WINNER } from "@/lib/ab";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
@@ -62,11 +59,11 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
     { question: "האם האתגר מתאים גם למי שעסוק?", answer: "כן. האתגר on-demand. צופים בקצב שלכם, מבצעים את האתגר היומי בזמן שנוח לכם, ומעלים לאינסטגרם. אין מחויבות לשעה קבועה." },
   ];
 
-  // A/B test: hero video vs designed text block
-  const cookieStore  = await cookies();
-  const abVariant    = parseVariant(cookieStore.get("ab_variant")?.value);
-  const heroContent  = CHALLENGE_HERO_AB[abVariant];
-  const useTextHero  = heroContent.type === "text";
+  // A/B test "challenge_hero_format" concluded 2026-06-19: variant B
+  // (designed text block) won at P(B>A)=97.4% with +123.8% uplift on
+  // challenge purchases. Now hardcoded as default for everyone — see
+  // CHALLENGE_HERO_WINNER in lib/ab.ts.
+  const heroContent = CHALLENGE_HERO_WINNER;
 
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
@@ -86,7 +83,6 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         { name: "אתגר 7 הימים", url: `${APP_URL}/challenge` },
       ]} />
       <ViewContentTracker product="challenge_197" value={197} />
-      <ChallengeHeroTracker variant={abVariant} />
       <ProductLandingPage
         productName="אתגר 7 הימים"
         price={PRODUCT_MAP.challenge_197.price}
@@ -95,20 +91,19 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
 
         headline={<>7 ימים, 7 סרטונים<br /><em>שמייצרים מכירות</em></>}
         heroSub="לגרום לכל משתתף לצאת לדרך עם סרטונים איכותיים שמקדמים מכירות ומטפחים קהילה איכותית סביב המותג האישי"
-        vimeoId={useTextHero ? undefined : heroContent.vimeoId}
-        heroSlot={useTextHero ? (
+        heroSlot={
           <ChallengeHeroText
             content={heroContent}
             priceNow={PRODUCT_MAP.challenge_197.price}
             priceOriginal={CHALLENGE_ORIGINAL_PRICE}
           />
-        ) : undefined}
+        }
         definitionBlock="הקהל לא קונה את השירות שלך. הוא קונה את מי שאת בתוך השירות. 7 ימים של הכוונה יומיומית שיגרמו לך לצאת לדרך עם ודאות: לדעת בדיוק מה לצלם, למה זה עובד, ואיך הופכים סרטונים לסיסטם שמביא לקוחות חדשים, חודש אחרי חודש."
         stats={[
           { val: "3,500+", label: "בעלי עסקים" },
           { val: "97%",    label: "ממליצים" },
         ]}
-        heroExtra={<><ChallengeGreeting />{!useTextHero && <InstantAccessStrip />}</>}
+        heroExtra={<ChallengeGreeting />}
 
         problemItems={[
           { icon: "🎥", text: "רוצה לצלם, אבל לא מסתדר/ת עם עצמך מול המצלמה. לא אוהב/ת את מה שאת/ה רואה, ומוותר/ת לפני שמתחיל/ה." },

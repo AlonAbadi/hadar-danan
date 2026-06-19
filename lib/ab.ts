@@ -71,11 +71,17 @@ export const QUIZ_Q1_AB: Record<AbVariant, { title: string; subtitle: string }> 
 
 export const QUIZ_Q1_EXPERIMENT = "quiz_q1_framing";
 
-// ── Challenge hero A/B test: video vs designed text block ──────────
-// Variant A (control): current Vimeo VSL at the top of /challenge
-// Variant B (test):    designed text block in place of the video
-// Primary metric (challenge_hero_format): PURCHASE of challenge_197
-// Secondary metric (challenge_hero_format_checkout): CHECKOUT_STARTED for challenge_197
+// ── Challenge hero A/B test — CONCLUDED 2026-06-19 ──────────────────
+// Winner: variant B (designed text block). Final numbers:
+//   A (video): 950 visitors, 8 purchases  = 0.84% CVR
+//   B (text):  1,061 visitors, 20 purchases = 1.89% CVR
+//   Uplift: +123.8% in favor of B, P(B>A) = 97.4%
+//   Checkout-started secondary: +56.5%, P=94.7%
+//
+// Variant B's content is now hard-coded as CHALLENGE_HERO_WINNER below
+// and rendered for all visitors on /challenge. The CHALLENGE_HERO_AB
+// map is kept ONLY so /admin/abtesting can render the historical
+// winner card; nothing in production reads from it anymore.
 export const CHALLENGE_HERO_EXPERIMENT          = "challenge_hero_format";
 export const CHALLENGE_HERO_CHECKOUT_EXPERIMENT = "challenge_hero_format_checkout";
 
@@ -110,3 +116,8 @@ export const CHALLENGE_HERO_AB: Record<AbVariant, ChallengeHeroVariant> = {
   },
   C: { type: "video", vimeoId: "1184733084" }, // C falls back to A
 };
+
+// The shipped default on /challenge. Same payload as CHALLENGE_HERO_AB.B
+// — kept as a separate constant so production reads from a non-AB
+// surface and the AB map can be deleted later without touching the page.
+export const CHALLENGE_HERO_WINNER: ChallengeHeroVariant = CHALLENGE_HERO_AB.B;
