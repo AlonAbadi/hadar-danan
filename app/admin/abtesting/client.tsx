@@ -909,6 +909,19 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  // Split live experiments (from the `experiments` table) by status so the
+  // page can lead with what's actively collecting data and demote what's
+  // already concluded into a "past results" block.
+  const liveRunning   = liveTests.filter((t) => t.status === 'running');
+  const liveConcluded = liveTests.filter((t) => t.status === 'concluded' || t.status === 'completed' || t.status === 'paused');
+  const totalRunning  = liveRunning.length + running.length;
+  const totalDone     = liveConcluded.length + completed.length;
+
+  // Recommendations collapsed by default — Alon asked for them to be
+  // demoted below running + concluded since the active tests are what
+  // need attention day-to-day.
+  const [showProposals, setShowProposals] = useState(false);
+
   return (
     <div style={{ padding: '32px 48px', color: '#EDE9E1' }}>
       {editingProposal && (
@@ -921,8 +934,8 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
 
       <PageHeader
         title="A/B טסטינג"
-        titleEn="AI Experimentation Hub"
-        subtitle="הסוכן מנתח נתוני האתר ומציע ניסויים - אתה מאשר, הנתונים מכריעים"
+        titleEn="Experiments"
+        subtitle="קודם מה רץ עכשיו · אחר כך מה הסתיים · בסוף ההמלצות"
         actions={
           <button
             onClick={handleAnalyze}
@@ -954,199 +967,253 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
       )}
 
       <KpiGrid cols={4}>
-        <KpiCard label="הצעות ממתינות" value={proposed.length} icon="💡" variant="gold" />
-        <KpiCard label="ניסויים פעילים" value={running.length + liveTests.length} icon="⚡" variant="success" />
-        <KpiCard label="הושלמו" value={completed.length} icon="✅" />
+        <KpiCard label="רצים עכשיו" value={totalRunning} icon="🔴" variant="success" />
+        <KpiCard label="הסתיימו" value={totalDone} icon="✅" />
         <KpiCard
           label="Uplift מצטבר"
           value={completed.length > 0 ? `+${totalCumulativeUplift.toFixed(1)}%` : '-'}
           icon="📈"
           variant={totalCumulativeUplift > 0 ? 'success' : 'default'}
         />
+        <KpiCard label="הצעות ממתינות" value={proposed.length} icon="💡" variant="gold" />
       </KpiGrid>
 
-      <TabBar
-        active={activeTab}
-        onChange={(k) => setActiveTab(k as typeof activeTab)}
-        tabs={[
-          { key: 'proposed', label: 'הצעות הסוכן', count: proposed.length },
-          { key: 'running', label: 'ניסויים פעילים', count: running.length + paused.length + liveTests.length },
-          { key: 'completed', label: 'הושלמו', count: completed.length },
-        ]}
-      />
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 1: רצים עכשיו — top of page, biggest, full LiveTestCard     */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div style={{
+        marginTop: '32px',
+        marginBottom: '32px',
+        padding: '20px 24px 24px',
+        background: 'linear-gradient(180deg, rgba(34,197,94,0.06), rgba(34,197,94,0.02))',
+        border: '1px solid rgba(34,197,94,0.25)',
+        borderRadius: '14px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{
+              display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%',
+              background: '#22C55E', boxShadow: '0 0 0 4px rgba(34,197,94,0.18)',
+              animation: 'livePulse 2s ease-in-out infinite',
+            }} />
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#EDE9E1' }}>
+              רצים עכשיו
+            </h2>
+          </div>
+          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>
+            {totalRunning} ניסויים פעילים
+          </div>
+        </div>
+        <div style={{ fontSize: '12px', color: '#9CA3AF', marginBottom: '20px' }}>
+          הניסויים האלה אוספים נתונים כרגע. הסטטיסטיקה מתעדכנת לפי visitor + conversion חדשים.
+        </div>
 
-      {/* ── Tab 1: Proposed ────────────────────────────────────────────────── */}
-      {activeTab === 'proposed' && (
-        <>
-          {proposed.length === 0 ? (
-            <EmptyState
-              icon="🤖"
-              title="אין הצעות ממתינות"
-              description='לחץ על "בקש ניתוח חדש" כדי שהסוכן יבצע ניתוח ויציע ניסויים חדשים'
-            />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {proposed.map((p) => (
-                <ProposalCard
-                  key={p.id}
-                  proposal={p}
-                  onApprove={() => handleApprove(p.id)}
-                  onEdit={() => setEditingProposal(p)}
-                  loading={loadingId === p.id}
+        {totalRunning === 0 ? (
+          <EmptyState
+            icon="⚡"
+            title="אין ניסויים רצים"
+            description="אשר הצעה מהסוכן כדי להפעיל ניסוי חדש."
+          />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {liveRunning.map((t) => (
+              <LiveTestCard key={t.id} test={t} />
+            ))}
+            {running.map((p) => (
+              <RunningCard
+                key={p.id}
+                proposal={p}
+                onStop={() => handleStop(p.id)}
+                onPause={() => handlePause(p.id)}
+                loading={loadingId === p.id}
+              />
+            ))}
+            {paused.length > 0 && (
+              <SectionCard title="מושהים" titleEn="Paused">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {paused.map((p) => (
+                    <div key={p.id} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '12px 16px', background: '#1D2430', borderRadius: '8px',
+                      border: '1px solid #2C323E',
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#EDE9E1' }}>{p.title}</div>
+                        <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '2px' }}>
+                          {p.visitors_a} A · {p.visitors_b} B · {p.confidence.toFixed(0)}% confidence
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleResume(p.id)}
+                        disabled={loadingId === p.id}
+                        style={{
+                          padding: '6px 14px', fontSize: '12px', borderRadius: '6px',
+                          border: 'none', background: '#C9964A', color: '#fff',
+                          cursor: 'pointer', fontFamily: 'inherit',
+                        }}
+                      >
+                        ▶ המשך
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 2: הסתיימו — concluded experiments + completed proposals    */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#EDE9E1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px' }}>✅</span>
+            הסתיימו
+          </h2>
+          <div style={{ fontSize: '12px', color: '#9CA3AF' }}>
+            {totalDone} ניסויים
+          </div>
+        </div>
+
+        {totalDone === 0 ? (
+          <div style={{
+            padding: '20px 24px',
+            background: '#141820',
+            border: '1px solid #2C323E',
+            borderRadius: '12px',
+            fontSize: '13px',
+            color: '#AAB0BD',
+            textAlign: 'center',
+          }}>
+            עוד אין ניסויים שהסתיימו. אחרי שמסיימים ניסוי הוא יופיע כאן.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Concluded LiveTests — full card so the final numbers are obvious */}
+            {liveConcluded.map((t) => (
+              <LiveTestCard key={t.id} test={t} />
+            ))}
+
+            {/* Completed proposals — compact table */}
+            {completed.length > 0 && (
+              <SectionCard title="ניסויים שהושלמו (מהסוכן)" titleEn="Completed Proposals" noPadding>
+                <DataTable
+                  columns={[
+                    { key: 'name', label: 'ניסוי', width: '25%' },
+                    { key: 'category', label: 'קטגוריה', align: 'center' },
+                    { key: 'uplift', label: 'Uplift', align: 'center' },
+                    { key: 'winner', label: 'מנצח', align: 'center' },
+                    { key: 'confidence', label: 'Confidence', align: 'center' },
+                    { key: 'duration', label: 'משך', align: 'center' },
+                  ]}
+                  rows={completed.map((p) => {
+                    const stats = bayesianStats(p.visitors_a, p.conversions_a, p.visitors_b, p.conversions_b);
+                    const dur = p.started_at && p.completed_at
+                      ? Math.floor((new Date(p.completed_at).getTime() - new Date(p.started_at).getTime()) / 86400000)
+                      : null;
+                    return {
+                      name: (
+                        <div>
+                          <div style={{ fontWeight: 500, color: '#EDE9E1', fontSize: '13px' }}>{p.title}</div>
+                          <div style={{ fontSize: '11px', color: '#AAB0BD' }}>{p.page_or_element}</div>
+                        </div>
+                      ),
+                      category: (
+                        <span style={{
+                          fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
+                          background: `${CATEGORY_COLORS[p.category]}20`,
+                          color: CATEGORY_COLORS[p.category], fontWeight: 500,
+                        }}>
+                          {CATEGORY_LABELS[p.category]}
+                        </span>
+                      ),
+                      uplift: (
+                        <span style={{
+                          color: stats.uplift > 0 ? '#22C55E' : stats.uplift < 0 ? '#EF4444' : '#AAB0BD',
+                          fontWeight: 600, fontFamily: 'system-ui',
+                        }}>
+                          {stats.hasMinSample ? `${stats.uplift > 0 ? '+' : ''}${stats.uplift.toFixed(1)}%` : '-'}
+                        </span>
+                      ),
+                      winner: p.winner === 'b'
+                        ? <Badge variant="success">🏆 גרסה B</Badge>
+                        : p.winner === 'a'
+                          ? <Badge variant="info">גרסה A</Badge>
+                          : <Badge variant="default">אין מנצח</Badge>,
+                      confidence: <Badge variant={p.confidence >= 95 ? 'success' : 'warning'}>{p.confidence.toFixed(0)}%</Badge>,
+                      duration: dur !== null ? <span style={{ fontSize: '12px', color: '#AAB0BD' }}>{dur} ימים</span> : '-',
+                    };
+                  })}
+                  emptyMessage="אין ניסויים שהושלמו עדיין"
                 />
-              ))}
-            </div>
-          )}
-        </>
-      )}
+              </SectionCard>
+            )}
+          </div>
+        )}
+      </div>
 
-      {/* ── Tab 2: Running ─────────────────────────────────────────────────── */}
-      {activeTab === 'running' && (
-        <>
-          {/* Live tests from experiments table */}
-          {liveTests.length > 0 && (
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#E8B94A', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
-                📡 ניסויים חיים — experiments table
-              </div>
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 3: הצעות הסוכן — collapsed by default, demoted to bottom    */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div>
+        <button
+          onClick={() => setShowProposals((v) => !v)}
+          style={{
+            width: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '14px 20px',
+            background: '#141820',
+            border: '1px solid #2C323E',
+            borderRadius: '12px',
+            color: '#EDE9E1',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '14px' }}>💡</span>
+            הצעות מהסוכן ({proposed.length})
+          </span>
+          <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 400 }}>
+            {showProposals ? 'הסתר ←' : 'הצג ↓'}
+          </span>
+        </button>
+
+        {showProposals && (
+          <div style={{ marginTop: '14px' }}>
+            {proposed.length === 0 ? (
+              <EmptyState
+                icon="🤖"
+                title="אין הצעות ממתינות"
+                description='לחץ על "בקש ניתוח חדש" כדי שהסוכן יבצע ניתוח ויציע ניסויים חדשים'
+              />
+            ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {liveTests.map((t) => (
-                  <LiveTestCard key={t.id} test={t} />
+                {proposed.map((p) => (
+                  <ProposalCard
+                    key={p.id}
+                    proposal={p}
+                    onApprove={() => handleApprove(p.id)}
+                    onEdit={() => setEditingProposal(p)}
+                    loading={loadingId === p.id}
+                  />
                 ))}
               </div>
-            </div>
-          )}
-
-          {running.length === 0 && paused.length === 0 && liveTests.length === 0 ? (
-            <EmptyState
-              icon="⚡"
-              title="אין ניסויים פעילים"
-              description='אשר הצעה מהסוכן כדי להתחיל ניסוי'
-            />
-          ) : running.length === 0 && paused.length === 0 ? null : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {running.map((p) => (
-                <RunningCard
-                  key={p.id}
-                  proposal={p}
-                  onStop={() => handleStop(p.id)}
-                  onPause={() => handlePause(p.id)}
-                  loading={loadingId === p.id}
-                />
-              ))}
-              {paused.length > 0 && (
-                <SectionCard title="מושהים" titleEn="Paused">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {paused.map((p) => (
-                      <div key={p.id} style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '12px 16px', background: '#1D2430', borderRadius: '8px',
-                        border: '1px solid #2C323E',
-                      }}>
-                        <div>
-                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#EDE9E1' }}>{p.title}</div>
-                          <div style={{ fontSize: '11px', color: '#AAB0BD', marginTop: '2px' }}>
-                            {p.visitors_a} A · {p.visitors_b} B · {p.confidence.toFixed(0)}% confidence
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleResume(p.id)}
-                          disabled={loadingId === p.id}
-                          style={{
-                            padding: '6px 14px', fontSize: '12px', borderRadius: '6px',
-                            border: 'none', background: '#C9964A', color: '#fff',
-                            cursor: 'pointer', fontFamily: 'inherit',
-                          }}
-                        >
-                          ▶ המשך
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </SectionCard>
-              )}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ── Tab 3: Completed ───────────────────────────────────────────────── */}
-      {activeTab === 'completed' && (
-        <SectionCard title="ניסויים שהושלמו" titleEn="Completed Tests" noPadding>
-          <DataTable
-            columns={[
-              { key: 'name', label: 'ניסוי', width: '25%' },
-              { key: 'category', label: 'קטגוריה', align: 'center' },
-              { key: 'uplift', label: 'Uplift', align: 'center' },
-              { key: 'winner', label: 'מנצח', align: 'center' },
-              { key: 'confidence', label: 'Confidence', align: 'center' },
-              { key: 'duration', label: 'משך', align: 'center' },
-            ]}
-            rows={completed.map((p) => {
-              const stats = bayesianStats(p.visitors_a, p.conversions_a, p.visitors_b, p.conversions_b);
-              const dur = p.started_at && p.completed_at
-                ? Math.floor((new Date(p.completed_at).getTime() - new Date(p.started_at).getTime()) / 86400000)
-                : null;
-              return {
-                name: (
-                  <div>
-                    <div style={{ fontWeight: 500, color: '#EDE9E1', fontSize: '13px' }}>{p.title}</div>
-                    <div style={{ fontSize: '11px', color: '#AAB0BD' }}>{p.page_or_element}</div>
-                  </div>
-                ),
-                category: (
-                  <span style={{
-                    fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
-                    background: `${CATEGORY_COLORS[p.category]}20`,
-                    color: CATEGORY_COLORS[p.category], fontWeight: 500,
-                  }}>
-                    {CATEGORY_LABELS[p.category]}
-                  </span>
-                ),
-                uplift: (
-                  <span style={{
-                    color: stats.uplift > 0 ? '#22C55E' : stats.uplift < 0 ? '#EF4444' : '#AAB0BD',
-                    fontWeight: 600, fontFamily: 'system-ui',
-                  }}>
-                    {stats.hasMinSample ? `${stats.uplift > 0 ? '+' : ''}${stats.uplift.toFixed(1)}%` : '-'}
-                  </span>
-                ),
-                winner: p.winner === 'b'
-                  ? <Badge variant="success">🏆 גרסה B</Badge>
-                  : p.winner === 'a'
-                    ? <Badge variant="info">גרסה A</Badge>
-                    : <Badge variant="default">אין מנצח</Badge>,
-                confidence: <Badge variant={p.confidence >= 95 ? 'success' : 'warning'}>{p.confidence.toFixed(0)}%</Badge>,
-                duration: dur !== null ? <span style={{ fontSize: '12px', color: '#AAB0BD' }}>{dur} ימים</span> : '-',
-              };
-            })}
-            emptyMessage="אין ניסויים שהושלמו עדיין"
-          />
-        </SectionCard>
-      )}
-
-      {/* Agent info card */}
-      <SectionCard title="על הסוכן" titleEn="How the Agent Works">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-          {[
-            { icon: '🔍', title: 'ניתוח נתונים', desc: 'בוחן נשירת פאנל, ביצועי אימייל, נטישת תשלום ושיעורי המרה' },
-            { icon: '💡', title: 'הצעות חכמות', desc: 'מציע ניסויים בקטגוריות קופי, UX ופאנל עם נימוק מבוסס-נתונים' },
-            { icon: '📊', title: 'Bayesian Stats', desc: 'מחשב P(B>A) ו-Confidence Interval - לא רק p-value' },
-            { icon: '🛑', title: 'עצירה חכמה', desc: 'עוצר אוטומטי ב-95% confidence או לאחר 2× הזמן המוערך' },
-          ].map((item) => (
-            <div key={item.title} style={{
-              padding: '14px', background: '#1D2430', borderRadius: '8px', border: '1px solid #2C323E',
-            }}>
-              <div style={{ fontSize: '18px', marginBottom: '6px' }}>{item.icon}</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#E8B94A', marginBottom: '4px' }}>{item.title}</div>
-              <div style={{ fontSize: '11px', color: '#AAB0BD', lineHeight: '1.5' }}>{item.desc}</div>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
+            )}
+          </div>
+        )}
+      </div>
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes livePulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.55; transform: scale(0.88); }
+        }
       `}</style>
     </div>
   );
