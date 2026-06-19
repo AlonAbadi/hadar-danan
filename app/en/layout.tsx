@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Hanken_Grotesk, Spectral } from "next/font/google";
+import { Space_Grotesk, Hanken_Grotesk, Spectral, Plus_Jakarta_Sans } from "next/font/google";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -19,6 +19,14 @@ const spectral = Spectral({
   subsets: ["latin"],
   variable: "--font-spectral",
   weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  weight: ["400", "500", "600", "700", "800"],
   style: ["normal", "italic"],
   display: "swap",
 });
@@ -57,12 +65,12 @@ export default function EnLayout({ children }: { children: React.ReactNode }) {
     <div
       lang="en"
       dir="ltr"
-      className={`${spaceGrotesk.variable} ${hankenGrotesk.variable} ${spectral.variable}`}
+      className={`${spaceGrotesk.variable} ${hankenGrotesk.variable} ${spectral.variable} ${plusJakarta.variable}`}
       style={{
         minHeight: "100vh",
-        background: "#FBFBF9",
-        color: "#0F1011",
-        fontFamily: "var(--font-hanken-grotesk), -apple-system, system-ui, sans-serif",
+        background: "#0D0C0A",
+        color: "#F2EDE4",
+        fontFamily: "var(--font-jakarta), -apple-system, system-ui, sans-serif",
         WebkitFontSmoothing: "antialiased",
       }}
     >

@@ -42,92 +42,103 @@ export function QuestionCard() {
   return (
     <div
       style={{
-        maxWidth: 580,
-        margin: "52px auto 0",
-        textAlign: "left",
         background: "#FFFFFF",
-        border: "1px solid rgba(15,16,17,0.10)",
         borderRadius: 20,
-        padding: 30,
+        overflow: "hidden",
+        border: "1px solid rgba(13,12,10,0.08)",
         boxShadow:
-          "0 2px 4px rgba(15,16,17,0.03), 0 30px 60px -40px rgba(15,16,17,0.30)",
+          "0 4px 12px rgba(13,12,10,0.04), 0 40px 80px -48px rgba(13,12,10,0.24)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-        <span style={{ fontFamily: "var(--font-space-grotesk), sans-serif", fontSize: 12, fontWeight: 500, letterSpacing: "0.04em", color: "#9A9C9E" }}>
-          Question 01 / 05
-        </span>
-        <span style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#9A7526" }}>
-          TrueSignal©
-        </span>
+      <div style={{ height: 4, background: "linear-gradient(90deg, #C2973F, #9A7526)" }} />
+      <div style={{ padding: 30 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 20,
+          }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.04em", color: "#A79C8C" }}>
+            Question 01 / 05
+          </span>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "#9A7526",
+            }}
+          >
+            TrueSignal©
+          </span>
+        </div>
+        <label
+          htmlFor="ts-q1"
+          style={{
+            display: "block",
+            fontSize: "clamp(21px, 3vw, 26px)",
+            fontWeight: 700,
+            letterSpacing: "-0.025em",
+            lineHeight: 1.2,
+            color: "#0D0C0A",
+            marginBottom: 20,
+          }}
+        >
+          Describe a moment you lost all track of time.
+        </label>
+        <textarea
+          ref={taRef}
+          id="ts-q1"
+          rows={2}
+          placeholder="A sentence, or a few. There are no wrong answers."
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{
+            width: "100%",
+            background: "#F5F1E8",
+            border: `1.5px solid ${focused ? "rgba(194,151,63,0.55)" : "rgba(13,12,10,0.07)"}`,
+            borderRadius: 12,
+            fontFamily: "var(--font-jakarta), -apple-system, system-ui, sans-serif",
+            fontSize: 14.5,
+            lineHeight: 1.6,
+            color: "#0D0C0A",
+            padding: 14,
+            resize: "none",
+            outline: "none",
+            transition: "border-color .2s ease",
+          }}
+        />
+        <button
+          type="button"
+          onClick={begin}
+          style={{
+            width: "100%",
+            marginTop: 14,
+            fontFamily: "var(--font-jakarta), -apple-system, system-ui, sans-serif",
+            fontSize: 14.5,
+            fontWeight: 700,
+            color: "#FFFFFF",
+            background: "#0D0C0A",
+            border: "none",
+            borderRadius: 10,
+            padding: 14,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            boxSizing: "border-box",
+            transition: "background .2s ease",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#1E1C18"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "#0D0C0A"; }}
+        >
+          Reveal my signal <span style={{ fontSize: 16 }}>→</span>
+        </button>
       </div>
-      <label
-        htmlFor="ts-q1"
-        style={{
-          display: "block",
-          fontFamily: "var(--font-space-grotesk), sans-serif",
-          fontWeight: 500,
-          fontSize: 23,
-          lineHeight: 1.25,
-          letterSpacing: "-0.02em",
-          color: "#0F1011",
-          marginBottom: 18,
-        }}
-      >
-        Describe a moment you lost all track of time.
-      </label>
-      <textarea
-        ref={taRef}
-        id="ts-q1"
-        rows={2}
-        placeholder="A sentence, or a few. There are no wrong answers."
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        style={{
-          width: "100%",
-          background: "#F5F5F2",
-          border: `1px solid ${focused ? "rgba(154,117,38,0.6)" : "rgba(15,16,17,0.08)"}`,
-          borderRadius: 12,
-          fontFamily: "var(--font-hanken-grotesk), sans-serif",
-          fontSize: 15,
-          lineHeight: 1.6,
-          color: "#0F1011",
-          padding: "14px 14px",
-          resize: "none",
-          outline: "none",
-          transition: "border-color .2s ease",
-        }}
-      />
-      <button
-        type="button"
-        onClick={begin}
-        style={{
-          width: "100%",
-          marginTop: 16,
-          fontFamily: "var(--font-hanken-grotesk), sans-serif",
-          fontSize: 15,
-          fontWeight: 600,
-          letterSpacing: "0.01em",
-          color: "#FBFBF9",
-          background: "#0F1011",
-          border: "none",
-          borderRadius: 12,
-          padding: "15px 22px",
-          cursor: "pointer",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 9,
-          transition: "background .2s ease",
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = "#9A7526"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = "#0F1011"; }}
-      >
-        Reveal my signal <span style={{ fontSize: 16 }}>→</span>
-      </button>
-      <p style={{ fontFamily: "var(--font-hanken-grotesk), sans-serif", fontSize: 12.5, lineHeight: 1.5, color: "#9A9C9E", margin: "14px 0 0", textAlign: "center" }}>
-        ≈ 10 minutes · saved as you write · the third question can be skipped
-      </p>
     </div>
   );
 }
