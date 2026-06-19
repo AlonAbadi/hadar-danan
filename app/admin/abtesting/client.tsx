@@ -837,12 +837,28 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
   const paused = proposals.filter((p) => p.status === 'paused');
   const completed = proposals.filter((p) => p.status === 'completed');
 
-  const totalCumulativeUplift = completed
-    .filter((p) => p.winner === 'b')
-    .reduce((sum, p) => {
-      const s = bayesianStats(p.visitors_a, p.conversions_a, p.visitors_b, p.conversions_b);
-      return sum + (s.uplift > 0 ? s.uplift : 0);
-    }, 0);
+  // Sum every test that has actually concluded with B beating A: both the
+  // AI-agent proposals (status=completed) AND the experiments-table tests
+  // (status in concluded/completed). The earlier version only summed the
+  // proposals path, so a 123.8% live-test win (e.g. challenge_hero_format)
+  // didn't show up in the dashboard KPI.
+  const concludedLiveB = liveTests
+    .filter((t) => (t.status === 'concluded' || t.status === 'completed'))
+    .map((t) => ({
+      stats: bayesianStats(t.visitors_a, t.conversions_a, t.visitors_b, t.conversions_b),
+    }))
+    .filter(({ stats }) => stats.hasMinSample && stats.uplift > 0);
+
+  const totalCumulativeUplift =
+    completed
+      .filter((p) => p.winner === 'b')
+      .reduce((sum, p) => {
+        const s = bayesianStats(p.visitors_a, p.conversions_a, p.visitors_b, p.conversions_b);
+        return sum + (s.uplift > 0 ? s.uplift : 0);
+      }, 0)
+    + concludedLiveB.reduce((sum, { stats }) => sum + stats.uplift, 0);
+
+  const hasAnyCompleted = completed.length > 0 || concludedLiveB.length > 0;
 
   // ── API calls ──────────────────────────────────────────────────────────────
 
@@ -971,7 +987,7 @@ export default function ABTestingClient({ proposals: initial, liveTests }: { pro
         <KpiCard label="הסתיימו" value={totalDone} icon="✅" />
         <KpiCard
           label="Uplift מצטבר"
-          value={completed.length > 0 ? `+${totalCumulativeUplift.toFixed(1)}%` : '-'}
+          value={hasAnyCompleted ? `+${totalCumulativeUplift.toFixed(1)}%` : '-'}
           icon="📈"
           variant={totalCumulativeUplift > 0 ? 'success' : 'default'}
         />
