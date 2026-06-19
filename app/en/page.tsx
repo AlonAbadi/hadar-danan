@@ -283,24 +283,40 @@ export default function EnHomePage() {
             {LAYERS.map((l, i) => {
               const cardInner = (
                 <>
-                  <div
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 9,
-                      background: i === 0 ? "#0D0C0A" : "rgba(13,12,10,0.08)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginBottom: 22,
-                    }}
-                  >
-                    {i === 0 ? (
-                      <Image src={BEE} alt="" width={22} height={22} style={{ width: "64%", height: "auto", display: "block" }} />
-                    ) : (
-                      <span style={{ fontSize: 16, fontWeight: 800, color: "#0D0C0A" }}>{l.num}</span>
-                    )}
-                  </div>
+                  {i === 0 ? (
+                    <div style={{ height: 40, display: "flex", alignItems: "center", marginBottom: 18 }}>
+                      <Image
+                        src={BEE}
+                        alt=""
+                        width={50}
+                        height={40}
+                        style={{ width: "auto", height: 40, display: "block" }}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-start",
+                        marginBottom: 18,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 24,
+                          fontWeight: 800,
+                          letterSpacing: "-0.02em",
+                          color: "#0D0C0A",
+                          opacity: 0.18,
+                        }}
+                      >
+                        {l.num}
+                      </span>
+                    </div>
+                  )}
                   <div
                     style={{
                       fontSize: 11,
