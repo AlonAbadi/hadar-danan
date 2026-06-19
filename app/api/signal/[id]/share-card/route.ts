@@ -81,50 +81,49 @@ function esc(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-// Length-aware font sizing so long signals don't overflow the canvas
-function signalFontSize(text: string): number {
-  const len = text.length;
-  if (len < 70)  return 64;
-  if (len < 110) return 56;
-  if (len < 160) return 48;
-  if (len < 220) return 40;
-  return 36;
-}
-
 function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, style: VisualStyle, palette: Palette): { html: string; css: string } {
-  const fontSize = signalFontSize(signalText);
-
   // When we have an AI-generated background, lay it down first under a dark
   // gradient overlay so the Hebrew text always stays readable regardless of
   // what the model came up with. Without a bg, the card falls back to the
-  // pure dark Santosha background — the existing v1 look.
+  // pure palette background.
   const bgLayer = bgUrl
     ? `<div class="bg" style="background-image:url('${esc(bgUrl)}');"></div>
        <div class="bg-overlay"></div>`
     : "";
 
-  // Clean variant (Hive perk) strips the bee logo + brand attribution + the
-  // beegood.online footer. The asset becomes the customer's own — a polished
-  // editorial post they can put on Instagram without our marks. Non-Hive
-  // users get the watermarked version with full branding (the bee, the
-  // attribution, the footer URL).
-  const brandingBlock = clean ? "" : `
-  <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
-  <div class="divider"></div>
-  <div class="attribution">התגלה באמצעות שיטת <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
-  <div class="footer">beegood.online</div>`;
+  // Clean variant (Hive perk) strips the bee logo + brand footer so the
+  // asset is the customer's own — no beegood watermark. Non-Hive users get
+  // the full branded version.
+  const beeBlock = clean ? "" : `
+  <div class="bee-zone">
+    <div class="bee-halo"></div>
+    <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
+  </div>`;
 
-  // Designed as a public branding statement for the customer to post to
-  // their own audience. No personal address. The accent-line above the text
-  // is a thin gold divider that frames the quote magazine-style.
+  const footerBlock = clean ? "" : `
+  <div class="footer-zone">
+    <div class="method-line">התגלה באמצעות שיטת <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
+    <div class="url-line">beegood.online</div>
+  </div>`;
+
+  // 4:5 portrait composition: bee zone top, quote zone center, footer bottom.
+  // Inner L-shaped corner accents at 46px inset for a premium magazine frame.
+  // The decorative quote mark above the statement uses the palette's accent
+  // at low opacity as a graphic element, not as readable punctuation.
   const html = `
 <div class="card">
   ${bgLayer}
-  <div class="glow"></div>${brandingBlock}
-  <div class="signal-wrap">
-    <div class="accent-line"></div>
-    <div class="signal" style="font-size:${fontSize}px;">${esc(signalText)}</div>
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+  ${beeBlock}
+  <div class="quote-zone">
+    <div class="quote-mark">&ldquo;</div>
+    <div class="quote-text">${esc(signalText)}</div>
+    <div class="divider"></div>
   </div>
+  ${footerBlock}
 </div>`;
 
   const css = `
@@ -133,15 +132,13 @@ body { margin: 0; padding: 0; }
 
 .card {
   width: 1080px;
-  height: 1080px;
+  height: 1350px;
   background: ${palette.bg};
   position: relative;
-  font-family: 'Assistant', 'Heebo', system-ui, sans-serif;
   overflow: hidden;
   direction: rtl;
 }
 
-/* AI-generated background image, full bleed */
 .bg {
   position: absolute;
   inset: 0;
@@ -151,9 +148,6 @@ body { margin: 0; padding: 0; }
   z-index: 0;
 }
 
-/* Dark gradient overlay on top of the AI bg — keeps the Hebrew text always
-   readable regardless of what the model came up with. Heavier at bottom
-   where the attribution + footer live. */
 .bg-overlay {
   position: absolute;
   inset: 0;
@@ -161,60 +155,80 @@ body { margin: 0; padding: 0; }
   z-index: 1;
 }
 
-/* Radial glow behind the bee logo — uses the palette's accent at low opacity
-   so each palette has its own atmospheric glow color. */
-.glow {
+/* Inner border — 4 L-shaped corner accents at 46px inset */
+.corner {
   position: absolute;
-  top: -25%;
+  width: 30px;
+  height: 30px;
+  z-index: 4;
+  opacity: 0.5;
+}
+.corner-tl { top: 46px; left: 46px; border-top: 1px solid ${palette.accent}; border-left: 1px solid ${palette.accent}; }
+.corner-tr { top: 46px; right: 46px; border-top: 1px solid ${palette.accent}; border-right: 1px solid ${palette.accent}; }
+.corner-bl { bottom: 46px; left: 46px; border-bottom: 1px solid ${palette.accent}; border-left: 1px solid ${palette.accent}; }
+.corner-br { bottom: 46px; right: 46px; border-bottom: 1px solid ${palette.accent}; border-right: 1px solid ${palette.accent}; }
+
+/* Top zone — bee with a soft radial halo behind it */
+.bee-zone {
+  position: absolute;
+  top: 130px;
   left: 50%;
   transform: translateX(-50%);
-  width: 150%;
-  height: 90%;
-  background: radial-gradient(ellipse at center, ${palette.glow} 0%, transparent 70%);
-  z-index: 2;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.bee-halo {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, ${palette.glow} 0%, transparent 65%);
+  filter: blur(12px);
 }
 
 .bee {
-  position: absolute;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 72px;
+  position: relative;
+  width: 88px;
   height: auto;
-  z-index: 3;
-  opacity: 0.95;
-  filter: drop-shadow(0 0 32px ${palette.glow});
+  z-index: 1;
+  filter: drop-shadow(0 0 24px ${palette.glow});
 }
 
-.signal-wrap {
+/* Center zone — decorative quote mark + statement + divider anchor */
+.quote-zone {
   position: absolute;
   top: 50%;
-  left: 100px;
-  right: 100px;
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 780px;
   text-align: center;
   direction: rtl;
   z-index: 3;
 }
 
-.accent-line {
-  width: 64px;
-  height: 2px;
-  margin: 0 auto 36px;
-  background: linear-gradient(90deg, transparent, ${palette.accent}, transparent);
-  opacity: 0.85;
+.quote-mark {
+  font-family: 'Frank Ruhl Libre', 'Assistant', serif;
+  font-size: 110px;
+  font-weight: 500;
+  line-height: 0.8;
+  color: ${palette.accent};
+  opacity: 0.3;
+  margin: 0 0 18px;
+  direction: ltr;
 }
 
-/* Statement text uses the palette's text color. All 11 curated palettes ship
-   with dark backgrounds + light text (validated AAA contrast), so the dark
-   text-shadow halo always works for legibility on AI backgrounds. */
-.signal {
-  font-weight: 700;
+.quote-text {
+  font-family: 'Frank Ruhl Libre', 'Assistant', serif;
+  font-size: 56px;
+  font-weight: 500;
+  line-height: 1.6;
   color: ${palette.text};
-  line-height: 1.38;
-  letter-spacing: -0.005em;
   direction: rtl;
   unicode-bidi: plaintext;
+  text-wrap: pretty;
   text-shadow:
     0 2px 14px rgba(0,0,0,0.85),
     0 4px 28px rgba(0,0,0,0.65),
@@ -222,44 +236,44 @@ body { margin: 0; padding: 0; }
 }
 
 .divider {
-  position: absolute;
-  bottom: 168px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 56px;
-  height: 1px;
+  width: 58px;
+  height: 2px;
+  margin: 40px auto 0;
   background: linear-gradient(90deg, transparent, ${palette.accent}, transparent);
-  opacity: 0.7;
+  opacity: 0.85;
+}
+
+/* Bottom zone — method line + URL, vertically stacked */
+.footer-zone {
+  position: absolute;
+  bottom: 130px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
   z-index: 3;
 }
 
-.attribution {
-  position: absolute;
-  bottom: 124px;
-  left: 0;
-  right: 0;
-  text-align: center;
+.method-line {
+  font-family: 'Heebo', 'Assistant', sans-serif;
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 300;
   color: ${palette.accent};
-  opacity: 0.72;
+  opacity: 0.78;
+  letter-spacing: 0.4px;
   direction: rtl;
-  letter-spacing: 0.6px;
-  z-index: 3;
   text-shadow: 0 2px 12px rgba(0,0,0,0.7);
 }
 
-.footer {
-  position: absolute;
-  bottom: 78px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 22px;
+.url-line {
+  font-family: 'Heebo', 'Assistant', sans-serif;
+  font-size: 25px;
   font-weight: 700;
-  letter-spacing: 1.2px;
   color: ${palette.accent};
-  z-index: 3;
+  letter-spacing: 1.8px;
+  direction: ltr;
   text-shadow: 0 2px 12px rgba(0,0,0,0.7);
 }
 `;
@@ -338,10 +352,10 @@ export async function GET(
   // Each visual style is generated and cached independently. Reading the
   // already-cached URL for a style is free; only the first request per
   // (extraction, style) pair pays the Replicate cost.
-  // Cache key v2 — bumped when we upgraded to Flux 1.1 Pro Ultra + the rewritten
-  // visual prompter. v1 URLs (lower-quality Pro model, dim prompt) are orphaned
-  // in the JSONB but stop being read. Each style still caches independently.
-  const cacheKey = `card_bg_url_v2_${style}`;
+  // Cache key v3 — bumped when canvas changed from 1:1 to 4:5 (1080×1350).
+  // v2 URLs (square aspect) would stretch/crop on the new portrait canvas, so
+  // we force a regen at the new 4:5 aspect. Each style still caches independently.
+  const cacheKey = `card_bg_url_v3_${style}`;
   let bgUrl: string | null =
     typeof row.signal[cacheKey] === "string" && row.signal[cacheKey].startsWith("http")
       ? row.signal[cacheKey]
@@ -365,8 +379,8 @@ export async function GET(
         payload: { extractionId: id, style },
       });
     } else {
-      // Stage 2: Flux renders the scene from Claude's prompt.
-      const gen = await generateBackgroundImage(promptResult.prompt);
+      // Stage 2: Flux renders the scene from Claude's prompt at 4:5 portrait.
+      const gen = await generateBackgroundImage(promptResult.prompt, "4:5");
       if (gen.ok) {
         bgUrl = gen.imageUrl;
         // Persist per-style so future requests skip the regen.
@@ -387,10 +401,10 @@ export async function GET(
   const result = await createHctiImage({
     html,
     css,
-    googleFonts:    "Assistant:wght@700",
+    googleFonts:    "Frank+Ruhl+Libre:wght@500;700|Heebo:wght@300;700|Assistant:wght@700",
     viewportWidth:  1080,
-    viewportHeight: 1080,
-    msDelay:        600,   // give the webfont + bee logo image time to load
+    viewportHeight: 1350,
+    msDelay:        700,   // give the 2 webfonts + bee logo image time to load
   });
 
   if (!result.ok) {

@@ -196,14 +196,14 @@ type VisualAsset = {
 };
 
 const VISUAL_ASSETS: VisualAsset[] = [
-  { type: "share-card-default", label: "כרטיס ראשי (1080×1080)", desc: "המשפט הציבורי שלך, מתאים לפיד אינסטגרם", ratio: "1:1" },
+  { type: "share-card-default", label: "כרטיס ראשי (1080×1350)", desc: "המשפט הציבורי שלך, מתאים לפיד אינסטגרם", ratio: "4:5" },
   { type: "instagram-story",    label: "סטורי 9:16 (1080×1920)", desc: "פורמט סטוריז + WhatsApp Status", ratio: "9:16" },
   { type: "linkedin-banner",    label: "באנר LinkedIn (1584×396)", desc: "תמונת הרקע של הפרופיל שלך", ratio: "4:1" },
-  { type: "quote-promise",      label: "כרטיס הבטחה", desc: "מבוסס על 'מה שהאות שלך מבטיח'", ratio: "1:1" },
-  { type: "quote-people",       label: "כרטיס קהל", desc: "מבוסס על 'האנשים שלך'", ratio: "1:1" },
-  { type: "quote-content-1",    label: "כרטיס תוכן #1", desc: "מבוסס על כיוון התוכן הראשון", ratio: "1:1" },
-  { type: "quote-content-2",    label: "כרטיס תוכן #2", desc: "מבוסס על כיוון התוכן השני", ratio: "1:1" },
-  { type: "quote-content-3",    label: "כרטיס תוכן #3", desc: "מבוסס על כיוון התוכן השלישי", ratio: "1:1" },
+  { type: "quote-promise",      label: "כרטיס הבטחה (1080×1350)", desc: "מבוסס על 'מה שהאות שלך מבטיח'", ratio: "4:5" },
+  { type: "quote-people",       label: "כרטיס קהל (1080×1350)", desc: "מבוסס על 'האנשים שלך'", ratio: "4:5" },
+  { type: "quote-content-1",    label: "כרטיס תוכן #1 (1080×1350)", desc: "מבוסס על כיוון התוכן הראשון", ratio: "4:5" },
+  { type: "quote-content-2",    label: "כרטיס תוכן #2 (1080×1350)", desc: "מבוסס על כיוון התוכן השני", ratio: "4:5" },
+  { type: "quote-content-3",    label: "כרטיס תוכן #3 (1080×1350)", desc: "מבוסס על כיוון התוכן השלישי", ratio: "4:5" },
 ];
 
 function VisualTab({ extractionId }: { extractionId: string }) {

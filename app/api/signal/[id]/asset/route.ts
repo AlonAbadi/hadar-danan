@@ -126,23 +126,23 @@ const ASSET_SPECS: Record<AssetType, AssetSpec> = {
     fieldFor: (s) => String(s.public_card_statement ?? s.signal ?? ""),
   },
   "quote-promise": {
-    width: 1080, height: 1080, aspect: "1:1",
+    width: 1080, height: 1350, aspect: "4:5",
     fieldFor: (s) => String(s.signal_promise ?? ""),
   },
   "quote-people": {
-    width: 1080, height: 1080, aspect: "1:1",
+    width: 1080, height: 1350, aspect: "4:5",
     fieldFor: (s) => String(s.people ?? ""),
   },
   "quote-content-1": {
-    width: 1080, height: 1080, aspect: "1:1",
+    width: 1080, height: 1350, aspect: "4:5",
     fieldFor: (s) => Array.isArray(s.content_directions) && s.content_directions[0] ? String(s.content_directions[0]) : "",
   },
   "quote-content-2": {
-    width: 1080, height: 1080, aspect: "1:1",
+    width: 1080, height: 1350, aspect: "4:5",
     fieldFor: (s) => Array.isArray(s.content_directions) && s.content_directions[1] ? String(s.content_directions[1]) : "",
   },
   "quote-content-3": {
-    width: 1080, height: 1080, aspect: "1:1",
+    width: 1080, height: 1350, aspect: "4:5",
     fieldFor: (s) => Array.isArray(s.content_directions) && s.content_directions[2] ? String(s.content_directions[2]) : "",
   },
 };
@@ -164,6 +164,185 @@ function fontSizeFor(text: string, baseWidth: number): number {
   return Math.round(base * scale);
 }
 
+// Quote-card layout — 1080×1350 portrait, 3-zone vertical composition with
+// decorative quote mark, corner accents and a refined footer block. Mirrors
+// the share-card route's layout (the two routes intentionally share the same
+// visual language for quote cards).
+function buildQuoteHtml(args: {
+  text:  string;
+  bgUrl: string | null;
+  clean: boolean;
+  style: VisualStyle;
+}): { html: string; css: string } {
+  const bgLayer = args.bgUrl
+    ? `<div class="bg" style="background-image:url('${esc(args.bgUrl)}');"></div>
+       <div class="bg-overlay"></div>`
+    : "";
+
+  const beeBlock = args.clean ? "" : `
+  <div class="bee-zone">
+    <div class="bee-halo"></div>
+    <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
+  </div>`;
+
+  const footerBlock = args.clean ? "" : `
+  <div class="footer-zone">
+    <div class="method-line">התגלה באמצעות שיטת <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
+    <div class="url-line">beegood.online</div>
+  </div>`;
+
+  const html = `
+<div class="card">
+  ${bgLayer}
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+  ${beeBlock}
+  <div class="quote-zone">
+    <div class="quote-mark">&ldquo;</div>
+    <div class="quote-text">${esc(args.text)}</div>
+    <div class="divider"></div>
+  </div>
+  ${footerBlock}
+</div>`;
+
+  const css = `
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { margin: 0; padding: 0; }
+
+.card {
+  width: 1080px;
+  height: 1350px;
+  background: #080C14;
+  position: relative;
+  overflow: hidden;
+  direction: rtl;
+}
+
+.bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.bg-overlay {
+  position: absolute; inset: 0;
+  background: ${overlayGradient(args.style, false)};
+  z-index: 1;
+}
+
+.corner {
+  position: absolute;
+  width: 30px; height: 30px;
+  z-index: 4;
+  opacity: 0.5;
+}
+.corner-tl { top: 46px; left: 46px; border-top: 1px solid #E8B94A; border-left: 1px solid #E8B94A; }
+.corner-tr { top: 46px; right: 46px; border-top: 1px solid #E8B94A; border-right: 1px solid #E8B94A; }
+.corner-bl { bottom: 46px; left: 46px; border-bottom: 1px solid #E8B94A; border-left: 1px solid #E8B94A; }
+.corner-br { bottom: 46px; right: 46px; border-bottom: 1px solid #E8B94A; border-right: 1px solid #E8B94A; }
+
+.bee-zone {
+  position: absolute;
+  top: 130px; left: 50%;
+  transform: translateX(-50%);
+  width: 200px; height: 200px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 3;
+}
+
+.bee-halo {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle, rgba(232,185,74,0.30) 0%, transparent 65%);
+  filter: blur(12px);
+}
+
+.bee {
+  position: relative;
+  width: 88px; height: auto;
+  z-index: 1;
+  filter: drop-shadow(0 0 24px rgba(232,185,74,0.35));
+}
+
+.quote-zone {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 780px;
+  text-align: center;
+  direction: rtl;
+  z-index: 3;
+}
+
+.quote-mark {
+  font-family: 'Frank Ruhl Libre', 'Assistant', serif;
+  font-size: 110px;
+  font-weight: 500;
+  line-height: 0.8;
+  color: #E8B94A;
+  opacity: 0.3;
+  margin: 0 0 18px;
+  direction: ltr;
+}
+
+.quote-text {
+  font-family: 'Frank Ruhl Libre', 'Assistant', serif;
+  font-size: 56px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: #FFFFFF;
+  direction: rtl;
+  unicode-bidi: plaintext;
+  text-wrap: pretty;
+  text-shadow:
+    0 2px 14px rgba(0,0,0,0.85),
+    0 4px 28px rgba(0,0,0,0.65),
+    0 0 48px rgba(0,0,0,0.45);
+}
+
+.divider {
+  width: 58px; height: 2px;
+  margin: 40px auto 0;
+  background: linear-gradient(90deg, transparent, #E8B94A, transparent);
+  opacity: 0.85;
+}
+
+.footer-zone {
+  position: absolute;
+  bottom: 130px;
+  left: 0; right: 0;
+  display: flex; flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  z-index: 3;
+}
+
+.method-line {
+  font-family: 'Heebo', 'Assistant', sans-serif;
+  font-size: 18px;
+  font-weight: 300;
+  color: #C9964A;
+  opacity: 0.78;
+  letter-spacing: 0.4px;
+  direction: rtl;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+}
+
+.url-line {
+  font-family: 'Heebo', 'Assistant', sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  color: #E8B94A;
+  letter-spacing: 1.8px;
+  direction: ltr;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+}
+`;
+
+  return { html, css };
+}
+
 function buildHtml(args: {
   text:    string;
   bgUrl:   string | null;
@@ -175,6 +354,13 @@ function buildHtml(args: {
 }): { html: string; css: string } {
   const isBanner = args.type === "linkedin-banner";
   const isStory  = args.type === "instagram-story";
+  // quote-promise / quote-people / quote-content-N — all 4:5 portrait cards
+  // that share the new premium magazine layout.
+  const isQuote  = !isBanner && !isStory;
+
+  if (isQuote) {
+    return buildQuoteHtml(args);
+  }
 
   const fontSize = fontSizeFor(args.text, args.width);
 
@@ -192,7 +378,7 @@ function buildHtml(args: {
   <div class="footer">beegood.online</div>`);
 
   // For banners the accent line would compete with the asymmetric right-aligned
-  // text, so we omit it there. Square + story formats get the gold divider.
+  // text, so we omit it there. Story format gets the gold divider.
   const accentLine = isBanner ? "" : `<div class="accent-line"></div>`;
 
   const html = `
@@ -422,9 +608,11 @@ export async function GET(
   }
 
   // ── Background generation (per-type, per-style cache) ──────────────
-  // v2 cache key — bumped when we moved to Flux 1.1 Pro Ultra + rewritten
-  // prompter + lighter overlay. v1 URLs in the JSONB stop being read.
-  const cacheKey = `asset_bg_url_v2_${typeParam}_${style}`;
+  // v3 cache key — bumped when quote cards changed aspect 1:1 → 4:5. v2 URLs
+  // for the 5 quote-* types would stretch/crop on the new portrait canvas, so
+  // we force a regen at the new aspect. Banner/story aspects didn't change but
+  // they read the same v3 key so existing v2 URLs orphan harmlessly.
+  const cacheKey = `asset_bg_url_v3_${typeParam}_${style}`;
   let bgUrl: string | null =
     typeof row.signal[cacheKey] === "string" && row.signal[cacheKey].startsWith("http")
       ? row.signal[cacheKey]
@@ -470,10 +658,10 @@ export async function GET(
 
   const result = await createHctiImage({
     html, css,
-    googleFonts:    "Assistant:wght@700",
+    googleFonts:    "Frank+Ruhl+Libre:wght@500;700|Heebo:wght@300;700|Assistant:wght@700",
     viewportWidth:  spec.width,
     viewportHeight: spec.height,
-    msDelay:        600,
+    msDelay:        700,
   });
   if (!result.ok) {
     await supabase.from("error_logs").insert({
