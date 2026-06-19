@@ -1,165 +1,255 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 /**
  * Horizontal-scrolling testimonial strip rendered immediately after the
  * /challenge hero in variant B of the challenge_proof_position A/B test.
  *
- * Purpose: bridge the social-proof gap between the hero (one quote +
- * stats strip) and the deep proof wall that sits ~7 mobile screens later.
- * The default order leaves most mobile visitors making a yes/no decision
- * before they ever see real screenshots from past participants.
- *
- * Picks 3 strong screenshots from the full ChallengeProofWall set so the
- * messaging stays consistent — same testimonials, just surfaced earlier.
+ * Design rule (2026-06-19): use the EXACT same card structure as
+ * ChallengeProofWall — five stars, highlight quote in gold, body in
+ * muted, footer with author + "הודעה מקורית" thumbnail button that
+ * opens a lightbox of the original WhatsApp screenshot. No invented
+ * layout, no shrunk-and-cropped previews. Three of the same testimonials
+ * appear here as a preview; the rest sit in the full wall further down.
  */
-import Image from "next/image";
 
-type StripItem = {
+type Testimonial = {
   src:       string;
-  highlight: string;
   author:    string;
+  highlight: string;
+  body:      string;
 };
 
-const STRIP_ITEMS: StripItem[] = [
+// Same testimonials as ChallengeProofWall — three strongest, used as a
+// preview here and the full set still renders in the wall below.
+const STRIP_ITEMS: Testimonial[] = [
   {
     src:       "/testimonials/challenge/ws-07.png",
-    highlight: "אתגר סופר משמעותי שהייתי בו בחיי",
     author:    "משתתפת באתגר",
+    highlight: "אתגר סופר משמעותי שהייתי בו בחיי",
+    body:      "ירדו לי כמה אסימונים בזכותו והצלחת להכניס בי ביטחון שעוד לא היה לי.",
   },
   {
     src:       "/testimonials/challenge/ws-01.png",
-    highlight: "האתגר עשה סדר, מיקד לי את המסר",
     author:    "משתתפת באתגר",
+    highlight: "האתגר עשה סדר, מיקד לי את המסר",
+    body:      "ואני מרגישה שגיליתי עולם חדש בשיווק. גישה מדהימה ממש. אני ממשיכה ליישם מאז וגאה בעצמי על ההתמדה.",
   },
   {
     src:       "/testimonials/challenge/ws-04.png",
-    highlight: "נתן חתיכת בעיטה בתחת",
     author:    "מאמנת כוח",
+    highlight: "נתן חתיכת בעיטה בתחת",
+    body:      "וגרם לי לעשות סרטונים שונים מאזור הנוחות שלי. תודה רבה רבה.",
   },
 ];
 
-const GOLD     = "#C9964A";
-const GOLD_L   = "#E8B94A";
-const CARD     = "#141820";
-const BORDER   = "#2C323E";
-const FG       = "#EDE9E1";
-const FG_MUTED = "#9E9990";
-const BG       = "#080C14";
-
 export function ChallengeTestimonialStrip() {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [lightbox]);
+
   return (
-    <section
-      aria-label="עדויות ממשתתפים"
-      style={{
-        background:  BG,
-        padding:     "28px 0 8px",
-        borderTop:   `1px solid ${BORDER}`,
-      }}
-    >
-      <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0 20px 18px" }}>
-        <div
-          style={{
-            fontSize:      11,
-            fontWeight:    800,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color:         GOLD_L,
-            marginBottom:  4,
-            textAlign:     "center",
-          }}
-        >
-          הוכחה מהשטח
-        </div>
-        <div
-          style={{
-            fontSize:      14,
-            color:         FG_MUTED,
-            textAlign:     "center",
-          }}
-        >
-          מה משתתפים כתבו על האתגר
-        </div>
+    <section aria-label="עדויות ממשתתפים" className="cts">
+      <div className="cts-head">
+        <div className="cts-eyebrow">הוכחה מהשטח</div>
+        <div className="cts-sub">מה משתתפים כתבו על האתגר</div>
       </div>
 
-      <div className="ts-strip-scroller">
-        {STRIP_ITEMS.map((item, i) => (
-          <article
-            key={i}
-            className="ts-strip-card"
-            style={{
-              background:   CARD,
-              border:       `1px solid ${BORDER}`,
-              borderRadius: 14,
-              padding:      "14px 14px 12px",
-            }}
-          >
-            <div
-              style={{
-                fontSize:    14,
-                fontWeight:  700,
-                color:       FG,
-                lineHeight:  1.4,
-                marginBottom: 10,
-              }}
-            >
-              <span style={{ color: GOLD_L }}>“</span>
-              {item.highlight}
-              <span style={{ color: GOLD_L }}>”</span>
-            </div>
-            <div
-              style={{
-                position:     "relative",
-                aspectRatio:  "1 / 1",
-                borderRadius: 10,
-                overflow:     "hidden",
-                background:   "#0B0F18",
-                marginBottom: 10,
-                border:       `1px solid ${BORDER}`,
-              }}
-            >
-              <Image
-                src={item.src}
-                alt={item.highlight}
-                fill
-                sizes="(max-width: 600px) 70vw, 240px"
-                style={{ objectFit: "cover" }}
-              />
-            </div>
-            <div
-              style={{
-                fontSize:   11,
-                color:      FG_MUTED,
-                textAlign:  "left",
-              }}
-            >
-              — {item.author}
+      <div className="cts-scroller">
+        {STRIP_ITEMS.map((t, i) => (
+          <article key={i} className="cts-card">
+            <div className="cts-stars">★★★★★</div>
+            <blockquote className="cts-quote">
+              <span className="cts-highlight">&ldquo;{t.highlight}&rdquo;</span>
+              {t.body && <span className="cts-body"> {t.body}</span>}
+            </blockquote>
+            <div className="cts-foot">
+              <div className="cts-author">{t.author}</div>
+              <button
+                type="button"
+                className="cts-proof"
+                onClick={() => setLightbox(t.src)}
+                aria-label="הצג הודעה מקורית"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={t.src} alt="" />
+                <span>הודעה מקורית</span>
+              </button>
             </div>
           </article>
         ))}
       </div>
 
-      <style>{`
-        .ts-strip-scroller {
+      {lightbox && (
+        <div
+          className="cts-lightbox"
+          onClick={() => setLightbox(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            className="cts-close"
+            onClick={(e) => { e.stopPropagation(); setLightbox(null); }}
+            aria-label="סגור"
+          >
+            ✕
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lightbox} alt="הודעה מקורית" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+
+      <style jsx>{`
+        /* Section frame — sits between hero and definition block */
+        .cts {
+          background: #080C14;
+          padding: 36px 0 28px;
+          border-top: 1px solid #2C323E;
+        }
+        .cts-head {
+          max-width: 1080px;
+          margin: 0 auto 18px;
+          padding: 0 20px;
+          text-align: center;
+        }
+        .cts-eyebrow {
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #E8B94A;
+          margin-bottom: 4px;
+        }
+        .cts-sub {
+          font-size: 14px;
+          color: #9E9990;
+        }
+
+        /* Card row — mirrors cpw-card 1:1 */
+        .cts-scroller {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+          max-width: 1080px;
+          margin: 0 auto;
+          padding: 0 20px;
+        }
+        @media (min-width: 640px) {
+          .cts-scroller { grid-template-columns: 1fr 1fr 1fr; }
+        }
+
+        .cts-card {
+          background: linear-gradient(145deg, #1D2430, #111620);
+          border: 1px solid rgba(201, 150, 74, 0.18);
+          border-radius: 16px;
+          padding: 22px 20px 16px;
           display: flex;
-          gap: 12px;
-          overflow-x: auto;
-          padding: 0 20px 18px;
-          scroll-snap-type: x mandatory;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
+          flex-direction: column;
+          gap: 14px;
         }
-        .ts-strip-scroller::-webkit-scrollbar { display: none; }
-        .ts-strip-card {
-          flex: 0 0 70%;
-          max-width: 280px;
-          scroll-snap-align: center;
+        .cts-stars {
+          color: #E8B94A;
+          font-size: 14px;
+          letter-spacing: 2px;
         }
-        @media (min-width: 720px) {
-          .ts-strip-scroller {
-            justify-content: center;
-            max-width: 1080px;
-            margin: 0 auto;
-            overflow-x: visible;
-          }
-          .ts-strip-card { flex: 0 1 240px; }
+        .cts-quote {
+          margin: 0;
+          font-size: 15px;
+          line-height: 1.65;
+          color: #EDE9E1;
+          flex: 1;
+        }
+        .cts-highlight {
+          font-size: 17px;
+          font-weight: 700;
+          color: #E8B94A;
+          display: block;
+          margin-bottom: 6px;
+          line-height: 1.45;
+        }
+        .cts-body {
+          color: #B8B2A7;
+        }
+        .cts-foot {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          padding-top: 14px;
+          border-top: 1px solid rgba(201, 150, 74, 0.12);
+        }
+        .cts-author {
+          font-size: 13px;
+          color: #AAB0BD;
+          font-weight: 600;
+        }
+        .cts-proof {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(201, 150, 74, 0.08);
+          border: 1px solid rgba(201, 150, 74, 0.25);
+          border-radius: 10px;
+          padding: 5px 9px 5px 6px;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 11px;
+          color: #E8B94A;
+          font-weight: 600;
+        }
+        .cts-proof img {
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+          object-fit: cover;
+          object-position: center;
+          border: 1px solid rgba(201, 150, 74, 0.3);
+        }
+
+        /* Lightbox — mirrors cpw-lightbox */
+        .cts-lightbox {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.92);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          cursor: zoom-out;
+        }
+        .cts-lightbox img {
+          max-width: 100%;
+          max-height: 100%;
+          border-radius: 12px;
+          box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+          cursor: default;
+        }
+        .cts-close {
+          position: absolute;
+          top: 18px;
+          left: 18px;
+          background: rgba(232, 185, 74, 0.15);
+          border: 1px solid rgba(232, 185, 74, 0.45);
+          color: #E8B94A;
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          font-size: 16px;
+          cursor: pointer;
         }
       `}</style>
     </section>
