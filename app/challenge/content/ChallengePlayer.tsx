@@ -360,40 +360,6 @@ export default function ChallengePlayer({
               >
                 כניסה למפגש ←
               </a>
-              {(dayData.meetingId || dayData.passcode) && (
-                <div style={{
-                  marginTop: 22,
-                  padding: "14px 20px",
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid #2C323E",
-                  borderRadius: 10,
-                  display: "inline-flex",
-                  flexDirection: "column",
-                  gap: 6,
-                  alignItems: "stretch",
-                  textAlign: "right",
-                  direction: "rtl",
-                  fontSize: 13,
-                  color: "#AAB0BD",
-                }}>
-                  {dayData.meetingId && (
-                    <div>
-                      <span style={{ color: "#AAB0BD" }}>מזהה מפגש: </span>
-                      <span dir="ltr" style={{ color: "#EDE9E1", fontWeight: 700, letterSpacing: 0.4 }}>
-                        {dayData.meetingId}
-                      </span>
-                    </div>
-                  )}
-                  {dayData.passcode && (
-                    <div>
-                      <span style={{ color: "#AAB0BD" }}>סיסמה: </span>
-                      <span dir="ltr" style={{ color: "#EDE9E1", fontWeight: 700, letterSpacing: 0.4 }}>
-                        {dayData.passcode}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
             </>
           ) : (
             <div style={{ fontSize: 12, color: "#4A5060" }}>
