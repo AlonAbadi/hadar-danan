@@ -44,7 +44,11 @@ export default function ChallengePlayer({
 
   const dayData        = CHALLENGE_DAYS.find((d) => d.day === activeDay)!;
   const isLocked       = activeDay > maxUnlockedDay || (activeDay === 8 && !day8Accessible);
+  // Live Zoom session = videoId is a URL (not a Vimeo ID). Renders a join card
+  // instead of the Vimeo iframe. PLACEHOLDER still triggers the same card path
+  // so that an unset day-8 falls back to "link coming soon" copy.
   const isPlaceholder  = dayData.videoId === "PLACEHOLDER";
+  const isLiveSession  = dayData.videoId.startsWith("http") || (activeDay === 8 && isPlaceholder);
   const dayDone        = completed.has(activeDay);
   const completedCount = completed.size;
   const totalDays      = CHALLENGE_DAYS.length;
@@ -73,7 +77,7 @@ export default function ChallengePlayer({
   // Vimeo Player API — auto-mark watched at 90% AND log analytics milestones to
   // video_events so admin profile / video drop-off dashboard see real numbers.
   useEffect(() => {
-    if (isPlaceholder || isLocked || !iframeRef.current) return;
+    if (isLiveSession || isLocked || !iframeRef.current) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const win = window as any;
     if (!win.Vimeo) return;
@@ -106,7 +110,7 @@ export default function ChallengePlayer({
       }
     });
     return () => { player.off("timeupdate"); };
-  }, [activeDay, isPlaceholder, isLocked, dayData.videoId, userEmail]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeDay, isLiveSession, isLocked, dayData.videoId, userEmail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function markWatched(day: number) {
     if (reported.has(day) || marking) return;
@@ -314,8 +318,14 @@ export default function ChallengePlayer({
       );
     }
 
-    // Day 8 is accessible but has no video yet — show live meeting info instead
-    if (activeDay === 8 && isPlaceholder) {
+    // Live Zoom session — replaces the Vimeo iframe with a join card. If the
+    // URL is still PLACEHOLDER (link not yet pinned), we keep the soft
+    // "link coming soon" copy; once a real Zoom URL is set, we surface the
+    // one-click join button + Meeting ID + Passcode so members can also join
+    // from the desktop app.
+    if (isLiveSession) {
+      const isPlaceholderUrl = isPlaceholder;
+      const joinUrl = isPlaceholderUrl ? null : dayData.videoId;
       return (
         <div style={{
           borderRadius: 12, border: "1px solid rgba(139,92,246,0.3)",
@@ -329,13 +339,70 @@ export default function ChallengePlayer({
           <div style={{ fontSize: 15, color: "#EDE9E1", fontWeight: 700, marginBottom: 8 }}>
             {liveMeetingLabel}
           </div>
-          <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.7, maxWidth: 400, margin: "0 auto" }}>
+          <div style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.7, maxWidth: 400, margin: "0 auto 22px" }}>
             מפגש הסיום יתקיים ב-Zoom עם הדר.
             נסכם את השבוע, נחגוג את ההישגים, ונדבר על הצעדים הבאים.
           </div>
-          <div style={{ marginTop: 16, fontSize: 12, color: "#4A5060" }}>
-            קישור ה-Zoom יישלח לפני המפגש
-          </div>
+
+          {joinUrl ? (
+            <>
+              <a
+                href={joinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-block",
+                  background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                  color: "#2a1d05",
+                  fontWeight: 800, fontSize: 16,
+                  padding: "14px 32px",
+                  borderRadius: 999,
+                  textDecoration: "none",
+                  boxShadow: "0 1px 0 rgba(255,255,255,0.55) inset, 0 -10px 22px rgba(157,110,12,0.35) inset, 0 18px 34px -12px rgba(214,155,31,0.55), 0 6px 14px -6px rgba(0,0,0,0.55)",
+                }}
+              >
+                כניסה למפגש ←
+              </a>
+              {(dayData.meetingId || dayData.passcode) && (
+                <div style={{
+                  marginTop: 22,
+                  padding: "14px 20px",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid #2C323E",
+                  borderRadius: 10,
+                  display: "inline-flex",
+                  flexDirection: "column",
+                  gap: 6,
+                  alignItems: "stretch",
+                  textAlign: "right",
+                  direction: "rtl",
+                  fontSize: 13,
+                  color: "#AAB0BD",
+                }}>
+                  {dayData.meetingId && (
+                    <div>
+                      <span style={{ color: "#AAB0BD" }}>מזהה מפגש: </span>
+                      <span dir="ltr" style={{ color: "#EDE9E1", fontWeight: 700, letterSpacing: 0.4 }}>
+                        {dayData.meetingId}
+                      </span>
+                    </div>
+                  )}
+                  {dayData.passcode && (
+                    <div>
+                      <span style={{ color: "#AAB0BD" }}>סיסמה: </span>
+                      <span dir="ltr" style={{ color: "#EDE9E1", fontWeight: 700, letterSpacing: 0.4 }}>
+                        {dayData.passcode}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ fontSize: 12, color: "#4A5060" }}>
+              קישור ה-Zoom יישלח לפני המפגש
+            </div>
+          )}
         </div>
       );
     }

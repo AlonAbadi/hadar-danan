@@ -1,11 +1,16 @@
 export interface ChallengeDay {
   day: number;
-  videoId: string; // Vimeo ID - "PLACEHOLDER" until real IDs are provided
+  videoId: string; // Vimeo ID for pre-recorded days; full Zoom URL for the live session (day 8)
   title: string;
   duration: number; // minutes
   aspectRatio: "16:9" | "9:16"; // 16:9 for day 0 & 8, 9:16 reels for days 1-7
   description: string;
   bullets: string[]; // expanded content — key takeaways from the actual video
+  // Live-session metadata (only set on Zoom days, e.g. day 8). Surfaced to
+  // members alongside the join URL so they can also join via Meeting ID +
+  // Passcode from the Zoom app.
+  meetingId?: string;
+  passcode?:  string;
 }
 
 export const CHALLENGE_DAYS: ChallengeDay[] = [
@@ -142,6 +147,8 @@ export const CHALLENGE_DAYS: ChallengeDay[] = [
     aspectRatio: "16:9",
     description: "מפגש הסיום המיוחד: נסכם את השבוע, נחגוג את ההישגים, ונדבר על הצעדים הבאים — איך להמשיך לבנות את המותג שלך מכאן.",
     bullets: [],
+    meetingId: "871 5062 2837",
+    passcode:  "188343",
   },
 ];
 
