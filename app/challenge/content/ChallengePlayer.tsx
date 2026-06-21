@@ -30,9 +30,6 @@ export default function ChallengePlayer({
   // would trigger re-renders for every milestone check.
   const milestoneReported = useRef<Set<string>>(new Set());
 
-  // Day 8 unlocks once day 7 is accessible
-  const day8Accessible = maxUnlockedDay >= 7;
-
   // Start on the current active day (first uncompleted within unlocked range)
   const firstActive = (() => {
     for (let d = 0; d <= maxUnlockedDay; d++) {
@@ -43,7 +40,9 @@ export default function ChallengePlayer({
   const [activeDay, setActiveDay] = useState(firstActive);
 
   const dayData        = CHALLENGE_DAYS.find((d) => d.day === activeDay)!;
-  const isLocked       = activeDay > maxUnlockedDay || (activeDay === 8 && !day8Accessible);
+  // Day 8 is a fixed-time live Zoom event — always accessible to enrolled
+  // members regardless of where they are in the daily-unlock progression.
+  const isLocked       = activeDay > maxUnlockedDay && activeDay !== 8;
   // Live Zoom session = videoId is a URL (not a Vimeo ID). Renders a join card
   // instead of the Vimeo iframe. PLACEHOLDER still triggers the same card path
   // so that an unset day-8 falls back to "link coming soon" copy.
@@ -139,7 +138,7 @@ export default function ChallengePlayer({
   }
 
   function handleDayClick(day: number) {
-    const locked = day > maxUnlockedDay || (day === 8 && !day8Accessible);
+    const locked = day > maxUnlockedDay && day !== 8;
     if (locked) {
       setLockedPopup(true);
     } else {
@@ -151,7 +150,7 @@ export default function ChallengePlayer({
   function circleStyle(day: number) {
     const isDone   = completed.has(day);
     const isActive = day === activeDay;
-    const locked   = day > maxUnlockedDay || (day === 8 && !day8Accessible);
+    const locked   = day > maxUnlockedDay && day !== 8;
     const special  = isSessionDay(day);
 
     if (isDone)   return { bg: "rgba(52,168,83,0.15)",    color: "#34A853",  border: "rgba(52,168,83,0.4)" };
@@ -167,7 +166,7 @@ export default function ChallengePlayer({
       {CHALLENGE_DAYS.map((d) => {
         const isDone    = completed.has(d.day);
         const isActive  = d.day === activeDay;
-        const locked    = d.day > maxUnlockedDay || (d.day === 8 && !day8Accessible);
+        const locked    = d.day > maxUnlockedDay && d.day !== 8;
         const cs        = circleStyle(d.day);
         const isSpecial = isSessionDay(d.day);
 
@@ -245,7 +244,7 @@ export default function ChallengePlayer({
   const NavButtons = () => {
     const prevDay = CHALLENGE_DAYS.find((d) => d.day === activeDay - 1);
     const nextDay = CHALLENGE_DAYS.find((d) => d.day === activeDay + 1);
-    const canNext = nextDay && nextDay.day <= maxUnlockedDay && !(nextDay.day === 8 && !day8Accessible);
+    const canNext = nextDay && (nextDay.day <= maxUnlockedDay || nextDay.day === 8);
     const canPrev = prevDay && prevDay.day <= maxUnlockedDay;
 
     return (
@@ -305,9 +304,7 @@ export default function ChallengePlayer({
             }}>
               <span style={{ fontSize: 36 }}>🔒</span>
               <div style={{ fontSize: 14, color: "#AAB0BD", fontWeight: 700, textAlign: "center" }}>
-                {activeDay === 8
-                  ? "מפגש הסיום יפתח לאחר שיום 7 יהיה זמין"
-                  : "יום זה ייפתח מחר בבוקר"}
+                יום זה ייפתח מחר בבוקר
               </div>
               <div style={{ fontSize: 12, color: "#4A5060", textAlign: "center" }}>
                 תקבל הודעה בווצאפ כשיגיע הזמן
