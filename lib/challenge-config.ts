@@ -136,7 +136,7 @@ export const CHALLENGE_DAYS: ChallengeDay[] = [
   },
   {
     day: 8,
-    videoId: "PLACEHOLDER",
+    videoId: "https://us06web.zoom.us/j/87150622837?pwd=l34oyxqO9AZtFjFJkeEdJg30RwqQlf.1",
     title: "מפגש סיום",
     duration: 120,
     aspectRatio: "16:9",
