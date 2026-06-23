@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { parseVariant, AB_CONTENT } from "@/lib/ab";
 import { createServerClient } from "@/lib/supabase/server";
 import { PageTracker } from "@/components/landing/PageTracker";
+import { HomeHeroCtaTracker } from "@/components/landing/HomeHeroCtaTracker";
 const ProductsSection = dynamic(() => import("@/components/ProductsSection").then(m => ({ default: m.ProductsSection })));
 import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Sparkles } from "lucide-react";
 
@@ -78,6 +79,7 @@ export default async function LandingPage() {
   return (
     <>
       <PageTracker abVariant={variant} />
+      <HomeHeroCtaTracker abVariant={variant} />
 
       <div dir="rtl" className="min-h-screen flex flex-col" style={{ background: "#080C14" }}>
 

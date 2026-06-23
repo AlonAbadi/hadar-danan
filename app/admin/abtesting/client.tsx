@@ -36,13 +36,22 @@ const LIVE_TEST_META: Record<string, {
   subLabel: string;
 }> = {
   landing_headline: {
-    label: 'כותרת הירו — עמוד הבית',
-    metric: 'שיעור הרשמה · מעקב דרך טבלת experiments',
+    label: 'כותרת הירו — עמוד הבית (primary: חילוץ אות)',
+    metric: 'שיעור השלמת חילוץ אות (SIGNAL_EXTRACTED / PAGE_VIEW של /)',
     a: AB_CONTENT.A.headline,
     b: AB_CONTENT.B.headline,
     aSub: AB_CONTENT.A.cta,
     bSub: AB_CONTENT.B.cta,
     subLabel: 'CTA',
+  },
+  landing_headline_click: {
+    label: 'כותרת הירו — עמוד הבית (secondary: קליקים)',
+    metric: 'אחוז קליקים על CTA (CTA_CLICKED / PAGE_VIEW של /)',
+    a: AB_CONTENT.A.headline,
+    b: AB_CONTENT.B.headline,
+    aSub: AB_CONTENT.A.cta,
+    bSub: AB_CONTENT.B.cta,
+    subLabel: 'CTA · leading indicator',
   },
   quiz_q1_framing: {
     label: 'שאלה 1 בקוויז — מסגור זהות מול כאב',

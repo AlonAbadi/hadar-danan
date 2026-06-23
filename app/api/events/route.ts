@@ -200,6 +200,12 @@ export async function POST(req: NextRequest) {
           type === "SIGNAL_EXTRACTED" ||
           type === "USER_SIGNED_UP" ||
           type === "QUIZ_LEAD";
+      } else if (experimentName === "landing_headline_click") {
+        // Leading indicator alongside the primary landing_headline test.
+        // Visitor: PAGE_VIEW (same as primary, fired with its own
+        // experiment_name by HomeHeroCtaTracker). Conversion: clicking the
+        // hero CTA on the homepage, fired as CTA_CLICKED via sendBeacon.
+        isConversion = type === "CTA_CLICKED";
       } else {
         // Default (quiz-Q1, future): signup or quiz lead
         isConversion = type === "USER_SIGNED_UP" || type === "QUIZ_LEAD";
