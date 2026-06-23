@@ -11,17 +11,24 @@ import { createServerClient } from "@/lib/supabase/server";
 export async function linkAuthUser(authId: string, email: string) {
   const supabase = createServerClient();
 
+  // Lookup must be case-insensitive: Cardcom guests + signup forms preserve
+  // the typed casing ("Foo@Gmail.com"), while OAuth providers (Google) hand
+  // us a normalized lowercase address. A case-sensitive `.eq("email", email)`
+  // missed those guest-buyer rows and silently inserted a duplicate empty
+  // row that broke /account purchase visibility (Shulamit, 22/6).
+  const normalized = email.toLowerCase().trim();
+
   const { data: existing } = await supabase
     .from("users")
     .select("*")
-    .eq("email", email)
+    .ilike("email", normalized)
     .maybeSingle();
 
   if (existing) {
     if (!existing.auth_id) {
       const { data: updated } = await supabase
         .from("users")
-        .update({ auth_id: authId, email_verified: true })
+        .update({ auth_id: authId, email: normalized, email_verified: true })
         .eq("id", existing.id)
         .select()
         .single();
@@ -34,8 +41,8 @@ export async function linkAuthUser(authId: string, email: string) {
     .from("users")
     .insert({
       auth_id: authId,
-      email,
-      status: "lead",
+      email:   normalized,
+      status:  "lead",
       email_verified: true,
     })
     .select()
