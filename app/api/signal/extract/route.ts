@@ -377,10 +377,15 @@ export async function POST(req: NextRequest) {
         messages: [{ role: "user" as const, content: userContent }],
       };
 
-      // Network-level retry on 429/529 only (same as truesignal-diagnosis)
+      // Network-level retry on 429/529. 5 attempts with exponential backoff
+      // + ±30% jitter: 1s, 2s, 4s, 8s. Total max wait before final failure
+      // ≈15s, which gives Anthropic's overload window a real chance to clear.
+      // Each attempt is also logged on failure so we can see in error_logs
+      // how deep into the retry chain we got.
+      const MAX_ATTEMPTS = 5;
       let aiResponse: Awaited<ReturnType<typeof client.messages.create>> | null = null;
       let lastErr: unknown = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         try {
           aiResponse = await client.messages.create(requestParams);
           break;
@@ -388,8 +393,10 @@ export async function POST(req: NextRequest) {
           lastErr = e;
           const status = (e as { status?: number })?.status;
           if (status !== 429 && status !== 529) throw e;
-          if (attempt === 2) throw e;
-          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          if (attempt === MAX_ATTEMPTS - 1) throw e;
+          const base   = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s, 8s
+          const jitter = base * (Math.random() * 0.6 - 0.3); // ±30%
+          await new Promise((r) => setTimeout(r, base + jitter));
         }
       }
       if (!aiResponse) throw lastErr ?? new Error("Anthropic call failed");
