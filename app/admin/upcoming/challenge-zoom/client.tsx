@@ -25,7 +25,24 @@ function fmtPhone(p: string | null): string {
   return p;
 }
 
-export default function ChallengeZoomClient({ rows }: { rows: Row[] }) {
+function fmtMeetingTitle(iso: string): string {
+  const d = new Date(iso);
+  const datePart = new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem",
+    day:      "numeric",
+    month:    "long",
+    year:     "numeric",
+  }).format(d);
+  const timePart = new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem",
+    hour:     "2-digit",
+    minute:   "2-digit",
+    hour12:   false,
+  }).format(d);
+  return `${datePart}, ${timePart}`;
+}
+
+export default function ChallengeZoomClient({ rows, meetingDateIso }: { rows: Row[]; meetingDateIso: string }) {
   const [q, setQ] = useState("");
   const [onlyActive, setOnlyActive] = useState(false);
 
@@ -76,7 +93,7 @@ export default function ChallengeZoomClient({ rows }: { rows: Row[] }) {
     >
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 6px", color: "#EDE9E1" }}>
-          זום אתגר — 23 ביוני 2026
+          זום אתגר — {fmtMeetingTitle(meetingDateIso)}
         </h1>
         <p style={{ color: "#AAB0BD", fontSize: 14, margin: 0, lineHeight: 1.6 }}>
           כל רוכשי האתגר שזכאים להשתתף במפגש הזום הקרוב.

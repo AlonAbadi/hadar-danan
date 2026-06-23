@@ -1,11 +1,21 @@
 import type { Metadata } from "next";
 import { createServerClient } from "@/lib/supabase/server";
+import { computeNextLiveMeetingDate } from "@/lib/challenge-config";
 import ChallengeZoomClient from "./client";
 
 export const dynamic = "force-dynamic";
 
+function nextMeetingShortLabel(): string {
+  const d = computeNextLiveMeetingDate();
+  return new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem",
+    day:      "numeric",
+    month:    "numeric",
+  }).format(d);
+}
+
 export const metadata: Metadata = {
-  title: "זום אתגר — 23.6 | אדמין",
+  title: `זום אתגר — ${nextMeetingShortLabel()} | אדמין`,
 };
 
 export default async function UpcomingChallengeZoomPage() {
@@ -81,5 +91,6 @@ export default async function UpcomingChallengeZoomPage() {
     return tb - ta;
   });
 
-  return <ChallengeZoomClient rows={rows} />;
+  const meetingDateIso = computeNextLiveMeetingDate().toISOString();
+  return <ChallengeZoomClient rows={rows} meetingDateIso={meetingDateIso} />;
 }

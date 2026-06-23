@@ -207,7 +207,7 @@ export function computeMaxUnlockedDay(enrolledAt: string): number {
 // timezone — Vercel functions can land in regions with non-UTC offsets, which
 // double-shifts the time when the browser later converts it. ISO-with-offset
 // makes the instant absolute regardless of where the code runs.
-const NEXT_LIVE_MEETING_OVERRIDE: Date | null = new Date("2026-06-23T17:00:00+03:00"); // 23 ביוני 2026, 17:00 שעון ישראל
+const NEXT_LIVE_MEETING_OVERRIDE: Date | null = new Date("2026-07-29T17:00:00+03:00"); // 29 ביולי 2026, 17:00 שעון ישראל
 
 export function computeNextLiveMeetingDate(): Date {
   const now = new Date();
