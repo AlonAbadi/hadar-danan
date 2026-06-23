@@ -92,8 +92,15 @@ export default async function LandingPage() {
           ══════════════════════════════════════════════════════ */}
           <section style={{ overflow: "hidden", background: "#0B1220" }}>
 
-            {/* ── MOBILE: full-bleed overlay, thumb-zone optimized ── */}
-            <div className="md:hidden" style={{ position: "relative", height: "93svh" }}>
+            {/* ── MOBILE: full-bleed overlay, thumb-zone optimized ──
+                 Sized for short punch headlines ("תפסיקו לנחש."). Container
+                 height + bottom anchor pull the gold CTA into the first-fold
+                 viewport on iPhone 14/15-class devices. Headline is poster-
+                 sized (clamp 2.6→3.4rem) so a 2-3 word punch reads as
+                 intentional, not as cropped. TrueSignal© chip lives on
+                 desktop only — on mobile the navbar already carries the
+                 brand and a 4th competing element would dilute the CTA. */}
+            <div className="md:hidden" style={{ position: "relative", height: "88svh" }}>
               <Image
                 src="/hadar1.jpg"
                 alt="הדר דנן"
@@ -119,44 +126,33 @@ export default async function LandingPage() {
               }} />
               {/* Content anchored from bottom */}
               <div style={{
-                position: "absolute", bottom: "32px", left: 0, right: 0,
+                position: "absolute", bottom: "56px", left: 0, right: 0,
                 padding: "0 24px", direction: "rtl", textAlign: "right",
               }}>
-                <div style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.32)",
-                  borderRadius: 9999, padding: "5px 14px", marginBottom: 12,
+                <h1 style={{
+                  color: "#EDE9E1",
+                  fontWeight: 900,
+                  fontSize: "clamp(2.6rem, 9vw, 3.4rem)",
+                  lineHeight: 1.05,
+                  letterSpacing: "-0.02em",
+                  marginBottom: 14,
+                  whiteSpace: "pre-line",
                 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C9964A", flexShrink: 0 }} />
-                  <span style={{ color: "#E8B94A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>
-                    <span style={{ direction: "rtl" }}>שיטת <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
-                  </span>
-                </div>
-                <h1 style={{ color: "#EDE9E1", fontWeight: 800, fontSize: "clamp(1.7rem, 4.5vw, 2rem)", lineHeight: 1.18, marginBottom: 12, whiteSpace: "pre-line" }}>
                   {content.headline}
                 </h1>
-                <p style={{ color: "#AAB0BD", fontSize: "clamp(0.9rem, 2vw, 1rem)", lineHeight: 1.72, marginBottom: 16 }}>
+                <p style={{ color: "#AAB0BD", fontSize: "clamp(0.95rem, 2.2vw, 1.05rem)", lineHeight: 1.72, marginBottom: 18 }}>
                   {content.description}
                 </p>
                 <a href="/signal" data-home-hero-cta="" style={{
                   display: "block", textAlign: "center",
                   background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
                   color: "#2a1d05", fontWeight: 800, fontSize: "clamp(0.95rem, 2vw, 1.05rem)",
-                  borderRadius: 9999, padding: "14px", marginBottom: 14, textDecoration: "none",
+                  borderRadius: 9999, padding: "14px", textDecoration: "none",
                   width: "100%",
                   boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
                 }}>
                   {content.cta}
                 </a>
-                <p style={{
-                  color: "#AAB0BD",
-                  fontSize: 12,
-                  textAlign: "center",
-                  marginTop: 8,
-                  direction: "rtl",
-                }}>
-                  חמש שאלות · אבחון אישי · ללא כרטיס אשראי
-                </p>
               </div>
             </div>
 
