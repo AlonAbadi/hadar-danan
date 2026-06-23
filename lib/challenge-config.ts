@@ -194,20 +194,30 @@ export function computeMaxUnlockedDay(enrolledAt: string): number {
 /**
  * Closing live meeting:
  *   - If a specific NEXT_LIVE_MEETING_OVERRIDE is in the future, use it
- *     (lets us pin one-off session times without the 15th-of-month rule).
- *   - Otherwise default to 15th of the current (or next) month, with
- *     Fri/Sat sliding to Sunday.
+ *     (lets us pin one-off session times without the monthly rule).
+ *   - Otherwise default to the LAST TUESDAY of the current (or next) month
+ *     at 17:00 Israel time.
  *
  * To set a custom next meeting: change NEXT_LIVE_MEETING_OVERRIDE below.
  * Note: months in `new Date(year, month, day, hour, minute)` are 0-indexed
- * (0 = January, 5 = June). Local time = Israel time on Vercel server.
+ * (0 = January, 6 = July). Local time = Israel time on Vercel server.
  */
-// IMPORTANT: pin the timezone with +03:00 (Asia/Jerusalem, DST in June).
+// IMPORTANT: pin the timezone with +03:00 (Asia/Jerusalem, DST in summer).
 // Constructing `new Date(year, month, day, hour, min)` uses the SERVER's local
 // timezone — Vercel functions can land in regions with non-UTC offsets, which
 // double-shifts the time when the browser later converts it. ISO-with-offset
 // makes the instant absolute regardless of where the code runs.
 const NEXT_LIVE_MEETING_OVERRIDE: Date | null = new Date("2026-07-29T17:00:00+03:00"); // 29 ביולי 2026, 17:00 שעון ישראל
+
+/** Last Tuesday of the given month, at 17:00 server-local time. */
+function lastTuesdayOfMonth(year: number, month: number): Date {
+  // day 0 of (month+1) = last day of `month`
+  const d = new Date(year, month + 1, 0, 17, 0);
+  // getDay: 0=Sun, 1=Mon, 2=Tue, ..., 6=Sat. Walk backwards to Tuesday.
+  const daysBack = (d.getDay() - 2 + 7) % 7;
+  d.setDate(d.getDate() - daysBack);
+  return d;
+}
 
 export function computeNextLiveMeetingDate(): Date {
   const now = new Date();
@@ -216,13 +226,10 @@ export function computeNextLiveMeetingDate(): Date {
     return NEXT_LIVE_MEETING_OVERRIDE;
   }
 
-  let d = new Date(now.getFullYear(), now.getMonth(), 15);
-  // If 15th already passed this month, use next month
+  let d = lastTuesdayOfMonth(now.getFullYear(), now.getMonth());
+  // If this month's last Tuesday already passed, advance to next month's
   if (d <= now) {
-    d = new Date(now.getFullYear(), now.getMonth() + 1, 15);
+    d = lastTuesdayOfMonth(now.getFullYear(), now.getMonth() + 1);
   }
-  const dow = d.getDay();
-  if (dow === 5) d.setDate(d.getDate() + 2); // Friday → Sunday
-  if (dow === 6) d.setDate(d.getDate() + 1); // Saturday → Sunday
   return d;
 }
