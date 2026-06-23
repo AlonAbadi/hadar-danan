@@ -3,6 +3,7 @@ import Link from "next/link";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { CallForm } from "@/app/call/CallForm";
 import { PRODUCT_MAP } from "@/lib/products";
+import { validateCoupon } from "@/lib/coupons";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
@@ -22,8 +23,18 @@ export const metadata = {
   alternates: { canonical: "/strategy" },
 };
 
-export default async function StrategyPage() {
-  const price   = String(PRODUCT_MAP.strategy_4000.price);
+export default async function StrategyPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const { code = "" } = await searchParams;
+  const listPrice      = PRODUCT_MAP.strategy_4000.price;
+
+  // URL-based coupon — only active when ?code= matches an active coupon row.
+  // Mirrors /workshop pattern: no cookie, no localStorage, must arrive via link.
+  const coupon         = await validateCoupon(code, "strategy_4000");
+  const effectivePrice = coupon?.finalPrice ?? listPrice;
+  const price          = String(effectivePrice);
+
+  const checkoutHref   = coupon ? `/strategy/book?code=${encodeURIComponent(coupon.code)}` : "/strategy/book";
+
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
   return (
@@ -44,8 +55,9 @@ export default async function StrategyPage() {
       <ViewContentTracker product="strategy_4000" value={4000} />
       <ProductLandingPage
         productName="פגישת אסטרטגיה"
-        price={PRODUCT_MAP.strategy_4000.price}
-        checkoutHref="/strategy/book"
+        price={effectivePrice}
+        originalPrice={coupon ? listPrice : undefined}
+        checkoutHref={checkoutHref}
 
         headline={<>יש תחושה שמשהו <em>לא יושב</em> בעסק?</>}
         heroSub="פגישת אסטרטגיה אחד-על-אחד עם הדר, פנים אל פנים — כמה שעות של מישהו שמסתכל עליך מבחוץ, מסנן את הרעש, ונותן לך בהירות מלאה לאן הולכים."
@@ -133,7 +145,7 @@ export default async function StrategyPage() {
 
         ctaSlot={
           <Link
-            href="/strategy/book"
+            href={checkoutHref}
             className="btn-cta-gold"
             style={{ display: "inline-block", padding: "15px 40px", borderRadius: 10, fontWeight: 800, fontSize: 17, textDecoration: "none" }}
           >

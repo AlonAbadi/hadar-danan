@@ -11,9 +11,10 @@ function getCookie(name: string): string | undefined {
 interface Props {
   price:         string;
   whatsappPhone: string;
+  couponCode?:   string;
 }
 
-export function StrategyBookFlow({ price, whatsappPhone }: Props) {
+export function StrategyBookFlow({ price, whatsappPhone, couponCode }: Props) {
   const [form, setForm]       = useState({ name: "", email: "", phone: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
@@ -53,7 +54,7 @@ export function StrategyBookFlow({ price, whatsappPhone }: Props) {
       const checkoutRes = await fetch("/api/checkout", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ product: "strategy_4000", user_id }),
+        body:    JSON.stringify({ product: "strategy_4000", user_id, coupon_code: couponCode }),
       });
 
       if (checkoutRes.status === 503) {

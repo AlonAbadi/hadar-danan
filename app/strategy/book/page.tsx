@@ -1,13 +1,19 @@
 import Link from "next/link";
 import { StrategyBookFlow } from "./StrategyBookFlow";
+import { PRODUCT_MAP } from "@/lib/products";
+import { validateCoupon } from "@/lib/coupons";
 
 export const metadata = {
   title: "פגישת אסטרטגיה | הדר דנן",
   description: "פגישת אסטרטגיה אחד-על-אחד של 90 דקות. לאחר התשלום ניצור קשר לתיאום המועד.",
 };
 
-export default async function BookingPage() {
-  const price         = process.env.NEXT_PUBLIC_PRICE_CALL ?? "4000";
+export default async function BookingPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const { code = "" } = await searchParams;
+  const listPrice     = PRODUCT_MAP.strategy_4000.price;
+  const coupon        = await validateCoupon(code, "strategy_4000");
+  const effectivePrice = coupon?.finalPrice ?? listPrice;
+  const price         = String(effectivePrice);
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "";
 
   return (
@@ -48,9 +54,27 @@ export default async function BookingPage() {
             </p>
           </div>
 
+          {coupon && (
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(232,185,74,0.10), rgba(232,185,74,0.04))",
+                border:     "1px solid rgba(232,185,74,0.32)",
+                borderRadius: 12,
+                padding:    "14px 18px",
+                color:      "#E8B94A",
+                fontSize:   15,
+                fontWeight: 600,
+                textAlign:  "right",
+              }}
+            >
+              ✓ הנחה אישית של {coupon.discountAmount} ₪ מופעלת. מחיר סופי: {effectivePrice.toLocaleString("he-IL")} ₪ במקום {listPrice.toLocaleString("he-IL")} ₪
+            </div>
+          )}
+
           <StrategyBookFlow
             price={price}
             whatsappPhone={whatsappPhone}
+            couponCode={coupon?.code}
           />
 
         </div>
