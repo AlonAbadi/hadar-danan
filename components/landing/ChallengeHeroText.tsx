@@ -125,7 +125,9 @@ export function ChallengeHeroText({
   priceNow: number;
   priceOriginal: number;
 }) {
-  const savings = priceOriginal - priceNow;
+  const savingsPercent = priceOriginal > 0
+    ? Math.round((priceOriginal - priceNow) / priceOriginal * 100)
+    : 0;
   const bullets = content.bullets ?? [];
   const pitchText = content.headline ?? "";
 
@@ -243,7 +245,7 @@ export function ChallengeHeroText({
         </div>
 
         {/* Savings badge */}
-        {savings > 0 && (
+        {savingsPercent > 0 && (
           <div style={{
             display: "flex", alignItems: "center",
             justifyContent: "flex-start",
@@ -258,7 +260,7 @@ export function ChallengeHeroText({
               boxShadow: "0 0 0 4px rgba(232,185,66,0.16)",
             }} />
             <span style={{ whiteSpace: "nowrap" }}>
-              חוסכים <Numeral>{savings}₪</Numeral> · המבצע מסתיים בקרוב
+              <Numeral>{savingsPercent}%</Numeral> הנחה · המבצע מסתיים בקרוב
             </span>
           </div>
         )}

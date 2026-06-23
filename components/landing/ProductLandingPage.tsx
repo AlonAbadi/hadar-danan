@@ -26,6 +26,11 @@ export interface ProductLandingPageProps {
   productName:   string;
   price:         number;
   originalPrice?: number;
+  /** How the discount badge is phrased on the price card.
+   *  'amount' (default) → "במבצע — חוסכים ₪100"
+   *  'percent'          → "X% הנחה"
+   *  Per-product call: lower-ticket products read better in percent. */
+  discountDisplay?: 'amount' | 'percent';
   checkoutHref:  string;
 
   headline:   React.ReactNode;
@@ -267,6 +272,7 @@ function MicroCommitment({
   ctaSlot,
   price,
   originalPrice,
+  discountDisplay,
   productName,
   creditNote,
   whatsappHref,
@@ -280,6 +286,7 @@ function MicroCommitment({
   ctaSlot?: React.ReactNode;
   price: number;
   originalPrice?: number;
+  discountDisplay?: 'amount' | 'percent';
   productName: string;
   creditNote?: string;
   whatsappHref: string;
@@ -394,6 +401,7 @@ function MicroCommitment({
         <PriceCard
           price={price}
           originalPrice={originalPrice}
+          discountDisplay={discountDisplay}
           displayPrice={displayPrice}
           dailyPrice={dailyPrice}
           productName={productName}
@@ -410,13 +418,20 @@ function MicroCommitment({
 
 // ── Price card (shared) ────────────────────────────────────────
 function PriceCard({
-  price, originalPrice, displayPrice, dailyPrice, productName,
+  price, originalPrice, discountDisplay, displayPrice, dailyPrice, productName,
   creditNote, checkoutHref, ctaSlot, whatsappHref, ctaLabel,
 }: {
-  price: number; originalPrice?: number; displayPrice: string; dailyPrice: string;
+  price: number; originalPrice?: number; discountDisplay?: 'amount' | 'percent';
+  displayPrice: string; dailyPrice: string;
   productName: string; creditNote?: string; checkoutHref: string;
   ctaSlot?: React.ReactNode; whatsappHref: string; ctaLabel: string;
 }) {
+  const discountBadge = originalPrice
+    ? (discountDisplay === 'percent'
+        ? `${Math.round((originalPrice - price) / originalPrice * 100)}% הנחה`
+        : `במבצע — חוסכים ₪${(originalPrice - price).toLocaleString('he-IL')}`)
+    : null;
+
   return (
     <div style={{
       background: CARD, borderRadius: 18,
@@ -432,7 +447,7 @@ function PriceCard({
             background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 800,
             padding: '3px 9px', borderRadius: 6, letterSpacing: '0.05em',
           }}>
-            במבצע — חוסכים ₪{(originalPrice - price).toLocaleString('he-IL')}
+            {discountBadge}
           </span>
         </div>
       )}
@@ -522,7 +537,7 @@ function SecTitle({ children, sub }: { children: React.ReactNode; sub?: string }
 
 // ── Main component ─────────────────────────────────────────────
 export default function ProductLandingPage({
-  productName, price, originalPrice, checkoutHref,
+  productName, price, originalPrice, discountDisplay, checkoutHref,
   headline, heroSub, vslVideoId, vimeoId, heroSlot, stats, heroExtra,
   problemItems, agitationText,
   solutionTitle, solutionDesc, solutionItems,
@@ -902,6 +917,7 @@ export default function ProductLandingPage({
               ctaSlot={ctaSlot}
               price={price}
               originalPrice={originalPrice}
+              discountDisplay={discountDisplay}
               productName={productName}
               creditNote={creditNote}
               whatsappHref={waHref}
@@ -919,6 +935,7 @@ export default function ProductLandingPage({
             <PriceCard
               price={price}
               originalPrice={originalPrice}
+              discountDisplay={discountDisplay}
               displayPrice={displayPrice}
               dailyPrice={dailyPrice}
               productName={productName}

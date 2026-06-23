@@ -100,6 +100,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
         productName="אתגר 7 הימים"
         price={PRODUCT_MAP.challenge_197.price}
         originalPrice={CHALLENGE_ORIGINAL_PRICE}
+        discountDisplay="percent"
         checkoutHref="#cta"
 
         headline={<>7 ימים, 7 סרטונים<br /><em>שמייצרים מכירות</em></>}
