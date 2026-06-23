@@ -503,6 +503,25 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // ── Increment landing_headline A/B conversion counter ───────────────────
+  // Hero CTA on / leads here. If the visitor was bucketed into a tracked
+  // variant on first visit, count this completed extraction as their
+  // conversion. Mirrors the Cardcom-webhook pattern: server-side, RPC,
+  // soft-fail. We read the cookie fresh here rather than threading it
+  // through the request body so the client can't spoof a variant.
+  try {
+    const cookieStore = await cookies();
+    const abVariant   = cookieStore.get("ab_variant")?.value;
+    if (abVariant === "A" || abVariant === "B") {
+      await db.rpc("increment_experiment", {
+        p_name:   "landing_headline",
+        p_column: abVariant === "A" ? "conversions_a" : "conversions_b",
+      });
+    }
+  } catch {
+    // Non-fatal — the signal is already returned to the user.
+  }
+
   // ── Fire SIGNAL_EXTRACTED + enqueue welcome email inline ────────────────
   // We don't route through /api/events because we want this self-contained
   // and we already have the user_id in hand. Soft-fail throughout — the user

@@ -192,8 +192,16 @@ export async function POST(req: NextRequest) {
         isConversion =
           type === "PURCHASE_COMPLETED" &&
           (metadata as { product?: string }).product === "challenge_197";
+      } else if (experimentName === "landing_headline") {
+        // Hero CTA leads to /signal — a completed signal extraction is the
+        // true win. USER_SIGNED_UP / QUIZ_LEAD kept for backward compat
+        // with any tail traffic that still routes through the old funnels.
+        isConversion =
+          type === "SIGNAL_EXTRACTED" ||
+          type === "USER_SIGNED_UP" ||
+          type === "QUIZ_LEAD";
       } else {
-        // Landing-headline / quiz-Q1 / default: signup or quiz lead
+        // Default (quiz-Q1, future): signup or quiz lead
         isConversion = type === "USER_SIGNED_UP" || type === "QUIZ_LEAD";
       }
 
