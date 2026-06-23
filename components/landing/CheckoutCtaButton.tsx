@@ -33,7 +33,16 @@ function PriceWas({ amount }: { amount: number }) {
   );
 }
 
-export function SavingsBadge({ savings, subtext = "מבצע מסתיים בקרוב" }: { savings: number; subtext?: string }) {
+export function SavingsBadge({
+  savings,
+  subtext = "מבצע מסתיים בקרוב",
+  percent,
+}: {
+  savings:  number;
+  subtext?: string;
+  /** When provided, the badge reads "X% הנחה" instead of "חסכת ₪Y". */
+  percent?: number;
+}) {
   return (
     <span
       style={{
@@ -60,7 +69,7 @@ export function SavingsBadge({ savings, subtext = "מבצע מסתיים בקר�
           boxShadow: "0 0 0 4px rgba(232, 185, 66, 0.18)",
         }}
       />
-      חסכת ₪{savings} · {subtext}
+      {percent !== undefined ? `${percent}% הנחה` : `חסכת ₪${savings}`} · {subtext}
     </span>
   );
 }

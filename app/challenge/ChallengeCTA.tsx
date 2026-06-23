@@ -50,6 +50,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
 
   const hasDiscount = !!originalPrice && originalPrice > toPay && toPay > 0;
   const savings = hasDiscount ? originalPrice! - toPay : 0;
+  const savingsPercent = hasDiscount ? Math.round(savings / originalPrice! * 100) : 0;
 
   useEffect(() => {
     // 1. Quiz session (users who came through the quiz)
@@ -288,7 +289,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
         <div style={WRAPPER_STYLE}>
           {hasDiscount && (
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <SavingsBadge savings={savings} />
+              <SavingsBadge savings={savings} percent={savingsPercent} />
             </div>
           )}
           <CheckoutCtaButton
@@ -319,7 +320,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
       <div style={WRAPPER_STYLE}>
         {hasDiscount && (
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <SavingsBadge savings={savings} />
+            <SavingsBadge savings={savings} percent={savingsPercent} />
           </div>
         )}
         <CheckoutCtaButton

@@ -411,7 +411,7 @@ function followup24h(ctx: EmailTemplateContext): RenderedEmail {
         <p>זה לא שיווק.</p>
         <p>זה בניית דמות עגולה שאנשים בוחרים בה.</p>
         <p>500+ עסקים כבר עשו את זה.</p>
-        <p style="font-size: 17px;"><span style="text-decoration: line-through; color: #9E9990;">₪297</span> <strong style="color: #C9964A;">₪197 בלבד</strong> (במבצע, חוסכים ₪100).</p>
+        <p style="font-size: 17px;"><span style="text-decoration: line-through; color: #9E9990;">₪297</span> <strong style="color: #C9964A;">₪197 בלבד</strong> (במבצע, 34% הנחה).</p>
         <a class="cta" href="${APP_URL}/challenge${ep}">להצטרפות לאתגר ←</a>
         <p>צוות beegood</p>
       </div>
