@@ -7,40 +7,37 @@ export interface VariantContent {
 }
 
 // Homepage hero A/B test: "landing_headline"
-// Phase 3 (2026-06-12): Full rewrite of all three variants to speak the
-// Signal-engine voice. Hero now leads to /signal (TrueSignal© engine).
-// Three distinct angles being tested as a coherent stack (headline +
-// description + CTA together):
-//   A — anti-content rebellion: "די לייצר תוכן. תתחיל לשדר את עצמך."
-//       Action verb, contrarian, shortest. For the exhausted owner who
-//       has tried every content course.
-//   B — identity-first question: "מה רק אתה יכול לתת?"
-//       Soft, reflective, aligned with brand line. Pushes inward
-//       reflection before a click.
-//   C — diagnosis + permission: "זה לא בגלל שאתה לא טוב מספיק."
-//       Longest, most narrative. Externalizes blame from the customer
-//       to the marketing system they were taught.
+// Phase 4 (2026-06-23): Reset. Single-question test — does pain framing
+// or gain framing drive more clicks on the signal-engine CTA?
+//   A — pain frame: "תפסיקו לנחש."
+//   B — gain frame: "בהירות משנה הכל."
+// Description, CTA, and visual layout are identical across both variants
+// so the only testable variable is the headline. Same first-person CTA
+// in both ("אני רוצה לגלות את האות שלי") — the reader narrates the click.
 // After deploying, reset counters in Supabase:
 //   UPDATE experiments SET visitors_a=0, visitors_b=0, conversions_a=0,
 //   conversions_b=0 WHERE name='landing_headline';
 export const AB_CONTENT: Record<AbVariant, VariantContent> = {
   A: {
-    headline: "די לייצר תוכן.\nתתחילו לשדר את עצמכם.",
+    headline: "תפסיקו לנחש.",
     description:
-      "מנוע האות של שיטת TrueSignal© מחלץ ב-5 שאלות את הבידול האמיתי שלכם - לא מה שאתם מוכרים, אלא מה שרק אתם יכולים לתת.",
-    cta: "לחלץ את האות שלכם ←",
+      "5 שאלות, 10 דקות, האות שלכם במשפט אחד. חינם.",
+    cta: "אני רוצה לגלות את האות שלי ←",
   },
   B: {
-    headline: "השאלה היא לא מה אתם מוכרים.\nהשאלה היא מה רק אתם יכולים לתת.",
+    headline: "בהירות משנה הכל.",
     description:
-      "מנוע האות שואל אתכם חמש שאלות שאף יועץ לא יעז לשאול - ומחזיר לכם את האות הקנייני שלכם. החלק שאחרים מנסים לחקות אבל לא מצליחים.",
-    cta: "מה רק אתם יכולים לתת? ←",
+      "5 שאלות, 10 דקות, האות שלכם במשפט אחד. חינם.",
+    cta: "אני רוצה לגלות את האות שלי ←",
   },
+  // C is unused in this test but kept in the type to satisfy
+  // parseVariant() — falls back to A copy if a stale cookie still hands
+  // out 'C' from a previous experiment.
   C: {
-    headline: "הקורסים, היועצים, התוכן -\nובכל זאת הלקוחות לא מגיעים.\nזה לא בגלל שאתם לא טובים מספיק.",
+    headline: "תפסיקו לנחש.",
     description:
-      "זה בגלל שהאות שלכם עוד לא ברור. חמש שאלות עם מנוע האות מחזירות לכם את הבידול שעצרו מכם כשניסו ללמד אתכם לדבר כמו כולם.",
-    cta: "להתחיל מהאות שלכם ←",
+      "5 שאלות, 10 דקות, האות שלכם במשפט אחד. חינם.",
+    cta: "אני רוצה לגלות את האות שלי ←",
   },
 };
 
