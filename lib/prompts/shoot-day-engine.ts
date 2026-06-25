@@ -179,10 +179,51 @@ const HADAR_SIGNATURE_MOVES = `15 המהלכים של הדר (8 גרעיניים
 - מותג יד-עבודה / ייצור (קונדיטוריה, נגרות, פרפיומריה, יצירת אומנות): השתמש ב-1-8 + 10.
 - מותג B2B-טכני עם ידע אסימטרי (נוירומרקטינג, ביו-פיליה, פרפיומריה תעשייתית): השתמש ב-1-8 + 9-10 + 13.
 
+ניתוב כשיש חפיפה (lapping): לקוח/ה יכול/ה ליפול ביותר מארכיטיפ אחד (למשל פרפיומריה = חושי גם יד-עבודה גם B2B). במקרה כזה קבע ארכיטיפ-על לפי הציר השיווקי המרכזי באות (signal), לא לפי התחום: אם החוש עצמו הוא המוצר שנמכר ללקוח-הקצה -> חושי. אם הידע האסימטרי הוא המוצר ("אנשים לא יודעים שהם מושפעים מ-X") -> B2B-טכני. אם השיטה/החומר הם הסיפור -> יד-עבודה. בכל מקרה מהלכים 1-8 תמיד פעילים, והוסף לכל היותר שני מהלכי-ארכיטיפ, לא את כולם. אסור להפעיל גם Projective (#7) וגם Receptive (#11) באותו יום צילום.
+
 המנטרה הקנונית של 2026-06-16 (Toko Aroma, C4367): "הכול חייב לנגן." כל פלט חייב להישמע כמו שהוא מנגן, לא כמו שהוא מסביר. **בדיקה עצמית לפני כל פלט**: אם משפט אחד נשמע כמו הסבר ולא כמו מנגינה, פסול אותו וכתוב מחדש.
 המנטרה הקנונית של 2026-06-24 (Toko Aroma, C4377): "הריח הוא האיש מחירות הכי שקט שיש." דגם: ה-X שלך הוא איש המכירות השקט. למותגי silent-mechanism, יש לפענח את ה-X (ריח, צבע, אקוסטיקה, רטט) ולנסח את אותה משוואה.
 המנטרה הקנונית של 2026-06-25 (Hadar-as-author, C4078): "אין בחירה, אין תנועה. אין תנועה, אין שיווק. אין שיווק, אין מכירות. אין מכירות, אין עסק." דגם: chain-collapse rhetoric — שרשרת קצרה של שלילות שמובילה למסקנה הכרחית. שימושי לפתיחת hook ב-Mode B.
 המטאפורה הקנונית של 2026-06-25 (Mirvi DNA, C4336): "תדמייני שאת כולך רשת של אור, כמו ביום העצמאות. כשאת מתחילה להתרחק מה-DNA שלך, מכבה מנורה. מכבה עוד מנורה. עם השנים, איך הרשת שלך נראית? חושך." זוהי המטאפורה הכי חזקה למותגים טיפוליים/טרנספורמטיביים. עבר-כל-ארכיטיפים: כל מותג שמדבר על אובדן עצמי יכול להשתמש בתבנית "רשת מנורות שמכבות".`;
+
+// ── Modes — the VOICE each video is shot in (distinct from archetype) ─
+// Every video carries a `mode` letter. The mode dictates WHO speaks and HOW.
+// Without this block the model treats `mode` as a decorative tag and a
+// "Mode D" video sounds identical to a "Mode B" one — the most common
+// correctness failure in the engine. Injected into every video-producing pack.
+const HADAR_MODES = `מודי הדיבור (כל סרטון מתויג במוד אחד, והמוד קובע את הקול, את מי מדבר ואל מי):
+
+Mode B (רילסים מובנים) — ברירת המחדל. הלקוח/ה מדבר/ת אל הקהל שלו/ה, בקול שלו/ה. משפטים קצרים וחדים. מבנה: hook -> תוכן -> נקודה. פותח בבעיה או בשלילה, אף פעם לא ב"שלום, אני X". הדר אינה הדוברת. זה המוד של רוב הסרטונים (1-5, 11, 12).
+
+Mode A (סיפור) — נרטיב ארוך ורגשי, בלי קיטועים. בלי שמות, עם פרטים קונקרטיים שגורמים להאמין. גוף ראשון, זורם. זה המוד של סרטוני הסיפור (6-8).
+
+Mode C (פריימוורק) — הסבר אסטרטגי שקול ובנוי. "שלוש השאלות ש...", "ארבעת הסוגים ש...". בונה סמכות דרך מבנה מסודר, לא דרך רגש. זה המוד של סרטוני הפריימוורק (9-10).
+
+Mode D (במה) — הדר עצמה (או דובר/ת-במה) מבצע/ת מול קהל. פתיחת-פרדוקס, מנטרה, signoff בסגנון "תהיו טובים". הקהל הוא "אתם" רבים. השתמש במוד הזה אך ורק כאשר הלקוח/ה הוא/היא מרצה/דובר/ת שמצלם/ת את עצמו/ה, לא כאשר מצלמים אותו/ה לרילס.
+
+אזהרת-ברזל: אסור לערבב Mode B ו-Mode D באותו סרטון. ב-Mode B הלקוח/ה מדבר/ת אל הקהל שלו/ה והדר היא הבמאית מאחורי המצלמה, לכן אסור לכתוב signoff או מנטרה בסגנון הדר ("תהיו טובים", "אני אכניס לכם מה להגיד") בתוך פיו/ה של הלקוח/ה. ב-Mode D אין "לקוח מצולם" נפרד, הדובר/ת הוא/היא הדר או דמות-במה.`;
+
+// ── Hadar quote provenance — closed allow-list (anti-fabrication) ─────
+// The model does NOT have the full corpus in context, only the ~15 quotes
+// embedded above. Left free, it invents plausible C-numbers, and Magic #2
+// ("למה זה?") then shows those fabrications to the user as real provenance.
+// Every video's hadar_quote.source must resolve to one of these, or fall
+// back to "general". Match is by C-number prefix OR exact label.
+export const APPROVED_QUOTE_SOURCES = [
+  "C4367", "C4377", "C4078", "C4336", "C4079", "C1201", "C2123",
+  "C0870", "C4332", "C1883", "C4371", "C4356", "C4381", "C4385",
+  "michael-kadosh.txt", "Hadar-lesson-1", "general",
+] as const;
+
+export function isApprovedQuoteSource(source: string): boolean {
+  if (!source) return false;
+  const s = source.trim();
+  return APPROVED_QUOTE_SOURCES.some((a) =>
+    s === a || s.toUpperCase().includes(a.toUpperCase()),
+  );
+}
+
+const HADAR_QUOTE_RULE = `כלל ציטוט-הדר (אכיפה קשיחה): בשדה hadar_quote.source מותר להשתמש אך ורק במקור שמופיע בבלוק המהלכים והמנטרות שלמעלה. מקורות מותרים: C4367 ("הכול חייב לנגן"), C4377 ("הריח הוא האיש מחירות הכי שקט שיש"), C4078 ("אין בחירה אין תנועה"), C4336 ("רשת מנורות"), C4079 ("ChatGPT זה מגבר"), C1201 ("אל תעשו סרטונים"), C4332 (Mirvi 3 פרמטרים), C0870 (Liel "שימור עובדים"), michael-kadosh.txt, Hadar-lesson-1. אסור להמציא C-number או ציטוט שלא מופיע למעלה. אם אין ציטוט מתאים, החזר source: "general" וטקסט שהוא פרפרזה כללית, לא ציטוט-בגרשיים מומצא.`;
 
 // ── Pack 1: Identity + 4 Pillars ─────────────────────────────────────
 
@@ -263,6 +304,10 @@ ${SHARED_RULES}
 
 ${HADAR_SIGNATURE_MOVES}
 
+${HADAR_MODES}
+
+${HADAR_QUOTE_RULE}
+
 ## הסרטון הראשון: IDENTITY
 
 זה סרטון הפתיחה של יום הצילום. 15 שניות. Mode B. ACT 1 (זהות). Set A. ללא pillar.
@@ -306,6 +351,10 @@ ${SHARED_RULES}
 
 ${HADAR_SIGNATURE_MOVES}
 
+${HADAR_MODES}
+
+${HADAR_QUOTE_RULE}
+
 ## מבנה 12 הסרטונים (מ-michael-kadosh shot list)
 
 ACT 1: זהות (4 סרטונים)
@@ -321,9 +370,9 @@ ACT 2: סיפור (4 סרטונים)
 - Video 8: STORY. 2 דקות. סיפור הציר של המסר. Mode A. Set B.
 
 ACT 3: סמכות (4 סרטונים)
-- Video 9: FRAMEWORK. 90 שניות. "3 השאלות שאני שואל בפגישה ראשונה". Mode C/D. Set A. בונה סמכות.
-- Video 10: FRAMEWORK. 2 דקות. "4 סוגי X שאני עובד איתם". Mode C/D. Set A.
-- Video 11: MYTH. 45 שניות. Sold-Inversion. "מה כולם חושבים — ומה האמת". Mode B/D. Set A.
+- Video 9: FRAMEWORK. 90 שניות. "3 השאלות שאני שואל בפגישה ראשונה". Mode C (Mode D רק אם הלקוח/ה הוא/היא דובר/ת-במה). Set A. בונה סמכות.
+- Video 10: FRAMEWORK. 2 דקות. "4 סוגי X שאני עובד איתם". Mode C (Mode D רק אם הלקוח/ה הוא/היא דובר/ת-במה). Set A.
+- Video 11: MYTH. 45 שניות. Sold-Inversion. "מה כולם חושבים, ומה האמת". Mode B. Set A.
 - Video 12: CTA. 20 שניות. הזמנה ישירה אבל מנומקת. Mode B. Set A. בלי דחיפות מזויפת.
 
 ## לכל סרטון
@@ -349,13 +398,13 @@ ACT 3: סמכות (4 סרטונים)
    - competitor_norm: מה כולם בקטגוריה של הלקוח/ה עושים בסרטונים דומים. ספציפי.
    - your_inversion: למה הסרטון של המשתמש שונה בדיוק במקום הזה.
 
-5. **hadar_quote**:
-   - text: ציטוט קצר מהמלאי שמסביר את התבנית של הסרטון
-   - source: "Hadar-lesson-1" / "michael-kadosh.txt" / "C4079-tzilum-hadar" וכו'
+5. **hadar_quote** (ראה כלל ציטוט-הדר למעלה, אכיפה קשיחה):
+   - text: ציטוט קצר מתוך המאגר המאושר שמסביר את התבנית של הסרטון, או פרפרזה כללית
+   - source: רק מתוך הרשימה המאושרת (C4367 / C4377 / C4078 / C4336 / C4079 / C1201 / C4332 / C0870 / michael-kadosh.txt / Hadar-lesson-1). אם אין התאמה: "general". אסור להמציא C-number.
 
 ## פלט
 
-החזר JSON תקין בלבד עם מערך של 12 סרטונים:
+הודעת המשתמש תציין אילו סרטונים לייצר (act מסוים או כל ה-12). ייצר אך ורק את הסרטונים שהתבקשת, עם המספרים המדויקים שלהם מתוך המבנה למעלה. החזר JSON תקין בלבד:
 
 {
   "videos": [
@@ -605,14 +654,27 @@ ${pillarsBlock}
 
 // ── Pack 2 context — accepts identity + pillars from Pack 1 ──────────
 
+// Act -> video numbers. Generating one act (4 videos) per call keeps each
+// Vercel invocation well under the 60s limit.
+export const ACT_VIDEO_NUMBERS: Record<1 | 2 | 3, number[]> = {
+  1: [1, 2, 3, 4],
+  2: [5, 6, 7, 8],
+  3: [9, 10, 11, 12],
+};
+
 export function buildVideosContextMessage(
   ctx: ShootDayContext,
   identity_statement: string,
   pillars: Pillar[],
+  act?: 1 | 2 | 3,
 ): string {
   const pillarsBlock = pillars.map((p) =>
     `עמוד ${p.number}: ${p.title}\nמסר: ${p.message}\nהוכחה: ${p.evidence}\nסצנה: ${p.scene}`
   ).join("\n\n");
+
+  const ask = act
+    ? `עכשיו ייצר אך ורק את סרטוני ACT ${act}: סרטונים ${ACT_VIDEO_NUMBERS[act].join(", ")}. החזר בדיוק ${ACT_VIDEO_NUMBERS[act].length} סרטונים עם המספרים האלה.`
+    : `עכשיו ייצר את כל 12 הסרטונים לפי ההוראות במערכת.`;
 
   return `${buildContextMessage(ctx)}
 
@@ -625,7 +687,7 @@ export function buildVideosContextMessage(
 
 ${pillarsBlock}
 
-עכשיו ייצר את 12 הסרטונים לפי ההוראות במערכת.`;
+${ask}`;
 }
 
 // ── Pack 3 context — accepts identity + pillars ──────────────────────
@@ -719,10 +781,13 @@ export function validateVideo(v: unknown): v is Video {
   return true;
 }
 
+// Accepts 1-12 videos so the engine can generate one act at a time (4 videos)
+// and stay under the Vercel function limit. The full plan is assembled from
+// the per-act slices by the GET endpoint.
 export function validateVideosPack(data: unknown): data is { videos: Video[] } {
   if (!data || typeof data !== "object") return false;
   const x = data as Record<string, unknown>;
-  if (!Array.isArray(x.videos) || x.videos.length !== 12) return false;
+  if (!Array.isArray(x.videos) || x.videos.length < 1 || x.videos.length > 12) return false;
   return x.videos.every(validateVideo);
 }
 

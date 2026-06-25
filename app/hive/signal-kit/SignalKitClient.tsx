@@ -715,7 +715,9 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
       {/* Videos in 3 acts (Lever #3: Act Structure 4+4+4). V1 ships only
           Video #1 (IDENTITY). V2+ unlocks the rest via per-card CTAs. */}
       <VideosByAct videos={plan.videos} />
-      {plan.videos.length < 12 && <NextVideoTeaser current={plan.videos.length} />}
+      {(plan.videos.length < 12 || !plan.visual_direction || !plan.gift_sentences) && (
+        <ShootDayBuilder extractionId={extractionId} plan={plan} setPlan={setPlan} />
+      )}
 
       {/* Visual Direction (Lever #5 via "הפוך מהקטגוריה") — optional in V1 */}
       {plan.visual_direction && <VisualDirectionCard visual={plan.visual_direction} />}
@@ -905,23 +907,129 @@ function VideosByAct({ videos }: { videos: Video[] }) {
   );
 }
 
-function NextVideoTeaser({ current }: { current: number }) {
-  const remaining = 12 - current;
+// Builds the rest of the shoot day on demand: 3 acts (4 videos each) + visual
+// direction/schedule/decisions + 5 gift sentences. Each is one sub-60s API
+// call; results stream into the plan as they arrive. The endpoints cache every
+// slice, so a refresh or re-open resumes where it left off.
+type SetPlan = (updater: (prev: ShootDayPlan | null) => ShootDayPlan | null) => void;
+
+function ShootDayBuilder({
+  extractionId, plan, setPlan,
+}: { extractionId: string; plan: ShootDayPlan; setPlan: SetPlan }) {
+  const [building, setBuilding] = useState(false);
+  const [step, setStep]         = useState<string>("");
+  const [error, setError]       = useState<string | null>(null);
+
+  const body = JSON.stringify({
+    identity_statement: plan.identity_statement,
+    pillars:            plan.pillars,
+  });
+
+  async function post(path: string, payload?: string) {
+    const res = await fetch(`/api/signal/${extractionId}/shoot-day/${path}`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    payload ?? body,
+    });
+    const txt = await res.text();
+    let data: Record<string, unknown>;
+    try { data = JSON.parse(txt); } catch { throw new Error(`${path}: ${txt.slice(0, 200)}`); }
+    if (!res.ok) throw new Error(String(data?.error ?? `${path} failed`));
+    return data;
+  }
+
+  function mergeVideos(newVideos: Video[]) {
+    setPlan((prev) => {
+      if (!prev) return prev;
+      const map = new Map(prev.videos.map((v) => [v.number, v]));
+      for (const v of newVideos) map.set(v.number, v);
+      return { ...prev, videos: [...map.values()].sort((a, b) => a.number - b.number) };
+    });
+  }
+
+  async function buildAll() {
+    setBuilding(true);
+    setError(null);
+    try {
+      for (const act of [1, 2, 3] as const) {
+        // Skip an act we already have all 4 videos for.
+        const have = plan.videos.filter((v) => v.act === act).length;
+        if (have >= 4) continue;
+        setStep(`בונה את סרטוני מערכה ${act}…`);
+        const data = await post("videos", JSON.stringify({
+          identity_statement: plan.identity_statement,
+          pillars:            plan.pillars,
+          act,
+        }));
+        mergeVideos((data.videos as Video[]) ?? []);
+      }
+
+      if (!plan.visual_direction || !plan.schedule || !plan.decisions) {
+        setStep("בונה ויזואל, לו\"ז ו-3 החלטות…");
+        const s = await post("strategy");
+        setPlan((prev) => prev ? {
+          ...prev,
+          visual_direction: s.visual_direction as ShootDayPlan["visual_direction"],
+          schedule:         s.schedule as ShootDayPlan["schedule"],
+          decisions:        s.decisions as ShootDayPlan["decisions"],
+        } : prev);
+      }
+
+      if (!plan.gift_sentences) {
+        setStep("בונה 5 משפטי מתנה…");
+        const g = await post("gifts");
+        setPlan((prev) => prev ? { ...prev, gift_sentences: g.gift_sentences as string[] } : prev);
+      }
+
+      setStep("");
+      playHadarVoice("completed_shoot_day");
+    } catch (e) {
+      setError(String(e instanceof Error ? e.message : e));
+    } finally {
+      setBuilding(false);
+    }
+  }
+
+  const remaining = 12 - plan.videos.length;
+
   return (
     <div style={{
       background: C.card, border: `1px dashed ${C.lineGold}`, borderRadius: 12,
-      padding: 16, display: "flex", flexDirection: "column", gap: 6,
+      padding: 16, display: "flex", flexDirection: "column", gap: 10,
     }}>
       <div style={{ fontSize: 12, color: C.goldMid, fontWeight: 700, letterSpacing: 1.4 }}>
-        ✦ הסרטונים הבאים
+        ✦ השלמת יום הצילום
       </div>
       <div style={{ fontSize: 14, color: C.fg, lineHeight: 1.6 }}>
-        בנינו לכם את הסרטון הראשון בקפידה. עוד {remaining} סרטונים מחכים לכם:
-        4 הוקי-עמוד, 3 סיפורי-תיק, 2 frameworks, 1 myth, ו-CTA.
+        {remaining > 0
+          ? `בנינו את הסרטון הראשון. עוד ${remaining} סרטונים, הויזואל, הלו"ז, 3 ההחלטות ו-5 משפטי המתנה מחכים לכם.`
+          : `הסרטונים מוכנים. נשארו הויזואל, הלו"ז ומשפטי המתנה.`}
       </div>
-      <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
-        בקרוב נשחרר ייצור-לפי-דרישה לכל סרטון בנפרד. בינתיים, תתרגלו את הסרטון הראשון הזה עד שהוא בעצמות.
-      </div>
+
+      {building && (
+        <div style={{ fontSize: 13, color: C.goldMid, lineHeight: 1.5 }}>
+          {step || "בונה…"}
+        </div>
+      )}
+      {error && (
+        <div style={{ fontSize: 13, color: "#E58A8A", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+          {error}
+        </div>
+      )}
+
+      <button
+        onClick={buildAll}
+        disabled={building}
+        style={{
+          alignSelf: "flex-start", marginTop: 4,
+          background: building ? C.cardSoft : C.gold,
+          color: building ? C.muted : "#1A1206",
+          border: "none", borderRadius: 8, padding: "10px 18px",
+          fontSize: 14, fontWeight: 700, cursor: building ? "default" : "pointer",
+        }}
+      >
+        {building ? "בונה את יום הצילום…" : "בנו את יום הצילום המלא"}
+      </button>
     </div>
   );
 }

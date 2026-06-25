@@ -28,6 +28,11 @@ import {
   type ShootDayContext,
   type Pillar,
 } from "@/lib/prompts/shoot-day-engine";
+import {
+  normalizeShootDayText,
+  sanitizeHadarQuotes,
+  stripEmDashes,
+} from "@/lib/prompts/shoot-day-lint";
 
 export const runtime     = "nodejs";
 export const dynamic     = "force-dynamic";
@@ -151,11 +156,12 @@ export async function POST(
     return NextResponse.json({ error: "Single video pack invalid shape", raw: videoText.slice(0, 500) }, { status: 500 });
   }
 
-  // ── Assemble + cache ─────────────────────────────────────────────────
+  // ── Assemble + cache (with deterministic output guards) ──────────────
+  const video1 = sanitizeHadarQuotes(normalizeShootDayText([videoParsed.video]))[0];
   const plan: ShootDayPlan = {
-    identity_statement,
-    pillars: pillars as [Pillar, Pillar, Pillar, Pillar],
-    videos:  [videoParsed.video],
+    identity_statement: stripEmDashes(identity_statement),
+    pillars: normalizeShootDayText(pillars) as [Pillar, Pillar, Pillar, Pillar],
+    videos:  [video1],
   };
 
   if (!validateShootDayPlan(plan)) {
