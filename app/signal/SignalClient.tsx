@@ -734,20 +734,23 @@ function FormCard(props: FormCardProps) {
   );
 }
 
-// Static fallback facts — used if the AI fact endpoint is slow or fails.
+// Curated bee facts shown on the loading screen. Hand-checked Hebrew (no typos)
+// — we deliberately do NOT use AI-generated facts here, to guarantee clean text.
 const STATIC_BEE_FACTS = [
-  "דבורת הדבש מבקרת בין 50 ל-100 פרחים במהלך טיסה אחת לאיסוף צוף",
-  "כדי לייצר כף מלאה אחת של דבש, דבורה אחת צריכה לטוס מרחק ששווה לפעמיים סיבוב כדור הארץ",
-  "דבורים מתקשרות זו עם זו דרך ריקוד מיוחד שמראה לחברות לכוון לפרחים",
-  "המלכה יכולה להטיל עד 2,000 ביצים ביום אחד - יותר ממשקלה שלה",
-  "דבורים זוכרות פרצופים אנושיים ומסוגלות לזהות את אותו האדם שוב לאחר ימים",
-  "כוורת בריאה מכילה בין 50,000 ל-80,000 דבורות, כמעט כולן נקבות",
-  "דבורים ישנות כ-5 עד 8 שעות ביממה, לפעמים בתוך פרחים",
-  "כנפי הדבורה מרפרפות 200 פעם בשנייה - זה מה שיוצר את הזמזום המוכר",
-  "דבורים יכולות לזהות צבעים שאנחנו לא רואים בכלל, כולל אולטרה-סגול",
-  "הדבש לא מתקלקל - נמצא דבש בן 3,000 שנה בקברי פרעונים שעדיין היה אכיל",
-  "דבורה אחת מייצרת בכל חייה רק שתים-עשרה כפיות קטנות של דבש",
-  "דבורים שומרות על טמפרטורת 35 מעלות בתוך הכוורת גם בקור עז, על ידי רעידות שרירים",
+  "דבורת הדבש מבקרת בין 50 ל-100 פרחים בטיסה אחת לאיסוף צוף.",
+  "כדי לייצר כף דבש אחת, דבורים טסות יחד מרחק ששווה לפעמיים הקפת כדור הארץ.",
+  "דבורים מתקשרות זו עם זו דרך ריקוד מיוחד שמראה לחברות בכוורת את הכיוון והמרחק לפרחים.",
+  "מלכת הכוורת יכולה להטיל עד 2,000 ביצים ביום, יותר ממשקל גופה.",
+  "דבורים זוכרות פרצופים אנושיים ומסוגלות לזהות את אותו אדם שוב לאחר ימים.",
+  "כוורת בריאה מכילה בין 50,000 ל-80,000 דבורים, כמעט כולן נקבות.",
+  "דבורים ישנות כחמש עד שמונה שעות ביממה, לפעמים בתוך פרחים.",
+  "כנפי הדבורה מרפרפות כ-200 פעמים בשנייה, וזה מה שיוצר את הזמזום המוכר.",
+  "דבורים רואות צבעים שאנחנו לא רואים כלל, כולל אור אולטרה-סגול.",
+  "הדבש כמעט אינו מתקלקל. נמצא דבש בן 3,000 שנה בקברי פרעונים שעדיין היה אכיל.",
+  "דבורת פועלת אחת מייצרת בכל חייה רק כ-1/12 כפית דבש.",
+  "הדבורים שומרות על חום של כ-35 מעלות בכוורת גם בקור עז, באמצעות רעידות שרירים.",
+  "לדבורה חמש עיניים, שלוש קטנות בראש ושתיים גדולות בצדדים.",
+  "הדבורים מאביקות כשליש מהמזון שאנחנו אוכלים מדי יום.",
 ];
 
 function pickRandomFacts(n: number): string[] {
@@ -765,22 +768,10 @@ const SIGNAL_STEPS = [
 function Loading() {
   const [progress, setProgress]         = useState(0);
   const [stepIdx, setStepIdx]           = useState(0);
-  const [facts, setFacts]               = useState<string[]>(() => pickRandomFacts(6));
+  // Facts are the hand-checked curated list only (no AI generation) so the text
+  // is guaranteed typo-free.
+  const [facts]                         = useState<string[]>(() => pickRandomFacts(6));
   const [factIdx, setFactIdx]           = useState(0);
-
-  // Try to refresh facts with AI-generated ones; fall back silently to static.
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/bee-facts")
-      .then((r) => r.json())
-      .then(({ facts }: { facts?: string[] }) => {
-        if (cancelled || !Array.isArray(facts) || facts.length === 0) return;
-        setFacts(facts);
-        setFactIdx(0);
-      })
-      .catch(() => { /* keep static facts */ });
-    return () => { cancelled = true; };
-  }, []);
 
   // Progress bar: accelerating curve. Slow at the start (builds
   // anticipation, no "almost done already?" misread on a 15-25s wait),
@@ -808,10 +799,10 @@ function Loading() {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
-  // Rotate facts every 4s.
+  // Rotate facts every 7s — long enough to comfortably read a full Hebrew fact.
   useEffect(() => {
     if (facts.length === 0) return;
-    const id = setInterval(() => setFactIdx((i) => (i + 1) % facts.length), 4000);
+    const id = setInterval(() => setFactIdx((i) => (i + 1) % facts.length), 7000);
     return () => clearInterval(id);
   }, [facts]);
 
