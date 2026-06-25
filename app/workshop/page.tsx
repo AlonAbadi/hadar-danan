@@ -5,19 +5,11 @@ import { NextWorkshopBadge } from "./NextWorkshopBadge";
 import { WorkshopTestimonials } from "./WorkshopTestimonials";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
-import { PRODUCT_MAP } from "@/lib/products";
+import { PRODUCT_MAP, getNextWorkshopDate, formatHebrew } from "@/lib/products";
 import { validateCoupon } from "@/lib/coupons";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
 import { BreadcrumbSchema } from "@/components/BreadcrumbSchema";
-
-const WORKSHOP_FAQS = [
-  { question: "מה זה סדנת יום אחד?", answer: "סדנת עומק פעילה בלייב — יום שלם שמתרגלים בו יכולות ביטוי, השפעה וכריזמה. לומדים לבוא עם מי שאנחנו מול מצלמה ומול קהל, ויוצאים עם מערך שיווקי ברור ומותג אישי שמוכר." },
-  { question: "למי מתאימה הסדנה?", answer: "לבעלי עסקים, מנכ\"לים ויוצרי תוכן שרוצים לבלוט במסך ולחיות שיווק — כאלה שמרגישים שהם מתאמצים מול מצלמה ולא מביאים את עצמם באמת." },
-  { question: "מה ההבדל בין הסדנה לאתגר 7 הימים?", answer: "האתגר הוא שבוע דיגיטלי של בניית הרגלי תוכן. הסדנה היא יום פיזי אינטנסיבי שעובד על הביטוי, הנוכחות והמסר — חוויה קבוצתית עמוקה שמשנה איך אתה מופיע בעולם." },
-  { question: "מתי ואיפה מתקיימת הסדנה?", answer: "במשרדי הדר דנן, רחוב החילזון 5, רמת גן. תאריכים קרובים מופיעים בבאג 'הסדנה הקרובה' למעלה." },
-  { question: "מה יוצאים עם זה?", answer: "יכולת לבנות מערך שיווקי לשירות שלך, הופעה מול קהל ומצלמה, הבנה אמיתית של מה אתה מוכר, ומשפך וידאו שמכניס כסף." },
-];
 
 export const metadata = {
   title: "סדנת יום אחד | הדר דנן",
@@ -41,6 +33,21 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
   const priceStr       = String(effectivePrice);
 
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
+
+  // Build the FAQ here (instead of at module scope) so the "when + where"
+  // answer always names the actual next workshop date, not a stale
+  // hard-coded month. Auto-rolls when MIN_WORKSHOP_DATE moves.
+  const nextDateISO   = getNextWorkshopDate();
+  const nextDateLong  = nextDateISO
+    ? `יום חמישי, ${formatHebrew(nextDateISO)} ${nextDateISO.slice(0, 4)}, 10:00–15:00`
+    : "המועד הבא יפורסם בקרוב";
+  const WORKSHOP_FAQS = [
+    { question: "מה זה סדנת יום אחד?", answer: "סדנת עומק פעילה בלייב — יום שלם שמתרגלים בו יכולות ביטוי, השפעה וכריזמה. לומדים לבוא עם מי שאנחנו מול מצלמה ומול קהל, ויוצאים עם מערך שיווקי ברור ומותג אישי שמוכר." },
+    { question: "למי מתאימה הסדנה?", answer: "לבעלי עסקים, מנכ\"לים ויוצרי תוכן שרוצים לבלוט במסך ולחיות שיווק — כאלה שמרגישים שהם מתאמצים מול מצלמה ולא מביאים את עצמם באמת." },
+    { question: "מה ההבדל בין הסדנה לאתגר 7 הימים?", answer: "האתגר הוא שבוע דיגיטלי של בניית הרגלי תוכן. הסדנה היא יום פיזי אינטנסיבי שעובד על הביטוי, הנוכחות והמסר — חוויה קבוצתית עמוקה שמשנה איך אתה מופיע בעולם." },
+    { question: "מתי ואיפה מתקיימת הסדנה?", answer: `המועד הקרוב: ${nextDateLong}. במשרדי הדר דנן, רחוב החילזון 5, רמת גן. מועדים הבאים מופיעים בבאדג' 'הסדנה הקרובה' בראש העמוד.` },
+    { question: "מה יוצאים עם זה?", answer: "יכולת לבנות מערך שיווקי לשירות שלך, הופעה מול קהל ומצלמה, הבנה אמיתית של מה אתה מוכר, ומשפך וידאו שמכניס כסף." },
+  ];
 
   return (
     <>
