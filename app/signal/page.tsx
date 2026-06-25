@@ -39,22 +39,40 @@ export default async function SignalPage({ searchParams }: { searchParams: Promi
   const { data: { user } } = await supabase.auth.getUser();
 
   let firstName:  string | undefined;
+  let lastName:   string | undefined;
   let email:      string | undefined;
+  let phone:      string | undefined;
+  let occupation: string | undefined;
+  let prefGender: "m" | "f" | undefined;
   let hiveActive: boolean = false;
 
   if (user) {
     const db = createServerClient();
-    const { data: userData } = await db
+    // occupation/gender aren't in the generated Database types yet (same as the
+    // extract route, which uses an untyped client for these columns).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: userData } = await (db as any)
       .from("users")
-      .select("id, name, email, hive_status")
+      .select("id, name, email, phone, occupation, gender, hive_status")
       .eq("auth_id", user.id)
       .maybeSingle();
 
     if (typeof userData?.name === "string" && userData.name.trim().length > 0) {
-      firstName = userData.name.split(" ")[0];
+      const parts = userData.name.trim().split(/\s+/);
+      firstName = parts[0];
+      if (parts.length > 1) lastName = parts.slice(1).join(" ");
     }
     if (typeof userData?.email === "string") {
       email = userData.email;
+    }
+    if (typeof userData?.phone === "string" && userData.phone.trim().length > 0) {
+      phone = userData.phone.trim();
+    }
+    if (typeof userData?.occupation === "string" && userData.occupation.trim().length > 0) {
+      occupation = userData.occupation.trim();
+    }
+    if (userData?.gender === "m" || userData?.gender === "f") {
+      prefGender = userData.gender;
     }
     hiveActive = userData?.hive_status === "active";
 
@@ -74,5 +92,16 @@ export default async function SignalPage({ searchParams }: { searchParams: Promi
     }
   }
 
-  return <SignalClient firstName={firstName} isAuthenticated={!!user} prefillEmail={email} hiveActive={hiveActive} />;
+  return (
+    <SignalClient
+      firstName={firstName}
+      prefillLastName={lastName}
+      isAuthenticated={!!user}
+      prefillEmail={email}
+      prefillPhone={phone}
+      prefillOccupation={occupation}
+      prefillGender={prefGender}
+      hiveActive={hiveActive}
+    />
+  );
 }

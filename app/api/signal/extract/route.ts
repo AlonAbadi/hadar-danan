@@ -169,6 +169,10 @@ export async function POST(req: NextRequest) {
   const occupationStr = typeof occupation === "string"
     ? occupation.trim().slice(0, 200)
     : "";
+  // name + phone are supplied by anonymous leads AND by authenticated users who
+  // completed the gate because their profile was incomplete (e.g. Google sign-up).
+  const nameStr  = typeof name === "string" ? name.trim() : "";
+  const phoneStr = typeof phone === "string" ? phone.trim() : "";
   const consentGranted = marketing_consent === true;
   // Client-supplied gender (from the LeadGate radio). When present, it
   // overrides server-side detection and any stored value — the user just
@@ -193,26 +197,43 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: userRow } = await (db as any)
       .from("users")
-      .select("id, name, occupation, status, hive_status, gender")
+      .select("id, name, phone, occupation, status, hive_status, gender")
       .eq("auth_id", authUser.id)
       .maybeSingle();
     if (!userRow) {
       return NextResponse.json({ error: "לא נמצא פרופיל משתמש" }, { status: 404 });
     }
     userId = userRow.id as string;
-    if (typeof userRow.name === "string" && userRow.name.trim().length > 0) {
-      userNameForPrompt = userRow.name.split(" ")[0];
+    const storedName = typeof userRow.name === "string" ? userRow.name.trim() : "";
+    // Prefer the stored name; fall back to the name the user just gave in the gate.
+    const effectiveName = storedName || nameStr;
+    if (effectiveName.length > 0) {
+      userNameForPrompt = effectiveName.split(" ")[0];
     }
     const storedOcc = typeof userRow.occupation === "string" ? userRow.occupation.trim() : "";
     occupationForPrompt = occupationStr || storedOcc || undefined;
     userStatus     = (userRow.status as string | null) ?? null;
     userHiveActive = userRow.hive_status === "active";
     storedGender   = (userRow.gender as Gender | null) ?? null;
+
+    // Backfill profile details the gate just collected, without overwriting
+    // existing values. This is the fix for authenticated (e.g. Google) sign-ups
+    // who reach the diagnostic with an incomplete profile.
+    const patch: Record<string, unknown> = {};
+    if (!storedName && nameStr)                          patch.name       = nameStr;
+    if (!userRow.phone && phoneStr)                      patch.phone      = phoneStr;
+    if (!storedOcc && occupationStr)                     patch.occupation = occupationStr;
+    if (consentGranted) {
+      patch.marketing_consent = true;
+      patch.consent_at        = new Date().toISOString();
+    }
+    if (Object.keys(patch).length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (db as any).from("users").update(patch).eq("id", userId);
+    }
   } else {
     // Anonymous path — require email + name + phone, upsert lead
     const emailStr = typeof email === "string" ? email.trim().toLowerCase() : "";
-    const nameStr  = typeof name === "string" ? name.trim() : "";
-    const phoneStr = typeof phone === "string" ? phone.trim() : "";
     if (!isValidEmail(emailStr)) {
       return NextResponse.json({ error: "אימייל לא תקין" }, { status: 400 });
     }

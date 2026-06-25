@@ -47,15 +47,22 @@ const DRAFT_KEY = "signal_draft_v1";
 const PROBE_KEYS = new Set<string>(["what_helped"]);
 
 interface Props {
-  firstName?:       string;
-  isAuthenticated?: boolean;
-  prefillEmail?:    string;
-  hiveActive?:      boolean;
+  firstName?:        string;
+  prefillLastName?:  string;
+  isAuthenticated?:  boolean;
+  prefillEmail?:     string;
+  prefillPhone?:     string;
+  prefillOccupation?: string;
+  prefillGender?:    Gender;
+  hiveActive?:       boolean;
 }
 
 type Phase = "intro" | "form" | "gate" | "loading" | "result" | "error";
 
-export function SignalClient({ firstName, isAuthenticated = false, prefillEmail, hiveActive = false }: Props) {
+export function SignalClient({
+  firstName, prefillLastName, isAuthenticated = false, prefillEmail,
+  prefillPhone, prefillOccupation, prefillGender, hiveActive = false,
+}: Props) {
   const [phase, setPhase]         = useState<Phase>("intro");
   const [step, setStep]           = useState(0);
   const [answers, setAnswers]     = useState<SignalAnswers>({});
@@ -77,18 +84,27 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
   // Lead-gate fields (anonymous only). First + last name are captured separately
   // so we can store the full name and still personalize emails with the first name.
   const [leadFirstName, setLeadFirstName] = useState(firstName ?? "");
-  const [leadLastName,  setLeadLastName]  = useState("");
+  const [leadLastName,  setLeadLastName]  = useState(prefillLastName ?? "");
   const [leadEmail,     setLeadEmail]     = useState(prefillEmail ?? "");
-  const [leadPhone,     setLeadPhone]     = useState("");
-  const [leadOccupation, setLeadOccupation] = useState("");
+  const [leadPhone,     setLeadPhone]     = useState(prefillPhone ?? "");
+  const [leadOccupation, setLeadOccupation] = useState(prefillOccupation ?? "");
   const [leadConsent,   setLeadConsent]   = useState(false);
   const [leadConsentErr, setLeadConsentErr] = useState(false);
   // Gender of address — defaults to detection from first name. Tracked
   // separately so the explicit radio always reflects either the user's
   // override or our current best guess. Once the user clicks a radio,
   // leadGenderTouched=true stops the auto-sync from typing.
-  const [leadGender, setLeadGender] = useState<Gender>(() => detectGender(firstName ?? ""));
+  const [leadGender, setLeadGender] = useState<Gender>(() => prefillGender ?? detectGender(firstName ?? ""));
   const [leadGenderTouched, setLeadGenderTouched] = useState(false);
+
+  // An authenticated user (e.g. signed up via Google) may be missing profile
+  // details the diagnostic needs — occupation feeds the signal + the Hadar
+  // handoff, gender drives the gendered output, phone is the lead's contact.
+  // When any are missing we still route them through the gate (email pre-known
+  // and locked) so they complete the picture. When all present, we skip it.
+  const authNeedsDetails =
+    isAuthenticated &&
+    (!firstName || !prefillPhone || !prefillOccupation || !prefillGender);
 
   // Re-detect from first name as the user types, until they manually pick.
   useEffect(() => {
@@ -170,13 +186,20 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
         answers,
         first_name: firstName ?? trimmedFirst,
       };
-      if (!isAuthenticated) {
-        payload.email = leadEmail.trim().toLowerCase();
+      // Profile fields: sent for anonymous (full lead capture) AND for
+      // authenticated users who completed the gate because they were missing
+      // details. The server backfills only the fields it doesn't already have.
+      // Email is the one field authenticated users never resend — the server
+      // takes it from their session.
+      if (!isAuthenticated || authNeedsDetails) {
         payload.name  = fullName;
         payload.phone = leadPhone.trim();
         payload.occupation = leadOccupation.trim();
         payload.marketing_consent = leadConsent;
         payload.gender = leadGender;
+      }
+      if (!isAuthenticated) {
+        payload.email = leadEmail.trim().toLowerCase();
       }
 
       const res = await fetch("/api/signal/extract", {
@@ -210,9 +233,12 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
     setProbeFollowup(null);
     setFollowupValue("");
     if (lastStep) {
-      // Anonymous users see the lead gate before the result; authenticated users
-      // jump straight into extraction.
-      if (isAuthenticated) {
+      // Anonymous users always see the lead gate. Authenticated users skip it
+      // ONLY if their profile is already complete; if they're missing details
+      // (e.g. Google sign-up with no occupation/phone/gender), they see the gate
+      // too — with email pre-known and locked — so the signal + handoff get the
+      // full picture.
+      if (isAuthenticated && !authNeedsDetails) {
         void submit();
       } else {
         setPhase("gate");
@@ -368,6 +394,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             onSubmit={() => void submit()}
             onBack={() => setPhase("form")}
             errorMsg={errorMsg}
+            emailLocked={isAuthenticated}
           />
         )}
         {phase === "loading" && <Loading />}
@@ -958,19 +985,22 @@ interface LeadGateProps {
   onSubmit:      () => void;
   onBack:        () => void;
   errorMsg:      string | null;
+  emailLocked?:  boolean;
 }
 
 function LeadGate({
   firstName, lastName, email, phone, occupation, gender, consent, consentErr,
   setFirstName, setLastName, setEmail, setPhone, setOccupation, setGender, setConsent, setConsentErr,
-  onSubmit, onBack, errorMsg,
+  onSubmit, onBack, errorMsg, emailLocked = false,
 }: LeadGateProps) {
   const trimmedFirst = firstName.trim();
   const trimmedLast  = lastName.trim();
   const trimmedEmail = email.trim();
   const trimmedPhone = phone.trim();
   const trimmedOcc   = occupation.trim();
-  const validEmail   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+  // When the email is locked (authenticated user), it's the verified address
+  // from signup — treat as valid without re-checking.
+  const validEmail   = emailLocked || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
   // Israeli mobile pattern is loose on purpose — accept 05X-XXXXXXX, with or
   // without dashes / spaces / international prefix. Server re-validates.
   const validPhone   = /^[0-9+\-\s()]{9,20}$/.test(trimmedPhone);
@@ -1063,17 +1093,20 @@ function LeadGate({
         </div>
 
         <label style={{ display: "block" }}>
-          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>אימייל</div>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>
+            אימייל{emailLocked && <span style={{ color: C.goldMid }}> · מההרשמה</span>}
+          </div>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             dir="ltr"
+            readOnly={emailLocked}
             style={{
               width:        "100%",
-              background:   C.cardSoft,
-              color:        C.fg,
+              background:   emailLocked ? "rgba(255,255,255,0.03)" : C.cardSoft,
+              color:        emailLocked ? C.muted : C.fg,
               border:       `1px solid ${C.line}`,
               borderRadius: 12,
               padding:      "12px 16px",
@@ -1081,6 +1114,7 @@ function LeadGate({
               fontFamily:   "inherit",
               outline:      "none",
               textAlign:    "left",
+              cursor:       emailLocked ? "not-allowed" : "text",
             }}
           />
         </label>
