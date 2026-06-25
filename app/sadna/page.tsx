@@ -1,9 +1,19 @@
 import type { Metadata } from "next";
 import { SadnaCheckout } from "./SadnaCheckout";
+import { getNextWorkshopDate, formatHebrew, formatShort } from "@/lib/products";
+
+// Note: Next.js's static metadata export evaluates at build time, so this
+// reflects whatever date was upcoming at deploy. The page body below uses
+// the same helpers and stays correct between deploys.
+const nextDateISO  = getNextWorkshopDate();
+const nextShort    = nextDateISO ? formatShort(nextDateISO) : "המועד הבא";
+const nextHebrew   = nextDateISO ? formatHebrew(nextDateISO) : "המועד הבא";
+const nextYear     = nextDateISO ? nextDateISO.slice(0, 4) : "";
+const nextFullHebrew = nextDateISO ? `יום חמישי, ${nextHebrew} ${nextYear}` : "המועד הבא";
 
 export const metadata: Metadata = {
-  title: "סדנת פרימיום | הדר דנן — 20 במאי",
-  description: "סדנה קטנה ואינטימית — תרגול פרקטי של הגדרה עצמית, העמקת המסר, והטמעה נכונה בוידאו. 20 במאי, 17:00–20:00, רחוב החילזון 5 רמת גן. עד 20 משתתפים.",
+  title: `סדנת פרימיום | הדר דנן — ${nextHebrew}`,
+  description: `סדנה קטנה ואינטימית — תרגול פרקטי של הגדרה עצמית, העמקת המסר, והטמעה נכונה בוידאו. ${nextHebrew} ${nextYear}, 17:00–20:00, רחוב החילזון 5 רמת גן. עד 20 משתתפים.`,
   alternates: { canonical: "/sadna" },
 };
 
@@ -23,7 +33,7 @@ export default function SadnaPage() {
         {/* Date strip */}
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 36, flexWrap: "wrap" }}>
           {[
-            { val: "20.5",    label: "תאריך"  },
+            { val: nextShort, label: "תאריך"  },
             { val: "17–20",   label: "שעות"   },
             { val: "20",      label: "מקומות" },
             { val: "₪500",    label: "השקעה"  },
@@ -108,7 +118,7 @@ export default function SadnaPage() {
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".28em", color: "#9E7C3A", marginBottom: 20, textAlign: "center" }}>פרטי האירוע</div>
 
         {[
-          { k: "תאריך",       v: "יום שלישי, 20 במאי 2025"          },
+          { k: "תאריך",       v: nextFullHebrew                       },
           { k: "שעות",        v: "17:00 – 20:00"                    },
           { k: "מיקום",       v: "רחוב החילזון 5, רמת גן"           },
           { k: "גודל קבוצה",  v: "עד 20 משתתפים בלבד"              },
@@ -145,7 +155,7 @@ export default function SadnaPage() {
       {/* ── Bottom CTA ───────────────────────────────────────────── */}
       <section style={{ maxWidth: 640, margin: "0 auto", padding: "48px 24px 80px" }}>
         <div style={{ background: "rgba(201,150,74,0.06)", border: "1px solid rgba(201,150,74,0.20)", borderRadius: 20, padding: "40px 32px" }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".28em", color: "#9E7C3A", marginBottom: 16, textAlign: "center" }}>20 במאי · 17:00–20:00 · רמת גן</div>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".28em", color: "#9E7C3A", marginBottom: 16, textAlign: "center" }}>{nextHebrew} · 17:00–20:00 · רמת גן</div>
           <p style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.3, marginBottom: 8, textAlign: "center" }}>
             20 מקומות בלבד.
           </p>
