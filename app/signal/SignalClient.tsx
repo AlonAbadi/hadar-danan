@@ -1542,14 +1542,16 @@ function Result({
         </div>
       )}
 
-      {/* Bridge — connects the personal moment to the offer below. Skipped
-          for bucket=none, where no offer follows. */}
-      <ResultBridge gender={gender} bucket={inviteBucket} />
-
-      {/* Conditional invite block — drives the funnel. Bucket comes from
-          determineBucket() server-side. Signal is passed so per-bucket cards
-          can personalize copy from the user's just-extracted soul fields. */}
-      <InviteCard bucket={inviteBucket} signal={signal} />
+      {/* Bridge + offer — the funnel next-step. SUPPRESSED for raw signals
+          (suggestRefine): a raw signal's single, clean next-step is the gentle
+          "refine with Hadar" conversation above, not a self-serve sales card.
+          Mature/ready signals get the bucket offer as usual. */}
+      {!suggestRefine && (
+        <>
+          <ResultBridge gender={gender} bucket={inviteBucket} />
+          <InviteCard bucket={inviteBucket} signal={signal} />
+        </>
+      )}
 
       {/* Quality feedback — captured at the end of the page so we can
           iterate the LLM prompt against real signal. 3 options + optional
@@ -1774,68 +1776,20 @@ function CardPreviewBlock({
 // ── Monthly contest box ───────────────────────────────────────────────────
 // Compact attention element under the share buttons. Encourages tagging
 // @hadar_danan on Instagram/Facebook/TikTok/LinkedIn. Full terms at /contest.
+// Monthly contest — a single subtle line, not a box. Keeps the share incentive
+// without turning the intimate signal moment into a marketing panel.
 function ContestBox() {
   return (
-    <div style={{
-      marginTop:    14,
-      padding:      "12px 16px",
-      background:   "rgba(232,185,74,0.04)",
-      border:       "1px solid rgba(232,185,74,0.18)",
-      borderRadius: 10,
-      textAlign:    "center",
-    }}>
-      <div style={{
-        fontSize:      9.5,
-        fontWeight:    800,
-        color:         C.goldMid,
-        letterSpacing: "0.18em",
-        textTransform: "uppercase",
-        marginBottom:  6,
-      }}>
-        כנסו לתחרות
-      </div>
-      <div style={{
-        fontSize:     13.5,
-        fontWeight:   700,
-        color:        C.gold,
-        marginBottom: 6,
-      }}>
-        כל חודש זוכה אחד. שלושה סרטונים.
-      </div>
-      <div style={{
-        fontSize:     11.5,
-        lineHeight:   1.65,
-        color:        C.muted,
-        marginBottom: 6,
-      }}>
-        שתפו את הכרטיס באינסטגרם, פייסבוק, טיקטוק או לינקדאין, תייגו{" "}
-        <span
-          dir="ltr"
-          style={{
-            fontFamily:  "Monaco, monospace",
-            color:       C.goldMid,
-            fontWeight:  700,
-            unicodeBidi: "embed",
-          }}
-        >
-          @hadar_danan
-        </span>
-        . מי שעורר הכי הרבה שיחה החודש (תגובות ולייקים) מקבל תהליך הפקת תוכן עם הדר. שלושה סרטונים שלמים, בשווי אלפי שקלים.
-      </div>
-      <Link
-        href="/contest"
-        style={{
-          display:             "inline-block",
-          fontSize:            10.5,
-          color:               C.goldMid,
-          textDecoration:      "underline",
-          textUnderlineOffset: 3,
-          opacity:             0.85,
-        }}
-      >
-        תקנון מלא ←
+    <p style={{ marginTop: 10, textAlign: "center", fontSize: 12, lineHeight: 1.6, color: C.muted }}>
+      כל חודש, מי שמשתף ומתייג{" "}
+      <span dir="ltr" style={{ fontFamily: "Monaco, monospace", color: C.goldMid, fontWeight: 700, unicodeBidi: "embed" }}>
+        @hadar_danan
+      </span>{" "}
+      ומעורר הכי הרבה שיחה זוכה ב-3 סרטונים עם הדר ·{" "}
+      <Link href="/contest" style={{ color: C.goldMid, textDecoration: "underline", textUnderlineOffset: 3 }}>
+        לתקנון
       </Link>
-    </div>
+    </p>
   );
 }
 
