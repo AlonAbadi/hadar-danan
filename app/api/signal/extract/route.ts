@@ -18,6 +18,7 @@ import {
 } from "@/lib/prompts/signal-engine";
 import { detectGender, type Gender } from "@/lib/gender/detect";
 import { determineBucket, type Bucket } from "@/lib/signal/score";
+import { determineFraming } from "@/lib/signal/framing";
 
 // Same recipients as /api/stage/apply and /api/quiz-result. Hardcoded by
 // design — we never want a config typo to silently lose hot-lead alerts.
@@ -120,12 +121,14 @@ export async function GET() {
     .maybeSingle();
 
   if (!latest) return NextResponse.json({ signal: null });
+  const latestSignal = latest.signal as SignalOutput;
   return NextResponse.json({
-    signal:       latest.signal as SignalOutput,
-    generated_at: latest.generated_at,
-    id:           latest.id,
-    gender:       (latest.gender as Gender | null) ?? null,
-    bucket:       (latest.bucket as string | null) ?? null,
+    signal:        latestSignal,
+    generated_at:  latest.generated_at,
+    id:            latest.id,
+    gender:        (latest.gender as Gender | null) ?? null,
+    bucket:        (latest.bucket as string | null) ?? null,
+    suggest_refine: determineFraming(latestSignal?.routing_signal).suggestRefine,
   });
 }
 
@@ -696,10 +699,13 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
-    id:           extractionId,
-    signal:       parsed,
-    generated_at: generatedAt,
-    gender:       genderForPrompt,
-    bucket:       bucketDecision.bucket,
+    id:            extractionId,
+    signal:        parsed,
+    generated_at:  generatedAt,
+    gender:        genderForPrompt,
+    bucket:        bucketDecision.bucket,
+    // B2 — soft refine suggestion. Inert unless SIGNAL_FRAMING_ENABLED + a
+    // high-confidence "raw" read. Derived flag only; raw maturity never leaks.
+    suggest_refine: determineFraming(parsed.routing_signal).suggestRefine,
   });
 }

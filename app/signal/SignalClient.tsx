@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
 import { detectGender } from "@/lib/gender/detect";
@@ -41,6 +41,11 @@ const C = {
 const MIN_CHARS = 40;          // per-question minimum (soft — server requires 3 answers × 8 chars)
 const DRAFT_KEY = "signal_draft_v1";
 
+// Questions that get the one dynamic follow-up (A1). Q4 "what_helped" is the
+// biggest abstraction magnet — "מה פיתחת" invites traits ("אהבה עצמית") instead
+// of moments. The probe asks once, soft, only when the answer is abstract.
+const PROBE_KEYS = new Set<string>(["what_helped"]);
+
 interface Props {
   firstName?:       string;
   isAuthenticated?: boolean;
@@ -59,8 +64,15 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [gender, setGender]       = useState<Gender>("f");
   const [bucket, setBucket]       = useState<Bucket>("challenge");
+  const [suggestRefine, setSuggestRefine] = useState(false);  // B2 — soft refine-with-Hadar suggestion (flag-gated server-side)
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
   const [cacheChecked, setCacheChecked] = useState(false);
+
+  // Dynamic follow-up (A1) — soft, optional, never blocks.
+  const [probing, setProbing]           = useState(false);
+  const [probeFollowup, setProbeFollowup] = useState<string | null>(null);
+  const [followupValue, setFollowupValue] = useState("");
+  const probedStepsRef = useRef<Set<number>>(new Set());
 
   // Lead-gate fields (anonymous only). First + last name are captured separately
   // so we can store the full name and still personalize emails with the first name.
@@ -116,6 +128,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             if (data.bucket === "challenge" || data.bucket === "strategy" || data.bucket === "hive" || data.bucket === "nurture" || data.bucket === "none") {
               setBucket(data.bucket);
             }
+            setSuggestRefine(data.suggest_refine === true);
             setPhase("result");
           }
         }
@@ -184,6 +197,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
       if (data.bucket === "challenge" || data.bucket === "strategy" || data.bucket === "hive" || data.bucket === "nurture" || data.bucket === "none") {
         setBucket(data.bucket);
       }
+      setSuggestRefine(data.suggest_refine === true);
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       setPhase("result");
     } catch {
@@ -192,8 +206,9 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
     }
   };
 
-  const next = () => {
-    setErrorMsg(null);
+  const advance = () => {
+    setProbeFollowup(null);
+    setFollowupValue("");
     if (lastStep) {
       // Anonymous users see the lead gate before the result; authenticated users
       // jump straight into extraction.
@@ -209,8 +224,54 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const next = async () => {
+    setErrorMsg(null);
+
+    // Dynamic probe (A1): on an abstraction-prone question, ask once whether the
+    // answer holds a concrete moment. If not, surface one soft follow-up before
+    // advancing. Soft-fails open — any error just advances. The follow-up never
+    // blocks: the "הלאה" button below it skips straight through.
+    if (
+      PROBE_KEYS.has(current.key) &&
+      value.trim().length >= MIN_CHARS &&
+      !probeFollowup &&
+      !probedStepsRef.current.has(step)
+    ) {
+      probedStepsRef.current.add(step);
+      setProbing(true);
+      try {
+        const res = await fetch("/api/signal/probe", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ answer: value, questionKey: current.key, gender: leadGender }),
+        });
+        const data = await res.json().catch(() => ({}));
+        setProbing(false);
+        if (data && data.concrete === false && typeof data.followup === "string" && data.followup.trim()) {
+          setProbeFollowup(data.followup.trim());
+          return; // show the follow-up; do not advance yet
+        }
+      } catch {
+        setProbing(false);
+      }
+    }
+    advance();
+  };
+
+  // Append the optional follow-up answer to the question's answer, then advance.
+  const submitFollowup = () => {
+    const extra = followupValue.trim();
+    if (extra) {
+      const key = current.key;
+      setAnswers((a) => ({ ...a, [key]: `${(a[key] ?? "").trim()}\n${extra}` }));
+    }
+    advance();
+  };
+
   const back = () => {
     setErrorMsg(null);
+    setProbeFollowup(null);
+    setFollowupValue("");
     setStep((s) => Math.max(0, s - 1));
   };
 
@@ -279,6 +340,11 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             canAdvance={canAdvance()}
             isLast={lastStep}
             errorMsg={errorMsg}
+            probing={probing}
+            followup={probeFollowup}
+            followupValue={followupValue}
+            setFollowupValue={setFollowupValue}
+            onSubmitFollowup={submitFollowup}
           />
         )}
         {phase === "gate"    && (
@@ -322,6 +388,7 @@ export function SignalClient({ firstName, isAuthenticated = false, prefillEmail,
             hiveActive={hiveActive}
             gender={gender}
             bucket={bucket}
+            suggestRefine={suggestRefine}
           />
         )}
       </div>
@@ -444,6 +511,11 @@ interface FormCardProps {
   canAdvance: boolean;
   isLast:     boolean;
   errorMsg:   string | null;
+  probing:          boolean;
+  followup:         string | null;
+  followupValue:    string;
+  setFollowupValue: (v: string) => void;
+  onSubmitFollowup: () => void;
 }
 
 function FormCard(props: FormCardProps) {
@@ -530,6 +602,63 @@ function FormCard(props: FormCardProps) {
         </div>
       )}
 
+      {/* Dynamic follow-up (A1) — warm, optional, never blocks. Skipping with
+          "הלאה" below advances without it. */}
+      {props.followup && (
+        <div
+          style={{
+            marginTop:    20,
+            padding:      "18px 18px 16px",
+            background:   "rgba(232,185,74,0.06)",
+            border:       `1px solid rgba(232,185,74,0.22)`,
+            borderRadius: 14,
+          }}
+        >
+          <div style={{ fontSize: 15, color: C.gold, lineHeight: 1.55, marginBottom: 12, fontWeight: 600 }}>
+            {props.followup}
+          </div>
+          <textarea
+            value={props.followupValue}
+            onChange={(e) => props.setFollowupValue(e.target.value)}
+            rows={3}
+            placeholder="רגע אחד ספציפי. לא חובה."
+            style={{
+              width:        "100%",
+              background:   C.cardSoft,
+              color:        C.fg,
+              border:       `1px solid ${C.line}`,
+              borderRadius: 10,
+              padding:      "12px 14px",
+              fontSize:     15,
+              lineHeight:   1.6,
+              fontFamily:   "inherit",
+              resize:       "vertical",
+              minHeight:    80,
+              outline:      "none",
+            }}
+          />
+          <button
+            onClick={props.onSubmitFollowup}
+            style={{
+              marginTop:    12,
+              background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+              color:        "#2a1d05",
+              fontWeight:   700,
+              border:       "none",
+              borderRadius: 10,
+              padding:      "10px 22px",
+              cursor:       "pointer",
+              fontSize:     14,
+            }}
+          >
+            הוספתי, להמשיך
+          </button>
+          <span style={{ fontSize: 12.5, color: C.muted, marginInlineStart: 12 }}>
+            או דלג/י עם &quot;הלאה&quot;.
+          </span>
+        </div>
+      )}
+
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 28, gap: 12 }}>
         <button
           onClick={props.onBack}
@@ -548,22 +677,22 @@ function FormCard(props: FormCardProps) {
         </button>
         <button
           onClick={props.onNext}
-          disabled={!props.canAdvance}
+          disabled={!props.canAdvance || props.probing}
           style={{
-            background:   props.canAdvance
+            background:   props.canAdvance && !props.probing
               ? "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)"
               : "rgba(232,185,74,0.18)",
-            color:        props.canAdvance ? "#2a1d05" : "rgba(237,233,225,0.4)",
+            color:        props.canAdvance && !props.probing ? "#2a1d05" : "rgba(237,233,225,0.4)",
             fontWeight:   700,
             border:       "none",
             borderRadius: 12,
             padding:      "12px 28px",
-            cursor:       props.canAdvance ? "pointer" : "not-allowed",
+            cursor:       props.canAdvance && !props.probing ? "pointer" : "not-allowed",
             fontSize:     15,
-            boxShadow:    props.canAdvance ? "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)" : "none",
+            boxShadow:    props.canAdvance && !props.probing ? "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)" : "none",
           }}
         >
-          {props.isLast ? "חלץ את האות" : "הלאה"}
+          {props.probing ? "רגע…" : props.isLast ? "חלץ את האות" : "הלאה"}
         </button>
       </div>
     </div>
@@ -1153,6 +1282,7 @@ interface ResultProps {
   hiveActive?:   boolean;
   gender:        Gender;
   bucket:        Bucket;
+  suggestRefine?: boolean;
 }
 
 // Gender-aware static labels. Most pronouns in unvowelled Hebrew are written
@@ -1174,7 +1304,7 @@ const labelsByGender = {
 
 function Result({
   firstName, signal, extractionId, ownerEmail, generatedAt, onRestart,
-  hiveActive = false, gender, bucket,
+  hiveActive = false, gender, bucket, suggestRefine = false,
 }: ResultProps) {
   const dateStr = generatedAt
     ? new Date(generatedAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
@@ -1338,6 +1468,41 @@ function Result({
             text={`${signal.signal}\n\nTrueSignal© · beegood.online`}
             label={t.copy}
           />
+        </div>
+      )}
+
+      {/* B2 — soft, optional refine-with-Hadar invitation. Renders only when the
+          server flag is on AND the read was a high-confidence "raw". Gift-framed,
+          never a deficit verdict: the signal is whole; refining it is a choice. */}
+      {suggestRefine && (
+        <div style={{
+          background:   "rgba(232,185,74,0.06)",
+          border:       "1px solid rgba(232,185,74,0.20)",
+          borderRadius: 14,
+          padding:      "18px 20px",
+          textAlign:    "center",
+          maxWidth:     480,
+          marginInline: "auto",
+        }}>
+          <p style={{ margin: "0 0 10px", fontSize: 15, lineHeight: 1.65, color: C.fg }}>
+            {gender === "m"
+              ? "האות שלך כאן, והוא חי. אם תרצה, השלב הבא הוא ללטש אותו עם הדר לפני שאתה נותן אותו החוצה."
+              : "האות שלך כאן, והוא חי. אם תרצי, השלב הבא הוא ללטש אותו עם הדר לפני שאת נותנת אותו החוצה."}
+          </p>
+          <a
+            href={HADAR_WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize:       14,
+              color:          C.gold,
+              textDecoration: "none",
+              borderBottom:   "1px dashed rgba(201,150,74,0.4)",
+              paddingBottom:  2,
+            }}
+          >
+            לדבר עם הדר ←
+          </a>
         </div>
       )}
 
@@ -1899,6 +2064,39 @@ const INVITE_STYLES = {
   success:     "#7FD49B",
 } as const;
 
+// Hadar's direct WhatsApp — the "talk first" door for strategy-fit leads (A3).
+// Decisive leads book directly (the booking CTA); this is for those who'd
+// rather explore with a person first. The prefilled message is explore-stage
+// ("אשמח להבין מה ההמשך"), never a purchase declaration — the visitor is
+// examining, not buying. WhatsApp carries the sender's identity to Hadar.
+const HADAR_WHATSAPP_URL =
+  "https://wa.me/972526681552?text=%D7%94%D7%99%D7%99%20%D7%94%D7%93%D7%A8%2C%20%D7%A7%D7%99%D7%91%D7%9C%D7%AA%D7%99%20%D7%90%D7%AA%20%D7%94%D7%90%D7%95%D7%AA%20%D7%A9%D7%9C%D7%99%20%D7%91%D7%9E%D7%A0%D7%95%D7%A2%20%D7%95%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%94%D7%91%D7%99%D7%9F%20%D7%9E%D7%94%20%D7%94%D7%94%D7%9E%D7%A9%D7%9A%20%D7%95%D7%90%D7%99%D7%9A%20%D7%A2%D7%95%D7%91%D7%93%D7%99%D7%9D%20%D7%99%D7%97%D7%93.";
+
+// The "talk to Hadar first" secondary door. Rendered under a primary CTA.
+function TalkToHadarLink() {
+  return (
+    <a
+      href={HADAR_WHATSAPP_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display:        "block",
+        textAlign:      "center",
+        marginTop:      -4,
+        fontSize:       13.5,
+        color:          INVITE_STYLES.goldDeep,
+        textDecoration: "none",
+        borderBottom:   "1px dashed rgba(201,150,74,0.4)",
+        paddingBottom:  2,
+        width:          "fit-content",
+        marginInline:   "auto",
+      }}
+    >
+      או לדבר עם הדר קודם ←
+    </a>
+  );
+}
+
 function InviteCard({ bucket, signal }: { bucket: Bucket; signal: SignalOutput }) {
   if (bucket === "none") {
     // Truly thin answers (<40 chars total). Don't push commerce. Save +
@@ -2333,6 +2531,7 @@ function StrategyInvite() {
       </div>
 
       <InviteCTA href="/strategy/book" label="לקבוע פגישת אסטרטגיה ←" />
+      <TalkToHadarLink />
 
       <InviteGuarantee>
         <strong style={{ color: INVITE_STYLES.success, fontWeight: 600 }}>לא פיצחנו בפגישה הראשונה? השנייה עלי, ללא עלות נוספת.</strong> ערבות אמיתית, לא כותרת.
