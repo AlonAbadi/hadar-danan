@@ -1487,6 +1487,14 @@ function Result({
         </p>
       </div>
 
+      {/* Section divider — the mockup's ✦ separator between the personal letter
+          and the shareable artifact + next step. */}
+      <div aria-hidden style={{ display: "flex", alignItems: "center", gap: 12, margin: "2px 8px" }}>
+        <span style={{ height: 1, flex: 1, background: "linear-gradient(90deg, transparent, #2C323E, transparent)" }} />
+        <span style={{ color: C.gold, fontSize: 13, opacity: 0.85 }}>✦</span>
+        <span style={{ height: 1, flex: 1, background: "linear-gradient(90deg, transparent, #2C323E, transparent)" }} />
+      </div>
+
       {/* Content directions block — the 3 starting angles the LLM extracted.
           Visible inline so the user keeps them, not buried in shared cards. */}
       {Array.isArray(signal.content_directions) && signal.content_directions.length === 3 && (
