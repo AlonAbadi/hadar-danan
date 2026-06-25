@@ -21,6 +21,7 @@ import {
   type VisualStyle,
 } from "@/lib/signal-visual-prompter";
 import { resolvePalette, type Palette } from "@/lib/signal/palettes";
+import { determineFraming } from "@/lib/signal/framing";
 
 // Per-style overlay. Premium v2: very light tint across the whole card — just
 // enough to unify color and ground the image visually. White text legibility is
@@ -81,7 +82,7 @@ function esc(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, style: VisualStyle, palette: Palette): { html: string; css: string } {
+function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, style: VisualStyle, palette: Palette, isDraft = false): { html: string; css: string } {
   // When we have an AI-generated background, lay it down first under a dark
   // gradient overlay so the Hebrew text always stays readable regardless of
   // what the model came up with. Without a bg, the card falls back to the
@@ -110,9 +111,17 @@ function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, sty
   // Inner L-shaped corner accents at 46px inset for a premium magazine frame.
   // The decorative quote mark above the statement uses the palette's accent
   // at low opacity as a graphic element, not as readable punctuation.
+  // Draft treatment: a faint full-bleed watermark + a rotated rubber-stamp
+  // badge, both in the palette accent. Signals "first version" without ruining
+  // the card. Only present when isDraft.
+  const draftBlock = isDraft ? `
+  <div class="draft-ghost">טיוטה</div>
+  <div class="draft-stamp"><div class="ds-t">טיוטה</div><div class="ds-s">גרסה ראשונית</div></div>` : "";
+
   const html = `
 <div class="card">
   ${bgLayer}
+  ${draftBlock}
   <div class="corner corner-tl"></div>
   <div class="corner corner-tr"></div>
   <div class="corner corner-bl"></div>
@@ -276,6 +285,53 @@ body { margin: 0; padding: 0; }
   direction: ltr;
   text-shadow: 0 2px 12px rgba(0,0,0,0.7);
 }
+
+/* Draft treatment — faint full-bleed watermark + rotated rubber-stamp badge */
+.draft-ghost {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  font-family: 'Heebo', 'Assistant', sans-serif;
+  font-weight: 700;
+  font-size: 360px;
+  color: ${palette.accent};
+  opacity: 0.05;
+  transform: rotate(-18deg);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.draft-stamp {
+  position: absolute;
+  top: 150px;
+  left: 90px;
+  z-index: 5;
+  transform: rotate(-11deg);
+  border: 4px solid ${palette.accent};
+  border-radius: 14px;
+  padding: 12px 28px 9px;
+  opacity: 0.9;
+  box-shadow: inset 0 0 0 2px ${palette.accent}55;
+}
+.draft-stamp .ds-t {
+  font-family: 'Heebo', 'Assistant', sans-serif;
+  font-weight: 700;
+  font-size: 44px;
+  letter-spacing: 6px;
+  line-height: 1;
+  color: ${palette.accent};
+}
+.draft-stamp .ds-s {
+  font-family: 'Heebo', 'Assistant', sans-serif;
+  font-size: 15px;
+  letter-spacing: 5px;
+  margin-top: 6px;
+  text-align: center;
+  color: ${palette.accent};
+  opacity: 0.85;
+}
 `;
 
   return { html, css };
@@ -396,7 +452,12 @@ export async function GET(
     }
   }
 
-  const { html, css } = buildHtml(cardText, bgUrl, clean, style, palette);
+  // Draft stamp: when the framing flag is on AND this signal read as a
+  // high-confidence "raw", the card is a first version — stamp it "טיוטה" so it
+  // isn't published as final from inside the pain. Mature/uncertain → no stamp.
+  const isDraft = determineFraming(row.signal.routing_signal).suggestRefine;
+
+  const { html, css } = buildHtml(cardText, bgUrl, clean, style, palette, isDraft);
 
   const result = await createHctiImage({
     html,

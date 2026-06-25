@@ -20,7 +20,11 @@
 import type { RoutingSignal } from "@/lib/prompts/signal-engine";
 import { validateRoutingSignal } from "@/lib/prompts/signal-engine";
 
-export const SIGNAL_FRAMING_ENABLED = process.env.SIGNAL_FRAMING_ENABLED === "true";
+// ON by default (the new design, per owner decision). Kill-switch: set
+// SIGNAL_FRAMING_ENABLED=false in env to instantly disable the maturity-driven
+// framing (draft stamp + soft refine suggestion) without a redeploy. The crisis
+// floor is a SEPARATE, still-unbuilt layer — this flag does not touch it.
+export const SIGNAL_FRAMING_ENABLED = process.env.SIGNAL_FRAMING_ENABLED !== "false";
 
 // Only act on confident reads — the borderline middle (where engine and human
 // disagreed in validation) stays at the safe default.
