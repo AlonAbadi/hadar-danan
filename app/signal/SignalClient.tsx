@@ -140,6 +140,11 @@ export function SignalClient({
             setSignal(data.signal);
             setExtractionId(data.id ?? null);
             setGeneratedAt(data.generated_at ?? null);
+            // Keep the last answers loaded so "start over / update" pre-fills the
+            // form for editing instead of wiping it.
+            if (data.answers && typeof data.answers === "object" && Object.keys(data.answers).length > 0) {
+              setAnswers(data.answers);
+            }
             if (data.gender === "m" || data.gender === "f") setGender(data.gender);
             if (data.bucket === "challenge" || data.bucket === "strategy" || data.bucket === "hive" || data.bucket === "nurture" || data.bucket === "none") {
               setBucket(data.bucket);
@@ -301,13 +306,16 @@ export function SignalClient({
     setStep((s) => Math.max(0, s - 1));
   };
 
+  // Start over / update: keep the last answers loaded so the user can edit or
+  // add to them, not retype from scratch. The form opens pre-filled at step 1;
+  // re-extraction overwrites the previous signal on submit.
   const restart = () => {
     setSignal(null);
     setExtractionId(null);
     setGeneratedAt(null);
-    setAnswers({});
     setStep(0);
     setErrorMsg(null);
+    probedStepsRef.current.clear();  // allow the dynamic probe to run again on the edited answers
     setPhase("form");
   };
 
@@ -1326,13 +1334,13 @@ const labelsByGender = {
     copy:      "העתק את האות",
     share:     "שתף בקישור",
     moreEmail: "שלח אליי את האות במייל",
-    restart:   "להתחיל מחדש",
+    restart:   "לעדכן את האות",
   },
   f: {
     copy:      "העתיקי את האות",
     share:     "שתפי בקישור",
     moreEmail: "שלחי אליי את האות במייל",
-    restart:   "להתחיל מחדש",
+    restart:   "לעדכן את האות",
   },
 } as const;
 

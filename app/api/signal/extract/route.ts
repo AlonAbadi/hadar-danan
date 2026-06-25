@@ -114,7 +114,7 @@ export async function GET() {
   if (!userRow) return NextResponse.json({ signal: null });
 
   const { data: latest } = await safeFrom(db, "signal_extractions")
-    .select("id, signal, generated_at, gender, bucket")
+    .select("id, signal, answers, generated_at, gender, bucket")
     .eq("user_id", userRow.id)
     .order("generated_at", { ascending: false })
     .limit(1)
@@ -124,6 +124,9 @@ export async function GET() {
   const latestSignal = latest.signal as SignalOutput;
   return NextResponse.json({
     signal:        latestSignal,
+    // Return the last answers so the user can restart/update from where they
+    // were — editing or adding, not retyping from scratch.
+    answers:       latest.answers ?? null,
     generated_at:  latest.generated_at,
     id:            latest.id,
     gender:        (latest.gender as Gender | null) ?? null,
