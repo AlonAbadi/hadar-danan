@@ -5,6 +5,7 @@
  * Design: dark header (#0a0a0f), white body, blue CTAs (#2563eb).
  */
 
+import { getNextWorkshopDate, formatHebrew } from "@/lib/products";
 
 const APP_URL  = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 const FROM_NAME = "הדר דנן";
@@ -537,6 +538,13 @@ function challengeUpsellWorkshop(ctx: EmailTemplateContext): RenderedEmail {
 
 function workshopConfirmation(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
+  // Pull the next workshop date dynamically so the confirmation email
+  // never shows a stale month after the floor in lib/products.ts moves.
+  const next         = getNextWorkshopDate();
+  const dateStrong   = next
+    ? `${formatHebrew(next)} ${next.slice(0, 4)}, יום חמישי`
+    : "המועד הבא של הסדנה";
+
   return {
     subject: `${firstName} — ההרשמה לסדנה אושרה`,
     html: base(`
@@ -547,7 +555,7 @@ function workshopConfirmation(ctx: EmailTemplateContext): RenderedEmail {
       <div class="body">
         <p>${firstName},</p>
         <p>הסדנה יום אחד — מקומך שמור.</p>
-        <p><strong>25 ביוני 2026, יום חמישי</strong></p>
+        <p><strong>${dateStrong}</strong></p>
         <p>10:00–15:00</p>
         <p>משרדי הדר דנן, רחוב החילזון 5, רמת גן</p>
         <p>כדי להגיע מוכן/ת — חשוב/י על 3 לקוחות אידיאליים שלך:<br/>

@@ -5,7 +5,7 @@ import WorkshopClient from "./client";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "סדנה — 25.6 | אדמין",
+  title: "סדנה — 30.7 | אדמין",
 };
 
 export default async function UpcomingWorkshopPage() {

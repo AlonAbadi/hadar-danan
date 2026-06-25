@@ -57,7 +57,7 @@ export default function WorkshopClient({ rows }: { rows: Row[] }) {
     >
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 6px", color: "#EDE9E1" }}>
-          סדנה — 25 ביוני 2026
+          סדנה — 30 ביולי 2026
         </h1>
         <p style={{ color: "#AAB0BD", fontSize: 14, margin: 0, lineHeight: 1.6 }}>
           רוכשי סדנה ב-90 הימים האחרונים — הקבוצה הצפויה להגיע למועד הקרוב.

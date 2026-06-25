@@ -32,17 +32,30 @@ function lastThursdayOfMonth(year: number, month: number): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * Optional floor for the workshop schedule. Months whose last-Thursday
+ * falls before this date are skipped. Set this when the team needs to
+ * cancel/postpone a specific month without rewriting the whole calendar.
+ *
+ * Last updated 2026-06-19: skip June (25.6) and start from July (30.7.2026).
+ */
+const MIN_WORKSHOP_DATE = "2026-07-01";
+
 /** Returns the next `count` workshop dates (last Thursday of each month) from today. */
 export function getWorkshopDates(count = 12): string[] {
   const today = localDateStr();
+  const floor = today > MIN_WORKSHOP_DATE ? today : MIN_WORKSHOP_DATE;
   const dates: string[] = [];
   const now = new Date();
   let year  = now.getFullYear();
   let month = now.getMonth() + 1; // 1–12
 
-  while (dates.length < count) {
+  // Safety stop: at most 36 months ahead so we never spin forever if floor
+  // is mis-typed or count is unreachable.
+  let safety = 36;
+  while (dates.length < count && safety-- > 0) {
     const date = lastThursdayOfMonth(year, month);
-    if (date >= today) dates.push(date);
+    if (date >= floor) dates.push(date);
     month++;
     if (month > 12) { month = 1; year++; }
   }
