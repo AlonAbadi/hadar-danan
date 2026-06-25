@@ -19,6 +19,7 @@ import {
 import { detectGender, type Gender } from "@/lib/gender/detect";
 import { determineBucket, type Bucket } from "@/lib/signal/score";
 import { determineFraming } from "@/lib/signal/framing";
+import { conversionScore } from "@/lib/signal/conversion-score";
 
 // Same recipients as /api/stage/apply and /api/quiz-result. Hardcoded by
 // design — we never want a config typo to silently lose hot-lead alerts.
@@ -496,6 +497,14 @@ export async function POST(req: NextRequest) {
     routingSignal: parsed.routing_signal,
   });
 
+  // Conversion-ease score — powers the real-time "gold lead" alert (and the
+  // /admin gold list). Heuristic; predicts fit, not proven conversion.
+  const convScore = conversionScore({
+    routingSignal: parsed.routing_signal,
+    bucket:        bucketDecision.bucket,
+    status:        userStatus,
+  });
+
   // ── Save to DB — soft-fail (return signal even if save fails) ────────────
   const generatedAt = new Date().toISOString();
   let extractionId: string | null = null;
@@ -622,7 +631,11 @@ export async function POST(req: NextRequest) {
         .eq("id", userId);
     }
 
-    if (temperature === "boiling") {
+    // Fire the real-time alert for a strategy/boiling lead OR any high
+    // conversion-ease score (>= 8) — the latter also catches a strong lead that
+    // wasn't routed to strategy (e.g. a mature, high-fit challenge lead).
+    const isGold = convScore.score >= 8;
+    if (temperature === "boiling" || isGold) {
       // Pull full lead details for the alert. We already know userId and
       // bucketDecision; just need contact info + name.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -668,6 +681,7 @@ export async function POST(req: NextRequest) {
     ${email ? `<p style="margin:4px 0"><strong>אימייל:</strong> <a href="mailto:${esc(email)}">${esc(email)}</a></p>` : ""}
     ${phone ? `<p style="margin:4px 0"><strong>טלפון:</strong> <a href="tel:${esc(phone)}">${esc(phone)}</a>${waLink ? ` &middot; <a href="${waLink}">WhatsApp</a>` : ""}</p>` : ""}
     ${occupation ? `<p style="margin:4px 0"><strong>תחום:</strong> ${esc(occupation)}</p>` : ""}
+    <p style="margin:8px 0 4px"><strong style="color:#9E7C3A">ציון קלות-המרה:</strong> <span style="font-weight:700;color:#222">${convScore.score}</span> <span style="color:#888">(${convScore.tier === "hot" ? "זהב" : convScore.tier === "warm" ? "חם" : "רגיל"})</span>${convScore.reasons.length ? ` &middot; <span style="color:#666;font-size:13px">${esc(convScore.reasons.join(" · "))}</span>` : ""}</p>
     <p style="margin:4px 0;color:#888;font-size:13px">${esc(bucketDecision.reason)}</p>
 
     <hr style="border:none;border-top:1px solid #eee;margin:14px 0"/>
@@ -695,7 +709,7 @@ export async function POST(req: NextRequest) {
         const sendResult = await resend.emails.send({
           from:    `הדר דנן <${fromAddr}>`,
           to:      Array.from(HOT_LEAD_RECIPIENTS),
-          subject: `🔥 ליד רותח — ${name}${occupation ? ` (${occupation})` : ""}`,
+          subject: `${isGold ? "🏆 ליד זהב" : "🔥 ליד רותח"} (ציון ${convScore.score}) — ${name}${occupation ? ` (${occupation})` : ""}`,
           html,
         });
         if (sendResult.error) {
