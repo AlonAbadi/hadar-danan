@@ -1,6 +1,53 @@
 import Link from 'next/link';
 import { createServerClient } from '@/lib/supabase/server';
 import { QuizInsightsButton } from './QuizInsightsButton';
+import { conversionScore, toWhatsappNumber, type ConversionTier } from '@/lib/signal/conversion-score';
+
+// Gold list — /signal leads ranked by conversion-ease (lib/signal/conversion-score).
+// Surfaces the highest-fit, most-ready leads for Hadar to reach out to personally.
+interface GoldLead {
+  id: string; name: string; occupation: string; phone: string;
+  signal: string; score: number; tier: ConversionTier; reasons: string[]; wa: string | null;
+}
+
+async function getSignalGoldList(): Promise<GoldLead[]> {
+  const supabase = createServerClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: exts } = await (supabase as any)
+    .from('signal_extractions')
+    .select('user_id, signal, bucket, generated_at')
+    .order('generated_at', { ascending: false })
+    .limit(400);
+  if (!exts?.length) return [];
+
+  const userIds = [...new Set(exts.map((e: { user_id: string }) => e.user_id).filter(Boolean))];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: users } = await (supabase as any)
+    .from('users').select('id, name, phone, occupation, status').in('id', userIds);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const uMap: Record<string, any> = {};
+  for (const u of users ?? []) uMap[u.id] = u;
+
+  const byUser: Record<string, GoldLead> = {};
+  for (const e of exts) {
+    const u = uMap[e.user_id];
+    if (!u) continue;
+    if (u.status === 'buyer' || u.status === 'not_relevant') continue; // converted / junk
+    const sc = conversionScore({ routingSignal: e.signal?.routing_signal, bucket: e.bucket, status: u.status });
+    const prev = byUser[e.user_id];
+    if (!prev || sc.score > prev.score) {
+      byUser[e.user_id] = {
+        id: u.id, name: u.name ?? '—', occupation: u.occupation ?? '', phone: u.phone ?? '',
+        signal: typeof e.signal?.signal === 'string' ? e.signal.signal : '',
+        score: sc.score, tier: sc.tier, reasons: sc.reasons, wa: toWhatsappNumber(u.phone),
+      };
+    }
+  }
+  return Object.values(byUser).sort((a, b) => b.score - a.score).slice(0, 12);
+}
+
+const HADAR_OUTREACH = (name: string) =>
+  `היי ${name ? name + ', ' : ''}כאן הדר דנן. ראיתי את האות שחילצת אצלנו במנוע והתחברתי אליו מאוד. אשמח לחשוב איתך על הצעד הבא.`;
 
 async function getHubKPIs() {
   const supabase = createServerClient();
@@ -117,7 +164,7 @@ function relTime(iso: string) {
 }
 
 export default async function AdminHubPage() {
-  const kd = await getHubKPIs();
+  const [kd, goldList] = await Promise.all([getHubKPIs(), getSignalGoldList()]);
 
   return (
     <>
@@ -172,6 +219,68 @@ export default async function AdminHubPage() {
           <div className="hub-title">ניהול — הדר דנן</div>
           <div className="hub-sub">{new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
         </div>
+
+        {/* ── GOLD LIST — /signal leads ranked by conversion-ease ───────────── */}
+        {goldList.length > 0 && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(232,185,74,0.12) 0%, rgba(201,150,74,0.04) 100%)',
+            border: '1px solid rgba(232,185,74,0.4)',
+            borderRadius: 16,
+            padding: '18px 20px 16px',
+            marginBottom: 28,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 4 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#E8B94A' }}>רשימת זהב · לידים שווי-המרה</div>
+              <div style={{ fontSize: 11.5, color: '#AAB0BD' }}>פנייה אישית של הדר · מדורג לפי קלות-המרה (fit, בשלות, כוונה)</div>
+            </div>
+            <div style={{ fontSize: 11, color: '#7d7468', marginBottom: 14, fontStyle: 'italic' }}>
+              חיזוי התאמה, לא המרה מוכחת. עבדי מלמעלה למטה.
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {goldList.map((lead, i) => {
+                const tierColor = lead.tier === 'hot' ? '#E8B94A' : lead.tier === 'warm' ? '#C9964A' : '#7d7468';
+                const firstName = lead.name.split(' ')[0];
+                const waHref = lead.wa
+                  ? `https://wa.me/${lead.wa}?text=${encodeURIComponent(HADAR_OUTREACH(firstName))}`
+                  : null;
+                return (
+                  <div key={lead.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    background: '#141820', border: '1px solid #2C323E', borderRadius: 10, padding: '11px 14px',
+                  }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#6B7280', width: 18, flexShrink: 0, textAlign: 'center' }}>{i + 1}</div>
+                    <div style={{
+                      flexShrink: 0, minWidth: 44, textAlign: 'center', padding: '4px 8px', borderRadius: 8,
+                      background: `${tierColor}1f`, border: `1px solid ${tierColor}66`, color: tierColor, fontWeight: 800, fontSize: 14,
+                    }}>{lead.score}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                        <Link href={`/admin/users/${lead.id}`} style={{ fontSize: 14.5, fontWeight: 700, color: '#EDE9E1', textDecoration: 'none' }}>{lead.name}</Link>
+                        {lead.occupation && <span style={{ fontSize: 12, color: '#C9964A' }}>· {lead.occupation}</span>}
+                      </div>
+                      {lead.signal && (
+                        <div style={{ fontSize: 12.5, color: '#AAB0BD', lineHeight: 1.5, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.signal}</div>
+                      )}
+                      {lead.reasons.length > 0 && (
+                        <div style={{ fontSize: 10.5, color: '#7d7468', marginTop: 3 }}>{lead.reasons.join(' · ')}</div>
+                      )}
+                    </div>
+                    {waHref ? (
+                      <a href={waHref} target="_blank" rel="noopener noreferrer" style={{
+                        flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: 'linear-gradient(135deg, #E8B94A, #C9964A)', color: '#1a140a',
+                        fontWeight: 800, fontSize: 12.5, padding: '8px 14px', borderRadius: 9, textDecoration: 'none',
+                      }}>WhatsApp ←</a>
+                    ) : (
+                      <span style={{ flexShrink: 0, fontSize: 11, color: '#6B7280' }}>אין טלפון</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* KPIs */}
         <div className="kpi-grid">
