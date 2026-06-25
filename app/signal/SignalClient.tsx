@@ -1349,6 +1349,11 @@ function Result({
   // signal. We treat hiveActive as the strongest override.
   const inviteBucket: Bucket = hiveActive ? "hive" : bucket;
 
+  // Defensive: strip a stray leading latin token (e.g. an "The," artifact the
+  // model occasionally prepends). Hebrew warm notes never legitimately open
+  // with a latin word, so this is safe.
+  const warmNote = (signal.warm_note ?? "").replace(/^\s*[A-Za-z]{1,8}[,.־\s]+/, "").trim();
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       {/* Header — soft, personal, no brand kicker */}
@@ -1369,26 +1374,27 @@ function Result({
         )}
       </div>
 
-      {/* The signal itself — center stage. Buttons moved below the letter so
-          the peak moment is uninterrupted. */}
+      {/* The signal letter — ONE clean card (mockup format): the signal at the
+          top, a thin divider, then the personal note. element + promise sit
+          below as quieter supporting lines, signed "הדר". Replaces the old
+          two-card (hero + "מהדר") layout. */}
       <div
-        className="signal-hero"
+        className="signal-letter"
         style={{
           position:     "relative",
           background:   `linear-gradient(145deg, ${C.cardSoft}, ${C.card})`,
           border:       `1px solid ${C.goldMid}`,
           borderRadius: 24,
-          padding:      "42px 32px 38px",
-          textAlign:    "center",
-          boxShadow:    "0 16px 40px rgba(232,185,74,0.14), 0 1px 0 rgba(255,255,255,0.04) inset",
+          padding:      "40px 34px 30px",
+          boxShadow:    "0 16px 40px rgba(232,185,74,0.12), 0 1px 0 rgba(255,255,255,0.04) inset",
         }}
       >
-        {/* Decorative gold line above the kicker */}
+        {/* Decorative gold line above the eyebrow */}
         <div
           aria-hidden
           style={{
             position:   "absolute",
-            top:        14,
+            top:        16,
             right:      "50%",
             transform:  "translateX(50%)",
             width:      42,
@@ -1400,59 +1406,47 @@ function Result({
           color:         C.goldMid,
           fontSize:      11.5,
           letterSpacing: 2,
-          marginBottom:  18,
+          marginBottom:  22,
           textTransform: "uppercase",
           fontWeight:    600,
+          textAlign:     "center",
         }}>
-          האות
+          האות שלך
         </div>
+
+        {/* The signal — center stage */}
         <p style={{
-          fontSize:     23,
-          lineHeight:   1.5,
-          margin:       0,
-          color:        C.fg,
-          fontWeight:   500,
+          fontSize:      23,
+          lineHeight:    1.55,
+          margin:        0,
+          color:         C.fg,
+          fontWeight:    600,
+          textAlign:     "center",
           letterSpacing: "-0.2px",
         }}>
           {signal.signal}
         </p>
-      </div>
 
-      {/* The letter — signal_promise + element + warm_note as one flowing block,
-          signed "הדר". This is the heart of the result page. */}
-      <div
-        className="signal-letter"
-        style={{
-          background:   "linear-gradient(180deg, rgba(232,185,74,0.045) 0%, transparent 100%)",
-          border:       "1px solid rgba(232,185,74,0.22)",
-          borderRadius: 18,
-          padding:      "36px 32px 28px",
-        }}
-      >
-        <div style={{
-          color:         C.goldMid,
-          fontSize:      11,
-          letterSpacing: 1.6,
-          marginBottom:  18,
-          textTransform: "uppercase",
-          textAlign:     "right",
-          fontWeight:    600,
-        }}>
-          מהדר
-        </div>
+        {/* Thin divider between the signal and the personal note */}
+        <div aria-hidden style={{
+          width:      48,
+          height:     1,
+          margin:     "26px auto",
+          background: "linear-gradient(90deg, transparent, rgba(201,150,74,0.5), transparent)",
+        }} />
 
-        {signal.signal_promise && (
-          <p style={{ margin: "0 0 18px", lineHeight: 1.85, fontSize: 16, color: C.fg }}>
-            {signal.signal_promise}
+        {warmNote && (
+          <p style={{ margin: "0 0 16px", lineHeight: 1.85, fontSize: 16, color: C.fg }}>
+            {warmNote}
           </p>
         )}
 
         {signal.element && (
           <p style={{
-            margin:       "0 0 18px",
+            margin:       "0 0 16px",
             lineHeight:   1.85,
-            fontSize:     16,
-            color:        C.fg,
+            fontSize:     15.5,
+            color:        C.muted,
             paddingRight: 12,
             borderRight:  "2px solid rgba(232,185,74,0.4)",
           }}>
@@ -1460,9 +1454,9 @@ function Result({
           </p>
         )}
 
-        {signal.warm_note && (
-          <p style={{ margin: "0 0 0", lineHeight: 1.85, fontSize: 16, color: C.fg }}>
-            {signal.warm_note}
+        {signal.signal_promise && (
+          <p style={{ margin: 0, lineHeight: 1.85, fontSize: 15.5, color: C.muted }}>
+            {signal.signal_promise}
           </p>
         )}
 
@@ -1471,8 +1465,9 @@ function Result({
           fontSize:      24,
           color:         C.gold,
           fontWeight:    500,
-          margin:        "22px 0 0",
+          margin:        "24px 0 0",
           letterSpacing: "-0.3px",
+          textAlign:     "right",
         }}>
           הדר
         </p>
