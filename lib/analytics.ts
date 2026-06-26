@@ -127,11 +127,35 @@ function postInternalEvent(type: string, metadata: Record<string, unknown>) {
   } catch {}
 }
 
+// Expected value per bucket — fed to Meta's standard Lead event so the pixel
+// learns which signal leads are worth more (value-based optimization).
+const SIGNAL_BUCKET_VALUE: Record<string, number> = {
+  strategy: 4000, challenge: 197, hive: 97, nurture: 0, none: 0,
+};
+
+/** Landed on /signal (intro shown). Meta ViewContent. */
+export function trackSignalView() {
+  try {
+    fbq("track", "ViewContent", { content_name: "signal" });
+    gtag("event", "signal_view");
+    postInternalEvent("SIGNAL_VIEW", {});
+  } catch {}
+}
+
 export function trackSignalStarted() {
   try {
     fbq("trackCustom", "SignalStarted");
     gtag("event", "signal_started");
     postInternalEvent("SIGNAL_STARTED", {});
+  } catch {}
+}
+
+/** Advanced past a question. Builds funnel-depth audiences in Meta. */
+export function trackSignalStep(step: number, key?: string) {
+  try {
+    fbq("trackCustom", "SignalStep", { step, key });
+    gtag("event", "signal_step", { step, key });
+    postInternalEvent("SIGNAL_STEP", { step, key });
   } catch {}
 }
 
@@ -143,11 +167,36 @@ export function trackSignalProbeShown() {
   } catch {}
 }
 
+/** User actually answered the dynamic follow-up (didn't skip it). */
+export function trackSignalProbeAnswered() {
+  try {
+    fbq("trackCustom", "SignalProbeAnswered");
+    gtag("event", "signal_probe_answered");
+    postInternalEvent("SIGNAL_PROBE_ANSWERED", {});
+  } catch {}
+}
+
+/** Lead gate shown (anonymous / incomplete profile) — about to capture contact. */
+export function trackSignalGateShown() {
+  try {
+    fbq("trackCustom", "SignalGateShown");
+    gtag("event", "signal_gate_shown");
+    postInternalEvent("SIGNAL_GATE_SHOWN", {});
+  } catch {}
+}
+
 export function trackSignalCompleted(meta: { bucket?: string } = {}) {
   try {
-    fbq("trackCustom", "SignalCompleted", meta);
-    gtag("event", "signal_completed", meta);
-    postInternalEvent("SIGNAL_COMPLETED", meta);
+    const bucket = meta.bucket ?? "";
+    const value  = SIGNAL_BUCKET_VALUE[bucket] ?? 0;
+    // Standard Lead WITH value — the event Meta optimizes toward + builds
+    // value-based lookalikes from. Fired here because the bucket (hence value)
+    // is only known once the signal is extracted.
+    fbq("track", "Lead", { content_name: `signal_${bucket || "none"}`, value, currency: "ILS" });
+    fbq("trackCustom", "SignalCompleted", { bucket, value });
+    gtag("event", "signal_completed", { bucket, value, currency: "ILS" });
+    gtag("event", "generate_lead", { method: "signal", bucket, value, currency: "ILS" });
+    postInternalEvent("SIGNAL_COMPLETED", { bucket, value });
   } catch {}
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { trackSignalCardShare } from "@/lib/analytics";
 
 interface Props {
   extractionId: string;
@@ -60,6 +61,8 @@ export function ShareButtons({ extractionId, firstName }: Props) {
         metadata: { source, extraction_id: extractionId },
       }),
     }).catch(() => {});
+    // Meta Pixel + GA (channel-named) so card sharing is captured everywhere.
+    trackSignalCardShare(source === "instagram" ? "story" : source === "download" ? "png" : "whatsapp");
   }
 
   function showToast(msg: string, ms = 3500) {

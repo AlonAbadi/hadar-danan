@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
-import { trackSignalStarted, trackSignalProbeShown, trackSignalCompleted, trackSignalHadarClick } from "@/lib/analytics";
+import { trackSignalView, trackSignalStarted, trackSignalStep, trackSignalProbeShown, trackSignalProbeAnswered, trackSignalGateShown, trackSignalCompleted, trackSignalHadarClick } from "@/lib/analytics";
 import { detectGender } from "@/lib/gender/detect";
 import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
@@ -166,6 +166,9 @@ export function SignalClient({
     } catch {}
   }, [answers]);
 
+  // Meta/GA ViewContent — landed on /signal. Fires once per page load.
+  useEffect(() => { trackSignalView(); }, []);
+
   const current  = SIGNAL_QUESTIONS[step];
   const value    = answers[current.key] ?? "";
   const progress = ((step + 1) / SIGNAL_QUESTIONS.length) * 100;
@@ -237,6 +240,7 @@ export function SignalClient({
   };
 
   const advance = () => {
+    trackSignalStep(step + 1, current.key);  // the question just completed
     setProbeFollowup(null);
     setFollowupValue("");
     if (lastStep) {
@@ -248,6 +252,7 @@ export function SignalClient({
       if (isAuthenticated && !authNeedsDetails) {
         void submit();
       } else {
+        trackSignalGateShown();
         setPhase("gate");
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -298,6 +303,7 @@ export function SignalClient({
     if (extra) {
       const key = current.key;
       setAnswers((a) => ({ ...a, [key]: `${(a[key] ?? "").trim()}\n${extra}` }));
+      trackSignalProbeAnswered();
     }
     advance();
   };
