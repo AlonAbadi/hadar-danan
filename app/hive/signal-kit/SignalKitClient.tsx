@@ -618,6 +618,7 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
   const [loading, setLoading]   = useState(true);
   const [phase, setPhase]       = useState<"phase1" | "phase2">("phase1");
   const [error, setError]       = useState<string | null>(null);
+  const [stored, setStored]     = useState<number[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -627,7 +628,7 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
         setPhase("phase1");
         const res1  = await fetch(`/api/signal/${extractionId}/shoot-day`);
         const txt1  = await res1.text();
-        let data1: { phase?: string; plan?: ShootDayPlan; identity_statement?: string; pillars?: Pillar[]; error?: string };
+        let data1: { phase?: string; plan?: ShootDayPlan; identity_statement?: string; pillars?: Pillar[]; error?: string; progress?: { stored?: number[] } };
         try {
           data1 = JSON.parse(txt1);
         } catch {
@@ -639,9 +640,12 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
           return;
         }
 
-        // Complete plan already cached? skip phase 2
+        // Complete plan already cached (full or partial)? skip phase 2
         if (data1.phase === "complete" && data1.plan) {
-          if (!cancelled) setPlan(data1.plan);
+          if (!cancelled) {
+            setPlan(data1.plan);
+            setStored(data1.progress?.stored ?? []);
+          }
           return;
         }
 
@@ -716,7 +720,7 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
           Video #1 (IDENTITY). V2+ unlocks the rest via per-card CTAs. */}
       <VideosByAct videos={plan.videos} />
       {(plan.videos.length < 12 || !plan.visual_direction || !plan.gift_sentences) && (
-        <ShootDayBuilder extractionId={extractionId} plan={plan} setPlan={setPlan} />
+        <ShootDayBuilder extractionId={extractionId} plan={plan} setPlan={setPlan} stored={stored} />
       )}
 
       {/* Visual Direction (Lever #5 via "הפוך מהקטגוריה") — optional in V1 */}
@@ -914,11 +918,14 @@ function VideosByAct({ videos }: { videos: Video[] }) {
 type SetPlan = (updater: (prev: ShootDayPlan | null) => ShootDayPlan | null) => void;
 
 function ShootDayBuilder({
-  extractionId, plan, setPlan,
-}: { extractionId: string; plan: ShootDayPlan; setPlan: SetPlan }) {
+  extractionId, plan, setPlan, stored,
+}: { extractionId: string; plan: ShootDayPlan; setPlan: SetPlan; stored: number[] }) {
   const [building, setBuilding] = useState(false);
   const [step, setStep]         = useState<string>("");
   const [error, setError]       = useState<string | null>(null);
+  // Video numbers already generated server-side. Seeded from the GET progress;
+  // grows as we generate, so a retry after a failure resumes where it stopped.
+  const [done, setDone]         = useState<number[]>(stored);
 
   const body = JSON.stringify({
     identity_statement: plan.identity_statement,
@@ -951,17 +958,22 @@ function ShootDayBuilder({
     setBuilding(true);
     setError(null);
     try {
-      for (const act of [1, 2, 3] as const) {
-        // Skip an act we already have all 4 videos for.
-        const have = plan.videos.filter((v) => v.act === act).length;
-        if (have >= 4) continue;
-        setStep(`בונה את סרטוני מערכה ${act}…`);
+      // One video per call — proven sub-60s on Vercel. Skip any already stored.
+      const titles: Record<number, string> = {
+        1: "סרטון הזהות", 2: "הוק עמוד 1", 3: "הוק עמוד 2", 4: "הוק עמוד 3",
+        5: "הוק עמוד 4", 6: "סיפור 1", 7: "סיפור 2", 8: "סיפור 3",
+        9: "פריימוורק 1", 10: "פריימוורק 2", 11: "ניפוץ מיתוס", 12: "הזמנה (CTA)",
+      };
+      for (let n = 1; n <= 12; n++) {
+        if (done.includes(n)) continue;
+        setStep(`בונה סרטון ${n} מתוך 12 · ${titles[n]}…`);
         const data = await post("videos", JSON.stringify({
           identity_statement: plan.identity_statement,
           pillars:            plan.pillars,
-          act,
+          numbers:            [n],
         }));
         mergeVideos((data.videos as Video[]) ?? []);
+        setDone((prev) => prev.includes(n) ? prev : [...prev, n]);
       }
 
       if (!plan.visual_direction || !plan.schedule || !plan.decisions) {

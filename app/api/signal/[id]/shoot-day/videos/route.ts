@@ -1,13 +1,13 @@
 /**
- * POST /api/signal/[id]/shoot-day/videos   (Phase 3 — videos, one act per call)
+ * POST /api/signal/[id]/shoot-day/videos   (Phase 3 — videos, small batches)
  *
- * Body: { identity_statement, pillars (4), act: 1 | 2 | 3 }
+ * Body: { identity_statement, pillars (4), numbers: number[] }
  *
- * Generates the 4 videos of ONE act (act 1 = videos 1-4, act 2 = 5-8,
- * act 3 = 9-12). One act is ~2700 output tokens / ~15-20s — safely under the
- * Vercel 60s cap, where a single 12-video call is not. The slice is cached as
- * signal.shoot_day_act{N}; the GET endpoint assembles the full 12-video plan
- * once all three acts + strategy + gifts exist.
+ * Generates the requested video numbers (the client sends 1-2 at a time so each
+ * call stays well under the Vercel 60s limit — a 4-video act timed out). Each
+ * produced video is cached in its own field signal.shoot_day_v{n}; the GET
+ * endpoint assembles the full 12-video plan once all of them plus strategy and
+ * gifts exist.
  */
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -16,7 +16,6 @@ import {
   buildVideosContextMessage,
   validateVideosPack,
   validatePillar,
-  ACT_VIDEO_NUMBERS,
   type Pillar,
 } from "@/lib/prompts/shoot-day-engine";
 import {
@@ -35,23 +34,28 @@ export const runtime     = "nodejs";
 export const dynamic     = "force-dynamic";
 export const maxDuration = 60;
 
+const MAX_BATCH    = 4;          // hard cap; client should send 1-2
+const TOKENS_PER_VIDEO = 2500;   // bounds generation time per call
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   // ── Parse + validate body ────────────────────────────────────────────
   let identity_statement: string;
   let pillars: Pillar[];
-  let act: 1 | 2 | 3;
+  let numbers: number[];
   try {
     const body = await req.json();
     identity_statement = String(body?.identity_statement ?? "");
     pillars            = body?.pillars;
-    act                = Number(body?.act) as 1 | 2 | 3;
+    numbers            = Array.isArray(body?.numbers) ? body.numbers.map(Number) : [];
     if (!identity_statement || !Array.isArray(pillars) || pillars.length !== 4 || !pillars.every(validatePillar)) {
       return NextResponse.json({ error: "Missing or invalid phase-1 payload (identity_statement + 4 pillars)" }, { status: 400 });
     }
-    if (![1, 2, 3].includes(act)) {
-      return NextResponse.json({ error: "act must be 1, 2, or 3" }, { status: 400 });
+    numbers = numbers.filter((n) => Number.isInteger(n) && n >= 1 && n <= 12);
+    numbers = [...new Set(numbers)];
+    if (numbers.length === 0 || numbers.length > MAX_BATCH) {
+      return NextResponse.json({ error: `numbers must be 1-${MAX_BATCH} video numbers in 1..12` }, { status: 400 });
     }
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -60,13 +64,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const gate = await gateAndBuildContext(req, id);
   if (!gate.ok) return gate.response;
 
-  // ── Generate this act ────────────────────────────────────────────────
+  // ── Generate the requested videos ────────────────────────────────────
   let text = "";
   try {
     text = await runPack(
       VIDEOS_PACK_SYSTEM,
-      buildVideosContextMessage(gate.ctx, identity_statement, pillars, act),
-      VIDEOS_PACK_MAX_TOKENS,
+      buildVideosContextMessage(gate.ctx, identity_statement, pillars, numbers),
+      Math.min(numbers.length * TOKENS_PER_VIDEO, VIDEOS_PACK_MAX_TOKENS),
     );
   } catch (e) {
     return NextResponse.json({ error: "Videos generation failed", details: String(e) }, { status: 500 });
@@ -82,18 +86,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Videos pack invalid shape", raw: text.slice(0, 500) }, { status: 500 });
   }
 
-  // Keep only the videos that belong to the requested act (defensive).
-  const expected = ACT_VIDEO_NUMBERS[act];
   const videos = sanitizeHadarQuotes(normalizeShootDayText(parsed.videos))
-    .filter((v) => expected.includes(v.number));
+    .filter((v) => numbers.includes(v.number));
   if (videos.length === 0) {
-    return NextResponse.json({ error: `Model returned no videos for act ${act}`, raw: text.slice(0, 500) }, { status: 500 });
+    return NextResponse.json({ error: `Model returned none of the requested videos (${numbers.join(",")})`, raw: text.slice(0, 500) }, { status: 500 });
   }
 
   const warnings = lintShootDay(videos);
-  if (warnings.length) console.warn(`[shoot-day act ${act}] lint:`, warnings);
+  if (warnings.length) console.warn(`[shoot-day videos ${numbers.join(",")}] lint:`, warnings);
 
-  await mergeSlice(gate.supabase, id, `shoot_day_act${act}`, videos);
+  // Cache each video in its own field so parallel/sequential calls never
+  // overwrite one another.
+  for (const v of videos) {
+    await mergeSlice(gate.supabase, id, `shoot_day_v${v.number}`, v);
+  }
 
-  return NextResponse.json({ act, videos, warnings });
+  return NextResponse.json({ videos, warnings });
 }

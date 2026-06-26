@@ -104,13 +104,12 @@ export async function GET(
   const refresh = req.nextUrl.searchParams.get("refresh") === "1";
   if (refresh) {
     const wiped = { ...row.signal };
-    for (const k of [
+    const keys = [
       "shoot_day", "shoot_day_phase1", "shoot_day_generated_at",
-      "shoot_day_act1", "shoot_day_act2", "shoot_day_act3",
       "shoot_day_strategy", "shoot_day_gifts",
-    ]) {
-      delete (wiped as Record<string, unknown>)[k];
-    }
+    ];
+    for (let n = 1; n <= 12; n++) keys.push(`shoot_day_v${n}`);
+    for (const k of keys) delete (wiped as Record<string, unknown>)[k];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
       .from("signal_extractions")
@@ -141,18 +140,35 @@ export async function GET(
   const phase1   = validateIdentityPillarsPack(row.signal.shoot_day_phase1)
     ? row.signal.shoot_day_phase1
     : (cachedPlan ? { identity_statement: cachedPlan.identity_statement, pillars: cachedPlan.pillars } : null);
-  const act1     = parseSlice<Video[]>(row.signal.shoot_day_act1);
-  const act2     = parseSlice<Video[]>(row.signal.shoot_day_act2);
-  const act3     = parseSlice<Video[]>(row.signal.shoot_day_act3);
+
+  // Per-video slices (shoot_day_v1 .. shoot_day_v12), written one at a time.
+  const storedVideos: Video[] = [];
+  for (let n = 1; n <= 12; n++) {
+    const v = parseSlice<Video>(row.signal[`shoot_day_v${n}`]);
+    if (v) storedVideos.push(v);
+  }
+  const storedNumbers = storedVideos.map((v) => v.number);
+
   const strategy = parseSlice<{ visual_direction: unknown; schedule: unknown; decisions: unknown }>(row.signal.shoot_day_strategy);
   const gifts    = parseSlice<string[]>(row.signal.shoot_day_gifts);
+
+  // Videos to show = stored slices unioned with the preview plan (stored wins).
+  const byNum = new Map<number, Video>();
+  if (cachedPlan) for (const v of cachedPlan.videos) byNum.set(v.number, v);
+  for (const v of storedVideos) byNum.set(v.number, v);
+  const mergedVideos = [...byNum.values()].sort((a, b) => a.number - b.number);
+
   const progress = {
-    identity: !!phase1, act1: !!act1, act2: !!act2, act3: !!act3,
-    strategy: !!strategy, gifts: !!gifts,
+    identity: !!phase1,
+    videos:   storedVideos.length,
+    stored:   storedNumbers,
+    strategy: !!strategy,
+    gifts:    !!gifts,
   };
 
-  if (phase1 && act1 && act2 && act3 && strategy && gifts) {
-    const videos = [...act1, ...act2, ...act3].sort((a, b) => a.number - b.number);
+  // Full plan: all 12 real videos generated + strategy + gifts.
+  if (phase1 && storedVideos.length === 12 && strategy && gifts) {
+    const videos = [...storedVideos].sort((a, b) => a.number - b.number);
     const plan = {
       identity_statement: phase1.identity_statement,
       pillars:            phase1.pillars,
@@ -163,7 +179,7 @@ export async function GET(
       gift_sentences:     gifts,
     } as ShootDayPlan;
 
-    if (validateShootDayPlan(plan) && videos.length === 12) {
+    if (validateShootDayPlan(plan)) {
       const generated_at = new Date().toISOString();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any)
@@ -174,13 +190,21 @@ export async function GET(
     }
   }
 
-  // Cached plan with fewer than 12 videos (identity + pillars + video #1 from
-  // Phase 2). Stays phase:"complete" so the existing UI keeps rendering it;
-  // `full:false` + `progress` let a newer UI know more acts can be generated.
-  if (cachedPlan) {
+  // Partial: a preview plan and/or some stored videos exist. Stays
+  // phase:"complete" so the existing UI keeps rendering; `full:false` +
+  // `progress` let the builder know what is left to generate.
+  if (cachedPlan || mergedVideos.length > 0) {
+    const base = phase1 ?? { identity_statement: cachedPlan!.identity_statement, pillars: cachedPlan!.pillars };
+    const plan = {
+      identity_statement: base.identity_statement,
+      pillars:            base.pillars,
+      videos:             mergedVideos,
+      ...(strategy ? { visual_direction: strategy.visual_direction, schedule: strategy.schedule, decisions: strategy.decisions } : {}),
+      ...(gifts ? { gift_sentences: gifts } : {}),
+    } as ShootDayPlan;
     return NextResponse.json({
       phase:        "complete",
-      plan:         cachedPlan,
+      plan,
       generated_at: row.signal.shoot_day_generated_at ?? null,
       full:         false,
       progress,

@@ -654,26 +654,27 @@ ${pillarsBlock}
 
 // ── Pack 2 context — accepts identity + pillars from Pack 1 ──────────
 
-// Act -> video numbers. Generating one act (4 videos) per call keeps each
-// Vercel invocation well under the 60s limit.
+// Which video numbers belong to each act (used for display grouping).
 export const ACT_VIDEO_NUMBERS: Record<1 | 2 | 3, number[]> = {
   1: [1, 2, 3, 4],
   2: [5, 6, 7, 8],
   3: [9, 10, 11, 12],
 };
 
+// Generation is done a few videos at a time (often 1) so each Vercel call
+// stays well under the 60s limit; pass the exact video numbers to produce.
 export function buildVideosContextMessage(
   ctx: ShootDayContext,
   identity_statement: string,
   pillars: Pillar[],
-  act?: 1 | 2 | 3,
+  videoNumbers?: number[],
 ): string {
   const pillarsBlock = pillars.map((p) =>
     `עמוד ${p.number}: ${p.title}\nמסר: ${p.message}\nהוכחה: ${p.evidence}\nסצנה: ${p.scene}`
   ).join("\n\n");
 
-  const ask = act
-    ? `עכשיו ייצר אך ורק את סרטוני ACT ${act}: סרטונים ${ACT_VIDEO_NUMBERS[act].join(", ")}. החזר בדיוק ${ACT_VIDEO_NUMBERS[act].length} סרטונים עם המספרים האלה.`
+  const ask = videoNumbers && videoNumbers.length
+    ? `עכשיו ייצר אך ורק את הסרטונים לפי מספריהם: ${videoNumbers.join(", ")}. החזר בדיוק ${videoNumbers.length} סרטונים עם המספרים האלה ובמבנה המוגדר למעלה (act, type, mode, set, duration נכונים לכל מספר).`
     : `עכשיו ייצר את כל 12 הסרטונים לפי ההוראות במערכת.`;
 
   return `${buildContextMessage(ctx)}
