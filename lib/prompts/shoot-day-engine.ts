@@ -116,8 +116,16 @@ export type Decision = {
   urgency: string;            // "השבוע הבא" / "תוך 7 ימים" / "מהיום"
 };
 
+// The script layer for the AI-Hadar director video (Higgsfield). monologue is
+// Hadar herself (Mode D) addressing the client by name; notes are her short
+// per-shot directing lines. This is the exact text fed to the avatar renderer.
+export type DirectorScript = {
+  monologue: string;                                  // ~90s, Hadar to the client
+  notes:     { number: number; line: string }[];      // one short spoken note per video
+};
+
 export type ShootDayPlan = {
-  identity_statement:  string;          // "כשהמערכת אומרת לא — אני מתחיל לעבוד"
+  identity_statement:  string;          // "כשהמערכת אומרת לא, אני מתחיל לעבוד"
   pillars:             [Pillar, Pillar, Pillar, Pillar];
   videos:              Video[];          // V1: 1 video. V2+: up to 12.
   // V1: the following are optional — generated lazily in Phase 3 to keep
@@ -126,6 +134,7 @@ export type ShootDayPlan = {
   schedule?:           ScheduleBlock[];
   decisions?:          [Decision, Decision, Decision];
   gift_sentences?:     string[];         // 5 when present
+  director?:           DirectorScript;   // Hadar's spoken direction (for video render)
 };
 
 // ── Shared rules baked into every sub-prompt ──────────────────────────
@@ -574,9 +583,50 @@ ${SHARED_RULES}
   ]
 }`;
 
+// ── Pack 5: Director Script (Hadar's spoken direction → AI video) ────
+// Hadar HERSELF (Mode D), in her own voice, addressing the client by name.
+// This is the script that the Higgsfield avatar (Soul ID + voice clone) will
+// speak. Distinct from every other pack, which is written in the CLIENT's
+// voice — here the speaker is Hadar.
+
+export const DIRECTOR_PACK_MAX_TOKENS = 2000;
+
+export const DIRECTOR_PACK_SYSTEM = `אתה כותב את הטקסט ש**הדר דנן בעצמה** תגיד מול המצלמה, בקול ובפנים שלה, כדי לביים את הלקוח/ה באופן אישי. זה לא נכתב בקול הלקוח. הדוברת היא הדר.
+
+${SHARED_RULES}
+
+${HADAR_MODES}
+
+חשוב: כאן המוד הוא Mode D (הדר מדברת אל הלקוח/ה ישירות). הדר היא הדוברת, ולכן מותר ואף רצוי הקול האישי שלה: פנייה בשם פרטי, חום, ישירות, וחתימה בנוסח שלה ("תהיו טובים"). אל תכתבי בקול הלקוח.
+
+## שני תוצרים
+
+### 1. monologue (מונולוג הבימוי האישי, כ-90 שניות דיבור)
+הדר פונה ללקוח/ה בשם הפרטי, ואומרת, ברצף טבעי אחד:
+- מה היא ראתה באות שלו/ה (משהו ספציפי מהאות, לא גנרי).
+- את משפט הזהות שלו/ה, כמתנה, לא כציטוט טכני.
+- שתיים עד שלוש הנחיות בימוי קונקרטיות ליום הצילום (איך לדבר, איפה לעצור, מה לא לעשות), בשפת הבימוי שלה.
+- סגירה חמה בנוסח של הדר.
+טון: מדברת לאדם אחד שיושב מולה, לא לקהל. משפטים קצרים. מנגן, לא מסביר. בלי רשימות, רצף דיבור אנושי.
+
+### 2. notes (הערת בימוי קצרה לכל אחד מ-12 הסרטונים)
+לכל סרטון, משפט אחד עד שניים שהדר תגיד כדי לכוון בדיוק את הצילום הזה. ספציפי לסרטון (לפי הכותרת והסוג שיינתנו לך), בשפת הבימוי של הדר ("תפתח/י בבעיה, לא בשלום", "תגיד/י את זה לאט, ותעצור/י", "אל תזוז/י בכיסא").
+
+## פלט
+החזר JSON תקין בלבד:
+
+{
+  "monologue": "...",
+  "notes": [
+    {"number": 1, "line": "..."},
+    {"number": 2, "line": "..."}
+  ]
+}`;
+
 // ── Context builder ──────────────────────────────────────────────────
 
 export interface ShootDayContext {
+  name?:          string | null; // שם הלקוח/ה (לפנייה אישית במונולוג הבימוי)
   signal:         string;       // המשפט הציבורי
   signal_promise: string;       // ההבטחה שמתחת
   pain_source:    string;       // מקור הכאב
@@ -596,9 +646,12 @@ export function buildContextMessage(ctx: ShootDayContext): string {
     ctx.gender === "f" ? "מגדר המשתמש: נקבה. כל פלט בגוף ראשון חייב להיות בלשון נקבה (אני מתחילה, אני שואלת, אני מקשיבה). פנייה אליה: לשון נקבה יחיד (את, שלך).\n" :
     "";
 
+  const firstName = (ctx.name ?? "").trim().split(/\s+/)[0] ?? "";
+  const nameLine = firstName ? `שם פרטי של הלקוח/ה: ${firstName}.\n` : "";
+
   return `הנה האות המותגי של הלקוח/ה. כל פלט שלך חייב להיות נגזר ממנו ישירות, לא גנרי:
 
-${genderLine}תחום עיסוק: ${ctx.occupation ?? "לא צוין"}
+${nameLine}${genderLine}תחום עיסוק: ${ctx.occupation ?? "לא צוין"}
 
 המשפט הציבורי (signal):
 ${ctx.signal}
@@ -735,6 +788,36 @@ ${pillarsBlock}
 עכשיו ייצר 5 משפטי-מתנה ייחודיים ב-קול הדר. אחד לכל עמוד + אחד נוסף חופשי.`;
 }
 
+// ── Director context — Hadar speaks; needs name + identity + video list ──
+export function buildDirectorContextMessage(
+  ctx: ShootDayContext,
+  identity_statement: string,
+  pillars: Pillar[],
+  videos: { number: number; title: string; type: string }[],
+): string {
+  const pillarsBlock = pillars.map((p) => `עמוד ${p.number}: ${p.title} — ${p.message}`).join("\n");
+  const videoBlock = videos
+    .slice()
+    .sort((a, b) => a.number - b.number)
+    .map((v) => `סרטון ${v.number} (${v.type}): ${v.title}`)
+    .join("\n");
+
+  return `${buildContextMessage(ctx)}
+
+---
+
+משפט הזהות של הלקוח/ה:
+"${identity_statement}"
+
+4 עמודי המסר:
+${pillarsBlock}
+
+12 הסרטונים שנבנו (לכתיבת הערת בימוי לכל אחד):
+${videoBlock}
+
+עכשיו כתבי, בקול של הדר עצמה, את מונולוג הבימוי האישי + הערת בימוי קצרה לכל סרטון.`;
+}
+
 // ── Validators ───────────────────────────────────────────────────────
 
 export function validatePillar(p: unknown): p is Pillar {
@@ -812,6 +895,19 @@ export function validateGiftSentencesPack(data: unknown): data is { gift_sentenc
   const x = data as Record<string, unknown>;
   if (!Array.isArray(x.gift_sentences) || x.gift_sentences.length !== 5) return false;
   return x.gift_sentences.every((s) => typeof s === "string" && s.length > 5);
+}
+
+export function validateDirectorPack(data: unknown): data is DirectorScript {
+  if (!data || typeof data !== "object") return false;
+  const x = data as Record<string, unknown>;
+  if (typeof x.monologue !== "string" || x.monologue.length < 20) return false;
+  if (!Array.isArray(x.notes) || x.notes.length < 1) return false;
+  return x.notes.every((n) => {
+    if (!n || typeof n !== "object") return false;
+    const y = n as Record<string, unknown>;
+    return typeof y.number === "number" && y.number >= 1 && y.number <= 12 &&
+           typeof y.line === "string" && y.line.length > 0;
+  });
 }
 
 export function validateShootDayPlan(data: unknown): data is ShootDayPlan {

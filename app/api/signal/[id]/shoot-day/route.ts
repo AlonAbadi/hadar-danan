@@ -106,7 +106,7 @@ export async function GET(
     const wiped = { ...row.signal };
     const keys = [
       "shoot_day", "shoot_day_phase1", "shoot_day_generated_at",
-      "shoot_day_strategy", "shoot_day_gifts",
+      "shoot_day_strategy", "shoot_day_gifts", "shoot_day_director",
     ];
     for (let n = 1; n <= 12; n++) keys.push(`shoot_day_v${n}`);
     for (const k of keys) delete (wiped as Record<string, unknown>)[k];
@@ -151,6 +151,7 @@ export async function GET(
 
   const strategy = parseSlice<{ visual_direction: unknown; schedule: unknown; decisions: unknown }>(row.signal.shoot_day_strategy);
   const gifts    = parseSlice<string[]>(row.signal.shoot_day_gifts);
+  const director = parseSlice<{ monologue: string; notes: unknown[] }>(row.signal.shoot_day_director);
 
   // Videos to show = stored slices unioned with the preview plan (stored wins).
   const byNum = new Map<number, Video>();
@@ -164,6 +165,7 @@ export async function GET(
     stored:   storedNumbers,
     strategy: !!strategy,
     gifts:    !!gifts,
+    director: !!director,
   };
 
   // Full plan: all 12 real videos generated + strategy + gifts.
@@ -177,6 +179,7 @@ export async function GET(
       schedule:           strategy.schedule,
       decisions:          strategy.decisions,
       gift_sentences:     gifts,
+      ...(director ? { director } : {}),
     } as ShootDayPlan;
 
     if (validateShootDayPlan(plan)) {
@@ -201,6 +204,7 @@ export async function GET(
       videos:             mergedVideos,
       ...(strategy ? { visual_direction: strategy.visual_direction, schedule: strategy.schedule, decisions: strategy.decisions } : {}),
       ...(gifts ? { gift_sentences: gifts } : {}),
+      ...(director ? { director } : {}),
     } as ShootDayPlan;
     return NextResponse.json({
       phase:        "complete",

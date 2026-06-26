@@ -57,6 +57,7 @@ export async function gateAndBuildContext(req: NextRequest, id: string): Promise
   }
 
   const ctx: ShootDayContext = {
+    name:           userRow.name ?? null,
     signal:         String(row.signal.signal         ?? ""),
     signal_promise: String(row.signal.signal_promise ?? ""),
     pain_source:    String(row.signal.pain_source    ?? ""),

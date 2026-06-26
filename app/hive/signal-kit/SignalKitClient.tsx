@@ -719,9 +719,12 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
       {/* Videos in 3 acts (Lever #3: Act Structure 4+4+4). V1 ships only
           Video #1 (IDENTITY). V2+ unlocks the rest via per-card CTAs. */}
       <VideosByAct videos={plan.videos} />
-      {(plan.videos.length < 12 || !plan.visual_direction || !plan.gift_sentences) && (
+      {(plan.videos.length < 12 || !plan.visual_direction || !plan.gift_sentences || !plan.director) && (
         <ShootDayBuilder extractionId={extractionId} plan={plan} setPlan={setPlan} stored={stored} />
       )}
+
+      {/* Hadar's personal direction (script layer for the AI-Hadar video) */}
+      {plan.director && <DirectorCard director={plan.director} videos={plan.videos} />}
 
       {/* Visual Direction (Lever #5 via "הפוך מהקטגוריה") — optional in V1 */}
       {plan.visual_direction && <VisualDirectionCard visual={plan.visual_direction} />}
@@ -964,6 +967,9 @@ function ShootDayBuilder({
         5: "הוק עמוד 4", 6: "סיפור 1", 7: "סיפור 2", 8: "סיפור 3",
         9: "פריימוורק 1", 10: "פריימוורק 2", 11: "ניפוץ מיתוס", 12: "הזמנה (CTA)",
       };
+      // Accumulate the full video set locally so the director step (which needs
+      // all 12 titles) sees them even though `plan` is a render snapshot.
+      const collected = new Map<number, Video>(plan.videos.map((v) => [v.number, v]));
       for (let n = 1; n <= 12; n++) {
         if (done.includes(n)) continue;
         setStep(`בונה סרטון ${n} מתוך 12 · ${titles[n]}…`);
@@ -972,7 +978,9 @@ function ShootDayBuilder({
           pillars:            plan.pillars,
           numbers:            [n],
         }));
-        mergeVideos((data.videos as Video[]) ?? []);
+        const vids = (data.videos as Video[]) ?? [];
+        vids.forEach((v) => collected.set(v.number, v));
+        mergeVideos(vids);
         setDone((prev) => prev.includes(n) ? prev : [...prev, n]);
       }
 
@@ -991,6 +999,19 @@ function ShootDayBuilder({
         setStep("בונה 5 משפטי מתנה…");
         const g = await post("gifts");
         setPlan((prev) => prev ? { ...prev, gift_sentences: g.gift_sentences as string[] } : prev);
+      }
+
+      if (!plan.director) {
+        setStep("כותב את הבימוי האישי של הדר…");
+        const videoRefs = [...collected.values()]
+          .sort((a, b) => a.number - b.number)
+          .map((v) => ({ number: v.number, title: v.title, type: v.type }));
+        const d = await post("director", JSON.stringify({
+          identity_statement: plan.identity_statement,
+          pillars:            plan.pillars,
+          videos:             videoRefs,
+        }));
+        setPlan((prev) => prev ? { ...prev, director: d.director as ShootDayPlan["director"] } : prev);
       }
 
       setStep("");
@@ -1042,6 +1063,47 @@ function ShootDayBuilder({
       >
         {building ? "בונה את יום הצילום…" : "בנו את יום הצילום המלא"}
       </button>
+    </div>
+  );
+}
+
+function DirectorCard({ director, videos }: { director: NonNullable<ShootDayPlan["director"]>; videos: Video[] }) {
+  const titleByNum = new Map(videos.map((v) => [v.number, v.title]));
+  return (
+    <div style={{
+      background: "linear-gradient(145deg,#1b2740,#10141f)", border: "1px solid #2f3b54",
+      borderRadius: 14, padding: 20, display: "flex", flexDirection: "column", gap: 14,
+    }}>
+      <div>
+        <div style={{ fontSize: 12, color: "#B9A3F0", fontWeight: 700, letterSpacing: 1.4 }}>✦ הבימוי האישי של הדר</div>
+        <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>
+          זה הטקסט שהדר אומרת כדי לביים אותך. בקרוב כסרטון בקול ובפנים שלה.
+        </div>
+      </div>
+
+      <div style={{
+        background: C.bg, borderRight: "3px solid #B9A3F0", borderRadius: 8,
+        padding: "12px 14px", fontSize: 15, color: "#E8E4DC", lineHeight: 1.8, whiteSpace: "pre-wrap",
+      }}>
+        {director.monologue}
+      </div>
+
+      <div>
+        <div style={{ fontSize: 13, color: C.gold, fontWeight: 700, marginBottom: 6 }}>הערות בימוי, סרטון-סרטון</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {director.notes.slice().sort((a, b) => a.number - b.number).map((n) => (
+            <div key={n.number} style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
+              <span style={{ flex: "0 0 auto", fontSize: 12, color: "#B9A3F0", fontWeight: 700, minWidth: 64 }}>
+                סרטון {n.number}
+              </span>
+              <span style={{ fontSize: 14, color: C.fg, lineHeight: 1.6 }}>
+                {titleByNum.get(n.number) ? <b style={{ color: C.muted }}>{titleByNum.get(n.number)}. </b> : null}
+                {n.line}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
