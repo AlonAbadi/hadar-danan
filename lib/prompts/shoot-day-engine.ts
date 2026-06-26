@@ -429,7 +429,7 @@ ACT 3: סמכות (4 סרטונים)
 
 // ── Pack 3: Visual Direction + Schedule + 3 Decisions ────────────────
 
-export const STRATEGY_PACK_MAX_TOKENS = 2500;
+export const STRATEGY_PACK_MAX_TOKENS = 4000;
 
 export const STRATEGY_PACK_SYSTEM = `אתה הבמאית של הדר דנן. אתה מקבל אות מותגי + תחום + 4 עמודי מסר, ומחזיר 3 דברים:
 

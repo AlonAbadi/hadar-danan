@@ -93,7 +93,18 @@ export function parseJsonResponse(text: string): unknown {
   if (cleaned.startsWith("```")) {
     cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
   }
-  return JSON.parse(cleaned);
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // Fall back to the outermost { ... } block, in case the model wrapped the
+    // JSON in prose. (Does not recover genuine truncation.)
+    const first = cleaned.indexOf("{");
+    const last  = cleaned.lastIndexOf("}");
+    if (first !== -1 && last > first) {
+      return JSON.parse(cleaned.slice(first, last + 1));
+    }
+    throw e;
+  }
 }
 
 /**
