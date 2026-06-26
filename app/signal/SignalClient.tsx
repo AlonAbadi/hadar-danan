@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
+import { trackSignalStarted, trackSignalProbeShown, trackSignalCompleted, trackSignalHadarClick } from "@/lib/analytics";
 import { detectGender } from "@/lib/gender/detect";
 import { VoiceInput } from "@/components/signal/VoiceInput";
 import { CopyButton } from "@/components/signal/CopyButton";
@@ -227,6 +228,7 @@ export function SignalClient({
       }
       setSuggestRefine(data.suggest_refine === true);
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
+      trackSignalCompleted({ bucket: typeof data.bucket === "string" ? data.bucket : undefined });
       setPhase("result");
     } catch {
       setErrorMsg("שגיאת רשת. נסה שוב בעוד רגע.");
@@ -280,6 +282,7 @@ export function SignalClient({
         setProbing(false);
         if (data && data.concrete === false && typeof data.followup === "string" && data.followup.trim()) {
           setProbeFollowup(data.followup.trim());
+          trackSignalProbeShown();
           return; // show the follow-up; do not advance yet
         }
       } catch {
@@ -359,7 +362,7 @@ export function SignalClient({
       />
 
       <div style={{ width: "100%", maxWidth: 680, position: "relative", zIndex: 1 }}>
-        {phase === "intro"  && <Intro firstName={firstName} onStart={() => setPhase("form")} />}
+        {phase === "intro"  && <Intro firstName={firstName} onStart={() => { trackSignalStarted(); setPhase("form"); }} />}
         {phase === "form"   && (
           <FormCard
             step={step}
@@ -1529,6 +1532,7 @@ function Result({
             href={HADAR_WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackSignalHadarClick("refine")}
             style={{
               fontSize:       14,
               color:          C.gold,
@@ -2069,6 +2073,7 @@ function TalkToHadarLink() {
       href={HADAR_WHATSAPP_URL}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => trackSignalHadarClick("strategy")}
       style={{
         display:        "block",
         textAlign:      "center",

@@ -111,6 +111,69 @@ export function trackBooking(eventId?: string) {
   } catch {}
 }
 
+// ── Signal funnel instrumentation ───────────────────────────────────────────
+// Every signal event fires to Meta Pixel (fbq), Google Analytics (gtag), AND
+// the internal events table (/api/events) so the funnel is visible in all three.
+// The internal log is what powers the /admin dashboard counts.
+function postInternalEvent(type: string, metadata: Record<string, unknown>) {
+  try {
+    if (typeof window === "undefined") return;
+    void fetch("/api/events", {
+      method:    "POST",
+      headers:   { "Content-Type": "application/json" },
+      body:      JSON.stringify({ type, metadata }),
+      keepalive: true, // survive a navigation (e.g. the wa.me redirect)
+    });
+  } catch {}
+}
+
+export function trackSignalStarted() {
+  try {
+    fbq("trackCustom", "SignalStarted");
+    gtag("event", "signal_started");
+    postInternalEvent("SIGNAL_STARTED", {});
+  } catch {}
+}
+
+export function trackSignalProbeShown() {
+  try {
+    fbq("trackCustom", "SignalProbeShown");
+    gtag("event", "signal_probe_shown");
+    postInternalEvent("SIGNAL_PROBE_SHOWN", {});
+  } catch {}
+}
+
+export function trackSignalCompleted(meta: { bucket?: string } = {}) {
+  try {
+    fbq("trackCustom", "SignalCompleted", meta);
+    gtag("event", "signal_completed", meta);
+    postInternalEvent("SIGNAL_COMPLETED", meta);
+  } catch {}
+}
+
+/**
+ * THE critical one — a click on "talk to Hadar" (the handoff). High-intent
+ * contact, so it also fires Meta's standard Contact event for value bidding.
+ * source: "refine" (raw refine note) | "strategy" (strategy invite) | other.
+ */
+export function trackSignalHadarClick(source: string) {
+  try {
+    fbq("track",       "Contact",          { content_name: "signal_hadar", source });
+    fbq("trackCustom", "SignalHadarClick", { source });
+    gtag("event", "signal_hadar_click", { source });
+    postInternalEvent("SIGNAL_HADAR_CLICK", { source });
+  } catch {}
+}
+
+/** Share-card action. channel: "png" | "story" | "whatsapp" | "copy". */
+export function trackSignalCardShare(channel: string) {
+  try {
+    fbq("trackCustom", "SignalCardShare", { channel });
+    gtag("event", "signal_card_share", { channel });
+    postInternalEvent("SIGNAL_CARD_SHARE", { channel });
+  } catch {}
+}
+
 export const PRODUCT_CUSTOM_EVENT: Record<string, string> = {
   challenge_197:  "PurchaseChallenge",
   workshop_1080:  "PurchaseWorkshop",
