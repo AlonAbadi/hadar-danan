@@ -18,6 +18,8 @@ type SignalOutput = {
   people:             string;
   content_directions: string[];
   warm_note:          string;
+  public_card_statement?: string;
+  routing_signal?:    { signal_maturity?: string; commercial_fit?: string; founder_stage?: string };
 };
 
 interface ExtractionRow {
@@ -25,6 +27,7 @@ interface ExtractionRow {
   user_id:      string;
   signal:       SignalOutput;
   answers:      Record<string, string>;
+  bucket:       string | null;
   generated_at: string;
   users: {
     id:         string;
@@ -47,6 +50,27 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("he-IL");
 }
 
+// Per-lead recommendation OR gap. raw = a draft → the gap is the missing link
+// (a conversation with Hadar), and there is nothing to share yet. Mature leads
+// get a product recommendation by their commercial bucket.
+function recommendation(row: ExtractionRow): { label: string; gap: boolean } {
+  const mat    = row.signal?.routing_signal?.signal_maturity;
+  const bucket = row.bucket ?? "";
+  if (mat === "raw")
+    return { label: "טיוטה · פער: צריך שיחה עם הדר לסגור את החוליה. אין מה לשתף עדיין — זו טיוטה.", gap: true };
+  if (bucket === "none")
+    return { label: "פער: תשובות דקות מדי לאות חד. לעודד לחזור ולהעמיק.", gap: true };
+  if (mat === "transitional")
+    return { label: "באמצע · מומלץ: שיחה רכה עם הדר לפני שמשתפים את האות.", gap: true };
+  if (bucket === "strategy")
+    return { label: "מומלץ: פגישת אסטרטגיה ₪4,000 · ליד שווי-המרה", gap: false };
+  if (bucket === "hive")
+    return { label: "חבר/ת כוורת · להמשיך לטפח בקהילה", gap: false };
+  if (bucket === "nurture")
+    return { label: "מומלץ: הדרכה חינמית (נורצ'ר)", gap: false };
+  return { label: "מומלץ: אתגר 7 ימים ₪197 · self-serve", gap: false };
+}
+
 const C = {
   bg:    "#0D1018",
   card:  "#141820",
@@ -64,7 +88,7 @@ export default async function AdminSignalPage() {
 
   // Fetch extractions joined with user info. Newest first.
   const { data: rows, error } = await safeFrom(supabase, "signal_extractions")
-    .select("id, user_id, signal, answers, generated_at, users(id, name, email, phone, occupation)")
+    .select("id, user_id, signal, answers, bucket, generated_at, users(id, name, email, phone, occupation)")
     .order("generated_at", { ascending: false })
     .limit(200);
 
@@ -137,6 +161,8 @@ function ExtractionCard({ row }: { row: ExtractionRow }) {
   const userHref   = row.users?.id ? `/admin/users/${row.users.id}` : null;
   const waPhone   = phone ? phone.replace(/\D/g, "").replace(/^0/, "972") : null;
   const signal    = row.signal;
+  const rec       = recommendation(row);
+  const isDraft   = signal?.routing_signal?.signal_maturity === "raw";
 
   return (
     <div style={{
@@ -200,13 +226,15 @@ function ExtractionCard({ row }: { row: ExtractionRow }) {
             href={`/api/signal/${row.id}/share-card`}
             target="_blank"
             rel="noopener noreferrer"
+            title={isDraft ? "טיוטה — לא לשיתוף עדיין" : "כרטיס PNG לשיתוף"}
             style={{
-              fontSize: 13, color: C.goldM, textDecoration: "none", textAlign: "center",
-              padding: "6px 14px", borderRadius: 8, border: `1px solid ${C.lineGold}`,
-              background: "rgba(232,185,74,0.06)",
+              fontSize: 13, color: isDraft ? "#E0A09A" : C.goldM, textDecoration: "none", textAlign: "center",
+              padding: "6px 14px", borderRadius: 8,
+              border: `1px solid ${isDraft ? "rgba(224,114,106,0.35)" : C.lineGold}`,
+              background: isDraft ? "rgba(224,114,106,0.06)" : "rgba(232,185,74,0.06)",
             }}
           >
-            כרטיס PNG ↗
+            {isDraft ? "כרטיס (טיוטה) ↗" : "כרטיס PNG ↗"}
           </a>
           {userHref && (
             <Link
@@ -220,6 +248,24 @@ function ExtractionCard({ row }: { row: ExtractionRow }) {
             </Link>
           )}
         </div>
+      </div>
+
+      {/* Recommendation / gap — what to do with this lead, per maturity + bucket. */}
+      <div style={{
+        display:       "flex",
+        alignItems:    "center",
+        gap:           8,
+        marginBottom:  14,
+        padding:       "9px 13px",
+        borderRadius:  9,
+        fontSize:      13,
+        lineHeight:    1.5,
+        background:    rec.gap ? "rgba(224,114,106,0.08)" : "rgba(127,212,155,0.08)",
+        border:        `1px solid ${rec.gap ? "rgba(224,114,106,0.35)" : "rgba(127,212,155,0.30)"}`,
+        color:         rec.gap ? "#E0A09A" : "#A7E0BD",
+      }}>
+        <span style={{ fontWeight: 800, flexShrink: 0 }}>{rec.gap ? "⚠ פער" : "✓ המלצה"}</span>
+        <span>{rec.label}</span>
       </div>
 
       {/* The signal sentence — featured */}
