@@ -205,40 +205,47 @@ const CHAIN_LABELS: Record<string, string> = {
 };
 
 async function getSignalChainStats(): Promise<ChainStat[]> {
-  const supabase = createServerClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: seqs } = await (supabase as any)
+  const supabase: any = createServerClient();
+  const { data: seqs } = await supabase
     .from("email_sequences")
     .select("id, template_key, delay_hours")
     .eq("trigger_event", "SIGNAL_EXTRACTED").order("delay_hours");
-  const out: ChainStat[] = [];
-  for (const s of seqs ?? []) {
-    const sentQ = await supabase.from("email_logs").select("*", { count: "exact", head: true }).eq("sequence_id", s.id);
-    const openQ = await supabase.from("email_logs").select("*", { count: "exact", head: true }).eq("sequence_id", s.id).eq("status", "opened");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const queuedQ = await (supabase as any).from("jobs").select("*", { count: "exact", head: true })
-      .eq("type", "SEND_EMAIL").eq("status", "pending").eq("payload->>sequence_id", s.id);
-    out.push({
-      key: s.template_key, delay: s.delay_hours, label: CHAIN_LABELS[s.template_key] ?? s.template_key,
-      sent: sentQ.count ?? 0, opened: openQ.count ?? 0, queued: queuedQ.count ?? 0,
-    });
+  const ids = (seqs ?? []).map((s: { id: string }) => s.id);
+  if (!ids.length) return [];
+
+  // One bulk pull of logs, tallied in JS. (The jobs table is 400k+ rows with no
+  // usable index for our filters, so the "queued" count is dropped — it timed out.)
+  const sent: Record<string, number> = {}, opened: Record<string, number> = {};
+  const { data: logs } = await supabase.from("email_logs").select("sequence_id, status").in("sequence_id", ids);
+  for (const l of logs ?? []) {
+    sent[l.sequence_id] = (sent[l.sequence_id] ?? 0) + 1;
+    if (l.status === "opened") opened[l.sequence_id] = (opened[l.sequence_id] ?? 0) + 1;
   }
-  return out;
+
+  return (seqs ?? []).map((s: { id: string; template_key: string; delay_hours: number }) => ({
+    key: s.template_key, delay: s.delay_hours, label: CHAIN_LABELS[s.template_key] ?? s.template_key,
+    sent: sent[s.id] ?? 0, opened: opened[s.id] ?? 0, queued: 0,
+  }));
 }
 
 export default async function AdminSignalPage() {
   const supabase = createServerClient();
 
-  // Fetch extractions joined with user info. Newest first.
-  const { data: rows, error } = await safeFrom(supabase, "signal_extractions")
-    .select("id, user_id, signal, answers, bucket, generated_at, users(id, name, email, phone, occupation)")
-    .order("generated_at", { ascending: false })
-    .limit(200);
+  // Fetch everything in parallel — the report queries are independent and each
+  // hits a large table, so running them sequentially risks a function timeout.
+  // Each helper swallows its own errors so one slow query can't blank the page.
+  const [{ data: rows, error }, missed, chain, conv] = await Promise.all([
+    safeFrom(supabase, "signal_extractions")
+      .select("id, user_id, signal, answers, bucket, generated_at, users(id, name, email, phone, occupation)")
+      .order("generated_at", { ascending: false })
+      .limit(200),
+    getMissedLeads().catch(() => [] as MissedLead[]),
+    getSignalChainStats().catch(() => [] as ChainStat[]),
+    getSignalChainConversions().catch(() => ({ total: 0, revenue: 0, byTrack: { strategy: { takers: 0, converted: 0 }, challenge: { takers: 0, converted: 0 } }, byEmail: [] } as ChainConversions)),
+  ]);
 
   const extractions: ExtractionRow[] = (rows ?? []) as ExtractionRow[];
-  const missed = await getMissedLeads();
-  const chain  = await getSignalChainStats();
-  const conv   = await getSignalChainConversions();
 
   // Window counts for the headline stats
   const now = Date.now();
@@ -277,7 +284,7 @@ export default async function AdminSignalPage() {
         <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "16px 18px", marginBottom: 22 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: C.gold, marginBottom: 2 }}>שרשרת המיילים של האות · ביצועים</div>
           <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 14 }}>
-            נשלח / נפתח (= הוקלק) / שיעור פתיחה לכל מייל בשרשרת. "בתור" = ממתינים להישלח.
+            נשלח / נפתח (= הוקלק) / שיעור פתיחה לכל מייל בשרשרת.
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
             <thead>
@@ -286,7 +293,6 @@ export default async function AdminSignalPage() {
                 <th style={{ textAlign: "center", padding: "6px 8px", borderBottom: `1px solid ${C.line}` }}>נשלח</th>
                 <th style={{ textAlign: "center", padding: "6px 8px", borderBottom: `1px solid ${C.line}` }}>נפתח</th>
                 <th style={{ textAlign: "center", padding: "6px 8px", borderBottom: `1px solid ${C.line}` }}>שיעור</th>
-                <th style={{ textAlign: "center", padding: "6px 8px", borderBottom: `1px solid ${C.line}` }}>בתור</th>
               </tr>
             </thead>
             <tbody>
@@ -298,7 +304,6 @@ export default async function AdminSignalPage() {
                     <td style={{ padding: "8px", borderBottom: `1px solid ${C.line}`, textAlign: "center" }}>{r.sent}</td>
                     <td style={{ padding: "8px", borderBottom: `1px solid ${C.line}`, textAlign: "center" }}>{r.opened}</td>
                     <td style={{ padding: "8px", borderBottom: `1px solid ${C.line}`, textAlign: "center", color: rate >= 30 ? "#7FD49B" : rate >= 15 ? C.goldM : C.muted, fontWeight: 700 }}>{r.sent > 0 ? `${rate}%` : "—"}</td>
-                    <td style={{ padding: "8px", borderBottom: `1px solid ${C.line}`, textAlign: "center", color: C.muted }}>{r.queued || "—"}</td>
                   </tr>
                 );
               })}
