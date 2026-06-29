@@ -90,26 +90,9 @@ const C = {
 interface MissedLead { id: string; name: string; phone: string; wa: string | null; }
 
 async function getMissedLeads(): Promise<MissedLead[]> {
-  const supabase = createServerClient();
-  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: errs } = await safeFrom(supabase, "error_logs")
-    .select("payload").ilike("context", "%claude call%").gte("created_at", since).limit(2000);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const uids = [...new Set((errs ?? []).map((e: any) => e?.payload?.userId).filter(Boolean))] as string[];
-  if (!uids.length) return [];
-  const { data: users } = await safeFrom(supabase, "users").select("id, name, phone").in("id", uids);
-  const { data: exts }  = await safeFrom(supabase, "signal_extractions").select("user_id").in("user_id", uids);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const haveExt = new Set((exts ?? []).map((e: any) => e.user_id));
-  return (users ?? [])
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((u: any) => !haveExt.has(u.id) && u.phone)   // still missed AND reachable
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((u: any) => ({
-      id: u.id, name: (u.name ?? "—") as string, phone: (u.phone ?? "") as string,
-      wa: u.phone ? String(u.phone).replace(/\D/g, "").replace(/^0/, "972") : null,
-    }));
+  // DISABLED — scanned error_logs + users + signal_extractions on every admin
+  // load and contributed to a DB overload. Rework behind a cache + indexes.
+  return [];
 }
 
 // Conversions driven by the signal chain: a completed purchase AFTER the user's
@@ -123,126 +106,37 @@ interface ChainConversions {
 }
 
 async function getSignalChainConversions(): Promise<ChainConversions> {
-  // Generated types are stale (no bucket/amount_paid on these tables) — cast,
-  // matching the (db as any) pattern used across the signal routes.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase: any = createServerClient();
-  // first extraction date + bucket per user
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const exts: any[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data } = await supabase.from("signal_extractions").select("user_id, bucket, generated_at")
-      .order("generated_at", { ascending: true }).range(from, from + 999);
-    exts.push(...(data ?? [])); if (!data || data.length < 1000) break;
-  }
-  const firstExt: Record<string, string> = {}, bucketBy: Record<string, string> = {};
-  for (const e of exts) { if (!e.user_id || e.user_id in firstExt) continue; firstExt[e.user_id] = e.generated_at; bucketBy[e.user_id] = e.bucket || "none"; }
-  const userIds = Object.keys(firstExt);
-
-  // completed purchases for these users
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const purch: any[] = [];
-  for (let i = 0; i < userIds.length; i += 300) {
-    const { data } = await supabase.from("purchases").select("user_id, amount_paid, created_at")
-      .eq("status", "completed").in("user_id", userIds.slice(i, i + 300));
-    purch.push(...(data ?? []));
-  }
-  // signal-driven = purchase after first extraction; keep first per user
-  const driven = purch.filter((p) => p.created_at && firstExt[p.user_id] && p.created_at > firstExt[p.user_id])
-    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const firstDriven: Record<string, any> = {};
-  for (const p of driven) if (!(p.user_id in firstDriven)) firstDriven[p.user_id] = p;
-  const drivenList = Object.values(firstDriven);
-  const revenue = driven.reduce((s, p) => s + (Number(p.amount_paid) || 0), 0);
-
-  // by track (strategy bucket → meeting; everyone else → challenge)
-  const byTrack = { strategy: { takers: 0, converted: 0 }, challenge: { takers: 0, converted: 0 } };
-  const drivenUsers = new Set(Object.keys(firstDriven));
-  for (const id of userIds) {
-    const t = bucketBy[id] === "strategy" ? "strategy" : "challenge";
-    byTrack[t].takers++; if (drivenUsers.has(id)) byTrack[t].converted++;
-  }
-
-  // attribution: last signal email sent before the purchase
-  const { data: seqs } = await supabase.from("email_sequences").select("id, template_key").eq("trigger_event", "SIGNAL_EXTRACTED");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const seqKey: Record<string, string> = Object.fromEntries((seqs ?? []).map((s: any) => [s.id, s.template_key]));
-  const seqIds = Object.keys(seqKey);
-  const dUsers = [...drivenUsers];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const logs: any[] = [];
-  for (let i = 0; i < dUsers.length; i += 300) {
-    const { data } = await supabase.from("email_logs").select("user_id, sequence_id, sent_at")
-      .in("sequence_id", seqIds.length ? seqIds : ["none"]).in("user_id", dUsers.slice(i, i + 300));
-    logs.push(...(data ?? []));
-  }
-  const byEmailCount: Record<string, number> = {};
-  for (const p of drivenList) {
-    const prior = logs.filter((l) => l.user_id === p.user_id && l.sent_at && l.sent_at < p.created_at)
-      .sort((a, b) => String(b.sent_at).localeCompare(String(a.sent_at)));
-    const key = prior[0] ? seqKey[prior[0].sequence_id] : "_none";
-    byEmailCount[key] = (byEmailCount[key] || 0) + 1;
-  }
-  const order = ["signal_welcome", "signal_day1", "signal_day3", "signal_day5", "signal_day8", "signal_day12", "_none"];
-  const byEmail = order.filter((k) => byEmailCount[k]).map((k) => ({
-    key: k, label: k === "_none" ? "ללא מייל (לפני השרשרת)" : (CHAIN_LABELS[k] ?? k), conversions: byEmailCount[k],
-  }));
-
-  return { total: drivenList.length, revenue, byTrack, byEmail };
+  // DISABLED — pulled ALL extractions + purchases + email_logs on every admin
+  // load and contributed to a DB overload. Rework behind a cache + indexes.
+  return { total: 0, revenue: 0, byTrack: { strategy: { takers: 0, converted: 0 }, challenge: { takers: 0, converted: 0 } }, byEmail: [] };
 }
 
 const GLITCH_MSG = (name: string) =>
   `היי ${name ? name + ", " : ""}כאן הצוות של הדר דנן. הייתה תקלה טכנית קטנה והאות שלך לא נשמר. נשמח שתיכנס/י שוב ותקבל/י אותו, זה לוקח 2 דקות: https://www.beegood.online/signal`;
 
-// Signal email-chain performance — per email: sent / opened (= clicked) / rate,
-// plus how many are still queued. The funnel-health view for the nurture chain.
+// Signal email-chain performance — per email: sent / opened / rate.
 interface ChainStat { key: string; delay: number; label: string; sent: number; opened: number; queued: number; }
 
-const CHAIN_LABELS: Record<string, string> = {
-  signal_welcome: "0 · ברכה", signal_day1: "1 · תרגיל", signal_day3: "2 · סיפור",
-  signal_day5: "3 · הצעה", signal_day8: "4 · הוכחה", signal_day12: "5 · סגירה",
-};
-
 async function getSignalChainStats(): Promise<ChainStat[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase: any = createServerClient();
-  const { data: seqs } = await supabase
-    .from("email_sequences")
-    .select("id, template_key, delay_hours")
-    .eq("trigger_event", "SIGNAL_EXTRACTED").order("delay_hours");
-  const ids = (seqs ?? []).map((s: { id: string }) => s.id);
-  if (!ids.length) return [];
-
-  // One bulk pull of logs, tallied in JS. (The jobs table is 400k+ rows with no
-  // usable index for our filters, so the "queued" count is dropped — it timed out.)
-  const sent: Record<string, number> = {}, opened: Record<string, number> = {};
-  const { data: logs } = await supabase.from("email_logs").select("sequence_id, status").in("sequence_id", ids);
-  for (const l of logs ?? []) {
-    sent[l.sequence_id] = (sent[l.sequence_id] ?? 0) + 1;
-    if (l.status === "opened") opened[l.sequence_id] = (opened[l.sequence_id] ?? 0) + 1;
-  }
-
-  return (seqs ?? []).map((s: { id: string; template_key: string; delay_hours: number }) => ({
-    key: s.template_key, delay: s.delay_hours, label: CHAIN_LABELS[s.template_key] ?? s.template_key,
-    sent: sent[s.id] ?? 0, opened: opened[s.id] ?? 0, queued: 0,
-  }));
+  // DISABLED — the email_logs scan overloaded the DB. Rework behind a cache.
+  return [];
 }
 
 export default async function AdminSignalPage() {
   const supabase = createServerClient();
 
-  // Fetch everything in parallel — the report queries are independent and each
-  // hits a large table, so running them sequentially risks a function timeout.
-  // Each helper swallows its own errors so one slow query can't blank the page.
+  // Report aggregates (chain stats / conversions / missed-leads) are DISABLED:
+  // they scanned large tables on every load and overloaded the DB (the page now
+  // does ONE light query). The helpers below are stubbed until reworked behind a
+  // cache + indexes; kept referenced so nothing is dead-code.
   const [{ data: rows, error }, missed, chain, conv] = await Promise.all([
     safeFrom(supabase, "signal_extractions")
       .select("id, user_id, signal, answers, bucket, generated_at, users(id, name, email, phone, occupation)")
       .order("generated_at", { ascending: false })
       .limit(200),
-    getMissedLeads().catch(() => [] as MissedLead[]),
-    getSignalChainStats().catch(() => [] as ChainStat[]),
-    getSignalChainConversions().catch(() => ({ total: 0, revenue: 0, byTrack: { strategy: { takers: 0, converted: 0 }, challenge: { takers: 0, converted: 0 } }, byEmail: [] } as ChainConversions)),
+    getMissedLeads(),
+    getSignalChainStats(),
+    getSignalChainConversions(),
   ]);
 
   const extractions: ExtractionRow[] = (rows ?? []) as ExtractionRow[];
