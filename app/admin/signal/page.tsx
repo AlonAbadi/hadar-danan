@@ -112,6 +112,86 @@ async function getMissedLeads(): Promise<MissedLead[]> {
     }));
 }
 
+// Conversions driven by the signal chain: a completed purchase AFTER the user's
+// first extraction (separates real signal→buy from pre-existing customers). Split
+// by track (strategy→meeting / else→challenge) and attributed to the last signal
+// email sent before the purchase ("who bought after which email").
+interface ChainConversions {
+  total: number; revenue: number;
+  byTrack: { strategy: { takers: number; converted: number }; challenge: { takers: number; converted: number } };
+  byEmail: { key: string; label: string; conversions: number }[];
+}
+
+async function getSignalChainConversions(): Promise<ChainConversions> {
+  // Generated types are stale (no bucket/amount_paid on these tables) — cast,
+  // matching the (db as any) pattern used across the signal routes.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = createServerClient();
+  // first extraction date + bucket per user
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const exts: any[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data } = await supabase.from("signal_extractions").select("user_id, bucket, generated_at")
+      .order("generated_at", { ascending: true }).range(from, from + 999);
+    exts.push(...(data ?? [])); if (!data || data.length < 1000) break;
+  }
+  const firstExt: Record<string, string> = {}, bucketBy: Record<string, string> = {};
+  for (const e of exts) { if (!e.user_id || e.user_id in firstExt) continue; firstExt[e.user_id] = e.generated_at; bucketBy[e.user_id] = e.bucket || "none"; }
+  const userIds = Object.keys(firstExt);
+
+  // completed purchases for these users
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const purch: any[] = [];
+  for (let i = 0; i < userIds.length; i += 300) {
+    const { data } = await supabase.from("purchases").select("user_id, amount_paid, created_at")
+      .eq("status", "completed").in("user_id", userIds.slice(i, i + 300));
+    purch.push(...(data ?? []));
+  }
+  // signal-driven = purchase after first extraction; keep first per user
+  const driven = purch.filter((p) => p.created_at && firstExt[p.user_id] && p.created_at > firstExt[p.user_id])
+    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const firstDriven: Record<string, any> = {};
+  for (const p of driven) if (!(p.user_id in firstDriven)) firstDriven[p.user_id] = p;
+  const drivenList = Object.values(firstDriven);
+  const revenue = driven.reduce((s, p) => s + (Number(p.amount_paid) || 0), 0);
+
+  // by track (strategy bucket → meeting; everyone else → challenge)
+  const byTrack = { strategy: { takers: 0, converted: 0 }, challenge: { takers: 0, converted: 0 } };
+  const drivenUsers = new Set(Object.keys(firstDriven));
+  for (const id of userIds) {
+    const t = bucketBy[id] === "strategy" ? "strategy" : "challenge";
+    byTrack[t].takers++; if (drivenUsers.has(id)) byTrack[t].converted++;
+  }
+
+  // attribution: last signal email sent before the purchase
+  const { data: seqs } = await supabase.from("email_sequences").select("id, template_key").eq("trigger_event", "SIGNAL_EXTRACTED");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const seqKey: Record<string, string> = Object.fromEntries((seqs ?? []).map((s: any) => [s.id, s.template_key]));
+  const seqIds = Object.keys(seqKey);
+  const dUsers = [...drivenUsers];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const logs: any[] = [];
+  for (let i = 0; i < dUsers.length; i += 300) {
+    const { data } = await supabase.from("email_logs").select("user_id, sequence_id, sent_at")
+      .in("sequence_id", seqIds.length ? seqIds : ["none"]).in("user_id", dUsers.slice(i, i + 300));
+    logs.push(...(data ?? []));
+  }
+  const byEmailCount: Record<string, number> = {};
+  for (const p of drivenList) {
+    const prior = logs.filter((l) => l.user_id === p.user_id && l.sent_at && l.sent_at < p.created_at)
+      .sort((a, b) => String(b.sent_at).localeCompare(String(a.sent_at)));
+    const key = prior[0] ? seqKey[prior[0].sequence_id] : "_none";
+    byEmailCount[key] = (byEmailCount[key] || 0) + 1;
+  }
+  const order = ["signal_welcome", "signal_day1", "signal_day3", "signal_day5", "signal_day8", "signal_day12", "_none"];
+  const byEmail = order.filter((k) => byEmailCount[k]).map((k) => ({
+    key: k, label: k === "_none" ? "ללא מייל (לפני השרשרת)" : (CHAIN_LABELS[k] ?? k), conversions: byEmailCount[k],
+  }));
+
+  return { total: drivenList.length, revenue, byTrack, byEmail };
+}
+
 const GLITCH_MSG = (name: string) =>
   `היי ${name ? name + ", " : ""}כאן הצוות של הדר דנן. הייתה תקלה טכנית קטנה והאות שלך לא נשמר. נשמח שתיכנס/י שוב ותקבל/י אותו, זה לוקח 2 דקות: https://www.beegood.online/signal`;
 
@@ -158,6 +238,7 @@ export default async function AdminSignalPage() {
   const extractions: ExtractionRow[] = (rows ?? []) as ExtractionRow[];
   const missed = await getMissedLeads();
   const chain  = await getSignalChainStats();
+  const conv   = await getSignalChainConversions();
 
   // Window counts for the headline stats
   const now = Date.now();
@@ -225,6 +306,53 @@ export default async function AdminSignalPage() {
           </table>
           <div style={{ fontSize: 11.5, color: C.muted, marginTop: 10 }}>
             ניתוב ההצעה: strategy → פגישה · השאר → אתגר. ייחוס מלא ב-<Link href="/admin/acquisition" style={{ color: C.goldM }}>אקוויזישן</Link> (utm_source=email · utm_content=שם המייל).
+          </div>
+
+          {/* Conversions layer */}
+          <div style={{ borderTop: `1px solid ${C.line}`, marginTop: 16, paddingTop: 14 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: C.gold, marginBottom: 2 }}>המרות מונעות-אות</div>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>
+              קנייה שהושלמה <b>אחרי</b> שעשו את האות (לא לקוחות קיימים). מתמלא ככל שהשרשרת רצה.
+            </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+              <div style={{ flex: 1, minWidth: 120, background: C.bg, border: `1px solid ${C.line}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#7FD49B" }}>{conv.total}</div>
+                <div style={{ fontSize: 12, color: C.muted }}>המרות סה״כ</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 120, background: C.bg, border: `1px solid ${C.line}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: C.goldM }}>₪{conv.revenue.toLocaleString()}</div>
+                <div style={{ fontSize: 12, color: C.muted }}>הכנסה מהאות</div>
+              </div>
+            </div>
+
+            {/* By track */}
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+              {([["strategy", "מסלול פגישה"], ["challenge", "מסלול אתגר"]] as const).map(([k, lbl]) => {
+                const t = conv.byTrack[k]; const rate = t.takers > 0 ? Math.round((t.converted / t.takers) * 100) : 0;
+                return (
+                  <div key={k} style={{ flex: 1, minWidth: 160, background: C.bg, border: `1px solid ${C.line}`, borderRadius: 10, padding: "10px 14px" }}>
+                    <div style={{ fontSize: 13, color: C.fg, fontWeight: 700 }}>{lbl}</div>
+                    <div style={{ fontSize: 13, color: C.muted, marginTop: 3 }}>
+                      <b style={{ color: "#7FD49B" }}>{t.converted}</b> / {t.takers} המירו · <b style={{ color: C.goldM }}>{rate}%</b>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* By last email before purchase */}
+            <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 6 }}>מי קנה אחרי איזה מייל:</div>
+            {conv.byEmail.length === 0 ? (
+              <div style={{ fontSize: 12.5, color: C.muted, fontStyle: "italic" }}>עדיין אין המרות מונעות-אות. יתמלא ככל שהשרשרת מתקדמת.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {conv.byEmail.map((e) => (
+                  <div key={e.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "5px 10px", background: C.bg, borderRadius: 8 }}>
+                    <span>{e.label}</span><b style={{ color: "#7FD49B" }}>{e.conversions}</b>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
