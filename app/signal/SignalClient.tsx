@@ -1042,8 +1042,9 @@ function LeadGate({
   // Israeli mobile pattern is loose on purpose — accept 05X-XXXXXXX, with or
   // without dashes / spaces / international prefix. Server re-validates.
   const validPhone   = /^[0-9+\-\s()]{9,20}$/.test(trimmedPhone);
+  // Last name is optional (recovers gate friction); occupation stays required —
+  // it drives the bucket routing + per-lead recommendation.
   const canSubmit    = trimmedFirst.length >= 2
-                    && trimmedLast.length >= 2
                     && validEmail
                     && validPhone
                     && trimmedOcc.length >= 2;
@@ -1109,7 +1110,7 @@ function LeadGate({
             />
           </label>
           <label style={{ display: "block" }}>
-            <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>שם משפחה</div>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>שם משפחה <span style={{ opacity: 0.6 }}>(לא חובה)</span></div>
             <input
               type="text"
               value={lastName}
