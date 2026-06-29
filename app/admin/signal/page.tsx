@@ -83,6 +83,38 @@ const C = {
   lineGold: "rgba(232,185,74,0.30)",
 };
 
+// Missed leads — people whose extraction FAILED (e.g. the Anthropic budget ran
+// out) so they never got a signal. We captured their contact (the user row is
+// created before the Claude call), but have no signal and no saved answers, so
+// they must redo it. This list lets the team win them back.
+interface MissedLead { id: string; name: string; phone: string; wa: string | null; }
+
+async function getMissedLeads(): Promise<MissedLead[]> {
+  const supabase = createServerClient();
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: errs } = await safeFrom(supabase, "error_logs")
+    .select("payload").ilike("context", "%claude call%").gte("created_at", since).limit(2000);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const uids = [...new Set((errs ?? []).map((e: any) => e?.payload?.userId).filter(Boolean))] as string[];
+  if (!uids.length) return [];
+  const { data: users } = await safeFrom(supabase, "users").select("id, name, phone").in("id", uids);
+  const { data: exts }  = await safeFrom(supabase, "signal_extractions").select("user_id").in("user_id", uids);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const haveExt = new Set((exts ?? []).map((e: any) => e.user_id));
+  return (users ?? [])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((u: any) => !haveExt.has(u.id) && u.phone)   // still missed AND reachable
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((u: any) => ({
+      id: u.id, name: (u.name ?? "—") as string, phone: (u.phone ?? "") as string,
+      wa: u.phone ? String(u.phone).replace(/\D/g, "").replace(/^0/, "972") : null,
+    }));
+}
+
+const GLITCH_MSG = (name: string) =>
+  `היי ${name ? name + ", " : ""}כאן הצוות של הדר דנן. הייתה תקלה טכנית קטנה והאות שלך לא נשמר. נשמח שתיכנס/י שוב ותקבל/י אותו, זה לוקח 2 דקות: https://www.beegood.online/signal`;
+
 export default async function AdminSignalPage() {
   const supabase = createServerClient();
 
@@ -93,6 +125,7 @@ export default async function AdminSignalPage() {
     .limit(200);
 
   const extractions: ExtractionRow[] = (rows ?? []) as ExtractionRow[];
+  const missed = await getMissedLeads();
 
   // Window counts for the headline stats
   const now = Date.now();
@@ -123,6 +156,42 @@ export default async function AdminSignalPage() {
       {error && (
         <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, padding: "12px 16px", color: "#FCA5A5", marginBottom: 18 }}>
           שגיאה בשליפה: {String(error.message ?? error)}
+        </div>
+      )}
+
+      {/* Missed leads — extraction failed (e.g. budget out). Win them back. */}
+      {missed.length > 0 && (
+        <div style={{
+          background: "rgba(224,114,106,0.07)", border: "1px solid rgba(224,114,106,0.35)",
+          borderRadius: 14, padding: "16px 18px", marginBottom: 22,
+        }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#E0A09A", marginBottom: 4 }}>
+            לידים שנכשלו (תקלת מערכת) · {missed.length}
+          </div>
+          <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 14 }}>
+            עברו את האבחון אבל החילוץ נכשל (התקציב נגמר). יש להם פרטים, אין להם אות. שלח/י "ווטסאפ תקלה" שיחזרו.
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {missed.map((m) => {
+              const firstName = m.name.split(" ")[0];
+              const href = m.wa ? `https://wa.me/${m.wa}?text=${encodeURIComponent(GLITCH_MSG(firstName))}` : null;
+              return (
+                <div key={m.id} style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  background: C.card, border: `1px solid ${C.line}`, borderRadius: 10, padding: "10px 14px",
+                }}>
+                  <Link href={`/admin/users/${m.id}`} style={{ fontSize: 14.5, fontWeight: 700, color: C.fg, textDecoration: "none", flex: 1 }}>{m.name}</Link>
+                  <span dir="ltr" style={{ fontSize: 12.5, color: C.muted }}>{m.phone}</span>
+                  {href && (
+                    <a href={href} target="_blank" rel="noopener noreferrer" style={{
+                      flexShrink: 0, background: "#25D366", color: "#0b141a", fontWeight: 800, fontSize: 12.5,
+                      padding: "8px 14px", borderRadius: 9, textDecoration: "none",
+                    }}>ווטסאפ תקלה ←</a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
