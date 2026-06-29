@@ -64,7 +64,10 @@ export function SignalClient({
   firstName, prefillLastName, isAuthenticated = false, prefillEmail,
   prefillPhone, prefillOccupation, prefillGender, hiveActive = false,
 }: Props) {
-  const [phase, setPhase]         = useState<Phase>("intro");
+  // Land directly on the first question (no blocking intro screen) — the quiz
+  // proves this; the old intro screen lost ~33% before they even started. The
+  // framing copy moved into a compact header on question 1 (see FormCard).
+  const [phase, setPhase]         = useState<Phase>("form");
   const [step, setStep]           = useState(0);
   const [answers, setAnswers]     = useState<SignalAnswers>({});
   const [signal, setSignal]       = useState<SignalOutput | null>(null);
@@ -167,7 +170,9 @@ export function SignalClient({
   }, [answers]);
 
   // Meta/GA ViewContent — landed on /signal. Fires once per page load.
-  useEffect(() => { trackSignalView(); }, []);
+  // View + started fire together now that landing == the first question (no
+  // intro gate between them). The meaningful funnel metric is view→completed.
+  useEffect(() => { trackSignalView(); trackSignalStarted(); }, []);
 
   const current  = SIGNAL_QUESTIONS[step];
   const value    = answers[current.key] ?? "";
@@ -573,6 +578,29 @@ function FormCard(props: FormCardProps) {
         padding:      "36px 32px",
       }}
     >
+      {/* Compact framing header — only on the first question. Replaces the old
+          blocking intro screen: keeps the methodology framing without the gating
+          click that cost ~33% of landers. */}
+      {props.step === 0 && (
+        <div style={{ textAlign: "center", marginBottom: 24, paddingBottom: 18, borderBottom: `1px solid ${C.line}` }}>
+          <div style={{ fontSize: 11, letterSpacing: 1.4, color: C.goldMid, textTransform: "uppercase", marginBottom: 10 }}>
+            <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
+          </div>
+          <p style={{ color: C.fg, fontSize: 16, fontWeight: 600, margin: "0 0 4px", lineHeight: 1.5 }}>
+            חמש שאלות שיחזירו לכם את האות שלכם.
+          </p>
+          <p style={{ color: C.muted, fontSize: 14.5, margin: "0 0 14px", lineHeight: 1.5 }}>
+            הלקוחות יקנו דרך מי שאתם, לא דרך מה שאתם מוכרים.
+          </p>
+          <p style={{ color: C.fg, fontSize: 14.5, margin: "0 0 2px", lineHeight: 1.5 }}>
+            אפשר לכתוב. <strong style={{ color: C.gold, fontWeight: 700 }}>אפשר פשוט לדבר.</strong>
+          </p>
+          <p style={{ color: C.muted, fontSize: 13.5, margin: 0, lineHeight: 1.5 }}>
+            מהלב, האות יוצא חד.
+          </p>
+        </div>
+      )}
+
       {/* Progress */}
       <div
         style={{
@@ -616,7 +644,9 @@ function FormCard(props: FormCardProps) {
         value={props.value}
         onChange={(e) => props.setValue(e.target.value)}
         rows={6}
-        placeholder="או הקלד/י כאן — בלי לערוך, כפי שאתה/את מדבר/ת."
+        placeholder={props.step === 0
+          ? "פשוט תתחילו, מילה אחת מספיקה. למשל: \"בפעם האחרונה שישבתי עם לקוחה והשעתיים עברו כמו רגע, כי...\""
+          : "או הקלד/י כאן — בלי לערוך, כפי שאתה/את מדבר/ת."}
         style={{
           width:        "100%",
           background:   C.cardSoft,
