@@ -1398,7 +1398,7 @@ function signalDay5En(ctx: EmailTemplateContext): RenderedEmail {
       <div class="en-header"><div class="en-eyebrow">TrueSignal©</div><h1>${firstName}, the hard part</h1></div>
       <div class="en-body">
         ${body}
-        <a class="en-cta" href="${SIGNAL_WA_EN}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
+        <a class="en-cta" href="${premium ? SIGNAL_WA_EN : `${APP_URL}/en/strategy`}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
         <div class="en-signoff">Hadar</div>
       </div>
     `),
@@ -1427,7 +1427,7 @@ function signalDay8En(ctx: EmailTemplateContext): RenderedEmail {
       <div class="en-header"><div class="en-eyebrow">TrueSignal©</div><h1>${firstName}, what you walk away with</h1></div>
       <div class="en-body">
         ${body}
-        <a class="en-cta" href="${SIGNAL_WA_EN}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
+        <a class="en-cta" href="${premium ? SIGNAL_WA_EN : `${APP_URL}/en/strategy`}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
         <div class="en-signoff">Hadar</div>
       </div>
     `),

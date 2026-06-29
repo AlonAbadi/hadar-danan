@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function EnHiveRedirect() {
-  redirect("/en/os");
+  redirect("/en/strategy");
 }

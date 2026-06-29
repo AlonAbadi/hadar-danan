@@ -398,11 +398,11 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
               maxWidth:   "58ch",
             }}
           >
-            Layer 01 (this) is yours, free, forever. Layers 02, 03, 04 translate the signal into business architecture, content intelligence, and the BeeGood OS execution engine.
+            Your signal is yours, free, forever. When you are ready to turn it into the way the market positions you, the strategy session is where that work happens - ninety minutes, one on one with Hadar.
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 22, flexWrap: "wrap" }}>
             <Link
-              href="/en/os"
+              href="/en/strategy"
               style={{
                 fontFamily:    "var(--font-jakarta), sans-serif",
                 fontSize:      15,
@@ -419,7 +419,7 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
                 gap:           10,
               }}
             >
-              See what comes next <span style={{ fontSize: 18 }}>→</span>
+              Book a strategy session <span style={{ fontSize: 18 }}>→</span>
             </Link>
             <a
               href="https://wa.me/972539566961"

@@ -776,9 +776,9 @@ const LAYERS = [
   },
   {
     num: "04",
-    title: "BeeGood OS",
-    body: "The execution engine. Unified data, AI decision intelligence, CRM, automations, all answering one question: what matters most right now?",
-    cta: "Learn more →",
-    href: "/en/os",
+    title: "Strategy Session",
+    body: "Ninety minutes, one on one with Hadar. We take your signal and build your positioning from it - the client, the offer, why you. You leave with one direction to act on the next morning.",
+    cta: "Book a session →",
+    href: "/en/strategy",
   },
 ] as const;
