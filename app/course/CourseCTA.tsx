@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { trackInitiateCheckout, trackProductLead } from "@/lib/analytics";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { getSessionUser, saveUserDetails } from "@/lib/quiz-session";
+import { getUtmFromCookies } from "@/lib/utm/client";
 
 function getCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -99,6 +100,7 @@ export function CourseCTA({ whatsappPhone, credit = 0, initialEmail = "" }: { wh
           anonymous_id:      getCookie("anon_id"),
           ab_variant:        getCookie("ab_variant"),
           marketing_consent: consent,
+          ...getUtmFromCookies(),
         }),
       });
 

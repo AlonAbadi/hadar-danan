@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getSessionUser } from "@/lib/quiz-session";
+import { getUtmFromCookies } from "@/lib/utm/client";
 
 function getCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -41,6 +42,7 @@ export function StrategyBookFlow({ price, whatsappPhone, couponCode }: Props) {
           phone:        form.phone,
           anonymous_id: getCookie("anon_id"),
           ab_variant:   getCookie("ab_variant"),
+          ...getUtmFromCookies(),
         }),
       });
 

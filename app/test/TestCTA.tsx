@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
+import { getUtmFromCookies } from "@/lib/utm/client";
 
 function getCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -32,6 +33,7 @@ export function TestCTA() {
           anonymous_id:      getCookie("anon_id"),
           ab_variant:        getCookie("ab_variant"),
           marketing_consent: consent,
+          ...getUtmFromCookies(),
         }),
       });
 

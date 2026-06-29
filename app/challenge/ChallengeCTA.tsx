@@ -5,6 +5,7 @@ import { trackInitiateCheckout, trackProductLead } from "@/lib/analytics";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { getSessionUser, saveUserDetails } from "@/lib/quiz-session";
 import { CheckoutCtaButton, SavingsBadge, SecurityNote } from "@/components/landing/CheckoutCtaButton";
+import { getUtmFromCookies } from "@/lib/utm/client";
 
 function getCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -139,6 +140,7 @@ export function ChallengeCTA({ price, originalPrice, whatsappPhone, credit = 0 }
           anonymous_id:      getCookie("anon_id"),
           ab_variant:        getCookie("ab_variant"),
           marketing_consent: consent,
+          ...getUtmFromCookies(),
         }),
       });
 
