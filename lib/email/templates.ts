@@ -352,6 +352,26 @@ function hiveMonthlyDrop(ctx: EmailTemplateContext): RenderedEmail {
   };
 }
 
+// ── Signal nurture chain helpers ─────────────────────────────
+// The funnel offers whatever the diagnostic routed the lead to. The Hive is
+// paused (being redefined), so strategy-fit → the strategy session, everyone
+// else → the 7-day challenge (the entry product). Templates read ctx.bucket.
+const SIGNAL_WA = "https://wa.me/972539566961";
+
+function signalOffer(ctx: EmailTemplateContext): { isStrategy: boolean; href: string; cta: string } {
+  const isStrategy = ctx.bucket === "strategy";
+  return isStrategy
+    ? { isStrategy, href: `${APP_URL}/strategy`, cta: "לקבוע פגישת אסטרטגיה ←" }
+    : { isStrategy, href: `${APP_URL}/challenge`, cta: "להצטרף לאתגר ←" };
+}
+
+// Signal-takers usually never set a password, so /account is a wall they can't
+// pass. The send-email handler passes a magic link in ctx.magicLink — a one-tap
+// passwordless login. Fall back to /account for anyone already authenticated.
+function signalAccountHref(ctx: EmailTemplateContext): string {
+  return typeof ctx.magicLink === "string" && ctx.magicLink ? ctx.magicLink : `${APP_URL}/account`;
+}
+
 function signalWelcome(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = ctx.name.split(" ")[0];
   return {
@@ -365,17 +385,165 @@ function signalWelcome(ctx: EmailTemplateContext): RenderedEmail {
         <p>שלום ${firstName},</p>
         <p>עברת את האבחון. זה לא טריוויאלי.</p>
         <p>הרוב לא עוצרים לחמש דקות לשאול את עצמם מה הם באמת באים לתת לעולם.</p>
-        <p>האות שלך נשמר אצלך — תוכל/י לחזור אליו בכל רגע פה:</p>
-        <a class="cta" href="${APP_URL}/account">לאזור האישי שלי ←</a>
+        <p>האות שלך נשמר אצלך — לחיצה אחת וזה מחכה לך:</p>
+        <a class="cta" href="${signalAccountHref(ctx)}">לאות שלי ←</a>
 
-        <p>מה הלאה?</p>
-        <p>חברי הכוורת מקבלים כל חודש שני רעיונות תוכן מותאמים אישית לאות שלהם.</p>
-        <p>לא רעיונות כלליים. לא עוד מאה קווים. שניים שעובדים בדיוק לך.</p>
-        <p>אם זה מרגיש כמו הצעד הבא הנכון —</p>
-        <a class="cta" href="${APP_URL}/hive">לראות את מסלולי הכוורת ←</a>
+        <p>בימים הקרובים אשלח לך עוד כמה דברים שיעזרו להפוך את האות הזה לתוכן שאנשים בוחרים בו.</p>
+        <p>בכל מקרה, האות שלך אצלך. עכשיו זה רק עניין של מה את/ה עושה איתו.</p>
+        <p>אם יש שאלה, <a href="${SIGNAL_WA}" style="color:#2563eb">הוואטסאפ פתוח</a>.</p>
+        <p>הדר</p>
+      </div>
+    `),
+  };
+}
 
-        <p>בכל מקרה, האות שלך אצלך. עכשיו זה רק עניין של מה אתה/את עושה איתו.</p>
-        <p>אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#2563eb">הוואטסאפ פתוח</a>.</p>
+// EMAIL 2 · +1 day — pure value, teach them to use the signal this week.
+function signalDay1(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  return {
+    subject: `${firstName}, אות שלא עושים איתו כלום הוא רק משפט יפה`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>${firstName}, מה תעשו עם האות</h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>קיבלתם את האות שלכם.</p>
+        <p>עכשיו השאלה היחידה שחשובה: מה תעשו איתו.</p>
+        <p>אז הנה תרגיל אחד, לשבוע הזה.</p>
+        <p>קחו את האות שלכם. כתבו פוסט אחד שמתחיל מהמשפט הזה.</p>
+        <p>לא על מה שאתם עושים. על מה שאתם רואים שאחרים לא.</p>
+        <p>זהו. פוסט אחד. לא קמפיין, לא אסטרטגיה. שורה אחת של אמת שיוצאת החוצה.</p>
+        <p>כי בידול הוא לא מה שאתם יודעים. הוא מה שאתם רואים, וכותבים בקול.</p>
+        <p>נסו השבוע. תכתבו לי בוואטסאפ איך יצא.</p>
+        <a class="cta" href="${SIGNAL_WA}">לכתוב להדר ←</a>
+        <p>הדר</p>
+      </div>
+    `),
+  };
+}
+
+// EMAIL 3 · +3 days — Hadar's story + authority.
+function signalDay3(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  return {
+    subject: `${firstName}, האנשים הכי מוכשרים שאני מכירה — בלתי נראים`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>${firstName}, מה שאני רואה שוב ושוב</h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>יש דבר אחד שאני רואה שוב ושוב, מ-2023, אצל מאות בעלי עסקים.</p>
+        <p>האנשים הכי מוכשרים, הכי עמוקים, הכי טובים במה שהם עושים —</p>
+        <p>הם בדיוק אלה שהשוק לא רואה.</p>
+        <p>לא כי הם לא טובים מספיק.</p>
+        <p>אלא כי הם משווקים את הכישורים שלהם, לא את האות שלהם.</p>
+        <p>את מה שהם עושים, לא את מה שרק הם רואים.</p>
+        <p>בניתי את כל זה בשביל הרגע הזה בדיוק.</p>
+        <p>שתפסיקו להיות הסוד הכי שמור בתחום שלכם.</p>
+        <p>האות שכבר יש לכם ביד הוא ההתחלה. מה שקורה אחריו — איך הוא הופך לנוכחות עקבית — זה מה שאני עוזרת בו.</p>
+        <p>נדבר על זה בקרוב.</p>
+        <p>הדר</p>
+      </div>
+    `),
+  };
+}
+
+// EMAIL 4 · +5 days — THE OFFER. Branches by bucket (strategy / challenge).
+function signalDay5(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  const offer = signalOffer(ctx);
+  const bodyStrategy = `
+        <p>${firstName},</p>
+        <p>לדעת את האות שלכם — זה החלק הקל.</p>
+        <p>לתרגם אותו למיצוב שמביא את הלקוחות הנכונים, במחיר הנכון — זה החלק הקשה.</p>
+        <p>האות שלכם יצא חד. זה אומר שאתם כבר לא במקום של "עוד תוכן".</p>
+        <p>אתם במקום שבו שיחה אחת ממוקדת שווה יותר ממאה פוסטים.</p>
+        <p>בפגישת האסטרטגיה אנחנו לוקחים את האות הזה ובונים ממנו את המיצוב: מי הלקוח, מה ההצעה, ולמה דווקא אתם. 90 דקות, אחד-על-אחד.</p>
+        <p>ואם לא פיצחנו בפגישה הראשונה — פגישה נוספת עליי.</p>`;
+  const bodyChallenge = `
+        <p>${firstName},</p>
+        <p>לדעת את האות שלכם — זה החלק הקל.</p>
+        <p>לקום ולהופיע איתו, שבוע אחרי שבוע, עד שהוא הופך לדמות שאנשים בוחרים בה — זה החלק הקשה.</p>
+        <p>האות הוא חומר הגלם. האתגר הוא איפה שהוא הופך לסיפור.</p>
+        <p>7 ימים, 7 סרטונים, כל אחד חושף שכבה נוספת של מי שאתם — עד שמצטברת דמות שלמה שלקוחות מתאהבים בה לפני שדיברתם.</p>
+        <p>500+ עסקים כבר עברו את זה. ₪197.</p>`;
+  return {
+    subject: `${firstName}, לדעת את האות זה הקל. החלק הקשה הוא אחר`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>${firstName}, החלק הקשה</h1>
+      </div>
+      <div class="body">
+        ${offer.isStrategy ? bodyStrategy : bodyChallenge}
+        <a class="cta" href="${offer.href}">${offer.cta}</a>
+        <p>הדר</p>
+      </div>
+    `),
+  };
+}
+
+// EMAIL 5 · +8 days — proof + objection handling. Branches by bucket.
+function signalDay8(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  const offer = signalOffer(ctx);
+  const bodyStrategy = `
+        <p>${firstName},</p>
+        <p>אולי אתם שואלים אם פגישה אחת באמת תזיז משהו. הוגן. אז מה קורה בה:</p>
+        <p>· אנחנו לוקחים את האות שלכם ומפרקים אותו למיצוב — מי הלקוח, מה ההצעה, מה המחיר.<br>
+        · יוצאים עם כיוון אחד ברור שאפשר להתחיל לפעול לפיו מחר.<br>
+        · 90 דקות, אחד-על-אחד, ממוקד בכם בלבד.</p>
+        <p>זו לא הרצאה ולא תבנית. זו עבודה על העסק שלכם, מהאות שכבר יש לכם.</p>
+        <p>ואם לא פיצחנו בפגישה הראשונה — פגישה נוספת עליי. בלי סיכון.</p>`;
+  const bodyChallenge = `
+        <p>${firstName},</p>
+        <p>אולי אתם שואלים אם האתגר באמת מתאים לכם. הוגן. אז מה תקבלו:</p>
+        <p>· 7 סרטונים קצרים, יום אחרי יום — כל אחד חושף שכבה נוספת של הדמות שלכם.<br>
+        · לא טיפים גנריים. תרגול אמיתי של להופיע עם האות שלכם.<br>
+        · בסוף השבוע יש לכם סיפור שלם, לא עוד פוסט בודד.</p>
+        <p>זה לא קורס תיאוריה. זה אימון להופיע כמי שאתם, עד שזה הופך טבעי.</p>
+        <p>500+ עסקים כבר עברו את זה. ₪197, פחות מארוחה בחוץ.</p>`;
+  return {
+    subject: `${firstName}, מה בעצם קורה (וזה לא עוד תוכן)`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>${firstName}, בדיוק מה שתקבלו</h1>
+      </div>
+      <div class="body">
+        ${offer.isStrategy ? bodyStrategy : bodyChallenge}
+        <a class="cta" href="${offer.href}">${offer.cta}</a>
+        <p>ואם יש שאלה לפני — אני פה, <a href="${SIGNAL_WA}" style="color:#2563eb">בוואטסאפ</a>.</p>
+        <p>הדר</p>
+      </div>
+    `),
+  };
+}
+
+// EMAIL 6 · +12 days — soft close + human escalation.
+function signalDay12(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  const offer = signalOffer(ctx);
+  return {
+    subject: `${firstName}, האות שלך עדיין כאן`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood</div>
+        <h1>${firstName}, בלי לחץ</h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>מייל אחרון, בלי לחץ.</p>
+        <p>האות שלכם עדיין שמור אצלכם. הוא לא הולך לשום מקום.</p>
+        <p>אם בא לכם לקחת אותו צעד קדימה — הדלת פתוחה:</p>
+        <a class="cta" href="${offer.href}">${offer.cta}</a>
+        <p>ואם אתם פשוט רוצים לחשוב בקול עם מישהי שרואה את התמונה — דברו איתי ישירות. תכתבו לי מילה בוואטסאפ, אני קוראת הכל.</p>
+        <a class="cta" href="${SIGNAL_WA}">לדבר עם הדר ←</a>
+        <p>האות שלכם הוא ההתחלה. מה תעשו איתו — זה כבר אתם.</p>
         <p>הדר</p>
       </div>
     `),
@@ -1174,6 +1342,11 @@ const TEMPLATES: Record<string, TemplateFn> = {
   followup_72h:                followup72h,
   // SIGNAL_EXTRACTED welcome
   signal_welcome:              signalWelcome,
+  signal_day1:                 signalDay1,
+  signal_day3:                 signalDay3,
+  signal_day5:                 signalDay5,
+  signal_day8:                 signalDay8,
+  signal_day12:                signalDay12,
   // SIGNAL_EXTRACTED_EN welcome (English /en/signal flow)
   signal_welcome_en:           signalWelcomeEn,
   // Manual on-demand full result email

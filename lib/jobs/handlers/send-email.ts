@@ -34,12 +34,32 @@ export async function handleSendEmail(
 
   if (existing) return; // already sent - idempotent
 
+  // ── Suppress signal offer emails once the lead has converted ──
+  // The value/story emails (day1/day3) are harmless, but stop pitching the
+  // product (day5/8/12) to someone who already bought.
+  const SUPPRESS_IF_PURCHASED = new Set(["signal_day5", "signal_day8", "signal_day12"]);
+  if (SUPPRESS_IF_PURCHASED.has(template_key)) {
+    const { data: purchased } = await supabase
+      .from("purchases")
+      .select("id")
+      .eq("user_id", user_id)
+      .eq("status", "completed")
+      .limit(1)
+      .maybeSingle();
+    if (purchased) return; // already a customer — don't keep selling
+  }
+
+  // ── Magic link (passwordless login) ───────────────────────
+  // Generated BEFORE render so signal templates can use it as their main
+  // "your area" CTA — signal-takers usually never set a password, so a raw
+  // /account link is a wall they can't pass.
+  const magicLink = await generateMagicLink(email, supabase);
+
   // ── Render template ───────────────────────────────────────
-  const rendered = renderTemplate(template_key, { ...payload, name, email });
+  const rendered = renderTemplate(template_key, { ...payload, name, email, magicLink });
   if (!rendered) throw new Error(`Unknown template key: ${template_key}`);
 
   // ── Inject magic link footer ──────────────────────────────
-  const magicLink = await generateMagicLink(email, supabase);
   const footer = magicLinkFooterHtml(magicLink);
   rendered.html = rendered.html.replace("</body>", `${footer}</body>`);
 

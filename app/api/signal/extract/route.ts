@@ -570,16 +570,16 @@ export async function POST(req: NextRequest) {
       metadata: { source: authUser ? "authenticated" : "anonymous_gate" },
     });
 
+    // Enqueue the FULL signal nurture chain (welcome 0h + day1/3/5/8/12). Each
+    // job carries the bucket so the offer emails render the matched product.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: welcomeSeq } = await (db as any)
+    const { data: seqs } = await (db as any)
       .from("email_sequences")
-      .select("id, subject, template_key")
+      .select("id, subject, template_key, delay_hours")
       .eq("trigger_event", "SIGNAL_EXTRACTED")
-      .eq("delay_hours", 0)
-      .eq("active", true)
-      .maybeSingle();
+      .eq("active", true);
 
-    if (welcomeSeq) {
+    if (seqs && seqs.length) {
       // Pull email + name fresh so the job has what it needs even if the
       // anonymous path didn't keep it in scope.
       const { data: u } = await db
@@ -589,19 +589,23 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (u?.email) {
-        await db.from("jobs").insert({
+        const now = Date.now();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rows = seqs.map((seq: any) => ({
           type:    "SEND_EMAIL",
           payload: {
             user_id:      userId,
             email:        u.email,
             name:         u.name ?? "",
-            sequence_id:  welcomeSeq.id,
-            subject:      welcomeSeq.subject,
-            template_key: welcomeSeq.template_key,
+            sequence_id:  seq.id,
+            subject:      seq.subject,
+            template_key: seq.template_key,
+            bucket:       bucketDecision.bucket,
           },
-          run_at: new Date().toISOString(),
+          run_at: new Date(now + (seq.delay_hours ?? 0) * 60 * 60 * 1000).toISOString(),
           status: "pending",
-        });
+        }));
+        await db.from("jobs").insert(rows);
       }
     }
   } catch (e) {
