@@ -22,6 +22,7 @@ import {
 } from "@/lib/signal-visual-prompter";
 import { resolvePalette, type Palette } from "@/lib/signal/palettes";
 import { determineFraming } from "@/lib/signal/framing";
+import { persistBackground, isPersistedUrl } from "@/lib/signal/persist-bg";
 
 // Per-style overlay. Premium v2: very light tint across the whole card — just
 // enough to unify color and ground the image visually. White text legibility is
@@ -412,10 +413,7 @@ export async function GET(
   // v2 URLs (square aspect) would stretch/crop on the new portrait canvas, so
   // we force a regen at the new 4:5 aspect. Each style still caches independently.
   const cacheKey = `card_bg_url_v3_${style}`;
-  let bgUrl: string | null =
-    typeof row.signal[cacheKey] === "string" && row.signal[cacheKey].startsWith("http")
-      ? row.signal[cacheKey]
-      : null;
+  let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
   if (!bgUrl && allowAi && isReplicateConfigured()) {
     // Stage 1: Claude writes the visual prompt with full occupation context.
@@ -426,6 +424,7 @@ export async function GET(
       central_tool:   String(row.signal.central_tool   ?? ""),
       occupation:     typeof userRow?.occupation === "string" ? userRow.occupation : null,
       style,
+      aspect:         "4:5",
     });
 
     if (!promptResult.ok) {
@@ -438,7 +437,8 @@ export async function GET(
       // Stage 2: Flux renders the scene from Claude's prompt at 4:5 portrait.
       const gen = await generateBackgroundImage(promptResult.prompt, "4:5");
       if (gen.ok) {
-        bgUrl = gen.imageUrl;
+        // Re-host the ephemeral Replicate URL permanently before caching it.
+        bgUrl = await persistBackground(supabase, gen.imageUrl, `${id}/${cacheKey}.png`);
         // Persist per-style so future requests skip the regen.
         await mergeSignalField(supabase, id, cacheKey, bgUrl);
       } else {

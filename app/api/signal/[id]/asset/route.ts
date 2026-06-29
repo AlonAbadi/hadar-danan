@@ -26,6 +26,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { createHctiImage, isHctiConfigured } from "@/lib/htmlcsstoimage";
 import { isReplicateConfigured, generateBackgroundImage, type FluxAspectRatio } from "@/lib/replicate";
 import { buildVisualPrompt, isValidStyle, DEFAULT_STYLE, type VisualStyle } from "@/lib/signal-visual-prompter";
+import { persistBackground, isPersistedUrl } from "@/lib/signal/persist-bg";
 import { writeCardText, needsCardWriter } from "@/lib/signal-card-writer";
 
 // Per-style overlay. v2: very light tint only. White text legibility is owned
@@ -613,10 +614,7 @@ export async function GET(
   // we force a regen at the new aspect. Banner/story aspects didn't change but
   // they read the same v3 key so existing v2 URLs orphan harmlessly.
   const cacheKey = `asset_bg_url_v3_${typeParam}_${style}`;
-  let bgUrl: string | null =
-    typeof row.signal[cacheKey] === "string" && row.signal[cacheKey].startsWith("http")
-      ? row.signal[cacheKey]
-      : null;
+  let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
   if (!bgUrl && isReplicateConfigured()) {
     const promptResult = await buildVisualPrompt({
@@ -626,12 +624,14 @@ export async function GET(
       central_tool:   String(row.signal.central_tool   ?? ""),
       occupation:     typeof userRow?.occupation === "string" ? userRow.occupation : null,
       style,
+      aspect:         spec.aspect,
     });
 
     if (promptResult.ok) {
       const gen = await generateBackgroundImage(promptResult.prompt, spec.aspect);
       if (gen.ok) {
-        bgUrl = gen.imageUrl;
+        // Re-host the ephemeral Replicate URL permanently before caching it.
+        bgUrl = await persistBackground(supabase, gen.imageUrl, `${id}/${cacheKey}.png`);
         await mergeSignalField(supabase, id, cacheKey, bgUrl);
       } else {
         await supabase.from("error_logs").insert({

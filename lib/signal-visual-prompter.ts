@@ -71,10 +71,24 @@ The image must also embody the signal's emotional truth (not its literal words):
 
 **Composition rule:** the lower half of the frame must stay visually CALMER (less detail, softer focus) but never dark or empty — text will be overlaid there and we want a premium magazine feel, not a black void.
 
+**Composition for the target frame:** the user message gives a "Target frame" (e.g. 4:5 portrait, 9:16 vertical, wide banner). Compose explicitly for it — a portrait frame wants a vertical subject with calmer space in the lower third; a wide banner wants a horizontal scene with the subject off-center. Never compose for a square if a different frame is requested.
+
 **Hard constraint, append VERBATIM at the very end:**
-"No text, no letters, no words, no logos, no watermarks, no captions, no signage. No close-up faces directly toward the camera. Square 1:1 composition."
+"No text, no letters, no words, no logos, no watermarks, no captions, no signage. No close-up faces directly toward the camera."
 
 Output: ONLY the prompt text. No preamble, no explanation, no quotes around it. One block of prose, 90-150 words, ending with the constraint sentence.`;
+
+// Human-readable framing guidance per Flux aspect ratio — keeps the model from
+// defaulting to a centered square subject that then crops badly on portrait.
+const ASPECT_HINT: Record<string, string> = {
+  "1:1":  "square 1:1",
+  "4:5":  "vertical 4:5 portrait — subject upper-center, calmer negative space across the lower third",
+  "2:3":  "tall 2:3 portrait — vertical subject, room to breathe at the bottom",
+  "9:16": "tall 9:16 vertical (story/reel) — full-height vertical composition, calmer lower third",
+  "16:9": "wide 16:9 horizontal banner — off-center subject, long horizontal flow",
+  "3:2":  "wide 3:2 horizontal — landscape composition",
+  "21:9": "ultra-wide 21:9 banner — cinematic horizontal, subject to one side",
+};
 
 export async function buildVisualPrompt(args: {
   signal:          string;       // The signal sentence (Hebrew)
@@ -83,12 +97,15 @@ export async function buildVisualPrompt(args: {
   central_tool:    string;       // Their core practice (Hebrew)
   occupation?:     string | null; // Their field (Hebrew, optional)
   style:           VisualStyle;
+  aspect?:         string;         // Flux aspect ratio (e.g. "4:5", "9:16"); composition matches it
 }): Promise<{ ok: true; prompt: string } | { ok: false; error: string }> {
   try {
     const client = new Anthropic();
     const occupationLine = args.occupation && args.occupation.trim().length > 0
       ? `תחום עיסוק: ${args.occupation.trim()}`
       : "תחום עיסוק: לא נמסר. השתמש בכלי המרכזי כדי להסיק את הסצנה.";
+
+    const aspectHint = ASPECT_HINT[args.aspect ?? "4:5"] ?? "vertical 4:5 portrait";
 
     const userMessage = [
       occupationLine,
@@ -99,6 +116,7 @@ export async function buildVisualPrompt(args: {
       `הכלי המרכזי: ${args.central_tool}`,
       "",
       `Visual style directive: ${STYLE_DIRECTIVES[args.style]}`,
+      `Target frame: ${aspectHint}`,
       "",
       "Write the Flux prompt now. Output the prompt text only.",
     ].join("\n");
