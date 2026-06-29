@@ -41,6 +41,14 @@ export const SIGNAL_QUESTIONS_EN = [
 export type SignalQuestionKeyEn = (typeof SIGNAL_QUESTIONS_EN)[number]["key"];
 export type SignalAnswersEn = Record<SignalQuestionKeyEn, string>;
 
+export type RoutingSignalEn = {
+  commercial_fit:  "high" | "medium" | "low";
+  founder_stage:   "established" | "scaling" | "practicing" | "exploring";
+  signal_maturity: "raw" | "transitional" | "mature";
+  buyer_signals:   string[];   // up to 3 verbatim quotes from the answers
+  confidence:      number;     // 0..1
+};
+
 export type SignalOutputEn = {
   pain_source:           string;
   element:               string;
@@ -51,7 +59,19 @@ export type SignalOutputEn = {
   content_directions:    [string, string, string];
   warm_note:             string;
   public_card_statement: string;
+  routing_signal?:       RoutingSignalEn; // internal-only, never rendered; soft-fails to undefined
 };
+
+// Maps the LLM routing read to the English offer ladder: premium shoot day for
+// established/high-fit founders, otherwise a strategy session (the universal
+// entry to the premium relationship). No challenge for this audience.
+export function bucketFromRoutingEn(rs: RoutingSignalEn | undefined): "premium" | "strategy" {
+  if (!rs) return "strategy";
+  const topFit   = rs.commercial_fit === "high";
+  const topStage = rs.founder_stage === "established" || rs.founder_stage === "scaling";
+  const ripe     = rs.signal_maturity === "mature";
+  return topFit && topStage && ripe && (rs.confidence ?? 0) >= 0.6 ? "premium" : "strategy";
+}
 
 export const SIGNAL_ENGINE_EN_SYSTEM_PROMPT = `You are the TrueSignal© engine of the method created by Hadar Danan and Alon Abadi at beegood. You receive five free-form answers in English from a user, and you return a personal brand signal according to the method.
 
@@ -96,6 +116,16 @@ The first name appears exactly once - at the opening of the warm note. Nowhere e
 
 If a particular answer is empty or too thin, do not invent content. Mention in the warm note that a field is worth returning to.
 
+Anti-template brake (critical): if the answers contain no concrete detail to anchor the signal in, do NOT invent a generic line. A signal that could be copied onto a thousand other people has failed. Anchor every sentence in a specific concrete detail from THIS person's answers. Avoid recycled skeletons like "when others X, you already see Y before Z" unless the X/Y/Z are pulled directly from the answers.
+
+Internal routing field (routing_signal): a separate internal-only assessment, never shown to the user, fully independent of fields 1-9 (no word from it appears in them). Read the answers for commercial maturity:
+- commercial_fit: high (clear paying-client / business-owner language), medium (building, some signals), low (early / hobbyist / thin).
+- founder_stage: established (running a real business), scaling (growing, has clients), practicing (doing the craft, pre-business), exploring (still finding direction).
+- signal_maturity: mature (clear, lived, specific), transitional (forming), raw (came straight from pain, still unprocessed).
+- buyer_signals: up to 3 VERBATIM quotes from the answers that signal readiness to invest. Empty array if none.
+- confidence: 0..1. Below 0.6, lean conservative (medium/practicing).
+This is part of valid JSON. If you break its schema, routing falls back to defaults and the signal is still shown.
+
 Return ONLY valid JSON. No prose before or after, no markdown code fences, no explanations.
 
 Format (remember: every field in second person, direct address):
@@ -113,7 +143,14 @@ Format (remember: every field in second person, direct address):
     "Third content direction, in second person, different from the other two."
   ],
   "warm_note": "A warm, personal note of 3-4 sentences, in second person throughout. Opens with the first name if provided (once, at the opening), otherwise without a name. Clearly says 'I saw you' and names one specific thing you noticed in the answers. The good here is of clarity, not of a caress. If any answer was too thin, mention here that it is worth returning to.",
-  "public_card_statement": "The only field not written to the person who took the diagnostic, but to their audience - for a public PNG share card. Up to 110 characters. Either a direct address to the potential reader ('If you are...', 'For those who already tried...') or a first-person statement from the publisher ('I am the marketer for...', 'I work with...'). 'You' must not point at the person publishing the card. Must lean on the differentiation extracted in fields 1-8. No clichés ('the professional', 'the leader'), no exclamation marks."
+  "public_card_statement": "The only field not written to the person who took the diagnostic, but to their audience - for a public PNG share card. Up to 110 characters. Either a direct address to the potential reader ('If you are...', 'For those who already tried...') or a first-person statement from the publisher ('I am the marketer for...', 'I work with...'). 'You' must not point at the person publishing the card. Must lean on the differentiation extracted in fields 1-8. No clichés ('the professional', 'the leader'), no exclamation marks.",
+  "routing_signal": {
+    "commercial_fit": "medium",
+    "founder_stage": "practicing",
+    "signal_maturity": "transitional",
+    "buyer_signals": ["verbatim quote if any"],
+    "confidence": 0.7
+  }
 }
 
 Strict rules:

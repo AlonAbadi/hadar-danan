@@ -9,6 +9,7 @@ import {
   SIGNAL_QUESTIONS_EN,
   buildSignalUserMessageEn,
   validateSignalOutputEn,
+  bucketFromRoutingEn,
   type SignalAnswersEn,
   type SignalOutputEn,
 } from "@/lib/prompts/signal-engine-en";
@@ -197,6 +198,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // English offer routing: premium shoot day for top-tier founders, else a
+  // strategy session. The real bucket rides in the email payload (the bucket
+  // column has a CHECK that predates "premium"); routing_signal is in the JSONB.
+  const enBucket = bucketFromRoutingEn(parsed.routing_signal);
+
   const generatedAt = new Date().toISOString();
   let extractionId: string | null = null;
   try {
@@ -208,6 +214,7 @@ export async function POST(req: NextRequest) {
         model_used:   SIGNAL_ENGINE_EN_MODEL,
         raw_response: parsed,
         generated_at: generatedAt,
+        bucket:       "strategy", // valid column value; true premium/strategy is in routing_signal + payload
       })
       .select("id")
       .single();
@@ -236,33 +243,41 @@ export async function POST(req: NextRequest) {
     await db.from("events").insert({
       user_id:  userId,
       type:     "SIGNAL_EXTRACTED_EN",
-      metadata: { source: "en_anonymous_gate", locale: "en", extraction_id: extractionId },
+      metadata: { source: "en_anonymous_gate", locale: "en", extraction_id: extractionId, bucket: enBucket },
     });
 
+    // Lead heat for the admin/gold view (premium → hottest).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: welcomeSeq } = await (db as any)
-      .from("email_sequences")
-      .select("id, subject, template_key")
-      .eq("trigger_event", "SIGNAL_EXTRACTED_EN")
-      .eq("delay_hours", 0)
-      .eq("active", true)
-      .maybeSingle();
+    await (db as any).from("users").update({ signal_temperature: enBucket === "premium" ? "boiling" : "warm" }).eq("id", userId);
 
-    if (welcomeSeq && extractionId) {
-      await db.from("jobs").insert({
+    // Enqueue the FULL English nurture chain (welcome 0h + day1/3/5/8/12). Each
+    // job carries the bucket so the offer emails render the matched product.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: seqs } = await (db as any)
+      .from("email_sequences")
+      .select("id, subject, template_key, delay_hours")
+      .eq("trigger_event", "SIGNAL_EXTRACTED_EN")
+      .eq("active", true);
+
+    if (seqs && seqs.length) {
+      const now = Date.now();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rows = seqs.map((seq: any) => ({
         type:    "SEND_EMAIL",
         payload: {
           user_id:       userId,
           email:         emailStr,
           name:          fullName,
-          sequence_id:   welcomeSeq.id,
-          subject:       welcomeSeq.subject,
-          template_key:  welcomeSeq.template_key,
+          sequence_id:   seq.id,
+          subject:       seq.subject,
+          template_key:  seq.template_key,
           extraction_id: extractionId,
+          bucket:        enBucket,
         },
-        run_at: new Date().toISOString(),
+        run_at: new Date(now + (seq.delay_hours ?? 0) * 60 * 60 * 1000).toISOString(),
         status: "pending",
-      });
+      }));
+      await db.from("jobs").insert(rows);
     }
   } catch (e) {
     await db.from("error_logs").insert({

@@ -1332,6 +1332,129 @@ function signalWelcomeEn(ctx: EmailTemplateContext): RenderedEmail {
   };
 }
 
+// ── English signal nurture chain (premium audience: meeting + shoot day) ──
+// No /en product pages for these high-ticket consultative offers, so the CTA is
+// a conversation (WhatsApp). Offer copy branches on bucket: premium → the full
+// shoot-day production, else → a strategy session.
+const SIGNAL_WA_EN = "https://wa.me/972539566961";
+
+function isPremiumEn(ctx: EmailTemplateContext): boolean {
+  return ctx.bucket === "premium";
+}
+
+function signalDay1En(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
+  return {
+    subject: `${firstName}, a signal you don't act on is just a nice sentence`,
+    html: enBase(`
+      <div class="en-header"><div class="en-eyebrow">TrueSignal©</div><h1>${firstName}, what you do with it</h1></div>
+      <div class="en-body">
+        <p class="lede">You have your signal. The only question that matters now is what you do with it.</p>
+        <p>Here is one exercise for this week.</p>
+        <p>Take your signal. Write one post that starts from that sentence. Not about what you do - about what you see that others miss.</p>
+        <p>That is it. One post. Not a campaign, not a strategy. One line of truth, out in the open.</p>
+        <p>Because differentiation is not what you know. It is what you see, and say out loud.</p>
+        <a class="en-cta" href="${SIGNAL_WA_EN}">Tell Hadar how it went &rarr;</a>
+        <div class="en-signoff">Hadar</div>
+      </div>
+    `),
+  };
+}
+
+function signalDay3En(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
+  return {
+    subject: `${firstName}, the most talented people I know are invisible`,
+    html: enBase(`
+      <div class="en-header"><div class="en-eyebrow">TrueSignal©</div><h1>${firstName}, what I see again and again</h1></div>
+      <div class="en-body">
+        <p>${firstName},</p>
+        <p>There is one thing I have seen over and over, across hundreds of business owners.</p>
+        <p>The most talented, the deepest, the best at what they do - they are exactly the ones the market does not see.</p>
+        <p>Not because they are not good enough. Because they market their skills, not their signal. What they do, instead of what only they see.</p>
+        <p>Your signal is the start. What happens after it - how it becomes a consistent presence the right people choose - that is what we build with you.</p>
+        <p>More on that soon.</p>
+        <div class="en-signoff">Hadar</div>
+      </div>
+    `),
+  };
+}
+
+function signalDay5En(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
+  const premium = isPremiumEn(ctx);
+  const body = premium ? `
+        <p>${firstName},</p>
+        <p>Knowing your signal is the easy part. Turning it into a body of work the market cannot ignore is the hard part.</p>
+        <p>Your signal came through sharp. That usually means you are past "more content" - you are at the point where one strong production is worth a year of posts.</p>
+        <p>That is the premium shoot day: a full content production built entirely from your signal - the message pillars, the videos, the visual direction. We build the whole thing with you, in your voice.</p>` : `
+        <p>${firstName},</p>
+        <p>Knowing your signal is the easy part. Turning it into the way the market positions you is the hard part.</p>
+        <p>That is the strategy session: 90 minutes, one on one, where we take your signal and build your positioning from it - who the client is, what the offer is, why you.</p>
+        <p>You leave with one clear direction you can act on the next morning.</p>`;
+  return {
+    subject: `${firstName}, knowing your signal is the easy part`,
+    html: enBase(`
+      <div class="en-header"><div class="en-eyebrow">TrueSignal©</div><h1>${firstName}, the hard part</h1></div>
+      <div class="en-body">
+        ${body}
+        <a class="en-cta" href="${SIGNAL_WA_EN}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
+        <div class="en-signoff">Hadar</div>
+      </div>
+    `),
+  };
+}
+
+function signalDay8En(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
+  const premium = isPremiumEn(ctx);
+  const body = premium ? `
+        <p>${firstName},</p>
+        <p>Maybe you are wondering what a shoot day actually produces. Fair. Here is what you walk away with:</p>
+        <p>- A full set of videos, each one a layer of who you are, drawn from your signal.<br>
+        - A visual direction that makes you unmistakable in your category.<br>
+        - A body of work you can publish for months, not a single post.</p>
+        <p>It is not a photo shoot. It is your signal, produced.</p>` : `
+        <p>${firstName},</p>
+        <p>Maybe you are wondering whether one session really moves anything. Fair. Here is what happens in it:</p>
+        <p>- We take your signal and break it into positioning - the client, the offer, the price.<br>
+        - You leave with one clear direction to act on the next morning.<br>
+        - 90 minutes, one on one, focused only on you.</p>
+        <p>It is not a lecture or a template. It is work on your business, from the signal you already have.</p>`;
+  return {
+    subject: `${firstName}, what actually happens (and what you walk away with)`,
+    html: enBase(`
+      <div class="en-header"><div class="en-eyebrow">TrueSignal©</div><h1>${firstName}, what you walk away with</h1></div>
+      <div class="en-body">
+        ${body}
+        <a class="en-cta" href="${SIGNAL_WA_EN}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
+        <div class="en-signoff">Hadar</div>
+      </div>
+    `),
+  };
+}
+
+function signalDay12En(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
+  const premium = isPremiumEn(ctx);
+  return {
+    subject: `${firstName}, your signal is still here`,
+    html: enBase(`
+      <div class="en-header"><div class="en-eyebrow">TrueSignal©</div><h1>${firstName}, no pressure</h1></div>
+      <div class="en-body">
+        <p>${firstName},</p>
+        <p>Last note, no pressure.</p>
+        <p>Your signal is still saved. It is not going anywhere.</p>
+        <p>If you want to take it a step forward - ${premium ? "into a full production built from it" : "into a session that turns it into your positioning"} - the door is open.</p>
+        <p>And if you simply want to think out loud with someone who sees the whole picture, talk to me directly. Send me a line on WhatsApp, I read every one.</p>
+        <a class="en-cta" href="${SIGNAL_WA_EN}">Talk to Hadar &rarr;</a>
+        <p>Your signal is the start. What you do with it is yours.</p>
+        <div class="en-signoff">Hadar</div>
+      </div>
+    `),
+  };
+}
+
 // ── Template registry ─────────────────────────────────────────
 type TemplateFn = (ctx: EmailTemplateContext) => RenderedEmail;
 
@@ -1349,6 +1472,11 @@ const TEMPLATES: Record<string, TemplateFn> = {
   signal_day12:                signalDay12,
   // SIGNAL_EXTRACTED_EN welcome (English /en/signal flow)
   signal_welcome_en:           signalWelcomeEn,
+  en_signal_day1:              signalDay1En,
+  en_signal_day3:              signalDay3En,
+  en_signal_day5:              signalDay5En,
+  en_signal_day8:              signalDay8En,
+  en_signal_day12:             signalDay12En,
   // Manual on-demand full result email
   signal_result_full:          signalResultFull,
   // Hive monthly content drop announcement

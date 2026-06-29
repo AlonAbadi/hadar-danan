@@ -421,6 +421,27 @@ export default async function EnSignalResultPage({ params }: { params: Promise<{
             >
               See what comes next <span style={{ fontSize: 18 }}>→</span>
             </Link>
+            <a
+              href="https://wa.me/972539566961"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily:    "var(--font-jakarta), sans-serif",
+                fontSize:      15,
+                fontWeight:    700,
+                color:         C.ctaBg,
+                background:    "transparent",
+                border:        `1px solid ${C.ctaBg}`,
+                borderRadius:  12,
+                padding:       "15px 30px",
+                textDecoration: "none",
+                display:       "inline-flex",
+                alignItems:    "center",
+                gap:           10,
+              }}
+            >
+              Talk to Hadar <span style={{ fontSize: 18 }}>→</span>
+            </a>
             <Link
               href="/en/signal"
               style={{
