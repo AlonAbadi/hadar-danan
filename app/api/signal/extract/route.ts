@@ -540,18 +540,19 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Increment landing_headline A/B conversion counter ───────────────────
-  // Hero CTA on / leads here. If the visitor was bucketed into a tracked
-  // variant on first visit, count this completed extraction as their
-  // conversion. Mirrors the Cardcom-webhook pattern: server-side, RPC,
-  // soft-fail. We read the cookie fresh here rather than threading it
-  // through the request body so the client can't spoof a variant.
+  // Only count when the visitor actually SAW the homepage copy in THIS
+  // browser session. Reads `landing_home_session` — a session-scoped cookie
+  // set by PageTracker.tsx the moment a visitor lands on /. The persistent
+  // `ab_variant` cookie (30 days) was the wrong source: users with stale
+  // buckets from old copy versions who land on /signal via email/quiz/
+  // bookmark would still get counted, inflating conversions to >100% CVR.
   try {
     const cookieStore = await cookies();
-    const abVariant   = cookieStore.get("ab_variant")?.value;
-    if (abVariant === "A" || abVariant === "B") {
+    const homeVariant = cookieStore.get("landing_home_session")?.value;
+    if (homeVariant === "A" || homeVariant === "B") {
       await db.rpc("increment_experiment", {
         p_name:   "landing_headline",
-        p_column: abVariant === "A" ? "conversions_a" : "conversions_b",
+        p_column: homeVariant === "A" ? "conversions_a" : "conversions_b",
       });
     }
   } catch {
