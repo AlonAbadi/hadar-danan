@@ -63,6 +63,21 @@ export async function handleSendEmail(
   const footer = magicLinkFooterHtml(magicLink);
   rendered.html = rendered.html.replace("</body>", `${footer}</body>`);
 
+  // ── UTM tagging for internal links ────────────────────────
+  // So clicks from emails are attributed in /admin/acquisition. utm_content =
+  // template_key, so we see WHICH email in the chain drove the visit/conversion.
+  const isSignal = template_key.startsWith("signal_");
+  const addUtm = (href: string): string => {
+    if (!href.startsWith(APP_URL)) return href; // only our own pages
+    const params = new URLSearchParams({
+      utm_source:   "email",
+      utm_medium:   isSignal ? "signal_chain" : "lifecycle",
+      utm_campaign: isSignal ? "signal_nurture" : template_key,
+      utm_content:  template_key,
+    });
+    return href + (href.includes("?") ? "&" : "?") + params.toString();
+  };
+
   // ── Wrap all links through click tracker ─────────────────
   // Click = confirmed open. More reliable than pixel for text-only emails.
   const uid = encodeURIComponent(user_id);
@@ -79,7 +94,8 @@ export async function handleSendEmail(
       ) {
         return `href="${href}"`;
       }
-      const clickUrl = `${APP_URL}/api/email/click?uid=${uid}&sid=${sid}&url=${encodeURIComponent(href)}`;
+      const dest = addUtm(href);
+      const clickUrl = `${APP_URL}/api/email/click?uid=${uid}&sid=${sid}&url=${encodeURIComponent(dest)}`;
       return `href="${clickUrl}"`;
     }
   );

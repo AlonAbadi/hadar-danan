@@ -115,6 +115,37 @@ async function getMissedLeads(): Promise<MissedLead[]> {
 const GLITCH_MSG = (name: string) =>
   `היי ${name ? name + ", " : ""}כאן הצוות של הדר דנן. הייתה תקלה טכנית קטנה והאות שלך לא נשמר. נשמח שתיכנס/י שוב ותקבל/י אותו, זה לוקח 2 דקות: https://www.beegood.online/signal`;
 
+// Signal email-chain performance — per email: sent / opened (= clicked) / rate,
+// plus how many are still queued. The funnel-health view for the nurture chain.
+interface ChainStat { key: string; delay: number; label: string; sent: number; opened: number; queued: number; }
+
+const CHAIN_LABELS: Record<string, string> = {
+  signal_welcome: "0 · ברכה", signal_day1: "1 · תרגיל", signal_day3: "2 · סיפור",
+  signal_day5: "3 · הצעה", signal_day8: "4 · הוכחה", signal_day12: "5 · סגירה",
+};
+
+async function getSignalChainStats(): Promise<ChainStat[]> {
+  const supabase = createServerClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: seqs } = await (supabase as any)
+    .from("email_sequences")
+    .select("id, template_key, delay_hours")
+    .eq("trigger_event", "SIGNAL_EXTRACTED").order("delay_hours");
+  const out: ChainStat[] = [];
+  for (const s of seqs ?? []) {
+    const sentQ = await supabase.from("email_logs").select("*", { count: "exact", head: true }).eq("sequence_id", s.id);
+    const openQ = await supabase.from("email_logs").select("*", { count: "exact", head: true }).eq("sequence_id", s.id).eq("status", "opened");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const queuedQ = await (supabase as any).from("jobs").select("*", { count: "exact", head: true })
+      .eq("type", "SEND_EMAIL").eq("status", "pending").eq("payload->>sequence_id", s.id);
+    out.push({
+      key: s.template_key, delay: s.delay_hours, label: CHAIN_LABELS[s.template_key] ?? s.template_key,
+      sent: sentQ.count ?? 0, opened: openQ.count ?? 0, queued: queuedQ.count ?? 0,
+    });
+  }
+  return out;
+}
+
 export default async function AdminSignalPage() {
   const supabase = createServerClient();
 
@@ -126,6 +157,7 @@ export default async function AdminSignalPage() {
 
   const extractions: ExtractionRow[] = (rows ?? []) as ExtractionRow[];
   const missed = await getMissedLeads();
+  const chain  = await getSignalChainStats();
 
   // Window counts for the headline stats
   const now = Date.now();
@@ -156,6 +188,44 @@ export default async function AdminSignalPage() {
       {error && (
         <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, padding: "12px 16px", color: "#FCA5A5", marginBottom: 18 }}>
           שגיאה בשליפה: {String(error.message ?? error)}
+        </div>
+      )}
+
+      {/* Signal email-chain performance */}
+      {chain.length > 0 && (
+        <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "16px 18px", marginBottom: 22 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: C.gold, marginBottom: 2 }}>שרשרת המיילים של האות · ביצועים</div>
+          <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 14 }}>
+            נשלח / נפתח (= הוקלק) / שיעור פתיחה לכל מייל בשרשרת. "בתור" = ממתינים להישלח.
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+            <thead>
+              <tr style={{ color: C.muted, fontSize: 12 }}>
+                <th style={{ textAlign: "right", padding: "6px 8px", borderBottom: `1px solid ${C.line}` }}>מייל</th>
+                <th style={{ textAlign: "center", padding: "6px 8px", borderBottom: `1px solid ${C.line}` }}>נשלח</th>
+                <th style={{ textAlign: "center", padding: "6px 8px", borderBottom: `1px solid ${C.line}` }}>נפתח</th>
+                <th style={{ textAlign: "center", padding: "6px 8px", borderBottom: `1px solid ${C.line}` }}>שיעור</th>
+                <th style={{ textAlign: "center", padding: "6px 8px", borderBottom: `1px solid ${C.line}` }}>בתור</th>
+              </tr>
+            </thead>
+            <tbody>
+              {chain.map((r) => {
+                const rate = r.sent > 0 ? Math.round((r.opened / r.sent) * 100) : 0;
+                return (
+                  <tr key={r.key}>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${C.line}`, fontWeight: 700 }}>{r.label}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${C.line}`, textAlign: "center" }}>{r.sent}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${C.line}`, textAlign: "center" }}>{r.opened}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${C.line}`, textAlign: "center", color: rate >= 30 ? "#7FD49B" : rate >= 15 ? C.goldM : C.muted, fontWeight: 700 }}>{r.sent > 0 ? `${rate}%` : "—"}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${C.line}`, textAlign: "center", color: C.muted }}>{r.queued || "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div style={{ fontSize: 11.5, color: C.muted, marginTop: 10 }}>
+            ניתוב ההצעה: strategy → פגישה · השאר → אתגר. ייחוס מלא ב-<Link href="/admin/acquisition" style={{ color: C.goldM }}>אקוויזישן</Link> (utm_source=email · utm_content=שם המייל).
+          </div>
         </div>
       )}
 
