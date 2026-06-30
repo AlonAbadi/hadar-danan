@@ -28,6 +28,7 @@ import { isReplicateConfigured, generateBackgroundImage, type FluxAspectRatio } 
 import { buildVisualPrompt, isValidStyle, DEFAULT_STYLE, type VisualStyle } from "@/lib/signal-visual-prompter";
 import { persistBackground, isPersistedUrl } from "@/lib/signal/persist-bg";
 import { writeCardText, needsCardWriter } from "@/lib/signal-card-writer";
+import { splitQuote, leadSize, supportSize } from "@/lib/signal/card-type";
 
 // Per-style overlay. v2: very light tint only. White text legibility is owned
 // by the multi-layer text-shadow on .signal — the overlay is just for visual
@@ -174,18 +175,6 @@ function fontSizeFor(text: string, baseWidth: number): number {
 // decorative quote mark, corner accents and a refined footer block. Mirrors
 // the share-card route's layout (the two routes intentionally share the same
 // visual language for quote cards).
-// Quote font-size scales with length (no fixed 56px); Hebrew serif wants higher
-// line-height. Kept in sync with the share-card route's copy.
-function quoteSize(len: number): { fs: number; lh: number } {
-  if (len <= 30)  return { fs: 92, lh: 1.20 };
-  if (len <= 55)  return { fs: 78, lh: 1.22 };
-  if (len <= 85)  return { fs: 64, lh: 1.26 };
-  if (len <= 120) return { fs: 54, lh: 1.30 };
-  if (len <= 170) return { fs: 44, lh: 1.34 };
-  if (len <= 230) return { fs: 38, lh: 1.38 };
-  return { fs: 33, lh: 1.42 };
-}
-
 // Warm-cream radial scrim lifting the text zone on a light, luminous AI bg so
 // DARK quote text always reads — feathered, never a flat bar.
 const LIGHT_TEXT_SCRIM = `radial-gradient(ellipse 86% 58% at 50% 50%, rgba(252,247,239,0.72) 0%, rgba(252,247,239,0.46) 46%, rgba(252,247,239,0.0) 80%)`;
@@ -206,8 +195,12 @@ function buildQuoteHtml(args: {
     ? "0 1px 1px rgba(255,255,255,0.7), 0 2px 14px rgba(255,253,250,0.55)"
     : "0 2px 14px rgba(0,0,0,0.85), 0 4px 28px rgba(0,0,0,0.65), 0 0 48px rgba(0,0,0,0.45)";
   const footerShadow = onImage ? "0 1px 6px rgba(255,255,255,0.55)" : "0 2px 12px rgba(0,0,0,0.7)";
+  const supportColor = onImage ? "#4A3F36" : "#E9E2D2";
   const overlay      = onImage ? LIGHT_TEXT_SCRIM : overlayGradient(args.style, false);
-  const { fs, lh }   = quoteSize(args.text.length);
+  // Pull-quote hierarchy: smaller support lead-in + larger lead punch.
+  const { support, lead } = splitQuote(args.text);
+  const leadFs = leadSize(lead.length);
+  const supFs  = supportSize(leadFs.fs);
 
   const bgLayer = args.bgUrl
     ? `<div class="bg" style="background-image:url('${esc(args.bgUrl)}');"></div>
@@ -236,7 +229,8 @@ function buildQuoteHtml(args: {
   ${beeBlock}
   <div class="quote-zone">
     <div class="quote-mark">&ldquo;</div>
-    <div class="quote-text">${esc(args.text)}</div>
+    ${support ? `<div class="quote-support">${esc(support)}</div>` : ""}
+    <div class="quote-lead">${esc(lead)}</div>
     <div class="divider"></div>
   </div>
   ${footerBlock}
@@ -321,15 +315,30 @@ body { margin: 0; padding: 0; }
   direction: ltr;
 }
 
-.quote-text {
+.quote-support {
+  font-family: 'Heebo', 'Assistant', sans-serif;
+  font-size: ${supFs}px;
+  font-weight: 400;
+  line-height: 1.42;
+  color: ${supportColor};
+  opacity: 0.92;
+  direction: rtl;
+  unicode-bidi: plaintext;
+  text-wrap: balance;
+  margin-bottom: 20px;
+  text-shadow: ${quoteShadow};
+}
+
+.quote-lead {
   font-family: 'Frank Ruhl Libre', 'Assistant', serif;
-  font-size: ${fs}px;
-  font-weight: 500;
-  line-height: ${lh};
+  font-size: ${leadFs.fs}px;
+  font-weight: 700;
+  line-height: ${leadFs.lh};
   color: ${quoteColor};
   direction: rtl;
   unicode-bidi: plaintext;
   text-wrap: balance;
+  letter-spacing: -0.005em;
   text-shadow: ${quoteShadow};
 }
 
@@ -647,10 +656,16 @@ export async function GET(
   // for the 5 quote-* types would stretch/crop on the new portrait canvas, so
   // we force a regen at the new aspect. Banner/story aspects didn't change but
   // they read the same v3 key so existing v2 URLs orphan harmlessly.
-  const cacheKey = `asset_bg_url_v5_${typeParam}_${style}`;
+  const cacheKey = `asset_bg_url_v6_${typeParam}_${style}`;
   let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
   if (wantImage && !bgUrl && isReplicateConfigured()) {
+    // Which of the 7 cards this is — drives the per-card color value + concept
+    // variation so a person's set is cohesive but not identical.
+    const CARD_INDEX: Record<string, number> = {
+      "quote-signal": 1, "quote-promise": 2, "quote-people": 3,
+      "quote-content-1": 4, "quote-content-2": 5, "quote-content-3": 6,
+    };
     const promptResult = await buildVisualPrompt({
       signal:         String(row.signal.signal         ?? ""),
       signal_promise: String(row.signal.signal_promise ?? ""),
@@ -659,6 +674,7 @@ export async function GET(
       occupation:     typeof userRow?.occupation === "string" ? userRow.occupation : null,
       style,
       aspect:         spec.aspect,
+      cardIndex:      CARD_INDEX[typeParam] ?? 0,
     });
 
     if (promptResult.ok) {
@@ -692,7 +708,7 @@ export async function GET(
 
   const result = await createHctiImage({
     html, css,
-    googleFonts:    "Frank+Ruhl+Libre:wght@500;700|Heebo:wght@300;700|Assistant:wght@700",
+    googleFonts:    "Frank+Ruhl+Libre:wght@500;700|Heebo:wght@300;400;700|Assistant:wght@700",
     viewportWidth:  spec.width,
     viewportHeight: spec.height,
     msDelay:        700,

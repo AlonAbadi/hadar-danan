@@ -23,6 +23,7 @@ import {
 import { resolvePalette, type Palette } from "@/lib/signal/palettes";
 import { determineFraming } from "@/lib/signal/framing";
 import { persistBackground, isPersistedUrl } from "@/lib/signal/persist-bg";
+import { splitQuote, leadSize, supportSize } from "@/lib/signal/card-type";
 
 // Per-style overlay. Premium v2: very light tint across the whole card — just
 // enough to unify color and ground the image visually. White text legibility is
@@ -83,19 +84,6 @@ function esc(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-// Quote font-size scales with length so short and long quotes both look
-// intentional in the 4:5 frame (no more fixed 56px). Hebrew serif wants higher
-// line-height than Latin (nikud + tall letters need vertical air).
-function quoteSize(len: number): { fs: number; lh: number } {
-  if (len <= 30)  return { fs: 92, lh: 1.20 };
-  if (len <= 55)  return { fs: 78, lh: 1.22 };
-  if (len <= 85)  return { fs: 64, lh: 1.26 };
-  if (len <= 120) return { fs: 54, lh: 1.30 };
-  if (len <= 170) return { fs: 44, lh: 1.34 };
-  if (len <= 230) return { fs: 38, lh: 1.38 };
-  return { fs: 33, lh: 1.42 };
-}
-
 // Warm-cream radial scrim that lifts the text zone on a (now light, luminous)
 // AI background so DARK quote text always reads — feathered, never a flat bar.
 const LIGHT_TEXT_SCRIM = `radial-gradient(ellipse 86% 58% at 50% 50%, rgba(252,247,239,0.72) 0%, rgba(252,247,239,0.46) 46%, rgba(252,247,239,0.0) 80%)`;
@@ -111,8 +99,12 @@ function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, sty
     ? "0 1px 1px rgba(255,255,255,0.7), 0 2px 14px rgba(255,253,250,0.55)"
     : "0 2px 14px rgba(0,0,0,0.85), 0 4px 28px rgba(0,0,0,0.65), 0 0 48px rgba(0,0,0,0.45)";
   const footerShadow = onImage ? "0 1px 6px rgba(255,255,255,0.55)" : "0 2px 12px rgba(0,0,0,0.7)";
+  const supportColor = onImage ? "#4A3F36" : palette.text;
   const overlay      = onImage ? LIGHT_TEXT_SCRIM : overlayGradient(style);
-  const { fs, lh }   = quoteSize(signalText.length);
+  // Pull-quote hierarchy: a smaller support lead-in + a larger lead punch.
+  const { support, lead } = splitQuote(signalText);
+  const leadFs = leadSize(lead.length);
+  const supFs  = supportSize(leadFs.fs);
 
   // When we have an AI-generated background, lay it down first under the scrim
   // so the Hebrew text always stays readable regardless of what the model came
@@ -159,7 +151,8 @@ function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, sty
   ${beeBlock}
   <div class="quote-zone">
     <div class="quote-mark">&ldquo;</div>
-    <div class="quote-text">${esc(signalText)}</div>
+    ${support ? `<div class="quote-support">${esc(support)}</div>` : ""}
+    <div class="quote-lead">${esc(lead)}</div>
     <div class="divider"></div>
   </div>
   ${footerBlock}
@@ -259,15 +252,30 @@ body { margin: 0; padding: 0; }
   direction: ltr;
 }
 
-.quote-text {
+.quote-support {
+  font-family: 'Heebo', 'Assistant', sans-serif;
+  font-size: ${supFs}px;
+  font-weight: 400;
+  line-height: 1.42;
+  color: ${supportColor};
+  opacity: 0.92;
+  direction: rtl;
+  unicode-bidi: plaintext;
+  text-wrap: balance;
+  margin-bottom: 20px;
+  text-shadow: ${quoteShadow};
+}
+
+.quote-lead {
   font-family: 'Frank Ruhl Libre', 'Assistant', serif;
-  font-size: ${fs}px;
-  font-weight: 500;
-  line-height: ${lh};
+  font-size: ${leadFs.fs}px;
+  font-weight: 700;
+  line-height: ${leadFs.lh};
   color: ${quoteColor};
   direction: rtl;
   unicode-bidi: plaintext;
   text-wrap: balance;
+  letter-spacing: -0.005em;
   text-shadow: ${quoteShadow};
 }
 
@@ -440,7 +448,7 @@ export async function GET(
   // Cache key v3 — bumped when canvas changed from 1:1 to 4:5 (1080×1350).
   // v2 URLs (square aspect) would stretch/crop on the new portrait canvas, so
   // we force a regen at the new 4:5 aspect. Each style still caches independently.
-  const cacheKey = `card_bg_url_v5_${style}`;
+  const cacheKey = `card_bg_url_v6_${style}`;
   let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
   if (wantImage && !bgUrl && allowAi && isReplicateConfigured()) {
@@ -453,6 +461,7 @@ export async function GET(
       occupation:     typeof userRow?.occupation === "string" ? userRow.occupation : null,
       style,
       aspect:         "4:5",
+      cardIndex:      0, // the public-statement card (card #1 of the set)
     });
 
     if (!promptResult.ok) {
@@ -490,7 +499,7 @@ export async function GET(
   const result = await createHctiImage({
     html,
     css,
-    googleFonts:    "Frank+Ruhl+Libre:wght@500;700|Heebo:wght@300;700|Assistant:wght@700",
+    googleFonts:    "Frank+Ruhl+Libre:wght@500;700|Heebo:wght@300;400;700|Assistant:wght@700",
     viewportWidth:  1080,
     viewportHeight: 1350,
     msDelay:        700,   // give the 2 webfonts + bee logo image time to load

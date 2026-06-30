@@ -24,6 +24,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { assignWorld, colorDirective, goldRepulsion, SHARED_NEGATIVES } from "@/lib/signal/color-worlds";
 
 export type VisualStyle = "editorial" | "warm" | "minimal" | "luminous";
 
@@ -57,7 +58,7 @@ Your job: given a Hebrew personal-brand signal (their differentiation), their pr
 PERSONALIZATION METHOD — derive every image from the signal, with NO default prop:
 1. CONCEPT (subject/scene): pull the person's own metaphor from their signal. If none is explicit, synthesize one from field x promise — a concrete, poetic, people-free scene. NEVER reach for a generic prop (no bowl, no draped linen).
 2. LIGHT-VERB (the promise as motion): decide what the light is DOING — rising, breaking through, spreading, warming, clarifying, igniting, gilding. The light always does something generous. This is what makes it positive and alive.
-3. COLOR WORLD (a 2-3 note chord from the emotional truth + field): one confident SIGNATURE hue + a warm light tone + a grounding neutral, over a luminous warm-cream base. Warm-biased for optimism; cool only when the signal is intrinsically about water/sky/clarity, and even then kept luminous, never grey.
+3. COLOR WORLD: use the forced COLOR WORLD given in the user message EXACTLY — its named hue and its hex values. Bind the hue into the subject itself (e.g. "a single deep-emerald folded paper", "one plum-violet ceramic form") and restate it as the background field. Do NOT invent a different palette, and do NOT default to gold/amber unless the forced world is a warm one.
 4. MATERIAL & TEXTURE (from their field): the real, tactile textures of THEIR world — sunlit plaster, flowing silk, water, fruit skin, paper, stone, petal, gold leaf, glass — rendered with high-fidelity richness. Not a stock prop.
 5. DEPTH & ATMOSPHERE: an atmospheric / mesh color gradient acting as ambient light, soft bloom, foreground-midground-falloff, a soft glow. Depth = aliveness. Never flat.
 6. THE ONE UNEXPECTED ELEMENT (from their differentiation): a single signal-specific detail that makes this card impossible to confuse with anyone else's.
@@ -72,10 +73,9 @@ Use the visual style directive in the user message to flavor the light and color
 
 **Target frame:** the user message gives a "Target frame" (e.g. 4:5 portrait). Compose explicitly for it.
 
-**Hard constraint, append VERBATIM at the very end:**
-"No people, no human figures, no faces, no hands. No text, no letters, no logos, no watermarks. No greige, no muted beige, no ceramic bowl, no draped linen, no flat lighting, no desaturation, no film grain, no vintage, no moody darkness, no clutter."
+**Negatives:** end your prompt by appending, verbatim, the NEGATIVE BLOCK provided in the user message.
 
-Output: ONLY the prompt text. No preamble, no explanation, no quotes. One block of prose, 110-170 words, ending with the constraint sentence.`;
+Output: ONLY the prompt text. No preamble, no explanation, no quotes. One block of prose, 110-170 words, ending with the negative block.`;
 
 // Human-readable framing guidance per Flux aspect ratio — keeps the model from
 // defaulting to a centered square subject that then crops badly on portrait.
@@ -97,6 +97,7 @@ export async function buildVisualPrompt(args: {
   occupation?:     string | null; // Their field (Hebrew, optional)
   style:           VisualStyle;
   aspect?:         string;         // Flux aspect ratio (e.g. "4:5", "9:16"); composition matches it
+  cardIndex?:      number;         // 0-6 — which of the 7 cards (drives color value + concept variation)
 }): Promise<{ ok: true; prompt: string } | { ok: false; error: string }> {
   try {
     const client = new Anthropic();
@@ -105,6 +106,14 @@ export async function buildVisualPrompt(args: {
       : "תחום עיסוק: לא נמסר. השתמש בכלי המרכזי כדי להסיק את הסצנה.";
 
     const aspectHint = ASPECT_HINT[args.aspect ?? "4:5"] ?? "vertical 4:5 portrait";
+
+    // Forced color world (deterministic per person) + per-card value/temperature
+    // variation, so a person's 7 cards are a cohesive SET and different people
+    // diverge — no more gold monoculture. Negatives ban the gem/glitter basin.
+    const cardIndex = args.cardIndex ?? 0;
+    const { world } = assignWorld(args.occupation, args.signal);
+    const colorBlock = colorDirective(world, cardIndex);
+    const negatives  = SHARED_NEGATIVES + goldRepulsion(world, cardIndex);
 
     const userMessage = [
       occupationLine,
@@ -115,7 +124,13 @@ export async function buildVisualPrompt(args: {
       `הכלי המרכזי: ${args.central_tool}`,
       "",
       `Visual style directive: ${STYLE_DIRECTIVES[args.style]}`,
+      "",
+      colorBlock,
+      "",
+      `This is card #${cardIndex + 1} of 7 for this person. Its concept MUST be distinct from the others: a different subject family, material, and light behaviour. Do NOT make scattered shiny objects.`,
       `Target frame: ${aspectHint}`,
+      "",
+      `NEGATIVE BLOCK — append this verbatim as the final sentences of your prompt: "${negatives}"`,
       "",
       "Write the Flux prompt now. Output the prompt text only.",
     ].join("\n");
