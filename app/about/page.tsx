@@ -5,7 +5,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
 export const metadata: Metadata = {
   title: "אודות הדר דנן | מומחית שיווק אותנטי, יוצרת שיטת TrueSignal",
-  description: "הדר דנן — מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal©. מעל 3,500 לקוחות ב-80 תחומים, 50,000+ תכנים, ושיטה אחת: הסיפור, המספרים והשיטה.",
+  description: "הדר דנן — מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal©. קהילה של 70,000 עוקבים, מעל 3,500 לקוחות ב-80 תחומים: הסיפור, המספרים והשיטה.",
   alternates: { canonical: "/about" },
 };
 
@@ -15,7 +15,7 @@ const personSchema = {
   "name": "הדר דנן",
   "url": APP_URL,
   "jobTitle": "מומחית שיווק אותנטי ויוצרת שיטת TrueSignal",
-  "description": "הדר דנן היא מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal©. עבדה עם מעל 3,500 לקוחות במעל 80 תחומים מאז 2023.",
+  "description": "הדר דנן היא מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal©. עבדה עם מעל 3,500 לקוחות במעל 80 תחומים, ובנתה קהילה של מעל 70,000 עוקבים מאז 2023.",
   "alumniOf": { "@type": "EducationalOrganization", "name": "בית הספר למשחק גודמן" },
   "knowsAbout": ["שיווק אותנטי", "עמידה מול מצלמה", "יצירת תוכן וידאו", "בניית מערכות Signal", "בניית מותג אישי", "אסטרטגיה עסקית", "TrueSignal"],
   "sameAs": [
@@ -177,9 +177,9 @@ export default function AboutPage() {
             {/* ── STATS ──────────────────────────────────────── */}
             <section className="about-stats" style={{ marginTop: 100, paddingTop: 60, borderTop: "1px solid #1f2530", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 40 }}>
               {[
-                { n: "3,500+", t: "לקוחות שמצאו את הבהירות שלהם" },
+                { n: "70,000", t: "עוקבים" },
+                { n: "3,500+", t: "לקוחות שמצאו את הבהירות" },
                 { n: "4",      t: "שנים" },
-                { n: "80",     t: "תחומים" },
               ].map((s) => (
                 <div key={s.t}>
                   <div className="about-stat-n" style={{ fontSize: 56, fontWeight: 800, color: "#E8B94A", lineHeight: 1 }}>
