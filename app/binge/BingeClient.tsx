@@ -255,7 +255,7 @@ function PosterCard({
               color: "#E8B94A", fontSize: 9, fontWeight: 700,
               letterSpacing: 1.4, textTransform: "uppercase",
             }}>
-              חברי הכוורת
+              לקוחות
             </span>
           </div>
         )}
@@ -411,7 +411,7 @@ export default function BingeClient({ isMember, isLoggedIn }: { isMember: boolea
           }}
         >
           <div style={{ color: "#E8B94A", fontSize: 13, fontWeight: 800, marginBottom: 2 }}>
-            הספרייה המלאה פתוחה לחברי הכוורת
+            הספרייה המלאה פתוחה ללקוחות
           </div>
           <div style={{ color: "#AAB0BD", fontSize: 12 }}>
             הצטרפו ב-₪59 לחודש וצפו בכל התהליכים והרילסים ←

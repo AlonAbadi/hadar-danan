@@ -7,7 +7,7 @@ import BingeClient from "./BingeClient";
 
 export const metadata: Metadata = {
   title: "בינג׳ | ספריית התוכן של הכוורת — הדר דנן",
-  description: "תהליכים מלאים, רילסים, ולקוחות אמיתיים שעברו את שיטת TrueSignal©. הספרייה המלאה פתוחה לחברי הכוורת.",
+  description: "תהליכים מלאים, רילסים, ולקוחות אמיתיים שעברו את שיטת TrueSignal©. הספרייה המלאה פתוחה ללקוחות.",
   alternates: { canonical: "/binge" },
 };
 
