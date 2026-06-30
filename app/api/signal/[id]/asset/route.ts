@@ -656,7 +656,7 @@ export async function GET(
   // for the 5 quote-* types would stretch/crop on the new portrait canvas, so
   // we force a regen at the new aspect. Banner/story aspects didn't change but
   // they read the same v3 key so existing v2 URLs orphan harmlessly.
-  const cacheKey = `asset_bg_url_v7_${typeParam}_${style}`;
+  const cacheKey = `asset_bg_url_v8_${typeParam}_${style}`;
   let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
   if (wantImage && !bgUrl && isReplicateConfigured()) {

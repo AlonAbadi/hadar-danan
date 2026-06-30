@@ -24,7 +24,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { assignScene, sceneDirective, SHARED_NEGATIVES } from "@/lib/signal/color-worlds";
+import { assignTerritory, territoryDirective, SHARED_NEGATIVES } from "@/lib/signal/color-worlds";
 
 export type VisualStyle = "editorial" | "warm" | "minimal" | "luminous";
 
@@ -40,21 +40,27 @@ const STYLE_DIRECTIVES: Record<VisualStyle, string> = {
 const MODEL  = "claude-sonnet-4-6";
 const MAX_TK = 600;
 
-const SYSTEM_PROMPT = `You are a world-class photography art director writing image prompts for Black Forest Labs Flux 1.1 Pro Ultra. Each image is the background of an Instagram quote card (4:5) — a BEAUTIFUL, HIGH-QUALITY, CINEMATIC, PEOPLE-FREE REAL PHOTOGRAPH. Think premium editorial / nature / architectural photography: rich, dimensional, gorgeous natural light. Modern 2026 — never antique, never film/vintage, never flat abstract color.
+const SYSTEM_PROMPT = `You are a world-class cinematographer writing image prompts for Black Forest Labs Flux 1.1 Pro Ultra. Each image is the background of an Instagram post — a UNIQUE, ORIGINAL, SURPRISING cinematic scene that feels like real contemporary high-end cinematography worthy of a luxury brand campaign or award-winning editorial photography.
 
-Your job: given a Hebrew personal-brand signal (their differentiation), their promise and field, plus a SCENE FOUNDATION, write ONE English Flux prompt (90-150 words) for a stunning real photograph.
+SUBJECT IS UNCONSTRAINED: the scene may come from absolutely any real-world environment, object, material, architecture, interior, exterior, weather condition, surface, light interaction, or unexpected visual moment. Prioritize ORIGINALITY and visual beauty. Every prompt should feel fresh and surprising — never the obvious or generic choice.
 
-METHOD:
-1. START FROM THE SCENE FOUNDATION given in the user message — that scene + its natural palette + its light are the foundation, and the source of this card's color (each of the 7 cards has a different scene, so the set is varied, never one uniform hue).
-2. BEND THE SCENE to embody the signal's EMOTIONAL TRUTH (not its literal words): e.g. "clarity that quiets the noise" -> first light breaking softly over still water; "patient growth" -> dawn warming a field. The scene should feel like the signal, while staying a real photographic place.
-3. LIGHT IS THE HERO and it is generous — rising, spreading, warming, breaking through. Positive, alive, hopeful. Never moody darkness, never flat shadowless light.
-4. REAL PHOTOGRAPHY, never a staged single prop object, never flat color or a plain gradient, never a mosaic. A real place, with depth, atmosphere and natural color.
+Write ONE English Flux prompt (90-150 words) that bakes in ALL of the following:
 
-CALM LIGHT ZONE FOR TEXT (critical): keep the vertical center band (about 38%-82% of the height) the LIGHTEST, softest, lowest-detail area — open sky, soft water, a wash of light, gentle haze — so dark Hebrew quote text overlaid there reads crisp. Push the richer detail to the top and bottom.
+CINEMATOGRAPHY (mandatory): shot as real high-end cinema photography; ARRI Alexa / Sony Venice visual quality; 35mm, 50mm or 85mm prime-lens aesthetics; natural lens compression; believable shallow depth of field.
 
-ABSOLUTELY NO PEOPLE: no person, face, silhouette, profile, portrait, head, bust, statue, or mosaic-of-a-face. If the scene could imply a figure, remove it.
+COMPOSITION: editorial framing; layered depth with clear foreground, midground and background separation; strong visual balance with intentional asymmetry; deliberate NEGATIVE SPACE suitable for a text overlay (keep one calm, low-detail, softly-lit area — ideally the vertical center band — clear for Hebrew text).
 
-**Target frame:** the user message gives a "Target frame" (e.g. 4:5 portrait). Compose explicitly for it.
+LIGHTING: beautiful motivated lighting from natural or practical sources; soft diffusion; realistic shadow falloff; subtle halation and bloom; occasional volumetric atmosphere.
+
+TEXTURE: visible micro-detail; real-world materials; tactile surfaces; subtle imperfections; fine cinematic film grain.
+
+COLOR: premium modern cinematic color grading; soft highlight rolloff; rich but controlled contrast; tasteful color separation; a warm-neutral emotional palette (let each card carry its own natural colors — never one uniform hue across the set).
+
+MOOD: modern, positive, emotionally intelligent, elegant, alive, human, premium. Let the signal in the user message inform the EMOTION/mood only — never illustrate it literally.
+
+HARD RULES: no people, no faces, no human figures. No artificial CGI look, no 3D-render look, no stock-photo aesthetic, no over-processed AI imagery.
+
+**Target frame:** compose explicitly for the "Target frame" given in the user message (e.g. 4:5 portrait).
 
 **Negatives:** end your prompt by appending, verbatim, the NEGATIVE BLOCK provided in the user message.
 
@@ -90,26 +96,23 @@ export async function buildVisualPrompt(args: {
 
     const aspectHint = ASPECT_HINT[args.aspect ?? "4:5"] ?? "vertical 4:5 portrait";
 
-    // Each card gets a DISTINCT real-photography scene (varied per card +
-    // varied between people). Color comes from the scene's natural palette,
-    // never one forced uniform hue.
+    // Each card springs from a DIFFERENT broad territory (varied per card +
+    // varied between people); the model invents an original cinematic scene.
     const cardIndex = args.cardIndex ?? 0;
-    const scene = assignScene(args.occupation, args.signal, cardIndex);
-    const sceneBlock = sceneDirective(scene);
+    const territory = assignTerritory(args.occupation, args.signal, cardIndex);
+    const territoryBlock = territoryDirective(territory);
 
     const userMessage = [
       occupationLine,
       "",
-      `האות: ${args.signal}`,
-      `הכיוון שאליו האות מצביע: ${args.signal_promise}`,
-      `האלמנט: ${args.element}`,
-      `הכלי המרכזי: ${args.central_tool}`,
+      `The signal (for emotional MOOD only — let it inform the feeling, do NOT illustrate it literally): ${args.signal}`,
+      `Its direction: ${args.signal_promise}`,
       "",
       `Photographic flavor: ${STYLE_DIRECTIVES[args.style]}`,
       "",
-      sceneBlock,
+      territoryBlock,
       "",
-      `This is card #${cardIndex + 1} of 7 for this person — its scene is already different from the others. Keep its natural colors (do NOT force one uniform hue across the set).`,
+      `This is card #${cardIndex + 1} of 7 for this person — make it genuinely different from a typical card: a fresh, surprising, original scene with its own natural colors.`,
       `Target frame: ${aspectHint}`,
       "",
       `NEGATIVE BLOCK — append this verbatim as the final sentences of your prompt: "${SHARED_NEGATIVES}"`,

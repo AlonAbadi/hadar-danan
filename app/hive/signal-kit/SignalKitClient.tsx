@@ -215,7 +215,7 @@ const VISUAL_ASSETS: VisualAsset[] = [
 const VISUAL_STYLE = "editorial";
 // Bump together with the route cache-key version (card_bg_url_vN / asset_bg_url_vN)
 // to bust the browser + CDN cache after a visual-prompter change.
-const ASSET_CACHE_V = 7;
+const ASSET_CACHE_V = 8;
 
 function VisualTab({ extractionId }: { extractionId: string }) {
   const [mode, setMode] = useState<"color" | "image">("color");
