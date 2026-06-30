@@ -171,14 +171,17 @@ function TextTab({ kit, loading, error }: { kit: ContentKit | null; loading: boo
       <Section title="בייו לאינסטגרם" hint="עד 150 תווים, חד וקליל">
         <CopyBlock text={kit.bio_short} />
       </Section>
-      <Section title="אבאוט קצר ללינקדאין" hint="עד 300 תווים, 2-3 משפטים">
-        <CopyBlock text={kit.bio_medium} />
-      </Section>
-      <Section title="כותרת ללינקדאין (Headline)" hint="עד 120 תווים, מתחת לשם בלינקדאין">
+      <Section title="כותרת ללינקדאין" hint="עד 120 תווים, מתחת לשם בלינקדאין">
         <CopyBlock text={kit.linkedin_headline} />
       </Section>
-      <Section title="אבאוט ארוך לדף 'אודות'" hint="150-220 מילים">
+      <Section title="אודות לפייסבוק" hint="עד 300 תווים, 2-3 משפטים">
+        <CopyBlock text={kit.bio_medium} />
+      </Section>
+      <Section title="טקסט לדף 'אודות' באתר" hint="150-220 מילים · טיוטה ראשונית">
         <CopyBlock text={kit.bio_long} longForm />
+        <div style={{ fontSize: 12.5, color: C.muted, marginTop: 10, padding: "10px 12px", background: "rgba(232,185,74,0.06)", border: `1px solid ${C.lineGold}`, borderRadius: 8, lineHeight: 1.6 }}>
+          זו טיוטה ראשונית שנגזרה מהאות שלכם. עברו עליה, דייקו ושנו לקול שלכם לפני שמפרסמים.
+        </div>
       </Section>
       <Section title="מניפסט אישי" hint="400-600 מילים, האני מאמין שלך">
         <CopyBlock text={kit.manifesto} longForm />
