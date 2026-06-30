@@ -21,7 +21,6 @@ const INVOICE_DESCRIPTIONS: Record<string, string> = {
   course_1800:    "קורס דיגיטלי - הדר דנן",
   strategy_4000:  "פגישת אסטרטגיה - הדר דנן",
   premium_14000:  "יום צילום פרמיום - הדר דנן",
-  sadna_500:      "סדנת פרימיום - הדר דנן",
   test_1:         "מוצר טסט - הדר דנן",
 };
 
@@ -57,7 +56,6 @@ const BodySchema = z.object({
     "course_1800",
     "strategy_4000",
     "premium_14000",
-    "sadna_500",
     "test_1",
   ]),
   user_id:     z.string().uuid(),
@@ -87,7 +85,7 @@ export async function POST(req: NextRequest) {
   // Server-side coupon validation. The page rendered the discounted price,
   // the CTA forwarded the code — but we re-validate here so a buyer who
   // tampers with the request body can't fake a discount.
-  // PRODUCT_MAP keys exclude test_1 / sadna_500; validateCoupon returns null
+  // PRODUCT_MAP keys exclude test_1; validateCoupon returns null
   // when the product key isn't in the map, which is the safe default.
   const coupon = coupon_code
     ? await validateCoupon(coupon_code, product as ProductKey).catch(() => null)
@@ -128,7 +126,7 @@ export async function POST(req: NextRequest) {
     .from("purchases")
     .insert({
       user_id,
-      product: product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000" | "sadna_500",
+      product: product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000",
       amount,
       currency: "ILS",
       status: "pending",
