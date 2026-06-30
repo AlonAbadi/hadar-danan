@@ -27,56 +27,55 @@ import Anthropic from "@anthropic-ai/sdk";
 
 export type VisualStyle = "editorial" | "warm" | "minimal" | "luminous";
 
+// Four MODERN, people-free moods (2026 art-directed material realism, not
+// emulated vintage photography). Keys kept stable for the codebase.
 const STYLE_DIRECTIVES: Record<VisualStyle, string> = {
+  // TONAL STILL — refined contemporary still life (default)
   editorial:
-    "Magazine editorial photography. Hasselblad H6D-100c with 85mm f/1.4 wide open. " +
-    "Dramatic single-source lighting (Profoto strobe through a softbox left, warm tungsten rim right). " +
-    "Rich dimensional shadows — never muddy black. Kodak Portra 800 push-1 grain. Vogue cover quality. " +
-    "Palette: deep navy, warm charcoal, gold rim light, cream highlights.",
+    "Refined contemporary still life, design-monograph aesthetic. One hero object, or two to three tonally-matched objects, on a matte textured surface (microcement, raw plaster, travertine, linen). " +
+    "Clean digital capture, tack-sharp, high micro-contrast, crisp commercial product photography. " +
+    "Soft bright diffused daylight, low contrast, gentle soft shadows that describe material. " +
+    "Tonal low-saturation palette in one warm-neutral family (bone, oat, greige, clay) with a single restrained accent. Quiet, gallery-like, generous negative space.",
+  // SOFT GRADIENT FIELD — atmosphere over object
   warm:
-    "Documentary lifestyle photography. Leica M11 with 50mm Summilux f/1.4. " +
-    "Golden-hour natural light, warm earth tones, lived-in textures. " +
-    "Kodak Portra 400 film — natural skin tones, gentle grain, subtle halation. " +
-    "Aperture Magazine feel: quiet observed moments, unposed composition.",
+    "Clean dimensional soft gradient or color field, modern fragrance and skincare campaign aesthetic. Mostly atmosphere and surface with one subtle tactile gesture (a soft fold of linen, a frosted-glass plane, a gentle light bloom). " +
+    "Smooth grain-free dimensionality, bright and airy. Palette of one or two soft warm hues blending (sand to cream, blush, butter, pale sage). Calm, weightless, premium.",
+  // STUDIO PLASTER
   minimal:
-    "Fine-art still-life photography. Phase One IQ4 150MP with 80mm leaf-shutter, f/8. " +
-    "Single soft directional light on a clean backdrop (raw concrete, pale plaster, linen). " +
-    "Mostly monochromatic with one quiet accent color, generous negative space, asymmetric. " +
-    "Hiroshi Sugimoto or Wolfgang Tillmans sensibility — restraint as elegance.",
+    "Daylit studio with a curved matte plaster or microcement backdrop in bone or pale clay. One sculptural object or material sample. " +
+    "Soft north-facing window light, long gentle soft shadows across the textured wall. Clean digital capture, tack-sharp. " +
+    "Palette: oat, plaster-white, putty, one muted accent. Contemporary product-launch feel, vast calm field.",
+  // SUNLIGHT & ARCHITECTURE
   luminous:
-    "Bright lifestyle photography, Kinfolk magazine cover energy. " +
-    "Hasselblad X2D 100c with 55mm XCD, slightly overexposed for an airy feel. " +
-    "Abundant overcast daylight OR sun-flooded interior with soft window glow. " +
-    "Kodak Ektar 100 — luminous color, gentle blooming highlights. " +
-    "Palette: cream, soft gold, peach blush, dusty sky blue, fresh white. " +
-    "Sun flares, dust motes catching light. Optimistic, hopeful, weightless. " +
-    "The entire frame stays bright and open — no dark vignettes anywhere.",
+    "Real architectural daylight: a crisp hard-edged sun shape projected across a warm-neutral plaster wall, a windowsill or table edge, one material catching the sun. " +
+    "Clean geometric light-and-shadow, bright and airy. Clean digital capture, tack-sharp. " +
+    "Palette: warm white, sand, soft shadow-blue. Mediterranean design-studio at mid-morning, optimistic and current.",
 };
 
 const MODEL  = "claude-sonnet-4-6";
 const MAX_TK = 600;
 
-const SYSTEM_PROMPT = `You are a brand-photography art director writing image-generation prompts for Black Forest Labs Flux 1.1 Pro Ultra — the highest-fidelity photographic model available in 2026.
+const SYSTEM_PROMPT = `You are a contemporary brand art director writing image-generation prompts for Black Forest Labs Flux 1.1 Pro Ultra. The look is MODERN and current (2026): art-directed material realism, not emulated vintage photography. Premium reads through CLARITY, clean bright light, and real matte materials — never through grain, darkness, drama, or film emulation.
 
-Your job: given a Hebrew personal-brand signal, the person's occupation (in Hebrew), and a visual style directive, write ONE English Flux Ultra prompt (90-150 words) that produces a premium, social-media-ready image suitable for a personal-brand magazine cover.
+Your job: given a Hebrew personal-brand signal, the person's occupation (in Hebrew), and a visual style directive, write ONE English Flux prompt (90-150 words) for a premium, people-free, social-media background.
 
 NON-NEGOTIABLE QUALITY BAR — every prompt must specify, by name, all four of:
 
-1. **A specific camera body + lens** (e.g. Hasselblad H6D-100c, 85mm f/1.4). Pull from the style directive verbatim if it names one.
-2. **A specific lighting setup** (e.g. golden-hour rim light + softbox fill, single-source window light, overcast diffusion, sun-flooded interior). Match the style's mood.
-3. **A specific film stock or processing reference** (e.g. Kodak Portra 400, Fuji 400H, Ektar 100, Ektachrome). Match the style.
-4. **An occupation-literate scene.** A marketer (משווק) → data dashboards, urban office, abstract growth — not a generic person. A potter (קדר) → clay, wheel, studio hands. A coach (מאמן) → boardroom, mountain horizons. A therapist → soft intimate space. Match the field's visual vocabulary.
+1. **A clean DIGITAL capture** (modern mirrorless or digital back, e.g. Sony A1 with 50mm f/2.8, or Phase One IQ4 150MP), tack-sharp, high micro-contrast, crisp commercial photography. NEVER film, analog, grain, or "shot on film".
+2. **Bright, soft, diffused DAYLIGHT** (large north-window light, overcast softbox, or high-key studio), low contrast, gentle soft shadows that describe material. NEVER a dramatic single hard source, moody darkness, candlelight, or vignette.
+3. **Real MATTE TACTILE MATERIALS + a modern palette.** Surfaces like matte plaster, microcement, raw linen, unglazed ceramic, travertine, pale oak, brushed aluminium, frosted glass. A tonal low-saturation warm-neutral palette (bone, oat, plaster, sand, greige, clay) with ONE restrained accent (sage, terracotta, dusty blue, butter, ink-blue). NEVER navy+gold+charcoal, sepia/amber wash, or glossy gold-marble luxury.
+4. **An occupation-literate, people-free scene.** Translate the field into ONE signature material/object/space, in the modern language above. Marketer (משווק) → a clean desk-plane, structured paper, an architectural pen, a faint grid. Therapist (מטפלת) → a linen fold, unglazed ceramic, a single leaf shadow on plaster. Chef (שף) → one raw ingredient or a matte ceramic plate on a microcement counter. Architect (אדריכל) → travertine, a small maquette, refined shadow geometry. Keep it to ONE hero idea, never a cluttered desk.
 
-The image must also embody the signal's emotional truth (not its literal words) WITHOUT depicting any people: building when no one believes → a single small structure against an impossible vast scale; reading silence → a contemplative still life lit by a single window. Use objects, spaces, light, and texture to carry the emotion. Never a person.
+The image embodies the signal's emotional truth (not its literal words) WITHOUT any people: building when no one believes → a single small form against a vast calm field. Use objects, space, light, texture. Never a person.
 
-**Composition rule:** the lower half of the frame must stay visually CALMER (less detail, softer focus) but never dark or empty — text will be overlaid there and we want a premium magazine feel, not a black void.
+**Composition:** ONE hero subject in the upper 55% of the frame. The lower 45% is a quiet, low-detail, near-uniform field (a plain wall, a smooth surface, a gentle gradient) so overlaid text stays legible. A subtle honest light falloff toward the bottom is good; never a dark void or a busy lower third.
 
-**Composition for the target frame:** the user message gives a "Target frame" (e.g. 4:5 portrait, 9:16 vertical, wide banner). Compose explicitly for it — a portrait frame wants a vertical subject with calmer space in the lower third; a wide banner wants a horizontal scene with the subject off-center. Never compose for a square if a different frame is requested.
+**Target frame:** the user message gives a "Target frame" (e.g. 4:5 portrait). Compose explicitly for it.
 
 **Hard constraint, append VERBATIM at the very end:**
-"No people, no human figures, no faces, no hands, no body parts. No text, no letters, no words, no logos, no watermarks, no captions, no signage."
+"No people, no human figures, no faces, no hands. No text, no letters, no logos, no watermarks. No film grain, no vintage, no sepia, no vignette, no moody darkness, no dramatic single-source light, no glossy luxury cliche, no HDR, no clutter."
 
-Output: ONLY the prompt text. No preamble, no explanation, no quotes around it. One block of prose, 90-150 words, ending with the constraint sentence.`;
+Output: ONLY the prompt text. No preamble, no explanation, no quotes. One block of prose, 90-150 words, ending with the constraint sentence.`;
 
 // Human-readable framing guidance per Flux aspect ratio — keeps the model from
 // defaulting to a centered square subject that then crops badly on portrait.
