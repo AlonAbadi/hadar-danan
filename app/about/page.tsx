@@ -5,7 +5,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
 export const metadata: Metadata = {
   title: "אודות הדר דנן | מומחית שיווק אותנטי, יוצרת שיטת TrueSignal",
-  description: "הדר דנן — מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal. מ-50,000+ עוקבים ועד מאות עסקים שגדלו: הסיפור, המספרים והשיטה.",
+  description: "הדר דנן — מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal©. מעל 3,500 לקוחות ב-80 תחומים, 50,000+ תכנים, ושיטה אחת: הסיפור, המספרים והשיטה.",
   alternates: { canonical: "/about" },
 };
 
@@ -15,7 +15,7 @@ const personSchema = {
   "name": "הדר דנן",
   "url": APP_URL,
   "jobTitle": "מומחית שיווק אותנטי ויוצרת שיטת TrueSignal",
-  "description": "הדר דנן היא מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal. עבדה עם מאות בעלי עסקים ובנתה קהילה של מעל 70,000 עוקבים.",
+  "description": "הדר דנן היא מומחית לשיווק אותנטי ויוצרת שיטת TrueSignal©. עבדה עם מעל 3,500 לקוחות במעל 80 תחומים מאז 2023.",
   "alumniOf": { "@type": "EducationalOrganization", "name": "בית הספר למשחק גודמן" },
   "knowsAbout": ["שיווק אותנטי", "עמידה מול מצלמה", "יצירת תוכן וידאו", "בניית מערכות Signal", "בניית מותג אישי", "אסטרטגיה עסקית", "TrueSignal"],
   "sameAs": [
@@ -31,27 +31,27 @@ const PRINCIPLES = [
   {
     n: "1",
     q: '"מה באמת מייחד אותי?"',
-    body: "לא מה שאתה רוצה למכור - אלא מה שהלקוחות שלך קונים ממך שוב ושוב. ה-Signal שלך חי שם, לא בבריף. לפני שמשנים משהו, מקשיבים - לא למה שאת אומרת, למה שמרגישים כשאת אומרת.",
+    body: "לא מה שאתם רוצים למכור - אלא מה שהלקוחות שלכם קונים מכם שוב ושוב. ה-Signal שלכם חי שם, לא בבריף. לפני שמשנים משהו, מקשיבים - לא למה שאתם אומרים, למה שמרגישים כשאתם אומרים.",
   },
   {
     n: "2",
     q: '"מה אני יכול/ה להחזיק בלי להתאמץ?"',
-    body: "כשיש פער בין מה שאתה מציג לבין מה שאתה מחזיק - הקהל מרגיש את זה לפני שהוא מבין למה. בכל יוצר יש משהו אחד שלא ניתן לדלל. אותנטיות היא מבנה, לא מצב רוח.",
+    body: "כשיש פער בין מה שאתם מציגים לבין מה שאתם מחזיקים - הקהל מרגיש את זה לפני שהוא מבין למה. בכל יוצר יש משהו אחד שלא ניתן לדלל. אותנטיות היא מבנה, לא מצב רוח.",
   },
   {
     n: "3",
     q: '"איך זה נשמע במילים שלך?"',
-    body: "תרגום הוא לא ניסוח מחדש. הוא מציאת השפה היחידה שמרגישה כמוך גם כשאת לא בחדר.",
+    body: "תרגום הוא לא ניסוח מחדש. הוא מציאת השפה היחידה שמרגישה כמוכם גם כשאתם לא בחדר.",
   },
   {
     n: "4",
     q: '"מה הלקוח הנכון שלי מחפש באמת?"',
-    body: "לא כל לקוח הוא הלקוח שלך. כשמדייקים את ה-Signal - הלקוחות הנכונים מגיעים, ואת הלא-נכונים לא צריך לשכנע. קהל לא בונים - קוראים בשמו.",
+    body: "לא כל לקוח הוא הלקוח שלכם. כשמדייקים את ה-Signal - הלקוחות הנכונים מגיעים, ואת הלא-נכונים לא צריך לשכנע. קהל לא בונים - קוראים בשמו.",
   },
   {
     n: "5",
     q: '"מה הפעולה שתייצר תנועה אמיתית?"',
-    body: "טריק שיווקי עובד פעם אחת. Signal אמיתי בונה מומנטום שמתחזק עם הזמן - כי הוא נשען על מה שקיים, לא על מה שאפשר לבים.",
+    body: "טריק שיווקי עובד פעם אחת. Signal אמיתי בונה מומנטום שמתחזק עם הזמן - כי הוא נשען על מה שקיים, לא על מה שאפשר לביים.",
   },
 ];
 
@@ -87,10 +87,10 @@ export default function AboutPage() {
             <h1 className="about-h1" style={{ fontSize: 88, fontWeight: 800, lineHeight: 0.95, marginBottom: 20, letterSpacing: -1 }}>
               יש שיווק שמוכר.
               <br />
-              ויש שיווק <span style={{ color: "#E8B94A" }}>שמדהד.</span>
+              ויש שיווק <span style={{ color: "#E8B94A" }}>שמהדהד.</span>
             </h1>
             <p className="about-byline" style={{ color: "#AAB0BD", fontSize: 18, marginTop: 32 }}>
-              שיטת <strong style={{ color: "#EDE9E1", fontWeight: 600 }}>TrueSignal</strong> · נבנתה ע״י הדר דנן
+              שיטת <strong style={{ color: "#EDE9E1", fontWeight: 600 }}><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></strong> · נבנתה ע״י הדר דנן
             </p>
 
             {/* ── מי אני ─────────────────────────────────────── */}
@@ -116,7 +116,7 @@ export default function AboutPage() {
               <h2 className="about-manifesto-h2" style={{ fontSize: 44, fontWeight: 800, lineHeight: 1.1, marginBottom: 60, maxWidth: 720 }}>
                 שיטת TrueSignal לא נשענת על טריקים.
                 <br />
-                היא נשענת על <em style={{ fontStyle: "normal", color: "#E8B94A" }}>ארבע שאלות.</em>
+                היא נשענת על <em style={{ fontStyle: "normal", color: "#E8B94A" }}>חמש שאלות.</em>
               </h2>
 
               <div className="about-hive-grid" style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 80, alignItems: "center" }}>
@@ -177,9 +177,9 @@ export default function AboutPage() {
             {/* ── STATS ──────────────────────────────────────── */}
             <section className="about-stats" style={{ marginTop: 100, paddingTop: 60, borderTop: "1px solid #1f2530", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 40 }}>
               {[
-                { n: "7+", t: "שנות ניסיון בשיווק וידאו" },
-                { n: "∞",  t: "עסקים שמצאו את ה-Signal שלהם" },
-                { n: "1",  t: "שיטה - TrueSignal" },
+                { n: "3,500+", t: "לקוחות שמצאו את הבהירות שלהם" },
+                { n: "4",      t: "שנים" },
+                { n: "80",     t: "תחומים" },
               ].map((s) => (
                 <div key={s.t}>
                   <div className="about-stat-n" style={{ fontSize: 56, fontWeight: 800, color: "#E8B94A", lineHeight: 1 }}>
