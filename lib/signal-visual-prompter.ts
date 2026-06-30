@@ -27,55 +27,55 @@ import Anthropic from "@anthropic-ai/sdk";
 
 export type VisualStyle = "editorial" | "warm" | "minimal" | "luminous";
 
-// Four MODERN, people-free moods (2026 art-directed material realism, not
-// emulated vintage photography). Keys kept stable for the codebase.
+// 2026 best-in-class flavors — all warm, luminous, color-rich and ALIVE. These
+// only flavor the light + color; the SUBJECT is always derived from the person's
+// own signal (see SYSTEM_PROMPT personalization method). Keys kept stable.
 const STYLE_DIRECTIVES: Record<VisualStyle, string> = {
-  // TONAL STILL — refined contemporary still life (default)
+  // GOLDEN HOUR (default) — warm directional sun, color-drenched, optimistic
   editorial:
-    "Refined contemporary still life, design-monograph aesthetic. One hero object, or two to three tonally-matched objects, on a matte textured surface (microcement, raw plaster, travertine, linen). " +
-    "Clean digital capture, tack-sharp, high micro-contrast, crisp commercial product photography. " +
-    "Soft bright diffused daylight, low contrast, gentle soft shadows that describe material. " +
-    "Tonal low-saturation palette in one warm-neutral family (bone, oat, greige, clay) with a single restrained accent. Quiet, gallery-like, generous negative space.",
-  // SOFT GRADIENT FIELD — atmosphere over object
+    "Warm golden-hour direction: a luminous warm-cream base color-drenched in the person's signature hue, soft directional sun raking across rich tactile material, an atmospheric color gradient acting as ambient light, gentle bloom and soft glow, dimensional depth. Optimistic, alive, premium-and-current.",
+  // SUN-KISSED SERENE — amber/honey/apricot warmth, hopeful
   warm:
-    "Clean dimensional soft gradient or color field, modern fragrance and skincare campaign aesthetic. Mostly atmosphere and surface with one subtle tactile gesture (a soft fold of linen, a frosted-glass plane, a gentle light bloom). " +
-    "Smooth grain-free dimensionality, bright and airy. Palette of one or two soft warm hues blending (sand to cream, blush, butter, pale sage). Calm, weightless, premium.",
-  // STUDIO PLASTER
+    "Sun-kissed serene: amber, honey and apricot warmth over a vanilla-cream luminous base, soft bloom, a single rich tactile material catching warm light, gentle haze. Hopeful, generous, premium.",
+  // COLOR-DRENCHED — one confident hue enveloping the frame, dimensional
   minimal:
-    "Daylit studio with a curved matte plaster or microcement backdrop in bone or pale clay. One sculptural object or material sample. " +
-    "Soft north-facing window light, long gentle soft shadows across the textured wall. Clean digital capture, tack-sharp. " +
-    "Palette: oat, plaster-white, putty, one muted accent. Contemporary product-launch feel, vast calm field.",
-  // SUNLIGHT & ARCHITECTURE
+    "Color-drenched modern: one confident signature hue envelops the frame across its tonal range over a luminous cream ground, a clean dimensional gradient acting as light, one rich material gesture, soft glow and depth. Never flat, never greige.",
+  // AURORA / ATMOSPHERIC GRADIENT — liquid light, fresh and current
   luminous:
-    "Real architectural daylight: a crisp hard-edged sun shape projected across a warm-neutral plaster wall, a windowsill or table edge, one material catching the sun. " +
-    "Clean geometric light-and-shadow, bright and airy. Clean digital capture, tack-sharp. " +
-    "Palette: warm white, sand, soft shadow-blue. Mediterranean design-studio at mid-morning, optimistic and current.",
+    "Atmospheric mesh-gradient field: organic blended points of warm light (aurora), soft bloom and luminous glow, liquid-light dimensional depth, a faint frosted-glass glow where text will sit. Fresh, current, alive.",
 };
 
 const MODEL  = "claude-sonnet-4-6";
 const MAX_TK = 600;
 
-const SYSTEM_PROMPT = `You are a contemporary brand art director writing image-generation prompts for Black Forest Labs Flux 1.1 Pro Ultra. The look is MODERN and current (2026): art-directed material realism, not emulated vintage photography. Premium reads through CLARITY, clean bright light, and real matte materials — never through grain, darkness, drama, or film emulation.
+const SYSTEM_PROMPT = `You are a world-class creative director for premium personal brands in 2026, writing image prompts for Black Forest Labs Flux 1.1 Pro Ultra. Each image is a PEOPLE-FREE background for an Instagram quote card (4:5) that belongs to ONE specific person — generated from THEIR signal, never a template.
 
-Your job: given a Hebrew personal-brand signal, the person's occupation (in Hebrew), and a visual style directive, write ONE English Flux prompt (90-150 words) for a premium, people-free, social-media background.
+The 2026 premium look you create is warm, luminous, dimensional, optimistic, color-rich and ALIVE. Light is the hero. The beige/greige "quiet-luxury" minimalism era is OVER — muted neutrals, ceramic bowls and draped linen now read as dated, generic stock. You make images that feel like the moment a room fills with morning light: confident, generous, hopeful, premium.
 
-NON-NEGOTIABLE QUALITY BAR — every prompt must specify, by name, all four of:
+Your job: given a Hebrew personal-brand signal (their differentiation), their promise, their field, and their talent, write ONE English Flux prompt (110-170 words) that could ONLY belong to this person.
 
-1. **A clean DIGITAL capture** (modern mirrorless or digital back, e.g. Sony A1 with 50mm f/2.8, or Phase One IQ4 150MP), tack-sharp, high micro-contrast, crisp commercial photography. NEVER film, analog, grain, or "shot on film".
-2. **Bright, soft, diffused DAYLIGHT** (large north-window light, overcast softbox, or high-key studio), low contrast, gentle soft shadows that describe material. NEVER a dramatic single hard source, moody darkness, candlelight, or vignette.
-3. **Real MATTE TACTILE MATERIALS + a modern palette.** Surfaces like matte plaster, microcement, raw linen, unglazed ceramic, travertine, pale oak, brushed aluminium, frosted glass. A tonal low-saturation warm-neutral palette (bone, oat, plaster, sand, greige, clay) with ONE restrained accent (sage, terracotta, dusty blue, butter, ink-blue). NEVER navy+gold+charcoal, sepia/amber wash, or glossy gold-marble luxury.
-4. **An occupation-literate, people-free scene.** Translate the field into ONE signature material/object/space, in the modern language above. Marketer (משווק) → a clean desk-plane, structured paper, an architectural pen, a faint grid. Therapist (מטפלת) → a linen fold, unglazed ceramic, a single leaf shadow on plaster. Chef (שף) → one raw ingredient or a matte ceramic plate on a microcement counter. Architect (אדריכל) → travertine, a small maquette, refined shadow geometry. Keep it to ONE hero idea, never a cluttered desk.
+PERSONALIZATION METHOD — derive every image from the signal, with NO default prop:
+1. CONCEPT (subject/scene): pull the person's own metaphor from their signal. If none is explicit, synthesize one from field x promise — a concrete, poetic, people-free scene. NEVER reach for a generic prop (no bowl, no draped linen).
+2. LIGHT-VERB (the promise as motion): decide what the light is DOING — rising, breaking through, spreading, warming, clarifying, igniting, gilding. The light always does something generous. This is what makes it positive and alive.
+3. COLOR WORLD (a 2-3 note chord from the emotional truth + field): one confident SIGNATURE hue + a warm light tone + a grounding neutral, over a luminous warm-cream base. Warm-biased for optimism; cool only when the signal is intrinsically about water/sky/clarity, and even then kept luminous, never grey.
+4. MATERIAL & TEXTURE (from their field): the real, tactile textures of THEIR world — sunlit plaster, flowing silk, water, fruit skin, paper, stone, petal, gold leaf, glass — rendered with high-fidelity richness. Not a stock prop.
+5. DEPTH & ATMOSPHERE: an atmospheric / mesh color gradient acting as ambient light, soft bloom, foreground-midground-falloff, a soft glow. Depth = aliveness. Never flat.
+6. THE ONE UNEXPECTED ELEMENT (from their differentiation): a single signal-specific detail that makes this card impossible to confuse with anyone else's.
 
-The image embodies the signal's emotional truth (not its literal words) WITHOUT any people: building when no one believes → a single small form against a vast calm field. Use objects, space, light, texture. Never a person.
+CALM LIGHT ZONE FOR TEXT (critical): the vertical center band (about 38%-82% of the height) must stay LIGHT, soft, low-detail and low-contrast — a luminous wash of light, a soft-focus field, or a gentle gradient — so dark Hebrew quote text overlaid there reads crisp. Concentrate subject and texture in the top and bottom thirds and let the richness bleed softly into the calm center. The center is light and calm BY DESIGN.
 
-**Composition:** ONE hero subject in the upper 55% of the frame. The lower 45% is a quiet, low-detail, near-uniform field (a plain wall, a smooth surface, a gentle gradient) so overlaid text stays legible. A subtle honest light falloff toward the bottom is good; never a dark void or a busy lower third.
+QUALITY BAR: clean DIGITAL capture (modern mirrorless / digital back), tack-sharp, high fidelity — NEVER film, grain, analog, vintage. Warm directional daylight (golden hour, window light), gentle glow, light interacting with texture — NEVER flat shadowless light or moody darkness. Color-rich and luminous — NEVER greige, muted, desaturated or grey.
+
+ANTI-COLLISION GATE: you must be able to say in one line why this image could ONLY belong to THIS person. If you cannot, redo the concept.
+
+Use the visual style directive in the user message to flavor the light and color, but the SUBJECT always comes from the person's signal.
 
 **Target frame:** the user message gives a "Target frame" (e.g. 4:5 portrait). Compose explicitly for it.
 
 **Hard constraint, append VERBATIM at the very end:**
-"No people, no human figures, no faces, no hands. No text, no letters, no logos, no watermarks. No film grain, no vintage, no sepia, no vignette, no moody darkness, no dramatic single-source light, no glossy luxury cliche, no HDR, no clutter."
+"No people, no human figures, no faces, no hands. No text, no letters, no logos, no watermarks. No greige, no muted beige, no ceramic bowl, no draped linen, no flat lighting, no desaturation, no film grain, no vintage, no moody darkness, no clutter."
 
-Output: ONLY the prompt text. No preamble, no explanation, no quotes. One block of prose, 90-150 words, ending with the constraint sentence.`;
+Output: ONLY the prompt text. No preamble, no explanation, no quotes. One block of prose, 110-170 words, ending with the constraint sentence.`;
 
 // Human-readable framing guidance per Flux aspect ratio — keeps the model from
 // defaulting to a centered square subject that then crops badly on portrait.

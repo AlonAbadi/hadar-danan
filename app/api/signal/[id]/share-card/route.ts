@@ -83,11 +83,40 @@ function esc(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// Quote font-size scales with length so short and long quotes both look
+// intentional in the 4:5 frame (no more fixed 56px). Hebrew serif wants higher
+// line-height than Latin (nikud + tall letters need vertical air).
+function quoteSize(len: number): { fs: number; lh: number } {
+  if (len <= 30)  return { fs: 92, lh: 1.20 };
+  if (len <= 55)  return { fs: 78, lh: 1.22 };
+  if (len <= 85)  return { fs: 64, lh: 1.26 };
+  if (len <= 120) return { fs: 54, lh: 1.30 };
+  if (len <= 170) return { fs: 44, lh: 1.34 };
+  if (len <= 230) return { fs: 38, lh: 1.38 };
+  return { fs: 33, lh: 1.42 };
+}
+
+// Warm-cream radial scrim that lifts the text zone on a (now light, luminous)
+// AI background so DARK quote text always reads — feathered, never a flat bar.
+const LIGHT_TEXT_SCRIM = `radial-gradient(ellipse 86% 58% at 50% 50%, rgba(252,247,239,0.72) 0%, rgba(252,247,239,0.46) 46%, rgba(252,247,239,0.0) 80%)`;
+
 function buildHtml(signalText: string, bgUrl: string | null, clean: boolean, style: VisualStyle, palette: Palette, isDraft = false): { html: string; css: string } {
-  // When we have an AI-generated background, lay it down first under a dark
-  // gradient overlay so the Hebrew text always stays readable regardless of
-  // what the model came up with. Without a bg, the card falls back to the
-  // pure palette background.
+  // The new AI backgrounds are light + luminous, so on an image we flip to DARK
+  // text over a light scrim (the palette's light-on-dark treatment is kept for
+  // the image-less "color" mode, where the palette bg is dark).
+  const onImage     = bgUrl != null;
+  const accent      = onImage ? "#3A2C1A" : palette.accent;
+  const quoteColor  = onImage ? "#1A1410" : palette.text;
+  const quoteShadow = onImage
+    ? "0 1px 1px rgba(255,255,255,0.7), 0 2px 14px rgba(255,253,250,0.55)"
+    : "0 2px 14px rgba(0,0,0,0.85), 0 4px 28px rgba(0,0,0,0.65), 0 0 48px rgba(0,0,0,0.45)";
+  const footerShadow = onImage ? "0 1px 6px rgba(255,255,255,0.55)" : "0 2px 12px rgba(0,0,0,0.7)";
+  const overlay      = onImage ? LIGHT_TEXT_SCRIM : overlayGradient(style);
+  const { fs, lh }   = quoteSize(signalText.length);
+
+  // When we have an AI-generated background, lay it down first under the scrim
+  // so the Hebrew text always stays readable regardless of what the model came
+  // up with. Without a bg, the card falls back to the pure palette background.
   const bgLayer = bgUrl
     ? `<div class="bg" style="background-image:url('${esc(bgUrl)}');"></div>
        <div class="bg-overlay"></div>`
@@ -161,7 +190,7 @@ body { margin: 0; padding: 0; }
 .bg-overlay {
   position: absolute;
   inset: 0;
-  background: ${overlayGradient(style)};
+  background: ${overlay};
   z-index: 1;
 }
 
@@ -173,10 +202,10 @@ body { margin: 0; padding: 0; }
   z-index: 4;
   opacity: 0.5;
 }
-.corner-tl { top: 46px; left: 46px; border-top: 1px solid ${palette.accent}; border-left: 1px solid ${palette.accent}; }
-.corner-tr { top: 46px; right: 46px; border-top: 1px solid ${palette.accent}; border-right: 1px solid ${palette.accent}; }
-.corner-bl { bottom: 46px; left: 46px; border-bottom: 1px solid ${palette.accent}; border-left: 1px solid ${palette.accent}; }
-.corner-br { bottom: 46px; right: 46px; border-bottom: 1px solid ${palette.accent}; border-right: 1px solid ${palette.accent}; }
+.corner-tl { top: 46px; left: 46px; border-top: 1px solid ${accent}; border-left: 1px solid ${accent}; }
+.corner-tr { top: 46px; right: 46px; border-top: 1px solid ${accent}; border-right: 1px solid ${accent}; }
+.corner-bl { bottom: 46px; left: 46px; border-bottom: 1px solid ${accent}; border-left: 1px solid ${accent}; }
+.corner-br { bottom: 46px; right: 46px; border-bottom: 1px solid ${accent}; border-right: 1px solid ${accent}; }
 
 /* Top zone — bee with a soft radial halo behind it */
 .bee-zone {
@@ -224,7 +253,7 @@ body { margin: 0; padding: 0; }
   font-size: 110px;
   font-weight: 500;
   line-height: 0.8;
-  color: ${palette.accent};
+  color: ${accent};
   opacity: 0.3;
   margin: 0 0 18px;
   direction: ltr;
@@ -232,24 +261,21 @@ body { margin: 0; padding: 0; }
 
 .quote-text {
   font-family: 'Frank Ruhl Libre', 'Assistant', serif;
-  font-size: 56px;
+  font-size: ${fs}px;
   font-weight: 500;
-  line-height: 1.6;
-  color: ${palette.text};
+  line-height: ${lh};
+  color: ${quoteColor};
   direction: rtl;
   unicode-bidi: plaintext;
-  text-wrap: pretty;
-  text-shadow:
-    0 2px 14px rgba(0,0,0,0.85),
-    0 4px 28px rgba(0,0,0,0.65),
-    0 0 48px rgba(0,0,0,0.45);
+  text-wrap: balance;
+  text-shadow: ${quoteShadow};
 }
 
 .divider {
   width: 58px;
   height: 2px;
   margin: 40px auto 0;
-  background: linear-gradient(90deg, transparent, ${palette.accent}, transparent);
+  background: linear-gradient(90deg, transparent, ${accent}, transparent);
   opacity: 0.85;
 }
 
@@ -270,21 +296,21 @@ body { margin: 0; padding: 0; }
   font-family: 'Heebo', 'Assistant', sans-serif;
   font-size: 18px;
   font-weight: 300;
-  color: ${palette.accent};
+  color: ${accent};
   opacity: 0.78;
   letter-spacing: 0.4px;
   direction: rtl;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+  text-shadow: ${footerShadow};
 }
 
 .url-line {
   font-family: 'Heebo', 'Assistant', sans-serif;
   font-size: 25px;
   font-weight: 700;
-  color: ${palette.accent};
+  color: ${accent};
   letter-spacing: 1.8px;
   direction: ltr;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+  text-shadow: ${footerShadow};
 }
 
 /* Draft treatment — faint full-bleed watermark + rotated rubber-stamp badge */
@@ -298,7 +324,7 @@ body { margin: 0; padding: 0; }
   font-family: 'Heebo', 'Assistant', sans-serif;
   font-weight: 700;
   font-size: 360px;
-  color: ${palette.accent};
+  color: ${accent};
   opacity: 0.05;
   transform: rotate(-18deg);
   pointer-events: none;
@@ -310,11 +336,11 @@ body { margin: 0; padding: 0; }
   left: 90px;
   z-index: 5;
   transform: rotate(-11deg);
-  border: 4px solid ${palette.accent};
+  border: 4px solid ${accent};
   border-radius: 14px;
   padding: 12px 28px 9px;
   opacity: 0.9;
-  box-shadow: inset 0 0 0 2px ${palette.accent}55;
+  box-shadow: inset 0 0 0 2px ${accent}55;
 }
 .draft-stamp .ds-t {
   font-family: 'Heebo', 'Assistant', sans-serif;
@@ -322,7 +348,7 @@ body { margin: 0; padding: 0; }
   font-size: 44px;
   letter-spacing: 6px;
   line-height: 1;
-  color: ${palette.accent};
+  color: ${accent};
 }
 .draft-stamp .ds-s {
   font-family: 'Heebo', 'Assistant', sans-serif;
@@ -330,7 +356,7 @@ body { margin: 0; padding: 0; }
   letter-spacing: 5px;
   margin-top: 6px;
   text-align: center;
-  color: ${palette.accent};
+  color: ${accent};
   opacity: 0.85;
 }
 `;
@@ -414,7 +440,7 @@ export async function GET(
   // Cache key v3 — bumped when canvas changed from 1:1 to 4:5 (1080×1350).
   // v2 URLs (square aspect) would stretch/crop on the new portrait canvas, so
   // we force a regen at the new 4:5 aspect. Each style still caches independently.
-  const cacheKey = `card_bg_url_v4_${style}`;
+  const cacheKey = `card_bg_url_v5_${style}`;
   let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
   if (wantImage && !bgUrl && allowAi && isReplicateConfigured()) {
