@@ -308,14 +308,16 @@ function ScrollRow({
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
-export default function BingeClient({ isMember, isLoggedIn }: { isMember: boolean; isLoggedIn: boolean }) {
+export default function BingeClient({ isMember }: { isMember: boolean; isLoggedIn?: boolean }) {
   const [activeCategory, setActiveCategory] = useState<Category>("הכל");
   const [playing, setPlaying] = useState<ModalVideo | null>(null);
 
   const showHadar   = activeCategory === "הכל" || activeCategory === "הדר";
   const showClients = activeCategory === "הכל" || activeCategory === "לקוחות";
 
-  const upgradeHref = isLoggedIn ? "/hive?ref=binge_lock" : "/login?next=/binge";
+  // Hive de-emphasized — locked content + the banner now route to a strategy
+  // session (best universal next step) instead of the Hive subscription.
+  const upgradeHref = "/strategy?ref=binge_lock";
   const handleLockedClick = () => { window.location.href = upgradeHref; };
 
   return (
@@ -411,10 +413,10 @@ export default function BingeClient({ isMember, isLoggedIn }: { isMember: boolea
           }}
         >
           <div style={{ color: "#E8B94A", fontSize: 13, fontWeight: 800, marginBottom: 2 }}>
-            הספרייה המלאה פתוחה ללקוחות
+            אלה לקוחות אמיתיים שעברו את התהליך
           </div>
           <div style={{ color: "#AAB0BD", fontSize: 12 }}>
-            הצטרפו ב-₪59 לחודש וצפו בכל התהליכים והרילסים ←
+            רוצים להיות הבאים? קבעו פגישת אסטרטגיה עם הדר ←
           </div>
         </a>
       )}
