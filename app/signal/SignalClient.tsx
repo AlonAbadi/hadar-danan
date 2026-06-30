@@ -586,11 +586,11 @@ function FormCard(props: FormCardProps) {
           <div style={{ fontSize: 11, letterSpacing: 1.4, color: C.goldMid, textTransform: "uppercase", marginBottom: 10 }}>
             <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
           </div>
-          <p style={{ color: C.fg, fontSize: 16, fontWeight: 600, margin: "0 0 4px", lineHeight: 1.5 }}>
-            חמש שאלות שיחזירו לכם את האות שלכם.
+          <p style={{ color: C.fg, fontSize: 20, fontWeight: 800, margin: "0 0 8px", lineHeight: 1.35 }}>
+            השיווק שלכם מתאר מה אתם עושים. לא מי שאתם.
           </p>
-          <p style={{ color: C.muted, fontSize: 14.5, margin: "0 0 14px", lineHeight: 1.5 }}>
-            הלקוחות יקנו דרך מי שאתם, לא דרך מה שאתם מוכרים.
+          <p style={{ color: C.muted, fontSize: 14, margin: "0 0 16px", lineHeight: 1.5 }}>
+            חמש שאלות · חמש דקות · ובסוף, משפט אחד שמסביר במה אתם שונים.
           </p>
           <p style={{ color: C.fg, fontSize: 14.5, margin: "0 0 2px", lineHeight: 1.5 }}>
             אפשר לכתוב. <strong style={{ color: C.gold, fontWeight: 700 }}>אפשר פשוט לדבר.</strong>
