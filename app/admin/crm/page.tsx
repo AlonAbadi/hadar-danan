@@ -121,26 +121,16 @@ function StatusBadge({ status }: { status: string }) {
 
 // ── Tab: Dashboard ────────────────────────────────────────────────────────────
 
-interface BoilingLead {
-  id:         string;
-  name:       string;
-  phone:      string;
-  occupation: string;
-  time:       string;
-}
-
 function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => void }) {
   const [stats, setStats]   = useState<Stats | null>(null);
   const [recent, setRecent] = useState<PipelineUser[]>([]);
-  const [boiling, setBoiling] = useState<BoilingLead[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       fetch('/api/admin/stats').then(r => r.json()).catch(() => ({})),
       fetch('/api/admin/pipeline?limit=200').then(r => r.json()).catch(() => ({ users: [] })),
-      fetch('/api/admin/boiling-leads?limit=20').then(r => r.json()).catch(() => ({ users: [] })),
-    ]).then(([s, p, b]) => {
+    ]).then(([s, p]) => {
       setStats({
         leads_today:      s?.leads_today      ?? 0,
         sales_this_month: s?.sales_this_month ?? 0,
@@ -148,7 +138,6 @@ function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
         conversion_rate:  s?.conversion_rate  ?? 0,
       });
       setRecent(p?.users ?? []);
-      setBoiling(b?.users ?? []);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -173,61 +162,6 @@ function DashboardTab({ onJumpToTier }: { onJumpToTier: (product: string) => voi
           ))
         }
       </div>
-
-      {/* Boiling leads from /signal — strategy bucket. Top priority. */}
-      {boiling.length > 0 && (
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(124,10,2,0.18) 0%, rgba(124,10,2,0.06) 100%)',
-          border: '1px solid rgba(255,80,80,0.35)',
-          borderRadius: 14,
-          padding: '14px 18px 16px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#FF6B6B', letterSpacing: '0.04em' }}>
-              🔥 לידים רותחים — אות שיצא לפגישת אסטרטגיה
-            </div>
-            <div style={{ fontSize: 11, color: '#AAB0BD' }}>{boiling.length} ממתינים</div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-            {boiling.map((b) => {
-              const wa = b.phone ? `https://wa.me/${b.phone.replace(/\D/g, '').replace(/^0/, '972')}` : '';
-              return (
-                <div key={b.id} style={{
-                  background: '#141820',
-                  border: '1px solid rgba(255,107,107,0.2)',
-                  borderRadius: 10,
-                  padding: '10px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 10,
-                }}>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#EDE9E1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {b.name}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#AAB0BD', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {b.occupation || '—'} · {b.time ? relativeTime(b.time) : ''}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                    <Link href={`/admin/users/${b.id}`} style={{
-                      background: '#C9964A', color: '#fff', fontSize: 11, fontWeight: 700,
-                      padding: '6px 10px', borderRadius: 6, textDecoration: 'none',
-                    }}>פרופיל</Link>
-                    {wa && (
-                      <a href={wa} target="_blank" rel="noopener noreferrer" style={{
-                        background: '#25D366', color: '#fff', fontSize: 11, fontWeight: 700,
-                        padding: '6px 10px', borderRadius: 6, textDecoration: 'none',
-                      }}>WA</a>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* All leads */}
       <div style={cardStyle}>
