@@ -382,6 +382,8 @@ export async function GET(
   const styleParam = req.nextUrl.searchParams.get("style") ?? "";
   const style: VisualStyle = isValidStyle(styleParam) ? styleParam : DEFAULT_STYLE;
   const cleanParam = req.nextUrl.searchParams.get("clean") === "1";
+  // bg=image → AI background; anything else (default) → flat palette color (free).
+  const wantImage  = req.nextUrl.searchParams.get("bg") === "image";
   const forceAi    = req.nextUrl.searchParams.get("force_ai") === "1";
   const paletteOverride = req.nextUrl.searchParams.get("palette");
 
@@ -415,7 +417,7 @@ export async function GET(
   const cacheKey = `card_bg_url_v3_${style}`;
   let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
-  if (!bgUrl && allowAi && isReplicateConfigured()) {
+  if (wantImage && !bgUrl && allowAi && isReplicateConfigured()) {
     // Stage 1: Claude writes the visual prompt with full occupation context.
     const promptResult = await buildVisualPrompt({
       signal:         String(row.signal.signal         ?? ""),

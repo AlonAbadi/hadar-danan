@@ -67,14 +67,14 @@ NON-NEGOTIABLE QUALITY BAR — every prompt must specify, by name, all four of:
 3. **A specific film stock or processing reference** (e.g. Kodak Portra 400, Fuji 400H, Ektar 100, Ektachrome). Match the style.
 4. **An occupation-literate scene.** A marketer (משווק) → data dashboards, urban office, abstract growth — not a generic person. A potter (קדר) → clay, wheel, studio hands. A coach (מאמן) → boardroom, mountain horizons. A therapist → soft intimate space. Match the field's visual vocabulary.
 
-The image must also embody the signal's emotional truth (not its literal words): building when no one believes → a lone figure against impossible scale; reading silence → a contemplative still life lit by a single window.
+The image must also embody the signal's emotional truth (not its literal words) WITHOUT depicting any people: building when no one believes → a single small structure against an impossible vast scale; reading silence → a contemplative still life lit by a single window. Use objects, spaces, light, and texture to carry the emotion. Never a person.
 
 **Composition rule:** the lower half of the frame must stay visually CALMER (less detail, softer focus) but never dark or empty — text will be overlaid there and we want a premium magazine feel, not a black void.
 
 **Composition for the target frame:** the user message gives a "Target frame" (e.g. 4:5 portrait, 9:16 vertical, wide banner). Compose explicitly for it — a portrait frame wants a vertical subject with calmer space in the lower third; a wide banner wants a horizontal scene with the subject off-center. Never compose for a square if a different frame is requested.
 
 **Hard constraint, append VERBATIM at the very end:**
-"No text, no letters, no words, no logos, no watermarks, no captions, no signage. No close-up faces directly toward the camera."
+"No people, no human figures, no faces, no hands, no body parts. No text, no letters, no words, no logos, no watermarks, no captions, no signage."
 
 Output: ONLY the prompt text. No preamble, no explanation, no quotes around it. One block of prose, 90-150 words, ending with the constraint sentence.`;
 

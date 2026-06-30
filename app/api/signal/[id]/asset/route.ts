@@ -104,6 +104,7 @@ function esc(s: string): string {
 type AssetType =
   | "linkedin-banner"
   | "instagram-story"
+  | "quote-signal"
   | "quote-promise"
   | "quote-people"
   | "quote-content-1"
@@ -125,6 +126,10 @@ const ASSET_SPECS: Record<AssetType, AssetSpec> = {
   "instagram-story": {
     width: 1080, height: 1920, aspect: "9:16",
     fieldFor: (s) => String(s.public_card_statement ?? s.signal ?? ""),
+  },
+  "quote-signal": {
+    width: 1080, height: 1350, aspect: "4:5",
+    fieldFor: (s) => String(s.signal ?? ""),
   },
   "quote-promise": {
     width: 1080, height: 1350, aspect: "4:5",
@@ -533,6 +538,9 @@ export async function GET(
   const styleParam = req.nextUrl.searchParams.get("style") ?? "";
   const style: VisualStyle = isValidStyle(styleParam) ? styleParam : DEFAULT_STYLE;
   const cleanParam = req.nextUrl.searchParams.get("clean") === "1";
+  // bg=image → high-quality AI background. Anything else (default) → flat color
+  // from the palette (no AI generation = free, and the new default).
+  const wantImage  = req.nextUrl.searchParams.get("bg") === "image";
   const forceAi    = req.nextUrl.searchParams.get("force_ai") === "1";
 
   const supabase = createServerClient();
@@ -616,7 +624,7 @@ export async function GET(
   const cacheKey = `asset_bg_url_v3_${typeParam}_${style}`;
   let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
-  if (!bgUrl && isReplicateConfigured()) {
+  if (wantImage && !bgUrl && isReplicateConfigured()) {
     const promptResult = await buildVisualPrompt({
       signal:         String(row.signal.signal         ?? ""),
       signal_promise: String(row.signal.signal_promise ?? ""),
