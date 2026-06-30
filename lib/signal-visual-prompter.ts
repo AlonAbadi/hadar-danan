@@ -24,58 +24,41 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { assignWorld, colorDirective, goldRepulsion, SHARED_NEGATIVES } from "@/lib/signal/color-worlds";
+import { assignScene, sceneDirective, SHARED_NEGATIVES } from "@/lib/signal/color-worlds";
 
 export type VisualStyle = "editorial" | "warm" | "minimal" | "luminous";
 
-// 2026 best-in-class flavors — all warm, luminous, color-rich and ALIVE. These
-// only flavor the light + color; the SUBJECT is always derived from the person's
-// own signal (see SYSTEM_PROMPT personalization method). Keys kept stable.
+// Photographic flavors — they only tune the LIGHT, never force color. The scene
+// (from color-worlds) and its natural palette carry the variety. Keys kept stable.
 const STYLE_DIRECTIVES: Record<VisualStyle, string> = {
-  // GOLDEN HOUR (default) — warm directional sun, color-drenched, optimistic
-  editorial:
-    "Warm golden-hour direction: a luminous warm-cream base color-drenched in the person's signature hue, soft directional sun raking across rich tactile material, an atmospheric color gradient acting as ambient light, gentle bloom and soft glow, dimensional depth. Optimistic, alive, premium-and-current.",
-  // SUN-KISSED SERENE — amber/honey/apricot warmth, hopeful
-  warm:
-    "Sun-kissed serene: amber, honey and apricot warmth over a vanilla-cream luminous base, soft bloom, a single rich tactile material catching warm light, gentle haze. Hopeful, generous, premium.",
-  // COLOR-DRENCHED — one confident hue enveloping the frame, dimensional
-  minimal:
-    "Color-drenched modern: one confident signature hue envelops the frame across its tonal range over a luminous cream ground, a clean dimensional gradient acting as light, one rich material gesture, soft glow and depth. Never flat, never greige.",
-  // AURORA / ATMOSPHERIC GRADIENT — liquid light, fresh and current
-  luminous:
-    "Atmospheric mesh-gradient field: organic blended points of warm light (aurora), soft bloom and luminous glow, liquid-light dimensional depth, a faint frosted-glass glow where text will sit. Fresh, current, alive.",
+  editorial: "Cinematic editorial photography — rich, dimensional, gorgeous natural light, modern and alive.",
+  warm:      "Warm sun-kissed natural-light photography — golden, hopeful, soft and inviting.",
+  minimal:   "Clean, airy, light-filled photography — calm and spacious, soft abundant daylight.",
+  luminous:  "Luminous atmospheric photography — soft haze and gentle glow, fresh and current.",
 };
 
 const MODEL  = "claude-sonnet-4-6";
 const MAX_TK = 600;
 
-const SYSTEM_PROMPT = `You are a world-class creative director for premium personal brands in 2026, writing image prompts for Black Forest Labs Flux 1.1 Pro Ultra. Each image is a PEOPLE-FREE background for an Instagram quote card (4:5) that belongs to ONE specific person — generated from THEIR signal, never a template.
+const SYSTEM_PROMPT = `You are a world-class photography art director writing image prompts for Black Forest Labs Flux 1.1 Pro Ultra. Each image is the background of an Instagram quote card (4:5) — a BEAUTIFUL, HIGH-QUALITY, CINEMATIC, PEOPLE-FREE REAL PHOTOGRAPH. Think premium editorial / nature / architectural photography: rich, dimensional, gorgeous natural light. Modern 2026 — never antique, never film/vintage, never flat abstract color.
 
-The 2026 premium look you create is warm, luminous, dimensional, optimistic, color-rich and ALIVE. Light is the hero. The beige/greige "quiet-luxury" minimalism era is OVER — muted neutrals, ceramic bowls and draped linen now read as dated, generic stock. You make images that feel like the moment a room fills with morning light: confident, generous, hopeful, premium.
+Your job: given a Hebrew personal-brand signal (their differentiation), their promise and field, plus a SCENE FOUNDATION, write ONE English Flux prompt (90-150 words) for a stunning real photograph.
 
-Your job: given a Hebrew personal-brand signal (their differentiation), their promise, their field, and their talent, write ONE English Flux prompt (110-170 words) that could ONLY belong to this person.
+METHOD:
+1. START FROM THE SCENE FOUNDATION given in the user message — that scene + its natural palette + its light are the foundation, and the source of this card's color (each of the 7 cards has a different scene, so the set is varied, never one uniform hue).
+2. BEND THE SCENE to embody the signal's EMOTIONAL TRUTH (not its literal words): e.g. "clarity that quiets the noise" -> first light breaking softly over still water; "patient growth" -> dawn warming a field. The scene should feel like the signal, while staying a real photographic place.
+3. LIGHT IS THE HERO and it is generous — rising, spreading, warming, breaking through. Positive, alive, hopeful. Never moody darkness, never flat shadowless light.
+4. REAL PHOTOGRAPHY, never a staged single prop object, never flat color or a plain gradient, never a mosaic. A real place, with depth, atmosphere and natural color.
 
-PERSONALIZATION METHOD — derive every image from the signal, with NO default prop:
-1. CONCEPT (subject/scene): pull the person's own metaphor from their signal. If none is explicit, synthesize one from field x promise — a concrete, poetic, people-free scene. NEVER reach for a generic prop (no bowl, no draped linen).
-2. LIGHT-VERB (the promise as motion): decide what the light is DOING — rising, breaking through, spreading, warming, clarifying, igniting, gilding. The light always does something generous. This is what makes it positive and alive.
-3. COLOR WORLD: use the forced COLOR WORLD given in the user message EXACTLY — its named hue and its hex values. Bind the hue into the subject itself (e.g. "a single deep-emerald folded paper", "one plum-violet ceramic form") and restate it as the background field. Do NOT invent a different palette, and do NOT default to gold/amber unless the forced world is a warm one.
-4. MATERIAL & TEXTURE (from their field): the real, tactile textures of THEIR world — sunlit plaster, flowing silk, water, fruit skin, paper, stone, petal, gold leaf, glass — rendered with high-fidelity richness. Not a stock prop.
-5. DEPTH & ATMOSPHERE: an atmospheric / mesh color gradient acting as ambient light, soft bloom, foreground-midground-falloff, a soft glow. Depth = aliveness. Never flat.
-6. THE ONE UNEXPECTED ELEMENT (from their differentiation): a single signal-specific detail that makes this card impossible to confuse with anyone else's.
+CALM LIGHT ZONE FOR TEXT (critical): keep the vertical center band (about 38%-82% of the height) the LIGHTEST, softest, lowest-detail area — open sky, soft water, a wash of light, gentle haze — so dark Hebrew quote text overlaid there reads crisp. Push the richer detail to the top and bottom.
 
-CALM LIGHT ZONE FOR TEXT (critical): the vertical center band (about 38%-82% of the height) must stay LIGHT, soft, low-detail and low-contrast — a luminous wash of light, a soft-focus field, or a gentle gradient — so dark Hebrew quote text overlaid there reads crisp. Concentrate subject and texture in the top and bottom thirds and let the richness bleed softly into the calm center. The center is light and calm BY DESIGN.
-
-QUALITY BAR: clean DIGITAL capture (modern mirrorless / digital back), tack-sharp, high fidelity — NEVER film, grain, analog, vintage. Warm directional daylight (golden hour, window light), gentle glow, light interacting with texture — NEVER flat shadowless light or moody darkness. Color-rich and luminous — NEVER greige, muted, desaturated or grey.
-
-ANTI-COLLISION GATE: you must be able to say in one line why this image could ONLY belong to THIS person. If you cannot, redo the concept.
-
-Use the visual style directive in the user message to flavor the light and color, but the SUBJECT always comes from the person's signal.
+ABSOLUTELY NO PEOPLE: no person, face, silhouette, profile, portrait, head, bust, statue, or mosaic-of-a-face. If the scene could imply a figure, remove it.
 
 **Target frame:** the user message gives a "Target frame" (e.g. 4:5 portrait). Compose explicitly for it.
 
 **Negatives:** end your prompt by appending, verbatim, the NEGATIVE BLOCK provided in the user message.
 
-Output: ONLY the prompt text. No preamble, no explanation, no quotes. One block of prose, 110-170 words, ending with the negative block.`;
+Output: ONLY the prompt text. No preamble, no explanation, no quotes. One block of prose, 90-150 words, ending with the negative block.`;
 
 // Human-readable framing guidance per Flux aspect ratio — keeps the model from
 // defaulting to a centered square subject that then crops badly on portrait.
@@ -107,13 +90,12 @@ export async function buildVisualPrompt(args: {
 
     const aspectHint = ASPECT_HINT[args.aspect ?? "4:5"] ?? "vertical 4:5 portrait";
 
-    // Forced color world (deterministic per person) + per-card value/temperature
-    // variation, so a person's 7 cards are a cohesive SET and different people
-    // diverge — no more gold monoculture. Negatives ban the gem/glitter basin.
+    // Each card gets a DISTINCT real-photography scene (varied per card +
+    // varied between people). Color comes from the scene's natural palette,
+    // never one forced uniform hue.
     const cardIndex = args.cardIndex ?? 0;
-    const { world } = assignWorld(args.occupation, args.signal);
-    const colorBlock = colorDirective(world, cardIndex);
-    const negatives  = SHARED_NEGATIVES + goldRepulsion(world, cardIndex);
+    const scene = assignScene(args.occupation, args.signal, cardIndex);
+    const sceneBlock = sceneDirective(scene);
 
     const userMessage = [
       occupationLine,
@@ -123,14 +105,14 @@ export async function buildVisualPrompt(args: {
       `האלמנט: ${args.element}`,
       `הכלי המרכזי: ${args.central_tool}`,
       "",
-      `Visual style directive: ${STYLE_DIRECTIVES[args.style]}`,
+      `Photographic flavor: ${STYLE_DIRECTIVES[args.style]}`,
       "",
-      colorBlock,
+      sceneBlock,
       "",
-      `This is card #${cardIndex + 1} of 7 for this person. Its concept MUST be distinct from the others: a different subject family, material, and light behaviour. Do NOT make scattered shiny objects.`,
+      `This is card #${cardIndex + 1} of 7 for this person — its scene is already different from the others. Keep its natural colors (do NOT force one uniform hue across the set).`,
       `Target frame: ${aspectHint}`,
       "",
-      `NEGATIVE BLOCK — append this verbatim as the final sentences of your prompt: "${negatives}"`,
+      `NEGATIVE BLOCK — append this verbatim as the final sentences of your prompt: "${SHARED_NEGATIVES}"`,
       "",
       "Write the Flux prompt now. Output the prompt text only.",
     ].join("\n");
