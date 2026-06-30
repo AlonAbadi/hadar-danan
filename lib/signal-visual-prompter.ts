@@ -24,7 +24,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { assignTerritory, territoryDirective, SHARED_NEGATIVES } from "@/lib/signal/color-worlds";
+import { assignVisualLaw, SHARED_NEGATIVES } from "@/lib/signal/color-worlds";
 
 export type VisualStyle = "editorial" | "warm" | "minimal" | "luminous";
 
@@ -38,33 +38,28 @@ const STYLE_DIRECTIVES: Record<VisualStyle, string> = {
 };
 
 const MODEL  = "claude-sonnet-4-6";
-const MAX_TK = 600;
+const MAX_TK = 1000;
 
-const SYSTEM_PROMPT = `You are a world-class cinematographer writing image prompts for Black Forest Labs Flux 1.1 Pro Ultra. Each image is the background of an Instagram post — a UNIQUE, ORIGINAL, SURPRISING cinematic scene that feels like real contemporary high-end cinematography worthy of a luxury brand campaign or award-winning editorial photography.
+const SYSTEM_PROMPT = `You are not generating a beautiful image. You are translating a person's SIGNAL into a cinematic visual METAPHOR. Your task is to create ONE premium editorial-grade image that feels emotionally TRUE to the person's signal.
 
-SUBJECT IS UNCONSTRAINED: the scene may come from absolutely any real-world environment, object, material, architecture, interior, exterior, weather condition, surface, light interaction, or unexpected visual moment. Prioritize ORIGINALITY and visual beauty. Every prompt should feel fresh and surprising — never the obvious or generic choice.
+Do NOT illustrate the profession literally. Avoid cliches. No stock wellness imagery. No generic coaching visuals. No text overlays, no quotes. No obvious symbolism unless transformed into something visually sophisticated.
 
-Write ONE English Flux prompt (90-150 words) that bakes in ALL of the following:
+THINK IN THIS ORDER:
 
-CINEMATOGRAPHY (mandatory): shot as real high-end cinema photography; ARRI Alexa / Sony Venice visual quality; 35mm, 50mm or 85mm prime-lens aesthetics; natural lens compression; believable shallow depth of field.
+STEP 1 — Understand the signal. Read the SIGNAL DATA (pain source, core signal, promise, element, central tool, audience). Ask: what transformation happened inside this person?
 
-COMPOSITION: editorial framing; layered depth with clear foreground, midground and background separation; strong visual balance with intentional asymmetry; deliberate NEGATIVE SPACE suitable for a text overlay (keep one calm, low-detail, softly-lit area — ideally the vertical center band — clear for Hebrew text).
+STEP 2 — Extract the visual metaphor. Translate the transformation into ONE visual law — e.g. boundaries dissolving; light expanding; weightlessness; emerging from fog; a cracked surface opening; the hidden becoming visible; chaos becoming structure; frozen becoming fluid; pressure becoming breath. This metaphor is the HEART of the image.
 
-LIGHTING: beautiful motivated lighting from natural or practical sources; soft diffusion; realistic shadow falloff; subtle halation and bloom; occasional volumetric atmosphere.
+STEP 3 — Decide the visual language: environment, lighting, camera distance, composition, physical tension, texture, movement.
 
-TEXTURE: visible micro-detail; real-world materials; tactile surfaces; subtle imperfections; fine cinematic film grain.
+The image must feel like LUXURY CINEMATIC PHOTOGRAPHY shot by a world-class art director — REAL photography, not AI fantasy art. Visual references: Vogue editorial photography, A24 cinematography, Apple cinematic campaigns, medium-format Hasselblad photography, natural material and skin realism.
 
-COLOR: premium modern cinematic color grading; soft highlight rolloff; rich but controlled contrast; tasteful color separation; a warm-neutral emotional palette (let each card carry its own natural colors — never one uniform hue across the set).
+STYLE RULES: prefer real-world physical scenes over surreal CGI; surreal elements only when emotionally justified. Human figures are allowed ONLY if anonymous — blurred, silhouetted, partially hidden, distant, or abstract enough to avoid identity; faces should rarely be visible. Emotion is carried by light, posture, texture, and space. Use negative space intelligently (keep one calm, softly-lit, low-detail area — ideally the vertical center band — clear for a Hebrew text overlay). Avoid over-staging. Avoid sentimentality. Avoid sadness unless the resolved signal is sadness. Generate TRANSFORMATION, not trauma.
 
-MOOD: modern, positive, emotionally intelligent, elegant, alive, human, premium. Let the signal in the user message inform the EMOTION/mood only — never illustrate it literally.
+The image must feel profound, contemporary, premium, emotionally intelligent, and culturally current (2026 visual language). FINAL TEST: someone seeing the image without text should FEEL the signal before understanding it.
 
-HARD RULES: no people, no faces, no human figures. No artificial CGI look, no 3D-render look, no stock-photo aesthetic, no over-processed AI imagery.
-
-**Target frame:** compose explicitly for the "Target frame" given in the user message (e.g. 4:5 portrait).
-
-**Negatives:** end your prompt by appending, verbatim, the NEGATIVE BLOCK provided in the user message.
-
-Output: ONLY the prompt text. No preamble, no explanation, no quotes. One block of prose, 90-150 words, ending with the negative block.`;
+OUTPUT — return ONLY a valid JSON object, no markdown, no preamble:
+{"signal_summary": "<one sentence: the transformation inside this person>", "visual_metaphor": "<the one visual law this image obeys>", "image_prompt": "<one English paragraph, 80-140 words, for a photorealistic AI image model: the full cinematic scene with environment, lighting, lens, composition, texture and color grading, ending with the verbatim NEGATIVE BLOCK from the user message>"}`;
 
 // Human-readable framing guidance per Flux aspect ratio — keeps the model from
 // defaulting to a centered square subject that then crops badly on portrait.
@@ -83,10 +78,12 @@ export async function buildVisualPrompt(args: {
   signal_promise:  string;       // The forward direction (Hebrew)
   element:         string;       // The element/talent zone (Hebrew)
   central_tool:    string;       // Their core practice (Hebrew)
+  pain_source?:    string;       // What they came from (Hebrew, optional)
+  people?:         string;       // Their audience (Hebrew, optional)
   occupation?:     string | null; // Their field (Hebrew, optional)
   style:           VisualStyle;
   aspect?:         string;         // Flux aspect ratio (e.g. "4:5", "9:16"); composition matches it
-  cardIndex?:      number;         // 0-6 — which of the 7 cards (drives color value + concept variation)
+  cardIndex?:      number;         // 0-6 — which of the 7 cards (seeds a distinct visual law)
 }): Promise<{ ok: true; prompt: string } | { ok: false; error: string }> {
   try {
     const client = new Anthropic();
@@ -96,29 +93,30 @@ export async function buildVisualPrompt(args: {
 
     const aspectHint = ASPECT_HINT[args.aspect ?? "4:5"] ?? "vertical 4:5 portrait";
 
-    // Each card springs from a DIFFERENT broad territory (varied per card +
-    // varied between people); the model invents an original cinematic scene.
+    // Seed a DISTINCT visual law per card so the 7 cards each express the
+    // transformation differently (variety) and people diverge. The model still
+    // derives its own metaphor from the signal — this is only a lean.
     const cardIndex = args.cardIndex ?? 0;
-    const territory = assignTerritory(args.occupation, args.signal, cardIndex);
-    const territoryBlock = territoryDirective(territory);
+    const law = assignVisualLaw(args.occupation, args.signal, cardIndex);
 
     const userMessage = [
-      occupationLine,
+      "SIGNAL DATA:",
+      args.occupation && args.occupation.trim() ? `- Field: ${args.occupation.trim()}` : "",
+      args.pain_source && args.pain_source.trim() ? `- Pain source: ${args.pain_source.trim()}` : "",
+      `- Core signal: ${args.signal}`,
+      args.signal_promise ? `- Promise: ${args.signal_promise}` : "",
+      args.element ? `- Element: ${args.element}` : "",
+      args.central_tool ? `- Central tool: ${args.central_tool}` : "",
+      args.people && args.people.trim() ? `- Audience: ${args.people.trim()}` : "",
       "",
-      `The signal (for emotional MOOD only — let it inform the feeling, do NOT illustrate it literally): ${args.signal}`,
-      `Its direction: ${args.signal_promise}`,
-      "",
+      `This is card #${cardIndex + 1} of 7 for this person. For variety, lean this card's metaphor toward the transformation family of "${law.name}" — but only if it stays emotionally true to the signal; otherwise derive your own. Each card must feel distinct.`,
       `Photographic flavor: ${STYLE_DIRECTIVES[args.style]}`,
-      "",
-      territoryBlock,
-      "",
-      `This is card #${cardIndex + 1} of 7 for this person — make it genuinely different from a typical card: a fresh, surprising, original scene with its own natural colors.`,
       `Target frame: ${aspectHint}`,
       "",
-      `NEGATIVE BLOCK — append this verbatim as the final sentences of your prompt: "${SHARED_NEGATIVES}"`,
+      `In the image_prompt, append this NEGATIVE BLOCK verbatim as the final sentences: "${SHARED_NEGATIVES}"`,
       "",
-      "Write the Flux prompt now. Output the prompt text only.",
-    ].join("\n");
+      "Now return ONLY the JSON object with signal_summary, visual_metaphor, and image_prompt.",
+    ].filter(Boolean).join("\n");
 
     const res = await client.messages.create({
       model:      MODEL,
@@ -131,7 +129,24 @@ export async function buildVisualPrompt(args: {
     if (!block || block.type !== "text") {
       return { ok: false, error: "Claude returned non-text block" };
     }
-    const prompt = block.text.trim();
+    // Reason-before-generate: the model returns {signal_summary, visual_metaphor,
+    // image_prompt}. Extract the image_prompt; fall back to raw text if the JSON
+    // can't be parsed so a card never fails to render.
+    const raw = block.text.trim();
+    let prompt = raw;
+    try {
+      const jsonText = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+      const start = jsonText.indexOf("{");
+      const end = jsonText.lastIndexOf("}");
+      if (start >= 0 && end > start) {
+        const parsed = JSON.parse(jsonText.slice(start, end + 1));
+        if (parsed && typeof parsed.image_prompt === "string" && parsed.image_prompt.trim().length >= 40) {
+          prompt = parsed.image_prompt.trim();
+        }
+      }
+    } catch {
+      // keep raw as fallback
+    }
     if (prompt.length < 40) {
       return { ok: false, error: `Prompt too short: ${prompt.length} chars` };
     }
