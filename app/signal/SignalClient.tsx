@@ -587,7 +587,7 @@ function FormCard(props: FormCardProps) {
             <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
           </div>
           <p style={{ color: C.fg, fontSize: 20, fontWeight: 800, margin: "0 0 8px", lineHeight: 1.35 }}>
-            השיווק שלכם מתאר מה אתם עושים. לא מי שאתם.
+            השיווק שלכם מתאר מה אתם עושים. לא את הבידול שלכם בתוך תחום העיסוק.
           </p>
           <p style={{ color: C.muted, fontSize: 14, margin: "0 0 16px", lineHeight: 1.5 }}>
             חמש שאלות · חמש דקות · ובסוף, האות שלכם.
