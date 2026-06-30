@@ -590,7 +590,7 @@ function FormCard(props: FormCardProps) {
             השיווק שלכם מתאר מה אתם עושים. לא מי שאתם.
           </p>
           <p style={{ color: C.muted, fontSize: 14, margin: "0 0 16px", lineHeight: 1.5 }}>
-            חמש שאלות · חמש דקות · ובסוף, משפט אחד שמסביר במה אתם שונים.
+            חמש שאלות · חמש דקות · ובסוף, האות שלכם.
           </p>
           <p style={{ color: C.fg, fontSize: 14.5, margin: "0 0 2px", lineHeight: 1.5 }}>
             אפשר לכתוב. <strong style={{ color: C.gold, fontWeight: 700 }}>אפשר פשוט לדבר.</strong>
