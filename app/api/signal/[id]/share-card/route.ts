@@ -414,7 +414,7 @@ export async function GET(
   // Cache key v3 — bumped when canvas changed from 1:1 to 4:5 (1080×1350).
   // v2 URLs (square aspect) would stretch/crop on the new portrait canvas, so
   // we force a regen at the new 4:5 aspect. Each style still caches independently.
-  const cacheKey = `card_bg_url_v3_${style}`;
+  const cacheKey = `card_bg_url_v4_${style}`;
   let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
   if (wantImage && !bgUrl && allowAi && isReplicateConfigured()) {

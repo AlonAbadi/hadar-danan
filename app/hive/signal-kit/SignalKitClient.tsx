@@ -213,13 +213,16 @@ const VISUAL_ASSETS: VisualAsset[] = [
 // Single design language now; the only choice is flat color vs a high-quality
 // image. Style drives the overlay/palette look; "editorial" is the house style.
 const VISUAL_STYLE = "editorial";
+// Bump together with the route cache-key version (card_bg_url_vN / asset_bg_url_vN)
+// to bust the browser + CDN cache after a visual-prompter change.
+const ASSET_CACHE_V = 4;
 
 function VisualTab({ extractionId }: { extractionId: string }) {
   const [mode, setMode] = useState<"color" | "image">("color");
   const [clean, setClean] = useState(true);
 
   function urlFor(asset: VisualAsset): string {
-    const q = `style=${VISUAL_STYLE}&bg=${mode}${clean ? "&clean=1" : ""}`;
+    const q = `style=${VISUAL_STYLE}&bg=${mode}&v=${ASSET_CACHE_V}${clean ? "&clean=1" : ""}`;
     if (asset.type === "share-card-default") {
       return `/api/signal/${extractionId}/share-card?${q}`;
     }
@@ -269,24 +272,49 @@ function pillStyle(active: boolean): React.CSSProperties {
 
 function AssetCard({ asset, url }: { asset: VisualAsset; url: string }) {
   const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
+  // When the url changes (mode switch / version bump) the image regenerates —
+  // reset to the loading state so the user always gets feedback.
+  useEffect(() => { setLoaded(false); setErrored(false); }, [url]);
   return (
     <>
       <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 12, padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => loaded && setOpen(true)}
           aria-label={`פתח ${asset.label}`}
           style={{
-            background: "#000", borderRadius: 8, aspectRatio: asset.ratio.replace(":", " / "),
+            background: C.cardSoft, borderRadius: 8, aspectRatio: asset.ratio.replace(":", " / "),
             overflow: "hidden", position: "relative", border: "none", padding: 0,
-            cursor: "zoom-in", fontFamily: "inherit",
+            cursor: loaded ? "zoom-in" : "default", fontFamily: "inherit",
           }}
         >
           <img
             src={url}
             loading="lazy"
             alt={asset.label}
-            style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
+            onLoad={() => setLoaded(true)}
+            onError={() => setErrored(true)}
+            style={{ width: "100%", height: "100%", display: "block", objectFit: "cover", opacity: loaded ? 1 : 0, transition: "opacity 0.4s ease" }}
           />
+          {!loaded && !errored && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 16, textAlign: "center" }}>
+              <div style={{
+                width: 30, height: 30,
+                border: "3px solid rgba(232,185,74,0.18)", borderTopColor: C.gold,
+                borderRadius: "50%", animation: "spin 0.9s linear infinite",
+              }} />
+              <div style={{ fontSize: 12.5, color: C.fg, fontWeight: 600 }}>מייצרים את התמונה…</div>
+              <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.5 }}>בפעם הראשונה זה לוקח כמה שניות. אחר כך מיידי.</div>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          )}
+          {errored && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, padding: 16, textAlign: "center" }}>
+              <div style={{ fontSize: 12.5, color: C.fg, fontWeight: 600 }}>לא הצלחנו לייצר עכשיו</div>
+              <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.5 }}>רעננו את העמוד בעוד רגע ונסו שוב.</div>
+            </div>
+          )}
         </button>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: C.fg }}>{asset.label}</div>
