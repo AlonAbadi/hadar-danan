@@ -174,6 +174,9 @@ export default async function AdminSignalPage() {
           <div style={{ fontSize: 14, color: C.muted, marginTop: 4 }}>
             מי עבר את אבחון <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> ומה האות שיצא לו. מסודר מהאחרון לישן.
           </div>
+          <Link href="/admin/signal/gap" style={{ display: "inline-block", marginTop: 10, fontSize: 12.5, color: C.goldM, textDecoration: "none", padding: "5px 12px", borderRadius: 8, border: `1px solid ${C.lineGold}`, background: "rgba(232,185,74,0.06)" }}>
+            מנוע הפער — סקירה פנימית ←
+          </Link>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Stat label="סה״כ"   value={total}              color={C.gold} />
