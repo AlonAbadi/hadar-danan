@@ -1659,7 +1659,7 @@ function Result({
 // to bridge to).
 
 const BRIDGE_TAILS: Record<Exclude<Bucket, "none">, string> = {
-  challenge: "שבעה ימים, וזה הופך לתוכן.",
+  challenge: "האות שלכם, ארוז לפעולה.",
   strategy:  "פנים אל פנים, על העסק שלך.",
   hive:      "מקום שממשיכים לעבוד בו עליו.",
   nurture:   "ההמשך מתחיל מההדרכה. חינמית, עשרים דקות.",
@@ -2160,7 +2160,7 @@ function InviteCard({ bucket, signal }: { bucket: Bucket; signal: SignalOutput }
   if (bucket === "nurture") return <NurtureInvite />;
   if (bucket === "strategy") return <StrategyInvite />;
   if (bucket === "hive")     return <HiveInvite />;
-  return <ChallengeInvite signal={signal} />;
+  return <SignalHiveInvite signal={signal} />;
 }
 
 // Nurture invite — for users whose answers were thin-but-engaged (40-79 chars)
@@ -2418,7 +2418,7 @@ function InviteLadder({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ChallengeInvite({ signal }: { signal: SignalOutput }) {
+function SignalHiveInvite({ signal }: { signal: SignalOutput }) {
   // Personalization band — uses just-extracted soul fields to anchor the
   // commercial offer to *this user's* signal. Fall back to the static
   // headline when fields are missing or empty.
@@ -2439,7 +2439,7 @@ function ChallengeInvite({ signal }: { signal: SignalOutput }) {
         gap:          16,
       }}
     >
-      <InviteHeader name="אתגר 7 הימים" price={<PriceBlock amount="197" anchor="₪297" />} />
+      <InviteHeader name="כוורת האות" price={<PriceBlock amount="590" />} />
 
       <h3 style={{
         margin:       0,
@@ -2449,10 +2449,10 @@ function ChallengeInvite({ signal }: { signal: SignalOutput }) {
         color:        INVITE_STYLES.text,
         letterSpacing: "-0.2px",
       }}>
-        שבעה ימים לתרגם את האות שלכם לתוכן שמוכר
+        גיליתם את האות. עכשיו מוציאים אותו לעולם.
       </h3>
       <p style={{ margin: 0, color: INVITE_STYLES.muted, fontSize: 14.5, lineHeight: 1.65 }}>
-        קורס און דימנד. גישה מיידית לשיעור הפתיחה תוך שניות אחרי התשלום. אין מחזורים, אין המתנה.
+        ערכת ההפעלה המלאה, גישה מיידית: אתגר 7 הימים, ערכת תוכן, ערכת ויזואל ובימוי אישי, הכל נגזר מהאות שלכם.
       </p>
 
       {hasPersonalization && (
@@ -2470,17 +2470,17 @@ function ChallengeInvite({ signal }: { signal: SignalOutput }) {
       )}
 
       <InviteBullets items={[
-        "האות שחילצתם היום הופך לקו תוכן אחד שמתחילים לצלם מחר",
-        "גישה מיידית לשיעור פתיחה מוקלט על שיווק ב-2026",
-        "7 סרטונים יומיים מהדר על סוג תוכן שמקדם מכירות",
-        "אתגר יומי לצילום והעלאה לאינסטגרם",
-        "מפגש סיום חי בזום, פתוח רק למי שסיימו את כל 7 הימים",
+        "לוח האות: האות, הכאב, ההבטחה והקהל שלכם, במקום אחד",
+        "אתגר 7 הימים, ממוסגר סביב האות שלכם",
+        "ערכת תוכן: כיווני-תוכן ופתיחות שנגזרים מהאות",
+        "ערכת ויזואל: כרטיסי האות שלכם + כיווני-צילום",
+        "הבמאית: 7 בימויים אישיים מול המצלמה",
       ]} />
 
       <InviteStats stats={[
-        { v: "3,500+", l: "בעלי עסק עברו" },
-        { v: "7",      l: "ימים" },
-        { v: "97%",    l: "המליצו" },
+        { v: "5",    l: "פולדרים" },
+        { v: "7",    l: "ימי אתגר" },
+        { v: "₪590", l: "מתקזז מהסדנה" },
       ]} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: INVITE_STYLES.muted, lineHeight: 1.5 }}>
@@ -2488,14 +2488,14 @@ function ChallengeInvite({ signal }: { signal: SignalOutput }) {
         <span><strong style={{ color: INVITE_STYLES.text, fontWeight: 600 }}>גישה מיידית</strong> · מתחילים תוך שניות אחרי התשלום</span>
       </div>
 
-      <InviteCTA href="/challenge" label="להצטרף לאתגר ←" />
+      <InviteCTA href="/signal-hive" label="להצטרף לכוורת האות ←" />
 
       <InviteGuarantee>
         <strong style={{ color: INVITE_STYLES.success, fontWeight: 600 }}>החזר מלא תוך 7 ימים</strong> אם לא הרגשתם שזה עבד. בלי שאלות.
       </InviteGuarantee>
 
       <InviteLadder>
-        השלב הבא לאחר האתגר · <strong style={{ color: INVITE_STYLES.goldDeep, fontWeight: 600 }}>סדנת יום אחד · ₪1,080</strong>
+        השלב הבא · <strong style={{ color: INVITE_STYLES.goldDeep, fontWeight: 600 }}>סדנת יום אחד · ₪1,080</strong> · ₪590 מתקזזים
       </InviteLadder>
     </div>
   );
