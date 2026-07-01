@@ -1,4 +1,4 @@
--- Migration 054: add the "כוורת האות" (Signal Hive) product type.
+-- Migration 055: add the "כוורת האות" (Signal Hive) product type.
 --
 -- The ₪590 one-time activation product that bridges signal discovery → broadcast.
 -- It grants signal-kit (Hive) access. Purchases table stores it as the product
