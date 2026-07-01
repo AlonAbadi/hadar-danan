@@ -9,9 +9,9 @@ export const GROUP2 = [
 ];
 
 export const GROUP3 = [
-  { label: "אתגר 7 ימים",      price: "₪197",    priceOriginal: "₪297", href: "/challenge" },
-  { label: "סדנה יום אחד",     price: "₪1,080",  href: "/workshop" },
-  { label: "קורס דיגיטלי",     price: "₪1,800",  href: "/course" },
+  { label: "אתגר 7 ימים",      price: "₪197",    priceOriginal: "₪297",   href: "/challenge" },
+  { label: "כוורת האות",       price: "₪590",    href: "/signal-hive" },
+  { label: "סדנה יום אחד",     price: "₪1,080",  priceOriginal: "₪1,800", href: "/workshop" },
   { label: "פגישת אסטרטגיה",   price: "₪4,000",  href: "/strategy" },
   { label: "יום צילום פרמיום", price: "₪14,000", href: "/premium" },
   { label: "שותפות",           price: "₪10k+",   href: "/partnership" },
