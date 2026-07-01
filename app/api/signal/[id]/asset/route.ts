@@ -177,7 +177,7 @@ function fontSizeFor(text: string, baseWidth: number): number {
 // visual language for quote cards).
 // Warm-cream radial scrim lifting the text zone on a light, luminous AI bg so
 // DARK quote text always reads — feathered, never a flat bar.
-const LIGHT_TEXT_SCRIM = `radial-gradient(ellipse 86% 58% at 50% 50%, rgba(252,247,239,0.72) 0%, rgba(252,247,239,0.46) 46%, rgba(252,247,239,0.0) 80%)`;
+const LIGHT_TEXT_SCRIM = `radial-gradient(ellipse 94% 64% at 50% 50%, rgba(252,247,239,0.90) 0%, rgba(252,247,239,0.72) 40%, rgba(252,247,239,0.34) 70%, rgba(252,247,239,0.0) 92%)`;
 
 function buildQuoteHtml(args: {
   text:  string;
@@ -195,7 +195,7 @@ function buildQuoteHtml(args: {
     ? "0 1px 1px rgba(255,255,255,0.7), 0 2px 14px rgba(255,253,250,0.55)"
     : "0 2px 14px rgba(0,0,0,0.85), 0 4px 28px rgba(0,0,0,0.65), 0 0 48px rgba(0,0,0,0.45)";
   const footerShadow = onImage ? "0 1px 6px rgba(255,255,255,0.55)" : "0 2px 12px rgba(0,0,0,0.7)";
-  const supportColor = onImage ? "#4A3F36" : "#E9E2D2";
+  const supportColor = onImage ? "#241C13" : "#E9E2D2";
   const overlay      = onImage ? LIGHT_TEXT_SCRIM : overlayGradient(args.style, false);
   // Pull-quote hierarchy: smaller support lead-in + larger lead punch.
   const { support, lead } = splitQuote(args.text);
@@ -318,14 +318,13 @@ body { margin: 0; padding: 0; }
 .quote-support {
   font-family: 'Heebo', 'Assistant', sans-serif;
   font-size: ${supFs}px;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.42;
   color: ${supportColor};
-  opacity: 0.92;
   direction: rtl;
   unicode-bidi: plaintext;
   text-wrap: balance;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
   text-shadow: ${quoteShadow};
 }
 

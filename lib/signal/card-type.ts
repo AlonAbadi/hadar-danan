@@ -45,7 +45,8 @@ export function leadSize(len: number): { fs: number; lh: number } {
   return { fs: 37, lh: 1.4 };
 }
 
-// Support is a clear step below the lead (target lead:support >= 1.8:1).
+// Support is a clear step below the lead by SIZE (hierarchy comes from size, not
+// from fading — the support must stay fully readable).
 export function supportSize(leadFs: number): number {
-  return Math.max(27, Math.round(leadFs * 0.5));
+  return Math.max(30, Math.round(leadFs * 0.54));
 }
