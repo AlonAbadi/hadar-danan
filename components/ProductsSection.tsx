@@ -41,9 +41,10 @@ export function ProductsSection({ excludeTraining = false }: { excludeTraining?:
       variant:       "outline",
     },
     {
-      name:        "כוורת האות",
-      price:       "₪590",
-      description: "הוציאו את האות שלכם לעולם — ערכת הפעלה מלאה",
+      name:          "כוורת האות",
+      price:         "₪590",
+      priceOriginal: "₪880",
+      description:   "הוציאו את האות שלכם לעולם — ערכת הפעלה מלאה",
       href:        "/signal-hive",
       ctaLabel:    "להצטרף לכוורת האות ←",
       variant:     "outline",

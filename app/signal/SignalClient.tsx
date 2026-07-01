@@ -2439,7 +2439,7 @@ function SignalHiveInvite({ signal }: { signal: SignalOutput }) {
         gap:          16,
       }}
     >
-      <InviteHeader name="כוורת האות" price={<PriceBlock amount="590" />} />
+      <InviteHeader name="כוורת האות" price={<PriceBlock amount="590" anchor="₪880" />} />
 
       <h3 style={{
         margin:       0,

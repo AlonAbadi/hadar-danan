@@ -87,6 +87,7 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
         productName="סדנה יום אחד"
         price={effectivePrice}
         originalPrice={originalPrice}
+        discountDisplay="percent"
         checkoutHref="#cta"
 
         headline={<>איך מביאים את <em>מי שאנחנו</em> ומפסיקים להתאמץ בוידאו?</>}

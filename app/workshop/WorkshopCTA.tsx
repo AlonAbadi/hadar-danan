@@ -52,6 +52,8 @@ export function WorkshopCTA({ price, originalPrice, whatsappPhone, credit = 0, c
 
   const hasDiscount = !!originalPrice && originalPrice > toPay && toPay > 0;
   const savings     = hasDiscount ? originalPrice! - toPay : 0;
+  // Discounts are shown as a PERCENTAGE across the site, never a shekel amount.
+  const savingsPct  = hasDiscount ? Math.round((savings / originalPrice!) * 100) : 0;
   // Coupon-driven discounts use "הנחה אישית" instead of the urgency-flavored
   // "מבצע מסתיים בקרוב" — there's no real expiry on the SADNA50 link.
   const badgeSubtext = couponCode ? "הנחה אישית" : "מבצע מסתיים בקרוב";
@@ -271,7 +273,7 @@ export function WorkshopCTA({ price, originalPrice, whatsappPhone, credit = 0, c
         <div style={WRAPPER_STYLE}>
           {hasDiscount && (
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <SavingsBadge savings={savings} subtext={badgeSubtext} />
+              <SavingsBadge savings={savings} percent={savingsPct} subtext={badgeSubtext} />
             </div>
           )}
           <CheckoutCtaButton
@@ -302,7 +304,7 @@ export function WorkshopCTA({ price, originalPrice, whatsappPhone, credit = 0, c
       <div style={WRAPPER_STYLE}>
         {hasDiscount && (
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <SavingsBadge savings={savings} subtext={badgeSubtext} />
+            <SavingsBadge savings={savings} percent={savingsPct} subtext={badgeSubtext} />
           </div>
         )}
         <CheckoutCtaButton

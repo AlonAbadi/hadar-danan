@@ -88,7 +88,13 @@ export default function SignalHivePage() {
         {/* Price + CTA */}
         <div style={{ background: C.soft, border: `1px solid ${C.line}`, borderRadius: 18, padding: "26px 24px", marginTop: 24 }}>
           <div style={{ textAlign: "center", marginBottom: 18 }}>
-            <div style={{ fontSize: 38, fontWeight: 800, color: C.goldL }}>₪590</div>
+            <div style={{ display: "inline-block", fontSize: 12, fontWeight: 800, color: C.goldL, background: "rgba(232,185,74,0.12)", border: "1px solid rgba(232,185,74,0.32)", borderRadius: 999, padding: "4px 12px", marginBottom: 10 }}>
+              33% הנחה
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 10 }}>
+              <span style={{ fontSize: 18, color: C.mut, textDecoration: "line-through" }}>₪880</span>
+              <span style={{ fontSize: 38, fontWeight: 800, color: C.goldL }}>₪590</span>
+            </div>
             <div style={{ fontSize: 13.5, color: C.mut, marginTop: 2 }}>תשלום חד-פעמי · גישה מלאה · מתקזז מהסדנה</div>
           </div>
           <SignalHiveCTA whatsappPhone={wa} />

@@ -37,7 +37,7 @@ async function getUserCount(): Promise<number> {
 const ROW1_PRODUCTS = [
   { title: "הדרכה חינמית",    who: "לכל מי שרוצה להבין למה השיווק שלו לא עובד",                      price: "חינם",          cta: "התחל כאן ←",         href: "/training",    icon: BookOpen },
   { title: "אתגר 7 ימים",     who: "לכל מי שרוצה לצאת לדרך ולייצר תוכן שמביא לקוחות",              price: "₪197",  priceOriginal: "₪297",  cta: "להתחיל ←", href: "/challenge",   icon: Zap },
-  { title: "כוורת האות",      who: "לכל מי שגילה את האות ורוצה להתחיל לשדר אותו לעולם",           price: "₪590",          cta: "לכוורת האות ←",      href: "/signal-hive", icon: GraduationCap },
+  { title: "כוורת האות",      who: "לכל מי שגילה את האות ורוצה להתחיל לשדר אותו לעולם",           price: "₪590", priceOriginal: "₪880", cta: "לכוורת האות ←", href: "/signal-hive", icon: GraduationCap },
   { title: "סדנה יום אחד",    who: "לכל מי שמייצר תוכן אבל לא רואה תוצאות",                        price: "₪1,080", priceOriginal: "₪1,800", cta: "קבע יום ←",  href: "/workshop",    icon: Target },
   { title: "פגישת אסטרטגיה",  who: "לכל מי שרוצה לשבת עם הדר ולבנות אסטרטגיה מדויקת",            price: "₪4,000",        cta: "קבע פגישה ←",        href: "/strategy",    icon: Compass },
 ];

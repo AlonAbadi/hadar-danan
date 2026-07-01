@@ -27,9 +27,8 @@ export interface ProductLandingPageProps {
   price:         number;
   originalPrice?: number;
   /** How the discount badge is phrased on the price card.
-   *  'amount' (default) → "במבצע — חוסכים ₪100"
-   *  'percent'          → "X% הנחה"
-   *  Per-product call: lower-ticket products read better in percent. */
+   *  'percent' (DEFAULT) → "X% הנחה" — discounts are shown as % site-wide.
+   *  'amount'            → "במבצע — חוסכים ₪100" (opt-in only). */
   discountDisplay?: 'amount' | 'percent';
   checkoutHref:  string;
 
@@ -426,10 +425,12 @@ function PriceCard({
   productName: string; creditNote?: string; checkoutHref: string;
   ctaSlot?: React.ReactNode; whatsappHref: string; ctaLabel: string;
 }) {
+  // Discounts are shown as a PERCENTAGE across the site (never a shekel amount),
+  // unless a caller explicitly opts into 'amount'.
   const discountBadge = originalPrice
-    ? (discountDisplay === 'percent'
-        ? `${Math.round((originalPrice - price) / originalPrice * 100)}% הנחה`
-        : `במבצע — חוסכים ₪${(originalPrice - price).toLocaleString('he-IL')}`)
+    ? (discountDisplay === 'amount'
+        ? `במבצע — חוסכים ₪${(originalPrice - price).toLocaleString('he-IL')}`
+        : `${Math.round((originalPrice - price) / originalPrice * 100)}% הנחה`)
     : null;
 
   return (

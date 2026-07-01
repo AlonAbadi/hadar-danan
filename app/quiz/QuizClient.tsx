@@ -110,7 +110,7 @@ const PRODUCTS: Product[] = [
   { id: "free_training", href: "/training",    checkoutHref: "/training",        name: "הדרכה חינמית",      price: "חינם" },
   { id: "challenge",     href: "/challenge",   checkoutHref: "/challenge#cta",   name: "אתגר 7 הימים",      price: "197 ש\"ח", priceOriginal: "297 ש\"ח" },
   { id: "workshop",      href: "/workshop",    checkoutHref: "/workshop#cta",    name: "סדנה יום אחד",      price: "1,080 ש\"ח" },
-  { id: "signal_hive",   href: "/signal-hive", checkoutHref: "/signal-hive#cta",  name: "כוורת האות",        price: "590 ש\"ח" },
+  { id: "signal_hive",   href: "/signal-hive", checkoutHref: "/signal-hive#cta",  name: "כוורת האות",        price: "590 ש\"ח", priceOriginal: "880 ש\"ח" },
   { id: "strategy",      href: "/strategy",    checkoutHref: "/strategy/book",   name: "פגישת אסטרטגיה",    price: "4,000 ש\"ח" },
   { id: "premium",       href: "/premium",     checkoutHref: "/premium#cta",     name: "יום צילום פרמיום",  price: "14,000 ש\"ח" },
   { id: "partnership",   href: "/partnership", checkoutHref: "/partnership#cta", name: "שותפות אסטרטגית",   price: "10,000-30,000 ש\"ח" },
