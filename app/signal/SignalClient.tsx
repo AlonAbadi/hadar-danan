@@ -1513,6 +1513,11 @@ function Result({
         </p>
       </div>
 
+      {/* Quality feedback — asked RIGHT at the reveal (the peak "did this land?"
+          moment), so far more people rate it. This drives the LLM-tuning loop.
+          Anonymous: only needs extractionId. */}
+      {extractionId && <SignalFeedback extractionId={extractionId} />}
+
       {/* Section divider — the mockup's ✦ separator between the personal letter
           and the shareable artifact + next step. */}
       <div aria-hidden style={{ display: "flex", alignItems: "center", gap: 12, margin: "2px 8px" }}>
@@ -1593,11 +1598,6 @@ function Result({
           <InviteCard bucket={inviteBucket} signal={signal} />
         </>
       )}
-
-      {/* Quality feedback — captured at the end of the page so we can
-          iterate the LLM prompt against real signal. 3 options + optional
-          free-text. Anonymous: only needs extractionId. */}
-      {extractionId && <SignalFeedback extractionId={extractionId} />}
 
       {/* Quiet footer — utility actions kept small and out of the way */}
       <div className="result-footer" style={{ textAlign: "center", paddingTop: 4, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
@@ -1970,58 +1970,47 @@ function SignalFeedback({ extractionId }: { extractionId: string }) {
     );
   }
 
-  // Initial phase — three rating chips
+  // Initial phase — a prominent, inviting card asked right at the reveal.
   return (
     <div style={{
-      textAlign: "center",
-      padding:   "22px 16px 4px",
-      marginTop: 22,
+      background:    C.cardSoft,
+      border:        "1px solid rgba(232,185,74,0.22)",
+      borderRadius:  16,
+      padding:       "22px 22px 20px",
+      margin:        "26px auto 6px",
+      maxWidth:      460,
+      textAlign:     "center",
     }}>
-      <div style={{
-        fontSize:    13,
-        color:       C.muted,
-        marginBottom: 12,
-        letterSpacing: 0.2,
-      }}>
-        איך הרגיש האות?
+      <div style={{ fontSize: 17, fontWeight: 700, color: C.fg, marginBottom: 5 }}>
+        האות הזה — הרגיש נכון?
       </div>
-      <div style={{
-        display:    "flex",
-        gap:        8,
-        justifyContent: "center",
-        flexWrap:   "wrap",
-      }}>
+      <div style={{ fontSize: 13, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>
+        תגובה אחת עוזרת לנו לדייק את המנוע. שנייה, בלי הרשמה.
+      </div>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
         {([
-          { value: "precise" as const, label: "מדויק לי" },
-          { value: "close"   as const, label: "קרוב" },
-          { value: "missed"  as const, label: "פספס" },
+          { value: "precise" as const, label: "מדויק לי", tint: "127,212,155" },
+          { value: "close"   as const, label: "קרוב",    tint: "232,185,74" },
+          { value: "missed"  as const, label: "פספס",    tint: "158,153,144" },
         ]).map((opt) => (
           <button
             key={opt.value}
             onClick={() => void handleRate(opt.value)}
             disabled={busy}
             style={{
-              background:   "transparent",
-              color:        C.muted,
-              border:       `1px solid ${C.line}`,
+              background:   `rgba(${opt.tint},0.10)`,
+              color:        `rgb(${opt.tint})`,
+              border:       `1px solid rgba(${opt.tint},0.42)`,
               borderRadius: 999,
-              padding:      "9px 22px",
-              fontSize:     13,
-              fontWeight:   600,
+              padding:      "11px 26px",
+              fontSize:     14.5,
+              fontWeight:   700,
               cursor:       busy ? "default" : "pointer",
               fontFamily:   "inherit",
               transition:   "all 0.15s",
             }}
-            onMouseEnter={(e) => {
-              if (!busy) {
-                e.currentTarget.style.borderColor = "rgba(232,185,74,0.4)";
-                e.currentTarget.style.color = C.fg;
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = C.line;
-              e.currentTarget.style.color = C.muted;
-            }}
+            onMouseEnter={(e) => { if (!busy) e.currentTarget.style.background = `rgba(${opt.tint},0.2)`; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = `rgba(${opt.tint},0.10)`; }}
           >
             {opt.label}
           </button>
