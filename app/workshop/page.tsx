@@ -6,7 +6,7 @@ import { WorkshopTestimonials } from "./WorkshopTestimonials";
 import { CreditBanner } from "@/components/landing/CreditBanner";
 import { getUserCredit } from "@/lib/credit";
 import { createServerClient } from "@/lib/supabase/server";
-import { PRODUCT_MAP, getNextWorkshopDate, formatHebrew } from "@/lib/products";
+import { PRODUCT_MAP, WORKSHOP_ORIGINAL_PRICE, getNextWorkshopDate, formatHebrew } from "@/lib/products";
 import { validateCoupon } from "@/lib/coupons";
 import { ProductSchema } from "@/components/ProductSchema";
 import { FAQSchema } from "@/components/FAQSchema";
@@ -46,8 +46,8 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
   const coupon         = await validateCoupon(code, "workshop_1080");
   const effectivePrice = coupon?.finalPrice ?? listPrice;
   // When discount is active, strike through the real list price (1080), not
-  // the marketing "was" price (1980) — we don't want two crossed-out numbers.
-  const originalPrice  = coupon ? listPrice : 1980;
+  // the marketing "was" price (1800) — we don't want two crossed-out numbers.
+  const originalPrice  = coupon ? listPrice : WORKSHOP_ORIGINAL_PRICE;
   const priceStr       = String(effectivePrice);
 
   const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";

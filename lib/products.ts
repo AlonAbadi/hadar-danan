@@ -91,6 +91,9 @@ export function formatHebrew(d: string): string {
 export const CHALLENGE_PRICE = 197;          // actual charged
 export const CHALLENGE_ORIGINAL_PRICE = 297; // display strikethrough
 
+export const WORKSHOP_PRICE = 1080;           // actual charged
+export const WORKSHOP_ORIGINAL_PRICE = 1800;  // display strikethrough ("was" price)
+
 export const PRODUCT_MAP = {
   challenge_197:  { name: "צ׳אלנג׳ 7 הימים",   price: 197   },
   signal_hive_590:{ name: "כוורת האות",          price: 590   },
