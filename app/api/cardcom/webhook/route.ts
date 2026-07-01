@@ -472,6 +472,22 @@ async function fulfillPurchase(
     }
   }
 
+  // כוורת האות — one-time ₪590 activation product. Grants signal-kit (Hive)
+  // access by flipping hive_status to 'active' (the /hive/* gate). Delivery
+  // (dedicated welcome email + magic link) is a fast-follow; for now access is
+  // via login → /hive/signal-kit.
+  if (purchase.product === "signal_hive_590") {
+    await supabase
+      .from("users")
+      .update({ hive_status: "active", hive_started_at: new Date().toISOString() })
+      .eq("id", purchase.user_id);
+    await supabase.from("events").insert({
+      user_id:  purchase.user_id,
+      type:     "SIGNAL_HIVE_PURCHASED",
+      metadata: { product: purchase.product, amount: purchase.amount },
+    });
+  }
+
   if (productEvent) {
     // Insert product-specific event into event log
     await supabase.from("events").insert({

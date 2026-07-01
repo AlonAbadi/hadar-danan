@@ -93,6 +93,7 @@ export const CHALLENGE_ORIGINAL_PRICE = 297; // display strikethrough
 
 export const PRODUCT_MAP = {
   challenge_197:  { name: "צ׳אלנג׳ 7 הימים",   price: 197   },
+  signal_hive_590:{ name: "כוורת האות",          price: 590   },
   workshop_1080:  { name: "סדנה יום אחד",        price: 1080  },
   course_1800:    { name: "קורס דיגיטלי",         price: 1800  },
   strategy_4000:  { name: "פגישת אסטרטגיה",      price: 4000  },

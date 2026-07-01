@@ -52,6 +52,7 @@ const PRODUCT_IC_EVENT: Record<string, string> = {
 const BodySchema = z.object({
   product: z.enum([
     "challenge_197",
+    "signal_hive_590",
     "workshop_1080",
     "course_1800",
     "strategy_4000",
@@ -217,6 +218,8 @@ export async function POST(req: NextRequest) {
     // oid= passed for Meta Pixel browser/CAPI event_id deduplication
     SuccessRedirectUrl: product === "challenge_197"
       ? `${appUrl}/challenge/thank-you?oid=${purchase.id}`
+      : product === "signal_hive_590"
+      ? `${appUrl}/signal-hive/success?oid=${purchase.id}`
       : `${appUrl}/${product.split("_")[0]}/success?oid=${purchase.id}`,
     ErrorRedirectUrl: `${appUrl}/checkout-error`,
 
