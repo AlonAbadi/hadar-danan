@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
-import { buildHandoffMessage, waPhoneOf } from "@/lib/signal/handoff-message";
-import HandoffQueue, { type HandoffLeadView, type HandoffStage } from "./HandoffQueue";
 
 // Typed escape hatch — signal_extractions isn't in the generated DB types.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,7 +29,6 @@ interface ExtractionRow {
   answers:      Record<string, string>;
   bucket:       string | null;
   generated_at: string;
-  handoff_stage?: "whatsapp_sent" | "meeting_booked" | null;
   users: {
     id:         string;
     name:       string | null;
@@ -132,11 +129,29 @@ export default async function AdminSignalPage() {
   // they scanned large tables on every load and overloaded the DB (the page now
   // does ONE light query). The helpers below are stubbed until reworked behind a
   // cache + indexes; kept referenced so nothing is dead-code.
-  const [{ data: rows, error }, missed, chain, conv] = await Promise.all([
+  // Real window counts via COUNT queries — the list is capped at 200 for
+  // display, so counting the array would wrongly cap the totals at 200.
+  const nowMs   = Date.now();
+  const dayAgo   = new Date(nowMs -  1 * 24 * 60 * 60 * 1000).toISOString();
+  const weekAgo  = new Date(nowMs -  7 * 24 * 60 * 60 * 1000).toISOString();
+  const monthAgo = new Date(nowMs - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [
+    { data: rows, error },
+    { count: totalCount },
+    { count: monthCount },
+    { count: weekCount },
+    { count: todayCount },
+    missed, chain, conv,
+  ] = await Promise.all([
     safeFrom(supabase, "signal_extractions")
       .select("id, user_id, signal, answers, bucket, generated_at, users(id, name, email, phone, occupation)")
       .order("generated_at", { ascending: false })
       .limit(200),
+    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }),
+    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).gte("generated_at", monthAgo),
+    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).gte("generated_at", weekAgo),
+    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).gte("generated_at", dayAgo),
     getMissedLeads(),
     getSignalChainStats(),
     getSignalChainConversions(),
@@ -144,68 +159,10 @@ export default async function AdminSignalPage() {
 
   const extractions: ExtractionRow[] = (rows ?? []) as ExtractionRow[];
 
-  // ── Build the handoff queue (תור האות) — ISOLATED + non-fatal ─────────────
-  // Kept as its own query so a not-yet-applied migration 056 (missing handoff_*
-  // columns) leaves the queue empty but NEVER breaks the extractions list above.
-  // Queue    = strategy-bucket leads not yet contacted (handoff_stage null).
-  // Sent tab = leads Hadar already messaged; a booked+paid lead is filtered out.
-  const handoffLeads: HandoffLeadView[] = [];
-  const [{ data: hRows }, { data: paidRows }] = await Promise.all([
-    safeFrom(supabase, "signal_extractions")
-      .select("id, user_id, signal, bucket, generated_at, handoff_stage, users(id, name, phone, occupation)")
-      .order("generated_at", { ascending: false })
-      .limit(200),
-    // Completed purchases → the set of paid users. A booked lead who has paid
-    // drops off the handoff queue (payment is the source of truth, not a flag).
-    safeFrom(supabase, "purchases")
-      .select("user_id")
-      .eq("status", "completed"),
-  ]);
-
-  const paidUsers = new Set<string>(
-    ((paidRows ?? []) as { user_id: string | null }[])
-      .map((p) => p.user_id)
-      .filter((v): v is string => !!v),
-  );
-
-  // Keep only the latest extraction per user so a lead never appears twice.
-  const seenUsers = new Set<string>();
-  for (const row of (hRows ?? []) as ExtractionRow[]) {
-    if (row.user_id && seenUsers.has(row.user_id)) continue;
-    if (row.user_id) seenUsers.add(row.user_id);
-
-    const stage: HandoffStage =
-      row.handoff_stage === "whatsapp_sent"  ? "whatsapp_sent"  :
-      row.handoff_stage === "meeting_booked" ? "meeting_booked" : "queue";
-
-    const inQueue = stage === "queue" && row.bucket === "strategy";
-    const inSent  = stage === "whatsapp_sent" || stage === "meeting_booked";
-    if (!inQueue && !inSent) continue;
-
-    // Booked + paid → done, drop from the list.
-    if (stage === "meeting_booked" && row.user_id && paidUsers.has(row.user_id)) continue;
-
-    const name  = row.users?.name?.trim() || "—";
-    const phone = row.users?.phone ?? null;
-    handoffLeads.push({
-      id:          row.id,
-      name,
-      occupation:  row.users?.occupation?.trim() || null,
-      signal:      row.signal?.signal ?? "",
-      generatedAt: row.generated_at,
-      stage,
-      waPhone:     waPhoneOf(phone),
-      waText:      buildHandoffMessage({ name, signal: row.signal }),
-      userHref:    row.users?.id ? `/admin/users/${row.users.id}` : null,
-    });
-  }
-
-  // Window counts for the headline stats
-  const now = Date.now();
-  const dayMs   = 24 * 60 * 60 * 1000;
-  const week    = extractions.filter((e) => now - new Date(e.generated_at).getTime() < 7 * dayMs).length;
-  const month   = extractions.filter((e) => now - new Date(e.generated_at).getTime() < 30 * dayMs).length;
-  const today   = extractions.filter((e) => now - new Date(e.generated_at).getTime() < dayMs).length;
+  const total = totalCount ?? extractions.length;
+  const month = monthCount ?? 0;
+  const week  = weekCount ?? 0;
+  const today = todayCount ?? 0;
 
   return (
     <div dir="rtl" style={{ fontFamily: "var(--font-assistant), Assistant, sans-serif", minHeight: "100vh", background: C.bg, padding: 32, color: C.fg }}>
@@ -219,7 +176,7 @@ export default async function AdminSignalPage() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <Stat label="סה״כ"   value={extractions.length} color={C.gold} />
+          <Stat label="סה״כ"   value={total}              color={C.gold} />
           <Stat label="החודש"  value={month}              color={C.gold} />
           <Stat label="השבוע"  value={week}               color={C.goldM} />
           <Stat label="היום"   value={today}              color={C.muted} />
@@ -231,9 +188,6 @@ export default async function AdminSignalPage() {
           שגיאה בשליפה: {String(error.message ?? error)}
         </div>
       )}
-
-      {/* תור האות — Hadar's manual WhatsApp handoff worklist */}
-      <HandoffQueue leads={handoffLeads} />
 
       {/* Signal email-chain performance */}
       {chain.length > 0 && (

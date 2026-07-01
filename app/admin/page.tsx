@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { createServerClient } from '@/lib/supabase/server';
+import { getImmediateLeads } from '@/lib/admin/immediate-leads';
 import { QuizInsightsButton } from './QuizInsightsButton';
+
+export const dynamic = 'force-dynamic';
 
 async function getHubKPIs() {
   const supabase = createServerClient();
@@ -54,6 +57,7 @@ async function getHubKPIs() {
 }
 
 const NAV_CARDS = [
+  { title: 'לידים לטיפול מיידי', desc: 'לידים חמים מהאות ומהקוויז — פנייה אישית בלחיצה', href: '/admin/today',       group: 'ראשי',     icon: '🔥' },
   { title: 'רשימת חיוגים',     desc: 'הלידים הכי חמים להיום + היסטוריה ותוצאות שיחה',  href: '/admin/call-list',   group: 'ראשי',     icon: '📞' },
   { title: 'אסטרטג שיווק AI',  desc: 'ניתוח חי + המלצות אסטרטגיות (Claude Opus 4.7)', href: '/admin/strategist',  group: 'ראשי',     icon: '🧠' },
   { title: 'מנוע התנועה',      desc: 'תיאור לקוח → תדריך בימוי לסרטון (לא תסריט)',  href: '/admin/movement',    group: 'תוכן',     icon: '🎯' },
@@ -95,6 +99,8 @@ function relTime(iso: string) {
 
 export default async function AdminHubPage() {
   const kd = await getHubKPIs();
+  const immediateLeads = await getImmediateLeads(createServerClient());
+  const immediateCount = immediateLeads.filter((l) => l.stage === 'queue').length;
 
   return (
     <>
@@ -149,6 +155,37 @@ export default async function AdminHubPage() {
           <div className="hub-title">ניהול — הדר דנן</div>
           <div className="hub-sub">{new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
         </div>
+
+        {/* לידים לטיפול מיידי — Hadar's daily worklist entry point */}
+        <Link
+          href="/admin/today"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+            textDecoration: 'none', marginBottom: 24, flexWrap: 'wrap',
+            background: 'linear-gradient(145deg, rgba(232,185,74,0.12), rgba(20,24,32,0.9))',
+            border: '1px solid rgba(232,185,74,0.45)', borderRadius: 14, padding: '18px 24px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ fontSize: 26 }}>🔥</span>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#E8B94A' }}>לידים לטיפול מיידי</div>
+              <div style={{ fontSize: 13, color: '#AAB0BD', marginTop: 2 }}>
+                לידים חמים מהאות ומהקוויז — פנייה אישית בלחיצה. העמוד של הבוקר.
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: '#E8B94A', lineHeight: 1 }}>{immediateCount}</div>
+              <div style={{ fontSize: 11, color: '#AAB0BD' }}>ממתינים</div>
+            </div>
+            <span style={{
+              fontSize: 14, fontWeight: 800, color: '#0D1018', background: '#E8B94A',
+              padding: '9px 18px', borderRadius: 10, whiteSpace: 'nowrap',
+            }}>פתח את התור ←</span>
+          </div>
+        </Link>
 
         {/* KPIs */}
         <div className="kpi-grid">
