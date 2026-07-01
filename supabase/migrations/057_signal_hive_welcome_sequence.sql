@@ -1,4 +1,4 @@
--- Migration 056: כוורת האות welcome email sequence.
+-- Migration 057: כוורת האות welcome email sequence.
 --
 -- Fired by the Cardcom webhook on a signal_hive_590 purchase (via the
 -- SIGNAL_HIVE_PURCHASED product event). The webhook injects a magic link
