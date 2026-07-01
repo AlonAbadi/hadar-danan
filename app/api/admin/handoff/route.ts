@@ -21,7 +21,7 @@ import { createServerClient } from "@/lib/supabase/server";
  * route authenticates itself against the admin credentials.
  */
 
-const VALID_STAGES = new Set(["whatsapp_sent", "meeting_booked"]);
+const VALID_STAGES = new Set(["whatsapp_sent", "meeting_booked", "dismissed"]);
 
 function isAdminAuthorized(req: NextRequest): { ok: boolean; username: string } {
   const auth = req.headers.get("Authorization") || req.headers.get("authorization");
@@ -68,6 +68,11 @@ export async function POST(req: NextRequest) {
     if (stage === "meeting_booked") {
       patch.handoff_booked_at = now;
       patch.status = "booked";
+    }
+    if (stage === "dismissed") {
+      // "לא רלבנטי" — Hadar reviewed and decided not to contact. Mirror the
+      // CRM status so the lead is also removed from other worklists.
+      patch.status = "not_relevant";
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

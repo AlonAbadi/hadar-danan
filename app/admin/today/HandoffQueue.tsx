@@ -7,16 +7,37 @@ import Link from "next/link";
  * לידים לטיפול מיידי — Hadar's daily WhatsApp worklist (source-agnostic).
  *
  * Two tabs:
- *   1. "תור"          — leads not yet contacted. "שלח ווטסאפ" opens wa.me with a
- *                       message pre-composed from their signal / quiz result and
- *                       stamps whatsapp_sent (moves them to tab 2).
+ *   1. "תור"          — leads not yet contacted. Actions:
+ *                       • "שלח ווטסאפ" opens wa.me with a pre-composed message
+ *                         and stamps whatsapp_sent (moves to tab 2).
+ *                       • "לא רלבנטי" stamps handoff_stage='dismissed' +
+ *                         users.status='not_relevant' and removes from list.
  *   2. "נשלח ווטסאפ"  — leads Hadar already messaged. "סגר פגישה" stamps
- *                       meeting_booked. Once they also pay they drop off the list.
+ *                       meeting_booked. Once they also pay they drop off.
  *
- * State is keyed on the user and persisted on the users row (migration 057).
+ * Each card carries a context strip so Hadar can decide whether to reach out
+ * BEFORE she clicks — contact, source, engagement recency, spend history, LLM
+ * fit read, and a verbatim snippet from their strongest answer.
  */
 
 export type HandoffStage = "queue" | "whatsapp_sent" | "meeting_booked";
+
+export interface LeadContext {
+  email:              string | null;
+  phone:              string | null;
+  utmSource:          string | null;
+  utmCampaign:        string | null;
+  marketingConsent:   boolean;
+  status:             string | null;
+  lastActivityAt:     string | null;
+  signupAt:           string | null;
+  purchaseCount:      number;
+  totalSpent:         number;
+  routingConfidence:  number | null;
+  commercialFit:      string | null;
+  founderStage:       string | null;
+  answerSnippet:      string | null;
+}
 
 export interface HandoffLeadView {
   userId:     string;
@@ -29,16 +50,18 @@ export interface HandoffLeadView {
   waPhone:    string | null;
   waText:     string;
   userHref:   string;
+  context:    LeadContext;
 }
 
 const C = {
   bg: "#0D1018", card: "#141820", cardSoft: "#1D2430",
   fg: "#EDE9E1", muted: "#AAB0BD", gold: "#E8B94A", goldM: "#C9964A",
   line: "#2C323E", lineGold: "rgba(232,185,74,0.30)",
-  wa: "#25D366", green: "#7FD49B", blue: "#7FB2F2",
+  wa: "#25D366", green: "#7FD49B", blue: "#7FB2F2", red: "#E67373",
 };
 
-function relativeTime(iso: string): string {
+function relativeTime(iso: string | null): string {
+  if (!iso) return "—";
   const diff  = Date.now() - new Date(iso).getTime();
   const mins  = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
@@ -50,7 +73,14 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("he-IL");
 }
 
-async function postStage(userId: string, stage: "whatsapp_sent" | "meeting_booked"): Promise<boolean> {
+function formatMoney(n: number): string {
+  return "₪" + n.toLocaleString("he-IL");
+}
+
+async function postStage(
+  userId: string,
+  stage: "whatsapp_sent" | "meeting_booked" | "dismissed",
+): Promise<boolean> {
   try {
     const res = await fetch("/api/admin/handoff", {
       method:  "POST",
@@ -62,6 +92,187 @@ async function postStage(userId: string, stage: "whatsapp_sent" | "meeting_booke
     return false;
   }
 }
+
+// ── Context strip ────────────────────────────────────────────────
+// The compact info row rendered under each lead's name/reason. Every chip
+// speaks a distinct decision-signal: can I reach them (contact), where they
+// came from (utm), how warm they are (engagement + past spend), how much the
+// engine trusts the fit (routing confidence + commercial fit), and their own
+// voice (verbatim snippet).
+
+function Chip({
+  label, value, tone = "neutral",
+}: {
+  label: string;
+  value: React.ReactNode;
+  tone?: "neutral" | "gold" | "green" | "red" | "blue";
+}) {
+  const colors: Record<string, { fg: string; bg: string; bd: string }> = {
+    neutral: { fg: C.muted,  bg: "rgba(255,255,255,0.03)", bd: C.line             },
+    gold:    { fg: C.gold,   bg: "rgba(232,185,74,0.08)",  bd: C.lineGold         },
+    green:   { fg: C.green,  bg: "rgba(127,212,155,0.08)", bd: "rgba(127,212,155,0.28)" },
+    red:     { fg: C.red,    bg: "rgba(230,115,115,0.08)", bd: "rgba(230,115,115,0.28)" },
+    blue:    { fg: C.blue,   bg: "rgba(127,178,242,0.08)", bd: "rgba(127,178,242,0.28)" },
+  };
+  const t = colors[tone];
+  return (
+    <span style={{
+      display:        "inline-flex", alignItems: "center", gap: 6,
+      padding:        "3px 9px", borderRadius: 8,
+      background:     t.bg, border: `1px solid ${t.bd}`,
+      fontSize:       11.5, lineHeight: 1.35, color: t.fg,
+      whiteSpace:     "nowrap",
+    }}>
+      <span style={{ opacity: 0.68, fontWeight: 500 }}>{label}</span>
+      <span style={{ fontWeight: 700 }}>{value}</span>
+    </span>
+  );
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  lead:             "ליד",
+  engaged:          "מעורב",
+  high_intent:      "כוונה גבוהה",
+  buyer:            "קונה",
+  booked:           "פגישה",
+  premium_lead:     "פרמיום",
+  partnership_lead: "שותפות",
+  handled:          "טופל",
+  not_relevant:     "לא רלוונטי",
+};
+
+const FIT_LABEL: Record<string, string> = {
+  high:    "גבוהה",
+  medium:  "בינונית",
+  low:     "נמוכה",
+  unclear: "לא ברור",
+};
+
+const FIT_TONE: Record<string, "green" | "gold" | "red" | "neutral"> = {
+  high:    "green",
+  medium:  "gold",
+  low:     "red",
+  unclear: "neutral",
+};
+
+function ContextStrip({ ctx }: { ctx: LeadContext }) {
+  const waLink = ctx.phone
+    ? "https://wa.me/" + ctx.phone.replace(/\D/g, "").replace(/^0/, "972")
+    : null;
+
+  const utmDisplay =
+    ctx.utmSource
+      ? ctx.utmSource + (ctx.utmCampaign ? ` · ${ctx.utmCampaign}` : "")
+      : "אורגני";
+
+  const fitTone = ctx.commercialFit ? FIT_TONE[ctx.commercialFit] ?? "neutral" : "neutral";
+  const statusTone: "gold" | "green" | "neutral" =
+    ctx.status === "buyer" || ctx.status === "booked" ? "green" :
+    ctx.status === "high_intent" || ctx.status === "premium_lead" || ctx.status === "partnership_lead" ? "gold" :
+    "neutral";
+
+  return (
+    <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+      {/* Contact */}
+      {ctx.phone && (
+        <a
+          href={`tel:${ctx.phone}`}
+          style={{ textDecoration: "none" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Chip label="טלפון" value={ctx.phone} tone="neutral" />
+        </a>
+      )}
+      {waLink && (
+        <a
+          href={waLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ textDecoration: "none" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Chip label="WA" value="פתח" tone="green" />
+        </a>
+      )}
+      {ctx.email && (
+        <a
+          href={`mailto:${ctx.email}`}
+          style={{ textDecoration: "none" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Chip label="מייל" value={ctx.email} tone="neutral" />
+        </a>
+      )}
+
+      {/* CRM status */}
+      {ctx.status && STATUS_LABEL[ctx.status] && (
+        <Chip label="סטטוס" value={STATUS_LABEL[ctx.status]} tone={statusTone} />
+      )}
+
+      {/* Acquisition */}
+      <Chip label="מקור" value={utmDisplay} tone={ctx.utmSource ? "blue" : "neutral"} />
+
+      {/* Marketing consent */}
+      <Chip
+        label="הסכמה"
+        value={ctx.marketingConsent ? "כן" : "לא"}
+        tone={ctx.marketingConsent ? "green" : "red"}
+      />
+
+      {/* Engagement recency */}
+      {ctx.lastActivityAt && (
+        <Chip label="פעילות" value={relativeTime(ctx.lastActivityAt)} tone="neutral" />
+      )}
+
+      {/* Signup age */}
+      {ctx.signupAt && (
+        <Chip label="נרשם" value={relativeTime(ctx.signupAt)} tone="neutral" />
+      )}
+
+      {/* Spend history */}
+      {ctx.purchaseCount > 0 && (
+        <Chip
+          label={`${ctx.purchaseCount} רכישות`}
+          value={formatMoney(ctx.totalSpent)}
+          tone="gold"
+        />
+      )}
+
+      {/* LLM routing verdict — signal path only */}
+      {typeof ctx.routingConfidence === "number" && (
+        <Chip
+          label="ביטחון LLM"
+          value={`${Math.round(ctx.routingConfidence * 100)}%`}
+          tone={ctx.routingConfidence >= 0.7 ? "green" : ctx.routingConfidence >= 0.5 ? "gold" : "neutral"}
+        />
+      )}
+      {ctx.commercialFit && FIT_LABEL[ctx.commercialFit] && (
+        <Chip label="התאמה" value={FIT_LABEL[ctx.commercialFit]} tone={fitTone} />
+      )}
+    </div>
+  );
+}
+
+function AnswerSnippet({ snippet }: { snippet: string }) {
+  return (
+    <div style={{
+      marginTop: 10,
+      padding: "8px 12px",
+      background: "rgba(232,185,74,0.04)",
+      border: `1px solid ${C.lineGold}`,
+      borderRadius: 8,
+      fontSize: 12.5,
+      lineHeight: 1.55,
+      color: C.muted,
+      fontStyle: "italic",
+    }}>
+      <span style={{ color: C.goldM, fontWeight: 700, fontStyle: "normal" }}>מהתשובות שלו/ה: </span>
+      &ldquo;{snippet}&rdquo;
+    </div>
+  );
+}
+
+// ── Main component ───────────────────────────────────────────────
 
 export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
   const [rows, setRows] = useState<HandoffLeadView[]>(leads);
@@ -77,6 +288,9 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
   const setStage = (userId: string, stage: HandoffStage) =>
     setRows((prev) => prev.map((r) => (r.userId === userId ? { ...r, stage } : r)));
 
+  const removeRow = (userId: string) =>
+    setRows((prev) => prev.filter((r) => r.userId !== userId));
+
   const onSendWhatsApp = async (lead: HandoffLeadView) => {
     if (lead.waPhone) {
       window.open(`https://wa.me/${lead.waPhone}?text=${encodeURIComponent(lead.waText)}`, "_blank", "noopener");
@@ -85,6 +299,19 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
     setStage(lead.userId, "whatsapp_sent"); // optimistic
     const ok = await postStage(lead.userId, "whatsapp_sent");
     if (!ok) setStage(lead.userId, "queue"); // revert on failure
+    setBusy(null);
+  };
+
+  const onDismiss = async (lead: HandoffLeadView) => {
+    // Two-tap confirm so a mis-click doesn't remove someone. Uses native
+    // confirm to keep the code footprint tiny — admin surface only.
+    if (!window.confirm(`להסיר את ${lead.name} מהרשימה? הליד יסומן כלא רלוונטי.`)) return;
+
+    setBusy(lead.userId);
+    const prev = rows;
+    removeRow(lead.userId); // optimistic
+    const ok = await postStage(lead.userId, "dismissed");
+    if (!ok) setRows(prev); // revert
     setBusy(null);
   };
 
@@ -160,22 +387,46 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
                     )}
                   </div>
                   <p style={{ margin: "8px 0 0", fontSize: 13.5, lineHeight: 1.55, color: C.fg }}>{lead.reason}</p>
+
+                  {/* Rich decision-support strip */}
+                  <ContextStrip ctx={lead.context} />
+
+                  {lead.context.answerSnippet && (
+                    <AnswerSnippet snippet={lead.context.answerSnippet} />
+                  )}
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 7, alignItems: "stretch", minWidth: 155 }}>
                   {tab === "queue" && (
-                    <button
-                      onClick={() => onSendWhatsApp(lead)}
-                      disabled={busy === lead.userId || !lead.waPhone}
-                      title={lead.waPhone ? "פתיחת ווטסאפ עם הודעה מוכנה" : "אין מספר טלפון"}
-                      style={{
-                        cursor: lead.waPhone ? "pointer" : "not-allowed", opacity: lead.waPhone ? 1 : 0.5,
-                        background: C.wa, color: "#0b141a", fontWeight: 800, fontSize: 13.5,
-                        padding: "10px 14px", borderRadius: 9, border: "none",
-                      }}
-                    >
-                      {busy === lead.userId ? "…" : "שלח ווטסאפ ←"}
-                    </button>
+                    <>
+                      <button
+                        onClick={() => onSendWhatsApp(lead)}
+                        disabled={busy === lead.userId || !lead.waPhone}
+                        title={lead.waPhone ? "פתיחת ווטסאפ עם הודעה מוכנה" : "אין מספר טלפון"}
+                        style={{
+                          cursor: lead.waPhone ? "pointer" : "not-allowed", opacity: lead.waPhone ? 1 : 0.5,
+                          background: C.wa, color: "#0b141a", fontWeight: 800, fontSize: 13.5,
+                          padding: "10px 14px", borderRadius: 9, border: "none",
+                        }}
+                      >
+                        {busy === lead.userId ? "…" : "שלח ווטסאפ ←"}
+                      </button>
+                      <button
+                        onClick={() => onDismiss(lead)}
+                        disabled={busy === lead.userId}
+                        title="הסרה מהרשימה — יסומן כלא רלוונטי"
+                        style={{
+                          cursor: "pointer",
+                          background: "transparent",
+                          color: C.red,
+                          fontWeight: 700, fontSize: 12.5,
+                          padding: "8px 14px", borderRadius: 9,
+                          border: `1px solid rgba(230,115,115,0.35)`,
+                        }}
+                      >
+                        לא רלבנטי ✕
+                      </button>
+                    </>
                   )}
                   {tab === "sent" && lead.stage === "whatsapp_sent" && (
                     <button
