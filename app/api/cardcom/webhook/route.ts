@@ -260,9 +260,10 @@ async function fulfillPurchase(
 
   // Determine product-specific trigger event
   const productEvent =
-    purchase.product === "challenge_197" ? "CHALLENGE_PURCHASED" :
-    purchase.product === "workshop_1080" ? "WORKSHOP_PURCHASED"  :
-    purchase.product === "course_1800"   ? "COURSE_PURCHASED"    : null;
+    purchase.product === "challenge_197"   ? "CHALLENGE_PURCHASED"   :
+    purchase.product === "signal_hive_590" ? "SIGNAL_HIVE_PURCHASED" :
+    purchase.product === "workshop_1080"   ? "WORKSHOP_PURCHASED"    :
+    purchase.product === "course_1800"     ? "COURSE_PURCHASED"      : null;
 
   // Fetch user data once (shared by all email enqueuing below)
   const { data: user } = await supabase
@@ -436,6 +437,7 @@ async function fulfillPurchase(
 
   // Create challenge enrollment + auth account immediately on purchase
   let challengeMagicLink: string | null = null;
+  let signalHiveMagicLink: string | null = null;
   let challengeEnrollmentId: string | null = null;
   if (purchase.product === "challenge_197") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -473,19 +475,26 @@ async function fulfillPurchase(
   }
 
   // כוורת האות — one-time ₪590 activation product. Grants signal-kit (Hive)
-  // access by flipping hive_status to 'active' (the /hive/* gate). Delivery
-  // (dedicated welcome email + magic link) is a fast-follow; for now access is
-  // via login → /hive/signal-kit.
+  // access by flipping hive_status to 'active' (the /hive/* gate) + a magic link
+  // so the buyer lands straight in their kit. The SIGNAL_HIVE_PURCHASED event +
+  // welcome email are enqueued by the productEvent path below.
   if (purchase.product === "signal_hive_590") {
     await supabase
       .from("users")
       .update({ hive_status: "active", hive_started_at: new Date().toISOString() })
       .eq("id", purchase.user_id);
-    await supabase.from("events").insert({
-      user_id:  purchase.user_id,
-      type:     "SIGNAL_HIVE_PURCHASED",
-      metadata: { product: purchase.product, amount: purchase.amount },
-    });
+    if (user?.email) {
+      try {
+        const { data: linkData } = await supabase.auth.admin.generateLink({
+          type:    "magiclink",
+          email:   user.email,
+          options: { redirectTo: `${appUrl}/hive/signal-kit` },
+        });
+        signalHiveMagicLink = linkData?.properties?.action_link ?? null;
+      } catch {
+        // non-fatal — the email falls back to a static /hive/signal-kit link
+      }
+    }
   }
 
   if (productEvent) {
@@ -517,9 +526,10 @@ async function fulfillPurchase(
               template_key: seq.template_key,
               product:      purchase.product,
               amount:       purchase.amount,
-              // Inject magic link only into the immediate challenge access email
-              ...(challengeMagicLink && seq.delay_hours === 0
-                ? { access_link: challengeMagicLink }
+              // Inject magic link into the immediate access email (challenge or
+              // כוורת האות)
+              ...((challengeMagicLink || signalHiveMagicLink) && seq.delay_hours === 0
+                ? { access_link: challengeMagicLink ?? signalHiveMagicLink }
                 : {}),
             },
             run_at: new Date(Date.now() + seq.delay_hours * 60 * 60 * 1000).toISOString(),

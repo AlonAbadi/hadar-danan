@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { ShootDayPlan, Video, Pillar } from "@/lib/prompts/shoot-day-engine";
 import { playHadarVoice } from "@/lib/hadar-voice";
+import { CHALLENGE_DAYS } from "@/lib/challenge-config";
 
 const C = {
   bg:       "#080C14",
@@ -37,6 +38,10 @@ interface Extraction {
   signal:       {
     signal: string;
     signal_promise: string;
+    pain_source?: string;
+    people?: string;
+    element?: string;
+    central_tool?: string;
     monthly_drops?: Record<string, { ideas: string[]; created_at: string }>;
   };
   generated_at: string;
@@ -76,7 +81,7 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
   const [kit, setKit] = useState<ContentKit | null>(null);
   const [kitLoading, setKitLoading] = useState(true);
   const [kitError, setKitError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"text" | "visual" | "strategy" | "shoot_day" | "monthly" | "review">("text");
+  const [tab, setTab] = useState<"challenge" | "text" | "visual" | "strategy" | "shoot_day" | "monthly" | "review">("challenge");
 
   useEffect(() => {
     (async () => {
@@ -119,7 +124,7 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, borderBottom: `1px solid ${C.line}`, marginBottom: 28, overflowX: "auto" }}>
-          {(["text", "visual", "strategy", "shoot_day", "monthly", "review"] as const).map((t) => (
+          {(["challenge", "text", "visual", "strategy", "shoot_day", "monthly", "review"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -141,6 +146,7 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
         </div>
 
         {/* Tab body */}
+        {tab === "challenge" && <ChallengeTab extraction={extraction} />}
         {tab === "text"      && <TextTab kit={kit} loading={kitLoading} error={kitError} />}
         {tab === "visual"    && <VisualTab extractionId={extraction.id} />}
         {tab === "strategy"  && <StrategyTab kit={kit} loading={kitLoading} />}
@@ -152,7 +158,87 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
   );
 }
 
+// ── אתגר האות — Signal Dashboard + the reframed 7-day challenge ────────────
+// The challenge VIDEOS are shared with the standalone /challenge product (read
+// from challenge-config); here they're wrapped in the person's signal — a
+// dashboard anchor + a per-day signal frame. The standalone challenge is
+// untouched: this framing lives only in the kit.
+const DAY_FRAMES: Record<number, string> = {
+  1: "היום נתחיל לראות מה מסתיר את האות שלך.",
+  2: "היום ניקח סיפור אחד, ונחבר אותו לאות שלך.",
+  3: "היום נמצא את הרגע שבו האות שלך הכי חזק.",
+  4: "היום נחדד למי האות שלך מדבר.",
+  5: "היום נתחיל לבטא את האות שלך מול העולם.",
+  6: "היום ניתן לאות שלך מבנה שאפשר לחזור עליו.",
+  7: "היום נבין איך האות שלך מושך את הלקוחות הנכונים.",
+};
+
+function DashRow({ label, value }: { label: string; value?: string }) {
+  if (!value || !value.trim()) return null;
+  return (
+    <div style={{ padding: "10px 0", borderTop: `1px solid ${C.line}` }}>
+      <div style={{ fontSize: 12, color: C.goldMid, fontWeight: 700, marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 14.5, color: C.fg, lineHeight: 1.6 }}>{value}</div>
+    </div>
+  );
+}
+
+function VimeoEmbed({ id, portrait }: { id: string; portrait: boolean }) {
+  return (
+    <div style={{ maxWidth: portrait ? 300 : "100%", margin: "14px auto", aspectRatio: portrait ? "9 / 16" : "16 / 9", background: "#000", borderRadius: 12, overflow: "hidden" }}>
+      <iframe
+        src={`https://player.vimeo.com/video/${id}`}
+        allow="autoplay; fullscreen; picture-in-picture"
+        style={{ width: "100%", height: "100%", border: 0 }}
+        title={`יום ${id}`}
+      />
+    </div>
+  );
+}
+
+function ChallengeTab({ extraction }: { extraction: Extraction }) {
+  const s = extraction.signal;
+  const days = CHALLENGE_DAYS.filter((d) => d.day >= 0 && d.day <= 7);
+  return (
+    <div>
+      {/* Signal Dashboard — the anchor */}
+      <div style={{ background: C.card, border: `1px solid ${C.lineGold}`, borderRadius: 16, padding: "20px 22px", marginBottom: 22 }}>
+        <div style={{ fontSize: 12, letterSpacing: 1.4, color: C.goldMid, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
+          לוח האות שלך
+        </div>
+        <div style={{ fontSize: 17, fontWeight: 700, color: C.fg, lineHeight: 1.55 }}>{s.signal}</div>
+        <DashRow label="הכאב שהוא פותר" value={s.pain_source} />
+        <DashRow label="ההבטחה" value={s.signal_promise} />
+        <DashRow label="הקהל שלך" value={s.people} />
+      </div>
+
+      <p style={{ fontSize: 15, color: C.muted, lineHeight: 1.7, textAlign: "center", marginBottom: 24, maxWidth: 560, marginInline: "auto" }}>
+        גילית את האות שלך. עכשיו 7 ימים להוציא אותו לעולם — כל יום, מתוך האות שלך.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {days.map((d) => (
+          <div key={d.day} style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "18px 20px" }}>
+            <div style={{ fontSize: 12.5, color: C.goldMid, fontWeight: 700, marginBottom: 6 }}>
+              {d.day === 0 ? "פתיחה" : `יום ${d.day}`}
+            </div>
+            {DAY_FRAMES[d.day] && (
+              <div style={{ fontSize: 16, color: C.gold, fontWeight: 700, lineHeight: 1.5, marginBottom: 4 }}>
+                {DAY_FRAMES[d.day]}
+              </div>
+            )}
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.fg, marginBottom: 2 }}>{d.title}</div>
+            <VimeoEmbed id={d.videoId} portrait={d.aspectRatio === "9:16"} />
+            <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.65 }}>{d.description}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const TAB_LABELS: Record<string, string> = {
+  challenge: "אתגר האות",
   text:      "טקסטים",
   visual:    "ויזואלי",
   strategy:  "אסטרטגיה",

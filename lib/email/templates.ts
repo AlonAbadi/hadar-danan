@@ -2,7 +2,8 @@
  * Hebrew email templates.
  * Each function receives a context object and returns { subject, html }.
  * All emails are RTL with the Assistant font.
- * Design: dark header (#0a0a0f), white body, blue CTAs (#2563eb).
+ * Design: warm cream letter (#FBF8F2 on #EBE4D8), gold CTAs (#C9964A), RTL
+ * right-aligned, signed by Hadar. Shared base() shell + signalLetter() shell.
  */
 
 import { getNextWorkshopDate, formatHebrew } from "@/lib/products";
@@ -24,41 +25,42 @@ function base(content: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #f4f7fb;
+      background: #EBE4D8;
       font-family: 'Assistant', Arial, sans-serif;
       direction: rtl;
       text-align: right;
-      color: #1f2937;
+      color: #2A2520;
     }
-    .wrapper { max-width: 600px; margin: 32px auto; padding: 0 16px 40px; }
-    .card { background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+    .wrapper { max-width: 600px; margin: 26px auto; padding: 0 14px 40px; direction: rtl; text-align: right; }
+    .card { background: #FBF8F2; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 18px rgba(60,45,20,0.10); direction: rtl; text-align: right; }
     .header {
-      background: #0a0a0f;
-      padding: 28px 32px;
-      color: #fff;
+      background: #FBF8F2;
+      padding: 30px 32px 8px;
+      color: #2A2520;
+      text-align: right;
+      border-bottom: 1px solid rgba(194,151,63,0.18);
     }
     .header-logo {
       font-size: 13px;
-      font-weight: 700;
-      color: #6b7280;
-      letter-spacing: 0.05em;
+      font-weight: 800;
+      color: #9A7526;
+      letter-spacing: 0.03em;
       margin-bottom: 14px;
-      text-transform: uppercase;
     }
-    .header h1 { font-size: 24px; font-weight: 800; color: #ffffff; line-height: 1.3; }
-    .header p  { font-size: 14px; color: #9ca3af; margin-top: 6px; }
-    .header-accent { color: #4ade80; }
-    .body { padding: 32px; }
-    .body p  { font-size: 16px; line-height: 1.75; color: #374151; margin-bottom: 14px; }
-    .body h2 { font-size: 20px; font-weight: 800; color: #111827; margin-bottom: 12px; }
+    .header h1 { font-size: 24px; font-weight: 800; color: #1c1812; line-height: 1.3; }
+    .header p  { font-size: 14px; color: #6B6256; margin-top: 6px; }
+    .header-accent { color: #C9964A; }
+    .body { padding: 28px 32px; text-align: right; direction: rtl; }
+    .body p  { font-size: 16px; line-height: 1.75; color: #2A2520; margin-bottom: 14px; text-align: right; }
+    .body h2 { font-size: 20px; font-weight: 800; color: #1c1812; margin-bottom: 12px; text-align: right; }
     .cta {
       display: inline-block;
-      background: #2563eb;
-      color: #ffffff !important;
+      background: #C9964A;
+      color: #241a08 !important;
       text-decoration: none;
       font-weight: 800;
       font-size: 16px;
@@ -66,11 +68,11 @@ function base(content: string): string {
       border-radius: 10px;
       margin: 8px 0 16px;
     }
-    .cta:hover { background: #1d4ed8; }
+    .cta:hover { background: #E8B94A; }
     .cta-dark {
       display: inline-block;
-      background: #0a0a0f;
-      color: #ffffff !important;
+      background: #1c1812;
+      color: #F5E9CE !important;
       text-decoration: none;
       font-weight: 800;
       font-size: 16px;
@@ -80,8 +82,8 @@ function base(content: string): string {
     }
     .cta-green {
       display: inline-block;
-      background: #16a34a;
-      color: #ffffff !important;
+      background: #C9964A;
+      color: #241a08 !important;
       text-decoration: none;
       font-weight: 800;
       font-size: 16px;
@@ -89,44 +91,47 @@ function base(content: string): string {
       border-radius: 10px;
       margin: 8px 0 16px;
     }
-    .divider { border: none; border-top: 1px solid #f3f4f6; margin: 24px 0; }
+    .divider { border: none; border-top: 1px solid rgba(194,151,63,0.18); margin: 24px 0; }
     .highlight-box {
-      background: #eff6ff;
-      border-right: 4px solid #2563eb;
+      background: rgba(194,151,63,0.10);
+      border-right: 4px solid #C9964A;
       border-radius: 8px;
       padding: 16px 20px;
       margin: 16px 0;
+      text-align: right;
     }
-    .highlight-box p { margin: 0; color: #1e40af; font-weight: 600; font-size: 15px; }
+    .highlight-box p { margin: 0; color: #4a4236; font-weight: 600; font-size: 15px; text-align: right; }
     .highlight-box-green {
-      background: #f0fdf4;
-      border-right: 4px solid #16a34a;
+      background: rgba(127,212,155,0.12);
+      border-right: 4px solid #5CA878;
       border-radius: 8px;
       padding: 16px 20px;
       margin: 16px 0;
+      text-align: right;
     }
-    .highlight-box-green p { margin: 0; color: #166534; font-weight: 600; font-size: 15px; }
+    .highlight-box-green p { margin: 0; color: #2f6e4a; font-weight: 600; font-size: 15px; text-align: right; }
     .highlight-box-yellow {
-      background: #fffbeb;
-      border-right: 4px solid #d97706;
+      background: rgba(194,151,63,0.14);
+      border-right: 4px solid #9A7526;
       border-radius: 8px;
       padding: 16px 20px;
       margin: 16px 0;
+      text-align: right;
     }
-    .highlight-box-yellow p { margin: 0; color: #92400e; font-weight: 600; font-size: 15px; }
+    .highlight-box-yellow p { margin: 0; color: #6e571f; font-weight: 600; font-size: 15px; text-align: right; }
     .coupon-box {
-      background: #0a0a0f;
+      background: #1c1812;
       border-radius: 10px;
       padding: 18px 24px;
       margin: 16px 0;
       text-align: center;
     }
-    .coupon-box p { color: #9ca3af; font-size: 13px; margin: 0 0 6px; }
-    .coupon-code { color: #4ade80 !important; font-size: 28px !important; font-weight: 800 !important; letter-spacing: 0.1em; }
+    .coupon-box p { color: #C9B898; font-size: 13px; margin: 0 0 6px; }
+    .coupon-code { color: #E8B94A !important; font-size: 28px !important; font-weight: 800 !important; letter-spacing: 0.1em; }
     .step-row { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
     .step-num {
-      background: #2563eb;
-      color: #fff;
+      background: #C9964A;
+      color: #241a08;
       font-weight: 800;
       font-size: 14px;
       width: 28px;
@@ -137,19 +142,20 @@ function base(content: string): string {
       justify-content: center;
       flex-shrink: 0;
     }
-    .step-text { font-size: 15px; color: #374151; line-height: 1.5; }
+    .step-text { font-size: 15px; color: #4a4236; line-height: 1.5; text-align: right; }
+    .ssig { font-family: 'Frank Ruhl Libre', Georgia, serif; font-size: 19px; color: #1c1812; margin-top: 20px; }
     .footer {
       text-align: center;
       font-size: 12px;
-      color: #9ca3af;
-      margin-top: 24px;
+      color: #8A8073;
+      margin-top: 22px;
       line-height: 1.8;
     }
-    .footer a { color: #6b7280; text-decoration: underline; }
+    .footer a { color: #9A7526; text-decoration: underline; }
     .product-tag {
       display: inline-block;
-      background: #f3f4f6;
-      color: #374151;
+      background: rgba(194,151,63,0.14);
+      color: #6e571f;
       font-size: 13px;
       font-weight: 700;
       padding: 4px 12px;
@@ -198,27 +204,27 @@ function welcome(ctx: EmailTemplateContext): RenderedEmail {
     subject: `ברוכ/ה הבא/ה, ${firstName}`,
     html: base(`
       <div class="header">
-        <div class="header-logo">beegood</div>
+        <div class="header-logo">הדר דנן · beegood</div>
         <h1>ברוכ/ה הבא/ה, <span class="header-accent">${firstName}</span></h1>
       </div>
       <div class="body">
         <p>${firstName},</p>
-        <p>ברוכ/ה הבא/ה לעולם של TrueSignal©.</p>
+        <p>ברוכ/ה הבא/ה לעולם של <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span>.</p>
         <p>שמי הדר דנן.</p>
-        <p>אני עובדת עם בעלי עסקים שיש להם משהו אמיתי לתת לעולם —</p>
+        <p>אני עובדת עם בעלי עסקים שיש להם משהו אמיתי לתת לעולם,</p>
         <p>אבל השיווק שלהם לא משקף את זה.</p>
-        <p>כבר 4 שנים אני עוזרת לעסקים לא רק לשווק —</p>
+        <p>מאז 2023 אני עוזרת לעסקים לא רק לשווק,</p>
         <p>אלא לבנות מערכת שיווק שעובדת בשבילם.</p>
-        <p>מ-197 שקל ועד 14,000 שקל —</p>
-        <p>כמעט 4,000 עסקים כבר עשו את המסע.</p>
-        <p>חלקם הגיעו אלינו בלי ניסיון בשיווק.</p>
-        <p>חלקם הגיעו עם ניסיון — אבל בלי כיוון.</p>
+        <p>מ-197 שקל ועד 14,000 שקל,</p>
+        <p>מאות עסקים כבר עשו את המסע.</p>
+        <p>חלקם הגיעו אליי בלי ניסיון בשיווק.</p>
+        <p>חלקם הגיעו עם ניסיון, אבל בלי כיוון.</p>
         <p>כולם יצאו עם משהו שלא היה להם לפני.</p>
         <p>ואת/ה עכשיו חלק מזה.</p>
         <p>בימים הקרובים תקבל/י ממני עוד תוכן.</p>
-        <p>בינתיים — אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#2563eb">צרו קשר בוואטסאפ</a>.</p>
-        <p>אנחנו כאן.</p>
-        <p>צוות beegood</p>
+        <p>בינתיים, אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#9A7526">דברו איתי בוואטסאפ</a>.</p>
+        <p>אני כאן.</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -314,8 +320,8 @@ function signalResultFull(ctx: EmailTemplateContext): RenderedEmail {
         <p>חברי הכוורת מקבלים כל חודש שני רעיונות תוכן מותאמים אישית לאות שלהם.</p>
         <a class="cta" href="${APP_URL}/hive">לראות את מסלולי הכוורת ←</a>
 
-        <p>אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#2563eb">הוואטסאפ פתוח</a>.</p>
-        <p>הדר</p>
+        <p>אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#9A7526">הוואטסאפ פתוח</a>.</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -387,17 +393,19 @@ function signalLetter(subject: string, body: string): RenderedEmail {
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     body { margin:0; background:#EBE4D8; font-family:'Assistant',Arial,sans-serif; direction:rtl; text-align:right; color:#2A2520; }
-    .swrap { max-width:600px; margin:0 auto; padding:26px 14px 40px; }
-    .sletter { background:#FBF8F2; border-radius:16px; padding:34px 30px 28px; }
+    .swrap { max-width:600px; margin:0 auto; padding:26px 14px 40px; direction:rtl; text-align:right; }
+    .sletter { background:#FBF8F2; border-radius:16px; padding:34px 30px 28px; direction:rtl; text-align:right; }
     .smark { font-size:13px; font-weight:800; letter-spacing:.3px; color:#9A7526; margin:0 0 22px; }
     .smark span { color:#8A8073; font-weight:400; }
-    .sletter p { font-size:16.5px; line-height:1.5; color:#2A2520; margin:0 0 11px; }
+    .sletter p { font-size:16.5px; line-height:1.5; color:#2A2520; margin:0 0 11px; text-align:right; }
     .sbeat { height:13px; line-height:13px; font-size:1px; }
-    .scta { display:inline-block; background:#C2973F; color:#241a08; font-weight:800; font-size:15.5px; text-decoration:none; border-radius:10px; padding:13px 30px; margin:12px 0 10px; }
-    .sloop { background:rgba(194,151,63,0.10); border-right:3px solid #C2973F; border-radius:8px; padding:13px 16px; font-size:15.5px; line-height:1.6; color:#4a4236; margin:10px 0; }
+    .scta { display:inline-block; background:#C9964A; color:#241a08; font-weight:800; font-size:15.5px; text-decoration:none; border-radius:10px; padding:13px 30px; margin:12px 0 10px; }
+    .sloop { background:rgba(194,151,63,0.10); border-right:3px solid #C9964A; border-radius:8px; padding:13px 16px; font-size:15.5px; line-height:1.6; color:#4a4236; margin:10px 0; text-align:right; }
     .ssmall { font-size:14px; color:#6B6256; }
     .ssig { font-family:'Frank Ruhl Libre',Georgia,serif; font-size:19px; color:#1c1812; margin-top:20px; }
     .sletter a:not(.scta) { color:#9A7526; }
+    .sfoot { max-width:600px; margin:14px auto 0; padding:0 18px; text-align:center; font-size:12px; line-height:1.8; color:#8A8073; direction:rtl; }
+    .sfoot a { color:#9A7526; text-decoration:underline; }
   </style>
 </head>
 <body>
@@ -405,6 +413,11 @@ function signalLetter(subject: string, body: string): RenderedEmail {
     <div class="sletter">
       <div class="smark">הדר דנן <span>· beegood</span></div>
       ${body}
+    </div>
+    <div class="sfoot">
+      <p>קיבלת אימייל זה כי נרשמת ב-<a href="${APP_URL}">beegood.online</a></p>
+      <p>הדר דנן בע״מ · ישראל</p>
+      <p style="margin-top:6px"><a href="${APP_URL}/unsubscribe">הסר אותי מרשימת התפוצה</a></p>
     </div>
   </div>
 </body>
@@ -746,7 +759,7 @@ function followup24h(ctx: EmailTemplateContext): RenderedEmail {
         <p>500+ עסקים כבר עשו את זה.</p>
         <p style="font-size: 17px;"><span style="text-decoration: line-through; color: #9E9990;">₪297</span> <strong style="color: #C9964A;">₪197 בלבד</strong> (במבצע, 34% הנחה).</p>
         <a class="cta" href="${APP_URL}/challenge${ep}">להצטרפות לאתגר ←</a>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -783,7 +796,7 @@ function followup72h(ctx: EmailTemplateContext): RenderedEmail {
         <p>מחר — מישהו אחר יחליט להתחיל.</p>
         <p>השאלה היא אם זה יהיה אתה.</p>
         <a class="cta" href="${APP_URL}/challenge${ep}">להצטרפות לאתגר ←</a>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -792,6 +805,36 @@ function followup72h(ctx: EmailTemplateContext): RenderedEmail {
 // ─────────────────────────────────────────────────────────────
 // SEQUENCE 2 - Challenge access (CHALLENGE_PURCHASED · 0h)
 // ─────────────────────────────────────────────────────────────
+
+function signalHiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName  = ctx.name.split(" ")[0];
+  const accessLink = (ctx.access_link as string | undefined) ?? `${APP_URL}/hive/signal-kit`;
+  const isMagic    = accessLink.includes("token=") || accessLink.includes("supabase");
+  return {
+    subject: `${firstName} — נכנסת לכוורת האות`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood · כוורת האות</div>
+        <h1>ברוכה הבאה, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>גילית את האות שלך.</p>
+        <p>עכשיו מתחילים להוציא אותו לעולם.</p>
+        <p>הכל מחכה לך במקום אחד:</p>
+        <p>· לוח האות — האות, הכאב, ההבטחה והקהל שלך.</p>
+        <p>· אתגר האות — 7 ימים, ממוסגרים סביב האות שלך.</p>
+        <p>· ערכת תוכן — כיווני-תוכן ופתיחות שנגזרים מהאות.</p>
+        <p>· ערכת ויזואל — הכרטיסים שלך + כיווני-צילום.</p>
+        <p>· הבמאית — 7 בימויים אישיים מול המצלמה.</p>
+        <a class="cta" href="${accessLink}">כניסה לכוורת האות ←</a>
+        ${isMagic ? `<p style="font-size:13px;color:#6b7280;margin-top:8px;">הלינק מחבר אותך ישירות — ללא צורך בסיסמה. תקף ל-24 שעות.</p>` : ""}
+        <p>קחי את זה יום-יום. אין למהר.</p>
+        <p class="ssig">הדר</p>
+      </div>
+    `),
+  };
+}
 
 function challengeAccess(ctx: EmailTemplateContext): RenderedEmail {
   const firstName  = ctx.name.split(" ")[0];
@@ -820,7 +863,7 @@ function challengeAccess(ctx: EmailTemplateContext): RenderedEmail {
         ${isMagic ? `<p style="font-size:13px;color:#6b7280;margin-top:8px;">הלינק מחבר אותך ישירות — ללא צורך בסיסמה. תקף ל-24 שעות.</p>` : ""}
         <p>מחר ייפתח יום 1.</p>
         <p>אנחנו מחכים לראות אותך מתחיל.</p>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -858,7 +901,7 @@ function challengeUpsellWorkshop(ctx: EmailTemplateContext): RenderedEmail {
         <p>עם מסר שברור לשוק.</p>
         <p>₪1,080.</p>
         <a class="cta" href="${APP_URL}/workshop${ep}">לסדנה ←</a>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -893,7 +936,7 @@ function workshopConfirmation(ctx: EmailTemplateContext): RenderedEmail {
         <p>כדי להגיע מוכן/ת — חשוב/י על 3 לקוחות אידיאליים שלך:<br/>
         מי הם? מה קיבלו ממך? ומה אמרו עליך?</p>
         <p>מחכים לך.</p>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -931,7 +974,7 @@ function workshopUpsellStrategy(ctx: EmailTemplateContext): RenderedEmail {
         <p>גישה לנצח.</p>
         <p>₪1,800.</p>
         <a class="cta" href="${APP_URL}/course${ep}">לקורס ←</a>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -966,7 +1009,7 @@ function courseAccess(ctx: EmailTemplateContext): RenderedEmail {
         <p>כל שיעור בנוי על הקודם.</p>
         <a class="cta" href="${APP_URL}/course/content">לקורס ←</a>
         <p>מחכים לשמוע מה אתה לוקח ממנו.</p>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -1006,7 +1049,7 @@ function courseUpsellStrategy(ctx: EmailTemplateContext): RenderedEmail {
         <p>יש פגישה שנייה. עלינו.</p>
         <p>₪4,000.</p>
         <a class="cta" href="${APP_URL}/strategy${ep}">לפגישת אסטרטגיה ←</a>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -1049,7 +1092,7 @@ function reengagement(ctx: EmailTemplateContext): RenderedEmail {
         <p>אלה שהתחילו מוקדם?</p>
         <p>הם כבר מרגישים את זה.</p>
         <a class="cta" href="${APP_URL}/challenge${ep}">להצטרפות לאתגר ←</a>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -1092,7 +1135,7 @@ function bookingConfirmation(ctx: EmailTemplateContext): RenderedEmail {
         <p>בימים הקרובים יחזרו אליך לתאם תאריך.</p>
         <p>הפגישה מתקיימת פנים אל פנים במשרד של הדר ברחוב החילזון 5, רמת גן.</p>
         <p>תהיה מוכן.</p>
-        <p>צוות beegood</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -1122,10 +1165,10 @@ function purchaseConfirmation(ctx: EmailTemplateContext): RenderedEmail {
         <p>חלקם הגיעו עם ספקות.</p>
         <p>חלקם לא ידעו מה לצפות.</p>
         <p>כולם יצאו עם משהו שלא היה להם לפני.</p>
-        <p>אם יש שאלות —</p>
-        <p>אנחנו כאן.</p>
-        <p><a href="https://wa.me/972539566961" style="color:#2563eb">כתבו לנו בוואטסאפ</a> — אנחנו עונים.</p>
-        <p>צוות beegood</p>
+        <p>אם יש שאלות,</p>
+        <p>אני כאן.</p>
+        <p><a href="https://wa.me/972539566961" style="color:#9A7526">כתבו לי בוואטסאפ</a>, אני עונה.</p>
+        <p class="ssig">הדר</p>
       </div>
     `),
   };
@@ -1647,6 +1690,7 @@ const TEMPLATES: Record<string, TemplateFn> = {
   hive_monthly_drop:           hiveMonthlyDrop,
   // Sequence 2 - challenge buyers
   challenge_access:            challengeAccess,
+  signal_hive_welcome:         signalHiveWelcome,
   challenge_upsell_workshop:   challengeUpsellWorkshop,
   // Sequence 3 - workshop buyers
   workshop_confirmation:       workshopConfirmation,

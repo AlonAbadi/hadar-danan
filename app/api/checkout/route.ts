@@ -110,12 +110,27 @@ export async function POST(req: NextRequest) {
     .eq("product", product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000")
     .eq("status", "pending");
 
+  // כוורת האות buyers get ₪590 credited toward the workshop. Checked server-side
+  // against a completed signal_hive_590 purchase so it can't be faked from the client.
+  let signalHiveCredit = 0;
+  if (product === "workshop_1080") {
+    const { count: shCount } = await supabase
+      .from("purchases")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user_id)
+      .eq("product", "signal_hive_590")
+      .eq("status", "completed");
+    if (shCount && shCount > 0) signalHiveCredit = 590;
+  }
+
   // Premium includes VAT (18%) — charged at list price + VAT.
   // Coupon (when valid) overrides — final billed amount comes from validateCoupon
   // which already applied the discount to the product's list price.
   const amount = coupon
     ? coupon.finalPrice
-    : (product === "premium_14000" ? Math.round(listPrice * 1.18) : listPrice);
+    : (product === "premium_14000"
+        ? Math.round(listPrice * 1.18)
+        : Math.max(0, listPrice - signalHiveCredit));
 
   // Capture current-session UTM from cookies so attribution survives even when
   // the buyer's user row has null utm (organic signup, returned via Meta ad).
