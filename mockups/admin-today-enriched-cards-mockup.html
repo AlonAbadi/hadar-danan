@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mockup — /admin/today enriched cards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* Santosha palette — from /Users/work/hadar-danan/CLAUDE.md */
+    :root {
+      --bg:        #0D1018;
+      --card:      #141820;
+      --card-soft: #1D2430;
+      --fg:        #EDE9E1;
+      --muted:     #AAB0BD;
+      --gold:      #E8B94A;
+      --goldM:     #C9964A;
+      --line:      #2C323E;
+      --lineGold:  rgba(232,185,74,0.30);
+      --wa:        #25D366;
+      --green:     #7FD49B;
+      --blue:      #7FB2F2;
+      --red:       #E67373;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Assistant', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      padding: 32px;
+      direction: rtl;
+      min-height: 100vh;
+    }
+    .mockup-tag {
+      max-width: 1120px;
+      margin: 0 auto 20px;
+      padding: 8px 16px;
+      background: rgba(232,185,74,0.06);
+      border: 1px dashed rgba(232,185,74,0.3);
+      border-radius: 8px;
+      color: var(--gold);
+      font-size: 12px;
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; }
+
+    /* Page header */
+    .head-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      flex-wrap: wrap; gap: 16px; margin-bottom: 10px;
+    }
+    .h-title { font-size: 26px; font-weight: 800; }
+    .h-sub {
+      font-size: 14px; color: var(--muted); margin-top: 4px;
+      max-width: 640px; line-height: 1.6;
+    }
+    .back-link {
+      font-size: 13px; color: var(--goldM); text-decoration: none;
+      padding: 8px 14px; border-radius: 9px; border: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    /* Queue count pill */
+    .queue-pill {
+      display: inline-flex; align-items: center; gap: 8px; margin-bottom: 22px;
+      background: rgba(232,185,74,0.08); border: 1px solid var(--lineGold);
+      border-radius: 999px; padding: 6px 16px;
+    }
+    .queue-pill-n { font-size: 22px; font-weight: 800; color: var(--gold); }
+    .queue-pill-t { font-size: 13px; color: var(--muted); }
+
+    /* Tab bar */
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab {
+      cursor: pointer; font-size: 14px; font-weight: 700;
+      padding: 8px 18px; border-radius: 999px;
+      border: 1px solid var(--line); background: transparent; color: var(--muted);
+      font-family: inherit;
+    }
+    .tab.active {
+      border-color: var(--lineGold);
+      background: rgba(232,185,74,0.10);
+      color: var(--gold);
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .card-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .card-main { flex: 1; min-width: 220px; }
+    .name-row {
+      display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+    }
+    .name { font-size: 16px; font-weight: 700; color: var(--fg); }
+    .badge {
+      font-size: 10.5px; font-weight: 800; letter-spacing: 0.3px;
+      border-radius: 999px; padding: 2px 9px;
+    }
+    .badge.signal {
+      color: var(--gold);
+      background: rgba(232,185,74,0.10);
+      border: 1px solid var(--lineGold);
+    }
+    .badge.quiz {
+      color: var(--blue);
+      background: rgba(127,178,242,0.10);
+      border: 1px solid rgba(127,178,242,0.30);
+    }
+    .occupation {
+      font-size: 11px; color: var(--goldM);
+      background: rgba(232,185,74,0.06);
+      border: 1px solid var(--lineGold);
+      border-radius: 999px; padding: 2px 9px;
+    }
+    .rel { font-size: 12px; color: var(--muted); }
+    .reason { margin-top: 8px; font-size: 13.5px; line-height: 1.55; color: var(--fg); }
+
+    /* Context strip */
+    .ctx-strip {
+      margin-top: 10px;
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 9px; border-radius: 8px;
+      font-size: 11.5px; line-height: 1.35; white-space: nowrap;
+      text-decoration: none;
+    }
+    .chip .k { opacity: 0.68; font-weight: 500; }
+    .chip .v { font-weight: 700; }
+
+    .chip.neutral { background: rgba(255,255,255,0.03); border: 1px solid var(--line); color: var(--muted); }
+    .chip.gold    { background: rgba(232,185,74,0.08);  border: 1px solid var(--lineGold); color: var(--gold); }
+    .chip.green   { background: rgba(127,212,155,0.08); border: 1px solid rgba(127,212,155,0.28); color: var(--green); }
+    .chip.red     { background: rgba(230,115,115,0.08); border: 1px solid rgba(230,115,115,0.28); color: var(--red); }
+    .chip.blue    { background: rgba(127,178,242,0.08); border: 1px solid rgba(127,178,242,0.28); color: var(--blue); }
+
+    /* Answer snippet */
+    .snippet {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: rgba(232,185,74,0.04);
+      border: 1px solid var(--lineGold);
+      border-radius: 8px;
+      font-size: 12.5px; line-height: 1.55;
+      color: var(--muted); font-style: italic;
+    }
+    .snippet .k {
+      color: var(--goldM); font-weight: 700; font-style: normal;
+    }
+
+    /* Action buttons */
+    .actions {
+      display: flex; flex-direction: column; gap: 7px; align-items: stretch;
+      min-width: 155px;
+    }
+    .btn { cursor: pointer; border-radius: 9px; font-family: inherit; }
+    .btn-wa {
+      background: var(--wa); color: #0b141a;
+      font-weight: 800; font-size: 13.5px;
+      padding: 10px 14px; border: none;
+    }
+    .btn-dismiss {
+      background: transparent; color: var(--red);
+      font-weight: 700; font-size: 12.5px;
+      padding: 8px 14px;
+      border: 1px solid rgba(230,115,115,0.35);
+    }
+    .btn-profile {
+      display: block; font-size: 12.5px; color: var(--goldM);
+      text-decoration: none; text-align: center;
+      padding: 8px 14px; border-radius: 9px; border: 1px solid var(--line);
+    }
+  </style>
+</head>
+<body>
+
+<div class="mockup-tag">MOCKUP · /admin/today — enriched cards + לא רלבנטי action</div>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="head-row">
+    <div>
+      <div class="h-title">לידים לטיפול מיידי</div>
+      <div class="h-sub">
+        הלידים החמים שהמנוע סימן כשווי-פגישה — מהאות ומהקוויז, במקום אחד. לחיצה על "שלח ווטסאפ" מנסחת הודעה אישית מהדר ומעבירה ל"נשלח ווטסאפ". מי שסגר פגישה ושילם — יורד מהרשימה אוטומטית.
+      </div>
+    </div>
+    <a href="#" class="back-link">← חזרה לניהול</a>
+  </div>
+
+  <div class="queue-pill">
+    <span class="queue-pill-n">3</span>
+    <span class="queue-pill-t">ממתינים לפנייה</span>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tabs">
+    <button class="tab active">תור · 3</button>
+    <button class="tab">נשלח ווטסאפ · 12</button>
+  </div>
+
+  <!-- ─── Card 1: Hot signal lead — senior professional, high LLM confidence, past customer ─── -->
+  <div class="card">
+    <div class="card-top">
+      <div class="card-main">
+        <div class="name-row">
+          <span class="name">דובי וינרוט</span>
+          <span class="badge signal">אות</span>
+          <span class="occupation">עריכת דין</span>
+          <span class="rel">לפני 3 שעות</span>
+        </div>
+        <p class="reason">כשאנשים נמצאים בנקודה שבה העבר כבד עליהם מדי ועוצר אותם, אתה כבר יודע איפה לתפוס את השיחה, כי עברת שם ויצאת.</p>
+
+        <!-- Context strip -->
+        <div class="ctx-strip">
+          <a class="chip neutral" href="tel:0508551122"><span class="k">טלפון</span><span class="v">050-8551122</span></a>
+          <a class="chip green"><span class="k">WA</span><span class="v">פתח</span></a>
+          <a class="chip neutral"><span class="k">מייל</span><span class="v">dov311@gmail.com</span></a>
+          <span class="chip neutral"><span class="k">סטטוס</span><span class="v">ליד</span></span>
+          <span class="chip neutral"><span class="k">מקור</span><span class="v">אורגני</span></span>
+          <span class="chip green"><span class="k">הסכמה</span><span class="v">כן</span></span>
+          <span class="chip neutral"><span class="k">פעילות</span><span class="v">לפני 3 שעות</span></span>
+          <span class="chip neutral"><span class="k">נרשם</span><span class="v">לפני 4 ימים</span></span>
+          <span class="chip green"><span class="k">ביטחון LLM</span><span class="v">85%</span></span>
+          <span class="chip green"><span class="k">התאמה</span><span class="v">גבוהה</span></span>
+        </div>
+
+        <!-- Verbatim -->
+        <div class="snippet">
+          <span class="k">מהתשובות שלו/ה: </span>
+          &ldquo;מה שעזר לי לצאת מזה זה תמיד ראייה אופטימית קדימה, לא להתבונן על האחורה ולפעול לתוך מקומות שאין לך יכולת לשנות אותם, אלא להסתכל קדימה עם עשייה חיובית&hellip;&rdquo;
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-wa">שלח ווטסאפ ←</button>
+        <button class="btn btn-dismiss">לא רלבנטי ✕</button>
+        <a class="btn-profile" href="#">פתח פרופיל ←</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Card 2: Mixed signal — past customer + medium fit ─── -->
+  <div class="card">
+    <div class="card-top">
+      <div class="card-main">
+        <div class="name-row">
+          <span class="name">שרה שויבר</span>
+          <span class="badge quiz">קוויז</span>
+          <span class="occupation">מטפלת רגשית הוליסטית</span>
+          <span class="rel">לפני 20 שעות</span>
+        </div>
+        <p class="reason">הקוויז המליץ: פגישת אסטרטגיה · 95% התאמה</p>
+
+        <div class="ctx-strip">
+          <a class="chip neutral" href="tel:0523456789"><span class="k">טלפון</span><span class="v">052-3456789</span></a>
+          <a class="chip green"><span class="k">WA</span><span class="v">פתח</span></a>
+          <a class="chip neutral"><span class="k">מייל</span><span class="v">sarah@shuiber.co.il</span></a>
+          <span class="chip gold"><span class="k">סטטוס</span><span class="v">כוונה גבוהה</span></span>
+          <span class="chip blue"><span class="k">מקור</span><span class="v">facebook · signal_launch</span></span>
+          <span class="chip green"><span class="k">הסכמה</span><span class="v">כן</span></span>
+          <span class="chip neutral"><span class="k">פעילות</span><span class="v">אתמול</span></span>
+          <span class="chip neutral"><span class="k">נרשם</span><span class="v">לפני 2 ימים</span></span>
+          <span class="chip gold"><span class="k">2 רכישות</span><span class="v">₪1,277</span></span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-wa">שלח ווטסאפ ←</button>
+        <button class="btn btn-dismiss">לא רלבנטי ✕</button>
+        <a class="btn-profile" href="#">פתח פרופיל ←</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Card 3: Weak signal — low LLM confidence, thin engagement, no consent ─── -->
+  <div class="card">
+    <div class="card-top">
+      <div class="card-main">
+        <div class="name-row">
+          <span class="name">עדן מדיוני</span>
+          <span class="badge signal">אות</span>
+          <span class="occupation">כושר תזונה ואונליין בעזרת גוף נפש נשמה</span>
+          <span class="rel">לפני 2 ימים</span>
+        </div>
+        <p class="reason">בנית בעצמך, לקוח אחרי לקוח, את ההבנה שגברים רזים שרוצים לשנות את הגוף לא עוצרים בגלל תוכנית כושר גרועה.</p>
+
+        <div class="ctx-strip">
+          <a class="chip neutral" href="tel:0501112233"><span class="k">טלפון</span><span class="v">050-111-2233</span></a>
+          <a class="chip green"><span class="k">WA</span><span class="v">פתח</span></a>
+          <span class="chip neutral"><span class="k">סטטוס</span><span class="v">ליד</span></span>
+          <span class="chip blue"><span class="k">מקור</span><span class="v">tiktok · organic</span></span>
+          <span class="chip red"><span class="k">הסכמה</span><span class="v">לא</span></span>
+          <span class="chip neutral"><span class="k">פעילות</span><span class="v">לפני 2 ימים</span></span>
+          <span class="chip neutral"><span class="k">נרשם</span><span class="v">לפני 2 ימים</span></span>
+          <span class="chip gold"><span class="k">ביטחון LLM</span><span class="v">58%</span></span>
+          <span class="chip gold"><span class="k">התאמה</span><span class="v">בינונית</span></span>
+        </div>
+
+        <div class="snippet">
+          <span class="k">מהתשובות שלו/ה: </span>
+          &ldquo;בנית בעצמך, לקוח אחרי לקוח, את ההבנה שגברים רזים שרוצים לשנות את הגוף לא עוצרים בגלל תוכנית כושר גרועה, הם עוצרים בגלל הלופים בראש, ואת זה אתה שובר מבפנים דרך האימון עצמו.&rdquo;
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-wa">שלח ווטסאפ ←</button>
+        <button class="btn btn-dismiss">לא רלבנטי ✕</button>
+        <a class="btn-profile" href="#">פתח פרופיל ←</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:1120px;margin:24px auto 0;padding:14px 16px;background:rgba(232,185,74,0.05);border:1px solid var(--lineGold);border-radius:10px;font-size:12.5px;line-height:1.7;color:var(--muted)">
+  <strong style="color:var(--gold)">מקרא צבעים:</strong>
+  <span style="color:var(--green)">ירוק</span> = חיובי (הסכמה, WA פתוח, ביטחון LLM גבוה, לקוח קיים) ·
+  <span style="color:var(--red)">אדום</span> = שלילי / דורש זהירות (אין הסכמה, כפתור "לא רלבנטי") ·
+  <span style="color:var(--gold)">זהב</span> = בינוני / חשוב לראות (סטטוס high_intent, רכישות קודמות, ביטחון LLM 50-70%) ·
+  <span style="color:var(--blue)">כחול</span> = מקור paid ·
+  אפור = ניטרלי.
+</div>
+
+</body>
+</html>

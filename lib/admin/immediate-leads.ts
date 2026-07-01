@@ -78,7 +78,9 @@ function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string
   return (supabase as any).from(table);
 }
 
-// Expanded user-join columns — includes everything the context strip needs.
+// Expanded user-join columns — includes everything the context strip needs
+// AND the fields the WhatsApp opener personalizes on (gender for pronoun
+// selection, answers via the extraction row for the Q4 verbatim quote).
 type UserJoin = {
   id:                 string;
   name:               string | null;
@@ -86,6 +88,7 @@ type UserJoin = {
   phone:              string | null;
   occupation:         string | null;
   status:             string | null;
+  gender:             "m" | "f" | null;
   utm_source:         string | null;
   utm_campaign:       string | null;
   marketing_consent:  boolean | null;
@@ -95,7 +98,7 @@ type UserJoin = {
 } | null;
 
 const USER_COLS =
-  "id, name, email, phone, occupation, status, utm_source, utm_campaign, " +
+  "id, name, email, phone, occupation, status, gender, utm_source, utm_campaign, " +
   "marketing_consent, last_activity_at, created_at, handoff_stage";
 
 function stageOf(u: UserJoin): HandoffStage | "dismissed" {
@@ -222,7 +225,12 @@ export async function getImmediateLeads(
           at:         row.generated_at as string,
           stage:      rawStage === "dismissed" ? "queue" : rawStage,
           waPhone:    waPhoneOf(u?.phone),
-          waText:     buildHandoffMessage({ name, signal: row.signal }),
+          waText:     buildHandoffMessage({
+            name,
+            gender:  u?.gender ?? null,
+            signal:  row.signal,
+            answers: (row.answers as Record<string, unknown> | null) ?? null,
+          }),
           userHref:   `/admin/users/${uid}`,
           context:    ctx,
         },
@@ -252,7 +260,11 @@ export async function getImmediateLeads(
           at:         row.created_at as string,
           stage:      rawStage === "dismissed" ? "queue" : rawStage,
           waPhone:    waPhoneOf(u?.phone),
-          waText:     buildQuizHandoffMessage({ name, recommendedProduct: product }),
+          waText:     buildQuizHandoffMessage({
+            name,
+            gender:             u?.gender ?? null,
+            recommendedProduct: product,
+          }),
           userHref:   `/admin/users/${uid}`,
           context:    ctx,
         },
