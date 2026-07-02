@@ -44,6 +44,12 @@ export interface LeadContext {
   painSource:         string | null;
 }
 
+export interface LeadDecision {
+  tone:   "strong" | "medium" | "weak";
+  label:  string;
+  points: string[];
+}
+
 export interface HandoffLeadView {
   userId:     string;
   name:       string;
@@ -56,6 +62,7 @@ export interface HandoffLeadView {
   waText:     string;
   userHref:   string;
   context:    LeadContext;
+  decision:   LeadDecision;
 }
 
 const C = {
@@ -160,6 +167,13 @@ const FIT_TONE: Record<string, "green" | "gold" | "red" | "neutral"> = {
   unclear: "neutral",
 };
 
+const FOUNDER_LABEL: Record<string, string> = {
+  exploring:   "בתחילת הדרך",
+  practicing:  "מתרגל/ת",
+  scaling:     "בצמיחה",
+  established: "מבוסס/ת",
+};
+
 function ContextStrip({ ctx }: { ctx: LeadContext }) {
   const waLink = ctx.phone
     ? "https://wa.me/" + ctx.phone.replace(/\D/g, "").replace(/^0/, "972")
@@ -253,6 +267,29 @@ function ContextStrip({ ctx }: { ctx: LeadContext }) {
       )}
       {ctx.commercialFit && FIT_LABEL[ctx.commercialFit] && (
         <Chip label="התאמה" value={FIT_LABEL[ctx.commercialFit]} tone={fitTone} />
+      )}
+      {ctx.founderStage && FOUNDER_LABEL[ctx.founderStage] && (
+        <Chip label="שלב" value={FOUNDER_LABEL[ctx.founderStage]} tone="neutral" />
+      )}
+    </div>
+  );
+}
+
+// One-line decision read at the top of the card — the whole picture at a glance.
+function DecisionLine({ decision }: { decision: LeadDecision }) {
+  const color = decision.tone === "strong" ? C.green : decision.tone === "medium" ? C.gold : C.red;
+  const bg    = decision.tone === "strong" ? "rgba(127,212,155,0.10)" : decision.tone === "medium" ? "rgba(232,185,74,0.10)" : "rgba(230,115,115,0.10)";
+  const dot   = decision.tone === "strong" ? "🟢" : decision.tone === "medium" ? "🟡" : "🔴";
+  return (
+    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      <span style={{
+        fontSize: 12.5, fontWeight: 800, color,
+        background: bg, border: `1px solid ${color}55`, borderRadius: 999, padding: "3px 12px",
+      }}>
+        {dot} {decision.label}
+      </span>
+      {decision.points.length > 0 && (
+        <span style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.5 }}>{decision.points.join(" · ")}</span>
       )}
     </div>
   );
@@ -449,6 +486,7 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
                       }}>סגר פגישה · ממתין לתשלום</span>
                     )}
                   </div>
+                  <DecisionLine decision={lead.decision} />
                   <p style={{ margin: "8px 0 0", fontSize: 13.5, lineHeight: 1.55, color: C.fg }}>{lead.reason}</p>
 
                   {/* Rich decision-support strip */}

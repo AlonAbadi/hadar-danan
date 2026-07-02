@@ -65,6 +65,14 @@ const QUESTION_LABELS: Record<string, string> = {
   what_helped:        "מה עזר לך לצאת מזה / מה פיתחת",
 };
 
+// One synthesized read that collapses all the signals into a single decision:
+// is this lead worth a personal message? Heuristic (no LLM) so it's instant + free.
+export interface LeadDecision {
+  tone:   "strong" | "medium" | "weak";
+  label:  string;   // "שווה הודעה" / "כדאי לבדוק" / "שקלו לדלג"
+  points: string[]; // the strongest supporting reasons, in plain Hebrew
+}
+
 export interface ImmediateLead {
   userId:     string;
   name:       string;
@@ -77,6 +85,31 @@ export interface ImmediateLead {
   waText:     string;
   userHref:   string;
   context:    LeadContext;
+  decision:   LeadDecision;
+}
+
+// Weigh the signals we already have into one verdict + the reasons behind it.
+function computeDecision(ctx: LeadContext): LeadDecision {
+  let score = 0;
+  const points: string[] = [];
+  if (ctx.commercialFit === "high")   { score += 2; points.push("התאמה מסחרית גבוהה"); }
+  else if (ctx.commercialFit === "medium") { score += 1; }
+  else if (ctx.commercialFit === "low")    { score -= 1; points.push("התאמה נמוכה"); }
+  if (typeof ctx.routingConfidence === "number" && ctx.routingConfidence >= 0.7) { score += 1; points.push("ביטחון גבוה בקריאה"); }
+  if (ctx.founderStage === "scaling" || ctx.founderStage === "established") { score += 1; points.push("עסק מבוסס"); }
+  else if (ctx.founderStage === "exploring") { score -= 1; points.push("בתחילת הדרך"); }
+  const depth = ctx.answers.reduce((n, a) => n + a.a.length, 0);
+  if (depth >= 400) { score += 1; points.push("כתב/ה בעומק"); }
+  else if (depth > 0 && depth < 130) { score -= 1; points.push("תשובות קצרות"); }
+  if (ctx.purchaseCount > 0) { score += 1; points.push("לקוח/ה קיים/ת"); }
+  if (ctx.lastActivityAt) {
+    const days = (Date.now() - new Date(ctx.lastActivityAt).getTime()) / 86400000;
+    if (days <= 3) { score += 1; points.push("פעיל/ה לאחרונה"); }
+  }
+  if (!ctx.marketingConsent) points.push("ללא הסכמה לדיוור");
+  const tone: LeadDecision["tone"] = score >= 3 ? "strong" : score >= 1 ? "medium" : "weak";
+  const label = tone === "strong" ? "שווה הודעה" : tone === "medium" ? "כדאי לבדוק" : "שקלו לדלג";
+  return { tone, label, points: points.slice(0, 4) };
 }
 
 const HIGH_VALUE_QUIZ = ["strategy", "premium", "partnership"];
@@ -269,6 +302,7 @@ export async function getImmediateLeads(
           }),
           userHref:   `/admin/users/${uid}`,
           context:    ctx,
+          decision:   computeDecision(ctx),
         },
         rawStage,
       );
@@ -303,6 +337,7 @@ export async function getImmediateLeads(
           }),
           userHref:   `/admin/users/${uid}`,
           context:    ctx,
+          decision:   computeDecision(ctx),
         },
         rawStage,
       );

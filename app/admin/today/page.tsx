@@ -26,6 +26,7 @@ export default async function AdminTodayPage() {
     waText:     l.waText,
     userHref:   l.userHref,
     context:    l.context,
+    decision:   l.decision,
   }));
 
   const queueCount = view.filter((l) => l.stage === "queue").length;
