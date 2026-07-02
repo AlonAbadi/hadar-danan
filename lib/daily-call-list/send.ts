@@ -19,15 +19,50 @@
 
 import { Resend } from "resend";
 import { createServerClient } from "@/lib/supabase/server";
-import { fetchCandidates } from "./query";
-import { scoreLead, pickTopLeads, applyDedup } from "./scoring";
-import { generateBrief } from "./brief";
-import { renderDailyCallEmail } from "./template";
+import { renderMorningSummary, type MorningMetrics } from "./template";
 import { getTaoVerseForDate } from "./tao";
-import type { ScoredLead, FinalLead } from "./types";
+import { getImmediateLeads } from "@/lib/admin/immediate-leads";
 
 const FROM_ADDRESS = process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online";
-const FROM_NAME    = "הדר דנן · רשימת חיוגים";
+const FROM_NAME    = "הדר דנן · סיכום הבוקר";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (supabase as any).from(table);
+}
+
+// Yesterday's business snapshot + how many hot leads are waiting right now.
+// One light round-trip; runs once/day from the cron.
+async function getMorningMetrics(
+  supabase: ReturnType<typeof createServerClient>,
+  yesterday: string,
+  today: string,
+): Promise<MorningMetrics> {
+  // Israel is +03:00 in summer — bound the "yesterday" calendar day explicitly.
+  const startISO = `${yesterday}T00:00:00+03:00`;
+  const endISO   = `${today}T00:00:00+03:00`;
+  const countIn = async (table: string, col: string): Promise<number> => {
+    const { count } = await safeFrom(supabase, table)
+      .select("id", { count: "exact", head: true })
+      .gte(col, startISO).lt(col, endISO);
+    return count ?? 0;
+  };
+  const [newLeads, signals, quizzes, salesRes, leads] = await Promise.all([
+    countIn("users", "created_at"),
+    countIn("signal_extractions", "generated_at"),
+    countIn("quiz_results", "created_at"),
+    safeFrom(supabase, "purchases")
+      .select("amount, amount_paid")
+      .eq("status", "completed").gte("created_at", startISO).lt("created_at", endISO),
+    getImmediateLeads(supabase),
+  ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sales = (salesRes.data ?? []) as any[];
+  const revenue = sales.reduce((n, p) => n + Number(p.amount_paid ?? p.amount ?? 0), 0);
+  const hotLeads = leads.filter((l) => l.stage === "queue").length;
+  return { newLeads, signals, quizzes, salesCount: sales.length, revenue, hotLeads };
+}
 
 function getRecipients(): string[] {
   const list = [
@@ -68,22 +103,6 @@ function israelHour(): number {
     hour12:   false,
   }).format(new Date());
   return parseInt(h, 10);
-}
-
-async function generateBriefsConcurrent(leads: ScoredLead[], concurrency = 4): Promise<FinalLead[]> {
-  const out: FinalLead[] = new Array(leads.length);
-  let cursor = 0;
-  const workers = Array.from({ length: Math.min(concurrency, leads.length) }, async () => {
-    while (true) {
-      const i = cursor++;
-      if (i >= leads.length) return;
-      const lead = leads[i]!;
-      const brief = await generateBrief(lead);
-      out[i] = { ...lead, brief };
-    }
-  });
-  await Promise.all(workers);
-  return out;
 }
 
 export type SendResult =
@@ -128,64 +147,13 @@ export async function runDailyCallList(options: { force?: boolean } = {}): Promi
       }
     }
 
-    // ── Yesterday's leads (for dedup) ────────────────────────────────────
+    // ── Yesterday's business snapshot + hot-leads-waiting count ──────────
     const yesterday = new Date(Date.parse(today + "T00:00:00Z") - 86400000)
       .toISOString().slice(0, 10);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: yesterdayRows } = await (supabase as any)
-      .from("daily_call_list")
-      .select("user_id")
-      .eq("sent_on", yesterday);
-    const yesterdayIds = new Set<string>((yesterdayRows ?? []).map((r: { user_id: string }) => r.user_id).filter(Boolean));
-
-    // ── Find + score + pick ──────────────────────────────────────────────
-    const candidates = await fetchCandidates(supabase);
-    const scored = candidates.map(scoreLead);
-    const deduped = applyDedup(scored, yesterdayIds);
-    const top = pickTopLeads(deduped);
-
-    // ── Generate briefs in parallel ──────────────────────────────────────
-    const withBriefs = top.length > 0 ? await generateBriefsConcurrent(top, 4) : [];
-
-    // ── AI go/no-go gate: drop leads the brief AI flagged as no_go ───────
-    // The brief itself decides; we just enforce it here.
-    const dropped = withBriefs.filter(l => l.brief.goNoGo === "no_go");
-    const final   = withBriefs.filter(l => l.brief.goNoGo === "go");
-
-    if (dropped.length > 0) {
-      await supabase.from("error_logs").insert({
-        context: "api/cron/daily-call-list",
-        error:   "no_go drops",
-        payload: {
-          dropped: dropped.map(d => ({ user_id: d.id, score: d.score, reason: d.brief.noGoReason })),
-        },
-      });
-    }
-
-    // ── Persist (idempotent via UNIQUE constraint) ───────────────────────
-    if (final.length > 0) {
-      const insertRows = final.map(f => ({
-        sent_on: today,
-        user_id: f.id,
-        score:   Number(f.score.toFixed(2)),
-        reasons: f.reasons,
-        brief:   f.brief,
-      }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: insertErr } = await (supabase as any)
-        .from("daily_call_list")
-        .upsert(insertRows, { onConflict: "sent_on,user_id" });
-      if (insertErr) {
-        await supabase.from("error_logs").insert({
-          context: "api/cron/daily-call-list",
-          error:   "daily_call_list insert failed",
-          payload: { message: insertErr.message, count: insertRows.length },
-        });
-      }
-    }
+    const metrics = await getMorningMetrics(supabase, yesterday, today);
 
     // ── Render + send ────────────────────────────────────────────────────
-    const { subject, html } = renderDailyCallEmail({ verse, leads: final, recipients });
+    const { subject, html } = renderMorningSummary({ verse, metrics, recipients });
 
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) return { ok: false, error: "RESEND_API_KEY not set" };
@@ -211,9 +179,9 @@ export async function runDailyCallList(options: { force?: boolean } = {}): Promi
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
       .from("daily_call_list_runs")
-      .upsert({ sent_on: today, lead_count: final.length }, { onConflict: "sent_on" });
+      .upsert({ sent_on: today, lead_count: metrics.hotLeads }, { onConflict: "sent_on" });
 
-    return { ok: true, skipped: false, sentCount: final.length, recipients };
+    return { ok: true, skipped: false, sentCount: metrics.hotLeads, recipients };
 
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);

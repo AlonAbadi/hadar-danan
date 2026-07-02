@@ -108,6 +108,93 @@ function renderLeadCard(lead: FinalLead, index: number): string {
   `;
 }
 
+export interface MorningMetrics {
+  newLeads:   number;
+  signals:    number;
+  quizzes:    number;
+  salesCount: number;
+  revenue:    number;
+  hotLeads:   number;
+}
+
+// The morning business summary — yesterday's snapshot + how many hot leads are
+// waiting now, pointing to the live worklist (/admin/today). Replaces the old
+// per-lead call-list email.
+export function renderMorningSummary(args: {
+  verse:      TaoVerse;
+  metrics:    MorningMetrics;
+  recipients: string[];
+}): { subject: string; html: string } {
+  const { verse, metrics: m } = args;
+  const dateHe = todayHebrewDate();
+  const dayMonth = new Intl.DateTimeFormat("he-IL", { day: "2-digit", month: "2-digit", timeZone: "Asia/Jerusalem" }).format(new Date());
+  const money = "₪" + Math.round(m.revenue).toLocaleString("he-IL");
+  const subject = `סיכום הבוקר · ${dayMonth} · ${m.hotLeads} לידים חמים ממתינים`;
+
+  const statCell = (value: string, label: string) => `
+    <td width="50%" style="padding:6px">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLOR.cardSoft};border:1px solid ${COLOR.border};border-radius:10px">
+        <tr><td style="padding:16px 18px;text-align:center">
+          <div style="font-size:30px;font-weight:800;color:${COLOR.goldLight};line-height:1">${esc(value)}</div>
+          <div style="font-size:13px;color:${COLOR.fgMuted};margin-top:5px">${esc(label)}</div>
+        </td></tr>
+      </table>
+    </td>`;
+
+  const taoBox = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLOR.cardSoft};border-right:3px solid ${COLOR.gold};border-radius:8px;margin:18px 0">
+      <tr><td style="padding:16px 20px">
+        <div style="font-size:11px;letter-spacing:1px;color:${COLOR.gold};font-weight:700;margin-bottom:6px">טאו טה צ'ינג · פרק ${verse.chapter}</div>
+        <div style="font-size:15px;color:${COLOR.fg};line-height:1.7;font-style:italic">${esc(verse.he)}</div>
+      </td></tr>
+    </table>`;
+
+  const statsGrid = `
+    <div style="font-size:13px;font-weight:700;color:${COLOR.gold};margin:8px 0 8px 0">אתמול במספרים</div>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>${statCell(String(m.newLeads), "לידים חדשים")}${statCell(String(m.signals), "אותות שהתגלו")}</tr>
+      <tr>${statCell(String(m.quizzes), "קוויזים")}${statCell(m.salesCount > 0 ? `${m.salesCount} · ${money}` : "0", "מכירות")}</tr>
+    </table>`;
+
+  const hotBox = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:rgba(232,185,74,0.08);border:1px solid ${COLOR.gold};border-radius:12px;margin:20px 0 8px 0">
+      <tr><td style="padding:20px;text-align:center">
+        <div style="font-size:15px;color:${COLOR.fg};margin-bottom:4px">
+          ${m.hotLeads > 0
+            ? `<b style="color:${COLOR.goldLight};font-size:20px">${m.hotLeads}</b> לידים חמים מחכים לך היום`
+            : `אין לידים חמים דחופים כרגע`}
+        </div>
+        <div style="font-size:13px;color:${COLOR.fgMuted};margin-bottom:14px">הרשימה החיה, עם כל הרקע והחלטה מהירה, נמצאת באזור הניהול.</div>
+        <a href="${APP_URL}/admin/today" style="display:inline-block;background:${COLOR.goldGrad};color:#0D1018;font-size:15px;font-weight:800;text-decoration:none;padding:12px 26px;border-radius:999px">פתחי את רשימת הלידים ←</a>
+      </td></tr>
+    </table>`;
+
+  const html = `<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:${COLOR.bg};font-family:'Assistant',Arial,sans-serif">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLOR.bg};padding:24px 12px">
+    <tr><td align="center">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;background:${COLOR.card};border:1px solid ${COLOR.border};border-radius:14px">
+        <tr><td style="padding:28px 28px 12px 28px;direction:rtl">
+          <p style="margin:0 0 4px 0;font-size:16px;color:${COLOR.fg}">בוקר אור הדר ואלון 🌅</p>
+          <p style="margin:0;font-size:14px;color:${COLOR.fgMuted}">${esc(dateHe)} · תמונת מצב קצרה לפתיחת היום.</p>
+          ${taoBox}
+          ${statsGrid}
+          ${hotBox}
+          <p style="margin:20px 0 8px 0;font-size:11px;color:${COLOR.fgMuted};line-height:1.7;border-top:1px solid ${COLOR.border};padding-top:14px">
+            סיכום יומי אוטומטי בכל בוקר (א-ה). אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | TrueSignal©
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  return { subject, html };
+}
+
 export function renderDailyCallEmail(args: {
   verse:      TaoVerse;
   leads:      FinalLead[];
