@@ -48,7 +48,22 @@ export interface LeadContext {
   commercialFit:      string | null; // "high" / "medium" / "low" / "unclear"
   founderStage:       string | null; // exploring / practicing / scaling / established / unclear
   answerSnippet:      string | null; // short verbatim from the strongest answer, so we hear their voice
+  // Full decision context (revealed on demand) — everything Hadar wants to read
+  // BEFORE she decides whether this lead is worth a personal message.
+  answers:            { q: string; a: string }[]; // all signal answers, label + verbatim
+  signalPromise:      string | null; // what the signal promises
+  element:            string | null; // their talent/element
+  people:             string | null; // their audience
+  painSource:         string | null; // where they came from
 }
+
+// Signal question keys → short Hebrew labels (mirrors lib/signal/gap-detect).
+const QUESTION_LABELS: Record<string, string> = {
+  flow_zone:          "רגע שבו שכחת מהזמן",
+  effortless_mastery: "מה קל לך עד שקשה להסביר איך",
+  hard_period:        "תקופה קשה ומה היא לימדה",
+  what_helped:        "מה עזר לך לצאת מזה / מה פיתחת",
+};
 
 export interface ImmediateLead {
   userId:     string;
@@ -181,10 +196,24 @@ export async function getImmediateLeads(
       opts: {
         routingSignal?: Record<string, unknown> | null;
         answers?:       Record<string, unknown> | null;
+        signal?:        Record<string, unknown> | null;
       } = {},
     ): LeadContext => {
       const totals = u?.id ? purchaseTotals.get(u.id) : undefined;
       const rs = opts.routingSignal ?? null;
+      const sig = opts.signal ?? null;
+      const str = (v: unknown): string | null =>
+        typeof v === "string" && v.trim().length > 0 ? v.trim() : null;
+      // All non-empty answers, in question order, mapped to their Hebrew label.
+      const answers: { q: string; a: string }[] = [];
+      if (opts.answers) {
+        for (const key of ["flow_zone", "effortless_mastery", "hard_period", "what_helped"]) {
+          const v = opts.answers[key];
+          if (typeof v === "string" && v.trim().length > 0) {
+            answers.push({ q: QUESTION_LABELS[key] ?? key, a: v.trim() });
+          }
+        }
+      }
       return {
         email:            u?.email?.trim() || null,
         phone:            u?.phone?.trim() || null,
@@ -200,6 +229,11 @@ export async function getImmediateLeads(
         commercialFit:    typeof rs?.commercial_fit === "string" ? (rs.commercial_fit as string) : null,
         founderStage:     typeof rs?.founder_stage === "string" ? (rs.founder_stage as string) : null,
         answerSnippet:    pickAnswerSnippet(opts.answers),
+        answers,
+        signalPromise:    str(sig?.signal_promise),
+        element:          str(sig?.element),
+        people:           str(sig?.people),
+        painSource:       str(sig?.pain_source),
       };
     };
 
@@ -215,6 +249,7 @@ export async function getImmediateLeads(
       const ctx = contextOf(u, {
         routingSignal: (row.signal?.routing_signal as Record<string, unknown> | null) ?? null,
         answers:       (row.answers as Record<string, unknown> | null) ?? null,
+        signal:        (row.signal as Record<string, unknown> | null) ?? null,
       });
       push(
         {

@@ -37,6 +37,11 @@ export interface LeadContext {
   commercialFit:      string | null;
   founderStage:       string | null;
   answerSnippet:      string | null;
+  answers:            { q: string; a: string }[];
+  signalPromise:      string | null;
+  element:            string | null;
+  people:             string | null;
+  painSource:         string | null;
 }
 
 export interface HandoffLeadView {
@@ -272,12 +277,62 @@ function AnswerSnippet({ snippet }: { snippet: string }) {
   );
 }
 
+// Full decision context — the person's whole signal + every answer, revealed on
+// demand so Hadar can judge quality before investing a personal message.
+function LeadDetail({ ctx }: { ctx: LeadContext }) {
+  const signalRows: { label: string; value: string }[] = [];
+  if (ctx.painSource)    signalRows.push({ label: "מאיפה הגיע/ה", value: ctx.painSource });
+  if (ctx.signalPromise) signalRows.push({ label: "מה האות מבטיח", value: ctx.signalPromise });
+  if (ctx.element)       signalRows.push({ label: "האלמנט", value: ctx.element });
+  if (ctx.people)        signalRows.push({ label: "הקהל", value: ctx.people });
+  return (
+    <div style={{
+      marginTop: 10, padding: "14px 16px", background: "rgba(8,12,20,0.55)",
+      border: `1px solid ${C.line}`, borderRadius: 10,
+      display: "flex", flexDirection: "column", gap: 14,
+    }}>
+      {signalRows.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {signalRows.map((r) => (
+            <div key={r.label}>
+              <div style={{ fontSize: 11.5, color: C.goldM, fontWeight: 700, marginBottom: 2 }}>{r.label}</div>
+              <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.55 }}>{r.value}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {ctx.answers.length > 0 && (
+        <div style={{
+          display: "flex", flexDirection: "column", gap: 11,
+          borderTop: signalRows.length ? `1px solid ${C.line}` : undefined,
+          paddingTop: signalRows.length ? 14 : 0,
+        }}>
+          <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 700 }}>מה שכתב/ה בשאלון:</div>
+          {ctx.answers.map((a, i) => (
+            <div key={i}>
+              <div style={{ fontSize: 12, color: C.goldM, marginBottom: 3 }}>{a.q}</div>
+              <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6 }}>&ldquo;{a.a}&rdquo;</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main component ───────────────────────────────────────────────
 
 export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
   const [rows, setRows] = useState<HandoffLeadView[]>(leads);
   const [tab, setTab]   = useState<"queue" | "sent" | "dismissed">("queue");
   const [busy, setBusy] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpand = (userId: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId); else next.add(userId);
+      return next;
+    });
 
   const queue = useMemo(() => rows.filter((r) => r.stage === "queue"), [rows]);
   const sent  = useMemo(
@@ -391,6 +446,23 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
 
                   {lead.context.answerSnippet && (
                     <AnswerSnippet snippet={lead.context.answerSnippet} />
+                  )}
+
+                  {(lead.context.answers.length > 0 || lead.context.signalPromise || lead.context.people) && (
+                    <>
+                      <button
+                        onClick={() => toggleExpand(lead.userId)}
+                        style={{
+                          marginTop: 10, cursor: "pointer", background: "transparent",
+                          border: `1px solid ${C.line}`, borderRadius: 8,
+                          color: C.goldM, fontSize: 12.5, fontWeight: 700,
+                          padding: "6px 12px", fontFamily: "inherit",
+                        }}
+                      >
+                        {expanded.has(lead.userId) ? "הסתר רקע ↑" : "רקע מלא — כל התשובות והאות ↓"}
+                      </button>
+                      {expanded.has(lead.userId) && <LeadDetail ctx={lead.context} />}
+                    </>
                   )}
                 </div>
 
