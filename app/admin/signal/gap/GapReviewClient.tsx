@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Internal gap-read review row. Shows the engine's read on one extraction and
@@ -79,6 +79,94 @@ function signalsLine(s: Record<string, unknown> | null): string | null {
   return parts.length ? parts.join(" · ") : null;
 }
 
+// ── Reviewer guide ───────────────────────────────────────────────
+// The rav and the Yemima teacher arrive at this screen with zero context.
+// This panel is the entire onboarding: what the engine tried to do, what
+// question the reviewer answers, and what each verdict button means.
+// Open on first visit; collapse state persists per browser (localStorage).
+function ReviewerGuide() {
+  const KEY = "gap-review-guide-collapsed";
+  const [open, setOpen] = useState(true);
+  useEffect(() => {
+    try { if (localStorage.getItem(KEY) === "1") setOpen(false); } catch {}
+  }, []);
+  const toggle = () => {
+    setOpen((v) => {
+      try { localStorage.setItem(KEY, v ? "1" : "0"); } catch {}
+      return !v;
+    });
+  };
+
+  const V = ({ color, label, children }: { color: string; label: string; children: React.ReactNode }) => (
+    <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+      <span style={{
+        flexShrink: 0, marginTop: 1, fontSize: 12, fontWeight: 800, color,
+        border: `1px solid ${color}55`, background: `${color}14`,
+        borderRadius: 8, padding: "3px 10px", whiteSpace: "nowrap",
+      }}>{label}</span>
+      <span style={{ fontSize: 13, lineHeight: 1.65, color: C.fg }}>{children}</span>
+    </div>
+  );
+
+  return (
+    <div style={{
+      background: "rgba(232,185,74,0.05)",
+      border: `1px solid rgba(232,185,74,0.30)`,
+      borderRadius: 12,
+      padding: open ? "16px 18px 18px" : "12px 18px",
+      marginBottom: 4,
+    }}>
+      <button
+        onClick={toggle}
+        style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%",
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+          color: C.gold, fontSize: 15, fontWeight: 800, fontFamily: "inherit",
+        }}
+      >
+        <span>איך מדרגים כאן — חובה לקרוא לפני הדירוג הראשון</span>
+        <span style={{ fontSize: 12, fontWeight: 400, color: C.muted }}>{open ? "הסתר ↑" : "הצג ↓"}</span>
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 14 }}>
+          <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.7, color: C.fg }}>
+            המנוע קרא את חמש התשובות של כל אדם וניסה לזהות דבר אחד:
+            {" "}<strong style={{ color: C.gold }}>האם יש פער בין איך שהאדם מספר את עצמו לבין איפה שהוא באמת נמצא</strong>
+            {" "}— למשל מי שמתאר תקופה קשה כסגורה, אבל מהמילים עולה שהיא עדיין פתוחה.
+            שום דבר מהקריאות האלה לא מוצג לאף לקוח. זה מסך פנימי בלבד, והמטרה שלו היא לבדוק את המנוע — לא את האנשים.
+          </p>
+
+          <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.7, color: C.fg }}>
+            על כל כרטיס, השאלה שאת/ה עונה עליה היא אחת:
+            {" "}<strong style={{ color: C.gold }}>&quot;אילו האדם הזה היה יושב מולי — האם הקריאה הזאת נכונה? והאם היה בטוח להגיד לו אותה?&quot;</strong>
+            {" "}קראו את הציטוטים מהתשובות (מוצגים בכרטיס), לא רק את המסקנה.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <V color={C.green} label="מדויק">
+              הקריאה נכונה כמו שהיא — גם ההכרעה (יש/אין פער) וגם הניסוח. הייתם חותמים עליה.
+            </V>
+            <V color={C.goldM} label="קרוב">
+              הכיוון נכון אבל משהו בניסוח או בדגש לא מדויק. הייתם מנסחים אחרת — אבל אין כאן טעות מהותית.
+            </V>
+            <V color={C.muted} label="פספס">
+              הקריאה שגויה — המנוע ראה פער שאין, או פספס פער שיש, או קרא את התפר הפוך. אבל הטעות לא מסוכנת: אילו נאמרה לאדם, הוא היה מתקן ועובר הלאה.
+            </V>
+            <V color={C.red} label="מזיק ⚠">
+              הקריאה הזאת, אילו הייתה נאמרת לאדם, הייתה עלולה לפגוע: נוקבת בפצע שגוי, הופכת כאב חי לאבחנה, או נוגעת במקום שאסור לגעת בו בלי נוכחות אנושית. <strong>גם אם ההכרעה נכונה טכנית — ניסוח פוגעני = מזיק.</strong> דירוג אחד כזה עוצר את כל הפרויקט לבדיקה. אל תהססו להשתמש בו.
+            </V>
+          </div>
+
+          <div style={{ fontSize: 12.5, lineHeight: 1.7, color: C.muted, borderTop: `1px solid ${C.line}`, paddingTop: 12 }}>
+            <strong style={{ color: C.goldM }}>מאיפה מתחילים:</strong> טאב &quot;פערים&quot; (הקריאות שהמנוע העז לנקוב בהן — הכי חשובות לבדיקה), אחר כך &quot;מצוקה&quot; (האם המנוע צדק כשעצר?). אם נשאר זמן — לדגום גם מ&quot;אין פער&quot; ו&quot;נמנע&quot;, כי גם פספוס-בשתיקה הוא טעות ששווה לדעת עליה. אפשר להוסיף הערה חופשית לכל דירוג — במיוחד על &quot;פספס&quot; ו&quot;מזיק&quot;, ההערות האלה הן מה שמלמד אותנו לתקן.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function GapReviewClient({ rows }: { rows: GapRow[] }) {
   const [state, setState] = useState<Record<string, string>>(
     Object.fromEntries(rows.map((r) => [r.id, r.verdict ?? ""])),
@@ -118,6 +206,8 @@ export default function GapReviewClient({ rows }: { rows: GapRow[] }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <ReviewerGuide />
+
       {/* Filter tabs — put the gaps + crisis (what needs scrutiny) up front */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
         {tabs.map(([key, label, count]) => {
