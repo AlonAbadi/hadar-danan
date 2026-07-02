@@ -29,7 +29,7 @@ import {
   waPhoneOf,
 } from "@/lib/signal/handoff-message";
 
-export type HandoffStage = "queue" | "whatsapp_sent" | "meeting_booked";
+export type HandoffStage = "queue" | "whatsapp_sent" | "meeting_booked" | "dismissed";
 
 // The context strip is what Hadar reads before she decides whether to reach out.
 // Keep it stable + small — every field must earn its slot.
@@ -170,7 +170,8 @@ export async function getImmediateLeads(
     const leads: ImmediateLead[] = [];
 
     const push = (lead: ImmediateLead, rawStage: HandoffStage | "dismissed") => {
-      if (rawStage === "dismissed") return; // hidden — Hadar said no
+      // Dismissed leads are NOT dropped — they move to the "לא רלבנטי" folder in
+      // the UI (stage carried through as 'dismissed'). Only booked+paid is dropped.
       if (rawStage === "meeting_booked" && paidUsers.has(lead.userId)) return; // done + paid → drop
       leads.push(lead);
     };
@@ -223,7 +224,7 @@ export async function getImmediateLeads(
           source:     "signal",
           reason:     (row.signal?.signal as string) ?? "",
           at:         row.generated_at as string,
-          stage:      rawStage === "dismissed" ? "queue" : rawStage,
+          stage:      rawStage,
           waPhone:    waPhoneOf(u?.phone),
           waText:     buildHandoffMessage({
             name,
@@ -258,7 +259,7 @@ export async function getImmediateLeads(
           source:     "quiz",
           reason:     (QUIZ_REASON[product] ?? "הקוויז המליץ על מוצר פרימיום") + pct,
           at:         row.created_at as string,
-          stage:      rawStage === "dismissed" ? "queue" : rawStage,
+          stage:      rawStage,
           waPhone:    waPhoneOf(u?.phone),
           waText:     buildQuizHandoffMessage({
             name,

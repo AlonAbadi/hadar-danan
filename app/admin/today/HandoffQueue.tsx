@@ -20,7 +20,7 @@ import Link from "next/link";
  * fit read, and a verbatim snippet from their strongest answer.
  */
 
-export type HandoffStage = "queue" | "whatsapp_sent" | "meeting_booked";
+export type HandoffStage = "queue" | "whatsapp_sent" | "meeting_booked" | "dismissed";
 
 export interface LeadContext {
   email:              string | null;
@@ -276,7 +276,7 @@ function AnswerSnippet({ snippet }: { snippet: string }) {
 
 export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
   const [rows, setRows] = useState<HandoffLeadView[]>(leads);
-  const [tab, setTab]   = useState<"queue" | "sent">("queue");
+  const [tab, setTab]   = useState<"queue" | "sent" | "dismissed">("queue");
   const [busy, setBusy] = useState<string | null>(null);
 
   const queue = useMemo(() => rows.filter((r) => r.stage === "queue"), [rows]);
@@ -284,12 +284,11 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
     () => rows.filter((r) => r.stage === "whatsapp_sent" || r.stage === "meeting_booked"),
     [rows],
   );
+  const dismissed = useMemo(() => rows.filter((r) => r.stage === "dismissed"), [rows]);
 
   const setStage = (userId: string, stage: HandoffStage) =>
     setRows((prev) => prev.map((r) => (r.userId === userId ? { ...r, stage } : r)));
 
-  const removeRow = (userId: string) =>
-    setRows((prev) => prev.filter((r) => r.userId !== userId));
 
   const onSendWhatsApp = async (lead: HandoffLeadView) => {
     if (lead.waPhone) {
@@ -308,10 +307,9 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
     if (!window.confirm(`להסיר את ${lead.name} מהרשימה? הליד יסומן כלא רלוונטי.`)) return;
 
     setBusy(lead.userId);
-    const prev = rows;
-    removeRow(lead.userId); // optimistic
+    setStage(lead.userId, "dismissed"); // optimistic → moves to the "לא רלבנטי" folder
     const ok = await postStage(lead.userId, "dismissed");
-    if (!ok) setRows(prev); // revert
+    if (!ok) setStage(lead.userId, "queue"); // revert
     setBusy(null);
   };
 
@@ -323,13 +321,13 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
     setBusy(null);
   };
 
-  const list = tab === "queue" ? queue : sent;
+  const list = tab === "queue" ? queue : tab === "sent" ? sent : dismissed;
 
   return (
     <div>
       {/* Tabs */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        {([["queue", "תור", queue.length], ["sent", "נשלח ווטסאפ", sent.length]] as const).map(([key, label, count]) => {
+        {([["queue", "תור", queue.length], ["sent", "נשלח ווטסאפ", sent.length], ["dismissed", "לא רלבנטי", dismissed.length]] as const).map(([key, label, count]) => {
           const active = tab === key;
           return (
             <button
@@ -351,7 +349,7 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
 
       {list.length === 0 ? (
         <div style={{ color: C.muted, fontSize: 14, padding: "40px 0", textAlign: "center", border: `1px dashed ${C.line}`, borderRadius: 12 }}>
-          {tab === "queue" ? "אין לידים בתור כרגע." : "עדיין לא נשלחו הודעות ווטסאפ."}
+          {tab === "queue" ? "אין לידים בתור כרגע." : tab === "sent" ? "עדיין לא נשלחו הודעות ווטסאפ." : "אין לידים שסומנו כלא רלוונטיים."}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
