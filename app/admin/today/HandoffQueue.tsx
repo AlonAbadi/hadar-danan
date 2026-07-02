@@ -277,9 +277,11 @@ function AnswerSnippet({ snippet }: { snippet: string }) {
   );
 }
 
-// Full decision context — the person's whole signal + every answer, revealed on
-// demand so Hadar can judge quality before investing a personal message.
+// Decision context — the engine's CONCISE read (4 short lines) by default, so
+// it's scannable, not a wall of text. The raw questionnaire answers are one more
+// click away for the rare deep-dive.
 function LeadDetail({ ctx }: { ctx: LeadContext }) {
+  const [showAnswers, setShowAnswers] = useState(false);
   const signalRows: { label: string; value: string }[] = [];
   if (ctx.painSource)    signalRows.push({ label: "מאיפה הגיע/ה", value: ctx.painSource });
   if (ctx.signalPromise) signalRows.push({ label: "מה האות מבטיח", value: ctx.signalPromise });
@@ -289,7 +291,7 @@ function LeadDetail({ ctx }: { ctx: LeadContext }) {
     <div style={{
       marginTop: 10, padding: "14px 16px", background: "rgba(8,12,20,0.55)",
       border: `1px solid ${C.line}`, borderRadius: 10,
-      display: "flex", flexDirection: "column", gap: 14,
+      display: "flex", flexDirection: "column", gap: 12,
     }}>
       {signalRows.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
@@ -302,18 +304,26 @@ function LeadDetail({ ctx }: { ctx: LeadContext }) {
         </div>
       )}
       {ctx.answers.length > 0 && (
-        <div style={{
-          display: "flex", flexDirection: "column", gap: 11,
-          borderTop: signalRows.length ? `1px solid ${C.line}` : undefined,
-          paddingTop: signalRows.length ? 14 : 0,
-        }}>
-          <div style={{ fontSize: 11.5, color: C.muted, fontWeight: 700 }}>מה שכתב/ה בשאלון:</div>
-          {ctx.answers.map((a, i) => (
-            <div key={i}>
-              <div style={{ fontSize: 12, color: C.goldM, marginBottom: 3 }}>{a.q}</div>
-              <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6 }}>&ldquo;{a.a}&rdquo;</div>
+        <div style={{ borderTop: signalRows.length ? `1px solid ${C.line}` : undefined, paddingTop: signalRows.length ? 12 : 0 }}>
+          <button
+            onClick={() => setShowAnswers((v) => !v)}
+            style={{
+              cursor: "pointer", background: "transparent", border: "none",
+              color: C.muted, fontSize: 12, fontWeight: 700, padding: 0, fontFamily: "inherit",
+            }}
+          >
+            {showAnswers ? "הסתר את התשובות המלאות ↑" : "+ התשובות המלאות בשאלון"}
+          </button>
+          {showAnswers && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 11, marginTop: 11 }}>
+              {ctx.answers.map((a, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 12, color: C.goldM, marginBottom: 3 }}>{a.q}</div>
+                  <div style={{ fontSize: 13, color: C.fg, lineHeight: 1.6 }}>&ldquo;{a.a}&rdquo;</div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
@@ -459,7 +469,7 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
                           padding: "6px 12px", fontFamily: "inherit",
                         }}
                       >
-                        {expanded.has(lead.userId) ? "הסתר רקע ↑" : "רקע מלא — כל התשובות והאות ↓"}
+                        {expanded.has(lead.userId) ? "הסתר ↑" : "האות המלא ↓"}
                       </button>
                       {expanded.has(lead.userId) && <LeadDetail ctx={lead.context} />}
                     </>
