@@ -105,6 +105,19 @@ async function postStage(
   }
 }
 
+async function postMarkPaid(userId: string, amount: number): Promise<boolean> {
+  try {
+    const res = await fetch("/api/admin/mark-paid", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ user_id: userId, amount }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 // ── Context strip ────────────────────────────────────────────────
 // The compact info row rendered under each lead's name/reason. Every chip
 // speaks a distinct decision-signal: can I reach them (contact), where they
@@ -423,6 +436,21 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
     setBusy(null);
   };
 
+  // Paid outside Cardcom (bank transfer). Records a completed purchase + books
+  // the lead → drops from the live list (paid + booked).
+  const onMarkPaid = async (lead: HandoffLeadView) => {
+    const input = window.prompt(`סכום ששולם בהעברה בנקאית עבור ${lead.name} (₪):`, "4000");
+    if (input === null) return;
+    const amount = Number(input.replace(/[^\d.]/g, ""));
+    if (!Number.isFinite(amount) || amount <= 0) { window.alert("סכום לא תקין"); return; }
+    setBusy(lead.userId);
+    const prev = rows;
+    setRows((p) => p.filter((r) => r.userId !== lead.userId)); // optimistic — paid+booked drops
+    const ok = await postMarkPaid(lead.userId, amount);
+    if (!ok) setRows(prev);
+    setBusy(null);
+  };
+
   const list = tab === "queue" ? queue : tab === "sent" ? sent : dismissed;
 
   return (
@@ -557,6 +585,20 @@ export default function HandoffQueue({ leads }: { leads: HandoffLeadView[] }) {
                       }}
                     >
                       {busy === lead.userId ? "…" : "סגר פגישה ✓"}
+                    </button>
+                  )}
+                  {(tab === "queue" || tab === "sent") && (
+                    <button
+                      onClick={() => onMarkPaid(lead)}
+                      disabled={busy === lead.userId}
+                      title="שילם/ה מחוץ למערכת (העברה בנקאית) — רישום כתשלום שהתקבל"
+                      style={{
+                        cursor: "pointer", background: "transparent", color: C.gold,
+                        fontWeight: 700, fontSize: 12.5, padding: "8px 14px", borderRadius: 9,
+                        border: `1px solid ${C.lineGold}`,
+                      }}
+                    >
+                      שילם/ה בהעברה ✓
                     </button>
                   )}
                   <Link href={lead.userHref} style={{

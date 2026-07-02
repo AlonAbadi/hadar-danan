@@ -47,6 +47,7 @@ export interface LeadContext {
   routingConfidence:  number | null; // 0.0–1.0 from signal.routing_signal
   commercialFit:      string | null; // "high" / "medium" / "low" / "unclear"
   founderStage:       string | null; // exploring / practicing / scaling / established / unclear
+  quizMatch:          number | null;  // quiz recommendation match % (quiz leads) — a real buy signal
   answerSnippet:      string | null; // short verbatim from the strongest answer, so we hear their voice
   // Full decision context (revealed on demand) — everything Hadar wants to read
   // BEFORE she decides whether this lead is worth a personal message.
@@ -89,9 +90,21 @@ export interface ImmediateLead {
 }
 
 // Weigh the signals we already have into one verdict + the reasons behind it.
+// Works for BOTH sources: signal leads lean on the LLM read (fit/confidence/
+// founder/depth); quiz leads lean on the match % + CRM engagement — so a strong
+// quiz lead (e.g. 93% strategy, engaged) is no longer scored as "skip".
 function computeDecision(ctx: LeadContext): LeadDecision {
   let score = 0;
   const points: string[] = [];
+  // CRM engagement — real interaction on the site (opened/clicked/checkout).
+  if (ctx.status === "high_intent" || ctx.status === "premium_lead" || ctx.status === "partnership_lead" || ctx.status === "buyer" || ctx.status === "booked") {
+    score += 2; points.push("כוונת-רכישה גבוהה");
+  } else if (ctx.status === "engaged") {
+    score += 1; points.push("מעורב/ת — קרא/ה ולחץ/ה");
+  }
+  // Quiz match — a direct recommendation strength signal.
+  if (typeof ctx.quizMatch === "number" && ctx.quizMatch >= 85) { score += 2; points.push(`${ctx.quizMatch}% התאמה בקוויז`); }
+  else if (typeof ctx.quizMatch === "number" && ctx.quizMatch >= 70) { score += 1; }
   if (ctx.commercialFit === "high")   { score += 2; points.push("התאמה מסחרית גבוהה"); }
   else if (ctx.commercialFit === "medium") { score += 1; }
   else if (ctx.commercialFit === "low")    { score -= 1; points.push("התאמה נמוכה"); }
@@ -230,6 +243,7 @@ export async function getImmediateLeads(
         routingSignal?: Record<string, unknown> | null;
         answers?:       Record<string, unknown> | null;
         signal?:        Record<string, unknown> | null;
+        quizMatch?:     number | null;
       } = {},
     ): LeadContext => {
       const totals = u?.id ? purchaseTotals.get(u.id) : undefined;
@@ -261,6 +275,7 @@ export async function getImmediateLeads(
         routingConfidence: typeof rs?.confidence === "number" ? (rs.confidence as number) : null,
         commercialFit:    typeof rs?.commercial_fit === "string" ? (rs.commercial_fit as string) : null,
         founderStage:     typeof rs?.founder_stage === "string" ? (rs.founder_stage as string) : null,
+        quizMatch:        typeof opts.quizMatch === "number" ? opts.quizMatch : null,
         answerSnippet:    pickAnswerSnippet(opts.answers),
         answers,
         signalPromise:    str(sig?.signal_promise),
@@ -319,7 +334,9 @@ export async function getImmediateLeads(
       const product = row.recommended_product as string;
       const pct = typeof row.match_percent === "number" ? ` · ${row.match_percent}% התאמה` : "";
       const rawStage = stageOf(u);
-      const ctx = contextOf(u); // quiz path has no routing_signal/answers
+      const ctx = contextOf(u, {
+        quizMatch: typeof row.match_percent === "number" ? row.match_percent : null,
+      }); // quiz path: no routing_signal/answers, but carries the match %
       push(
         {
           userId:     uid,
