@@ -138,9 +138,11 @@ function ReviewerGuide() {
           </p>
 
           <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.7, color: C.fg }}>
-            על כל כרטיס, השאלה שאת/ה עונה עליה היא אחת:
-            {" "}<strong style={{ color: C.gold }}>&quot;אילו האדם הזה היה יושב מולי — האם הקריאה הזאת נכונה? והאם היה בטוח להגיד לו אותה?&quot;</strong>
-            {" "}קראו את הציטוטים מהתשובות (מוצגים בכרטיס), לא רק את המסקנה.
+            בכל כרטיס יש מסגרת זהב: <strong style={{ color: C.gold }}>&quot;מה היה נאמר לאדם — מילה במילה&quot;</strong>.
+            זה הטקסט המדויק שהיה מוצג לאדם אילו המנוע היה חי. <strong>אותו אתם מדרגים</strong> — לא את הניתוח הפנימי.
+            השאלה שאתם עונים עליה: <strong style={{ color: C.gold }}>&quot;אילו האדם הזה היה יושב מולי — האם המשפט הזה נכון? והאם היה בטוח להגיד לו אותו, במילים האלה בדיוק?&quot;</strong>
+            {" "}מתחת למשפט מופיעים הציטוטים מהתשובות שעליהם הוא נשען — קראו גם אותם.
+            בכרטיסים שבהם המנוע שתק (אין פער / נמנע / מצוקה) — השאלה הפוכה: האם השתיקה צודקת?
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
@@ -241,21 +243,52 @@ export default function GapReviewClient({ rows }: { rows: GapRow[] }) {
               {cur && <span style={{ fontSize: 12, color: verdicts.find((v) => v[0] === cur)?.[2] ?? C.muted, fontWeight: 700 }}>סומן: {verdicts.find((v) => v[0] === cur)?.[1]}</span>}
             </div>
 
-            {/* The read */}
+            {/* THE UTTERANCE — the exact text a person would see, verbatim.
+                This is what the reviewer is actually rating. Framed loudly so
+                nobody mistakes it for internal notes. */}
             {r.reading ? (
-              <div style={{ background: C.soft, border: `1px solid ${C.line}`, borderRadius: 8, padding: "10px 12px", marginBottom: 8 }}>
-                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>{r.reading}</p>
-                {r.crossing && <p style={{ margin: "6px 0 0", fontSize: 13, color: C.goldM }}>המעבר: {r.crossing}</p>}
+              <div style={{
+                background: "rgba(232,185,74,0.05)",
+                border: `1px solid rgba(232,185,74,0.45)`,
+                borderRadius: 10, padding: "12px 14px", marginBottom: 8,
+              }}>
+                <div style={{
+                  fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em",
+                  color: C.gold, textTransform: "uppercase", marginBottom: 8,
+                }}>
+                  מה היה נאמר לאדם — מילה במילה
+                </div>
+                <p style={{
+                  margin: 0, fontSize: 15.5, lineHeight: 1.6, color: C.fg, fontWeight: 500,
+                }}>
+                  &ldquo;{r.reading}{r.crossing ? ` ${r.crossing}` : ""}&rdquo;
+                </p>
                 {r.evidence?.length > 0 && (
-                  <div style={{ marginTop: 6, fontSize: 12, color: C.muted }}>
-                    עוגן: {r.evidence.map((e, i) => <span key={i}>“{e.span}” </span>)}
+                  <div style={{ marginTop: 10, paddingTop: 8, borderTop: `1px solid ${C.line}`, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                    <span style={{ color: C.goldM, fontWeight: 700 }}>על מה זה נשען (מהתשובות שלהם): </span>
+                    {r.evidence.map((e, i) => <span key={i}>&ldquo;{e.span}&rdquo;{i < r.evidence.length - 1 ? " · " : ""}</span>)}
                   </div>
                 )}
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: C.muted, marginBottom: 8, fontStyle: "italic" }}>
-                {r.present === "no" ? "אין פער — לאשר את המתנה." : r.safety === "do_not_name" ? "רצפת מצוקה — לא לנקוב." : "המנוע נמנע (אין די אות ברור)."}
-                {signalsLine(r.signals) && <span style={{ opacity: 0.6 }}> · {signalsLine(r.signals)}</span>}
+              <div style={{
+                background: C.soft, border: `1px dashed ${C.line}`,
+                borderRadius: 10, padding: "10px 14px", marginBottom: 8,
+              }}>
+                <div style={{
+                  fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em",
+                  color: C.muted, textTransform: "uppercase", marginBottom: 6,
+                }}>
+                  לא הייתה נאמרת שום אמירה — המנוע שתק
+                </div>
+                <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                  {r.present === "no"
+                    ? "המנוע קבע שאין פער, ולכן היה מאשר את המתנה בלי לנקוב בשום דבר. השאלה לדירוג: האם השתיקה הזו צודקת?"
+                    : r.safety === "do_not_name"
+                      ? "רצפת מצוקה — המנוע זיהה כאב חי ועצר הכול. השאלה לדירוג: האם העצירה צודקת?"
+                      : "המנוע לא היה בטוח מספיק ושתק. השאלה לדירוג: האם השתיקה צודקת, או שהיה כאן פער ברור שפוספס?"}
+                  {signalsLine(r.signals) && <span style={{ opacity: 0.6 }}> · {signalsLine(r.signals)}</span>}
+                </div>
               </div>
             )}
 
