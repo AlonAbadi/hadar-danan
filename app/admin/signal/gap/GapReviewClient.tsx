@@ -52,12 +52,55 @@ async function postVerdict(id: string, verdict: string, note: string): Promise<b
   } catch { return false; }
 }
 
+// Priority for the review queue: emitted gaps first (need most scrutiny),
+// then crisis, then no-gap, then abstain. Newest first within each band.
+function priority(r: GapRow): number {
+  if (r.present === "yes" || r.present === "partial") return 0;
+  if (r.safety === "do_not_name") return 1;
+  if (r.present === "no") return 2;
+  return 3; // abstain
+}
+function band(r: GapRow): "gap" | "crisis" | "nogap" | "abstain" {
+  if (r.present === "yes" || r.present === "partial") return "gap";
+  if (r.safety === "do_not_name") return "crisis";
+  if (r.present === "no") return "nogap";
+  return "abstain";
+}
+
+// Readable one-line render of the raw agreement signals (no raw JSON).
+function signalsLine(s: Record<string, unknown> | null): string | null {
+  if (!s) return null;
+  const parts: string[] = [];
+  if (typeof s.agreement === "number") parts.push(`הסכמה ${Math.round((s.agreement as number) * 100)}%`);
+  if (typeof s.p_overshoot === "number") parts.push(`overshoot ${Math.round((s.p_overshoot as number) * 100)}%`);
+  if (typeof s.seam_samples === "number") parts.push(`${s.seam_samples} דגימות`);
+  if (s.fusion === true) parts.push("ערבוב");
+  if (typeof s.reason === "string") parts.push(String(s.reason));
+  return parts.length ? parts.join(" · ") : null;
+}
+
 export default function GapReviewClient({ rows }: { rows: GapRow[] }) {
   const [state, setState] = useState<Record<string, string>>(
     Object.fromEntries(rows.map((r) => [r.id, r.verdict ?? ""])),
   );
   const [busy, setBusy] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [filter, setFilter] = useState<"all" | "gap" | "crisis" | "nogap" | "abstain">("all");
+
+  const counts = { gap: 0, crisis: 0, nogap: 0, abstain: 0 };
+  rows.forEach((r) => { counts[band(r)]++; });
+
+  const sorted = [...rows].sort((a, b) =>
+    priority(a) - priority(b) || (b.computedAt ?? "").localeCompare(a.computedAt ?? ""));
+  const shown = filter === "all" ? sorted : sorted.filter((r) => band(r) === filter);
+
+  const tabs: [typeof filter, string, number][] = [
+    ["all", "הכל", rows.length],
+    ["gap", "פערים", counts.gap],
+    ["crisis", "מצוקה", counts.crisis],
+    ["nogap", "אין פער", counts.nogap],
+    ["abstain", "נמנע", counts.abstain],
+  ];
 
   const mark = async (id: string, verdict: string) => {
     setBusy(id);
@@ -75,7 +118,23 @@ export default function GapReviewClient({ rows }: { rows: GapRow[] }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {rows.map((r) => {
+      {/* Filter tabs — put the gaps + crisis (what needs scrutiny) up front */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+        {tabs.map(([key, label, count]) => {
+          const active = filter === key;
+          return (
+            <button key={key} onClick={() => setFilter(key)}
+              style={{ cursor: "pointer", fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 999,
+                border: `1px solid ${active ? C.gold : C.line}`,
+                background: active ? "rgba(232,185,74,0.10)" : "transparent",
+                color: active ? C.gold : C.muted }}>
+              {label} · {count}
+            </button>
+          );
+        })}
+      </div>
+
+      {shown.map((r) => {
         const p = r.present ? PRESENT_LABEL[r.present] : null;
         const s = r.safety ? SAFETY_LABEL[r.safety] : null;
         const cur = state[r.id];
@@ -106,7 +165,7 @@ export default function GapReviewClient({ rows }: { rows: GapRow[] }) {
             ) : (
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 8, fontStyle: "italic" }}>
                 {r.present === "no" ? "אין פער — לאשר את המתנה." : r.safety === "do_not_name" ? "רצפת מצוקה — לא לנקוב." : "המנוע נמנע (אין די אות ברור)."}
-                {r.signals && <span style={{ opacity: 0.7 }}> · {JSON.stringify(r.signals)}</span>}
+                {signalsLine(r.signals) && <span style={{ opacity: 0.6 }}> · {signalsLine(r.signals)}</span>}
               </div>
             )}
 
