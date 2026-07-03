@@ -589,7 +589,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         {screen === "s6" && (
           <Card>
             <h2 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 22px", lineHeight: 1.3, color: C.gold }}>
-              הקריאה שלכם
+              התמונה שלכם
             </h2>
             <p style={{ fontSize: 17, lineHeight: 1.8, margin: "0 0 22px", color: C.fg }}>
               {cell}
@@ -610,7 +610,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         {screen === "s5" && (
           <Card>
             <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 24px", lineHeight: 1.45 }}>
-              לאן לשלוח את הקריאה? המייל שומר לכם אותה.
+              לאן לשלוח את התמונה? המייל שומר לכם אותה.
             </h2>
             {gateErr && (
               <div role="alert" style={{ marginBottom: 16, color: "#FF8888", fontSize: 14 }}>{gateErr}</div>
@@ -666,44 +666,16 @@ export function KriahClient({ previewKey, isTest }: Props) {
               זה לא חסר לכם. זה כבר קיים, פשוט עוד לא נאמר בקול רם.
             </p>
 
-            {/* Blurred teaser — one legible fragment inside a blurred sample sentence */}
-            <div
-              aria-hidden="true"
-              style={{
-                background: C.cardSoft,
-                border: `1px solid ${C.line}`,
-                borderRadius: 14,
-                padding: "20px 18px",
-                marginBottom: 14,
-                fontSize: 16.5,
-                lineHeight: 1.75,
-                userSelect: "none",
-                overflow: "hidden",
-              }}
-            >
-              <span style={{ filter: "blur(4.5px)" }}>
-                האנשים שבוחרים בי לא באים בגלל מה שאני עושה, הם באים בגלל{" "}
-              </span>
-              <span style={{ color: C.gold, fontWeight: 700 }}>הדבר שרק אני</span>
-              <span style={{ filter: "blur(4.5px)" }}>
-                {" "}יודע להחזיק בשבילם ברגע שהכי חשוב להם.
-              </span>
-            </div>
-
             <p style={{ fontSize: 15.5, lineHeight: 1.7, margin: "0 0 6px", color: C.fg }}>
               למשפט הזה אנחנו קוראים האות שלכם.
             </p>
             <p style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.7, margin: "0 0 18px", color: C.fg }}>
               שש שאלות. הן דורשות כנות, לא זמן.
             </p>
-            <p style={{ fontSize: 13.5, color: C.muted, margin: "0 0 28px" }}>
-              הדר דנן. יותר מ-3,500 עסקים כבר עברו כאן.
-            </p>
-
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
               <GoldButton onClick={() => goTo("s8", "s8_bridge")}>להמשיך לשש השאלות</GoldButton>
               <QuietLink onClick={() => goTo("exit", "exit")}>
-                הקריאה כבר במייל, אפשר לעצור כאן
+                התמונה כבר במייל, אפשר לעצור כאן
               </QuietLink>
             </div>
           </Card>
@@ -850,7 +822,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
               עוד פרט אחד, לבחירתכם.
             </h2>
             <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.9, margin: "0 0 24px" }}>
-              אם מהקריאה שלכם יעלה משהו שהדר תרצה להרחיב עליו אישית, בשיחה ולא במייל, בלי מספר פשוט לא נוכל לקיים את זה.
+              אם מהתמונה שלכם יעלה משהו שהדר תרצה להרחיב עליו אישית, בשיחה ולא במייל, בלי מספר פשוט לא נוכל לקיים את זה.
             </p>
             <label htmlFor="kriah-phone" style={{ display: "block", fontSize: 14, color: C.muted, marginBottom: 6 }}>
               טלפון (רשות)
@@ -916,7 +888,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         {screen === "exit" && (
           <Card center>
             <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 18px", lineHeight: 1.4 }}>
-              הקריאה הראשונית אצלכם במייל
+              התמונה הראשונית אצלכם במייל
             </h2>
             <p style={{ fontSize: 17, color: C.gold, fontWeight: 600, margin: 0 }}>
               תהיו טובים.
@@ -997,7 +969,7 @@ function FullReading({
         }}
       >
         <h2 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 26px", lineHeight: 1.3, color: C.gold }}>
-          הקריאה המלאה שלכם
+          התמונה המלאה שלכם
         </h2>
 
         {/* P1 — opening with the verbatim quote */}
@@ -1067,7 +1039,7 @@ function FullReading({
         }}
       >
         <p style={{ fontSize: 16.5, fontWeight: 800, margin: "0 0 8px", lineHeight: 1.6, color: C.fg }}>
-          המשפט הזה מחזיק גם מחוץ לקריאה.
+          המשפט הזה מחזיק גם מחוץ לתמונה.
         </p>
         <p style={{ fontSize: 15.5, lineHeight: 1.7, margin: "0 0 20px", color: C.fg, opacity: 0.9 }}>
           הכנו לכם אותו כתזכורת: שמרו אותה איפה שתראו אותה, ואם יש מישהו שיזהה אתכם בה, שלחו לו אותה.
@@ -1120,7 +1092,7 @@ function FullReading({
             המשפט לא הולך לשום מקום. מה שמתפוגג הוא ההד שלו: אות בלי חזרה נשכח. תנו לו שבוע של חזרות, ותראו מה הוא עושה.
           </p>
           <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 20px", color: C.fg }}>
-            הקריאה המלאה והתזכורת כבר אצלכם במייל. בעוד יום-יומיים נשלח לשם גם את הצעד הבא, למי שירצה להמשיך.
+            התמונה המלאה והתזכורת כבר אצלכם במייל. בעוד יום-יומיים נשלח לשם גם את הצעד הבא, למי שירצה להמשיך.
           </p>
           <p style={{ fontSize: 16.5, fontWeight: 700, margin: 0, color: C.gold }}>
             תהיו טובים.
