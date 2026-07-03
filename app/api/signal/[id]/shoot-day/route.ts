@@ -118,10 +118,10 @@ export async function GET(
     row.signal = wiped;
   }
 
-  // Fully-built plan (all 12 videos) cached? return immediately.
+  // Fully-built plan (all 7 videos; legacy caches hold 12) cached? return immediately.
   if (row.signal.shoot_day &&
       validateShootDayPlan(row.signal.shoot_day) &&
-      (row.signal.shoot_day as ShootDayPlan).videos.length === 12) {
+      (row.signal.shoot_day as ShootDayPlan).videos.length >= 7) {
     return NextResponse.json({
       phase:        "complete",
       plan:         row.signal.shoot_day as ShootDayPlan,
@@ -132,7 +132,7 @@ export async function GET(
   }
 
   // Assemble the full plan from Phase 3 slices once every piece exists, and
-  // cache it (upgrading any 1-video preview to the full 12-video plan).
+  // cache it (upgrading any 1-video preview to the full 7-video plan).
   // identity+pillars come from the phase-1 cache, or from the preview plan if
   // Phase 2 already ran and cleared the phase-1 partial.
   const cachedPlan = (row.signal.shoot_day && validateShootDayPlan(row.signal.shoot_day))
@@ -168,8 +168,8 @@ export async function GET(
     director: !!director,
   };
 
-  // Full plan: all 12 real videos generated + strategy + gifts.
-  if (phase1 && storedVideos.length === 12 && strategy && gifts) {
+  // Full plan: all 7 real videos generated + strategy + gifts.
+  if (phase1 && new Set(storedNumbers.filter((n) => n >= 1 && n <= 7)).size >= 7 && strategy && gifts) {
     const videos = [...storedVideos].sort((a, b) => a.number - b.number);
     const plan = {
       identity_statement: phase1.identity_statement,

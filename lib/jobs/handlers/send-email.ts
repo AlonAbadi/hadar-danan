@@ -49,6 +49,30 @@ export async function handleSendEmail(
     if (purchased) return; // already a customer — don't keep selling
   }
 
+  // ── Suppress the boiling-lead fallback once it's no longer needed ──
+  // signal_strategy_fallback exists ONLY for a strategy lead who, 3 days in,
+  // still hasn't moved: skip it if a meeting was booked, the lead was
+  // dismissed, the status advanced past "lead machine" territory, or they
+  // already bought something (any purchase means the funnel worked).
+  if (template_key === "signal_strategy_fallback") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: u } = await (supabase as any)
+      .from("users")
+      .select("status, handoff_stage")
+      .eq("id", user_id)
+      .maybeSingle();
+    if (u?.handoff_stage === "meeting_booked" || u?.handoff_stage === "dismissed") return;
+    if (["booked", "buyer", "handled", "not_relevant"].includes(u?.status ?? "")) return;
+    const { data: purchased } = await supabase
+      .from("purchases")
+      .select("id")
+      .eq("user_id", user_id)
+      .eq("status", "completed")
+      .limit(1)
+      .maybeSingle();
+    if (purchased) return;
+  }
+
   // ── Magic link (passwordless login) ───────────────────────
   // Generated BEFORE render so signal templates can use it as their main
   // "your area" CTA — signal-takers usually never set a password, so a raw
@@ -69,14 +93,23 @@ export async function handleSendEmail(
   const isSignal = template_key.startsWith("signal_");
   const addUtm = (href: string): string => {
     if (!href.startsWith(APP_URL)) return href; // only our own pages
+    if (href.includes("utm_source=")) return href; // already tagged — don't double
     const params = new URLSearchParams({
       utm_source:   "email",
-      utm_medium:   isSignal ? "signal_chain" : "lifecycle",
-      utm_campaign: isSignal ? "signal_nurture" : template_key,
-      utm_content:  template_key,
+      utm_medium:   "email",
+      utm_campaign: isSignal ? "signal_nurture" : "lifecycle",
+      utm_content:  template_key, // which email in the chain drove the visit
     });
     return href + (href.includes("?") ? "&" : "?") + params.toString();
   };
+
+  // Asset URLs (web-font stylesheet, images) must never be wrapped — email
+  // clients prefetch them, which otherwise fires fake EMAIL_OPENED/LINK_CLICKED
+  // and wrongly promotes the recipient lead→engaged.
+  const isAsset = (href: string): boolean =>
+    href.includes("fonts.googleapis") ||
+    href.includes("fonts.gstatic") ||
+    /\.(css|js|woff2?|ttf|otf|eot|png|jpe?g|svg|gif|ico|webp)(\?|$)/i.test(href);
 
   // ── Wrap all links through click tracker ─────────────────
   // Click = confirmed open. More reliable than pixel for text-only emails.
@@ -85,12 +118,13 @@ export async function handleSendEmail(
   const trackedHtml = rendered.html.replace(
     /href="(https?:\/\/[^"]+)"/g,
     (_, href: string) => {
-      // Don't wrap unsubscribe, WhatsApp, or mailto links
+      // Don't wrap unsubscribe, WhatsApp, mailto, auth, or asset links
       if (
         href.includes("/unsubscribe") ||
         href.includes("wa.me") ||
         href.startsWith("mailto:") ||
-        href.includes("supabase.co/auth")
+        href.includes("supabase.co/auth") ||
+        isAsset(href)
       ) {
         return `href="${href}"`;
       }

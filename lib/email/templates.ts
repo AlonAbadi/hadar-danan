@@ -836,6 +836,37 @@ function signalHiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
   };
 }
 
+// Day-3 fallback for a boiling (strategy-bucket) lead who hasn't booked a
+// meeting yet. Re-opens the conversation and carries the self-serve fallback
+// (כוורת האות) so the concierge promise never leaves the lead with nothing
+// to buy. Suppressed at send time by lib/jobs/handlers/send-email.ts if the
+// lead booked / was dismissed / already purchased.
+function signalStrategyFallback(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  return {
+    subject: `${firstName}, האות שלכם עדיין כאן`,
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood · TrueSignal</div>
+        <h1>האות שלכם עדיין כאן, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>לפני שלושה ימים האות שלכם נוסח.</p>
+        <p>הדר קראה אותו, והשיחה איתה עדיין פתוחה.</p>
+        <p>שיחת היכרות קצרה, בלי עלות ובלי התחייבות: עוברים יחד על האות ועל הצעד שנגזר ממנו.</p>
+        <a class="cta" href="https://wa.me/972539566961?text=${encodeURIComponent("היי, קיבלתי את האות שלי ואשמח לתאם את השיחה עם הדר")}">לתאם את השיחה בוואטסאפ ←</a>
+        <p>ואם אתם מסוג האנשים שמעדיפים להתחיל לבד, בקצב שלכם:</p>
+        <p><strong>כוורת האות.</strong> ערכת ההפעלה המלאה שנגזרת מהאות שלכם: לוח האות, אתגר 7 הימים, ערכת תוכן, ערכת ויזואל והבמאית.</p>
+        <p>₪590, גישה מיידית. ואם תמשיכו לסדנה, כל הסכום מתקזז.</p>
+        <a class="cta" href="${APP_URL}/signal-hive">להפעיל את האות ←</a>
+        <p>שני המסלולים מתחילים מאותו מקום: האות שכבר יש לכם.</p>
+        <p class="ssig">הדר</p>
+      </div>
+    `),
+  };
+}
+
 function challengeAccess(ctx: EmailTemplateContext): RenderedEmail {
   const firstName  = ctx.name.split(" ")[0];
   const accessLink = (ctx.access_link as string | undefined) ?? `${APP_URL}/challenge/content`;
@@ -1691,6 +1722,7 @@ const TEMPLATES: Record<string, TemplateFn> = {
   // Sequence 2 - challenge buyers
   challenge_access:            challengeAccess,
   signal_hive_welcome:         signalHiveWelcome,
+  signal_strategy_fallback:    signalStrategyFallback,
   challenge_upsell_workshop:   challengeUpsellWorkshop,
   // Sequence 3 - workshop buyers
   workshop_confirmation:       workshopConfirmation,

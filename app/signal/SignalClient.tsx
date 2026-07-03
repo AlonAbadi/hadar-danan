@@ -56,6 +56,7 @@ interface Props {
   prefillOccupation?: string;
   prefillGender?:    Gender;
   hiveActive?:       boolean;
+  fromKit?:          boolean;   // paid Hive member sent here because their kit has no extraction yet
 }
 
 type Phase = "intro" | "form" | "gate" | "loading" | "result" | "error";
@@ -63,6 +64,7 @@ type Phase = "intro" | "form" | "gate" | "loading" | "result" | "error";
 export function SignalClient({
   firstName, prefillLastName, isAuthenticated = false, prefillEmail,
   prefillPhone, prefillOccupation, prefillGender, hiveActive = false,
+  fromKit = false,
 }: Props) {
   // Land directly on the first question (no blocking intro screen) — the quiz
   // proves this; the old intro screen lost ~33% before they even started. The
@@ -373,6 +375,16 @@ export function SignalClient({
       />
 
       <div style={{ width: "100%", maxWidth: 680, position: "relative", zIndex: 1 }}>
+        {fromKit && (phase === "form" || phase === "intro") && (
+          <div style={{
+            background: "rgba(232,185,74,0.08)", border: `1px solid ${C.gold}`,
+            borderRadius: 12, padding: "12px 16px", marginBottom: 18,
+            fontSize: 14, lineHeight: 1.7, textAlign: "center",
+          }}>
+            <b style={{ color: C.gold }}>התשלום נקלט ואתם בפנים.</b>{" "}
+            נשאר צעד אחד: מהתשובות כאן נבנית כל ערכת כוורת האות שלכם.
+          </div>
+        )}
         {phase === "intro"  && <Intro firstName={firstName} onStart={() => { trackSignalStarted(); setPhase("form"); }} />}
         {phase === "form"   && (
           <FormCard

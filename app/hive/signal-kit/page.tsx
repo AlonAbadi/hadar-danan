@@ -46,6 +46,12 @@ export default async function SignalKitPage() {
     .limit(1)
     .maybeSingle();
 
+  // Paid member with no diagnostic yet (bought directly from /signal-hive):
+  // send them straight into the diagnostic instead of an empty kit. /signal
+  // shows a "payment received, one step left" banner via ?from=kit, and its
+  // hive-active completion path routes back here.
+  if (!ext) redirect("/signal?from=kit");
+
   return (
     <SignalKitClient
       firstName={userData.name?.split(" ")[0] ?? ""}

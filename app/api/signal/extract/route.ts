@@ -607,6 +607,38 @@ export async function POST(req: NextRequest) {
           status: "pending",
         }));
         await db.from("jobs").insert(rows);
+
+        // Boiling leads get the concierge promise ("הדר תיצור קשר"). If no
+        // meeting happens within 3 days, the SIGNAL_STRATEGY_LEAD fallback
+        // email re-opens the conversation + carries כוורת האות so the lead
+        // never cools with nothing to buy. Suppressed at send time if by
+        // then they booked / were dismissed / purchased (see send-email.ts).
+        if (bucketDecision.bucket === "strategy") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: fallbackSeqs } = await (db as any)
+            .from("email_sequences")
+            .select("id, subject, template_key, delay_hours")
+            .eq("trigger_event", "SIGNAL_STRATEGY_LEAD")
+            .eq("active", true);
+          if (fallbackSeqs && fallbackSeqs.length) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const fbRows = fallbackSeqs.map((seq: any) => ({
+              type:    "SEND_EMAIL",
+              payload: {
+                user_id:      userId,
+                email:        u.email,
+                name:         u.name ?? "",
+                sequence_id:  seq.id,
+                subject:      seq.subject,
+                template_key: seq.template_key,
+                bucket:       bucketDecision.bucket,
+              },
+              run_at: new Date(now + (seq.delay_hours ?? 72) * 60 * 60 * 1000).toISOString(),
+              status: "pending",
+            }));
+            await db.from("jobs").insert(fbRows);
+          }
+        }
       }
     }
   } catch (e) {

@@ -832,7 +832,7 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
       {/* Videos in 3 acts (Lever #3: Act Structure 4+4+4). V1 ships only
           Video #1 (IDENTITY). V2+ unlocks the rest via per-card CTAs. */}
       <VideosByAct videos={plan.videos} />
-      {(plan.videos.length < 12 || !plan.visual_direction || !plan.gift_sentences || !plan.director) && (
+      {(plan.videos.length < 7 || !plan.visual_direction || !plan.gift_sentences || !plan.director) && (
         <ShootDayBuilder extractionId={extractionId} plan={plan} setPlan={setPlan} stored={stored} />
       )}
 
@@ -1027,7 +1027,7 @@ function VideosByAct({ videos }: { videos: Video[] }) {
   );
 }
 
-// Builds the rest of the shoot day on demand: 3 acts (4 videos each) + visual
+// Builds the rest of the shoot day on demand: 7 videos across 3 acts + visual
 // direction/schedule/decisions + 5 gift sentences. Each is one sub-60s API
 // call; results stream into the plan as they arrive. The endpoints cache every
 // slice, so a refresh or re-open resumes where it left off.
@@ -1076,16 +1076,15 @@ function ShootDayBuilder({
     try {
       // One video per call — proven sub-60s on Vercel. Skip any already stored.
       const titles: Record<number, string> = {
-        1: "סרטון הזהות", 2: "הוק עמוד 1", 3: "הוק עמוד 2", 4: "הוק עמוד 3",
-        5: "הוק עמוד 4", 6: "סיפור 1", 7: "סיפור 2", 8: "סיפור 3",
-        9: "פריימוורק 1", 10: "פריימוורק 2", 11: "ניפוץ מיתוס", 12: "הזמנה (CTA)",
+        1: "סרטון הזהות", 2: "הוק עמוד 1", 3: "הוק עמוד 2",
+        4: "סיפור 1", 5: "סיפור 2", 6: "פריימוורק", 7: "הזמנה (CTA)",
       };
       // Accumulate the full video set locally so the director step (which needs
-      // all 12 titles) sees them even though `plan` is a render snapshot.
+      // all 7 titles) sees them even though `plan` is a render snapshot.
       const collected = new Map<number, Video>(plan.videos.map((v) => [v.number, v]));
-      for (let n = 1; n <= 12; n++) {
+      for (let n = 1; n <= 7; n++) {
         if (done.includes(n)) continue;
-        setStep(`בונה סרטון ${n} מתוך 12 · ${titles[n]}…`);
+        setStep(`בונה סרטון ${n} מתוך 7 · ${titles[n]}…`);
         const data = await post("videos", JSON.stringify({
           identity_statement: plan.identity_statement,
           pillars:            plan.pillars,
@@ -1136,7 +1135,7 @@ function ShootDayBuilder({
     }
   }
 
-  const remaining = 12 - plan.videos.length;
+  const remaining = Math.max(0, 7 - plan.videos.length);
 
   return (
     <div style={{
@@ -1427,7 +1426,7 @@ function ColorChip({ hex, label }: { hex: string; label: string }) {
 
 function ScheduleCard({ schedule }: { schedule: NonNullable<ShootDayPlan["schedule"]> }) {
   return (
-    <Section title="לו״ז יום הצילום" hint="08:30 → 17:00. שני סטים, 12 סרטונים. הפסקה חובה ב-13:00.">
+    <Section title="לו״ז יום הצילום" hint="08:30 → 17:00. שני סטים, 7 סרטונים. הפסקה חובה ב-13:00.">
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {schedule.map((block, i) => (
           <div key={i} style={{

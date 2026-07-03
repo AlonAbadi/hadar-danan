@@ -6,7 +6,7 @@
  *
  *   - identity_statement (single sentence, signature Hadar form)
  *   - 4 pillars (message pillars, each with message + evidence + scene)
- *   - 12 videos (Identity + 4 Pillar Hooks + 3 Stories + 2 Frameworks + 1 Myth + 1 CTA)
+ *   - 7 videos (Identity + 2 Pillar Hooks + 2 Stories + 1 Framework + 1 CTA)
  *   - visual_direction (palette + framing + anti-category posture)
  *   - schedule (08:30 → 17:00, two sets, balanced)
  *   - 3 decisions (zehutit + tifulit + cognitive)
@@ -42,7 +42,7 @@ export type VideoMode = "B" | "A" | "C" | "D";  // B=hook, A=story, C=framework,
 export type VideoType = "IDENTITY" | "PILLAR_HOOK" | "STORY" | "FRAMEWORK" | "MYTH" | "CTA";
 
 export type Video = {
-  number:      number;             // 1-12
+  number:      number;             // 1-7 (legacy cached plans may hold up to 12)
   act:         1 | 2 | 3;          // 1=זהות, 2=סיפור, 3=סמכות
   type:        VideoType;
   mode:        VideoMode;
@@ -105,7 +105,7 @@ export type VisualDirection = {
 export type ScheduleBlock = {
   time:       string;         // "09:00-10:00"
   activity:   string;
-  videos:     number[];       // which video numbers (1-12)
+  videos:     number[];       // which video numbers (1-7)
   hint:       string;
 };
 
@@ -127,7 +127,7 @@ export type DirectorScript = {
 export type ShootDayPlan = {
   identity_statement:  string;          // "כשהמערכת אומרת לא, אני מתחיל לעבוד"
   pillars:             [Pillar, Pillar, Pillar, Pillar];
-  videos:              Video[];          // V1: 1 video. V2+: up to 12.
+  videos:              Video[];          // V1: 1 video. Full plan: 7.
   // V1: the following are optional — generated lazily in Phase 3 to keep
   // Phase 2 under the 60s Vercel Hobby function-invocation limit.
   visual_direction?:   VisualDirection;
@@ -307,7 +307,7 @@ ${HADAR_SIGNATURE_MOVES}
 
 export const SINGLE_VIDEO_PACK_MAX_TOKENS = 1500;
 
-export const SINGLE_VIDEO_PACK_SYSTEM = `אתה הבמאית של הדר דנן. אתה מקבל אות מותגי + משפט זהות + 4 עמודי מסר, ומחזיר את **הסרטון הראשון בלבד** מתוך 12 הסרטונים של יום הצילום.
+export const SINGLE_VIDEO_PACK_SYSTEM = `אתה הבמאית של הדר דנן. אתה מקבל אות מותגי + משפט זהות + 4 עמודי מסר, ומחזיר את **הסרטון הראשון בלבד** מתוך 7 הסרטונים של יום הצילום.
 
 ${SHARED_RULES}
 
@@ -354,7 +354,7 @@ ${HADAR_QUOTE_RULE}
 
 export const VIDEOS_PACK_MAX_TOKENS = 8000;
 
-export const VIDEOS_PACK_SYSTEM = `אתה הבמאית של הדר דנן. אתה מקבל אות מותגי + משפט זהות + 4 עמודי מסר, ומחזיר 12 סרטונים מובנים לפי המבנה הקנוני של הדר.
+export const VIDEOS_PACK_SYSTEM = `אתה הבמאית של הדר דנן. אתה מקבל אות מותגי + משפט זהות + 4 עמודי מסר, ומחזיר 7 סרטונים מובנים לפי המבנה הקנוני של הדר.
 
 ${SHARED_RULES}
 
@@ -364,25 +364,22 @@ ${HADAR_MODES}
 
 ${HADAR_QUOTE_RULE}
 
-## מבנה 12 הסרטונים (מ-michael-kadosh shot list)
+## מבנה 7 הסרטונים (מ-michael-kadosh shot list, מרוכז)
 
-ACT 1: זהות (4 סרטונים)
+ACT 1: זהות (3 סרטונים)
 - Video 1: IDENTITY. סרטון פתיחה. 15 שניות. מבטיח את משפט הזהות לקהל. Mode B. Set A.
 - Video 2: PILLAR_HOOK עמוד 1. 30 שניות. הוק חד. Mode B. Set A.
 - Video 3: PILLAR_HOOK עמוד 2. 60 שניות. Service Reframe מרכזי. Mode B. Set B.
-- Video 4: PILLAR_HOOK עמוד 3. 45 שניות. היתרון האישי. Mode B. Set B.
 
-ACT 2: סיפור (4 סרטונים)
-- Video 5: PILLAR_HOOK עמוד 4. 40 שניות. paradigm shift. Mode B. Set A.
-- Video 6: STORY. 2 דקות. סיפור-תיק ספציפי. Mode A. Set B. בלי שמות, עם פרטים שגורמים להאמין.
-- Video 7: STORY. 2 דקות. הרגע הרגשי. Mode A. Set B. למה החיים מתחילים לזוז.
-- Video 8: STORY. 2 דקות. סיפור הציר של המסר. Mode A. Set B.
+ACT 2: סיפור (2 סרטונים)
+- Video 4: STORY. 2 דקות. סיפור-תיק ספציפי. Mode A. Set B. בלי שמות, עם פרטים שגורמים להאמין.
+- Video 5: STORY. 2 דקות. הרגע הרגשי. Mode A. Set B. למה החיים מתחילים לזוז.
 
-ACT 3: סמכות (4 סרטונים)
-- Video 9: FRAMEWORK. 90 שניות. "3 השאלות שאני שואל בפגישה ראשונה". Mode C (Mode D רק אם הלקוח/ה הוא/היא דובר/ת-במה). Set A. בונה סמכות.
-- Video 10: FRAMEWORK. 2 דקות. "4 סוגי X שאני עובד איתם". Mode C (Mode D רק אם הלקוח/ה הוא/היא דובר/ת-במה). Set A.
-- Video 11: MYTH. 45 שניות. Sold-Inversion. "מה כולם חושבים, ומה האמת". Mode B. Set A.
-- Video 12: CTA. 20 שניות. הזמנה ישירה אבל מנומקת. Mode B. Set A. בלי דחיפות מזויפת.
+ACT 3: סמכות (2 סרטונים)
+- Video 6: FRAMEWORK. 90 שניות. "3 השאלות שאני שואל בפגישה ראשונה". Mode C (Mode D רק אם הלקוח/ה הוא/היא דובר/ת-במה). Set A. בונה סמכות.
+- Video 7: CTA. 20 שניות. הזמנה ישירה אבל מנומקת. Mode B. Set A. בלי דחיפות מזויפת.
+
+הערה: עמודי המסר 3-4 לא מקבלים הוק ייעודי. הם מזינים את הסיפורים (Video 4-5) ואת ה-Framework (Video 6): כשבוחרים סיפור או מסגרת, העדף כאלה שמבטאים את העמודים שלא קיבלו הוק.
 
 ## לכל סרטון
 
@@ -391,7 +388,7 @@ ACT 3: סמכות (4 סרטונים)
 1. **script**:
    - hook: 3 השניות הראשונות. משפט שעוצר את הגלילה. רוב הסרטונים פותחים בבעיה, לא ב-hook קליל.
    - body: התוכן המרכזי. מתפתח דרך אחד ממהלכי הדר.
-   - cta (רק לסרטון 12): הזמנה ישירה.
+   - cta (רק לסרטון 7): הזמנה ישירה.
 
 2. **direction**:
    - visual: framing + רקע + תאורה. ספציפי.
@@ -413,7 +410,7 @@ ACT 3: סמכות (4 סרטונים)
 
 ## פלט
 
-הודעת המשתמש תציין אילו סרטונים לייצר (act מסוים או כל ה-12). ייצר אך ורק את הסרטונים שהתבקשת, עם המספרים המדויקים שלהם מתוך המבנה למעלה. החזר JSON תקין בלבד:
+הודעת המשתמש תציין אילו סרטונים לייצר (act מסוים או כל ה-7). ייצר אך ורק את הסרטונים שהתבקשת, עם המספרים המדויקים שלהם מתוך המבנה למעלה. החזר JSON תקין בלבד:
 
 {
   "videos": [
@@ -432,7 +429,7 @@ ACT 3: סמכות (4 סרטונים)
       "anti_category": {"competitor_norm": "...", "your_inversion": "..."},
       "hadar_quote": {"text": "...", "source": "..."}
     },
-    ... 11 more ...
+    ... 6 more ...
   ]
 }`;
 
@@ -443,7 +440,7 @@ export const STRATEGY_PACK_MAX_TOKENS = 4000;
 export const STRATEGY_PACK_SYSTEM = `אתה הבמאית של הדר דנן. אתה מקבל אות מותגי + תחום + 4 עמודי מסר, ומחזיר 3 דברים:
 
 1. visual_direction — הקטגוריה הויזואלית החדשה (הפוך מהקטגוריה הקיימת)
-2. schedule — לו"ז יום צילום 08:30-17:00 שמכסה את 12 הסרטונים
+2. schedule — לו"ז יום צילום 08:30-17:00 שמכסה את 7 הסרטונים
 3. decisions — 3 ההחלטות שהלקוח/ה לוקח/ת כסיום
 
 ${SHARED_RULES}
@@ -484,19 +481,19 @@ ${SHARED_RULES}
 
 ## schedule — לו"ז יום הצילום
 
-מחויב: 08:30 → 17:00. שני סטים (A ו-B). הפסקה של שעה ב-13:00. כיסוי של 12 הסרטונים.
+מחויב: 08:30 → 17:00. שני סטים (A ו-B). הפסקה של שעה ב-13:00. כיסוי של 7 הסרטונים.
 
-מבנה: מערך של 7-9 בלוקים. לכל בלוק: time, activity, videos (מערך של מספרי וידאו או []), hint.
+מבנה: מערך של 7-8 בלוקים. לכל בלוק: time, activity, videos (מערך של מספרי וידאו או []), hint.
 
 הלו"ז הסטנדרטי:
 - 08:30-09:00: הכנה, איפור, מיקרופון. videos: [].
-- 09:00-10:00: סט A · משפט הזהות + הוקי-זהות. videos: [1, 2, 3].
-- 10:00-11:30: סט A · הוקים נוספים. videos: [4, 5].
-- 11:30-13:00: סט B · סיפורי תיקים. videos: [6, 7, 8].
+- 09:00-10:30: סט A · משפט הזהות + הוק עמוד 1. videos: [1, 2].
+- 10:30-11:30: סט B · Service Reframe. videos: [3].
+- 11:30-13:00: סט B · סיפורי תיקים. videos: [4, 5].
 - 13:00-14:00: הפסקה. videos: []. hint: "בלי הפסקה אנרגיית הדיבור צונחת בדקה ה-14."
-- 14:00-15:30: סט B · Frameworks + Myth. videos: [9, 10, 11].
-- 15:30-16:00: סט A · CTA. videos: [12].
-- 16:00-17:00: B-Roll + סטילס. videos: [].
+- 14:00-15:00: סט A · Framework. videos: [6].
+- 15:00-15:30: סט A · CTA. videos: [7].
+- 15:30-17:00: B-Roll + סטילס. videos: [].
 
 ה-hint לכל בלוק חייב להיות מ-Hadar's voice. ציטוטים מאומתים:
 - "אתה לא קורא, אתה מדבר"
@@ -609,7 +606,7 @@ ${HADAR_MODES}
 - סגירה חמה בנוסח של הדר.
 טון: מדברת לאדם אחד שיושב מולה, לא לקהל. משפטים קצרים. מנגן, לא מסביר. בלי רשימות, רצף דיבור אנושי.
 
-### 2. notes (הערת בימוי קצרה לכל אחד מ-12 הסרטונים)
+### 2. notes (הערת בימוי קצרה לכל אחד מ-7 הסרטונים)
 לכל סרטון, משפט אחד עד שניים שהדר תגיד כדי לכוון בדיוק את הצילום הזה. ספציפי לסרטון (לפי הכותרת והסוג שיינתנו לך), בשפת הבימוי של הדר ("תפתח/י בבעיה, לא בשלום", "תגיד/י את זה לאט, ותעצור/י", "אל תזוז/י בכיסא").
 
 ## פלט
@@ -709,9 +706,9 @@ ${pillarsBlock}
 
 // Which video numbers belong to each act (used for display grouping).
 export const ACT_VIDEO_NUMBERS: Record<1 | 2 | 3, number[]> = {
-  1: [1, 2, 3, 4],
-  2: [5, 6, 7, 8],
-  3: [9, 10, 11, 12],
+  1: [1, 2, 3],
+  2: [4, 5],
+  3: [6, 7],
 };
 
 // Generation is done a few videos at a time (often 1) so each Vercel call
@@ -728,7 +725,7 @@ export function buildVideosContextMessage(
 
   const ask = videoNumbers && videoNumbers.length
     ? `עכשיו ייצר אך ורק את הסרטונים לפי מספריהם: ${videoNumbers.join(", ")}. החזר בדיוק ${videoNumbers.length} סרטונים עם המספרים האלה ובמבנה המוגדר למעלה (act, type, mode, set, duration נכונים לכל מספר).`
-    : `עכשיו ייצר את כל 12 הסרטונים לפי ההוראות במערכת.`;
+    : `עכשיו ייצר את כל 7 הסרטונים לפי ההוראות במערכת.`;
 
   return `${buildContextMessage(ctx)}
 
@@ -812,7 +809,7 @@ export function buildDirectorContextMessage(
 4 עמודי המסר:
 ${pillarsBlock}
 
-12 הסרטונים שנבנו (לכתיבת הערת בימוי לכל אחד):
+הסרטונים שנבנו (לכתיבת הערת בימוי לכל אחד):
 ${videoBlock}
 
 עכשיו כתבי, בקול של הדר עצמה, את מונולוג הבימוי האישי + הערת בימוי קצרה לכל סרטון.`;
@@ -865,13 +862,13 @@ export function validateVideo(v: unknown): v is Video {
   return true;
 }
 
-// Accepts 1-12 videos so the engine can generate one act at a time (4 videos)
-// and stay under the Vercel function limit. The full plan is assembled from
-// the per-act slices by the GET endpoint.
+// Accepts 1-7 videos so the engine can generate a few at a time and stay
+// under the Vercel function limit. The full plan is assembled from the
+// per-video slices by the GET endpoint.
 export function validateVideosPack(data: unknown): data is { videos: Video[] } {
   if (!data || typeof data !== "object") return false;
   const x = data as Record<string, unknown>;
-  if (!Array.isArray(x.videos) || x.videos.length < 1 || x.videos.length > 12) return false;
+  if (!Array.isArray(x.videos) || x.videos.length < 1 || x.videos.length > 7) return false;
   return x.videos.every(validateVideo);
 }
 
@@ -915,7 +912,7 @@ export function validateShootDayPlan(data: unknown): data is ShootDayPlan {
   const x = data as Record<string, unknown>;
   if (typeof x.identity_statement !== "string") return false;
   if (!Array.isArray(x.pillars) || x.pillars.length !== 4) return false;
-  // V1: at least 1 video (the IDENTITY video). V2+ will accept up to 12.
+  // At least 1 video (the IDENTITY video). Full plan: 7 (legacy caches: up to 12).
   if (!Array.isArray(x.videos) || x.videos.length < 1 || x.videos.length > 12) return false;
   if (!x.videos.every(validateVideo)) return false;
   // visual_direction / schedule / decisions / gift_sentences are optional

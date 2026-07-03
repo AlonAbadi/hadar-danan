@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 // CTA). We send them straight to /hive/signal-kit instead, where the result
 // lives alongside all the derived artifacts. ?stay=1 escapes the redirect for
 // admin/debug previews.
-export default async function SignalPage({ searchParams }: { searchParams: Promise<{ stay?: string }> }) {
+export default async function SignalPage({ searchParams }: { searchParams: Promise<{ stay?: string; from?: string }> }) {
   const sp = await searchParams;
   const cookieStore = await cookies();
 
@@ -78,7 +78,7 @@ export default async function SignalPage({ searchParams }: { searchParams: Promi
 
     // Redirect Hive-active members with an existing extraction to the Signal
     // Kit — the page that turns their signal into actual usable artifacts.
-    if (hiveActive && userData?.id && sp?.stay !== "1") {
+    if (hiveActive && userData?.id && sp?.stay !== "1" && sp?.from !== "kit") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: ext } = await (db as any)
         .from("signal_extractions")
@@ -102,6 +102,7 @@ export default async function SignalPage({ searchParams }: { searchParams: Promi
       prefillOccupation={occupation}
       prefillGender={prefGender}
       hiveActive={hiveActive}
+      fromKit={sp?.from === "kit" && hiveActive}
     />
   );
 }
