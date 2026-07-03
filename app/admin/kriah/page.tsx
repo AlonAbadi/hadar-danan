@@ -115,7 +115,10 @@ export default async function AdminKriahPage() {
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: C.gold, marginBottom: 4 }}>קריאת האות v2 · לוח בקרה</h1>
-          <a href="/admin/kriah/tests" style={{ color: C.goldMid, fontSize: 13.5 }}>רשימת האבחונים והבדיקות ←</a>
+          <span style={{ display: "flex", gap: 18 }}>
+            <a href="/admin/today" style={{ color: "#FF9B9B", fontSize: 13.5, fontWeight: 700 }}>🔥 עמוד הלידים ←</a>
+            <a href="/admin/kriah/tests" style={{ color: C.goldMid, fontSize: 13.5 }}>רשימת האבחונים והבדיקות ←</a>
+          </span>
         </div>
         <p style={{ color: C.muted, fontSize: 14, marginBottom: 28 }}>
           משפך /kriah (מוסתר). תנועת בדיקה נספרת בנפרד. צפי קונסיירז': 4-5 בשבוע. רף: 0.72 (סטטי, שבוע 1).

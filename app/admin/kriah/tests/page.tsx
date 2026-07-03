@@ -48,7 +48,10 @@ export default async function KriahTestsPage() {
       <div style={{ maxWidth: 960, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: C.gold, margin: 0 }}>קריאת האות v2 · אבחונים ובדיקות</h1>
-          <a href="/admin/kriah" style={{ color: C.goldMid, fontSize: 13.5 }}>← ללוח הבקרה</a>
+          <span style={{ display: "flex", gap: 18 }}>
+            <a href="/admin/today" style={{ color: "#FF9B9B", fontSize: 13.5, fontWeight: 700 }}>🔥 עמוד הלידים ←</a>
+            <a href="/admin/kriah" style={{ color: C.goldMid, fontSize: 13.5 }}>← ללוח הבקרה</a>
+          </span>
         </div>
         <p style={{ color: C.muted, fontSize: 13.5, marginBottom: 24 }}>
           כל האבחונים של /kriah, החדש למעלה. שורות בדיקה מסומנות. {rows.length} אחרונים.

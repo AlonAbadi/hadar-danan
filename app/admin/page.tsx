@@ -58,6 +58,7 @@ async function getHubKPIs() {
 
 const NAV_CARDS = [
   { title: 'לידים לטיפול מיידי', desc: 'לידים חמים מהאות ומהקוויז — פנייה אישית בלחיצה', href: '/admin/today',       group: 'ראשי',     icon: '🔥' },
+  { title: 'קריאת האות v2',     desc: 'המשפך המאוחד: לוח בקרה, אבחונים ובדיקות',        href: '/admin/kriah',       group: 'ראשי',     icon: '🧭' },
   { title: 'רשימת חיוגים',     desc: 'הלידים הכי חמים להיום + היסטוריה ותוצאות שיחה',  href: '/admin/call-list',   group: 'ראשי',     icon: '📞' },
   { title: 'אסטרטג שיווק AI',  desc: 'ניתוח חי + המלצות אסטרטגיות (Claude Opus 4.7)', href: '/admin/strategist',  group: 'ראשי',     icon: '🧠' },
   { title: 'מנוע התנועה',      desc: 'תיאור לקוח → תדריך בימוי לסרטון (לא תסריט)',  href: '/admin/movement',    group: 'תוכן',     icon: '🎯' },
