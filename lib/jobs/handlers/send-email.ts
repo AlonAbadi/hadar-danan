@@ -70,6 +70,9 @@ export async function handleSendEmail(
       .eq("id", user_id)
       .maybeSingle();
     if (u?.handoff_stage === "meeting_booked" || u?.handoff_stage === "dismissed") return;
+    // Hadar already opened a personal WhatsApp thread — an automated email
+    // landing mid-conversation reads robotic. Her thread owns the lead now.
+    if (u?.handoff_stage === "whatsapp_sent") return;
     if (["booked", "buyer", "handled", "not_relevant"].includes(u?.status ?? "")) return;
     const { data: purchased } = await supabase
       .from("purchases")
