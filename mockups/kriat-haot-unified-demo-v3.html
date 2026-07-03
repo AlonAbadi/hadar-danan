@@ -91,6 +91,23 @@
   .letter .youquote{color:var(--goldL);font-style:italic}
   .letter .ps{font-size:12px;color:var(--muted);border-top:1px solid rgba(201,150,74,.2);padding-top:10px;margin-top:4px}
   .letter .sig{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:21px;color:var(--gold);margin-top:6px;margin-bottom:0}
+  .signalcard{margin-top:14px;border:1.5px solid rgba(232,185,74,.55);border-radius:14px;padding:22px 18px;text-align:center;background:radial-gradient(120% 90% at 50% 0%,rgba(201,150,74,.16) 0%,rgba(20,24,32,.9) 55%,#0D1018 100%);box-shadow:0 6px 24px rgba(0,0,0,.45)}
+  .signalcard .sc-label{font-size:10px;font-weight:800;letter-spacing:.22em;color:var(--goldL);text-transform:uppercase;margin-bottom:12px}
+  .signalcard .sc-sentence{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:17px;line-height:1.65;color:var(--fg)}
+  .signalcard .sc-brand{font-size:9px;letter-spacing:.14em;color:var(--muted);margin-top:14px}
+  .sharerow{display:flex;gap:8px;margin-top:10px}
+  .sharerow button{flex:1;padding:10px 4px;border-radius:10px;border:1px solid rgba(201,150,74,.4);background:transparent;color:var(--goldL);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+  .endswitch{display:flex;gap:6px;margin:16px 0 10px}
+  .endswitch button{flex:1;padding:9px 4px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+  .endswitch button.on{border-color:var(--goldL);color:var(--goldL);background:rgba(232,185,74,.08)}
+  .offer{margin-top:12px;border:1px solid rgba(232,185,74,.4);border-radius:14px;padding:16px;background:rgba(232,185,74,.04)}
+  .offer .lbl{font-size:10px;font-weight:800;letter-spacing:.18em;color:var(--goldL);text-transform:uppercase;margin-bottom:8px}
+  .offer .name{font-size:16.5px;font-weight:800;margin-bottom:7px}
+  .offer .why{font-size:12.5px;color:var(--muted);line-height:1.7}
+  .offer .price{font-size:13px;font-weight:800;color:var(--fg);margin-top:10px}
+  .backstage{margin-top:14px;border:1.5px dashed rgba(90,160,255,.5);border-radius:12px;padding:12px 14px;font-size:11.5px;line-height:1.8;color:var(--muted)}
+  .backstage .bt{color:var(--blue);font-weight:800;font-size:10.5px;letter-spacing:.08em;margin-bottom:5px}
+  .backstage b{color:var(--fg)}
   .sharecard{opacity:0;transform:translateY(10px);transition:opacity .8s,transform .8s;margin-top:12px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:12px;color:var(--muted)}
   .sharecard.in{opacity:1;transform:none}
 
@@ -139,6 +156,7 @@
       <div class="row"><b>רוני 2:</b> <span class="old">"הדר מנסחת לכם" (לא אמין ב-7 דקות)</span> ← "השיטה שבנתה הדר דנן... מנסחת".</div>
       <div class="row"><b>רוני 3:</b> <span class="old">"השיחה" צצה משומקום</span> ← בכל הופעה: "שיחת היכרות קצרה, בלי עלות ובלי התחייבות".</div>
       <div class="row"><b>רוני 4:</b> <span class="old">5 מונחים פנימיים</span> ← נשארו 2: "הקריאה הראשונית" + "האות". "הדלת"→"קיצור דרך לשיחה".</div>
+      <div class="row"><b>שלך 4 (סבב זה):</b> <span class="old">הכול נגמר בשיחת היכרות, בלי קלף, בלי מוצרים, בלי ניהול לידים</span> ← הקלף מוצג ויזואלית עם כפתורי שיתוף (המנוע האורגני), שני סופים למסלולים (רותח→שיחה / רוב המשתמשים→אתגר ₪197 ברכישה אונליין = סקייל), ופאנל backstage שמראה מה קורה לליד בכל מסלול.</div>
       <div class="row"><b>רוני 5:</b> <span class="old">ערבוב יחיד/רבים + כפתור "אותנו"</span> ← רבים בכל מסכי המערכת; יחיד רק בתוך המכתב ובשאלות האינטימיות (בכוונה).</div>
     </div>
     <div class="fixbox" style="background:rgba(232,185,74,.04);border-color:rgba(232,185,74,.3)">
@@ -168,8 +186,8 @@
       <div class="d">שורת נשימה לפני ("רגע נשימה...") כדי שהכאב לא יארוב אחרי שאלת התודה. <b>נסה לדלג — ותראה את שאלה 5 מתחלפת.</b></div></div>
     <div class="step" data-go="s15"><span class="n">9</span><span class="t">שער טלפון</span>
       <div class="d">אחרי ההשקעה, כלוגיסטיקה: "המכתב שלך נכתב עכשיו." + נתיב שקט בלי טלפון (הליד מסומן, לא נחסם).</div></div>
-    <div class="step" data-go="s16"><span class="n">10</span><span class="t">המכתב — fade פסקה-פסקה</span>
-      <div class="d">נפתח בציטוט המילים שלך, חתימה אחרונה לבד, כרטיס השיתוף מופיע רק אחרי beat (מתנה בלי בקשת שיווק מהודקת). ההמלצה המשודרגת כ-P.S.</div></div>
+    <div class="step" data-go="s16"><span class="n">10</span><span class="t">המכתב + הקלף + שני הסופים</span>
+      <div class="d">מכתב → קלף שיתוף אמיתי (מנוע הרכישה האורגני) → סוף לפי מסלול: ליד רותח = שיחה + מכונת הלידים, כל השאר = הצעת מוצר ורכישה אונליין. מתג למעלה מחליף בין השניים, כולל פאנל "מאחורי הקלעים" של ניהול הליד.</div></div>
     <div class="step" data-go="d1"><span class="n">11</span><span class="t">הדלת החמה</span>
       <div class="d">לרפרלים ומוכנים — "אם כבר ברור לך שהשיחה עם הדר היא הצעד, אין צורך לחכות."</div></div>
 
@@ -403,18 +421,62 @@
         </div>
       </div>
 
-      <!-- S16 letter with paragraph fade -->
+      <!-- S16 letter + card + bucket-matched ending -->
       <div class="screen" id="s16">
         <div style="height:6px"></div>
         <div class="letter" id="letter">
           <div class="from">מהדר</div>
           <p>דנה, כתבת ש<span class="youquote">"אנשים תמיד אומרים שאני יודעת להקשיב"</span>. ואז, כשה-probe שאל, סיפרת על הלקוחה שבכתה כי סוף סוף מישהי הבינה מה היא לא מצליחה להגיד.</p>
           <p>זה לא הקשבה. הקשבה זה מה שכולן עושות. את שומעת את המשפט שהאישה מולך לא מעיזה להגיד, ואומרת אותו בשבילה. זה האות שלך.</p>
-          <p class="ps">נ.ב. לפי שלוש התשובות הראשונות, התמונה נראתה אחרת. אחרי מה שכתבת, היא השתנתה: הצעד הנכון בשבילך הוא שיחת היכרות. אפשר לקבוע כאן למטה, והפרטים גם במייל.</p>
+          <p class="ps" id="letterPs">נ.ב. לפי שלוש התשובות הראשונות, התמונה נראתה אחרת. אחרי מה שכתבת, היא השתנתה: הצעד הנכון בשבילך הוא שיחת היכרות. אפשר לקבוע כאן למטה, והפרטים גם במייל.</p>
           <p class="sig">הדר</p>
         </div>
+
         <div class="sharecard" id="shareC">
-          המשפט שלכם, מעוצב כקלף: <b style="color:var(--goldL)">לשמור · לשתף · לתחרות החודשית</b><br/><button class="btn" style="margin-top:10px;padding:10px;font-size:13px" onclick="alert('דמו: מסך קביעת שיחה')">לקבוע שיחת היכרות ←</button>
+          <div class="signalcard">
+            <div class="sc-label">האות של דנה</div>
+            <div class="sc-sentence">"את שומעת את המשפט שהיא לא מעיזה להגיד, ואומרת אותו בשבילה."</div>
+            <div class="sc-brand">TRUESIGNAL© · beegood.online</div>
+          </div>
+          <div class="sharerow">
+            <button onclick="alert('דמו: שיתוף וואטסאפ עם קפשן מוכן + קישור')">וואטסאפ</button>
+            <button onclick="alert('דמו: שיתוף לסטורי')">סטורי</button>
+            <button onclick="alert('דמו: הורדת PNG')">שמירה</button>
+          </div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:7px;text-align:center">כל שיתוף נושא את הקישור. זה מנוע הרכישה האורגני: האות של דנה מביא את החברה הבאה.</div>
+
+          <div class="endswitch">
+            <button id="swHot" class="on" onclick="setEnding('hot')">הסוף של דנה: ליד רותח</button>
+            <button id="swOnline" onclick="setEnding('online')">הסוף של רוב המשתמשים: מכירה אונליין</button>
+          </div>
+
+          <div id="endHot">
+            <div class="offer">
+              <div class="lbl">הצעד הבא</div>
+              <div class="name">שיחת היכרות עם הדר</div>
+              <div class="why">האות של דנה, עם עומק התשובות שלה, מציב אותה במסלול העסקים המבוססים. שיחה קצרה, בלי עלות ובלי התחייבות, לעבור יחד על המשפט ועל הצעד שנגזר ממנו.</div>
+              <button class="btn" style="margin-top:12px;padding:11px;font-size:13.5px" onclick="alert('דמו: בחירת חלון זמן לשיחה')">לקבוע שיחת היכרות ←</button>
+            </div>
+            <div class="backstage">
+              <div class="bt">מאחורי הקלעים (לא מוצג ללקוח) — מכונת הלידים</div>
+              ברגע הזה: <b>temperature=רותח</b> → מייל מיידי לאלון+הדר עם כל הפרטים → דנה קופצת ל<b>ראש התור ב-/admin/today</b> עם פתיח וואטסאפ מותאם (ציטוט מהתשובה שלה + מגדר) → הדר שולחת וואטסאפ אישי בתוך יום עסקים → פגישה בטלפון → יום צילום ₪14,000. <b>זה המסלול של 97% מההכנסות.</b>
+            </div>
+          </div>
+
+          <div id="endOnline" style="display:none">
+            <div class="offer">
+              <div class="lbl">הצעד שנבנה מהאות שלכם</div>
+              <div class="name">אתגר 7 ימים עם הדר</div>
+              <div class="why">האות שלך ברור. מה שחסר עכשיו זה קצב: שבעה ימים, כל יום סרטון אחד שנבנה מהמשפט הזה, עד שהמסר יוצא אחיד בכל פעם, בלי להמציא מחדש. מחזור חדש נפתח בתחילת כל חודש.</div>
+              <div class="price">₪197 · הצטרפות מיידית, תשלום מאובטח</div>
+              <button class="btn" style="margin-top:12px;padding:11px;font-size:13.5px" onclick="alert('דמו: Cardcom checkout')">להצטרף לאתגר ←</button>
+              <div style="font-size:10.5px;color:var(--muted);margin-top:8px">הפרטים המלאים גם במייל, יחד עם הקלף שלכם.</div>
+            </div>
+            <div class="backstage">
+              <div class="bt">מאחורי הקלעים (לא מוצג ללקוח) — המסלול שסוגר אונליין</div>
+              <b>temperature=חם</b> → שרשרת 6 מיילים לפי המסלול (מייל 1: הקריאה+הקלף · מייל 2: הצעת האתגר · 3-6: nurture עם האות שלהם בפנים) → רכישה בכרטיס בלי מגע אנושי → status=buyer → אחרי האתגר: הזמנה לסדנה/פגישה. <b>זה מסלול הסקייל: אפס זמן של הדר עד לרכישה.</b>
+            </div>
+          </div>
         </div>
         <div class="cta"><button class="btn ghost" onclick="restart()">חזרה להתחלה</button></div>
       </div>
@@ -461,6 +523,16 @@
 
 <script>
   const state = { blocker: 1, skippedHard: false, probeShown: false };
+  const PS_HOT = 'נ.ב. לפי שלוש התשובות הראשונות, התמונה נראתה אחרת. אחרי מה שכתבת, היא השתנתה: הצעד הנכון בשבילך הוא שיחת היכרות. אפשר לקבוע כאן למטה, והפרטים גם במייל.';
+  const PS_ONLINE = 'נ.ב. האות שלך חד. הצעד עכשיו הוא לא עוד הבנה, אלא קצב. בניתי בשבילך מסלול של שבעה ימים שמתחיל בדיוק מהמשפט הזה. הפרטים למטה, וגם במייל.';
+  function setEnding(mode){
+    const hot = mode === 'hot';
+    document.getElementById('endHot').style.display = hot ? '' : 'none';
+    document.getElementById('endOnline').style.display = hot ? 'none' : '';
+    document.getElementById('swHot').classList.toggle('on', hot);
+    document.getElementById('swOnline').classList.toggle('on', !hot);
+    document.getElementById('letterPs').textContent = hot ? PS_HOT : PS_ONLINE;
+  }
 
   // Fork headlines per blocker (dynamic callback — Cialdini consistency)
   const FORK_HEADS = [
