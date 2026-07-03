@@ -204,7 +204,7 @@ async function fulfillPurchase(
     })
     .eq("id", purchaseId)
     .eq("status", "pending")   // only update pending — prevents overwriting refunds
-    .select("id, user_id, product, amount, meta_fbp, meta_fbc, meta_client_ip, meta_user_agent")
+    .select("id, user_id, product, amount, meta_fbp, meta_fbc, meta_client_ip, meta_user_agent, is_test")
     .single();
 
   if (purchaseErr || !purchase) {
@@ -215,6 +215,12 @@ async function fulfillPurchase(
     });
     return { ok: false };
   }
+
+  // v2 isolation: a test purchase (stamped at checkout with the preview
+  // secret) completes technically — DB row, product access — but never
+  // pages admins, hits Make, fires Meta CAPI, enrolls WhatsApp, or counts
+  // in experiments.
+  const isTestPurchase = (purchase as { is_test?: boolean }).is_test === true;
 
   // Look up the buyer's ab_variant so we can attribute the purchase to the
   // right experiment row (e.g. challenge_hero_format primary metric).
@@ -402,6 +408,7 @@ async function fulfillPurchase(
             template_key: welcomeSeq.template_key,
             tier,
             price:        String(tierAmount),
+            is_test:      isTestPurchase,
           },
           run_at: new Date().toISOString(),
           status: "pending",
@@ -426,6 +433,7 @@ async function fulfillPurchase(
             subject:      seq.subject,
             template_key: seq.template_key,
             tier,
+            is_test:      isTestPurchase,
           },
           run_at: new Date(now.getTime() + seq.delay_hours * 3600000).toISOString(),
           status: "pending" as const,
@@ -439,7 +447,7 @@ async function fulfillPurchase(
   let challengeMagicLink: string | null = null;
   let signalHiveMagicLink: string | null = null;
   let challengeEnrollmentId: string | null = null;
-  if (purchase.product === "challenge_197") {
+  if (purchase.product === "challenge_197" && !isTestPurchase) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)
       .from("challenge_enrollments")
@@ -526,6 +534,7 @@ async function fulfillPurchase(
               template_key: seq.template_key,
               product:      purchase.product,
               amount:       purchase.amount,
+              is_test:      isTestPurchase,
               // Inject magic link into the immediate access email (challenge or
               // כוורת האות)
               ...((challengeMagicLink || signalHiveMagicLink) && seq.delay_hours === 0
@@ -560,6 +569,7 @@ async function fulfillPurchase(
           template_key: confirmSeq.template_key,
           product:      purchase.product,
           amount:       purchase.amount,
+          is_test:      isTestPurchase,
         },
         run_at: new Date().toISOString(),
         status: "pending" as const,
@@ -585,7 +595,7 @@ async function fulfillPurchase(
     .select("name, email, phone, utm_source, utm_medium, utm_campaign, utm_content, utm_term, utm_adset, utm_ad, click_id")
     .eq("id", purchase.user_id)
     .single();
-  if (buyer) {
+  if (buyer && !isTestPurchase) {
     await notifyPurchase(supabase, {
       userId:        purchase.user_id,
       name:          buyer.name,
@@ -664,6 +674,7 @@ async function fulfillPurchase(
       eventId:    purchase.id,
       userData:   sharedUserData,
       customData: sharedCustomData,
+      isTest:     isTestPurchase,
     });
 
     // Product-specific custom event for per-product campaign optimization
@@ -682,6 +693,7 @@ async function fulfillPurchase(
         eventId:    `${customEventName.toLowerCase()}_${purchase.id}`,
         userData:   sharedUserData,
         customData: sharedCustomData,
+        isTest:     isTestPurchase,
       });
     }
 

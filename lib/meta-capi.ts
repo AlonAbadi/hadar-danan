@@ -40,9 +40,14 @@ interface CapiPayload {
     contentName?: string;
     contentIds?: string[];
   };
+  isTest?: boolean;  // v2 isolation: test traffic never reaches the Graph API
 }
 
 export async function sendCapiEvent(payload: CapiPayload): Promise<void> {
+  // Isolation valve (v2 test runs): never pollute Meta optimization with
+  // test events — account safety rule, no exceptions.
+  if (payload.isTest === true) return;
+
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
   const token   = process.env.META_CAPI_TOKEN;
   if (!pixelId || !token) return;

@@ -16,6 +16,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { suppressTestEmail } from "@/lib/isolation";
 import { createServerClient } from "@/lib/supabase/server";
 import { renderTemplate, FROM_NAME } from "@/lib/email/templates";
 import { rateLimit } from "@/lib/rate-limit";
@@ -47,7 +48,7 @@ export async function POST(
   const supabase = createServerClient();
 
   const { data: row, error: fetchErr } = await safeFrom(supabase, "signal_extractions")
-    .select("id, user_id, signal")
+    .select("id, user_id, signal, is_test")
     .eq("id", id)
     .maybeSingle();
 
@@ -55,12 +56,16 @@ export async function POST(
     return NextResponse.json({ error: "האות לא נמצא" }, { status: 404 });
   }
 
-  // Look up the owner
+  // v2 isolation: test extractions use the allowlist rule like every send
   const { data: user } = await supabase
     .from("users")
     .select("email, name")
     .eq("id", row.user_id)
     .maybeSingle();
+
+  if (row.is_test === true && suppressTestEmail(true, user?.email)) {
+    return NextResponse.json({ ok: true, suppressed: true });
+  }
 
   if (!user?.email) {
     return NextResponse.json({ error: "לא נמצא נמען לשליחה" }, { status: 404 });

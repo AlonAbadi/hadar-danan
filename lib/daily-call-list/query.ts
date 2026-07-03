@@ -88,16 +88,20 @@ export async function fetchCandidates(
     .not("user_id", "is", null);
 
   // ── 4) Users currently at high-intent / premium_lead / partnership_lead ──
-  const statusPromise = supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const statusPromise = (supabase as any)
     .from("users")
     .select("id")
+    .neq("is_test", true)   // v2 isolation
     .in("status", ["high_intent", "premium_lead", "partnership_lead"]);
 
   // ── 5) Awakened: dormant >30d then activity in last 72h ──────────────────
   // Two-step: find dormant users, then intersect with recent event firers.
-  const dormantPromise = supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dormantPromise = (supabase as any)
     .from("users")
     .select("id")
+    .neq("is_test", true)   // v2 isolation
     .lt("last_activity_at", t30d)
     .not("status", "in", "(buyer,booked,handled,not_relevant)");
 
@@ -137,9 +141,11 @@ export async function fetchCandidates(
   // ── Hydrate ───────────────────────────────────────────────────────────────
   const insightCutoff = isoDaysAgo(7);
   const [usersRes, eventsRes, quizzesRes, purchasesRes, insightsRes] = await Promise.all([
-    supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
       .from("users")
       .select("id, name, email, phone, status, last_activity_at, created_at, utm_source, utm_campaign, marketing_consent")
+      .neq("is_test", true)   // v2 isolation: authoritative filter — a test user never makes Hadar's list
       .in("id", candidateIds),
     supabase
       .from("events")

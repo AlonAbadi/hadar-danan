@@ -146,12 +146,13 @@ export default async function AdminSignalPage() {
   ] = await Promise.all([
     safeFrom(supabase, "signal_extractions")
       .select("id, user_id, signal, answers, bucket, generated_at, users(id, name, email, phone, occupation)")
+      .neq("is_test", true)
       .order("generated_at", { ascending: false })
       .limit(200),
-    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }),
-    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).gte("generated_at", monthAgo),
-    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).gte("generated_at", weekAgo),
-    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).gte("generated_at", dayAgo),
+    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).neq("is_test", true),
+    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).neq("is_test", true).gte("generated_at", monthAgo),
+    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).neq("is_test", true).gte("generated_at", weekAgo),
+    safeFrom(supabase, "signal_extractions").select("id", { count: "exact", head: true }).neq("is_test", true).gte("generated_at", dayAgo),
     getMissedLeads(),
     getSignalChainStats(),
     getSignalChainConversions(),

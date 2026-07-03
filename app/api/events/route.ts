@@ -117,12 +117,29 @@ export async function POST(req: NextRequest) {
       resolvedUserId = identity?.user_id ?? null;
     }
 
+    // ── v2 isolation: inherit is_test from the user row ──────
+    // Test users are stamped at creation (extract/signup with the preview
+    // secret); every downstream event, alert, and A/B counter follows the
+    // stamp so a test run can't page admins or pollute experiments.
+    let isTestEvent = false;
+    if (resolvedUserId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: testCheck } = await (supabase as any)
+        .from("users")
+        .select("is_test")
+        .eq("id", resolvedUserId)
+        .maybeSingle();
+      isTestEvent = testCheck?.is_test === true;
+    }
+
     // ── Persist event ────────────────────────────────────────
-    await supabase.from("events").insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("events").insert({
       user_id: resolvedUserId,
       anonymous_id: anonymous_id ?? null,
       type,
       metadata: metadata ?? {},
+      is_test: isTestEvent,
     });
 
     // ── QUIZ_COMPLETED backup: ensure quiz_results row + fire side effects ──
@@ -147,7 +164,7 @@ export async function POST(req: NextRequest) {
           });
         } catch {}
 
-        if (resolvedUserId) {
+        if (resolvedUserId && !isTestEvent) {
           try {
             await applyQuizSideEffects(supabase, {
               user_id:             resolvedUserId,
@@ -166,7 +183,7 @@ export async function POST(req: NextRequest) {
     // experiment_name from metadata; defaults to "landing_headline" for
     // backward compatibility with PageTracker calls that pre-date the
     // multi-experiment refactor.
-    if (metadata?.ab_variant) {
+    if (metadata?.ab_variant && !isTestEvent) {
       const experimentName =
         typeof metadata.experiment_name === "string"
           ? metadata.experiment_name
@@ -238,7 +255,7 @@ export async function POST(req: NextRequest) {
       // Notify admin when user reaches a high-value status
       if (transitioned?.length && NOTIFY_ON_TRANSITION.has(to)) {
         const u = transitioned[0];
-        notifyStatusChange(u.id, u.name ?? u.email ?? "", u.email, u.phone ?? null, u.utm_source ?? null, to, type);
+        if (!isTestEvent) notifyStatusChange(u.id, u.name ?? u.email ?? "", u.email, u.phone ?? null, u.utm_source ?? null, to, type);
       }
     }
 

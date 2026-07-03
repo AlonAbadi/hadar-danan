@@ -149,9 +149,11 @@ async function checkInactiveUsers(
     const sevenDaysAgo  = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     // Find users who haven't been seen in 3+ days and are lead/engaged
-    const { data: inactiveUsers } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: inactiveUsers } = await (supabase as any)
       .from("users")
       .select("id, email, name")
+      .neq("is_test", true)   // v2 isolation
       .in("status", ["lead", "engaged"])
       .lt("last_seen_at", threeDaysAgo)
       .limit(20); // process at most 20 per tick

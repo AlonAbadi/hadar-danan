@@ -40,6 +40,13 @@ export async function handleSendWhatsapp(
 ): Promise<void> {
   const { user_id, phone, template_name, template_params = [] } = payload;
 
+  // Isolation valve (v2 test runs): WhatsApp bypasses the email valve
+  // entirely, so it needs its own gate — a test job must never reach UChat.
+  if (payload.is_test === true) {
+    console.warn(`[isolation] suppressed test WhatsApp ${template_name} → ${phone}`);
+    return;
+  }
+
   const apiKey = process.env.UCHAT_API_KEY;
   if (!apiKey) throw new Error("UCHAT_API_KEY not configured");
 

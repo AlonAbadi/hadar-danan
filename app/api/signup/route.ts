@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { SignupSchema } from "@/lib/validations";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendCapiEvent } from "@/lib/meta-capi";
+import { kriahPreviewAllowed } from "@/lib/isolation";
 import { Resend } from "resend";
 
 const PRODUCT_NAME: Record<string, string> = {
@@ -139,6 +140,11 @@ export async function POST(req: NextRequest) {
     marketing_consent,
   } = parsed.data;
 
+  // ── v2 isolation: honored only with the preview secret ──
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isTestRun = (body as any)?.is_test === true &&
+    kriahPreviewAllowed(req.headers.get("x-kriah-preview"));
+
   // Sanitize ab_variant — DB constraint only allows 'A' or 'B'
   const raw_variant = parsed.data.ab_variant;
   const ab_variant = (raw_variant === "A" || raw_variant === "B") ? raw_variant : null;
@@ -184,7 +190,9 @@ export async function POST(req: NextRequest) {
       // New user
       const { data: inserted, error: insertErr } = await supabase
         .from("users")
-        .insert({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .insert(({
+          is_test:      isTestRun,
           email,
           name,
           phone,
@@ -200,7 +208,8 @@ export async function POST(req: NextRequest) {
           status: "lead",
           last_seen_at: new Date().toISOString(),
           ...(marketing_consent ? { marketing_consent: true, consent_at: new Date().toISOString() } : {}),
-        })
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }) as any)
         .select("id, status")
         .single();
       if (insertErr) throw new Error(insertErr.message);
@@ -266,6 +275,7 @@ export async function POST(req: NextRequest) {
           sequence_id: welcomeSeq.id,
           subject: welcomeSeq.subject,
           template_key: welcomeSeq.template_key,
+          is_test: isTestRun,
         },
         run_at: new Date().toISOString(),
         status: "pending",
@@ -290,6 +300,7 @@ export async function POST(req: NextRequest) {
           sequence_id: seq.id,
           subject: seq.subject,
           template_key: seq.template_key,
+          is_test: isTestRun,
         },
         run_at: new Date(
           Date.now() + seq.delay_hours * 60 * 60 * 1000
@@ -337,7 +348,7 @@ export async function POST(req: NextRequest) {
       const rawProduct = quizRes.data?.recommended_product ?? null;
       const quizProduct = rawProduct ? (QUIZ_KEY_MAP[rawProduct] ?? rawProduct) : null;
 
-      notifyNewLead({
+      if (!isTestRun) notifyNewLead({
         userId: user.id,
         name,
         email,
@@ -357,12 +368,14 @@ export async function POST(req: NextRequest) {
       eventName: "Lead",
       eventId:   user.id,
       userData:  { email, phone: phone ?? undefined, fbp, fbc, clientUserAgent: ua },
+      isTest:    isTestRun,
     });
 
     await sendCapiEvent({
       eventName: "CompleteRegistration",
       eventId:   `reg_${user.id}`,
       userData:  { email, phone: phone ?? undefined, fbp, fbc, clientUserAgent: ua },
+      isTest:    isTestRun,
     });
 
     return NextResponse.json({ ok: true, user_id: user.id }, { status: 201 });

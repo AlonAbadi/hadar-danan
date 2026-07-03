@@ -130,19 +130,25 @@ export async function applyQuizSideEffects(
     utm_source:   string | null;
     utm_medium:   string | null;
     utm_campaign: string | null;
+    is_test?:     boolean | null;
   };
   let user: UserRow | null = null;
 
   try {
     const { data } = await supabase
       .from("users")
-      .select("name, email, phone, status, utm_source, utm_medium, utm_campaign")
+      .select("name, email, phone, status, utm_source, utm_medium, utm_campaign, is_test")
       .eq("id", user_id)
       .single();
     user = (data as unknown as UserRow) ?? null;
   } catch {}
 
   if (!user) return;
+
+  // v2 isolation: a test user never triggers admin email, Make webhook,
+  // premium_lead escalation, or WhatsApp. Defense in depth — callers gate
+  // too, but this function is reachable from two routes.
+  if (user.is_test === true) return;
 
   // DEDUP: if user already has a protected status (already a premium_lead,
   // partnership_lead, buyer, booked, etc.), skip ALL side-effects. This

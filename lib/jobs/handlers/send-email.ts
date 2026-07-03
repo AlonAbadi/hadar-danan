@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { renderTemplate, fromNameFor } from "@/lib/email/templates";
+import { suppressTestEmail } from "@/lib/isolation";
 import { generateMagicLink, magicLinkFooterHtml } from "@/lib/email/magic-link";
 import type { Database } from "@/lib/supabase/types";
 
@@ -22,6 +23,13 @@ export async function handleSendEmail(
   supabase: SupabaseClient<Database>
 ): Promise<void> {
   const { user_id, email, name, sequence_id, template_key } = payload;
+
+  // ── Isolation valve (v2 test runs) — MUST stay first: the magic-link call
+  // below creates a real auth.users row, so a test job may not get past here.
+  if (suppressTestEmail(payload.is_test, email)) {
+    console.warn(`[isolation] suppressed test email ${template_key} → ${email}`);
+    return;
+  }
 
   // ── Dedup: skip if already sent for this user + sequence ──
   const { data: existing } = await supabase

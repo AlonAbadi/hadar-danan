@@ -11,6 +11,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { PRODUCT_MAP, type ProductKey } from "@/lib/products";
 import { sendCapiEvent } from "@/lib/meta-capi";
+import { kriahPreviewAllowed } from "@/lib/isolation";
 import { getClientIp } from "@/lib/rate-limit";
 import { validateCoupon } from "@/lib/coupons";
 
@@ -61,6 +62,7 @@ const BodySchema = z.object({
   ]),
   user_id:     z.string().uuid(),
   coupon_code: z.string().optional(),
+  is_test:     z.boolean().optional(), // honored only with the kriah preview secret
 });
 
 export async function POST(req: NextRequest) {
@@ -80,6 +82,20 @@ export async function POST(req: NextRequest) {
   }
 
   const { product, user_id, coupon_code } = body.data;
+
+  // ── v2 isolation ──
+  // A test checkout may NEVER open a live Cardcom session for a real product.
+  // Only test_1 (₪1) is allowed through with the preview secret; everything
+  // else is refused before any CAPI event or Cardcom fetch fires.
+  const isTestRun = (body.data as { is_test?: unknown }).is_test === true &&
+    kriahPreviewAllowed(req.headers.get("x-kriah-preview"));
+  if (isTestRun && product !== "test_1") {
+    return NextResponse.json(
+      { error: "בדיקת v2: תשלום אמיתי חסום. השתמשו במוצר test_1 בלבד." },
+      { status: 403 },
+    );
+  }
+
   const listPrice = PRICES[product];
   const appUrl    = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.beegood.online";
 
@@ -142,6 +158,7 @@ export async function POST(req: NextRequest) {
     .from("purchases")
     .insert({
       user_id,
+      is_test: isTestRun,
       product: product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000",
       amount,
       currency: "ILS",
@@ -296,6 +313,7 @@ export async function POST(req: NextRequest) {
       eventId:    `ic_${purchase.id}`,
       userData:   icUserData,
       customData: icCustomData,
+      isTest:     isTestRun,
     }),
     productIcEvent
       ? sendCapiEvent({
@@ -303,6 +321,7 @@ export async function POST(req: NextRequest) {
           eventId:    `${productIcEvent.toLowerCase()}_${purchase.id}`,
           userData:   icUserData,
           customData: icCustomData,
+          isTest:     isTestRun,
         })
       : Promise.resolve(),
     fetch(

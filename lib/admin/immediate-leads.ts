@@ -192,19 +192,23 @@ export async function getImmediateLeads(
     const [sigRes, quizRes, paidRes, purchasesRes] = await Promise.all([
       safeFrom(supabase, "signal_extractions")
         .select(`id, user_id, signal, answers, bucket, generated_at, users(${USER_COLS})`)
+        .neq("is_test", true)   // v2 isolation: test runs never reach Hadar's queue
         .eq("bucket", "strategy")
         .order("generated_at", { ascending: false })
         .limit(300),
       safeFrom(supabase, "quiz_results")
         .select(`user_id, recommended_product, match_percent, created_at, users(${USER_COLS})`)
+        .neq("is_test", true)
         .in("recommended_product", HIGH_VALUE_QUIZ)
         .order("created_at", { ascending: false })
         .limit(300),
       safeFrom(supabase, "purchases")
         .select("user_id")
+        .neq("is_test", true)
         .eq("status", "completed"),
       safeFrom(supabase, "purchases")
         .select("user_id, amount, amount_paid, status")
+        .neq("is_test", true)
         .eq("status", "completed"),
     ]);
 

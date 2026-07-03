@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Resend } from "resend";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { kriahPreviewAllowed } from "@/lib/isolation";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { rateLimit } from "@/lib/rate-limit";
@@ -170,6 +171,19 @@ export async function POST(req: NextRequest) {
     gender?:            unknown;
   };
 
+  // ── v2 isolation plumbing ──
+  // is_test is honored ONLY with the preview secret — a public caller can't
+  // stamp rows as test (hide from admin) or claim the v2 instrument version.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bodyAny = body as any;
+  const isTestRun = bodyAny?.is_test === true &&
+    kriahPreviewAllowed(req.headers.get("x-kriah-preview"));
+  const instrumentVersion: string =
+    (isTestRun || process.env.UNIFIED_FUNNEL_ENABLED === "true") &&
+    typeof bodyAny?.instrument_version === "string"
+      ? String(bodyAny.instrument_version).slice(0, 32)
+      : "v1_5q";
+
   const occupationStr = typeof occupation === "string"
     ? occupation.trim().slice(0, 200)
     : "";
@@ -267,11 +281,19 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (db as any)
       .from("users")
-      .select("id, name, phone, occupation, status, hive_status, gender")
+      .select("id, name, phone, occupation, status, hive_status, gender, is_test")
       .eq("email", emailStr)
       .maybeSingle();
 
     if (existing?.id) {
+      // Isolation: a test run must NEVER attach an extraction + email chain +
+      // boiling alert to a real user's row. Testers use +tag aliases.
+      if (isTestRun && existing.is_test !== true) {
+        return NextResponse.json(
+          { error: "בדיקת v2 לא יכולה להשתמש במייל של משתמש אמיתי. השתמשו בכתובת עם +v2test." },
+          { status: 403 },
+        );
+      }
       userId = existing.id as string;
       userStatus     = (existing.status as string | null) ?? null;
       userHiveActive = existing.hive_status === "active";
@@ -308,6 +330,7 @@ export async function POST(req: NextRequest) {
       // future re-extractions and personalized emails get it for free.
       const detectedAtCreate = detectGender(nameStr.split(" ")[0]);
       insertPayload.gender = detectedAtCreate;
+      if (isTestRun) insertPayload.is_test = true;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: created, error: insErr } = await (db as any)
         .from("users")
@@ -506,6 +529,20 @@ export async function POST(req: NextRequest) {
   });
 
   // ── Save to DB — soft-fail (return signal even if save fails) ────────────
+  // Attribution (P0): capture the UTM chain from the proxy-set cookies so
+  // v1↔v2 cohort comparison is possible. Missing before — 201/225 extractions
+  // had no attribution.
+  let sourceUtm: Record<string, string> | null = null;
+  try {
+    const utmStore = await cookies();
+    const utmObj: Record<string, string> = {};
+    for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_adset", "utm_ad", "utm_term", "fbclid", "gclid"]) {
+      const v = utmStore.get(k)?.value;
+      if (v) utmObj[k] = v.slice(0, 200);
+    }
+    if (Object.keys(utmObj).length > 0) sourceUtm = utmObj;
+  } catch { /* attribution is best-effort */ }
+
   const generatedAt = new Date().toISOString();
   let extractionId: string | null = null;
   try {
@@ -519,6 +556,9 @@ export async function POST(req: NextRequest) {
         generated_at: generatedAt,
         gender:       genderForPrompt,
         bucket:       bucketDecision.bucket,
+        is_test:      isTestRun,
+        instrument_version: instrumentVersion,
+        source_utm:   sourceUtm,
       })
       .select("id")
       .single();
@@ -549,7 +589,7 @@ export async function POST(req: NextRequest) {
   try {
     const cookieStore = await cookies();
     const homeVariant = cookieStore.get("landing_home_session")?.value;
-    if (homeVariant === "A" || homeVariant === "B") {
+    if (!isTestRun && (homeVariant === "A" || homeVariant === "B")) {
       await db.rpc("increment_experiment", {
         p_name:   "landing_headline",
         p_column: homeVariant === "A" ? "conversions_a" : "conversions_b",
@@ -565,10 +605,12 @@ export async function POST(req: NextRequest) {
   // already has their signal on screen even if event logging or job enqueue
   // fails. Matches the same pattern /api/hive/join uses.
   try {
-    await db.from("events").insert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db as any).from("events").insert({
       user_id:  userId,
       type:     "SIGNAL_EXTRACTED",
       metadata: { source: authUser ? "authenticated" : "anonymous_gate" },
+      is_test:  isTestRun,
     });
 
     // Enqueue the FULL signal nurture chain (welcome 0h + day1/3/5/8/12). Each
@@ -602,6 +644,7 @@ export async function POST(req: NextRequest) {
             subject:      seq.subject,
             template_key: seq.template_key,
             bucket:       bucketDecision.bucket,
+            is_test:      isTestRun,
           },
           run_at: new Date(now + (seq.delay_hours ?? 0) * 60 * 60 * 1000).toISOString(),
           status: "pending",
@@ -632,6 +675,7 @@ export async function POST(req: NextRequest) {
                 subject:      seq.subject,
                 template_key: seq.template_key,
                 bucket:       bucketDecision.bucket,
+                is_test:      isTestRun,
               },
               run_at: new Date(now + (seq.delay_hours ?? 72) * 60 * 60 * 1000).toISOString(),
               status: "pending",
@@ -672,7 +716,8 @@ export async function POST(req: NextRequest) {
     // conversion-ease score (>= 8) — the latter also catches a strong lead that
     // wasn't routed to strategy (e.g. a mature, high-fit challenge lead).
     const isGold = convScore.score >= 8;
-    if (temperature === "boiling" || isGold) {
+    // Isolation: test runs never page Alon+Hadar in real time.
+    if (!isTestRun && (temperature === "boiling" || isGold)) {
       // Pull full lead details for the alert. We already know userId and
       // bucketDecision; just need contact info + name.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
