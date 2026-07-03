@@ -122,9 +122,25 @@ export async function GET(
   if (row.signal.shoot_day &&
       validateShootDayPlan(row.signal.shoot_day) &&
       (row.signal.shoot_day as ShootDayPlan).videos.length >= 7) {
+    let fullPlan = row.signal.shoot_day as ShootDayPlan;
+    // Late-arriving director: the full plan gets assembled+cached the moment
+    // videos+strategy+gifts exist, and the director step runs after — so a
+    // GET landing in that window freezes a cache without it. If the slice
+    // exists now, merge it in and repair the cache.
+    if (!fullPlan.director) {
+      const lateDirector = parseSlice<ShootDayPlan["director"]>(row.signal.shoot_day_director);
+      if (lateDirector) {
+        fullPlan = { ...fullPlan, director: lateDirector };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from("signal_extractions")
+          .update({ signal: { ...row.signal, shoot_day: fullPlan } })
+          .eq("id", id);
+      }
+    }
     return NextResponse.json({
       phase:        "complete",
-      plan:         row.signal.shoot_day as ShootDayPlan,
+      plan:         fullPlan,
       generated_at: row.signal.shoot_day_generated_at ?? null,
       full:         true,
       cached:       true,
