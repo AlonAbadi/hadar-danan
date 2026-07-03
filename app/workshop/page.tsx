@@ -4,7 +4,7 @@ import { WorkshopCTA } from "./WorkshopCTA";
 import { NextWorkshopBadge } from "./NextWorkshopBadge";
 import { WorkshopTestimonials } from "./WorkshopTestimonials";
 import { CreditBanner } from "@/components/landing/CreditBanner";
-import { getUserCredit } from "@/lib/credit";
+import { computeCredit } from "@/lib/credit-ladder";
 import { createServerClient } from "@/lib/supabase/server";
 import { PRODUCT_MAP, WORKSHOP_ORIGINAL_PRICE, getNextWorkshopDate, formatHebrew } from "@/lib/products";
 import { validateCoupon } from "@/lib/coupons";
@@ -22,24 +22,16 @@ export default async function WorkshopPage({ searchParams }: { searchParams: Pro
   const { email = "", code = "" } = await searchParams;
   const listPrice     = PRODUCT_MAP.workshop_1080.price;
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
-  const emailCredit   = email ? await getUserCredit(email) : 0;
-  // כוורת האות buyers get ₪590 credited toward the workshop (surfaced here,
-  // enforced server-side in /api/checkout).
-  let signalHiveCredit = 0;
+  // The controlled credit ladder — surfaced here, enforced in /api/checkout.
+  // Replaces both legacy systems (getUserCredit + the ad-hoc signal-hive check).
+  let credit = 0;
   if (email) {
     const supabase = createServerClient();
     const { data: u } = await supabase.from("users").select("id").eq("email", email).maybeSingle();
     if (u?.id) {
-      const { count } = await supabase
-        .from("purchases")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", u.id)
-        .eq("product", "signal_hive_590")
-        .eq("status", "completed");
-      if (count && count > 0) signalHiveCredit = 590;
+      credit = (await computeCredit(supabase, u.id, "workshop_1080", listPrice)).credit;
     }
   }
-  const credit = Math.max(emailCredit, signalHiveCredit);
 
   // URL-based coupon — only active when ?code= matches an active coupon row.
   // No cookie, no localStorage: customer must arrive via the dedicated link.

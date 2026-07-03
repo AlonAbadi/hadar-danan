@@ -12,6 +12,7 @@ import { z } from "zod";
 import { PRODUCT_MAP, type ProductKey } from "@/lib/products";
 import { sendCapiEvent } from "@/lib/meta-capi";
 import { kriahPreviewAllowed } from "@/lib/isolation";
+import { computeCredit } from "@/lib/credit-ladder";
 import { getClientIp } from "@/lib/rate-limit";
 import { validateCoupon } from "@/lib/coupons";
 
@@ -126,27 +127,19 @@ export async function POST(req: NextRequest) {
     .eq("product", product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000")
     .eq("status", "pending");
 
-  // כוורת האות buyers get ₪590 credited toward the workshop. Checked server-side
-  // against a completed signal_hive_590 purchase so it can't be faked from the client.
-  let signalHiveCredit = 0;
-  if (product === "workshop_1080") {
-    const { count: shCount } = await supabase
-      .from("purchases")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user_id)
-      .eq("product", "signal_hive_590")
-      .eq("status", "completed");
-    if (shCount && shCount > 0) signalHiveCredit = 590;
-  }
+  // The controlled credit ladder (lib/credit-ladder.ts) — ONE credit system.
+  // Computed server-side; the client never sends an amount. Coupon overrides
+  // credit (a coupon price is already final).
+  const grossBase = product === "premium_14000" ? Math.round(listPrice * 1.18) : listPrice;
+  const creditRes = coupon
+    ? { credit: 0, sourcePurchaseId: null, sourceProduct: null, sourceInvoice: null }
+    : await computeCredit(supabase, user_id, product, grossBase);
 
-  // Premium includes VAT (18%) — charged at list price + VAT.
-  // Coupon (when valid) overrides — final billed amount comes from validateCoupon
-  // which already applied the discount to the product's list price.
+  // `amount` stays the BILLED amount (net), same semantics as always — the
+  // gross is derivable from the price list; credit_applied records the delta.
   const amount = coupon
     ? coupon.finalPrice
-    : (product === "premium_14000"
-        ? Math.round(listPrice * 1.18)
-        : Math.max(0, listPrice - signalHiveCredit));
+    : Math.max(0, grossBase - creditRes.credit);
 
   // Capture current-session UTM from cookies so attribution survives even when
   // the buyer's user row has null utm (organic signup, returned via Meta ad).
@@ -161,6 +154,8 @@ export async function POST(req: NextRequest) {
       is_test: isTestRun,
       product: product as "challenge_197" | "workshop_1080" | "course_1800" | "strategy_4000" | "premium_14000",
       amount,
+      credit_applied:            creditRes.credit,
+      credit_source_purchase_id: creditRes.sourcePurchaseId,
       currency: "ILS",
       status: "pending",
       meta_fbp:         req.cookies.get("_fbp")?.value ?? null,
@@ -229,7 +224,10 @@ export async function POST(req: NextRequest) {
   const customerName  = userRow?.name  ?? "";
   const customerEmail = userRow?.email ?? "";
   const customerPhone = userRow?.phone ?? "";
-  const invoiceDesc   = INVOICE_DESCRIPTIONS[product] ?? NAMES[product];
+  const baseDesc    = INVOICE_DESCRIPTIONS[product] ?? NAMES[product];
+  const invoiceDesc = creditRes.credit > 0
+    ? `${baseDesc} ₪${grossBase.toLocaleString("en-US")} בקיזוז ₪${creditRes.credit}${creditRes.sourceInvoice ? ` (חשבונית #${creditRes.sourceInvoice})` : ""}, לחיוב ₪${amount.toLocaleString("en-US")}`
+    : baseDesc;
 
   // Cardcom LowProfile API — Name=Value form-encoded POST
   const params = new URLSearchParams({

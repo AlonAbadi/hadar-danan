@@ -4,11 +4,9 @@ import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import ChallengeProofWall from "@/components/landing/ChallengeProofWall";
 import { ChallengeCTA } from "./ChallengeCTA";
 import { ChallengeGreeting } from "./ChallengeGreeting";
-import { CreditBanner } from "@/components/landing/CreditBanner";
 import { ChallengeHeroText } from "@/components/landing/ChallengeHeroText";
 import { ChallengeTestimonialStrip } from "@/components/landing/ChallengeTestimonialStrip";
 import { ChallengeProofTracker } from "./ChallengeProofTracker";
-import { getUserCredit } from "@/lib/credit";
 import { PRODUCT_MAP, CHALLENGE_ORIGINAL_PRICE } from "@/lib/products";
 import { computeNextLiveMeetingDate } from "@/lib/challenge-config";
 import { CHALLENGE_HERO_WINNER, parseVariant } from "@/lib/ab";
@@ -48,7 +46,6 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
   const { email = "" } = await searchParams;
   const price         = String(PRODUCT_MAP.challenge_197.price);
   const whatsappPhone = process.env.WHATSAPP_PHONE ?? "972539566961";
-  const credit        = email ? await getUserCredit(email) : 0;
 
   // Next live closing-meeting date, formatted for display in Israel time.
   const closingMeetingText = formatClosingMeeting(computeNextLiveMeetingDate());
@@ -178,8 +175,6 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
           "לא יודע":          "בדיוק לזה האתגר. כל יום הדרכה ממוקדת + אתגר ברור, ואתה/את יוצא/ת עם סרטונים אמיתיים.",
         }}
 
-        creditNote={credit > 0 ? `יש לך זיכוי של ${credit} שקל מרכישות קודמות - מקוזז אוטומטית` : undefined}
-
         faqSectionTitle="שאלות נפוצות על אתגר 7 הימים"
         faqs={CHALLENGE_FAQS.map(f => ({ q: f.question, a: f.answer }))}
 
@@ -190,14 +185,7 @@ export default async function ChallengePage({ searchParams }: { searchParams: Pr
 
         ctaSlot={
           <>
-            <CreditBanner credit={credit} listPrice={PRODUCT_MAP.challenge_197.price} productName="האתגר 7 הימים" dark />
-            <ChallengeCTA price={price} originalPrice={CHALLENGE_ORIGINAL_PRICE} whatsappPhone={whatsappPhone} credit={credit} />
-            {credit > 0 && (
-              <p style={{ textAlign: "center", fontSize: 11, color: "rgba(201,150,74,0.75)", marginTop: 8 }}>
-                הזיכוי מרכישות קודמות מקוזז אוטומטית -{" "}
-                <a href="/my" style={{ color: "rgba(201,150,74,0.75)", textDecoration: "underline" }}>בדוק באזור האישי</a>
-              </p>
-            )}
+            <ChallengeCTA price={price} originalPrice={CHALLENGE_ORIGINAL_PRICE} whatsappPhone={whatsappPhone} />
           </>
         }
       />

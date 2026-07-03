@@ -21,6 +21,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { sendCapiEvent } from "@/lib/meta-capi";
+import { consumeCredit } from "@/lib/credit-ladder";
 import { sendChallengeWhatsApp } from "@/lib/challenge-whatsapp";
 import { Resend } from "resend";
 import { extractTokenizedCardFields } from "@/lib/cardcom/lowprofile";
@@ -204,7 +205,7 @@ async function fulfillPurchase(
     })
     .eq("id", purchaseId)
     .eq("status", "pending")   // only update pending — prevents overwriting refunds
-    .select("id, user_id, product, amount, meta_fbp, meta_fbc, meta_client_ip, meta_user_agent, is_test")
+    .select("id, user_id, product, amount, meta_fbp, meta_fbc, meta_client_ip, meta_user_agent, is_test, credit_applied, credit_source_purchase_id")
     .single();
 
   if (purchaseErr || !purchase) {
@@ -221,6 +222,40 @@ async function fulfillPurchase(
   // pages admins, hits Make, fires Meta CAPI, enrolls WhatsApp, or counts
   // in experiments.
   const isTestPurchase = (purchase as { is_test?: boolean }).is_test === true;
+
+  // amount_paid = the billed net, now explicit on every completed row
+  // (migration 063 backfilled history; admin math reads amount_paid ?? amount).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any)
+    .from("purchases")
+    .update({ amount_paid: purchase.amount })
+    .eq("id", purchase.id)
+    .is("amount_paid", null);
+
+  // Credit ladder — atomic consumption of the source credit. Losing the race
+  // (a concurrent purchase consumed it first) NEVER blocks fulfillment: the
+  // customer already paid the discounted net. It becomes an undercharge alert.
+  const creditApplied = Number((purchase as { credit_applied?: number }).credit_applied ?? 0);
+  const creditSource  = (purchase as { credit_source_purchase_id?: string | null }).credit_source_purchase_id ?? null;
+  if (creditApplied > 0 && creditSource) {
+    const won = await consumeCredit(supabase, creditSource, purchase.id);
+    if (!won) {
+      await supabase.from("error_logs").insert({
+        context: "credit-ladder RACE — undercharged",
+        error:   `Purchase ${purchase.id} billed with ₪${creditApplied} credit from ${creditSource}, but the credit was already consumed. Review manually.`,
+        payload: { purchase_id: purchase.id, credit_source: creditSource, credit_applied: creditApplied },
+      });
+      if (!isTestPurchase && process.env.RESEND_API_KEY) {
+        const { Resend } = await import("resend");
+        new Resend(process.env.RESEND_API_KEY).emails.send({
+          from: process.env.NEXT_PUBLIC_FROM_EMAIL ?? "noreply@beegood.online",
+          to: ["alonabadi9@gmail.com"],
+          subject: "⚠️ קיזוז כפול — נדרשת בדיקה ידנית",
+          html: `<div dir="rtl">רכישה ${purchase.id} (${purchase.product}) חויבה בקיזוז ₪${creditApplied} מרכישה ${creditSource}, אבל הקיזוז כבר נוצל במקביל. הלקוח שילם פחות — לבדוק ידנית.</div>`,
+        }).catch(() => {});
+      }
+    }
+  }
 
   // Look up the buyer's ab_variant so we can attribute the purchase to the
   // right experiment row (e.g. challenge_hero_format primary metric).
