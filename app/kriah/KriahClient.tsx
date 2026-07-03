@@ -254,6 +254,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
 
   // Result
   const [extractionId, setExtractionId] = useState<string | null>(null);
+  const [ending, setEnding] = useState<"concierge" | "hive" | "pre_revenue" | "crisis_soft">("hive");
   const [signal, setSignal]       = useState<SignalOutput | null>(null);
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
 
@@ -426,6 +427,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         marketing_consent: true,
         is_test: isTest,
         instrument_version: "v2_funnel",
+        key1: stateKey,
       };
       const ph = phone.trim();
       if (ph) payload.phone = ph;
@@ -443,6 +445,10 @@ export function KriahClient({ previewKey, isTest }: Props) {
       }
       setSignal(data.signal as SignalOutput);
       if (typeof data.id === "string") setExtractionId(data.id);
+      if (data.v2_ending === "concierge" || data.v2_ending === "hive" ||
+          data.v2_ending === "pre_revenue" || data.v2_ending === "crisis_soft") {
+        setEnding(data.v2_ending);
+      }
       goTo("s16", "s16_full_reading");
     } catch {
       setErrorMsg("שגיאת רשת. נסו שוב בעוד רגע.");
@@ -886,6 +892,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
             track={track}
             extractionId={extractionId}
             firstName={name.split(" ")[0] ?? ""}
+            ending={ending}
           />
         )}
 
@@ -913,12 +920,14 @@ function FullReading({
   track,
   extractionId,
   firstName,
+  ending,
 }: {
   signal:       SignalOutput;
   answers:      Record<string, string>;
   track:        (step: string) => void;
   extractionId: string | null;
   firstName:    string;
+  ending:       "concierge" | "hive" | "pre_revenue" | "crisis_soft";
 }) {
   // P1 quote priority per the deck: Q6 (message_to_past), then Q3 (gratitude_mirror).
   const quoteSource =
@@ -1099,15 +1108,58 @@ function FullReading({
             padding: "30px 26px",
           }}
         >
-          <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
-            קיבלתם עכשיו את האות שלכם. הוא שלכם, בלי תמורה.
-          </p>
-          <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
-            המשפט לא הולך לשום מקום. מה שמתפוגג הוא ההד שלו: אות בלי חזרה נשכח. תנו לו שבוע של חזרות, ותראו מה הוא עושה.
-          </p>
-          <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 20px", color: C.fg }}>
-            האות והתזכורת כבר אצלכם במייל. בעוד יום-יומיים נשלח לשם גם את הצעד הבא, למי שירצה להמשיך.
-          </p>
+          {ending === "concierge" && (
+            <>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
+                יש אותות שלא נכנסים לתבנית. את שלכם קראנו, והוא אחד מהם.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
+                אות כזה הדר קוראת בעצמה. לא מערכת, לא צוות. היא.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
+                היא תיצור איתכם קשר אישית בתוך יום עסקים.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 20px", color: C.fg }}>
+                אין פה כפתור וגם לא טופס. רק להשאיר את זה פתוח.
+              </p>
+            </>
+          )}
+          {ending === "hive" && (
+            <>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
+                קיבלתם עכשיו את האות שלכם. הוא שלכם, בלי תמורה.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
+                המשפט לא הולך לשום מקום. מה שמתפוגג הוא ההד שלו: אות בלי חזרה נשכח. תנו לו שבוע של חזרות, ותראו מה הוא עושה.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 20px", color: C.fg }}>
+                האות והתזכורת כבר אצלכם במייל. בעוד יום-יומיים נשלח לשם גם את הצעד הבא, למי שירצה להמשיך.
+              </p>
+            </>
+          )}
+          {ending === "pre_revenue" && (
+            <>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
+                אתם עוד בהתחלה, וזה בדיוק הרגע לקרוא את האות, לפני שהוא נקבר תחת עוד ועוד תוכן.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
+                קחו את מה שקיבלתם, נסחו מזה משפט אחד, ותנו לו לחזור. זה לבד יזיז אתכם קדימה, בלי לשלם שקל.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 20px", color: C.fg }}>
+                בעוד כמה חודשים אפשר לחזור ולקרוא שוב. עסק משתנה, והאות מתחדד איתו.
+              </p>
+            </>
+          )}
+          {ending === "crisis_soft" && (
+            <>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 14px", color: C.fg }}>
+                האות שלכם אצלכם, והוא שלכם בלי שום תנאי.
+              </p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 20px", color: C.fg }}>
+                נראה שאתם בתקופה שמבקשת קודם כול נשימה, לא תוכנית. קחו את הזמן. אם תרצו מישהו לדבר איתו, הדר כאן, בקצב שלכם.
+              </p>
+            </>
+          )}
           <p style={{ fontSize: 16.5, fontWeight: 700, margin: 0, color: C.gold }}>
             תהיו טובים.
           </p>

@@ -27,6 +27,8 @@ import { detectGender, type Gender } from "@/lib/gender/detect";
 import { determineBucket, type Bucket } from "@/lib/signal/score";
 import { determineFraming } from "@/lib/signal/framing";
 import { conversionScore } from "@/lib/signal/conversion-score";
+import { extractEvidence, routeV2Ending, type V2Ending } from "@/lib/signal/evidence";
+import { crisisFloor } from "@/lib/prompts/gap-engine";
 
 // Same recipients as /api/stage/apply and /api/quiz-result. Hardcoded by
 // design — we never want a config typo to silently lose hot-lead alerts.
@@ -189,6 +191,9 @@ export async function POST(req: NextRequest) {
     typeof bodyAny?.instrument_version === "string"
       ? String(bodyAny.instrument_version).slice(0, 32)
       : "v1_5q";
+  // key 1 of the two-key gate: the declared business state (S2 tap).
+  const key1Declared: "A" | "B" | "C" | "D" | null =
+    ["A", "B", "C", "D"].includes(bodyAny?.key1) ? bodyAny.key1 : null;
 
   const occupationStr = typeof occupation === "string"
     ? occupation.trim().slice(0, 200)
@@ -526,6 +531,33 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // ── v2 two-key routing (kriah only) — evidence + crisis + truth table ───
+  // Best-effort: any failure degrades to the hive ending, never blocks the
+  // reading. Runs BEFORE the save so the routing columns ride the insert.
+  let v2Route: { ending: V2Ending; cell: string } | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let v2Evidence: any = null;
+  if (instrumentVersion === "v2_funnel") {
+    try {
+      const ansRec = answers as Record<string, string | undefined>;
+      const answered = Object.values(ansRec).filter((a) => typeof a === "string" && a.trim().length >= 8).length;
+      const totalChars = Object.values(ansRec).filter(Boolean).join("").length;
+      const crisis = crisisFloor(
+        Object.fromEntries(Object.entries(ansRec).map(([k, v]) => [k, v ?? ""])),
+      );
+      v2Evidence = await extractEvidence(ansRec, answered, totalChars);
+      v2Route = routeV2Ending({
+        crisis,
+        key1:       key1Declared,
+        evidence:   v2Evidence.evidence,
+        years:      Math.min(Math.max(v2Evidence.llm?.years_in_business ?? 0, 0), 40),
+        phoneGiven: phoneStr.length > 0,
+      });
+    } catch {
+      v2Route = { ending: "hive", cell: "route_error" };
+    }
+  }
+
   // ── Compute bucket (drives the conditional CTA on the result page) ──────
   // LLM's routing_signal (if returned and valid) drives the decision; rules
   // are the guardrail. Missing/invalid routing_signal degrades gracefully.
@@ -578,6 +610,17 @@ export async function POST(req: NextRequest) {
         is_test:      isTestRun,
         instrument_version: instrumentVersion,
         source_utm:   sourceUtm,
+        ...(v2Route ? {
+          key1_declared:  key1Declared,
+          evidence_score: v2Evidence?.evidence ?? null,
+          llm_evidence:   v2Evidence?.llm ?? null,
+          regex_staff:    v2Evidence?.regex_staff ?? null,
+          regex_money:    v2Evidence?.regex_money ?? null,
+          distress_money: v2Evidence?.distress ?? null,
+          truth_cell:     v2Route.cell,
+          routed_ending:  v2Route.ending,
+          phone_given:    phoneStr.length > 0,
+        } : {}),
       })
       .select("id")
       .single();
@@ -634,8 +677,12 @@ export async function POST(req: NextRequest) {
 
     // Enqueue the FULL signal nurture chain (welcome 0h + day1/3/5/8/12). Each
     // job carries the bucket so the offer emails render the matched product.
+    // "אסור למכור לכאב טרי": a crisis-floor lead gets no commercial chain at
+    // all — the reading stays a gift, the human door handles the rest.
+    const suppressChain = v2Route?.ending === "crisis_soft";
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: seqs } = await (db as any)
+    const { data: seqs } = suppressChain ? { data: [] } : await (db as any)
       .from("email_sequences")
       .select("id, subject, template_key, delay_hours")
       .eq("trigger_event", "SIGNAL_EXTRACTED")
@@ -669,6 +716,36 @@ export async function POST(req: NextRequest) {
           status: "pending",
         }));
         await db.from("jobs").insert(rows);
+
+        // v2 core lane: the ₪590 offer arrives by email ~40h later (moved
+        // off the ending screen by decision). Carries the user's sentence.
+        if (v2Route?.ending === "hive") {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: offerSeqs } = await (db as any)
+            .from("email_sequences")
+            .select("id, subject, template_key, delay_hours")
+            .eq("trigger_event", "KRIAH_CORE_LEAD")
+            .eq("active", true);
+          if (offerSeqs && offerSeqs.length) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const offerRows = offerSeqs.map((seq: any) => ({
+              type:    "SEND_EMAIL",
+              payload: {
+                user_id:         userId,
+                email:           u.email,
+                name:            u.name ?? "",
+                sequence_id:     seq.id,
+                subject:         seq.subject,
+                template_key:    seq.template_key,
+                signal_sentence: parsed.signal,
+                is_test:         isTestRun,
+              },
+              run_at: new Date(now + (seq.delay_hours ?? 40) * 60 * 60 * 1000).toISOString(),
+              status: "pending",
+            }));
+            await db.from("jobs").insert(offerRows);
+          }
+        }
 
         // Boiling leads get the concierge promise ("הדר תיצור קשר"). If no
         // meeting happens within 3 days, the SIGNAL_STRATEGY_LEAD fallback
@@ -840,6 +917,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     id:            extractionId,
     signal:        parsed,
+    ...(v2Route ? { v2_ending: v2Route.ending } : {}),
     generated_at:  generatedAt,
     gender:        genderForPrompt,
     bucket:        bucketDecision.bucket,

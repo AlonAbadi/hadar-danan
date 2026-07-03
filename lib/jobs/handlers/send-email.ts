@@ -45,7 +45,7 @@ export async function handleSendEmail(
   // ── Suppress signal offer emails once the lead has converted ──
   // The value/story emails (day1/day3) are harmless, but stop pitching the
   // product (day5/8/12) to someone who already bought.
-  const SUPPRESS_IF_PURCHASED = new Set(["signal_day5", "signal_day8", "signal_day12"]);
+  const SUPPRESS_IF_PURCHASED = new Set(["signal_day5", "signal_day8", "signal_day12", "kriah_hive_offer"]);
   if (SUPPRESS_IF_PURCHASED.has(template_key)) {
     const { data: purchased } = await supabase
       .from("purchases")

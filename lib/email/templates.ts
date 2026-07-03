@@ -867,6 +867,35 @@ function signalStrategyFallback(ctx: EmailTemplateContext): RenderedEmail {
   };
 }
 
+// /kriah day-2 offer (KRIAH_CORE_LEAD, 40h): the ₪590 offer moved OFF the
+// ending screen (Alon's decision) — the sentence gets a day to prove itself,
+// then this email carries כוורת האות. Suppressed at send time if the lead
+// already purchased anything (see send-email.ts guard).
+function kriahHiveOffer(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = ctx.name.split(" ")[0];
+  const sentence  = typeof ctx.signal_sentence === "string" && ctx.signal_sentence.trim()
+    ? ctx.signal_sentence.trim() : null;
+  return {
+    subject: "המשפט שלכם עדיין מחזיק?",
+    html: base(`
+      <div class="header">
+        <div class="header-logo">beegood · TrueSignal</div>
+        <h1>המשפט שלכם עדיין מחזיק, <span class="header-accent">${firstName}</span>?</h1>
+      </div>
+      <div class="body">
+        ${sentence ? `<p style="background:#F3EDE2;border-radius:10px;padding:12px 16px;font-weight:600">"${sentence}"</p>` : ""}
+        <p>יומיים עברו. אם המשפט הזה עוד מסתובב לכם בראש, זה בדיוק הסימן שחיכינו לו: אות אמיתי לא מרפה.</p>
+        <p>אות בלי חזרה מתפוגג. מה שהופך אותו למשהו שאנשים זוכרים זה לחזור עליו, שבוע אחרי שבוע, עד שהוא נשמע כמוכם.</p>
+        <p>לזה בנינו את <strong>כוורת האות</strong>: המקום שבו האות הופך לתוכנית. מסר אחד, מסלול ברור, בקצב שאפשר לעמוד בו.</p>
+        <p>תשלום אחד של <span dir="ltr">₪590</span>, גישה מיידית. בלי לחץ, נכנסים כשמרגישים שזה הזמן. ואם תמשיכו משם לסדנת העבודה עם הדר, יום אחד שבו בונים את התוכנית יחד, כל ה-<span dir="ltr">₪590</span> נזקפים במלואם.</p>
+        <a class="cta" href="${APP_URL}/signal-hive">להפוך את האות לתוכנית ←</a>
+        <p>תהיו טובים.</p>
+        <p class="ssig">צוות beegood</p>
+      </div>
+    `),
+  };
+}
+
 function challengeAccess(ctx: EmailTemplateContext): RenderedEmail {
   const firstName  = ctx.name.split(" ")[0];
   const accessLink = (ctx.access_link as string | undefined) ?? `${APP_URL}/challenge/content`;
@@ -1723,6 +1752,7 @@ const TEMPLATES: Record<string, TemplateFn> = {
   challenge_access:            challengeAccess,
   signal_hive_welcome:         signalHiveWelcome,
   signal_strategy_fallback:    signalStrategyFallback,
+  kriah_hive_offer:            kriahHiveOffer,
   challenge_upsell_workshop:   challengeUpsellWorkshop,
   // Sequence 3 - workshop buyers
   workshop_confirmation:       workshopConfirmation,
