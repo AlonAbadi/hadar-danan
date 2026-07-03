@@ -17,6 +17,12 @@ import {
   type SignalAnswers,
   type SignalOutput,
 } from "@/lib/prompts/signal-engine";
+import {
+  SIGNAL_ENGINE_V2_SYSTEM_PROMPT,
+  SIGNAL_QUESTIONS_V2,
+  buildSignalUserMessageV2,
+  isValidAnswersV2,
+} from "@/lib/prompts/signal-engine-v2";
 import { detectGender, type Gender } from "@/lib/gender/detect";
 import { determineBucket, type Bucket } from "@/lib/signal/score";
 import { determineFraming } from "@/lib/signal/framing";
@@ -393,7 +399,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!isValidAnswers(answers)) {
+  const isV2Run = instrumentVersion === "v2_funnel";
+  if (isV2Run ? !isValidAnswersV2(answers) : !isValidAnswers(answers)) {
     return NextResponse.json(
       { error: "צריך לענות על לפחות שלוש שאלות, בכל אחת לפחות שמונה תווים." },
       { status: 400 },
@@ -421,7 +428,11 @@ export async function POST(req: NextRequest) {
     //   3. If parse/validation still fails, retry ONCE with a sharper
     //      follow-up message — covers max_tokens truncation, malformed
     //      JSON, and missing-required-field cases
-    const baseUserMessage = buildSignalUserMessage(answers, nameForPrompt, occupationForPrompt, genderForPrompt)
+    const baseUserMessage = (isV2Run
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? buildSignalUserMessageV2(answers as any, nameForPrompt, occupationForPrompt, genderForPrompt)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      : buildSignalUserMessage(answers as any, nameForPrompt, occupationForPrompt, genderForPrompt))
       + "\n\nהחזר אך ורק את אובייקט ה-JSON. בלי טקסט לפניו, בלי טקסט אחריו, בלי גושי קוד. התחל את התשובה בתו { וסיים בתו }.";
 
     // Inner helper: one full LLM call + parse + validate. Throws on any
@@ -430,7 +441,7 @@ export async function POST(req: NextRequest) {
       const requestParams = {
         model:      SIGNAL_ENGINE_MODEL,
         max_tokens: SIGNAL_ENGINE_MAX_TOKENS,
-        system:     SIGNAL_ENGINE_SYSTEM_PROMPT,
+        system:     isV2Run ? SIGNAL_ENGINE_V2_SYSTEM_PROMPT : SIGNAL_ENGINE_SYSTEM_PROMPT,
         messages: [{ role: "user" as const, content: userContent }],
       };
 
@@ -519,7 +530,9 @@ export async function POST(req: NextRequest) {
   // LLM's routing_signal (if returned and valid) drives the decision; rules
   // are the guardrail. Missing/invalid routing_signal degrades gracefully.
   const bucketDecision = determineBucket({
-    answers,
+    // v2 answers share the depth/commit heuristics; the key superset is safe here.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    answers: answers as any,
     occupation:    occupationForPrompt ?? null,
     userStatus,
     hiveActive:    userHiveActive,
@@ -751,7 +764,7 @@ export async function POST(req: NextRequest) {
           .map((d, i) => `<li style="margin:4px 0">${i + 1}. ${esc(d)}</li>`)
           .join("");
 
-        const answerLines = SIGNAL_QUESTIONS
+        const answerLines = (isV2Run ? SIGNAL_QUESTIONS_V2 : SIGNAL_QUESTIONS)
           .map((q) => {
             const a = (answers as Record<string, string | undefined>)[q.key];
             if (!a) return "";
