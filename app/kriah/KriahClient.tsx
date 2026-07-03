@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
+import { ShareButtons } from "@/components/signal/ShareButtons";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /kriah — unified funnel v2, wave 1.
@@ -252,6 +253,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
   const [phoneErr, setPhoneErr]   = useState<string | null>(null);
 
   // Result
+  const [extractionId, setExtractionId] = useState<string | null>(null);
   const [signal, setSignal]       = useState<SignalOutput | null>(null);
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
 
@@ -440,6 +442,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         return;
       }
       setSignal(data.signal as SignalOutput);
+      if (typeof data.id === "string") setExtractionId(data.id);
       goTo("s16", "s16_full_reading");
     } catch {
       setErrorMsg("שגיאת רשת. נסו שוב בעוד רגע.");
@@ -881,6 +884,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
             signal={signal}
             answers={answers}
             track={track}
+            extractionId={extractionId}
+            firstName={name.split(" ")[0] ?? ""}
           />
         )}
 
@@ -906,10 +911,14 @@ function FullReading({
   signal,
   answers,
   track,
+  extractionId,
+  firstName,
 }: {
-  signal:  SignalOutput;
-  answers: Record<string, string>;
-  track:   (step: string) => void;
+  signal:       SignalOutput;
+  answers:      Record<string, string>;
+  track:        (step: string) => void;
+  extractionId: string | null;
+  firstName:    string;
 }) {
   // P1 quote priority per the deck: Q6 (message_to_past), then Q3 (gratitude_mirror).
   const quoteSource =
@@ -969,7 +978,7 @@ function FullReading({
         }}
       >
         <h2 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 26px", lineHeight: 1.3, color: C.gold }}>
-          התמונה המלאה שלכם
+          האות שלכם
         </h2>
 
         {/* P1 — opening with the verbatim quote */}
@@ -1039,33 +1048,38 @@ function FullReading({
         }}
       >
         <p style={{ fontSize: 16.5, fontWeight: 800, margin: "0 0 8px", lineHeight: 1.6, color: C.fg }}>
-          המשפט הזה מחזיק גם מחוץ לתמונה.
+          המשפט הזה מחזיק גם מחוץ למסך הזה.
         </p>
         <p style={{ fontSize: 15.5, lineHeight: 1.7, margin: "0 0 20px", color: C.fg, opacity: 0.9 }}>
           הכנו לכם אותו כתזכורת: שמרו אותה איפה שתראו אותה, ואם יש מישהו שיזהה אתכם בה, שלחו לו אותה.
         </p>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <GoldButton small onClick={saveReminder}>לשמור את התזכורת</GoldButton>
-          <button
-            onClick={() => void share()}
-            style={{
-              background: "transparent",
-              color: C.gold,
-              border: `1px solid rgba(232,185,74,0.4)`,
-              borderRadius: 12,
-              padding: "10px 24px",
-              cursor: "pointer",
-              fontSize: 15,
-              fontWeight: 700,
-              fontFamily: "inherit",
-            }}
-          >
-            לשתף
-          </button>
-          {shareFeedback && (
-            <span style={{ fontSize: 13, color: C.muted }}>{shareFeedback}</span>
-          )}
-        </div>
+        {extractionId ? (
+          <>
+            {/* The production share-card (1080×1080, AI background, 12 color
+                worlds) — same asset v1 ships. v2 reuses the pipeline verbatim. */}
+            <div
+              style={{
+                border: "1.5px solid rgba(232,185,74,0.5)",
+                borderRadius: 16,
+                overflow: "hidden",
+                marginBottom: 16,
+                boxShadow: "0 8px 28px rgba(0,0,0,0.45)",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/signal/${extractionId}/share-card`}
+                alt="התזכורת שלכם"
+                style={{ display: "block", width: "100%", height: "auto" }}
+              />
+            </div>
+            <ShareButtons extractionId={extractionId} firstName={firstName} />
+          </>
+        ) : (
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <GoldButton small onClick={saveReminder}>לשמור את התזכורת</GoldButton>
+          </div>
+        )}
       </div>
 
       {/* Seam line + ending B (wave 1: always B — the clean gift, no price) */}
@@ -1092,7 +1106,7 @@ function FullReading({
             המשפט לא הולך לשום מקום. מה שמתפוגג הוא ההד שלו: אות בלי חזרה נשכח. תנו לו שבוע של חזרות, ותראו מה הוא עושה.
           </p>
           <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 20px", color: C.fg }}>
-            התמונה המלאה והתזכורת כבר אצלכם במייל. בעוד יום-יומיים נשלח לשם גם את הצעד הבא, למי שירצה להמשיך.
+            האות והתזכורת כבר אצלכם במייל. בעוד יום-יומיים נשלח לשם גם את הצעד הבא, למי שירצה להמשיך.
           </p>
           <p style={{ fontSize: 16.5, fontWeight: 700, margin: 0, color: C.gold }}>
             תהיו טובים.
