@@ -796,7 +796,14 @@ export async function POST(req: NextRequest) {
   // it within minutes. Soft-fail throughout (the user already has their
   // signal on screen — alert misses must not break their UX).
   try {
-    const temperature = bucketToTemperature(bucketDecision.bucket);
+    // v2 runs: the two-key routing (not the legacy bucket) owns the machine.
+    // concierge = the boiling promise; hive = warm; pre_revenue/crisis = nurture
+    // (crisis never gets commercial pressure — nurture temperature only marks
+    // the row, the chain suppression already happened above).
+    const temperature = v2Route
+      ? (v2Route.ending === "concierge" ? "boiling"
+        : v2Route.ending === "hive" ? "warm" : "nurture")
+      : bucketToTemperature(bucketDecision.bucket);
     if (temperature) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (db as any)

@@ -193,7 +193,8 @@ export async function getImmediateLeads(
       safeFrom(supabase, "signal_extractions")
         .select(`id, user_id, signal, answers, bucket, generated_at, users(${USER_COLS})`)
         .neq("is_test", true)   // v2 isolation: test runs never reach Hadar's queue
-        .eq("bucket", "strategy")
+        // legacy boiling (bucket=strategy) OR v2 concierge — both are the hot lane
+        .or("bucket.eq.strategy,routed_ending.eq.concierge")
         .order("generated_at", { ascending: false })
         .limit(300),
       safeFrom(supabase, "quiz_results")
