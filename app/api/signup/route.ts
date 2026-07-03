@@ -142,8 +142,16 @@ export async function POST(req: NextRequest) {
 
   // ── v2 isolation: honored only with the preview secret ──
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const isTestRun = (body as any)?.is_test === true &&
+  const bodyAny = body as any;
+  const isTestRun = bodyAny?.is_test === true &&
     kriahPreviewAllowed(req.headers.get("x-kriah-preview"));
+
+  // Phone became schema-optional for the /kriah email gate (name+email only).
+  // Every other caller keeps the original hard requirement.
+  const isKriahGate = bodyAny?.instrument_version === "v2_funnel";
+  if (!isKriahGate && !parsed.data.phone) {
+    return NextResponse.json({ errors: { phone: "טלפון חסר" } }, { status: 422 });
+  }
 
   // Sanitize ab_variant — DB constraint only allows 'A' or 'B'
   const raw_variant = parsed.data.ab_variant;

@@ -18,7 +18,9 @@ export const SignupSchema = z.object({
     .min(2, "שם חייב להכיל לפחות 2 תווים")
     .max(80, "שם ארוך מדי"),
   email: z.string().email("כתובת אימייל לא תקינה"),
-  phone: israeliPhone,
+  // Optional at schema level: the /kriah email gate collects name+email only.
+  // /api/signup re-imposes the requirement for every other caller.
+  phone: israeliPhone.optional(),
   ab_variant: z.enum(["A", "B", "C"]).optional(),
   utm_source:   z.string().max(100).optional(),
   utm_medium:   z.string().max(100).optional(),
