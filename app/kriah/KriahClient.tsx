@@ -221,6 +221,7 @@ interface Draft {
   name?:       string;
   email?:      string;
   phone?:      string;
+  occupation?: string;
   signal?:     SignalOutput | null;
 }
 
@@ -255,6 +256,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
   // Result
   const [extractionId, setExtractionId] = useState<string | null>(null);
   const [ending, setEnding] = useState<"concierge" | "hive" | "pre_revenue" | "crisis_soft">("hive");
+  const [occupation, setOccupation] = useState("");
   const [signal, setSignal]       = useState<SignalOutput | null>(null);
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
 
@@ -298,6 +300,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         const d = JSON.parse(raw) as Draft;
         if (d.stateKey)   setStateKey(d.stateKey);
         if (d.blocker)    setBlocker(d.blocker);
+        if (typeof d.occupation === "string") setOccupation(d.occupation);
         if (typeof d.changeWish === "string") setChangeWish(d.changeWish);
         if (d.answers && typeof d.answers === "object") setAnswers(d.answers);
         if (d.q4Skipped)  setQ4Skipped(true);
@@ -328,7 +331,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
     if (!restoredRef.current) return;
     try {
       const draft: Draft = {
-        screen, qIdx, stateKey, blocker, changeWish, answers,
+        screen, qIdx, stateKey, blocker, changeWish, answers, occupation,
         q4Skipped, probeShown, name, email, phone, signal,
       };
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -341,6 +344,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
     const em = email.trim().toLowerCase();
     if (nm.length < 2) { setGateErr("שם חייב להכיל לפחות 2 תווים"); return; }
     if (!em.includes("@") || !em.includes(".")) { setGateErr("כתובת אימייל לא תקינה"); return; }
+    if (occupation.trim().length < 2) { setGateErr("ספרו לנו במילה או שתיים מה תחום העיסוק"); return; }
     if (!consent) { setConsentErr(true); return; }
     setGateErr(null);
 
@@ -429,6 +433,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
         instrument_version: "v2_funnel",
         key1: stateKey,
       };
+      const occ = occupation.trim();
+      if (occ) payload.occupation = occ;
       const ph = phone.trim();
       if (ph) payload.phone = ph;
 
@@ -650,6 +656,19 @@ export function KriahClient({ previewKey, isTest }: Props) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{ ...inputStyle(), textAlign: "left" }}
+                />
+              </div>
+              <div>
+                <label htmlFor="kriah-occupation" style={{ display: "block", fontSize: 14, color: C.muted, marginBottom: 6 }}>
+                  תחום עיסוק
+                </label>
+                <input
+                  id="kriah-occupation"
+                  type="text"
+                  placeholder="מאמנת עסקית, עו&quot;ד, קוסמטיקאית..."
+                  value={occupation}
+                  onChange={(e) => setOccupation(e.target.value)}
+                  style={inputStyle()}
                 />
               </div>
               <ConsentCheckbox
