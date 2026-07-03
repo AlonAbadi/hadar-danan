@@ -57,7 +57,17 @@ export default async function KriahTestsPage() {
         {rows.length === 0 && <p style={{ color: C.muted }}>אין אבחוני v2 עדיין.</p>}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {rows.map((r) => (
+          {rows.map((r) => {
+            // Same personalized opener /admin/today sends: greeting + the
+            // signal + a verbatim quote from their answers, gender-derived.
+            const waLink = buildHandoffWaLink({
+              name:    r.users?.name,
+              gender:  r.users?.gender ?? undefined,
+              signal:  r.signal,
+              answers: r.answers,
+              phone:   r.users?.phone,
+            });
+            return (
             <details key={r.id} style={{ background: C.card, border: `1px solid ${r.is_test ? C.line : "rgba(232,185,74,0.45)"}`, borderRadius: 14, padding: "14px 18px" }}>
               <summary style={{ cursor: "pointer", display: "flex", flexWrap: "wrap", gap: "6px 14px", alignItems: "baseline", fontSize: 14, listStyle: "none" }}>
                 <span style={{ color: C.muted, fontSize: 12.5 }}>
@@ -78,6 +88,24 @@ export default async function KriahTestsPage() {
                 {r.is_test && (
                   <span style={{ background: "rgba(90,160,255,0.15)", color: "#8FBFFF", borderRadius: 999, padding: "2px 10px", fontSize: 11.5, fontWeight: 700 }}>בדיקה</span>
                 )}
+                <span style={{ marginInlineStart: "auto", display: "flex", gap: 10, alignItems: "center" }}>
+                  {waLink ? (
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        background: "#1FA855", color: "#fff", borderRadius: 999,
+                        padding: "6px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none",
+                      }}
+                    >
+                      💬 וואטסאפ מותאם
+                    </a>
+                  ) : (
+                    <span style={{ color: C.muted, fontSize: 12 }}>אין טלפון</span>
+                  )}
+                  <span style={{ color: C.goldMid, fontSize: 12.5 }}>פרטים ▾</span>
+                </span>
               </summary>
               <div style={{ marginTop: 14, borderTop: `1px solid ${C.line}`, paddingTop: 14, fontSize: 14, lineHeight: 1.75 }}>
                 {r.signal?.signal && (
@@ -92,32 +120,18 @@ export default async function KriahTestsPage() {
                   </p>
                 ))}
                 <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
-                  {(() => {
-                    // The exact same personalized opener /admin/today sends:
-                    // greeting + the signal + a verbatim quote from their answers,
-                    // gender-derived. One machinery, two surfaces.
-                    const waLink = buildHandoffWaLink({
-                      name:    r.users?.name,
-                      gender:  r.users?.gender ?? undefined,
-                      signal:  r.signal,
-                      answers: r.answers,
-                      phone:   r.users?.phone,
-                    });
-                    return waLink ? (
-                      <a
-                        href={waLink}
-                        target="_blank"
-                        style={{
-                          background: "#1FA855", color: "#fff", borderRadius: 10,
-                          padding: "8px 18px", fontSize: 13.5, fontWeight: 700, textDecoration: "none",
-                        }}
-                      >
-                        שליחת וואטסאפ מותאם ←
-                      </a>
-                    ) : (
-                      <span style={{ color: C.muted, fontSize: 13 }}>אין טלפון לוואטסאפ</span>
-                    );
-                  })()}
+                  {waLink && (
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      style={{
+                        background: "#1FA855", color: "#fff", borderRadius: 10,
+                        padding: "8px 18px", fontSize: 13.5, fontWeight: 700, textDecoration: "none",
+                      }}
+                    >
+                      שליחת וואטסאפ מותאם ←
+                    </a>
+                  )}
                   {r.users?.phone && (
                     <span style={{ color: C.muted, fontSize: 13, direction: "ltr" }}>{r.users.phone}</span>
                   )}
@@ -125,7 +139,8 @@ export default async function KriahTestsPage() {
                 </div>
               </div>
             </details>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
