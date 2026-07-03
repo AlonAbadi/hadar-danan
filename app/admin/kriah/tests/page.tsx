@@ -96,7 +96,6 @@ export default async function KriahTestsPage() {
                     <a
                       href={waLink}
                       target="_blank"
-                      onClick={(e) => e.stopPropagation()}
                       style={{
                         background: "#1FA855", color: "#fff", borderRadius: 999,
                         padding: "6px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none",
