@@ -185,7 +185,8 @@ export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bodyAny = body as any;
   const isTestRun = bodyAny?.is_test === true &&
-    kriahPreviewAllowed(req.headers.get("x-kriah-preview"));
+    (kriahPreviewAllowed(req.headers.get("x-kriah-preview")) ||
+     process.env.UNIFIED_FUNNEL_ENABLED !== "true");
   const instrumentVersion: string =
     (isTestRun || process.env.UNIFIED_FUNNEL_ENABLED === "true") &&
     typeof bodyAny?.instrument_version === "string"

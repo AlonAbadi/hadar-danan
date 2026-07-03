@@ -89,7 +89,8 @@ export async function POST(req: NextRequest) {
   // Only test_1 (₪1) is allowed through with the preview secret; everything
   // else is refused before any CAPI event or Cardcom fetch fires.
   const isTestRun = (body.data as { is_test?: unknown }).is_test === true &&
-    kriahPreviewAllowed(req.headers.get("x-kriah-preview"));
+    (kriahPreviewAllowed(req.headers.get("x-kriah-preview")) ||
+     process.env.UNIFIED_FUNNEL_ENABLED !== "true");
   if (isTestRun && product !== "test_1") {
     return NextResponse.json(
       { error: "בדיקת v2: תשלום אמיתי חסום. השתמשו במוצר test_1 בלבד." },

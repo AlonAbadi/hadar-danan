@@ -1,6 +1,4 @@
-import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
-import { unifiedFunnelEnabled, kriahPreviewAllowed } from "@/lib/isolation";
+import { unifiedFunnelEnabled } from "@/lib/isolation";
 import { KriahClient } from "./KriahClient";
 
 // Hidden v2 funnel (BUILD_SPEC_KRIAH_V2 §1). Three isolation layers:
@@ -18,14 +16,11 @@ export default async function KriahPage({
   searchParams: Promise<{ key?: string }>;
 }) {
   const sp = await searchParams;
-  // Tester convenience: one visit with ?key= plants a device cookie (set
-  // client-side by KriahClient), and from then on a bare /kriah works on
-  // that device. Everyone else still gets a 404 — the funnel stays hidden.
-  const cookieStore = await cookies();
-  const cookieKey = cookieStore.get("kriah_preview")?.value ?? "";
-  const key = kriahPreviewAllowed(sp?.key) ? (sp?.key ?? "") : cookieKey;
-
-  if (!unifiedFunnelEnabled() && !kriahPreviewAllowed(key)) notFound();
+  // Alon's decision (2026-07-03): no secret, no cookie. The page is unreachable
+  // organically (zero inbound links, noindex, robots DISALLOW) — obscurity is
+  // the gate. While the launch flag is OFF, every run is stamped is_test and
+  // lands in the dedicated /admin/kriah/tests list.
+  const key = sp?.key ?? "";
 
   return (
     <KriahClient

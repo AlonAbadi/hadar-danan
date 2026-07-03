@@ -144,7 +144,8 @@ export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bodyAny = body as any;
   const isTestRun = bodyAny?.is_test === true &&
-    kriahPreviewAllowed(req.headers.get("x-kriah-preview"));
+    (kriahPreviewAllowed(req.headers.get("x-kriah-preview")) ||
+     process.env.UNIFIED_FUNNEL_ENABLED !== "true");
 
   // Phone became schema-optional for the /kriah email gate (name+email only).
   // Every other caller keeps the original hard requirement.
