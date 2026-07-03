@@ -5,6 +5,7 @@
  * counterweight to accepting is_test claims without a secret).
  */
 import { createServerClient } from "@/lib/supabase/server";
+import { buildHandoffWaLink } from "@/lib/signal/handoff-message";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function KriahTestsPage() {
   const supabase = createServerClient();
 
   const { data } = await safeFrom(supabase, "signal_extractions")
-    .select("id, generated_at, is_test, key1_declared, evidence_score, truth_cell, routed_ending, phone_given, signal, answers, users(name, email)")
+    .select("id, generated_at, is_test, key1_declared, evidence_score, truth_cell, routed_ending, phone_given, signal, answers, users(name, email, phone, gender)")
     .eq("instrument_version", "v2_funnel")
     .order("generated_at", { ascending: false })
     .limit(100);
@@ -38,7 +39,7 @@ export default async function KriahTestsPage() {
     truth_cell: string | null; routed_ending: string | null; phone_given: boolean | null;
     signal: { signal?: string; warm_note?: string } | null;
     answers: Record<string, string> | null;
-    users: { name: string | null; email: string | null } | null;
+    users: { name: string | null; email: string | null; phone: string | null; gender: "m" | "f" | null } | null;
   };
   const rows = (data ?? []) as Row[];
 
@@ -90,7 +91,38 @@ export default async function KriahTestsPage() {
                     <b style={{ color: C.muted }}>{k}:</b> {v}
                   </p>
                 ))}
-                <a href={`/api/signal/${r.id}/share-card`} target="_blank" style={{ color: C.goldMid, fontSize: 13 }}>לתזכורת (הקלף) ←</a>
+                <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
+                  {(() => {
+                    // The exact same personalized opener /admin/today sends:
+                    // greeting + the signal + a verbatim quote from their answers,
+                    // gender-derived. One machinery, two surfaces.
+                    const waLink = buildHandoffWaLink({
+                      name:    r.users?.name,
+                      gender:  r.users?.gender ?? undefined,
+                      signal:  r.signal,
+                      answers: r.answers,
+                      phone:   r.users?.phone,
+                    });
+                    return waLink ? (
+                      <a
+                        href={waLink}
+                        target="_blank"
+                        style={{
+                          background: "#1FA855", color: "#fff", borderRadius: 10,
+                          padding: "8px 18px", fontSize: 13.5, fontWeight: 700, textDecoration: "none",
+                        }}
+                      >
+                        שליחת וואטסאפ מותאם ←
+                      </a>
+                    ) : (
+                      <span style={{ color: C.muted, fontSize: 13 }}>אין טלפון לוואטסאפ</span>
+                    );
+                  })()}
+                  {r.users?.phone && (
+                    <span style={{ color: C.muted, fontSize: 13, direction: "ltr" }}>{r.users.phone}</span>
+                  )}
+                  <a href={`/api/signal/${r.id}/share-card`} target="_blank" style={{ color: C.goldMid, fontSize: 13 }}>לתזכורת (הקלף) ←</a>
+                </div>
               </div>
             </details>
           ))}
