@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>המשפט שמבדל אתכם · הדגמה חיה v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0D1018;--bg2:#080C14;--card:#141820;--soft:#1D2430;--line:#2C323E;
+  --gold:#C9964A;--goldL:#E8B94A;--goldD:#9E7C3A;--fg:#EDE9E1;--muted:#9E9990;
+  --green:#7FD49B;--blue:#7FB2F2;--wa:#25D366;--red:#E67373}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Assistant',sans-serif;background:var(--bg2);color:var(--fg);min-height:100vh;direction:rtl}
+  .top{max-width:1300px;margin:0 auto;padding:26px 24px 4px;text-align:center}
+  .top .eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;color:var(--goldL);text-transform:uppercase;margin-bottom:6px}
+  .top h1{font-size:28px;font-weight:800}
+  .top p{font-size:13.5px;color:var(--muted);margin-top:6px;max-width:760px;margin-inline:auto;line-height:1.7}
+  .top b{color:var(--goldL)}
+  .wrap{max-width:1300px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:1fr 430px;gap:26px;align-items:start}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}}
+
+  /* phone */
+  .phone-col{position:sticky;top:14px;order:2}
+  .phone{width:400px;max-width:100%;height:790px;margin:0 auto;background:var(--bg);border:3px solid #2a3040;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:140px;height:26px;background:#000;border-radius:0 0 16px 16px;z-index:9}
+  .screen{position:absolute;inset:0;padding:44px 22px 18px;overflow-y:auto;display:none;flex-direction:column}
+  .screen.active{display:flex}
+
+  .plabel{font-size:10px;font-weight:800;letter-spacing:.16em;color:var(--muted);margin-bottom:5px;display:flex;justify-content:space-between}
+  .plabel b{color:var(--goldL)}
+  .prog{height:4px;background:var(--line);border-radius:99px;margin-bottom:18px;overflow:hidden;flex-shrink:0}
+  .prog>div{height:100%;background:linear-gradient(90deg,var(--goldL),var(--gold));border-radius:99px;transition:width .4s}
+
+  .q-title{font-size:20px;font-weight:800;line-height:1.35;margin-bottom:8px}
+  .q-hint{font-size:12.5px;color:var(--muted);line-height:1.65;margin-bottom:14px}
+  .q-hint2{font-size:11.5px;color:var(--muted);opacity:.75;line-height:1.6;margin:-8px 0 14px}
+  .breath{font-size:11.5px;color:var(--goldM,#C9964A);background:rgba(232,185,74,.05);border:1px solid rgba(232,185,74,.2);border-radius:9px;padding:8px 12px;margin-bottom:14px;line-height:1.6}
+  .one-line{font-size:11px;color:var(--muted);margin-top:6px;text-align:center}
+
+  .chips{display:flex;flex-direction:column;gap:9px}
+  .chip{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:13px 15px;font-size:14px;font-weight:600;color:var(--fg);cursor:pointer;text-align:right;transition:all .15s;font-family:inherit;line-height:1.4}
+  .chip:hover,.chip.sel{border-color:var(--goldL);background:rgba(232,185,74,.08);color:var(--goldL)}
+
+  .txt{width:100%;min-height:120px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--fg);font-family:inherit;font-size:14px;line-height:1.6;resize:none}
+  .txt:focus{outline:none;border-color:var(--gold)}
+  .txt::placeholder{color:#5a6070;font-size:13px}
+  .mic-tip{margin-top:9px;font-size:11px;color:var(--muted);display:none;gap:6px;align-items:flex-start;animation:fadeIn .5s}
+  .mic-tip.show{display:flex}
+  .mic-tip b{color:var(--goldL)}
+
+  .cta{margin-top:auto;padding-top:14px}
+  .btn{display:block;width:100%;text-align:center;background:linear-gradient(180deg,#f4d27a 0%,#e8b942 52%,#d59b1f 100%);color:#2a1d05;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 8px 20px -8px rgba(214,155,31,.6)}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);box-shadow:none;margin-top:8px;font-weight:600;font-size:12.5px}
+  .btn.skip{background:transparent;color:var(--muted);border:1px dashed var(--line);box-shadow:none;margin-top:8px;font-weight:600;font-size:12.5px}
+  .btn.wa{background:var(--wa);color:#0b141a}
+  .quiet{display:block;text-align:center;margin-top:10px;font-size:11.5px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;background:none;border:none;font-family:inherit}
+  .inp{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--fg);font-family:inherit;font-size:14px;margin-bottom:9px}
+
+  /* reco card with honest-limit INSIDE (TRIBE) */
+  .rec{background:rgba(232,185,74,.05);border:1px solid rgba(201,150,74,.5);border-radius:14px;overflow:hidden;margin-bottom:14px}
+  .rec .body{padding:16px 16px 12px}
+  .rec .lbl{font-size:10px;font-weight:800;letter-spacing:.18em;color:var(--goldL);text-transform:uppercase;margin-bottom:7px}
+  .rec .name{font-size:20px;font-weight:800;color:var(--goldL)}
+  .rec .why{font-size:13px;color:var(--fg);line-height:1.6;margin-top:7px}
+  .rec .limit{border-top:1px solid rgba(201,150,74,.25);background:rgba(232,185,74,.03);padding:10px 16px;font-size:12px;line-height:1.6;color:rgba(232,185,74,.75)}
+
+  /* fork */
+  .fork-head{font-size:17.5px;font-weight:800;line-height:1.45;margin-bottom:6px}
+  .fork-head .cb{color:var(--goldL)}
+  .fork-body{font-size:13.5px;line-height:1.7;color:var(--fg);margin-bottom:12px}
+  .teaser{position:relative;background:linear-gradient(160deg,#1a1410,#0d0a08);border:1px solid rgba(201,150,74,.4);border-radius:12px;padding:14px 16px;margin-bottom:6px;overflow:hidden}
+  .teaser .who{font-size:10px;letter-spacing:.14em;color:rgba(232,185,74,.7);text-transform:uppercase;font-weight:700;margin-bottom:6px}
+  .teaser .quote{font-size:14px;line-height:1.55;color:var(--fg)}
+  .teaser .blur{filter:blur(4.5px);user-select:none}
+  .teaser .lock{position:absolute;bottom:10px;left:12px;font-size:14px;opacity:.8}
+  .teaser-note{font-size:10.5px;color:var(--muted);margin-bottom:12px;text-align:center}
+  .scope{font-size:11px;color:var(--muted);text-align:center;margin-top:7px;line-height:1.6}
+  .scope b{color:var(--goldL)}
+
+  .probe{background:rgba(127,178,242,.07);border:1px solid rgba(127,178,242,.3);border-radius:11px;padding:11px 13px;font-size:12.5px;line-height:1.6;color:var(--fg);margin-top:10px;display:none;animation:fadeIn .5s}
+  .probe.show{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* letter with paragraph fade (TRIBE) */
+  .letter{background:linear-gradient(180deg,rgba(232,185,74,.05) 0%,transparent 100%);border:1px solid rgba(232,185,74,.3);border-radius:16px;padding:20px 18px;font-size:13.5px;line-height:1.85}
+  .letter .from{color:var(--goldL);font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;margin-bottom:10px;text-align:right}
+  .letter p{opacity:0;transform:translateY(8px);transition:opacity .7s,transform .7s;margin-bottom:10px}
+  .letter p.in{opacity:1;transform:none}
+  .letter .youquote{color:var(--goldL);font-style:italic}
+  .letter .ps{font-size:12px;color:var(--muted);border-top:1px solid rgba(201,150,74,.2);padding-top:10px;margin-top:4px}
+  .letter .sig{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:21px;color:var(--gold);margin-top:6px;margin-bottom:0}
+  .sharecard{opacity:0;transform:translateY(10px);transition:opacity .8s,transform .8s;margin-top:12px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:12px;color:var(--muted)}
+  .sharecard.in{opacity:1;transform:none}
+
+  /* notes panel */
+  .notes{order:1}
+  .notes h2{font-size:19px;font-weight:800;margin-bottom:3px}
+  .notes .sub{font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.7}
+  .fixbox{background:rgba(127,212,155,.05);border:1px solid rgba(127,212,155,.3);border-radius:13px;padding:15px 17px;margin-bottom:16px}
+  .fixbox .t{font-size:13px;font-weight:800;color:var(--green);margin-bottom:8px}
+  .fixbox .row{font-size:12.5px;line-height:1.7;color:var(--fg);margin-bottom:8px}
+  .fixbox .row b{color:var(--green)}
+  .fixbox .row .old{color:var(--red);text-decoration:line-through;opacity:.7}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin-bottom:9px;cursor:pointer;transition:border-color .15s}
+  .step:hover{border-color:rgba(201,150,74,.4)}
+  .step.on{border-color:var(--goldL);background:rgba(232,185,74,.05)}
+  .step .n{display:inline-flex;width:22px;height:22px;border-radius:50%;background:rgba(232,185,74,.12);border:1px solid var(--goldL);color:var(--goldL);font-size:11px;font-weight:800;align-items:center;justify-content:center;margin-left:8px}
+  .step .t{font-size:14px;font-weight:700;display:inline}
+  .step .d{font-size:12px;color:var(--muted);line-height:1.65;margin-top:6px}
+  .step .d b{color:var(--goldL)}
+  .facts{background:var(--bg);border:1px solid var(--line);border-radius:13px;padding:16px;margin-top:14px}
+  .facts .t{font-size:12.5px;font-weight:800;color:var(--goldL);margin-bottom:9px;letter-spacing:.05em}
+  .facts table{width:100%;border-collapse:collapse;font-size:12px}
+  .facts td{padding:5px 4px;border-bottom:1px solid rgba(44,50,62,.5);color:var(--fg);line-height:1.5}
+  .facts td:first-child{color:var(--muted)}
+  .facts tr:last-child td{border-bottom:none}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="eyebrow">DEMO v3 · אחרי ביקורת אלון + סימולציית קורא-קר</div>
+  <h1>המשפט שמבדל אתכם · הדגמה חיה</h1>
+  <p>הדמו הזה <b>מגיב לבחירות שלך</b>: החסם שתבחר בהקשה 2 ישנה את קופי המזלג. דילוג על שאלת התקופה הקשה יחליף את נוסח השאלה שאחריה. המכתב נחשף פסקה-פסקה. <b>עבור את המסלול בטלפון</b>, או קפוץ לשלב מהפאנל.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- ═══ NOTES ═══ -->
+  <div class="notes">
+    <div class="fixbox">
+      <div class="t">✓ מה תוקן — 3 ההערות שלך + 5 ממצאי הקורא-הקר</div>
+      <div class="row"><b>שלך 1:</b> <span class="old">"אתגר 7 הימים" ללקוח קר</span> ← הקריאה עכשיו על המצב שלו, בלי שום שם מוצר. ה-SKU עבר למייל.</div>
+      <div class="row"><b>שלך 2:</b> <span class="old">"הקשות"</span> ← "שאלות קצרות".</div>
+      <div class="row"><b>שלך 3:</b> <span class="old">"נגמר במכתב"</span> ← ההבטחה: "המשפט שמסביר למה לבחור דווקא בכם".</div>
+      <div class="row"><b>רוני 1:</b> <span class="old">"קריאת האות" ככותרת (נשמע נומרולוגיה)</span> ← H1: "המשפט שמבדל אתכם". "האות" מופיע רק אחרי שהוגדר.</div>
+      <div class="row"><b>רוני 2:</b> <span class="old">"הדר מנסחת לכם" (לא אמין ב-7 דקות)</span> ← "השיטה שבנתה הדר דנן... מנסחת".</div>
+      <div class="row"><b>רוני 3:</b> <span class="old">"השיחה" צצה משומקום</span> ← בכל הופעה: "שיחת היכרות קצרה, בלי עלות ובלי התחייבות".</div>
+      <div class="row"><b>רוני 4:</b> <span class="old">5 מונחים פנימיים</span> ← נשארו 2: "הקריאה הראשונית" + "האות". "הדלת"→"קיצור דרך לשיחה".</div>
+      <div class="row"><b>רוני 5:</b> <span class="old">ערבוב יחיד/רבים + כפתור "אותנו"</span> ← רבים בכל מסכי המערכת; יחיד רק בתוך המכתב ובשאלות האינטימיות (בכוונה).</div>
+    </div>
+    <div class="fixbox" style="background:rgba(232,185,74,.04);border-color:rgba(232,185,74,.3)">
+      <div class="t" style="color:var(--goldL)">✎ הערות מהגרסה הקודמת (הושארו)</div>
+      <div class="row" style="display:none"><b>1 · המוטיבציה במזלג:</b> <span class="old">"מכתב אישי שנכתב עליכם"</span> ← עכשיו המזלג מוכר את הטרנספורמציה: <b>"המשפט שאף מתחרה לא יכול להעתיק"</b>, עם callback למילים שבחרת בעצמך בהקשה 2, teaser נעול של אות אמיתי, ושורת הכנות "6 שאלות, בערך 7 דקות. האות נבנה מהמילים שלכם, ולכן הוא צריך אותן."</div>
+      <div class="row"><b>עדיין חי בדמו:</b> callback דינמי לחסם, teaser נעול, דילוג מדורג (שאלה 4→5), probe חד-פעמי, מכתב פסקה-פסקה, קלף אחרי beat.</div><div class="row" style="display:none"><b>2 · הקוהרנטיות:</b> <span class="old">"מה עזר לך לצאת מזה" בלי תקופה קשה לפניה</span> ← עכשיו כל 6 השאלות בסדר הקנוני, מספור אמיתי (1-6), ו<b>דילוג מדורג חי</b>: דלג על שאלה 4 ותראה את שאלה 5 מתחלפת לנוסח בלי "מזה". טבלת ביקורת-עקביות עברה על כל הפניה.</div>
+    </div>
+
+    <h2>הזרימה</h2>
+    <div class="sub">לחיצה על שלב קופצת אליו. כל קופי כאן shippable — עבר את שלושת הסוכנים (קופי / זרימה / TRIBE v2).</div>
+
+    <div class="step" data-go="s1"><span class="n">1</span><span class="t">כניסה</span>
+      <div class="d">ההבטחה: "המשפט שמסביר למה לבחור דווקא בכם". בלי ז'רגון, בלי שמות מוצרים.</div></div>
+    <div class="step" data-go="s2"><span class="n">2</span><span class="t">3 שאלות מצביות</span>
+      <div class="d">איפה העסק · מה עוצר · מה ישנה. ניסוחים בגובה העיניים ("הכול עובר דרכי") — לא טיפולוגיה. <b>ההקשה השנייה נשמרת ותופיע במזלג.</b></div></div>
+    <div class="step" data-go="s5"><span class="n">3</span><span class="t">שער אימייל</span>
+      <div class="d">לפני התוצאה (opt-in 50-60% לפני מול &lt;20% אחרי).</div></div>
+    <div class="step" data-go="s6"><span class="n">4</span><span class="t">הקריאה הראשונית — עם המגבלה בתוך הכרטיס</span>
+      <div class="d">TRIBE: שורת "שלוש תשובות זה מתאר, לא דיוקן" יושבת <b>בתוך</b> כרטיס ההמלצה — ממסגרת את הפרס כלא-שלם, לא כ-upsell.</div></div>
+    <div class="step" data-go="s7"><span class="n">5</span><span class="t">המזלג — הלב של הכול</span>
+      <div class="d">Callback דינמי לחסם שבחרת + teaser מטושטש (55-65%, קטע קריא אחד, CAS 0.74→0.81) + הבטחה כנה ("השיטה מנסחת", לא "הדר מנסחת") + קיצור דרך לשיחה מוגדרת + יציאה שקטה.</div></div>
+    <div class="step" data-go="s8"><span class="n">6</span><span class="t">גשר הכניסה לעומק</span>
+      <div class="d">"עד כאן שאלנו על העסק. עכשיו זה עובר אליך." מסך משלו כי הבעלות מתחלפת. מד התקדמות <b>חדש</b> (קריאה · 1 מתוך 6) — מד רציף שקופץ אחורה = שבירת חוזה.</div></div>
+    <div class="step" data-go="s9"><span class="n">7</span><span class="t">שש השאלות — הסט המאומת</span>
+      <div class="d">סדר v2 הקנוני. placeholder = רמז-שליפה, לא דוגמה (דוגמה מזהמת את מנוע הבידול). טיפ המיקרופון מופיע רק אחרי השהיה. probe פעם אחת מקסימום, אף פעם לא על שאלת הכאב.</div></div>
+    <div class="step" data-go="s12"><span class="n">8</span><span class="t">שאלת הכאב — עם נשימה ודילוג</span>
+      <div class="d">שורת נשימה לפני ("רגע נשימה...") כדי שהכאב לא יארוב אחרי שאלת התודה. <b>נסה לדלג — ותראה את שאלה 5 מתחלפת.</b></div></div>
+    <div class="step" data-go="s15"><span class="n">9</span><span class="t">שער טלפון</span>
+      <div class="d">אחרי ההשקעה, כלוגיסטיקה: "המכתב שלך נכתב עכשיו." + נתיב שקט בלי טלפון (הליד מסומן, לא נחסם).</div></div>
+    <div class="step" data-go="s16"><span class="n">10</span><span class="t">המכתב — fade פסקה-פסקה</span>
+      <div class="d">נפתח בציטוט המילים שלך, חתימה אחרונה לבד, כרטיס השיתוף מופיע רק אחרי beat (מתנה בלי בקשת שיווק מהודקת). ההמלצה המשודרגת כ-P.S.</div></div>
+    <div class="step" data-go="d1"><span class="n">11</span><span class="t">הדלת החמה</span>
+      <div class="d">לרפרלים ומוכנים — "אם כבר ברור לך שהשיחה עם הדר היא הצעד, אין צורך לחכות."</div></div>
+
+    <div class="facts">
+      <div class="t">פסקי TRIBE v2 שמוטמעים כאן</div>
+      <table>
+        <tr><td>המגבלה בתוך כרטיס ההמלצה</td><td>CAS +0.05</td></tr>
+        <tr><td>Teaser חלקי (לא מלא, לא מוסתר)</td><td>CAS 0.74→0.81</td></tr>
+        <tr><td>רמז-שליפה במקום דוגמה</td><td>EII +0.06 + מגן על המנוע</td></tr>
+        <tr><td>מיקרופון רק אחרי השהיה</td><td>ARS +0.08 לתקועים</td></tr>
+        <tr><td>שני מדי התקדמות נפרדים</td><td>ARS ‎0.62→0.71</td></tr>
+        <tr><td>מכתב פסקה-פסקה, חתימה לבד</td><td>EII +0.07</td></tr>
+        <tr><td>כרטיס שיתוף אחרי beat</td><td>HSS נשמר, CAS +0.04</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ PHONE ═══ -->
+  <div class="phone-col">
+    <div class="phone">
+      <div class="notch"></div>
+
+      <!-- S1 entry -->
+      <div class="screen active" id="s1">
+        <div style="margin-top:70px;text-align:center">
+          <div style="font-size:10px;font-weight:800;letter-spacing:.22em;color:var(--goldL);margin-bottom:10px">TRUESIGNAL©</div>
+          <div style="font-size:28px;font-weight:800;line-height:1.3;margin-bottom:12px">המשפט שמבדל אתכם</div>
+          <p style="font-size:14.5px;color:var(--muted);line-height:1.8;max-width:300px;margin:0 auto">
+            יש משפט אחד שמסביר למה לבחור דווקא בכם.<br/>
+            רוב בעלי העסקים לא מצליחים להגיד אותו.<br/>
+            <b style="color:var(--fg)">הכלי הזה מוצא אותו, מהמילים שלכם.</b>
+          </p>
+          <p style="font-size:11.5px;color:var(--muted);margin-top:14px;opacity:.8">מתחילים בשלוש שאלות קצרות. חמש עד עשר דקות בסך הכול. חינם.</p>
+        </div>
+        <div class="cta">
+          <button class="btn" onclick="go('s2')">להתחיל ←</button>
+          <button class="btn ghost" onclick="go('d1')">הגעתם בהמלצה? קיצור דרך לשיחה</button>
+        </div>
+      </div>
+
+      <!-- S2 MC1 -->
+      <div class="screen" id="s2">
+        <div class="plabel"><span>חלק 1 · היכרות</span><b>1 / 3</b></div>
+        <div class="prog"><div style="width:8%"></div></div>
+        <div class="q-title">איפה העסק עומד היום?</div>
+        <div class="chips">
+          <button class="chip" onclick="pickMC(this,'s3')">עוד אין עסק. יש רעיון שלא עוזב אותי</button>
+          <button class="chip" onclick="pickMC(this,'s3')">יש לקוחות ראשונים, עוד אין שיטה</button>
+          <button class="chip" onclick="pickMC(this,'s3')">יש הכנסה קבועה, אבל הכול עובר דרכי</button>
+          <button class="chip" onclick="pickMC(this,'s3')">העסק רץ, ומשהו בפנים כבר לא מתחבר</button>
+        </div>
+      </div>
+
+      <!-- S3 MC2 (blocker — stored!) -->
+      <div class="screen" id="s3">
+        <div class="plabel"><span>חלק 1 · היכרות</span><b>2 / 3</b></div>
+        <div class="prog"><div style="width:16%"></div></div>
+        <div class="q-title">מה עוצר אתכם עכשיו הכי הרבה?</div>
+        <div class="chips">
+          <button class="chip" onclick="pickBlocker(this,0)">המסר. כל פעם זה יוצא אחרת</button>
+          <button class="chip" onclick="pickBlocker(this,1)">התוכן. יש לי מה להגיד, אבל זה לא יוצא החוצה</button>
+          <button class="chip" onclick="pickBlocker(this,2)">המחיר. קשה לבקש את מה שזה באמת שווה</button>
+          <button class="chip" onclick="pickBlocker(this,3)">הזמן. הכול על הכתפיים שלי, אין רגע להרים את הראש</button>
+        </div>
+      </div>
+
+      <!-- S4 MC3 -->
+      <div class="screen" id="s4">
+        <div class="plabel"><span>חלק 1 · היכרות</span><b>3 / 3</b></div>
+        <div class="prog"><div style="width:24%"></div></div>
+        <div class="q-title">מה היה משנה לכם הכי הרבה בחודשיים הקרובים?</div>
+        <div class="chips">
+          <button class="chip" onclick="pickMC(this,'s5')">לקוחות ראשונים שמשלמים</button>
+          <button class="chip" onclick="pickMC(this,'s5')">מסר אחד ברור, כזה שאפשר לחזור עליו בלי להתבייש</button>
+          <button class="chip" onclick="pickMC(this,'s5')">מערכת שמביאה פניות גם בשבוע שלא פרסמתם כלום</button>
+          <button class="chip" onclick="pickMC(this,'s5')">לחזור להרגיש את מה שבגללו התחלתם</button>
+        </div>
+      </div>
+
+      <!-- S5 email gate -->
+      <div class="screen" id="s5">
+        <div class="plabel"><span>עוד רגע</span><b></b></div>
+        <div class="prog"><div style="width:32%"></div></div>
+        <div class="q-title">לאן לשלוח את הקריאה הראשונית?</div>
+        <div class="q-hint">היא מופיעה גם כאן במסך הבא. המייל שומר לכם אותה.</div>
+        <input class="inp" placeholder="שם פרטי" value="דנה"/>
+        <input class="inp" placeholder="אימייל" value="dana@example.com"/>
+        <div class="cta"><button class="btn" onclick="go('s6')">לקבל את הקריאה ←</button></div>
+      </div>
+
+      <!-- S6 reco with limit INSIDE -->
+      <div class="screen" id="s6">
+        <div class="plabel"><span>הקריאה הראשונית</span><b></b></div>
+        <div class="prog"><div style="width:40%"></div></div>
+        <div class="rec">
+          <div class="body">
+            <div class="lbl">הקריאה הראשונית שלכם</div>
+            <div class="why" style="margin-top:0;font-size:14px">יש כבר אנשים שמשלמים לכם. זו הוכחה שהערך אמיתי.<br/><br/>מה שעוד אין זו שיטה: כשהמסר יוצא כל פעם אחרת, אי אפשר לבנות קצב של פניות.<br/><br/><b style="color:var(--goldL)">הצעד הנכון עכשיו הוא לא עוד כלי שיווק, אלא לקבע מסר אחד ולהפוך אותו להרגל.</b></div>
+          </div>
+          <div class="limit">אבל שלוש תשובות זה מתאר, לא דיוקן. את המשפט שמבדל אתכם אפשר לקרוא רק ממה שבאמת קרה לכם.</div>
+        </div>
+        <div class="cta"><button class="btn" onclick="go('s7')">להמשיך ←</button></div>
+      </div>
+
+      <!-- S7 THE FORK — dynamic callback -->
+      <div class="screen" id="s7">
+        <div class="plabel"><span>שתי דרכים מכאן</span><b></b></div>
+        <div class="prog"><div style="width:45%"></div></div>
+        <div class="fork-head" id="forkHead">
+          <!-- filled by JS from blocker choice -->
+        </div>
+        <div class="fork-body">
+          זה לא חסר לכם. זה כבר קיים, פשוט עוד לא נאמר בקול רם.<br/>
+          עוד שש שאלות, והשיטה שבנתה הדר דנן, אסטרטגית שליוותה יותר מ-250 עסקים, מנסחת לכם אותו במשפט אחד. <b style="color:var(--goldL)">מהמילים שלכם, לא מתבנית.</b> למשפט הזה אנחנו קוראים האות שלכם.
+        </div>
+        <div class="teaser">
+          <div class="who">האות של יעל, מאמנת עסקית</div>
+          <div class="quote">"נשים לא מגיעות אליי בשביל עוד תוכנית עבודה. הן מגיעות כי אני <span class="blur">רואה את הרגע שבו הן מפסיקות להאמין לעצמן, ומחזירה</span>"</div>
+          <div class="lock">🔒</div>
+        </div>
+        <div class="teaser-note">האות שלכם ייכתב רק מהתשובות שלכם. אין שניים זהים.</div>
+        <div class="cta">
+          <button class="btn" onclick="go('s8')">לנסח את המשפט שמבדל אתכם ←</button>
+          <div class="scope">שש שאלות פתוחות. בערך 7 דקות. <b>האות נבנה מהמילים שלכם, ולכן הוא צריך אותן.</b></div>
+          <button class="btn ghost" onclick="go('d1')">קיצור דרך: שיחת היכרות קצרה עם הדר, בלי עלות ובלי התחייבות</button>
+          <button class="quiet" onclick="go('exit')">הקריאה כבר במייל, אפשר לעצור כאן</button>
+        </div>
+      </div>
+
+      <!-- S8 depth intro bridge -->
+      <div class="screen" id="s8">
+        <div style="margin-top:110px;text-align:center">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.2em;color:var(--goldL);margin-bottom:14px">הקריאה</div>
+          <p style="font-size:17px;line-height:1.8;max-width:290px;margin:0 auto">
+            עד כאן שאלנו על העסק.<br/><b style="color:var(--goldL)">עכשיו זה עובר אליכם.</b><br/><br/>
+            <span style="font-size:14px;color:var(--muted)">שש שאלות. אין תשובות נכונות,<br/>יש רק החומר שממנו ננסח את המשפט שלכם.</span>
+          </p>
+        </div>
+        <div class="cta"><button class="btn" onclick="go('s9')">להתחיל בשאלות ←</button></div>
+      </div>
+
+      <!-- S9 Q1 flow_zone -->
+      <div class="screen" id="s9">
+        <div class="plabel"><span>הקריאה</span><b>שאלה 1 מתוך 6</b></div>
+        <div class="prog"><div style="width:17%"></div></div>
+        <div class="q-title">רגע שבו שכחת מהזמן</div>
+        <div class="q-hint">מתי זה קרה בפעם האחרונה? איפה היית, מה עשית שם, ואיך פתאום גילית כמה זמן עבר.</div>
+        <textarea class="txt" placeholder="תחשבו על השבועיים האחרונים. היה רגע כזה..." oninput="hideTip(this)"></textarea>
+        <div class="one-line">משפט אחד מספיק.</div>
+        <div class="mic-tip" id="tip1">🎤 <span>אפשר גם לדבר: לחצו על <b>המיקרופון במקלדת</b>. תשובות מדוברות יוצאות עשירות יותר.</span></div>
+        <div class="cta"><button class="btn" onclick="go('s10')">להמשיך ←</button></div>
+      </div>
+
+      <!-- S10 Q2 mastery + probe demo -->
+      <div class="screen" id="s10">
+        <div class="plabel"><span>הקריאה</span><b>שאלה 2 מתוך 6</b></div>
+        <div class="prog"><div style="width:33%"></div></div>
+        <div class="q-title">מה הדבר שאנשים עוצרים ושואלים אותך: רגע, איך עשית את זה?</div>
+        <div class="q-hint">מתי לאחרונה מישהו שאל אותך את זה, ומה עשית שם? ואם אין לך תשובה מסודרת, זה בדיוק הסימן.</div>
+        <textarea class="txt" id="q2txt">אנשים תמיד אומרים שאני יודעת להקשיב</textarea>
+        <div class="probe" id="probe2">
+          <div style="color:var(--blue);font-weight:700;font-size:10.5px;letter-spacing:.08em;margin-bottom:4px">ה-PROBE — מופיע פעם אחת, רק כשהתשובה כללית:</div>
+          יש כאן משהו. אפשר עוד צעד אחד פנימה? מי שאל, ומה בדיוק עשית שם?
+        </div>
+        <div class="cta"><button class="btn" id="q2btn" onclick="probeThen()">להמשיך ←</button></div>
+      </div>
+
+      <!-- S11 Q3 gratitude -->
+      <div class="screen" id="s11">
+        <div class="plabel"><span>הקריאה</span><b>שאלה 3 מתוך 6</b></div>
+        <div class="prog"><div style="width:50%"></div></div>
+        <div class="q-title">על מה אנשים מודים לך הכי הרבה?</div>
+        <div class="q-hint">לא מה שכתוב באתר. משפט תודה אחד שקיבלת באמת: מי אמר אותו, מה בדיוק נאמר, ומה השתנה אצלו. אפשר לצטט מילה במילה.</div>
+        <div class="q-hint2">עוד אין לקוחות? תודה אמיתית נחשבת גם מחבר, קולגה, או אדם שעזרת לו בדרך.</div>
+        <textarea class="txt" placeholder="תחשבו על הפעם האחרונה שמישהו עצר להגיד תודה..."></textarea>
+        <div class="cta"><button class="btn" onclick="go('s12')">להמשיך ←</button></div>
+      </div>
+
+      <!-- S12 Q4 hard_period with breath + skip -->
+      <div class="screen" id="s12">
+        <div class="plabel"><span>הקריאה</span><b>שאלה 4 מתוך 6</b></div>
+        <div class="prog"><div style="width:67%"></div></div>
+        <div class="breath">רגע נשימה. השאלה הבאה נוגעת במקום פחות נוח, והיא לגמרי בבחירה שלך.</div>
+        <div class="q-title">תקופה קשה שעברת. לא צריך את כל הסיפור, רק רגע אחד מתוכה.</div>
+        <div class="q-hint">אפשר לדלג, או לכתוב רק מה שמרגיש בסדר לחלוק. אין כאן רשות לחקור כאב שלא בחרת להעלות. אם כן, רגע אחד: איפה היית, מה קרה.</div>
+        <textarea class="txt" placeholder=""></textarea>
+        <div class="cta">
+          <button class="btn" onclick="answeredHard(true)">להמשיך ←</button>
+          <button class="btn skip" onclick="answeredHard(false)">לדלג על השאלה הזאת</button>
+        </div>
+      </div>
+
+      <!-- S13 Q5 what_helped — CONDITIONAL -->
+      <div class="screen" id="s13">
+        <div class="plabel"><span>הקריאה</span><b>שאלה 5 מתוך 6</b></div>
+        <div class="prog"><div style="width:83%"></div></div>
+        <div id="q5wrapA">
+          <div class="q-title">מה עזר לך לצאת מזה, מה פיתחת בעצמך</div>
+        </div>
+        <div id="q5wrapB" style="display:none">
+          <div class="q-title">מה הכלי, ההרגל או השאלה שפיתחת בעצמך, הדבר שהכי מחזיק אותך היום?</div>
+          <div style="font-size:10.5px;color:var(--green);margin:-4px 0 8px">← הנוסח הותאם כי דילגת על השאלה הקודמת. אין "מזה" תלוי באוויר.</div>
+        </div>
+        <div class="q-hint">כלי, הרגל, או שאלה שהפכה למפתח. לא משהו שלמדת מספר, משהו שחיית. במילים שלך, כאילו חבר שואל אותך בטלפון.</div>
+        <textarea class="txt" placeholder="הדבר שאני חוזרת אליו כשקשה הוא..."></textarea>
+        <div class="cta"><button class="btn" onclick="go('s14')">להמשיך ←</button></div>
+      </div>
+
+      <!-- S14 Q6 message -->
+      <div class="screen" id="s14">
+        <div class="plabel"><span>הקריאה</span><b>שאלה 6 מתוך 6</b></div>
+        <div class="prog"><div style="width:100%"></div></div>
+        <div class="q-title">משפט אחד למי שנמצא היום בדיוק איפה שהיית</div>
+        <div class="q-hint">יש אדם אחד ספציפי כזה, אולי פגשת אותו השבוע. מה המשפט הראשון שלך אליו? צעד אחד קונקרטי.</div>
+        <textarea class="txt" placeholder="דמיינו אותו יושב מולכם עכשיו..."></textarea>
+        <div class="cta"><button class="btn" onclick="go('s15')">לסיים את הקריאה ←</button></div>
+      </div>
+
+      <!-- S15 phone gate -->
+      <div class="screen" id="s15">
+        <div class="plabel"><span>זהו. שש התשובות נאספו.</span><b></b></div>
+        <div class="prog"><div style="width:100%"></div></div>
+        <div style="margin-top:30px">
+          <div class="q-title">האות שלכם מנוסח ממש עכשיו.</div>
+          <div class="q-hint">נשלח אותו גם לוואטסאפ, שלא ילך לאיבוד. ואם תרצו, שיחת היכרות קצרה עם הדר לעבור עליו יחד. בלי עלות ובלי התחייבות.</div>
+          <input class="inp" placeholder="טלפון" value="050-1234567"/>
+        </div>
+        <div class="cta">
+          <button class="btn" onclick="go('s16')">לקבל את האות ←</button>
+          <button class="quiet" onclick="go('s16')">להמשיך בלי טלפון</button>
+        </div>
+      </div>
+
+      <!-- S16 letter with paragraph fade -->
+      <div class="screen" id="s16">
+        <div style="height:6px"></div>
+        <div class="letter" id="letter">
+          <div class="from">מהדר</div>
+          <p>דנה, כתבת ש<span class="youquote">"אנשים תמיד אומרים שאני יודעת להקשיב"</span>. ואז, כשה-probe שאל, סיפרת על הלקוחה שבכתה כי סוף סוף מישהי הבינה מה היא לא מצליחה להגיד.</p>
+          <p>זה לא הקשבה. הקשבה זה מה שכולן עושות. את שומעת את המשפט שהאישה מולך לא מעיזה להגיד, ואומרת אותו בשבילה. זה האות שלך.</p>
+          <p class="ps">נ.ב. לפי שלוש התשובות הראשונות, התמונה נראתה אחרת. אחרי מה שכתבת, היא השתנתה: הצעד הנכון בשבילך הוא שיחת היכרות. אפשר לקבוע כאן למטה, והפרטים גם במייל.</p>
+          <p class="sig">הדר</p>
+        </div>
+        <div class="sharecard" id="shareC">
+          המשפט שלכם, מעוצב כקלף: <b style="color:var(--goldL)">לשמור · לשתף · לתחרות החודשית</b><br/><button class="btn" style="margin-top:10px;padding:10px;font-size:13px" onclick="alert('דמו: מסך קביעת שיחה')">לקבוע שיחת היכרות ←</button>
+        </div>
+        <div class="cta"><button class="btn ghost" onclick="restart()">חזרה להתחלה</button></div>
+      </div>
+
+      <!-- D1 door -->
+      <div class="screen" id="d1">
+        <div style="height:14px"></div>
+        <div class="q-title">קיצור דרך לשיחה.</div>
+        <div class="q-hint">אם כבר ברור לכם ששיחת היכרות עם הדר היא הצעד, אין צורך לחכות. שלושה פרטים ומשפט אחד.</div>
+        <input class="inp" placeholder="שם מלא" value="יואב לוי"/>
+        <input class="inp" placeholder="טלפון" value="052-9876543"/>
+        <input class="inp" placeholder="אימייל" value="yoav@example.com"/>
+        <textarea class="txt" style="min-height:85px" placeholder="מה הכי חשוב שהדר תדע לפני השיחה?">סגרתי שנה של 2M והתקרה עכשיו היא שאני צוואר הבקבוק של השיווק. הגעתי דרך מיכל ברק.</textarea>
+        <div class="cta"><button class="btn wa" onclick="go('d2')">לשלוח להדר ←</button></div>
+      </div>
+
+      <!-- D2 door done -->
+      <div class="screen" id="d2">
+        <div style="margin-top:130px;text-align:center">
+          <div style="font-size:38px;margin-bottom:14px">🚪</div>
+          <div class="q-title" style="text-align:center">הגיע.</div>
+          <p style="font-size:13.5px;color:var(--muted);line-height:1.75;max-width:270px;margin:8px auto 0">
+            הדר קוראת כל פנייה בעצמה וחוזרת בתוך יום עסקים. הקריאה הראשונית כבר אצלך במייל.
+          </p>
+        </div>
+        <div class="cta"><button class="btn ghost" onclick="restart()">חזרה להתחלה</button></div>
+      </div>
+
+      <!-- exit -->
+      <div class="screen" id="exit">
+        <div style="margin-top:130px;text-align:center">
+          <div style="font-size:38px;margin-bottom:14px">✉️</div>
+          <div class="q-title" style="text-align:center">הקריאה הראשונית אצלכם במייל</div>
+          <p style="font-size:13.5px;color:var(--muted);line-height:1.75;max-width:280px;margin:8px auto 0">
+            ואם המשפט שמבדל אתכם עוד מסקרן, הקישור להמשך שמור שם. בלי לחץ.
+          </p>
+        </div>
+        <div class="cta"><button class="btn ghost" onclick="restart()">חזרה להתחלה</button></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const state = { blocker: 1, skippedHard: false, probeShown: false };
+
+  // Fork headlines per blocker (dynamic callback — Cialdini consistency)
+  const FORK_HEADS = [
+    'אמרתם שהמסר <span class="cb">יוצא כל פעם אחרת</span>.',
+    'אמרתם שיש לכם מה להגיד, <span class="cb">אבל זה לא יוצא החוצה</span>.',
+    'אמרתם ש<span class="cb">קשה לבקש את מה שזה באמת שווה</span>.',
+    'אמרתם ש<span class="cb">הכול על הכתפיים שלכם</span>.',
+  ];
+
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id));
+    document.querySelectorAll('.step').forEach(st=>st.classList.toggle('on', st.dataset.go===id));
+  }
+
+  function go(id){
+    if(id==='s7'){
+      document.getElementById('forkHead').innerHTML = FORK_HEADS[state.blocker];
+    }
+    if(id==='s13'){
+      document.getElementById('q5wrapA').style.display = state.skippedHard ? 'none':'block';
+      document.getElementById('q5wrapB').style.display = state.skippedHard ? 'block':'none';
+    }
+    if(id==='s9'){
+      // delayed mic tip (prod: 8-10s of no typing; demo: 3s)
+      setTimeout(()=>document.getElementById('tip1')?.classList.add('show'), 3000);
+    }
+    if(id==='s16'){ revealLetter(); }
+    show(id);
+  }
+
+  function pickMC(el,next){ el.classList.add('sel'); setTimeout(()=>go(next),260); }
+  function pickBlocker(el,idx){ state.blocker = idx; el.classList.add('sel'); setTimeout(()=>go('s4'),260); }
+  function answeredHard(answered){ state.skippedHard = !answered; go('s13'); }
+  function hideTip(t){ document.getElementById('tip1')?.classList.remove('show'); }
+
+  function probeThen(){
+    if(!state.probeShown){
+      state.probeShown = true;
+      document.getElementById('probe2').classList.add('show');
+      document.getElementById('q2btn').textContent = 'להמשיך בכל זאת ←';
+      return; // first press shows probe; second always proceeds (spec)
+    }
+    go('s11');
+  }
+
+  function revealLetter(){
+    const ps = document.querySelectorAll('#letter p');
+    ps.forEach(p=>p.classList.remove('in'));
+    document.getElementById('shareC').classList.remove('in');
+    ps.forEach((p,i)=> setTimeout(()=>p.classList.add('in'), 500 + i*750));
+    setTimeout(()=>document.getElementById('shareC').classList.add('in'), 500 + ps.length*750 + 1800);
+  }
+
+  function restart(){
+    state.skippedHard=false; state.probeShown=false;
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+    document.getElementById('probe2').classList.remove('show');
+    document.getElementById('q2btn').textContent='להמשיך ←';
+    go('s1');
+  }
+
+  document.querySelectorAll('.step').forEach(st=>st.addEventListener('click',()=>go(st.dataset.go)));
+  show('s1');
+</script>
+</body>
+</html>
