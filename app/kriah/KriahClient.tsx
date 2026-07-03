@@ -226,6 +226,13 @@ interface Draft {
 }
 
 export function KriahClient({ previewKey, isTest }: Props) {
+  // Plant the tester cookie so the next visit works without ?key= (90 days).
+  useEffect(() => {
+    if (previewKey) {
+      document.cookie = `kriah_preview=${encodeURIComponent(previewKey)}; path=/; max-age=${90 * 24 * 3600}; SameSite=Lax; Secure`;
+    }
+  }, [previewKey]);
+
   const [ready, setReady]         = useState(false);
   const [screen, setScreen]       = useState<Screen>("s1");
   const [qIdx, setQIdx]           = useState(0);

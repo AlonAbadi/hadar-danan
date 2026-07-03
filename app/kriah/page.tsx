@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { unifiedFunnelEnabled, kriahPreviewAllowed } from "@/lib/isolation";
 import { KriahClient } from "./KriahClient";
 
@@ -17,7 +18,12 @@ export default async function KriahPage({
   searchParams: Promise<{ key?: string }>;
 }) {
   const sp = await searchParams;
-  const key = sp?.key ?? "";
+  // Tester convenience: one visit with ?key= plants a device cookie (set
+  // client-side by KriahClient), and from then on a bare /kriah works on
+  // that device. Everyone else still gets a 404 — the funnel stays hidden.
+  const cookieStore = await cookies();
+  const cookieKey = cookieStore.get("kriah_preview")?.value ?? "";
+  const key = kriahPreviewAllowed(sp?.key) ? (sp?.key ?? "") : cookieKey;
 
   if (!unifiedFunnelEnabled() && !kriahPreviewAllowed(key)) notFound();
 
