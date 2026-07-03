@@ -173,6 +173,10 @@ export async function POST(
     ...row.signal,
     shoot_day:              plan,
     shoot_day_generated_at: generated_at,
+    // Also store video 1 as a per-video slice — the GET endpoint's full-plan
+    // assembly counts shoot_day_v1..v7 slices, and without this the plan
+    // built via finish + builder tops out at 6 slices and never goes full.
+    shoot_day_v1:           video1,
     // Phase-1 partial no longer needed once the full plan is cached
     shoot_day_phase1: undefined,
   };
