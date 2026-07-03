@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>קריאת האות — הדגמת הכלי המאוחד</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0D1018; --bg2:#080C14; --card:#141820; --soft:#1D2430; --line:#2C323E;
+    --gold:#C9964A; --goldL:#E8B94A; --goldD:#9E7C3A;
+    --fg:#EDE9E1; --muted:#9E9990; --green:#7FD49B; --blue:#7FB2F2; --wa:#25D366;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Assistant',sans-serif;background:var(--bg2);color:var(--fg);min-height:100vh;direction:rtl}
+
+  .top{max-width:1280px;margin:0 auto;padding:28px 24px 8px;text-align:center}
+  .top .eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;color:var(--goldL);text-transform:uppercase;margin-bottom:8px}
+  .top h1{font-size:30px;font-weight:800}
+  .top p{font-size:14px;color:var(--muted);margin-top:8px;max-width:720px;margin-inline:auto;line-height:1.7}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:24px;display:grid;grid-template-columns:420px 1fr;gap:28px;align-items:start}
+  @media(max-width:960px){.wrap{grid-template-columns:1fr}}
+
+  /* ── Phone frame ── */
+  .phone-col{position:sticky;top:16px}
+  .phone{width:390px;max-width:100%;height:760px;margin:0 auto;background:var(--bg);border:3px solid #2a3040;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:140px;height:26px;background:#000;border-radius:0 0 16px 16px;z-index:5}
+  .screen{position:absolute;inset:0;padding:44px 22px 20px;overflow-y:auto;display:none;flex-direction:column}
+  .screen.active{display:flex}
+
+  .prog{height:4px;background:var(--line);border-radius:99px;margin-bottom:20px;overflow:hidden;flex-shrink:0}
+  .prog>div{height:100%;background:linear-gradient(90deg,var(--goldL),var(--gold));border-radius:99px;transition:width .4s}
+
+  .q-eyebrow{font-size:10px;font-weight:800;letter-spacing:.2em;color:var(--goldL);text-transform:uppercase;margin-bottom:10px}
+  .q-title{font-size:21px;font-weight:800;line-height:1.35;margin-bottom:8px}
+  .q-hint{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:18px}
+
+  .chips{display:flex;flex-direction:column;gap:10px}
+  .chip{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:14px 16px;font-size:14.5px;font-weight:600;color:var(--fg);cursor:pointer;text-align:right;transition:all .15s;font-family:inherit}
+  .chip:hover,.chip.sel{border-color:var(--goldL);background:rgba(232,185,74,.08);color:var(--goldL)}
+
+  .txt{width:100%;min-height:130px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--fg);font-family:inherit;font-size:14px;line-height:1.6;resize:none}
+  .txt:focus{outline:none;border-color:var(--gold)}
+  .mic-tip{margin-top:10px;font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .mic-tip b{color:var(--goldL)}
+
+  .cta{margin-top:auto;padding-top:16px}
+  .btn{display:block;width:100%;text-align:center;background:linear-gradient(180deg,#f4d27a 0%,#e8b942 52%,#d59b1f 100%);color:#2a1d05;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 8px 20px -8px rgba(214,155,31,.6)}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);box-shadow:none;margin-top:9px;font-weight:600;font-size:13px}
+  .btn.wa{background:var(--wa);color:#0b141a}
+
+  .inp{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:13px 14px;color:var(--fg);font-family:inherit;font-size:14.5px;margin-bottom:10px}
+
+  .rec-card{background:rgba(232,185,74,.05);border:1px solid rgba(201,150,74,.45);border-radius:14px;padding:18px;margin-bottom:16px}
+  .rec-label{font-size:10px;font-weight:800;letter-spacing:.18em;color:var(--goldL);text-transform:uppercase;margin-bottom:8px}
+  .rec-name{font-size:20px;font-weight:800;color:var(--goldL)}
+  .rec-why{font-size:13px;color:var(--fg);line-height:1.6;margin-top:8px}
+
+  .fork-note{font-size:14.5px;line-height:1.7;margin:6px 0 16px}
+  .fork-note b{color:var(--goldL)}
+
+  .probe{background:rgba(127,178,242,.07);border:1px solid rgba(127,178,242,.3);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;color:var(--fg);margin-top:12px;animation:fadeIn .5s}
+  .probe .k{color:var(--blue);font-weight:700;font-size:11px;letter-spacing:.1em}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .letter{background:linear-gradient(180deg,rgba(232,185,74,.05) 0%,transparent 100%);border:1px solid rgba(232,185,74,.3);border-radius:16px;padding:22px 18px;font-size:14px;line-height:1.85}
+  .letter .from{color:var(--goldL);font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;margin-bottom:12px;text-align:right}
+  .letter .sig{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:20px;color:var(--gold);margin-top:14px}
+
+  .door-box{background:var(--card);border:1px dashed rgba(232,185,74,.4);border-radius:14px;padding:16px;margin-top:14px}
+  .door-box .t{font-size:13px;font-weight:800;color:var(--goldL);margin-bottom:4px}
+  .door-box .d{font-size:12px;color:var(--muted);line-height:1.6}
+
+  /* ── Annotations panel ── */
+  .notes h2{font-size:20px;font-weight:800;margin-bottom:4px}
+  .notes .sub{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+  .step:hover{border-color:rgba(201,150,74,.4)}
+  .step.on{border-color:var(--goldL);background:rgba(232,185,74,.05)}
+  .step .n{display:inline-flex;width:24px;height:24px;border-radius:50%;background:rgba(232,185,74,.12);border:1px solid var(--goldL);color:var(--goldL);font-size:12px;font-weight:800;align-items:center;justify-content:center;margin-left:9px}
+  .step .t{font-size:14.5px;font-weight:700;display:inline}
+  .step .d{font-size:12.5px;color:var(--muted);line-height:1.65;margin-top:7px}
+  .step .d b{color:var(--goldL)}
+
+  .facts{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:18px}
+  .facts .t{font-size:13px;font-weight:800;color:var(--goldL);margin-bottom:10px;letter-spacing:.06em}
+  .facts table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .facts td{padding:6px 4px;border-bottom:1px solid rgba(44,50,62,.5);color:var(--fg)}
+  .facts td:first-child{color:var(--muted)}
+  .facts tr:last-child td{border-bottom:none}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="eyebrow">DEMO · מוקאפ אינטראקטיבי</div>
+  <h1>קריאת האות — הכלי המאוחד</h1>
+  <p>הקוויז והסיגנל הופכים לכלי אחד בשתי מהירויות: פתיח של 3 הקשות שנותן המלצה, ומזלג שמזמין את מי שרוצה להיראות באמת. <b style="color:var(--goldL)">לחצו על הטלפון כדי לעבור את המסע כמו לקוח</b>, או על שלב בפאנל הימני כדי לקפוץ.</p>
+</div>
+
+<div class="wrap">
+
+  <!-- ═══════ ANNOTATIONS (right side in RTL = first) ═══════ -->
+  <div class="notes">
+    <h2>הזרימה, שלב אחרי שלב</h2>
+    <div class="sub">כל מה שמופיע בטלפון הוא קופי אמיתי מהמחקר — לא lorem ipsum. הצעד הכתום בפאנל = המסך המוצג כרגע.</div>
+
+    <div class="step" data-go="0"><span class="n">1</span><span class="t">כניסה — "קריאת האות"</span>
+      <div class="d">אף פעם לא "שאלון" או "קוויז". ההבטחה: <b>"שלוש שאלות קצרות, ואם תרצו — קריאה אמיתית."</b> שקיפות מלאה על שתי הקומות מהשנייה הראשונה.</div></div>
+
+    <div class="step" data-go="1"><span class="n">2</span><span class="t">3 הקשות מצביות (40 שניות)</span>
+      <div class="d">איפה העסק · מה חוסם · מה היעד. <b>לא טיפולוגיה</b> ("איזה טיפוס אתם") אלא שאלות מצב קונקרטיות — בסגנון של הדר ("ספר לי על המכירה האחרונה"). זה גם שדה מצב-העסק ממחקר השאלות — עבודה משותפת.</div></div>
+
+    <div class="step" data-go="4"><span class="n">3</span><span class="t">שער אימייל — לפני התוצאה</span>
+      <div class="d">בנצ'מארק: opt-in לפני תוצאה ממיר 50-60%, אחרי — פחות מ-20%. התוצאה היא התשלום. <b>45 לידים עם אימייל לכל 100 כניסות.</b></div></div>
+
+    <div class="step" data-go="5"><span class="n">4</span><span class="t">ההמלצה — בכוונה לא-שלמה + המזלג</span>
+      <div class="d">שם מוצר + משפט "למה" אחד. ואז המשפט שכל הפסיכולוגיה תלויה בו: <b>"היא נכונה, אבל היא עדיין לא אתם."</b> לולאה פתוחה על עצמם = יעד הסקרנות החזק ביותר. מי שממהר יוצא מכובד (ההצעה חוזרת במייל 2).</div></div>
+
+    <div class="step" data-go="6"><span class="n">5</span><span class="t">קומת העומק — 4 שאלות פתוחות</span>
+      <div class="d">עמוד שדרה קבוע (השוואתיות למנועים) + <b>probe חכם שמופיע רק כשהתשובה מופשטת</b> — מוכיח "קראו אותי" בלי להרגיש בוט חוקר. טיפ ההכתבה הקולית מתחת לכל תיבה. הסט הסופי ממתין להחלטת שאלות-v2.</div></div>
+
+    <div class="step" data-go="8"><span class="n">6</span><span class="t">שער טלפון — לפני המכתב</span>
+      <div class="d">אחרי 5+ דקות השקעה, הבקשה מוצגת כלוגיסטיקת משלוח: <b>"המכתב אישי. לאן לשלוח?"</b> — וזה הערוץ שבו נסגרים 96% מההכנסות.</div></div>
+
+    <div class="step" data-go="9"><span class="n">7</span><span class="t">המכתב + הכרטיס</span>
+      <div class="d">התוצר של הסיגנל הקיים — נשאר בדיוק כמו היום: מכתב הזהב, הכרטיס המשותף, התחרות. אם התשובות הפתוחות סותרות את ההמלצה מההקשות — <b>ההמלצה משתדרגת</b>.</div></div>
+
+    <div class="step" data-go="10"><span class="n">8</span><span class="t">הדלת החמה (מסלול מקביל)</span>
+      <div class="d">לרפרלים ומוכנים: 3 שדות + "מה זז בך עכשיו?" — 60 שניות, בלי תיאטרון, <b>ישר לראש הרשימה של הדר</b>. "לעולם לא מכריחים המלצה להוכיח את עצמה."</div></div>
+
+    <div class="step" data-go="11"><span class="n">9</span><span class="t">מאחורי הקלעים — הצד של הדר</span>
+      <div class="d">כל השלמה מזינה את /admin/today: ההקשות + התשובות הפתוחות + המכתב מחוברים לרשומה אחת, עם <b>שורת פתיחה מנוסחת מראש שמצטטת את המילים שלהם</b>.</div></div>
+
+    <div class="facts">
+      <div class="t">המתמטיקה (ל-100 כניסות, הנחות שמרניות)</div>
+      <table>
+        <tr><td>מסיימים את 3 ההקשות (75%)</td><td><b>75</b></td></tr>
+        <tr><td>משאירים אימייל בשער (60%)</td><td><b>45 לידים + המלצה</b></td></tr>
+        <tr><td>נכנסים לעומק במזלג (35%)</td><td><b>16</b></td></tr>
+        <tr><td>משלימים עומק + טלפון</td><td><b>~11 פרופילים מלאים</b></td></tr>
+      </table>
+      <div style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6">11 לידים שנראו-עד-הסוף, עם טלפון ושני סטים של דאטה — מול היום: שני מסלולים מנותקים שאף אחד לא מחבר. לעסק שסוגר בטלפון, 11 עמוקים &gt; 40 רדודים (לקח לוטם).</div>
+    </div>
+
+    <div class="facts">
+      <div class="t">מסלול ההגירה — כל שלב עומד לבדו</div>
+      <table>
+        <tr><td>שלב 1 (ימים)</td><td>מסך המזלג בסוף הקוויז הקיים → קישור לסיגנל הקיים. מודד קבלה.</td></tr>
+        <tr><td>שלב 2 (2-3 שבועות)</td><td>איחוד ל-URL אחד, המיתוג "קריאת האות", שערים פרוגרסיביים.</td></tr>
+        <tr><td>שלב 3</td><td>השכבה האדפטיבית + פרישת הקוויז העצמאי.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════ PHONE ═══════ -->
+  <div class="phone-col">
+    <div class="phone">
+      <div class="notch"></div>
+
+      <!-- 0: Entry -->
+      <div class="screen active" data-s="0">
+        <div style="margin-top:60px;text-align:center">
+          <div class="q-eyebrow">TrueSignal©</div>
+          <div style="font-size:30px;font-weight:800;line-height:1.3;margin-bottom:14px">קריאת האות</div>
+          <p style="font-size:15px;color:var(--muted);line-height:1.75;max-width:280px;margin:0 auto">
+            שלוש שאלות קצרות, ואם תרצו — קריאה אמיתית.<br/>
+            בסוף מחכה לכם הצעד הנכון, ואולי גם מכתב.
+          </p>
+        </div>
+        <div class="cta">
+          <button class="btn" onclick="go(1)">מתחילים בקריאה ←</button>
+          <button class="btn ghost" onclick="go(10)">כבר מכירים אותנו? הדלת המהירה</button>
+        </div>
+      </div>
+
+      <!-- 1: MC Q1 -->
+      <div class="screen" data-s="1">
+        <div class="prog"><div style="width:15%"></div></div>
+        <div class="q-eyebrow">1 מתוך 3</div>
+        <div class="q-title">איפה העסק עומד היום?</div>
+        <div class="chips">
+          <button class="chip" onclick="pick(this,2)">עוד לפני לקוחות משלמים</button>
+          <button class="chip" onclick="pick(this,2)">יש לקוחות, עוד לא יציב</button>
+          <button class="chip" onclick="pick(this,2)">עסק יציב</button>
+          <button class="chip" onclick="pick(this,2)">עסק ותיק שמחפש קפיצה</button>
+        </div>
+      </div>
+
+      <!-- 2: MC Q2 -->
+      <div class="screen" data-s="2">
+        <div class="prog"><div style="width:30%"></div></div>
+        <div class="q-eyebrow">2 מתוך 3</div>
+        <div class="q-title">מה הכי עוצר אתכם עכשיו?</div>
+        <div class="chips">
+          <button class="chip" onclick="pick(this,3)">לא יודעים מה להגיד שיבדל אותנו</button>
+          <button class="chip" onclick="pick(this,3)">מצלמים ומעלים — אין פניות</button>
+          <button class="chip" onclick="pick(this,3)">יש פניות — לא נסגרות</button>
+          <button class="chip" onclick="pick(this,3)">אין זמן לשיווק בכלל</button>
+        </div>
+      </div>
+
+      <!-- 3: MC Q3 -->
+      <div class="screen" data-s="3">
+        <div class="prog"><div style="width:45%"></div></div>
+        <div class="q-eyebrow">3 מתוך 3</div>
+        <div class="q-title">מה היעד הקרוב?</div>
+        <div class="chips">
+          <button class="chip" onclick="pick(this,4)">לקוחות ראשונים</button>
+          <button class="chip" onclick="pick(this,4)">קצב פניות יציב</button>
+          <button class="chip" onclick="pick(this,4)">להעלות מחירים בביטחון</button>
+          <button class="chip" onclick="pick(this,4)">מותג שמוכר בלעדיי</button>
+        </div>
+      </div>
+
+      <!-- 4: Email gate -->
+      <div class="screen" data-s="4">
+        <div class="prog"><div style="width:55%"></div></div>
+        <div class="q-eyebrow">כמעט שם</div>
+        <div class="q-title">לאן לשלוח את ההמלצה שלכם?</div>
+        <div class="q-hint">ההמלצה מבוססת על שלוש התשובות. היא תחכה גם במייל.</div>
+        <input class="inp" placeholder="שם פרטי" value="דנה"/>
+        <input class="inp" placeholder="אימייל" value="dana@example.com"/>
+        <div class="cta"><button class="btn" onclick="go(5)">קבלו את ההמלצה ←</button></div>
+      </div>
+
+      <!-- 5: Result + FORK -->
+      <div class="screen" data-s="5">
+        <div class="prog"><div style="width:65%"></div></div>
+        <div class="rec-card">
+          <div class="rec-label">ההמלצה שלכם</div>
+          <div class="rec-name">אתגר 7 הימים</div>
+          <div class="rec-why">כי יש לכם לקוחות אבל הקצב לא יציב — והצעד שמייצב קצב הוא הרגל תוכן שמוכר, לא עוד שיטה.</div>
+        </div>
+        <p class="fork-note">
+          <b>קיבלתם את ההמלצה שלכם.</b><br/>
+          היא מבוססת על שלוש תשובות. היא נכונה, <b>אבל היא עדיין לא אתם.</b><br/><br/>
+          רוצים שנראה גם מי אתם? עוד 4 שאלות, בכתיבה חופשית, בקצב שלכם. בסוף מחכה לכם מכתב אישי שנכתב עליכם. לא תבנית.
+        </p>
+        <div class="cta">
+          <button class="btn" onclick="go(6)">כן, תראו אותי ←</button>
+          <button class="btn ghost" onclick="go(12)">מספיקה לי ההמלצה</button>
+        </div>
+      </div>
+
+      <!-- 6: Depth Q (with mic tip) -->
+      <div class="screen" data-s="6">
+        <div class="prog"><div style="width:75%"></div></div>
+        <div class="q-eyebrow">קריאה · 1 מתוך 4</div>
+        <div class="q-title">רגע שבו שכחת מהזמן</div>
+        <div class="q-hint">מתי זה קרה בפעם האחרונה? איפה היית, מה עשית שם, ואיך פתאום גילית כמה זמן עבר.</div>
+        <textarea class="txt">כשאני יושבת עם לקוחה על התוכנית שלה ואנחנו פתאום מפרקות את כל מה שהיא חשבה שהיא מוכרת</textarea>
+        <div class="mic-tip">🎤 <span>טיפ: לחצו על <b>המיקרופון במקלדת</b> ודברו במקום להקליד. תשובות מדוברות יוצאות פי 2-3 יותר עשירות.</span></div>
+        <div class="cta"><button class="btn" onclick="go(7)">הבא ←</button></div>
+      </div>
+
+      <!-- 7: Depth Q with PROBE -->
+      <div class="screen" data-s="7">
+        <div class="prog"><div style="width:85%"></div></div>
+        <div class="q-eyebrow">קריאה · 2 מתוך 4</div>
+        <div class="q-title">מה עזר לך לצאת מזה, מה פיתחת בעצמך</div>
+        <div class="q-hint">כלי, הרגל, או שאלה שהפכה למפתח. במילים שלך, כאילו חבר שואל אותך בטלפון.</div>
+        <textarea class="txt">למדתי להאמין בעצמי ולהקשיב לאינטואיציה</textarea>
+        <div class="probe">
+          <div class="k">המנוע מבחין שהתשובה כללית — probe אחד, חם:</div>
+          תני רגע ספציפי אחד — מתי, איפה, מה בדיוק אמרת או עשית?
+        </div>
+        <div class="cta"><button class="btn" onclick="go(8)">הבא ←</button></div>
+      </div>
+
+      <!-- 8: Phone gate -->
+      <div class="screen" data-s="8">
+        <div class="prog"><div style="width:92%"></div></div>
+        <div class="q-eyebrow">שנייה לפני</div>
+        <div class="q-title">המכתב שלך אישי. לאן לשלוח?</div>
+        <div class="q-hint">המכתב נכתב עלייך, מהתשובות שלך. נשלח גם לוואטסאפ כדי שלא ילך לאיבוד.</div>
+        <input class="inp" placeholder="טלפון" value="050-1234567"/>
+        <div class="cta"><button class="btn" onclick="go(9)">קבלי את המכתב ←</button></div>
+      </div>
+
+      <!-- 9: The Letter -->
+      <div class="screen" data-s="9">
+        <div style="height:8px"></div>
+        <div class="letter">
+          <div class="from">מהדר</div>
+          דנה,<br/><br/>
+          את פועלת באפס מאמץ כשאת מפרקת ללקוחה את מה שהיא חשבה שהיא מוכרת — ושם, בדיוק ברגע הפירוק, נמצא האות שלך.<br/><br/>
+          כשעסקים מרגישים שהם מוכרים "עוד שירות", את כבר רואה את הדבר האמיתי שהלקוחות שלהם קונים. זה לא ניתוח. זו ראייה.<br/>
+          <div class="sig">הדר</div>
+        </div>
+        <div style="margin-top:14px;text-align:center;font-size:12px;color:var(--muted)">+ הכרטיס המשותף · התחרות · ההמלצה המשודרגת</div>
+        <div class="cta">
+          <button class="btn wa" onclick="go(11)">מה הדר רואה בצד שלה? ←</button>
+          <button class="btn ghost" onclick="go(0)">חזרה להתחלה</button>
+        </div>
+      </div>
+
+      <!-- 10: The Door -->
+      <div class="screen" data-s="10">
+        <div style="height:20px"></div>
+        <div class="q-eyebrow">הדלת המהירה</div>
+        <div class="q-title">כבר יודעים שאתם רוצים לדבר?</div>
+        <div class="q-hint">בלי שאלון. שלושה פרטים ומשפט אחד — והדר רואה את זה אישית.</div>
+        <input class="inp" placeholder="שם" value="יואב לוי"/>
+        <input class="inp" placeholder="טלפון" value="052-9876543"/>
+        <input class="inp" placeholder="מי הפנה / איך הגעתם" value="המלצה של מיכל ברק"/>
+        <textarea class="txt" style="min-height:90px">סגרתי שנה של 2M והתקרה עכשיו היא שאני הצוואר בקבוק של השיווק. רוצה לדבר על יום צילום.</textarea>
+        <div class="q-hint" style="margin-top:12px">הדר עוברת על הפניות האלה אישית. אם זה מתאים — היא תחזור אליכם השבוע.</div>
+        <div class="cta"><button class="btn" onclick="go(11)">שלחו ←</button></div>
+      </div>
+
+      <!-- 11: Behind the scenes (Hadar side) -->
+      <div class="screen" data-s="11">
+        <div style="height:10px"></div>
+        <div class="q-eyebrow">מאחורי הקלעים · /admin/today</div>
+        <div class="q-title" style="font-size:17px">מה הדר רואה לפני שהיא שולחת וואטסאפ</div>
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:12px;line-height:1.7;margin-top:8px">
+          <div style="font-weight:800;font-size:14px">דנה כהן <span style="color:var(--goldL);font-size:10px;border:1px solid rgba(232,185,74,.4);border-radius:99px;padding:1px 8px;margin-right:6px">קריאת האות</span></div>
+          <div style="color:var(--muted);margin:6px 0">יועצת עסקית · יש לקוחות, לא יציב · יעד: קצב פניות</div>
+          <div style="background:rgba(232,185,74,.05);border:1px solid rgba(232,185,74,.25);border-radius:8px;padding:8px 10px;margin:8px 0;font-style:italic;color:var(--muted)">
+            <b style="color:var(--goldM);font-style:normal">מהתשובות שלה:</b> "אנחנו פתאום מפרקות את כל מה שהיא חשבה שהיא מוכרת"
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">
+            <span style="border:1px solid rgba(127,212,155,.3);color:var(--green);border-radius:8px;padding:2px 8px;font-size:10.5px">ביטחון LLM 82%</span>
+            <span style="border:1px solid rgba(127,212,155,.3);color:var(--green);border-radius:8px;padding:2px 8px;font-size:10.5px">הסכמה ✓</span>
+            <span style="border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:2px 8px;font-size:10.5px">נרשמה לפני שעתיים</span>
+          </div>
+          <button class="btn wa" style="margin-top:12px;padding:10px;font-size:13px">שלח ווטסאפ (הודעה מוכנה עם הציטוט שלה) ←</button>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);line-height:1.7;margin-top:12px">
+          ההקשות + התשובות + המכתב = רשומה אחת. פתיח הוואטסאפ מצטט את המילים שלה. יואב מהדלת המהירה מופיע בראש הרשימה, מעל כולם.
+        </div>
+        <div class="cta"><button class="btn ghost" onclick="go(0)">חזרה להתחלה</button></div>
+      </div>
+
+      <!-- 12: Exit lane -->
+      <div class="screen" data-s="12">
+        <div style="margin-top:100px;text-align:center">
+          <div style="font-size:40px;margin-bottom:16px">✉️</div>
+          <div class="q-title" style="text-align:center">ההמלצה בדרך למייל</div>
+          <p style="font-size:13.5px;color:var(--muted);line-height:1.7;max-width:270px;margin:10px auto 0">
+            אם תרצו את המכתב האישי — הקישור שמור לכם שם. בלי לחץ.
+          </p>
+        </div>
+        <div class="cta"><button class="btn ghost" onclick="go(0)">חזרה להתחלה</button></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const screens = document.querySelectorAll('.screen');
+  const steps = document.querySelectorAll('.step');
+  function go(n){
+    screens.forEach(s=>s.classList.toggle('active', s.dataset.s==String(n)));
+    steps.forEach(st=>st.classList.toggle('on', st.dataset.go==String(n)));
+    const on = document.querySelector('.step.on');
+    if(on) on.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  function pick(el,next){
+    el.classList.add('sel');
+    setTimeout(()=>go(next),280);
+  }
+  steps.forEach(st=>st.addEventListener('click',()=>go(Number(st.dataset.go))));
+  go(0);
+</script>
+</body>
+</html>
