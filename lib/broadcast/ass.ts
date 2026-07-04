@@ -5,8 +5,15 @@
 //
 // ASS colors are &HAABBGGRR (BGR, alpha-first): #EDE9E1 -> &H00E1E9ED,
 // #E8B94A (gold) -> &H004AB9E8, #080C14 outline at ~60% alpha -> &H99140C08.
-// Every Dialogue line is prefixed with RLM so digit/Latin-leading lines keep
-// an RTL base paragraph direction (the classic trailing-punctuation bug).
+//
+// Bidi (spike-proven on this exact ffmpeg-static build): libass strips bidi
+// control chars and hardcodes an LTR base direction UNLESS the style sets
+// Encoding: -1, which enables per-line direction autodetection — that single
+// field fixes trailing punctuation, digit-leading lines, and mid-line Latin
+// tokens. The RLM prefix is kept as belt-and-suspenders for future builds
+// that honor it (today it is stripped, harmlessly). Two hard rules proven by
+// the spike: NEVER use per-line override tags ({\c}, {\fsp}) and NEVER a
+// nonzero style Spacing — both split the text into runs laid out LTR.
 import type { CaptionLine } from "./captions";
 
 const RLM = "‏";
@@ -60,8 +67,8 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Caption,Assistant,66,&H00E1E9ED,&H00FFFFFF,&H99140C08,&H00000000,1,0,0,0,100,100,0,0,1,2,0,2,90,90,320,1
-Style: Stamp,Assistant,30,&H004AB9E8,&H00FFFFFF,&H99140C08,&H00000000,0,0,0,0,100,100,0,0,1,1,0,8,90,90,96,1
+Style: Caption,Assistant,66,&H00E1E9ED,&H00FFFFFF,&H99140C08,&H00000000,1,0,0,0,100,100,0,0,1,2,0,2,90,90,320,-1
+Style: Stamp,Assistant,30,&H004AB9E8,&H00FFFFFF,&H99140C08,&H00000000,0,0,0,0,100,100,0,0,1,1,0,8,90,90,96,-1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
