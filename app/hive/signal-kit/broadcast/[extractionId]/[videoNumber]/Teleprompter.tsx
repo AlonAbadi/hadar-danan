@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getBroadcastCopy } from "@/lib/broadcast-copy";
 
 const SPEED_STEPS = [40, 55, 70, 90, 115]; // px/s
-const SIZE_STEPS = [20, 24, 28];
+const SIZE_STEPS = [22, 27, 33];
 
 export interface TeleprompterHandle {
   start: () => void;
@@ -64,11 +64,15 @@ export function Teleprompter({
     rafRef.current = requestAnimationFrame(tick);
   }, []);
 
+  // No early-return guard and always reschedule: the running-prop effect's
+  // cleanup cancels the rAF on re-render (React strict ordering), so start()
+  // must be safe to call again after its frame was cancelled — this was the
+  // "teleprompter doesn't move" bug on the first iPhone QA.
   const start = useCallback(() => {
-    if (runningRef.current) return;
     runningRef.current = true;
     lastTsRef.current = null;
     setPaused(false);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(tick);
   }, [tick]);
 
@@ -89,8 +93,9 @@ export function Teleprompter({
   }, [onRegisterControls, start, pause, restart]);
 
   useEffect(() => {
-    if (running && !paused) start();
-    if (!running) {
+    if (running && !paused) {
+      start();
+    } else if (!running) {
       runningRef.current = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     }

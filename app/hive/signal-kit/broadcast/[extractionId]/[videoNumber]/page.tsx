@@ -8,12 +8,24 @@
  */
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import type { Viewport } from "next";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { BroadcastRoomClient } from "./BroadcastRoomClient";
 
 export const dynamic = "force-dynamic";
+
+// Camera room: lock the page scale. Without this, iOS Safari's double-tap /
+// focus zoom leaves the user zoomed-in over the viewfinder with the
+// teleprompter off-screen (first iPhone QA finding).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 interface ScriptShape {
   hook: string;

@@ -295,7 +295,7 @@ function CaptionApproval({
             src={snap.take_preview_url}
             playsInline
             controls
-            style={{ width: "100%", maxHeight: "36dvh", borderRadius: 12, background: "#000", marginTop: 14 }}
+            style={portraitPreview("36dvh", 14)}
           />
         ) : null}
         <div style={{ marginTop: 16 }}>
@@ -372,13 +372,7 @@ function CaptionApproval({
           src={snap.take_preview_url}
           playsInline
           controls
-          style={{
-            width: "100%",
-            maxHeight: "36dvh",
-            borderRadius: 12,
-            background: "#000",
-            marginTop: 14,
-          }}
+          style={portraitPreview("36dvh", 14)}
         />
       ) : null}
       {/* trim nudges — two text buttons, never a timeline */}
@@ -542,7 +536,7 @@ function OutputScreen({
             src={snap.output_url}
             playsInline
             controls
-            style={{ width: "100%", maxHeight: "52dvh", borderRadius: 14, background: "#000" }}
+            style={portraitPreview("52dvh", 0)}
           />
           <span
             style={{
@@ -640,6 +634,21 @@ function OutputScreen({
     </div>
   );
 }
+
+// Takes and outputs are portrait reels — lock the inline player to a centered
+// 9:16 frame instead of letting Safari letterbox it into a wide box
+// (first iPhone QA finding: "הציג לי לרוחב").
+const portraitPreview = (height: string, marginTop: number): React.CSSProperties => ({
+  display: "block",
+  height,
+  aspectRatio: "9 / 16",
+  width: "auto",
+  maxWidth: "100%",
+  margin: `${marginTop}px auto 0`,
+  borderRadius: 12,
+  background: "#000",
+  objectFit: "contain",
+});
 
 const stickyBar: React.CSSProperties = {
   position: "fixed",

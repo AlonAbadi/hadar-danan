@@ -178,6 +178,8 @@ export function BroadcastRoomClient({
     overflow: "hidden",
     color: "#EDE9E1",
     fontFamily: 'var(--font-assistant), "Assistant", Arial, sans-serif',
+    touchAction: "manipulation", // kill iOS double-tap zoom inside the room
+    overscrollBehavior: "none",
   };
 
   if (phase === "prep") {

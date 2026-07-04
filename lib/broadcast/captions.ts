@@ -26,9 +26,9 @@ export interface CaptionsPayload {
   approved_at: string | null;
 }
 
-// Single-line phrases only — max ~24 chars (~4-5 Hebrew words) fits Fontsize 66
-// inside the 900px usable width of the 1080px canvas.
-const MAX_LINE_CHARS = 24;
+// Single-line phrases only — max ~19 chars (~3-4 Hebrew words) fits the
+// Fontsize 92 reels-standard captions inside the 940px usable width.
+const MAX_LINE_CHARS = 19;
 const HARD_BREAK_GAP_MS = 500;
 const SOFT_BREAK_GAP_MS = 280;
 const MIN_LINE_MS = 600;
