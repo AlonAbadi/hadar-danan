@@ -12,6 +12,7 @@ const TYPES = new Set([
   "upload_stalled",
   "permission_denied",
   "realtime_fallback_to_poll",
+  "capture_recipe",
 ]);
 
 export async function POST(req: NextRequest) {
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest) {
       error: JSON.stringify({
         take_id: body.take_id ?? null,
         edit_id: body.edit_id ?? null,
+        detail: typeof body.detail === "string" ? body.detail.slice(0, 400) : body.detail ?? null,
         ua: req.headers.get("user-agent")?.slice(0, 200) ?? null,
       }),
     });
