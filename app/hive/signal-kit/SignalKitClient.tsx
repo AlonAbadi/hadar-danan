@@ -78,28 +78,10 @@ export function SignalKitClient({ firstName, occupation, tier: _tier, extraction
 }
 
 function SignalKitView({ firstName, occupation, extraction }: { firstName: string; occupation: string | null; extraction: Extraction }) {
-  const [kit, setKit] = useState<ContentKit | null>(null);
-  const [kitLoading, setKitLoading] = useState(true);
-  const [kitError, setKitError] = useState<string | null>(null);
-  const [tab, setTab] = useState<"challenge" | "text" | "visual" | "strategy" | "shoot_day" | "monthly" | "review">("challenge");
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`/api/signal/${extraction.id}/content-kit`);
-        const data = await res.json();
-        if (!res.ok || !data?.kit) {
-          setKitError(data?.error ?? "Content Kit generation failed.");
-          return;
-        }
-        setKit(data.kit);
-      } catch (e) {
-        setKitError(String(e));
-      } finally {
-        setKitLoading(false);
-      }
-    })();
-  }, [extraction.id]);
+  const [tab, setTab] = useState<"challenge" | "visual" | "shoot_day" | "content">("challenge");
+  // NOTE: the content-kit fetch (text/strategy tabs) was removed with those
+  // tabs — it triggered a paid Claude generation on every first page load.
+  // Restore it together with the tabs if they ever come back.
 
   return (
     <div dir="rtl" className="font-assistant" style={{ minHeight: "100vh", background: C.bg, color: C.fg }}>
@@ -124,7 +106,7 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, borderBottom: `1px solid ${C.line}`, marginBottom: 28, overflowX: "auto" }}>
-          {(["challenge", "text", "visual", "strategy", "shoot_day", "monthly", "review"] as const).map((t) => (
+          {(["challenge", "visual", "shoot_day", "content"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -147,12 +129,9 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
 
         {/* Tab body */}
         {tab === "challenge" && <ChallengeTab extraction={extraction} />}
-        {tab === "text"      && <TextTab kit={kit} loading={kitLoading} error={kitError} />}
         {tab === "visual"    && <VisualTab extractionId={extraction.id} />}
-        {tab === "strategy"  && <StrategyTab kit={kit} loading={kitLoading} />}
         {tab === "shoot_day" && <ShootDayTab extractionId={extraction.id} />}
-        {tab === "monthly"   && <MonthlyTab extraction={extraction} />}
-        {tab === "review"    && <PostReviewTab extractionId={extraction.id} />}
+        {tab === "content"   && <ContentTab onGoFilm={() => setTab("shoot_day")} />}
       </div>
     </div>
   );
@@ -237,14 +216,14 @@ function ChallengeTab({ extraction }: { extraction: Extraction }) {
   );
 }
 
+// Reduced to the core offering (Alon, 2026-07-04): signal, visual, filming,
+// and the produced content. The text/strategy/monthly/review tabs still exist
+// as components + APIs — just unlisted, so restoring one is a one-line change.
 const TAB_LABELS: Record<string, string> = {
-  challenge: "אתגר האות",
-  text:      "טקסטים",
-  visual:    "ויזואלי",
-  strategy:  "אסטרטגיה",
-  shoot_day: "יום הצילום",
-  monthly:   "החודש",
-  review:    "ביקורת פוסטים",
+  challenge: "האות",
+  visual:    "ויזואל",
+  shoot_day: "צילום",
+  content:   "התכנים שלי",
 };
 
 // ── Text tab ───────────────────────────────────────────────
@@ -558,6 +537,135 @@ function MonthlyTab({ extraction }: { extraction: Extraction }) {
         </Section>
       ))}
     </div>
+  );
+}
+
+// ── התכנים שלי — produced reels management ──────────────────
+function ContentTab({ onGoFilm }: { onGoFilm: () => void }) {
+  const [reels, setReels] = useState<
+    {
+      edit_id: string;
+      review_item_id: string | null;
+      video_number: number | null;
+      created_at: string;
+      published: boolean;
+      thumb_url: string | null;
+      download_url: string | null;
+    }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/broadcast/reels")
+      .then((r) => (r.ok ? r.json() : { reels: [] }))
+      .then((d) => {
+        if (!cancelled) setReels(d.reels ?? []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function markPublished(reel: { edit_id: string; review_item_id: string | null }) {
+    if (!reel.review_item_id) return;
+    setReels((prev) =>
+      prev.map((r) => (r.edit_id === reel.edit_id ? { ...r, published: true } : r))
+    );
+    await fetch(`/api/broadcast/review-items/${reel.review_item_id}/publish`, {
+      method: "POST",
+    }).catch(() => {});
+  }
+
+  if (loading) return <Loading text="טוען את התכנים שלך…" />;
+
+  if (!reels.length) {
+    return (
+      <Section title="התכנים שלי" hint="כל רילס שתסיימו בחדר השידור מחכה כאן">
+        <div style={{ textAlign: "center", padding: "24px 0" }}>
+          <div style={{ color: C.muted, fontSize: 15, lineHeight: 1.7, marginBottom: 16 }}>
+            עוד אין תכנים. הרילס הראשון שלך במרחק תסריט אחד.
+          </div>
+          <button
+            onClick={onGoFilm}
+            style={{
+              background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+              color: "#2a1d05", border: "none", borderRadius: 10, padding: "12px 26px",
+              fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            לצלם עכשיו
+          </button>
+        </div>
+      </Section>
+    );
+  }
+
+  return (
+    <Section title="התכנים שלי" hint="להוריד, לפרסם, ולסמן מה כבר עלה">
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {reels.map((r) => (
+          <div
+            key={r.edit_id}
+            style={{
+              display: "flex", alignItems: "center", gap: 12,
+              background: C.cardSoft, borderRadius: 12, padding: 10,
+            }}
+          >
+            {r.thumb_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={r.thumb_url} alt=""
+                style={{ width: 48, height: 85, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.line}` }}
+              />
+            ) : (
+              <div style={{ width: 48, height: 85, borderRadius: 8, background: C.card }} />
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, color: C.fg, fontWeight: 600 }}>
+                {r.video_number ? `רילס לתסריט ${r.video_number}` : "רילס"}
+              </div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                {new Date(r.created_at).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}
+                {" · "}
+                <span style={{ color: r.published ? "#7FD49B" : C.goldMid }}>
+                  {r.published ? "פורסם ✓" : "ממתין לפרסום"}
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+              {r.download_url ? (
+                <a
+                  href={r.download_url}
+                  style={{
+                    border: `1px solid ${C.lineGold}`, color: C.gold, borderRadius: 999,
+                    padding: "6px 14px", fontSize: 13, fontWeight: 700, textDecoration: "none",
+                  }}
+                >
+                  הורדה
+                </a>
+              ) : null}
+              {!r.published && r.review_item_id ? (
+                <button
+                  onClick={() => markPublished(r)}
+                  style={{
+                    background: "transparent", color: C.gold, border: `1px solid ${C.lineGold}`,
+                    borderRadius: 999, padding: "6px 14px", fontSize: 13, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >
+                  פורסם
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
+    </Section>
   );
 }
 
@@ -880,42 +988,15 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
   if (error)   return <ErrorBox text={error} />;
   if (!plan)   return null;
 
+  // Lean by decision (Alon, 2026-07-04): the filming tab is ONLY the scripts
+  // and the camera. Intro/pillars/direction/schedule/gifts/decisions all still
+  // exist as components below, unlisted.
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Hadar voice intro — replaces planned video. Uses her actual signature
-          lines from the corpus, typeset as a 3-line manifesto. */}
-      <ShootDayVoiceIntro />
-
-      {/* Identity statement card */}
-      <ShootDayHero identity={plan.identity_statement} />
-
-      {/* 4 Pillars overview */}
-      <PillarsOverview pillars={plan.pillars} />
-
-      {/* Videos in 3 acts (Lever #3: Act Structure 4+4+4). V1 ships only
-          Video #1 (IDENTITY). V2+ unlocks the rest via per-card CTAs. */}
       <VideosByAct videos={plan.videos} extractionId={extractionId} />
       {(plan.videos.length < 7 || !plan.visual_direction || !plan.gift_sentences || !plan.director) && (
         <ShootDayBuilder extractionId={extractionId} plan={plan} setPlan={setPlan} stored={stored} />
       )}
-
-      {/* Hadar's personal direction (script layer for the AI-Hadar video) */}
-      {plan.director && <DirectorCard director={plan.director} videos={plan.videos} />}
-
-      {/* Visual Direction (Lever #5 via "הפוך מהקטגוריה") — optional in V1 */}
-      {plan.visual_direction && <VisualDirectionCard visual={plan.visual_direction} />}
-
-      {/* Schedule — optional in V1 */}
-      {plan.schedule && <ScheduleCard schedule={plan.schedule} />}
-
-      {/* 5 Gift Sentences (Magic #6: Gift Sentence Lab) — optional in V1 */}
-      {plan.gift_sentences && <GiftSentencesCard sentences={plan.gift_sentences} />}
-
-      {/* 3 Closing Decisions (Lever #4: Urgency-Loaded CTA) — optional in V1 */}
-      {plan.decisions && <DecisionsCard decisions={plan.decisions} />}
-
-      {/* Hadar's signoff */}
-      <HadarSignoff />
     </div>
   );
 }
@@ -1304,16 +1385,10 @@ function ActBlock({ title, subtitle, videos, extractionId }: { title: string; su
 
 function VideoCard({ video, extractionId }: { video: Video; extractionId: string }) {
   const [open, setOpen]           = useState(false);
-  const [whyOpen, setWhyOpen]     = useState(false);
 
   function handleExpand() {
     setOpen(!open);
     if (!open) playHadarVoice("expanded_video_card");
-  }
-
-  function handleWhy() {
-    setWhyOpen(!whyOpen);
-    if (!whyOpen) playHadarVoice("clicked_why_button");
   }
 
   return (
@@ -1330,41 +1405,7 @@ function VideoCard({ video, extractionId }: { video: Video; extractionId: string
             {video.title}
           </div>
         </div>
-        <button
-          onClick={handleWhy}
-          aria-label="למה זה?"
-          style={{
-            background: "transparent", color: C.goldMid, border: `1px solid ${C.lineGold}`,
-            borderRadius: 999, padding: "4px 10px", fontSize: 11, cursor: "pointer",
-            fontFamily: "inherit", whiteSpace: "nowrap",
-          }}
-        >
-          {whyOpen ? "סגור" : "למה זה?"}
-        </button>
       </div>
-
-      {/* Magic #2: Methodology Visibility tooltip */}
-      {whyOpen && (
-        <div style={{
-          background: C.cardSoft, borderRadius: 8, padding: "10px 12px",
-          fontSize: 12, color: C.fg, lineHeight: 1.6,
-          border: `1px solid ${C.line}`,
-        }}>
-          <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 4, letterSpacing: 1 }}>
-            Mode {video.mode} · {video.signature_move.name}
-          </div>
-          <div style={{ marginBottom: 8 }}>
-            {sanitizeHebrew(video.signature_move.explanation)}
-          </div>
-          <div style={{
-            borderTop: `1px solid ${C.line}`, paddingTop: 8, marginTop: 6,
-            fontStyle: "italic", color: C.muted,
-          }}>
-            &ldquo;{sanitizeHebrew(video.hadar_quote.text)}&rdquo;
-            <div style={{ fontSize: 10, marginTop: 2 }}>· {video.hadar_quote.source}</div>
-          </div>
-        </div>
-      )}
 
       {/* חדר השידור — the script's primary action */}
       <Link
@@ -1388,7 +1429,7 @@ function VideoCard({ video, extractionId }: { video: Video; extractionId: string
           fontFamily: "inherit", textAlign: "right",
         }}
       >
-        {open ? "סגור פירוט ↑" : "ראה תסריט + בימוי ↓"}
+        {open ? "סגור תסריט ↑" : "לקרוא את התסריט ↓"}
       </button>
 
       {open && (
@@ -1411,32 +1452,6 @@ function VideoCard({ video, extractionId }: { video: Video; extractionId: string
             )}
           </div>
 
-          {/* Direction */}
-          <div style={{ background: C.cardSoft, padding: 12, borderRadius: 8 }}>
-            <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 6 }}>הוראות בימוי</div>
-            <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.8 }}>
-              <div><strong>ויזואלי:</strong> {sanitizeHebrew(video.direction.visual)}</div>
-              <div><strong>גוף:</strong> {sanitizeHebrew(video.direction.body_language)}</div>
-              <div><strong>טון:</strong> {sanitizeHebrew(video.direction.tone)}</div>
-              <div><strong>קשר עין:</strong> {sanitizeHebrew(video.direction.eye_contact)}</div>
-            </div>
-          </div>
-
-          {/* Anti-category cue */}
-          <div style={{
-            background: "rgba(232,185,74,0.04)", padding: 12, borderRadius: 8,
-            border: `1px solid ${C.lineGold}`,
-          }}>
-            <div style={{ fontSize: 10, color: C.goldMid, fontWeight: 700, marginBottom: 6 }}>
-              הפוך מהקטגוריה
-            </div>
-            <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 4 }}>
-              <strong style={{ color: C.fg }}>הם:</strong> {sanitizeHebrew(video.anti_category.competitor_norm)}
-            </div>
-            <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.6 }}>
-              <strong style={{ color: C.gold }}>אתם:</strong> {sanitizeHebrew(video.anti_category.your_inversion)}
-            </div>
-          </div>
         </div>
       )}
     </div>
