@@ -551,8 +551,9 @@ function OutputScreen({
   snap: EditSnapshot;
   onAnotherTake: () => void;
 }) {
-  const [shareBusy, setShareBusy] = useState(false);
+  const [shareFile, setShareFile] = useState<File | null>(null);
   const approvedRef = useRef(false);
+  const shareFetchedRef = useRef(false);
 
   const approveOnce = useCallback(() => {
     if (approvedRef.current) return;
@@ -566,21 +567,29 @@ function OutputScreen({
     typeof navigator.canShare === "function" &&
     navigator.canShare({ files: [new File([], "probe.mp4", { type: "video/mp4" })] });
 
-  const shareReel = useCallback(async () => {
-    if (!snap.output_url) return;
-    setShareBusy(true);
+  // iOS only allows navigator.share inside a FRESH tap — awaiting a 30MB
+  // fetch inside the handler expires the gesture and the sheet never opens
+  // (QA round 5 "share doesn't work"). So the file is fetched the moment the
+  // screen loads, and the tap shares it synchronously.
+  useEffect(() => {
+    if (!snap.output_url || !canShareFiles || shareFetchedRef.current) return;
+    shareFetchedRef.current = true;
+    fetch(snap.output_url)
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+      .then((blob) => setShareFile(new File([blob], "reel.mp4", { type: "video/mp4" })))
+      .catch(() => {
+        shareFetchedRef.current = false; // allow a retry on next snapshot
+      });
+  }, [snap.output_url, canShareFiles]);
+
+  const shareReel = useCallback(() => {
+    if (!shareFile) return;
     approveOnce();
-    try {
-      const res = await fetch(snap.output_url);
-      const blob = await res.blob();
-      const file = new File([blob], "reel.mp4", { type: "video/mp4" });
-      await navigator.share({ files: [file] });
-    } catch {
-      /* user closed the sheet or fetch failed — download stays available */
-    } finally {
-      setShareBusy(false);
-    }
-  }, [snap.output_url, approveOnce]);
+    // no await before share() — the user gesture must stay alive
+    navigator.share({ files: [shareFile] }).catch(() => {
+      /* user closed the sheet — nothing to do */
+    });
+  }, [shareFile, approveOnce]);
 
   return (
     <>
@@ -607,7 +616,12 @@ function OutputScreen({
         </p>
         <div style={{ ...stickyBar, flexDirection: "column", gap: 10 }}>
           {snap.output_url && canShareFiles ? (
-            <ActionButton variant="primary" busy={shareBusy} busyLabel="מכינה את הקובץ" onClick={shareReel}>
+            <ActionButton
+              variant="primary"
+              busy={!shareFile}
+              busyLabel="מכינה את הקובץ לשיתוף"
+              onClick={shareReel}
+            >
               {getBroadcastCopy("output.share")}
             </ActionButton>
           ) : null}

@@ -77,7 +77,11 @@ export async function runBurnStage(edit: EditRow): Promise<void> {
       "-i", inputPath,
       "-vf",
       `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
-      "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high", "-crf", "20",
+      // Reels-sufficient quality: IG recompresses everything to ~2-4 Mbps, so
+      // CRF 23 capped at 5 Mbps loses nothing visible for talking-head footage
+      // and roughly halves file size vs CRF 20 uncapped.
+      "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high", "-crf", "23",
+      "-maxrate", "5M", "-bufsize", "10M",
       "-pix_fmt", "yuv420p",
       "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
       "-movflags", "+faststart",
