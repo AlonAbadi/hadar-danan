@@ -1,14 +1,10 @@
 /**
- * /admin/kriah — the v2 funnel control panel (wave 5).
+ * /admin/kriah — the live performance report of the kriah funnel.
  *
- * North-star metrics per BUILD_SPEC §11:
- *   - S7 commit rate (the fork → six-questions transition)
- *   - Ending distribution (concierge volume vs the expected 4-5/week)
- *   - Per-screen drop-off from FUNNEL_STEP events
- *   - couldnt_pay_rate placeholder (fills as premium_outcomes accumulates)
- *
- * Test traffic (is_test) is counted SEPARATELY and clearly labeled — during
- * the hidden phase, most traffic here will be test runs.
+ * Rebuilt 2026-07-05 (Alon): a learning tool, not an isolation console.
+ * Internal test rows are excluded everywhere (tiny footnote only).
+ * Answers: how much traffic, where from, where it drops, what it produces
+ * (leads, endings, hot leads), and whether the mail engine is moving.
  */
 import { createServerClient } from "@/lib/supabase/server";
 
@@ -22,11 +18,9 @@ function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string
 
 const C = {
   bg: "#0D1018", card: "#141820", gold: "#E8B94A", goldMid: "#C9964A",
-  fg: "#EDE9E1", muted: "#9E9990", line: "#2C323E",
+  fg: "#EDE9E1", muted: "#9E9990", line: "#2C323E", green: "#7FD49B", red: "#FF9B9B",
 };
 
-// The 2026-07-04 flow (gate moved before the letter): each row aggregates
-// the FUNNEL_STEP names that mean "reached/completed this stage".
 const STEP_ROWS: { label: string; keys: string[] }[] = [
   { label: "כניסה",            keys: ["s1"] },
   { label: "מצב עסק",          keys: ["s2_state"] },
@@ -46,156 +40,174 @@ const STEP_ROWS: { label: string; keys: string[] }[] = [
   { label: "האות (סיום)",      keys: ["s16_full_reading"] },
 ];
 
-const ENDING_LABELS: Record<string, string> = {
-  concierge:   "קונסיירז' (רותח)",
-  hive:        "כוורת (מייל יום-2)",
-  pre_revenue: "טרום-הכנסה",
-  crisis_soft: "סוף רך (משבר)",
+const ENDING_LABELS: Record<string, { label: string; color: string }> = {
+  concierge:   { label: "קונסיירז' (רותח)", color: C.red },
+  hive:        { label: "כוורת (מייל יום-2)", color: C.gold },
+  pre_revenue: { label: "טרום-הכנסה", color: "#8FBFFF" },
+  crisis_soft: { label: "סוף רך (משבר)", color: C.muted },
 };
 
 export default async function AdminKriahPage() {
   const supabase = createServerClient();
-  const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const now = Date.now();
+  const dayAgo   = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+  const weekAgo  = new Date(now - 7  * 24 * 60 * 60 * 1000).toISOString();
+  const twoWeeks = new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [extRes, stepRes, outcomeRes] = await Promise.all([
+  const [extRes, stepRes, offerJobsRes, welcomeLogsRes, testCountRes] = await Promise.all([
     safeFrom(supabase, "signal_extractions")
-      .select("id, routed_ending, evidence_score, key1_declared, is_test, generated_at")
+      .select("id, user_id, routed_ending, evidence_score, key1_declared, truth_cell, source_utm, phone_given, generated_at")
       .eq("instrument_version", "v2_funnel")
+      .neq("is_test", true)
+      .gte("generated_at", twoWeeks)
       .order("generated_at", { ascending: false })
-      .limit(500),
+      .limit(1000),
     safeFrom(supabase, "events")
-      .select("metadata, is_test, created_at")
+      .select("metadata, created_at")
       .eq("type", "FUNNEL_STEP")
-      .gte("created_at", twoWeeksAgo)
-      .limit(5000),
-    safeFrom(supabase, "premium_outcomes")
-      .select("could_pay, showed_up, purchased, created_at")
-      .order("created_at", { ascending: false })
-      .limit(30),
+      .neq("is_test", true)
+      .gte("created_at", twoWeeks)
+      .limit(10000),
+    safeFrom(supabase, "jobs")
+      .select("status, payload")
+      .eq("payload->>template_key", "kriah_hive_offer"),
+    safeFrom(supabase, "email_logs")
+      .select("id", { count: "exact", head: true })
+      .gte("sent_at", twoWeeks),
+    safeFrom(supabase, "signal_extractions")
+      .select("id", { count: "exact", head: true })
+      .eq("instrument_version", "v2_funnel")
+      .eq("is_test", true),
   ]);
 
-  type Ext = { routed_ending: string | null; evidence_score: number | null; key1_declared: string | null; is_test: boolean };
-  const exts = (extRes.data ?? []) as Ext[];
-  const real = exts.filter((e) => !e.is_test);
-  const test = exts.filter((e) => e.is_test);
-
-  const endingCounts = (rows: Ext[]) => {
-    const m: Record<string, number> = {};
-    for (const e of rows) {
-      const k = e.routed_ending ?? "—";
-      m[k] = (m[k] ?? 0) + 1;
-    }
-    return m;
+  type Ext = {
+    routed_ending: string | null; evidence_score: number | null; phone_given: boolean | null;
+    source_utm: Record<string, string> | null; generated_at: string; truth_cell: string | null;
   };
+  type Ev = { metadata: { step?: string; is_test?: boolean } | null; created_at: string };
 
-  // FUNNEL_STEP dropoff: count unique-ish step hits (raw counts are fine at
-  // this volume; per-visitor dedup comes with real traffic).
-  type Ev = { metadata: { step?: string; is_test?: boolean } | null; is_test: boolean };
-  const steps = (stepRes.data ?? []) as Ev[];
-  const stepCounts: Record<string, { real: number; test: number }> = {};
-  for (const ev of steps) {
-    const step = ev.metadata?.step ?? "";
-    const key = step.startsWith("q") && step.length <= 3 ? step : step;
-    if (!key) continue;
-    const isT = ev.is_test === true || ev.metadata?.is_test === true;
-    stepCounts[key] = stepCounts[key] ?? { real: 0, test: 0 };
-    stepCounts[key][isT ? "test" : "real"]++;
+  const exts  = (extRes.data ?? []) as Ext[];
+  const steps = ((stepRes.data ?? []) as Ev[]).filter((e) => e.metadata?.is_test !== true);
+
+  // ── windows ──
+  const inWindow = <T extends { [k: string]: unknown }>(rows: T[], field: string, since: string) =>
+    rows.filter((r) => String(r[field]) >= since);
+
+  const stepCount = (keys: string[], since?: string) =>
+    steps.filter((e) => keys.includes(e.metadata?.step ?? "") && (!since || e.created_at >= since)).length;
+
+  const entries14 = stepCount(["s1"]);
+  const entries7  = stepCount(["s1"], weekAgo);
+  const entries1  = stepCount(["s1"], dayAgo);
+  const exts14 = exts.length;
+  const exts7  = inWindow(exts, "generated_at", weekAgo).length;
+  const exts1  = inWindow(exts, "generated_at", dayAgo).length;
+  const completion = (e: number, x: number) => (e > 0 ? `${Math.round((x / e) * 100)}%` : "—");
+
+  // ── endings + hot leads ──
+  const endings: Record<string, number> = {};
+  for (const e of exts) endings[e.routed_ending ?? "—"] = (endings[e.routed_ending ?? "—"] ?? 0) + 1;
+  const hot7 = inWindow(exts, "generated_at", weekAgo).filter((e) => e.routed_ending === "concierge").length;
+  const phoneRate = exts14 > 0 ? Math.round((exts.filter((e) => e.phone_given).length / exts14) * 100) : null;
+
+  // ── traffic sources ──
+  const sources: Record<string, number> = {};
+  for (const e of exts) {
+    const src = e.source_utm?.utm_source
+      ? `${e.source_utm.utm_source}${e.source_utm.utm_campaign ? ` · ${e.source_utm.utm_campaign}` : ""}`
+      : "ישיר / לא מזוהה";
+    sources[src] = (sources[src] ?? 0) + 1;
   }
+  const topSources = Object.entries(sources).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
-  const rowCount = (keys: string[]) => keys.reduce(
-    (acc, k) => ({ real: acc.real + (stepCounts[k]?.real ?? 0), test: acc.test + (stepCounts[k]?.test ?? 0) }),
-    { real: 0, test: 0 },
+  // ── mail engine ──
+  type Job = { status: string };
+  const offerJobs = (offerJobsRes.data ?? []) as Job[];
+  const offersPending = offerJobs.filter((j) => j.status === "pending").length;
+  const offersSent    = offerJobs.filter((j) => j.status === "done").length;
+  const emailsSent14  = welcomeLogsRes.count ?? 0;
+  const testCount     = testCountRes.count ?? 0;
+
+  // ── funnel rows with rates ──
+  const rows = STEP_ROWS.map((r) => ({ label: r.label, n: stepCount(r.keys) }));
+  const maxN = Math.max(...rows.map((r) => r.n), 1);
+
+  const Stat = ({ label, v1, v7, v14 }: { label: string; v1: string | number; v7: string | number; v14: string | number }) => (
+    <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "16px 16px" }}>
+      <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 10 }}>{label}</div>
+      <div style={{ display: "flex", gap: 18 }}>
+        {[["היום", v1], ["7 ימים", v7], ["14 יום", v14]].map(([t, v]) => (
+          <div key={String(t)}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: C.gold }}>{v}</div>
+            <div style={{ fontSize: 11, color: C.muted }}>{t}</div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
-  const s7 = rowCount(["s7_fork"]);
-  const s8 = rowCount(["s8_bridge"]);
-  const commitRate = (n: { real: number }, d: { real: number }) =>
-    d.real > 0 ? Math.round((n.real / d.real) * 100) : null;
-
-  type Outcome = { could_pay: boolean | null; showed_up: boolean | null; purchased: boolean | null };
-  const outcomes = (outcomeRes.data ?? []) as Outcome[];
-  const couldntPay = outcomes.filter((o) => o.could_pay === false).length;
-
-  const realEndings = endingCounts(real);
-  const testEndings = endingCounts(test);
-  const avgEvidence = (rows: Ext[]) => {
-    const vals = rows.map((e) => e.evidence_score).filter((v): v is number => typeof v === "number");
-    return vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : "—";
-  };
 
   return (
     <div dir="rtl" className="font-assistant" style={{ minHeight: "100vh", background: C.bg, color: C.fg, padding: "40px 20px" }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+      <div style={{ maxWidth: 940, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: C.gold, marginBottom: 4 }}>קריאת האות v2 · לוח בקרה</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: C.gold, marginBottom: 4 }}>קריאת האות · דוח ביצועים</h1>
           <span style={{ display: "flex", gap: 18 }}>
-            <a href="/admin/today" style={{ color: "#FF9B9B", fontSize: 13.5, fontWeight: 700 }}>🔥 עמוד הלידים ←</a>
-            <a href="/admin/kriah/tests" style={{ color: C.goldMid, fontSize: 13.5 }}>רשימת האבחונים והבדיקות ←</a>
+            <a href="/admin/today" style={{ color: C.red, fontSize: 13.5, fontWeight: 700 }}>🔥 עמוד הלידים ←</a>
+            <a href="/admin/kriah/tests" style={{ color: C.goldMid, fontSize: 13.5 }}>כל האבחונים ←</a>
           </span>
         </div>
-        <p style={{ color: C.muted, fontSize: 14, marginBottom: 28 }}>
-          משפך /kriah (מוסתר). תנועת בדיקה נספרת בנפרד. צפי קונסיירז': 4-5 בשבוע. רף: 0.72 (סטטי, שבוע 1).
+        <p style={{ color: C.muted, fontSize: 14, marginBottom: 26 }}>
+          תנועה אמיתית בלבד. חלון: 14 הימים האחרונים.
         </p>
 
-        {/* headline stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 26 }}>
+        {/* headline stats in time windows */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginBottom: 14 }}>
+          <Stat label="כניסות לשאלון" v1={entries1} v7={entries7} v14={entries14} />
+          <Stat label="אבחונים שהושלמו" v1={exts1} v7={exts7} v14={exts14} />
+          <Stat label="שיעור השלמה (כניסה ← אות)" v1={completion(entries1, exts1)} v7={completion(entries7, exts7)} v14={completion(entries14, exts14)} />
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14, marginBottom: 26 }}>
           {[
-            { label: "אבחוני v2 אמיתיים", value: real.length },
-            { label: "אבחוני בדיקה", value: test.length },
-            { label: "S7 → שאלות (אמיתי)", value: commitRate(s8, s7) !== null ? `${commitRate(s8, s7)}%` : "אין דאטה" },
-            { label: "ציון ראיות ממוצע", value: avgEvidence(real.length ? real : test) },
-            { label: "לא-יכלו-לשלם (מתוך 30 אחרונים)", value: outcomes.length ? `${couldntPay}/${outcomes.length}` : "אין פגישות עדיין" },
+            { label: "לידים רותחים (7 ימים)", value: hot7, hint: "צפי בריא: 4-5 בשבוע" },
+            { label: "השאירו טלפון", value: phoneRate !== null ? `${phoneRate}%` : "—" },
+            { label: "מיילי הצעה בתור / נשלחו", value: `${offersPending} / ${offersSent}` },
+            { label: "מיילים שנשלחו (14 יום, כלל האתר)", value: emailsSent14 },
           ].map((s) => (
-            <div key={s.label} style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "18px 16px" }}>
-              <div style={{ fontSize: 24, fontWeight: 800, color: C.gold }}>{s.value}</div>
-              <div style={{ fontSize: 12.5, color: C.muted, marginTop: 4 }}>{s.label}</div>
+            <div key={s.label} style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "16px" }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: C.gold }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{s.label}</div>
+              {"hint" in s && s.hint && <div style={{ fontSize: 10.5, color: C.muted, opacity: 0.7, marginTop: 2 }}>{s.hint}</div>}
             </div>
           ))}
         </div>
 
-        {/* endings */}
+        {/* funnel with drop rates */}
         <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20, marginBottom: 26 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 800, color: C.goldMid, margin: "0 0 14px" }}>התפלגות סופים</h2>
-          <table style={{ width: "100%", fontSize: 14, borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ color: C.muted, textAlign: "right" }}>
-                <th style={{ padding: "6px 4px" }}>סוף</th>
-                <th style={{ padding: "6px 4px" }}>אמיתי</th>
-                <th style={{ padding: "6px 4px" }}>בדיקה</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(ENDING_LABELS).map((k) => (
-                <tr key={k} style={{ borderTop: `1px solid ${C.line}` }}>
-                  <td style={{ padding: "8px 4px" }}>{ENDING_LABELS[k]}</td>
-                  <td style={{ padding: "8px 4px", fontWeight: 700 }}>{realEndings[k] ?? 0}</td>
-                  <td style={{ padding: "8px 4px", color: C.muted }}>{testEndings[k] ?? 0}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* funnel dropoff */}
-        <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 800, color: C.goldMid, margin: "0 0 14px" }}>
-            נטישה פר-מסך · 14 יום (FUNNEL_STEP)
-          </h2>
-          {STEP_ROWS.every((r) => rowCount(r.keys).real + rowCount(r.keys).test === 0) ? (
-            <p style={{ color: C.muted, fontSize: 14 }}>אין אירועים עדיין.</p>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: C.goldMid, margin: "0 0 4px" }}>המשפך, שלב אחרי שלב · 14 יום</h2>
+          <p style={{ fontSize: 12, color: C.muted, margin: "0 0 16px" }}>
+            אחוז ירוק = כמה מהשלב הקודם המשיכו. אחוז אפור = כמה מסך הכניסות הגיעו לכאן.
+          </p>
+          {rows.every((r) => r.n === 0) ? (
+            <p style={{ color: C.muted, fontSize: 14 }}>אין תנועה עדיין.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {STEP_ROWS.map((r) => {
-                const c = rowCount(r.keys);
-                const max = Math.max(...STEP_ROWS.map((x) => { const cc = rowCount(x.keys); return cc.real + cc.test; }), 1);
-                const total = c.real + c.test;
+              {rows.map((r, i) => {
+                const prev = i > 0 ? rows[i - 1].n : r.n;
+                const stepRate  = i > 0 && prev > 0 ? Math.round((r.n / prev) * 100) : null;
+                const totalRate = rows[0].n > 0 ? Math.round((r.n / rows[0].n) * 100) : null;
                 return (
                   <div key={r.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ width: 118, fontSize: 12.5, color: C.muted, flexShrink: 0 }}>{r.label}</span>
                     <div style={{ flex: 1, background: "#0A0E16", borderRadius: 6, height: 18, overflow: "hidden" }}>
-                      <div style={{ width: `${(total / max) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${C.goldMid}, ${C.gold})`, opacity: 0.85 }} />
+                      <div style={{ width: `${(r.n / maxN) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${C.goldMid}, ${C.gold})`, opacity: 0.85 }} />
                     </div>
-                    <span style={{ width: 70, fontSize: 12.5, textAlign: "left", flexShrink: 0 }}>
-                      {c.real}{c.test > 0 && <span style={{ color: C.muted }}> +{c.test}ב</span>}
+                    <span style={{ width: 34, fontSize: 13, fontWeight: 700, textAlign: "left", flexShrink: 0 }}>{r.n}</span>
+                    <span style={{ width: 44, fontSize: 11.5, textAlign: "left", flexShrink: 0, color: stepRate !== null && stepRate < 60 ? C.red : C.green }}>
+                      {stepRate !== null ? `${stepRate}%` : ""}
+                    </span>
+                    <span style={{ width: 40, fontSize: 11, textAlign: "left", flexShrink: 0, color: C.muted }}>
+                      {totalRate !== null && i > 0 ? `${totalRate}%` : ""}
                     </span>
                   </div>
                 );
@@ -203,6 +215,51 @@ export default async function AdminKriahPage() {
             </div>
           )}
         </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14 }}>
+          {/* endings */}
+          <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 800, color: C.goldMid, margin: "0 0 14px" }}>לאן נותבו · 14 יום</h2>
+            {exts14 === 0 ? <p style={{ color: C.muted, fontSize: 14 }}>אין אבחונים עדיין.</p> : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {Object.keys(ENDING_LABELS).map((k) => {
+                  const n = endings[k] ?? 0;
+                  const pct = exts14 > 0 ? Math.round((n / exts14) * 100) : 0;
+                  return (
+                    <div key={k} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5 }}>
+                      <span style={{ width: 140, color: ENDING_LABELS[k].color, fontWeight: 700 }}>{ENDING_LABELS[k].label}</span>
+                      <div style={{ flex: 1, background: "#0A0E16", borderRadius: 6, height: 14, overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", background: ENDING_LABELS[k].color, opacity: 0.7 }} />
+                      </div>
+                      <span style={{ width: 60, textAlign: "left" }}>{n} · {pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* traffic sources */}
+          <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 800, color: C.goldMid, margin: "0 0 14px" }}>מאיפה הגיעו (אבחונים) · 14 יום</h2>
+            {topSources.length === 0 ? <p style={{ color: C.muted, fontSize: 14 }}>אין דאטה עדיין.</p> : (
+              <table style={{ width: "100%", fontSize: 13.5, borderCollapse: "collapse" }}>
+                <tbody>
+                  {topSources.map(([src, n]) => (
+                    <tr key={src} style={{ borderTop: `1px solid ${C.line}` }}>
+                      <td style={{ padding: "8px 4px" }}>{src}</td>
+                      <td style={{ padding: "8px 4px", fontWeight: 700, textAlign: "left" }}>{n}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+
+        <p style={{ fontSize: 11, color: C.muted, opacity: 0.6, marginTop: 22 }}>
+          {testCount > 0 ? `${testCount} אבחוני בדיקה פנימיים מוסתרים מהדוח. ` : ""}נטישה מחושבת מאירועי FUNNEL_STEP; אבחונים מטבלת החילוץ.
+        </p>
       </div>
     </div>
   );
