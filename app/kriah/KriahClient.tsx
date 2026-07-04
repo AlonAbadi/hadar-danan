@@ -15,10 +15,11 @@ type StateKey   = "A" | "B" | "C" | "D";
 type BlockerKey = "message" | "content" | "price" | "time";
 
 type Screen =
-  | "s1" | "s2" | "s3" | "s4" | "s6" | "s5" | "s7" | "s8"
-  | "q" | "probe" | "s15" | "loading" | "s16" | "exit" | "error";
+  | "s1" | "s2" | "s3" | "s4" | "s6" | "s7" | "s8"
+  | "q" | "probe" | "s15" | "loading" | "sendgate" | "s16" | "exit" | "error";
 
 type SignalOutput = {
+  occupation?:        string | null;   // inferred by the engine (change 3)
   pain_source:        string;
   element:            string;
   signal:             string;
@@ -265,6 +266,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
   const [ending, setEnding] = useState<"concierge" | "hive" | "pre_revenue" | "crisis_soft">("hive");
   const [occupation, setOccupation] = useState("");
   const [dictationTipDismissed, setDictationTipDismissed] = useState(false);
+  const [softCaptured, setSoftCaptured] = useState(false);   // email given at the S8 soft gate
+  const [finalizing, setFinalizing]     = useState(false);
   useEffect(() => {
     try { if (sessionStorage.getItem("kriah_dict_tip") === "1") setDictationTipDismissed(true); } catch {}
   }, []);
@@ -354,43 +357,101 @@ export function KriahClient({ previewKey, isTest }: Props) {
   }, [screen, qIdx, stateKey, blocker, changeWish, answers, q4Skipped, probeShown, name, email, phone, signal]);
 
   // ── S5 email gate → POST /api/signup (non-blocking) ────────────────────────
-  const submitEmailGate = () => {
-    const nm = name.trim();
+  // ── S8 soft capture (change 2): one light email field, never blocking ──────
+  // Consent here is by the inline legal line (not a checkbox) — the field's
+  // whole purpose is saving progress + contact; the letter email itself is
+  // requested explicitly at the send gate.
+  const submitSoftCapture = () => {
     const em = email.trim().toLowerCase();
-    if (nm.length < 2) { setGateErr("שם חייב להכיל לפחות 2 תווים"); return; }
     if (!em.includes("@") || !em.includes(".")) { setGateErr("כתובת אימייל לא תקינה"); return; }
-    if (occupation.trim().length < 2) { setGateErr("ספרו לנו במילה או שתיים מה תחום העיסוק"); return; }
-    if (!consent) { setConsentErr(true); return; }
     setGateErr(null);
-
     const anonymousId = getCookie("anon_id");
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (previewKey) headers["x-kriah-preview"] = previewKey;
-    // Non-blocking by design: the reading was already shown; the extract call
-    // at the end upserts the same lead by email either way.
     // Note: ab_variant deliberately NOT sent — sending it would increment the
     // live landing_headline experiment conversion counters.
     void fetch("/api/signup", {
       method: "POST",
       headers,
       body: JSON.stringify({
-        name: nm,
+        name: name.trim() || "",
         email: em,
         marketing_consent: true,
         is_test: isTest,
-        instrument_version: "v2_funnel", // lets /api/signup accept a phone-less lead
+        instrument_version: "v2_funnel", // phone-less + name-less lead allowed
         ...(anonymousId ? { anonymous_id: anonymousId } : {}),
         ...readUtmCookies(),
       }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          console.warn("[kriah] /api/signup rejected", res.status, await res.json().catch(() => null));
-        }
-      })
-      .catch((err) => console.warn("[kriah] /api/signup failed", err));
+    }).catch((err) => console.warn("[kriah] soft capture failed", err));
+    setSoftCaptured(true);
+    setConsent(true);
+    startQuestions();
+  };
 
-    goTo("s7", "s7_fork");
+  const startQuestions = () => {
+    track("q1_flow_zone_shown");
+    setScreen("q");
+    setQIdx(0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Partial-answer beacon (change 2): abandonment mid-questions still leaves
+  // the answers recoverable next to the soft-captured contact.
+  const beaconPartialAnswer = (key: string) => {
+    try {
+      const text = (answers[key] ?? "").trim().slice(0, 1500);
+      if (!text) return;
+      const anonymousId = getCookie("anon_id");
+      navigator.sendBeacon?.("/api/events", new Blob([JSON.stringify({
+        type: "KRIAH_PARTIAL_ANSWER",
+        ...(anonymousId ? { anonymous_id: anonymousId } : {}),
+        metadata: { key, text, instrument: "v2_funnel", is_test: isTest },
+      })], { type: "application/json" }));
+    } catch { /* tracking only */ }
+  };
+
+  // ── Send gate (change 1): gates the LETTER, not the snapshot ────────────────
+  const submitSendGate = async () => {
+    const nm = name.trim();
+    const em = email.trim().toLowerCase();
+    if (nm.length < 2) { setGateErr("שם חייב להכיל לפחות 2 תווים"); return; }
+    if (!em.includes("@") || !em.includes(".")) { setGateErr("כתובת אימייל לא תקינה"); return; }
+    if (!consent) { setConsentErr(true); return; }
+    setGateErr(null);
+    setFinalizing(true);
+    try {
+      if (extractionId) {
+        // Reading already generated (soft-capture path) — patch the lead
+        // with the confirmed values + deliver the letter by email.
+        await finalizeAndSend(extractionId);
+        goTo("s16", "s16_full_reading");
+      } else {
+        // Skipper path — extraction runs now with everything in hand.
+        await runExtract("finalize");
+      }
+    } finally {
+      setFinalizing(false);
+    }
+  };
+
+  const finalizeAndSend = async (extId: string) => {
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (previewKey) headers["x-kriah-preview"] = previewKey;
+      await fetch("/api/kriah/finalize", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          extraction_id: extId,
+          email: email.trim().toLowerCase(),
+          name: name.trim(),
+          occupation: occupation.trim(),
+        }),
+      });
+    } catch (err) {
+      // The letter still renders on screen — email delivery is best-effort here.
+      console.warn("[kriah] finalize failed", err);
+    }
   };
 
   // ── After Q6: decide probe / continue ─────────────────────────────────────
@@ -417,6 +478,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
   const advanceQuestion = () => {
     const q = QUESTIONS[qIdx];
     track(`q${qIdx + 1}_${q.key}`);
+    beaconPartialAnswer(q.key);
     if (qIdx === QUESTIONS.length - 1) { afterQ6(); return; }
     setQIdx((i) => i + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -431,7 +493,12 @@ export function KriahClient({ previewKey, isTest }: Props) {
   };
 
   // ── Extraction ─────────────────────────────────────────────────────────────
-  const runExtract = async () => {
+  // dest="sendgate": soft-capture path — reading generates BEFORE the gate so
+  // the inferred occupation can prefill it. dest="finalize": skipper path —
+  // gate came first; deliver the letter email right after extraction.
+  const lastExtractDest = useRef<"sendgate" | "finalize">("finalize");
+  const runExtract = async (dest: "sendgate" | "finalize" = "finalize") => {
+    lastExtractDest.current = dest;
     goTo("loading", "loading");
     setErrorMsg(null);
     try {
@@ -465,12 +532,23 @@ export function KriahClient({ previewKey, isTest }: Props) {
         return;
       }
       setSignal(data.signal as SignalOutput);
-      if (typeof data.id === "string") setExtractionId(data.id);
+      const extId = typeof data.id === "string" ? data.id : null;
+      if (extId) setExtractionId(extId);
       if (data.v2_ending === "concierge" || data.v2_ending === "hive" ||
           data.v2_ending === "pre_revenue" || data.v2_ending === "crisis_soft") {
         setEnding(data.v2_ending);
       }
-      goTo("s16", "s16_full_reading");
+      // Change 3: the engine's inferred occupation prefills the send gate
+      // (confirmation, not data entry). Never overwrites what the user typed.
+      const inferredOcc = (data.signal as SignalOutput)?.occupation;
+      if (inferredOcc && !occupation.trim()) setOccupation(inferredOcc);
+
+      if (dest === "sendgate") {
+        goTo("sendgate", "sendgate");
+      } else {
+        if (extId) await finalizeAndSend(extId);
+        goTo("s16", "s16_full_reading");
+      }
     } catch {
       setErrorMsg("שגיאת רשת. נסו שוב בעוד רגע.");
       goTo("error", "extract_error");
@@ -488,7 +566,14 @@ export function KriahClient({ previewKey, isTest }: Props) {
       setPhone("");
     }
     setPhoneErr(null);
-    void runExtract();
+    // Soft-captured leads have an email → the reading can generate now, and
+    // the send gate opens with the inferred occupation prefilled. Skippers
+    // see the gate first; extraction runs on submit.
+    if (softCaptured && email.trim()) {
+      void runExtract("sendgate");
+    } else {
+      goTo("sendgate", "sendgate");
+    }
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -631,17 +716,20 @@ export function KriahClient({ previewKey, isTest }: Props) {
               {LIMITATION_LINE}
             </p>
             <div style={{ textAlign: "left" }}>
-              <GoldButton onClick={() => goTo("s5", "s5_email_gate")}>להמשיך</GoldButton>
+              <GoldButton onClick={() => goTo("s7", "s7_fork")}>להמשיך</GoldButton>
             </div>
           </Card>
         )}
 
-        {/* ── S5 · email gate (after S6) ── */}
-        {screen === "s5" && (
+        {/* ── Send gate · before the letter (the gated asset is the letter) ── */}
+        {screen === "sendgate" && (
           <Card>
-            <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 24px", lineHeight: 1.45 }}>
-              לאן לשלוח את התמונה? המייל שומר לכם אותה.
+            <h2 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 10px", lineHeight: 1.45 }}>
+              האות האישי שלכם מוכן. לאן לשלוח אותו?
             </h2>
+            <p style={{ fontSize: 14, color: C.muted, margin: "0 0 24px", lineHeight: 1.6 }}>
+              נראה לכם אותו כאן, וגם נשלח למייל כדי שיישאר איתכם.
+            </p>
             {gateErr && (
               <div role="alert" style={{ marginBottom: 16, color: "#FF8888", fontSize: 14 }}>{gateErr}</div>
             )}
@@ -675,25 +763,28 @@ export function KriahClient({ previewKey, isTest }: Props) {
               </div>
               <div>
                 <label htmlFor="kriah-occupation" style={{ display: "block", fontSize: 14, color: C.muted, marginBottom: 6 }}>
-                  תחום עיסוק
+                  תחום עיסוק (לא חובה)
                 </label>
                 <input
                   id="kriah-occupation"
                   type="text"
-                  placeholder="מאמנת עסקית, עו&quot;ד, קוסמטיקאית..."
                   value={occupation}
                   onChange={(e) => setOccupation(e.target.value)}
                   style={inputStyle()}
                 />
               </div>
-              <ConsentCheckbox
-                checked={consent}
-                onChange={(v) => { setConsent(v); if (v) setConsentErr(false); }}
-                error={consentErr}
-                dark
-              />
+              {!softCaptured && (
+                <ConsentCheckbox
+                  checked={consent}
+                  onChange={(v) => { setConsent(v); if (v) setConsentErr(false); }}
+                  error={consentErr}
+                  dark
+                />
+              )}
               <div style={{ textAlign: "left", marginTop: 8 }}>
-                <GoldButton onClick={submitEmailGate}>להמשיך</GoldButton>
+                <GoldButton onClick={() => void submitSendGate()} disabled={finalizing}>
+                  {finalizing ? "שולחים..." : "שלחו לי את האות ←"}
+                </GoldButton>
               </div>
             </div>
           </Card>
@@ -718,25 +809,54 @@ export function KriahClient({ previewKey, isTest }: Props) {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
               <GoldButton onClick={() => goTo("s8", "s8_bridge")}>להמשיך לשש השאלות</GoldButton>
               <QuietLink onClick={() => goTo("exit", "exit")}>
-                התמונה כבר במייל, אפשר לעצור כאן
+                אפשר לעצור כאן
               </QuietLink>
             </div>
           </Card>
         )}
 
-        {/* ── S8 · bridge ── */}
+        {/* ── S8 · bridge + soft capture (change 2) ── */}
         {screen === "s8" && (
           <Card>
             <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 16px", lineHeight: 1.4, textAlign: "center" }}>
               עד כאן שאלנו על העסק. עכשיו זה עובר אליכם.
             </h2>
-            <p style={{ fontSize: 16, lineHeight: 1.7, color: C.muted, margin: "0 0 30px", textAlign: "center" }}>
+            <p style={{ fontSize: 16, lineHeight: 1.7, color: C.muted, margin: "0 0 26px", textAlign: "center" }}>
               שש שאלות. אין תשובות נכונות, יש רק החומר שממנו נבנה המשפט שלכם.
             </p>
-            <div style={{ textAlign: "center" }}>
-              <GoldButton onClick={() => { track("q1_flow_zone_shown"); setScreen("q"); setQIdx(0); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+            {!softCaptured && (
+              <div style={{ marginBottom: 22 }}>
+                <label htmlFor="kriah-soft-email" style={{ display: "block", fontSize: 14.5, color: C.fg, marginBottom: 8, textAlign: "center" }}>
+                  לפני שמתחילים, לאן לשמור את ההתקדמות שלכם?
+                </label>
+                {gateErr && (
+                  <div role="alert" style={{ marginBottom: 10, color: "#FF8888", fontSize: 13, textAlign: "center" }}>{gateErr}</div>
+                )}
+                <input
+                  id="kriah-soft-email"
+                  type="email"
+                  dir="ltr"
+                  autoComplete="email"
+                  placeholder="you@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={{ ...inputStyle(), textAlign: "left" }}
+                />
+                <p style={{ fontSize: 11.5, color: C.muted, margin: "8px 0 0", textAlign: "center", opacity: 0.8 }}>
+                  בהזנת המייל אתם מאשרים קבלת עדכונים. אפשר להסיר הרשמה בכל רגע.
+                </p>
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+              <GoldButton onClick={() => {
+                if (softCaptured || !email.trim()) { startQuestions(); return; }
+                submitSoftCapture();
+              }}>
                 להמשיך
               </GoldButton>
+              {!softCaptured && email.trim().length === 0 && (
+                <QuietLink onClick={startQuestions}>להמשיך בלי</QuietLink>
+              )}
             </div>
           </Card>
         )}
@@ -934,7 +1054,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
             <p style={{ fontSize: 16, color: "#FF8888", margin: "0 0 22px", lineHeight: 1.6 }}>
               {errorMsg ?? "משהו השתבש. נסו שוב."}
             </p>
-            <GoldButton onClick={() => void runExtract()}>לנסות שוב</GoldButton>
+            <GoldButton onClick={() => void runExtract(lastExtractDest.current)}>לנסות שוב</GoldButton>
           </Card>
         )}
 
@@ -954,7 +1074,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         {screen === "exit" && (
           <Card center>
             <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 18px", lineHeight: 1.4 }}>
-              התמונה הראשונית אצלכם במייל
+              {softCaptured ? "ההתקדמות שלכם שמורה" : "אפשר לחזור מתי שתרצו"}
             </h2>
             <p style={{ fontSize: 17, color: C.gold, fontWeight: 600, margin: 0 }}>
               תהיו טובים.

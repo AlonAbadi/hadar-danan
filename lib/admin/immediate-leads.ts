@@ -308,7 +308,10 @@ export async function getImmediateLeads(
         {
           userId:     uid,
           name,
-          occupation: u?.occupation?.trim() || null,
+          occupation: u?.occupation?.trim()
+            || (typeof (row.signal as Record<string, unknown> | null)?.occupation === "string"
+                ? String((row.signal as Record<string, unknown>).occupation).trim() || null
+                : null),
           source:     "signal",
           reason:     (row.signal?.signal as string) ?? "",
           at:         row.generated_at as string,
