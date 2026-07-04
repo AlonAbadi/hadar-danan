@@ -125,23 +125,55 @@ export function BroadcastRoomClient({
     []
   );
 
+  // Countdown beeps (real teleprompter behavior): short tick per digit, a
+  // higher "go" tone at zero, then a beat of silence before the mic opens so
+  // the tone is never captured in the take.
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const beep = useCallback((freq: number, durationMs: number) => {
+    try {
+      if (!audioCtxRef.current) {
+        const Ctx = (window.AudioContext ??
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+        audioCtxRef.current = new Ctx();
+      }
+      const ctx = audioCtxRef.current;
+      ctx.resume().catch(() => {});
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = freq;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + durationMs / 1000);
+    } catch { /* sound is a nicety, never a blocker */ }
+  }, []);
+
   const beginCountdown = useCallback(() => {
     if (countdown !== null || rec.isRecording) return;
     setCountdown(3);
+    beep(880, 130);
     prompterRef.current?.restart();
     let n = 3;
     const iv = setInterval(() => {
       n -= 1;
       if (n === 0) {
         clearInterval(iv);
+        beep(1318, 220); // "go"
         setCountdown(null);
-        rec.startRecording();
-        prompterRef.current?.start();
+        // one beat of silence: the go-tone dies before the mic opens, and
+        // she gets a breath before the prompter's grace period begins
+        setTimeout(() => {
+          rec.startRecording();
+          prompterRef.current?.start();
+        }, 350);
       } else {
+        beep(880, 130);
         setCountdown(n);
       }
     }, 1000);
-  }, [countdown, rec]);
+  }, [countdown, rec, beep]);
 
   const stopTake = useCallback(() => {
     prompterRef.current?.pause();
