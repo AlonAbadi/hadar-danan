@@ -562,6 +562,68 @@ function MonthlyTab({ extraction }: { extraction: Extraction }) {
 }
 
 // ── Post review tab ────────────────────────────────────────
+
+// Pending reels from חדר השידור — mark-only flow ("פורסם" flips the item;
+// the text-review flow below stays exactly as it was).
+function PendingReviewItems() {
+  const [items, setItems] = useState<
+    { id: string; created_at: string; video_number: number | null; cover_url: string | null }[]
+  >([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/broadcast/review-items")
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((d) => { if (!cancelled) setItems(d.items ?? []); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  async function markPublished(id: string) {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    await fetch(`/api/broadcast/review-items/${id}/publish`, { method: "POST" }).catch(() => {});
+  }
+
+  if (!items.length) return null;
+  return (
+    <Section title="ממתינים לביקורת" hint="רילסים מחדר השידור שעוד לא פורסמו">
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {items.map((item) => (
+          <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {item.cover_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.cover_url} alt=""
+                style={{ width: 44, height: 78, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.line}` }}
+              />
+            ) : (
+              <div style={{ width: 44, height: 78, borderRadius: 8, background: C.cardSoft }} />
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, color: C.fg, fontWeight: 600 }}>
+                {item.video_number ? `רילס לתסריט ${item.video_number}` : "רילס מחדר השידור"}
+              </div>
+              <div style={{ fontSize: 12, color: C.muted }}>
+                {new Date(item.created_at).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}
+              </div>
+            </div>
+            <button
+              onClick={() => markPublished(item.id)}
+              style={{
+                background: "transparent", color: C.gold, border: `1px solid ${C.lineGold}`,
+                borderRadius: 999, padding: "6px 16px", fontSize: 13, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >
+              פורסם
+            </button>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
 function PostReviewTab({ extractionId }: { extractionId: string }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -587,7 +649,8 @@ function PostReviewTab({ extractionId }: { extractionId: string }) {
   }
 
   return (
-    <div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <PendingReviewItems />
       <Section title="בדוק טיוטה" hint="הדבק כאן פוסט שאתה שוקל לפרסם. ה-AI יגיד כמה הוא במדויק האות שלך, ויכין לך גרסה חדה יותר.">
         <textarea
           value={text} onChange={(e) => setText(e.target.value)}
@@ -831,7 +894,7 @@ function ShootDayTab({ extractionId }: { extractionId: string }) {
 
       {/* Videos in 3 acts (Lever #3: Act Structure 4+4+4). V1 ships only
           Video #1 (IDENTITY). V2+ unlocks the rest via per-card CTAs. */}
-      <VideosByAct videos={plan.videos} />
+      <VideosByAct videos={plan.videos} extractionId={extractionId} />
       {(plan.videos.length < 7 || !plan.visual_direction || !plan.gift_sentences || !plan.director) && (
         <ShootDayBuilder extractionId={extractionId} plan={plan} setPlan={setPlan} stored={stored} />
       )}
@@ -1013,16 +1076,16 @@ function PillarsOverview({ pillars }: { pillars: Pillar[] }) {
   );
 }
 
-function VideosByAct({ videos }: { videos: Video[] }) {
+function VideosByAct({ videos, extractionId }: { videos: Video[]; extractionId: string }) {
   const act1 = videos.filter((v) => v.act === 1);
   const act2 = videos.filter((v) => v.act === 2);
   const act3 = videos.filter((v) => v.act === 3);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <ActBlock title="ACT 1 · זהות" subtitle="מי אתם לעצמכם" videos={act1} />
-      <ActBlock title="ACT 2 · סיפור" subtitle="הסיפורים שמוכיחים את זה" videos={act2} />
-      <ActBlock title="ACT 3 · סמכות" subtitle="איך אתם חושבים, לא איך אתם עובדים" videos={act3} />
+      <ActBlock title="ACT 1 · זהות" subtitle="מי אתם לעצמכם" videos={act1} extractionId={extractionId} />
+      <ActBlock title="ACT 2 · סיפור" subtitle="הסיפורים שמוכיחים את זה" videos={act2} extractionId={extractionId} />
+      <ActBlock title="ACT 3 · סמכות" subtitle="איך אתם חושבים, לא איך אתם עובדים" videos={act3} extractionId={extractionId} />
     </div>
   );
 }
@@ -1220,7 +1283,7 @@ function DirectorCard({ director, videos }: { director: NonNullable<ShootDayPlan
   );
 }
 
-function ActBlock({ title, subtitle, videos }: { title: string; subtitle: string; videos: Video[] }) {
+function ActBlock({ title, subtitle, videos, extractionId }: { title: string; subtitle: string; videos: Video[]; extractionId: string }) {
   if (videos.length === 0) return null;
   return (
     <div>
@@ -1233,13 +1296,13 @@ function ActBlock({ title, subtitle, videos }: { title: string; subtitle: string
         <div style={{ fontSize: 12, color: C.muted }}>{subtitle}</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-        {videos.map((v) => <VideoCard key={v.number} video={v} />)}
+        {videos.map((v) => <VideoCard key={v.number} video={v} extractionId={extractionId} />)}
       </div>
     </div>
   );
 }
 
-function VideoCard({ video }: { video: Video }) {
+function VideoCard({ video, extractionId }: { video: Video; extractionId: string }) {
   const [open, setOpen]           = useState(false);
   const [whyOpen, setWhyOpen]     = useState(false);
 
@@ -1302,6 +1365,19 @@ function VideoCard({ video }: { video: Video }) {
           </div>
         </div>
       )}
+
+      {/* חדר השידור — the script's primary action */}
+      <Link
+        href={`/hive/signal-kit/broadcast/${extractionId}/${video.number}`}
+        style={{
+          display: "block", textAlign: "center", textDecoration: "none",
+          background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+          color: "#2a1d05", borderRadius: 10, padding: "12px 14px",
+          fontSize: 14, fontWeight: 700, minHeight: 20,
+        }}
+      >
+        לצלם עכשיו
+      </Link>
 
       <button
         onClick={handleExpand}
