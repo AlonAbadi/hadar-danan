@@ -341,7 +341,7 @@ function CaptionApproval({
               src={snap.take_preview_url}
               playsInline
               controls
-              style={portraitPreview("34dvh", 0)}
+              style={portraitPreview("34dvh", 0, true)}
             />
           ) : null}
           <div style={{ marginTop: 16 }}>
@@ -421,7 +421,7 @@ function CaptionApproval({
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 140px" }}>
         <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.hint")}</p>
         {snap.take_preview_url ? (
-          <video src={snap.take_preview_url} playsInline controls style={portraitPreview("34dvh", 14)} />
+          <video src={snap.take_preview_url} playsInline controls style={portraitPreview("34dvh", 14, true)} />
         ) : null}
         {/* trim nudges — two text buttons, never a timeline */}
         <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
@@ -644,8 +644,9 @@ function OutputScreen({
 }
 
 // Takes and outputs are portrait reels — lock the inline player to a centered
-// 9:16 frame instead of letting Safari letterbox it into a wide box.
-const portraitPreview = (height: string, marginTop: number): React.CSSProperties => ({
+// 9:16 frame. Raw takes use COVER so the preview shows the exact crop the
+// burn will produce (WYSIWYG); burned outputs are already 9:16.
+const portraitPreview = (height: string, marginTop: number, cover = false): React.CSSProperties => ({
   display: "block",
   height,
   aspectRatio: "9 / 16",
@@ -654,7 +655,7 @@ const portraitPreview = (height: string, marginTop: number): React.CSSProperties
   margin: `${marginTop}px auto 0`,
   borderRadius: 12,
   background: "#000",
-  objectFit: "contain",
+  objectFit: cover ? "cover" : "contain",
 });
 
 const stickyBar: React.CSSProperties = {

@@ -296,20 +296,44 @@ export function BroadcastRoomClient({
   return (
     <div dir="rtl" style={shell} className="font-assistant">
       <RoomStyles />
-      <video
-        ref={rec.attachPreview}
-        autoPlay
-        muted
-        playsInline
+      {/* WYSIWYG stage: the preview is EXACTLY the 9:16 frame the burn will
+          produce (iPhone QA: Safari records the full landscape sensor, so a
+          full-bleed preview showed a wider world than the reel — the mismatch
+          read as "the video is zoomed in"). What you see is what she gets. */}
+      <div
         style={{
           position: "absolute",
           inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          transform: "scaleX(-1)", // selfie mirror; the recorded file stays true
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#000",
         }}
-      />
+      >
+        <div
+          style={{
+            width: "min(100vw, calc(100dvh * 9 / 16))",
+            aspectRatio: "9 / 16",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <video
+            ref={rec.attachPreview}
+            autoPlay
+            muted
+            playsInline
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transform: "scaleX(-1)", // selfie mirror; the recorded file stays true
+            }}
+          />
+        </div>
+      </div>
       {/* always a way out of the camera, even mid-session */}
       {!rec.isRecording ? (
         <button

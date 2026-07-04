@@ -1,30 +1,50 @@
-// חדר השידור — teleprompter strip pinned to the top of the viewport (nearest
-// the iPhone front lens).
+// חדר השידור — karaoke teleprompter (the pattern of the leading prompter
+// apps): words light up at speaking pace, and the scroll FOLLOWS the lit
+// word — the reader sets the rhythm mentally against the highlight, not
+// against a conveyor belt.
 //
-// Behavior modeled on mature teleprompter apps (QA round 2 feedback):
-// - Scroll speed is AUTO-CALIBRATED from the script: word count / natural
-//   Hebrew speaking pace determines px/s, so the text arrives when the words
-//   do. The user control is a gentle multiplier, not an absolute speed.
-// - A gold read-line marks where to read; the script starts ON the line.
-// - After the countdown there is a grace pause, then the scroll eases in —
-//   nothing jumps the moment recording starts.
-// - rAF with dt-based movement, so Low Power Mode never changes the pace.
+// - Pace: word-level schedule. Each word's duration is weighted by its
+//   length around a base of ~120 Hebrew wpm (2.0 w/s), the recorded-content
+//   sweet spot; the speed control is a live multiplier.
+// - Display: large type, ~3 lines visible; past words dim, the current word
+//   is gold, upcoming words are bright.
+// - Grace: a short beat after the countdown, then the first word lights.
+// - rAF + dt everywhere: Low Power Mode cannot change the pace.
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBroadcastCopy } from "@/lib/broadcast-copy";
 
-const SPEED_MULTIPLIERS = [0.7, 0.85, 1.0, 1.15, 1.35];
-const SIZE_STEPS = [30, 36, 44];
-const WORDS_PER_SECOND = 1.7; // deliberate on-camera Hebrew (~100 wpm; BIGVU recommends 120-140 English wpm for recorded content)
-const START_GRACE_MS = 1600; // read the first line before anything moves
-const RAMP_MS = 1400; // ease from 0 to full speed
-const READ_LINE_FRACTION = 0.3; // read-line position inside the strip
+const SPEED_MULTIPLIERS = [0.75, 0.9, 1.0, 1.15, 1.3];
+const SIZE_STEPS = [34, 40, 48];
+const WORDS_PER_SECOND = 2.0; // ~120 Hebrew wpm
+const START_GRACE_MS = 900;
+const READ_LINE_FRACTION = 0.32;
+const FOLLOW_RATE = 5; // scroll catch-up speed (fraction/s toward target)
 
 export interface TeleprompterHandle {
   start: () => void;
   pause: () => void;
   restart: () => void;
+}
+
+interface Word {
+  text: string;
+  gold: boolean; // hook/cta words render gold when upcoming
+  durMs: number;
+}
+
+function buildWords(hook: string, body: string, cta: string | undefined, mult: number): Word[] {
+  const parts: { text: string; gold: boolean }[] = [];
+  hook.trim().split(/\s+/).filter(Boolean).forEach((t) => parts.push({ text: t, gold: true }));
+  body.trim().split(/\s+/).filter(Boolean).forEach((t) => parts.push({ text: t, gold: false }));
+  (cta ?? "").trim().split(/\s+/).filter(Boolean).forEach((t) => parts.push({ text: t, gold: true }));
+  if (!parts.length) return [];
+  // Length-weighted schedule, normalized so the average word hits the base pace.
+  const weights = parts.map((p) => p.text.length + 2);
+  const avg = weights.reduce((a, b) => a + b, 0) / weights.length;
+  const baseMs = 1000 / (WORDS_PER_SECOND * mult);
+  return parts.map((p, i) => ({ ...p, durMs: (weights[i] / avg) * baseMs }));
 }
 
 export function Teleprompter({
@@ -51,79 +71,82 @@ export function Teleprompter({
     return Number.isInteger(saved) && saved >= 0 && saved < SIZE_STEPS.length ? saved : 1;
   });
   const [paused, setPaused] = useState(false);
+  const [wordIdx, setWordIdx] = useState(-1); // -1 = nothing lit yet
 
-  const posRef = useRef(0);
-  const stripRef = useRef<HTMLDivElement | null>(null);
+  const words = useMemo(
+    () => buildWords(hook, body, cta, SPEED_MULTIPLIERS[speedIdx]),
+    [hook, body, cta, speedIdx]
+  );
+  const wordsRef = useRef(words);
+  wordsRef.current = words;
+
   const innerRef = useRef<HTMLDivElement | null>(null);
-  const textRef = useRef<HTMLDivElement | null>(null);
+  const wordEls = useRef<(HTMLSpanElement | null)[]>([]);
   const rafRef = useRef<number | null>(null);
   const lastTsRef = useRef<number | null>(null);
   const runningRef = useRef(false);
-  const startedAtRef = useRef(0); // when the current run began (for grace+ramp)
-  const scrolledMsRef = useRef(0); // accumulated active-scroll time across pauses
-  const baseSpeedRef = useRef(24); // px/s, auto-calibrated below
-  const multiplierRef = useRef(SPEED_MULTIPLIERS[speedIdx]);
-  multiplierRef.current = SPEED_MULTIPLIERS[speedIdx];
-
-  const fontSize = SIZE_STEPS[sizeIdx];
-  const wordCount = `${hook} ${body} ${cta ?? ""}`.trim().split(/\s+/).length;
-
-  // Auto-calibration: the whole script should finish scrolling past the
-  // read-line in the time it takes to SAY it. Distance = the TEXT block only
-  // (textRef) — counting the container paddings inflated the speed by up to
-  // 2x on short scripts (QA round 4 bug).
-  useLayoutEffect(() => {
-    const el = textRef.current;
-    if (!el) return;
-    const textHeight = el.offsetHeight;
-    const estSpeechSec = Math.max(wordCount / WORDS_PER_SECOND, 8);
-    const px = textHeight / estSpeechSec;
-    baseSpeedRef.current = Math.min(Math.max(px, 8), 60);
-  }, [wordCount, fontSize, hook, body, cta]);
+  const graceLeftRef = useRef(START_GRACE_MS);
+  const accRef = useRef(0);
+  const idxRef = useRef(-1);
+  const posRef = useRef(0);
 
   const tick = useCallback((ts: number) => {
     if (!runningRef.current) return;
     const last = lastTsRef.current ?? ts;
-    const dt = Math.min((ts - last) / 1000, 0.2);
+    const dt = Math.min(ts - last, 200);
     lastTsRef.current = ts;
 
-    const sinceStart = scrolledMsRef.current + (performance.now() - startedAtRef.current);
-    if (sinceStart >= START_GRACE_MS) {
-      // ease-in ramp after the grace pause
-      const ramp = Math.min((sinceStart - START_GRACE_MS) / RAMP_MS, 1);
-      posRef.current += baseSpeedRef.current * multiplierRef.current * ramp * dt;
-      const el = innerRef.current;
-      if (el) {
-        const max = el.scrollHeight;
-        if (posRef.current > max) posRef.current = max;
-        el.style.transform = `translate3d(0, ${-posRef.current}px, 0)`;
+    if (graceLeftRef.current > 0) {
+      graceLeftRef.current -= dt;
+    } else {
+      const w = wordsRef.current;
+      if (idxRef.current < 0) {
+        idxRef.current = 0;
+        setWordIdx(0);
       }
+      accRef.current += dt;
+      while (idxRef.current < w.length - 1 && accRef.current >= w[idxRef.current].durMs) {
+        accRef.current -= w[idxRef.current].durMs;
+        idxRef.current += 1;
+        setWordIdx(idxRef.current);
+      }
+    }
+
+    // Scroll follows the lit word: ease toward keeping it on the read line.
+    const inner = innerRef.current;
+    const el = idxRef.current >= 0 ? wordEls.current[idxRef.current] : null;
+    if (inner && el) {
+      const strip = inner.parentElement!;
+      const readLine = strip.clientHeight * READ_LINE_FRACTION;
+      const target = Math.max(0, el.offsetTop - readLine);
+      posRef.current += (target - posRef.current) * Math.min(1, (dt / 1000) * FOLLOW_RATE);
+      inner.style.transform = `translate3d(0, ${-posRef.current}px, 0)`;
     }
     rafRef.current = requestAnimationFrame(tick);
   }, []);
 
-  // Always (re)schedules — React effect cleanup cancels frames on re-render,
-  // so a guard here would freeze the prompter (QA round 1 bug).
+  // Always (re)schedules — React effect cleanup cancels frames on re-render;
+  // a guard here would freeze the prompter (learned in QA round 1).
   const start = useCallback(() => {
     runningRef.current = true;
     lastTsRef.current = null;
-    startedAtRef.current = performance.now();
     setPaused(false);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(tick);
   }, [tick]);
 
   const pause = useCallback(() => {
-    scrolledMsRef.current += performance.now() - startedAtRef.current;
     runningRef.current = false;
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     setPaused(true);
   }, []);
 
   const restart = useCallback(() => {
+    idxRef.current = -1;
+    accRef.current = 0;
+    graceLeftRef.current = START_GRACE_MS;
     posRef.current = 0;
-    scrolledMsRef.current = 0;
-    startedAtRef.current = performance.now();
+    setWordIdx(-1);
     if (innerRef.current) innerRef.current.style.transform = "translate3d(0, 0, 0)";
     lastTsRef.current = null;
   }, []);
@@ -137,7 +160,6 @@ export function Teleprompter({
       start();
     } else if (!running) {
       runningRef.current = false;
-      scrolledMsRef.current = 0;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     }
     return () => {
@@ -152,9 +174,10 @@ export function Teleprompter({
     localStorage.setItem("broadcast_size_idx", String(sizeIdx));
   }, [sizeIdx]);
 
+  const fontSize = SIZE_STEPS[sizeIdx];
+
   return (
     <div
-      ref={stripRef}
       dir="rtl"
       onClick={() => (runningRef.current ? pause() : running && start())}
       style={{
@@ -163,57 +186,59 @@ export function Teleprompter({
         insetInlineStart: 0,
         insetInlineEnd: 0,
         paddingTop: "env(safe-area-inset-top)",
-        height: "min(32dvh, 290px)",
-        background: "rgba(8,12,20,0.78)",
+        height: "min(30dvh, 270px)",
+        background: "rgba(8,12,20,0.82)",
         backdropFilter: "blur(6px)",
         WebkitBackdropFilter: "blur(6px)",
         overflow: "hidden",
         zIndex: 20,
         maskImage:
-          "linear-gradient(to bottom, transparent 0, black 8%, black 52%, rgba(0,0,0,0.18) 78%, transparent 96%)",
+          "linear-gradient(to bottom, transparent 0, black 9%, black 56%, rgba(0,0,0,0.15) 82%, transparent 97%)",
         WebkitMaskImage:
-          "linear-gradient(to bottom, transparent 0, black 8%, black 52%, rgba(0,0,0,0.18) 78%, transparent 96%)",
+          "linear-gradient(to bottom, transparent 0, black 9%, black 56%, rgba(0,0,0,0.15) 82%, transparent 97%)",
       }}
     >
-      {/* the read line — read whatever crosses it */}
-      <div
-        style={{
-          position: "absolute",
-          top: `calc(env(safe-area-inset-top) + ${READ_LINE_FRACTION * 100}%)`,
-          insetInlineStart: 10,
-          insetInlineEnd: 10,
-          height: 2,
-          background: "linear-gradient(90deg, transparent, rgba(232,185,74,0.55), transparent)",
-          zIndex: 1,
-          pointerEvents: "none",
-        }}
-      />
       <div
         ref={innerRef}
         style={{
-          // first line starts ON the read line; long padding-bottom lets the
-          // last line scroll all the way up to it
-          paddingTop: `calc(${READ_LINE_FRACTION * 100}% * 0.38)`,
-          paddingBottom: 340,
-          paddingInline: 22,
+          paddingTop: `calc(min(30dvh, 270px) * ${READ_LINE_FRACTION} * 0.5)`,
+          paddingBottom: 320,
+          paddingInline: 20,
           textAlign: "center",
           fontSize,
-          lineHeight: 1.5,
-          color: "#EDE9E1",
-          fontWeight: 600,
+          lineHeight: 1.45,
+          fontWeight: 700,
           willChange: "transform",
         }}
       >
-        <div ref={textRef}>
-          <span style={{ color: "#E8B94A", fontWeight: 700 }}>{hook}</span>{" "}
-          <span>{body}</span>
-          {cta ? (
-            <>
-              {" "}
-              <span style={{ color: "#E8B94A", fontWeight: 700 }}>{cta}</span>
-            </>
-          ) : null}
-        </div>
+        {words.map((w, i) => {
+          const isPast = wordIdx >= 0 && i < wordIdx;
+          const isNow = i === wordIdx;
+          return (
+            <span key={i}>
+              <span
+                ref={(el) => { wordEls.current[i] = el; }}
+                style={{
+                  display: "inline-block",
+                  color: isNow
+                    ? "#080C14"
+                    : isPast
+                      ? "rgba(237,233,225,0.32)"
+                      : w.gold
+                        ? "#E8B94A"
+                        : "#EDE9E1",
+                  background: isNow ? "#E8B94A" : "transparent",
+                  borderRadius: isNow ? 8 : 0,
+                  padding: isNow ? "0 6px" : 0,
+                  margin: isNow ? "0 -6px" : 0,
+                  transition: "color 0.12s, background 0.12s",
+                }}
+              >
+                {w.text}
+              </span>{" "}
+            </span>
+          );
+        })}
       </div>
       {paused && running ? (
         <div
