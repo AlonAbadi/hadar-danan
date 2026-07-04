@@ -76,6 +76,14 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
   // never trusted from the request.
   const CAPTURE_RECIPES: { name: string; video: MediaTrackConstraints }[] = [
     {
+      // Full-sensor 12MP 4:3 (3088x2320-class): the native camera's WIDE
+      // selfie framing. Safari's 1440x1920 mode maps to the CROPPED selfie
+      // view — requesting the high-res format is the only way to the wide
+      // one. "ideal" degrades gracefully where the format doesn't exist.
+      name: "A0_fullsensor",
+      video: { facingMode: "user", width: { ideal: 2316 }, height: { ideal: 3088 }, aspectRatio: { ideal: 0.75 }, frameRate: { ideal: 30 } },
+    },
+    {
       name: "A_portrait43",
       video: { facingMode: "user", width: { ideal: 1440 }, height: { ideal: 1920 }, aspectRatio: { ideal: 0.75 }, frameRate: { ideal: 30 } },
     },
@@ -97,6 +105,36 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     noiseSuppression: true,
     autoGainControl: true,
   };
+
+  const testRecord = useCallback(async (stream: MediaStream): Promise<boolean> => {
+    if (!mimeType) return false;
+    return new Promise<boolean>((resolve) => {
+      let gotData = false;
+      let rec: MediaRecorder;
+      try {
+        rec = new MediaRecorder(stream, { mimeType });
+      } catch {
+        resolve(false);
+        return;
+      }
+      const done = () => resolve(gotData);
+      rec.ondataavailable = (e) => {
+        if (e.data.size > 0) gotData = true;
+      };
+      rec.onerror = () => {
+        try { rec.stop(); } catch { /* already stopped */ }
+      };
+      rec.onstop = done;
+      try {
+        rec.start(120);
+        setTimeout(() => {
+          try { rec.stop(); } catch { done(); }
+        }, 600);
+      } catch {
+        resolve(false);
+      }
+    });
+  }, [mimeType]);
 
   const measureStream = useCallback(async (stream: MediaStream, settleMs: number) => {
     const probe = document.createElement("video");
@@ -151,11 +189,19 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
         } catch { /* keep measured values */ }
       }
       if (h > w) {
-        accepted = { stream, recipe: recipe.name, w, h };
-        break; // portrait content — take it (h>=1600 is the ideal, any portrait beats landscape)
+        // portrait content — verify the recorder can actually consume it
+        // (full-sensor formats can exceed the encoder) before accepting
+        if (await testRecord(stream)) {
+          accepted = { stream, recipe: recipe.name, w, h };
+          break;
+        }
+        failed.push(recipe.name + "_recorder");
+        stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+        continue;
       }
       failed.push(recipe.name + "_landscape");
-      if (recipe === CAPTURE_RECIPES[CAPTURE_RECIPES.length - 1]) {
+      if (recipe === CAPTURE_RECIPES[CAPTURE_RECIPES.length - 1] && (await testRecord(stream))) {
         // ladder exhausted: keep the landscape stream rather than no camera —
         // the WYSIWYG stage and the blur-pad burn both handle it honestly.
         accepted = { stream, recipe: recipe.name + "_landscape_accepted", w, h };
@@ -255,9 +301,11 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
       }, 100);
     } catch { /* analysis is optional — never blocks recording */ }
 
+    // Full-sensor streams get more bits so the server downscale stays crisp.
+    const trackHeight = stream.getVideoTracks()[0]?.getSettings().height ?? 1920;
     const recorder = new MediaRecorder(stream, {
       mimeType,
-      videoBitsPerSecond: 5_000_000,
+      videoBitsPerSecond: trackHeight > 2200 ? 8_000_000 : 5_000_000,
       audioBitsPerSecond: 128_000,
     });
     chunksRef.current = [];
