@@ -15,8 +15,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { getBroadcastCopy } from "@/lib/broadcast-copy";
 
 const SPEED_MULTIPLIERS = [0.7, 0.85, 1.0, 1.15, 1.35];
-const SIZE_STEPS = [26, 32, 40];
-const WORDS_PER_SECOND = 2.2; // natural conversational Hebrew (~130 wpm)
+const SIZE_STEPS = [30, 36, 44];
+const WORDS_PER_SECOND = 1.7; // deliberate on-camera Hebrew (~100 wpm; BIGVU recommends 120-140 English wpm for recorded content)
 const START_GRACE_MS = 1600; // read the first line before anything moves
 const RAMP_MS = 1400; // ease from 0 to full speed
 const READ_LINE_FRACTION = 0.3; // read-line position inside the strip
@@ -55,6 +55,7 @@ export function Teleprompter({
   const posRef = useRef(0);
   const stripRef = useRef<HTMLDivElement | null>(null);
   const innerRef = useRef<HTMLDivElement | null>(null);
+  const textRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const lastTsRef = useRef<number | null>(null);
   const runningRef = useRef(false);
@@ -68,14 +69,16 @@ export function Teleprompter({
   const wordCount = `${hook} ${body} ${cta ?? ""}`.trim().split(/\s+/).length;
 
   // Auto-calibration: the whole script should finish scrolling past the
-  // read-line in the time it takes to SAY it.
+  // read-line in the time it takes to SAY it. Distance = the TEXT block only
+  // (textRef) — counting the container paddings inflated the speed by up to
+  // 2x on short scripts (QA round 4 bug).
   useLayoutEffect(() => {
-    const el = innerRef.current;
+    const el = textRef.current;
     if (!el) return;
-    const contentHeight = el.scrollHeight - el.clientHeight * 0; // full text block
+    const textHeight = el.offsetHeight;
     const estSpeechSec = Math.max(wordCount / WORDS_PER_SECOND, 8);
-    const px = contentHeight / estSpeechSec;
-    baseSpeedRef.current = Math.min(Math.max(px, 12), 70);
+    const px = textHeight / estSpeechSec;
+    baseSpeedRef.current = Math.min(Math.max(px, 8), 60);
   }, [wordCount, fontSize, hook, body, cta]);
 
   const tick = useCallback((ts: number) => {
@@ -160,16 +163,16 @@ export function Teleprompter({
         insetInlineStart: 0,
         insetInlineEnd: 0,
         paddingTop: "env(safe-area-inset-top)",
-        height: "min(38dvh, 340px)",
+        height: "min(32dvh, 290px)",
         background: "rgba(8,12,20,0.78)",
         backdropFilter: "blur(6px)",
         WebkitBackdropFilter: "blur(6px)",
         overflow: "hidden",
         zIndex: 20,
         maskImage:
-          "linear-gradient(to bottom, transparent 0, black 8%, black 62%, rgba(0,0,0,0.25) 86%, transparent 100%)",
+          "linear-gradient(to bottom, transparent 0, black 8%, black 52%, rgba(0,0,0,0.18) 78%, transparent 96%)",
         WebkitMaskImage:
-          "linear-gradient(to bottom, transparent 0, black 8%, black 62%, rgba(0,0,0,0.25) 86%, transparent 100%)",
+          "linear-gradient(to bottom, transparent 0, black 8%, black 52%, rgba(0,0,0,0.18) 78%, transparent 96%)",
       }}
     >
       {/* the read line — read whatever crosses it */}
@@ -195,20 +198,22 @@ export function Teleprompter({
           paddingInline: 22,
           textAlign: "center",
           fontSize,
-          lineHeight: 1.55,
+          lineHeight: 1.5,
           color: "#EDE9E1",
           fontWeight: 600,
           willChange: "transform",
         }}
       >
-        <span style={{ color: "#E8B94A", fontWeight: 700 }}>{hook}</span>{" "}
-        <span>{body}</span>
-        {cta ? (
-          <>
-            {" "}
-            <span style={{ color: "#E8B94A", fontWeight: 700 }}>{cta}</span>
-          </>
-        ) : null}
+        <div ref={textRef}>
+          <span style={{ color: "#E8B94A", fontWeight: 700 }}>{hook}</span>{" "}
+          <span>{body}</span>
+          {cta ? (
+            <>
+              {" "}
+              <span style={{ color: "#E8B94A", fontWeight: 700 }}>{cta}</span>
+            </>
+          ) : null}
+        </div>
       </div>
       {paused && running ? (
         <div
