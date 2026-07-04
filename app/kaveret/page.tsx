@@ -17,6 +17,7 @@ import type { Viewport } from "next";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { CHALLENGE_DAYS } from "@/lib/challenge-config";
 import { KaveretClient, type KaveretData } from "./KaveretClient";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,10 @@ const DEMO: KaveretData = {
   scriptsTotal: 7,
   scripts: [],
   extractionId: null,
+  challenge: null,
+  aboutSite: "",
+  manifesto: "",
+  reels: [],
   waPhone: "972000000000",
   demo: true,
 };
@@ -132,17 +137,78 @@ export default async function KaveretPage({
   ).size;
 
   // Scripts for the monthly zone: number + title from the shoot-day plan.
-  const planVideos: { number: number; title: string }[] = Array.isArray(signal.shoot_day?.videos)
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      signal.shoot_day.videos.map((v: any) => ({ number: v.number, title: String(v.title ?? "") }))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toScript = (v: any) => ({
+    number: v.number,
+    title: String(v.title ?? ""),
+    hook: String(v.script?.hook ?? ""),
+    body: String(v.script?.body ?? ""),
+    cta: v.script?.cta ? String(v.script.cta) : "",
+  });
+  const planVideos = Array.isArray(signal.shoot_day?.videos)
+    ? signal.shoot_day.videos.map(toScript)
     : Array.from({ length: 12 }, (_, i) => i + 1)
         .filter((n) => signal[`shoot_day_v${n}`])
-        .map((n) => ({ number: n, title: String(signal[`shoot_day_v${n}`].title ?? "") }));
+        .map((n) => toScript(signal[`shoot_day_v${n}`]));
 
   const monthLabel = new Intl.DateTimeFormat("he-IL", {
     month: "long",
     timeZone: "Asia/Jerusalem",
   }).format(new Date());
+
+  // Live challenge board: today's step from the shared challenge config.
+  const challengeDayNum = Math.min(Math.max(enrollment?.current_day ?? 0, 0), 7);
+  const dayCfg = CHALLENGE_DAYS.find((d) => d.day === challengeDayNum) ?? null;
+  const challenge = dayCfg
+    ? {
+        day: challengeDayNum,
+        title: dayCfg.title,
+        videoId: dayCfg.videoId,
+        portrait: dayCfg.aspectRatio === "9:16",
+      }
+    : null;
+
+  // Produced reels for the my-content zone (same source as /api/broadcast/reels).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: reelEdits } = await (db as any)
+    .from("broadcast_edits")
+    .select("id, video_number, output_path, review_item_id, created_at")
+    .eq("user_id", userData.id)
+    .eq("status", "ready")
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const reelItemIds = (reelEdits ?? []).map((e: { review_item_id: string | null }) => e.review_item_id).filter(Boolean);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: reelItems } = reelItemIds.length
+    ? await (db as any).from("review_items").select("id, status").in("id", reelItemIds)
+    : { data: [] };
+  const reels = await Promise.all(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (reelEdits ?? []).map(async (e: any) => {
+      const prefix = e.output_path?.split("/")[0];
+      const [thumb, download] = await Promise.all([
+        prefix
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (db as any).storage.from("broadcast-takes").createSignedUrl(`${prefix}/covers/${e.id}-frame0.jpg`, 3600)
+          : Promise.resolve({ data: null }),
+        e.output_path
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (db as any).storage.from("broadcast-takes").createSignedUrl(e.output_path, 7200, { download: `reel-${e.video_number}.mp4` })
+          : Promise.resolve({ data: null }),
+      ]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const item = (reelItems ?? []).find((i: any) => i.id === e.review_item_id);
+      return {
+        editId: e.id,
+        reviewItemId: e.review_item_id,
+        videoNumber: e.video_number,
+        createdAt: e.created_at,
+        published: item?.status === "published",
+        thumbUrl: thumb.data?.signedUrl ?? null,
+        downloadUrl: download.data?.signedUrl ?? null,
+      };
+    })
+  );
 
   const data: KaveretData = {
     firstName: userData.name?.split(" ")[0] ?? "",
@@ -162,12 +228,16 @@ export default async function KaveretPage({
         [signal.central_tool, signal.element].filter(Boolean).join(" | ")
     ),
     facebookAbout: String(kit.bio_medium ?? signal.signal ?? ""),
-    challengeDay: Math.min(Math.max(enrollment?.current_day ?? 0, 0), 7),
+    challengeDay: challengeDayNum,
     monthLabel,
     filmedCount,
     scriptsTotal: planVideos.length || 7,
     scripts: planVideos,
     extractionId: ext.id,
+    challenge,
+    aboutSite: String(kit.bio_long ?? ""),
+    manifesto: String(kit.manifesto ?? ""),
+    reels,
     waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
     demo: false,
   };

@@ -30,10 +30,51 @@ export interface KaveretData {
   monthLabel: string;
   filmedCount: number;
   scriptsTotal: number;
-  scripts: { number: number; title: string }[];
+  scripts: { number: number; title: string; hook: string; body: string; cta: string }[];
   extractionId: string | null;
+  challenge: { day: number; title: string; videoId: string; portrait: boolean } | null;
+  aboutSite: string;
+  manifesto: string;
+  reels: {
+    editId: string;
+    reviewItemId: string | null;
+    videoNumber: number | null;
+    createdAt: string;
+    published: boolean;
+    thumbUrl: string | null;
+    downloadUrl: string | null;
+  }[];
   waPhone: string;
   demo: boolean;
+}
+
+// Per-day signal frames — mirrors the kit's challenge framing lines.
+const DAY_FRAMES: Record<number, string> = {
+  1: "היום נתחיל לראות מה מסתיר את האות שלך.",
+  2: "היום ניקח סיפור אחד, ונחבר אותו לאות שלך.",
+  3: "היום נמצא את הרגע שבו האות שלך הכי חזק.",
+  4: "היום נחדד למי האות שלך מדבר.",
+  5: "היום נתחיל לבטא את האות שלך מול העולם.",
+  6: "היום ניתן לאות שלך מבנה שאפשר לחזור עליו.",
+  7: "היום נבין איך האות שלך מושך את הלקוחות הנכונים.",
+};
+
+// The kit's designed visual assets (same API the ויזואל tab uses).
+const VISUAL_ASSETS = [
+  { type: "share-card-default", label: "המשפט הציבורי שלך" },
+  { type: "quote-signal", label: "האות שלך" },
+  { type: "quote-promise", label: "ההבטחה" },
+  { type: "quote-people", label: "הקהל שלך" },
+  { type: "quote-content-1", label: "כיוון תוכן #1" },
+  { type: "quote-content-2", label: "כיוון תוכן #2" },
+  { type: "quote-content-3", label: "כיוון תוכן #3" },
+] as const;
+
+function assetUrl(extractionId: string, type: string): string {
+  const q = "style=editorial&bg=color&v=10";
+  return type === "share-card-default"
+    ? `/api/signal/${extractionId}/share-card?${q}`
+    : `/api/signal/${extractionId}/asset?type=${type}&${q}`;
 }
 
 const REVEAL_KEY = "kaveret_reveal_seen";
@@ -70,6 +111,7 @@ export function KaveretClient({
   const okTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const [okBtns, setOkBtns] = useState<Record<string, boolean>>({});
   const pngBusy = useRef(false);
+  const [published, setPublished] = useState<Record<string, boolean>>({});
 
   // Word reveal only on first visit per session (spec: kaveret_reveal_seen).
   useEffect(() => {
@@ -341,11 +383,39 @@ export function KaveretClient({
           <div className={sty.zrule} />
           <div className={sty.trow}>
             <div className={sty.head}><span className={sty.plat}>לוח האתגר שלך</span><span className={sty.check}>יום {data.challengeDay} מתוך 7</span></div>
-            <p className={sty.txt}>
-              {data.demo
-                ? "כאן נטען לוח האתגר החי מהערכה: הצעד היומי, הסטטוס, וההנחיה של הדר להיום."
-                : "הצעד היומי שלך מחכה בערכת האות. ממשיכים יום אחרי יום, בקצב שלך."}
-            </p>
+            {data.demo || !data.challenge ? (
+              <p className={sty.txt}>
+                כאן נטען לוח האתגר החי מהערכה: הצעד היומי, הסטטוס, וההנחיה של הדר להיום.
+              </p>
+            ) : (
+              <div>
+                {DAY_FRAMES[data.challenge.day] ? (
+                  <p className={sty.txt} style={{ color: "#E8B94A", fontWeight: 600 }}>
+                    {DAY_FRAMES[data.challenge.day]}
+                  </p>
+                ) : null}
+                <p className={sty.txt} style={{ marginTop: 8 }}>
+                  {data.challenge.day === 0 ? "פתיחה" : `יום ${data.challenge.day}`} · {data.challenge.title}
+                </p>
+                <div
+                  style={{
+                    maxWidth: data.challenge.portrait ? 300 : "100%",
+                    margin: "14px auto 0",
+                    aspectRatio: data.challenge.portrait ? "9 / 16" : "16 / 9",
+                    background: "#000",
+                    borderRadius: 12,
+                    overflow: "hidden",
+                  }}
+                >
+                  <iframe
+                    src={`https://player.vimeo.com/video/${data.challenge.videoId}`}
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    style={{ width: "100%", height: "100%", border: 0 }}
+                    title={`יום ${data.challenge.day}`}
+                  />
+                </div>
+              </div>
+            )}
             <div className={sty.tfoot}>
               <a className={sty.btnCopy} href="/hive/signal-kit"><span>להמשיך באתגר</span></a>
             </div>
@@ -383,6 +453,43 @@ export function KaveretClient({
               <span key={i} className={i === dot ? sty.on : undefined} />
             ))}
           </div>
+
+          {!data.demo && data.extractionId ? (
+            <div>
+              <div className={sty.zhead} style={{ marginTop: 34 }}>
+                <span className={sty.zt}>
+                  <h2 style={{ fontSize: 19 }}>הנכסים המעוצבים</h2>
+                  <span className={sty.hint}>מוכנים לפיד, בהתאמה אישית</span>
+                </span>
+              </div>
+              <div className={sty.carousel}>
+                {VISUAL_ASSETS.map((a) => (
+                  <div className={sty.vc} key={a.type}>
+                    <div className={sty.frame} style={{ padding: 0, aspectRatio: "4 / 5" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={assetUrl(data.extractionId!, a.type)}
+                        alt={a.label}
+                        loading="lazy"
+                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 18 }}
+                      />
+                    </div>
+                    <div className={sty.meta}><span className={sty.name}>{a.label}</span></div>
+                    <div className={sty.vfoot}>
+                      <a
+                        className={`${sty.btnCopy} ${sty.btnCard}`}
+                        style={{ textDecoration: "none" }}
+                        href={assetUrl(data.extractionId!, a.type)}
+                        download
+                      >
+                        <span>הורדת הנכס</span>
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <section className={sty.zone} id="z-filming" data-tab-index={3} ref={(el) => { zonesRef.current[3] = el; }}>
@@ -417,6 +524,8 @@ export function KaveretClient({
             ["ביו לאינסטגרם", data.bioInstagram, "bio"],
             ["כותרת ללינקדאין", data.linkedinHeadline, "li"],
             ["אודות לפייסבוק", data.facebookAbout, "fb"],
+            ["אודות לאתר", data.aboutSite, "about"],
+            ["מניפסט אישי", data.manifesto, "manifesto"],
           ] as const).map(([label, text, key]) =>
             text.trim() ? (
               <div className={sty.trow} key={key}>
@@ -426,6 +535,65 @@ export function KaveretClient({
               </div>
             ) : null
           )}
+
+          {!data.demo && data.reels.length ? (
+            <div>
+              <div className={sty.zhead} style={{ marginTop: 34 }}>
+                <span className={sty.zt}>
+                  <h2 style={{ fontSize: 19 }}>הרילסים שלך</h2>
+                  <span className={sty.hint}>מה שצילמת בחדר השידור</span>
+                </span>
+              </div>
+              {data.reels.map((r) => {
+                const isPub = r.published || published[r.editId];
+                return (
+                  <div className={sty.trow} key={r.editId}>
+                    <div className={sty.head}>
+                      <span className={sty.plat}>
+                        {r.videoNumber ? `רילס לתסריט ${r.videoNumber}` : "רילס"}
+                      </span>
+                      <span className={sty.check}>
+                        {isPub ? <><span className={sty.v}>✓</span> פורסם</> : "ממתין לפרסום"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      {r.thumbUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={r.thumbUrl}
+                          alt=""
+                          style={{ width: 48, height: 85, objectFit: "cover", borderRadius: 10, border: "1px solid rgba(232,185,74,0.16)" }}
+                        />
+                      ) : null}
+                      <span className={sty.txt} style={{ flex: 1 }}>
+                        {new Date(r.createdAt).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}
+                      </span>
+                    </div>
+                    <div className={sty.tfoot}>
+                      {r.downloadUrl ? (
+                        <a className={sty.btnCopy} href={r.downloadUrl} style={{ textDecoration: "none" }}>
+                          <span>הורדה</span>
+                        </a>
+                      ) : null}
+                      {!isPub && r.reviewItemId ? (
+                        <button
+                          type="button"
+                          className={sty.btnCopy}
+                          onClick={() => {
+                            setPublished((prev) => ({ ...prev, [r.editId]: true }));
+                            fetch(`/api/broadcast/review-items/${r.reviewItemId}/publish`, { method: "POST" }).catch(() => {});
+                            toast("סומן כפורסם");
+                          }}
+                        >
+                          <span>פורסם</span>
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
 
           <div className={sty.zhead} style={{ marginTop: 34 }}>
             <span className={sty.zt}><h2 style={{ fontSize: 19 }}>החודש</h2><span className={sty.hint}>שבעת הסרטונים של החודש</span></span>
@@ -441,16 +609,37 @@ export function KaveretClient({
             ) : (
               <div>
                 {data.scripts.map((s2) => (
-                  <div className={sty.tfoot} key={s2.number} style={{ alignItems: "center" }}>
-                    <p className={sty.txt} style={{ flex: 1 }}>{s2.number}. {s2.title}</p>
-                    <a
-                      className={`${sty.btnCopy} ${sty.btnCard}`}
-                      style={{ flex: "0 0 auto", padding: "0 18px", textDecoration: "none" }}
-                      href={`/hive/signal-kit/broadcast/${data.extractionId}/${s2.number}`}
+                  <details key={s2.number} style={{ marginTop: 12 }}>
+                    <summary
+                      style={{
+                        listStyle: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        cursor: "pointer",
+                      }}
                     >
-                      <span>לצלם עכשיו</span>
-                    </a>
-                  </div>
+                      <p className={sty.txt} style={{ flex: 1 }}>{s2.number}. {s2.title}</p>
+                      <a
+                        className={`${sty.btnCopy} ${sty.btnCard}`}
+                        style={{ flex: "0 0 auto", padding: "0 18px", textDecoration: "none" }}
+                        href={`/hive/signal-kit/broadcast/${data.extractionId}/${s2.number}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span>לצלם עכשיו</span>
+                      </a>
+                    </summary>
+                    <div style={{ padding: "10px 18px 6px 0", fontWeight: 300, fontSize: 16, lineHeight: 1.7 }}>
+                      <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s2.hook}</span>{" "}
+                      <span>{s2.body}</span>
+                      {s2.cta ? (
+                        <>
+                          {" "}
+                          <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s2.cta}</span>
+                        </>
+                      ) : null}
+                    </div>
+                  </details>
                 ))}
               </div>
             )}
