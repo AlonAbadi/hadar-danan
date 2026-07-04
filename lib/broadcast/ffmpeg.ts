@@ -67,6 +67,49 @@ export function runFfmpeg(args: string[], timeoutMs = 480_000): Promise<FfmpegRe
   });
 }
 
+export interface VideoDims {
+  width: number;
+  height: number;
+  rotation: number;
+  effWidth: number;
+  effHeight: number;
+}
+
+// Effective (display) dimensions of the first video stream. iPhone Safari
+// MediaRecorder files carry the sensor buffer + a displaymatrix rotation;
+// ffmpeg autorotates at decode, so filters see the EFFECTIVE dims — branch
+// framing decisions on those, never on the raw buffer numbers.
+export async function probeVideoDims(inputPath: string): Promise<VideoDims | null> {
+  try {
+    let stderrTail = "";
+    try {
+      const r = await runFfmpeg(
+        ["-i", inputPath, "-map", "0:v:0", "-frames:v", "1", "-f", "null", "-"],
+        30_000
+      );
+      stderrTail = r.stderrTail;
+    } catch (e) {
+      stderrTail = (e as { stderrTail?: string }).stderrTail ?? "";
+    }
+    const dim = stderrTail.match(/Video:[^\n]*?(\d{2,5})x(\d{2,5})/);
+    if (!dim) return null;
+    const width = Number(dim[1]);
+    const height = Number(dim[2]);
+    const rot = stderrTail.match(/rotation of (-?\d+(?:\.\d+)?) degrees/);
+    const rotation = rot ? Math.round(Number(rot[1])) : 0;
+    const swapped = Math.abs(rotation) % 180 === 90;
+    return {
+      width,
+      height,
+      rotation,
+      effWidth: swapped ? height : width,
+      effHeight: swapped ? width : height,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // Per-edit scratch dir under /tmp; callers must scratchCleanup() in finally.
 export function scratchDir(editId: string): string {
   const dir = `/tmp/br-${editId}`;

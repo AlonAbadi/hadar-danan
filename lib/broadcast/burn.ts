@@ -10,12 +10,56 @@
 import { writeFileSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { createServerClient } from "@/lib/supabase/server";
-import { runFfmpeg, scratchDir, scratchCleanup, FONTS_DIR } from "./ffmpeg";
+import { runFfmpeg, scratchDir, scratchCleanup, probeVideoDims, FONTS_DIR, type VideoDims } from "./ffmpeg";
 import { buildAss } from "./ass";
 import type { CaptionsPayload } from "./captions";
 
 const BUCKET = "broadcast-takes";
 const COVER_FRACTIONS = [0.2, 0.45, 0.7];
+
+export type FramingStrategy = "portrait_crop" | "landscape_blurpad";
+
+export interface VideoFilterPlan {
+  kind: "vf" | "complex";
+  value: string;
+  strategy: FramingStrategy;
+  captionMarginV: number;
+  stampMarginV: number;
+}
+
+// Framing decision (expert-panel verdict): portrait sources keep the exact
+// crop chain; LANDSCAPE sources (iPhone Safari records the full landscape
+// sensor) get the industry-standard blur-pad — full frame as a band over a
+// blurred, dimmed fill, captions on the lower strip, stamp on the upper one.
+// Cropping a landscape source cannot fix "too zoomed in"; padding can.
+export function buildVideoFilter(dims: VideoDims | null, assPath: string): VideoFilterPlan {
+  const landscape = dims !== null && dims.effWidth > dims.effHeight;
+  if (!landscape) {
+    return {
+      kind: "vf",
+      value: `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
+      strategy: "portrait_crop",
+      captionMarginV: 430,
+      stampMarginV: 96,
+    };
+  }
+  return {
+    kind: "complex",
+    value:
+      `[0:v]split=2[bg][fg];` +
+      `[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,` +
+      `scale=270:480,boxblur=10:2,scale=1080:1920:flags=bilinear,` +
+      `eq=brightness=-0.12:saturation=0.85[bgv];` +
+      `[fg]scale=1080:-2:flags=lanczos[fgv];` +
+      `[bgv][fgv]overlay=(W-w)/2:(H-h)/2:format=auto,setsar=1,fps=30,` +
+      `ass=${assPath}:fontsdir=${FONTS_DIR}[v]`,
+    strategy: "landscape_blurpad",
+    // 1080-wide band sits at y 555-1365: captions just below it on the blur
+    // strip, stamp just above it — both clear of the Reels UI zones.
+    captionMarginV: 400,
+    stampMarginV: 440,
+  };
+}
 
 interface EditRow {
   id: string;
@@ -64,39 +108,68 @@ export async function runBurnStage(edit: EditRow): Promise<void> {
         : durationMs || rawTrimEnd;
     const trimmedMs = trimEnd - trimStart;
 
-    // ASS with approved lines only (mode 'none' approved an empty set —
-    // the stamp still burns).
-    const lines = (edit.captions?.lines ?? []).filter((l) => !l.deleted && l.text.trim());
+    // Framing decision from the EFFECTIVE source dims (autorotation-aware).
+    const dims = await probeVideoDims(inputPath);
     const assPath = path.join(dir, "captions.ass");
-    writeFileSync(assPath, buildAss(lines, { trimStartMs: trimStart, durationMs: trimmedMs, stamp: true }), "utf8");
+    const plan = buildVideoFilter(dims, assPath);
+
+    // ASS with approved lines only (mode 'none' approved an empty set —
+    // the stamp still burns). Margins depend on the framing strategy.
+    const lines = (edit.captions?.lines ?? []).filter((l) => !l.deleted && l.text.trim());
+    writeFileSync(
+      assPath,
+      buildAss(lines, {
+        trimStartMs: trimStart,
+        durationMs: trimmedMs,
+        stamp: true,
+        captionMarginV: plan.captionMarginV,
+        stampMarginV: plan.stampMarginV,
+      }),
+      "utf8"
+    );
 
     const outPath = path.join(dir, "out.mp4");
-    await runFfmpeg([
-      "-ss", (trimStart / 1000).toFixed(3),
-      ...(trimEnd > trimStart ? ["-to", (trimEnd / 1000).toFixed(3)] : []),
-      "-i", inputPath,
-      "-vf",
-      `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
+    const encodeArgs = [
       // Reels-sufficient quality: IG recompresses everything to ~2-4 Mbps, so
-      // CRF 23 capped at 5 Mbps loses nothing visible for talking-head footage
-      // and roughly halves file size vs CRF 20 uncapped.
+      // CRF 23 capped at 5 Mbps loses nothing visible for talking-head footage.
       "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high", "-crf", "23",
       "-maxrate", "5M", "-bufsize", "10M",
       "-pix_fmt", "yuv420p",
       "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
       "-movflags", "+faststart",
       outPath,
+    ];
+    await runFfmpeg([
+      "-ss", (trimStart / 1000).toFixed(3),
+      ...(trimEnd > trimStart ? ["-to", (trimEnd / 1000).toFixed(3)] : []),
+      "-i", inputPath,
+      ...(plan.kind === "vf"
+        ? ["-vf", plan.value]
+        : ["-filter_complex", plan.value, "-map", "[v]", "-map", "0:a?"]),
+      ...encodeArgs,
     ]);
 
-    // 3 cover candidate frames from the trimmed timeline (input already local).
+    // 3 cover candidate frames — extracted from the BURNED OUTPUT so the
+    // thumbnails always match the delivered framing, whatever the strategy.
     const authPrefix = take.storage_path.split("/")[0];
     const framePaths: string[] = [];
     for (let i = 0; i < COVER_FRACTIONS.length; i++) {
-      const t = trimStart / 1000 + (trimmedMs / 1000) * COVER_FRACTIONS[i];
+      const t = (trimmedMs / 1000) * COVER_FRACTIONS[i];
       const framePath = path.join(dir, `frame${i}.jpg`);
-      await runFfmpeg(["-ss", t.toFixed(2), "-i", inputPath, "-frames:v", "1", "-q:v", "2", framePath]);
+      await runFfmpeg(["-ss", t.toFixed(2), "-i", outPath, "-frames:v", "1", "-q:v", "2", framePath]);
       framePaths.push(framePath);
     }
+
+    // Framing observability: one info row per burn, answerable per edit id.
+    await db.from("error_logs").insert({
+      context: "broadcast/burn:framing_info",
+      error: JSON.stringify({
+        edit_id: edit.id,
+        src: dims ? `${dims.width}x${dims.height}r${dims.rotation}` : "probe_failed",
+        eff: dims ? `${dims.effWidth}x${dims.effHeight}` : null,
+        strategy: plan.strategy,
+      }),
+    });
 
     // Upload output + frames.
     const outputPath = `${authPrefix}/outputs/${edit.id}.mp4`;
