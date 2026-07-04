@@ -239,7 +239,7 @@ export function HiveJoinForm({ onClose }: HiveJoinFormProps) {
               </p>
             </div>
             <a
-              href="/quiz"
+              href="/kriah"
               className="w-full py-4 rounded-full font-bold text-lg text-center transition hover:opacity-90 active:scale-[0.98]"
               style={{
                 background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",

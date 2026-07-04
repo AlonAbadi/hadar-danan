@@ -307,7 +307,7 @@ function AccessPageInner() {
           </div>
           <div style={S.bottomLink}>
             עוד לא לקוחה?{" "}
-            <Link href="/quiz" style={{ color: "#E8B94A", textDecoration: "none", fontWeight: 700 }}>
+            <Link href="/kriah" style={{ color: "#E8B94A", textDecoration: "none", fontWeight: 700 }}>
               התחילי מהקוויז →
             </Link>
           </div>

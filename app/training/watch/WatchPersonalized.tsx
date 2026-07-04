@@ -248,7 +248,7 @@ export function WatchNextStep() {
         כשהאות שלך ברור - הלקוחות הנכונים מגיעים מאליהם
       </p>
       <a
-        href="/quiz"
+        href="/kriah"
         style={{
           display: "inline-block",
           background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",

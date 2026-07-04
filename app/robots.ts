@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 
 const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://beegood.online";
 
-const DISALLOW = ["/admin", "/members", "/my", "/api/", "/kriah"];
+const DISALLOW = ["/admin", "/members", "/my", "/api/",];
 
 export default function robots(): MetadataRoute.Robots {
   return {

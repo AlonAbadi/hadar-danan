@@ -43,7 +43,7 @@ export function QuizCTABanner() {
           6 שאלות — וקבל המלצה אישית למה מתאים לך
         </p>
         <a
-          href="/quiz"
+          href="/kriah"
           onClick={() => gtag('event', 'training_quiz_cta_click')}
           style={{
             display: 'inline-block',

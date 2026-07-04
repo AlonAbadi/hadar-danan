@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Quiz → kriah cutover (2026-07-04, Alon's approval). 308 preserves the
+      // full query string, so live Meta ads keep their UTM attribution. The
+      // quiz page code stays in the repo as the rollback path.
+      { source: "/quiz", destination: "/kriah", permanent: true },
       // /sadna was a one-off premium workshop in May 2026. It's not running
       // again. Anyone who finds an old link or screenshot is funneled to
       // the standing monthly workshop instead. 308 = permanent, search

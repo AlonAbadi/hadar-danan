@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "המשפט שכבר מבדל אתכם",
-  robots: { index: false, follow: false },
+  description: "יש משפט אחד שמסביר למה לבחור דווקא בכם. הכלי הזה מוצא אותו, מהמילים שלכם. חינם, מתחילים בשלוש שאלות קצרות.",
 };
 
 export default async function KriahPage({

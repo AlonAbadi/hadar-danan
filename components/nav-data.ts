@@ -5,7 +5,7 @@ export const GROUP1 = [
 
 export const GROUP2 = [
   { label: "הדרכה חינמית",     href: "/training" },
-  { label: "קוויז - איפה אתה?", href: "/quiz" },
+  { label: "המשפט שמבדל אתכם", href: "/kriah" },
 ];
 
 export const GROUP3 = [
