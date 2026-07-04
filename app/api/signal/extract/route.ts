@@ -683,11 +683,18 @@ export async function POST(req: NextRequest) {
     const suppressChain = v2Route?.ending === "crisis_soft";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: seqs } = suppressChain ? { data: [] } : await (db as any)
+    const { data: rawSeqs } = suppressChain ? { data: [] } : await (db as any)
       .from("email_sequences")
       .select("id, subject, template_key, delay_hours")
       .eq("trigger_event", "SIGNAL_EXTRACTED")
       .eq("active", true);
+    // v2 leads get ONLY the welcome from the legacy chain — the day1-12
+    // nurture pitches by the OLD bucket and would collide with the kriah
+    // day-2 offer (double, contradictory selling).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const seqs = isV2Run
+      ? (rawSeqs ?? []).filter((q: any) => q.template_key === "signal_welcome")
+      : rawSeqs;
 
     if (seqs && seqs.length) {
       // Pull email + name fresh so the job has what it needs even if the
@@ -753,7 +760,7 @@ export async function POST(req: NextRequest) {
         // email re-opens the conversation + carries כוורת האות so the lead
         // never cools with nothing to buy. Suppressed at send time if by
         // then they booked / were dismissed / purchased (see send-email.ts).
-        if (bucketDecision.bucket === "strategy") {
+        if (v2Route ? v2Route.ending === "concierge" : bucketDecision.bucket === "strategy") {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: fallbackSeqs } = await (db as any)
             .from("email_sequences")
