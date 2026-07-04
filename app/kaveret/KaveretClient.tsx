@@ -32,7 +32,10 @@ export interface KaveretData {
   scriptsTotal: number;
   scripts: { number: number; title: string; hook: string; body: string; cta: string }[];
   extractionId: string | null;
-  challenge: { day: number; title: string; videoId: string; portrait: boolean } | null;
+  challengeDays: { day: number; title: string; videoId: string; portrait: boolean }[];
+  completedDays: number[];
+  challengeDone: boolean;
+  filmedNumbers: number[];
   aboutSite: string;
   manifesto: string;
   reels: {
@@ -112,6 +115,10 @@ export function KaveretClient({
   const [okBtns, setOkBtns] = useState<Record<string, boolean>>({});
   const pngBusy = useRef(false);
   const [published, setPublished] = useState<Record<string, boolean>>({});
+  const [curDay, setCurDay] = useState(data.challengeDay);
+  const [doneDays, setDoneDays] = useState<number[]>(data.completedDays);
+  const [viewDay, setViewDay] = useState(data.challengeDay);
+  const [dayBusy, setDayBusy] = useState(false);
 
   // Word reveal only on first visit per session (spec: kaveret_reveal_seen).
   useEffect(() => {
@@ -156,6 +163,27 @@ export function KaveretClient({
         btnKey,
         setTimeout(() => setOkBtns((prev) => ({ ...prev, [btnKey]: false })), 1500)
       );
+    }
+  }, [toast]);
+
+  const completeDay = useCallback(async (day: number) => {
+    setDayBusy(true);
+    try {
+      const res = await fetch("/api/challenge/complete-day", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ day_number: day }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setDoneDays((prev) => (prev.includes(day) ? prev : [...prev, day]));
+      const next = Math.min(day + 1, 7);
+      setCurDay((prev) => Math.max(prev, next));
+      setViewDay(next);
+      toast(day >= 7 ? "סיימת את האתגר" : "יום הושלם, ממשיכים");
+    } catch {
+      toast("משהו לא הסתדר, נסו שוב");
+    } finally {
+      setDayBusy(false);
     }
   }, [toast]);
 
@@ -344,6 +372,47 @@ export function KaveretClient({
           </div>
         </div>
 
+        {!data.demo ? (() => {
+          const allDone = data.challengeDone || doneDays.includes(7);
+          const firstUnfilmed = data.scripts.find((sc) => !data.filmedNumbers.includes(sc.number));
+          const pendingReel = data.reels.find((r) => !r.published && !published[r.editId]);
+          let label: string, sub: string, act: () => void;
+          if (!allDone) {
+            const started = doneDays.length > 0 || curDay > 0;
+            label = started ? `להמשיך באתגר, יום ${Math.max(curDay, 1)}` : "מתחילים את האתגר";
+            sub = started
+              ? "הצעד היומי הבא מחכה לך למטה"
+              : "שבעה ימים, צעד ביום. הפתיחה מחכה לך";
+            act = () => goTab(1);
+          } else if (firstUnfilmed && data.extractionId) {
+            label = "לצלם עכשיו";
+            sub = `התסריט הבא שלך: ${firstUnfilmed.title}`;
+            const href = `/hive/signal-kit/broadcast/${data.extractionId}/${firstUnfilmed.number}`;
+            act = () => { window.location.href = href; };
+          } else if (pendingReel) {
+            label = "לפרסם את הרילס";
+            sub = "יש לך רילס מוכן שממתין לפרסום";
+            act = () => goTab(4);
+          } else {
+            label = "לצלם טייק נוסף";
+            sub = "כל התסריטים צולמו. אפשר תמיד לחדד";
+            act = () => goTab(3);
+          }
+          return (
+            <div className={sty.trow} style={{ borderColor: "rgba(232,185,74,0.4)" }}>
+              <div className={sty.head}>
+                <span className={sty.plat}>הצעד הבא שלך</span>
+              </div>
+              <p className={sty.txt}>{sub}</p>
+              <div className={sty.tfoot}>
+                <button type="button" className={`${sty.btnCopy} ${sty.btnCard}`} onClick={act}>
+                  <span>{label}</span>
+                </button>
+              </div>
+            </div>
+          );
+        })() : null}
+
         <section className={sty.zone} id="z-strategy" data-tab-index={0} ref={(el) => { strategyRef.current = el; }}>
           <div className={sty.zhead}>
             <span className={sty.zt}><h2>אסטרטגיה</h2><span className={sty.hint}>לעיניך בלבד, לא לפרסום</span></span>
@@ -382,43 +451,110 @@ export function KaveretClient({
           </div>
           <div className={sty.zrule} />
           <div className={sty.trow}>
-            <div className={sty.head}><span className={sty.plat}>לוח האתגר שלך</span><span className={sty.check}>יום {data.challengeDay} מתוך 7</span></div>
-            {data.demo || !data.challenge ? (
-              <p className={sty.txt}>
-                כאן נטען לוח האתגר החי מהערכה: הצעד היומי, הסטטוס, וההנחיה של הדר להיום.
-              </p>
-            ) : (
-              <div>
-                {DAY_FRAMES[data.challenge.day] ? (
-                  <p className={sty.txt} style={{ color: "#E8B94A", fontWeight: 600 }}>
-                    {DAY_FRAMES[data.challenge.day]}
-                  </p>
-                ) : null}
-                <p className={sty.txt} style={{ marginTop: 8 }}>
-                  {data.challenge.day === 0 ? "פתיחה" : `יום ${data.challenge.day}`} · {data.challenge.title}
+            <div className={sty.head}><span className={sty.plat}>לוח האתגר שלך</span><span className={sty.check}>{
+              data.demo
+                ? `יום ${data.challengeDay} מתוך 7`
+                : data.challengeDone || doneDays.includes(7)
+                  ? <><span className={sty.v}>✓</span> הושלם</>
+                  : doneDays.length === 0 && curDay === 0
+                    ? "עוד לא התחלת, הפתיחה מחכה לך"
+                    : `יום ${Math.max(curDay, 1)} מתוך 7`
+            }</span></div>
+            {data.demo || !data.challengeDays.length ? (
+              <>
+                <p className={sty.txt}>
+                  כאן נטען לוח האתגר החי מהערכה: הצעד היומי, הסטטוס, וההנחיה של הדר להיום.
                 </p>
-                <div
-                  style={{
-                    maxWidth: data.challenge.portrait ? 300 : "100%",
-                    margin: "14px auto 0",
-                    aspectRatio: data.challenge.portrait ? "9 / 16" : "16 / 9",
-                    background: "#000",
-                    borderRadius: 12,
-                    overflow: "hidden",
-                  }}
-                >
-                  <iframe
-                    src={`https://player.vimeo.com/video/${data.challenge.videoId}`}
-                    allow="autoplay; fullscreen; picture-in-picture"
-                    style={{ width: "100%", height: "100%", border: 0 }}
-                    title={`יום ${data.challenge.day}`}
-                  />
+                <div className={sty.tfoot}>
+                  <a className={sty.btnCopy} href="/hive/signal-kit"><span>להמשיך באתגר</span></a>
                 </div>
-              </div>
-            )}
-            <div className={sty.tfoot}>
-              <a className={sty.btnCopy} href="/hive/signal-kit"><span>להמשיך באתגר</span></a>
-            </div>
+              </>
+            ) : (() => {
+              const shown = data.challengeDays.find((d) => d.day === Math.min(viewDay, 7)) ?? data.challengeDays[0];
+              const isDone = doneDays.includes(shown.day);
+              const allDone = data.challengeDone || doneDays.includes(7);
+              return (
+                <div>
+                  {/* day chips: done / current / locked */}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", margin: "4px 0 12px" }}>
+                    {data.challengeDays.map((d) => {
+                      const done = doneDays.includes(d.day);
+                      const locked = d.day > curDay;
+                      const active = d.day === shown.day;
+                      return (
+                        <button
+                          key={d.day}
+                          type="button"
+                          disabled={locked}
+                          onClick={() => setViewDay(d.day)}
+                          style={{
+                            minWidth: 40,
+                            height: 32,
+                            borderRadius: 999,
+                            border: active ? "none" : "1px solid rgba(232,185,74,0.3)",
+                            background: active
+                              ? "linear-gradient(160deg,#F6DFA0,#9E7C3A)"
+                              : "transparent",
+                            color: active ? "#080C14" : done ? "#7FBF8E" : locked ? "#5A564E" : "#E8B94A",
+                            fontFamily: "inherit",
+                            fontSize: 12.5,
+                            fontWeight: 700,
+                            cursor: locked ? "default" : "pointer",
+                          }}
+                        >
+                          {done ? "✓ " : ""}{d.day === 0 ? "פתיחה" : d.day}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {DAY_FRAMES[shown.day] ? (
+                    <p className={sty.txt} style={{ color: "#E8B94A", fontWeight: 600 }}>
+                      {DAY_FRAMES[shown.day]}
+                    </p>
+                  ) : null}
+                  <p className={sty.txt} style={{ marginTop: 8 }}>
+                    {shown.day === 0 ? "פתיחה" : `יום ${shown.day}`} · {shown.title}
+                  </p>
+                  <div
+                    style={{
+                      maxWidth: shown.portrait ? 300 : "100%",
+                      margin: "14px auto 0",
+                      aspectRatio: shown.portrait ? "9 / 16" : "16 / 9",
+                      background: "#000",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <iframe
+                      src={`https://player.vimeo.com/video/${shown.videoId}`}
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      style={{ width: "100%", height: "100%", border: 0 }}
+                      title={`יום ${shown.day}`}
+                    />
+                  </div>
+                  <div className={sty.tfoot}>
+                    {allDone ? (
+                      <span className={sty.txt} style={{ flex: 1, color: "#7FBF8E" }}>
+                        סיימת את האתגר, כל הכבוד
+                      </span>
+                    ) : isDone ? (
+                      <span className={sty.txt} style={{ flex: 1, color: "#7FBF8E" }}>
+                        היום הזה הושלם
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className={`${sty.btnCopy} ${sty.btnCard}`}
+                        disabled={dayBusy || shown.day > curDay}
+                        onClick={() => completeDay(shown.day)}
+                      >
+                        <span>{dayBusy ? "רגע..." : "סיימתי את היום"}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </section>
 
@@ -511,6 +647,65 @@ export function KaveretClient({
             <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(data.identity, "identity")}>{data.identity}</p>
             <div className={sty.tfoot}>{copyBtn("identity", data.identity)}</div>
           </div>
+
+          {!data.demo ? (
+            <div>
+              <div className={sty.zhead} style={{ marginTop: 34 }}>
+                <span className={sty.zt}>
+                  <h2 style={{ fontSize: 19 }}>סרטוני {data.monthLabel}</h2>
+                  <span className={sty.hint}>{data.filmedCount} מתוך {data.scriptsTotal} צולמו</span>
+                </span>
+              </div>
+              <div className={sty.trow}>
+                {!data.scripts.length ? (
+                  <>
+                    <p className={sty.txt}>ערכת יום הצילום שלך עוד לא נבנתה. זה לוקח כמה דקות, ומחכה לך בערכה.</p>
+                    <div className={sty.tfoot}>
+                      <a className={`${sty.btnCopy} ${sty.btnCard}`} style={{ textDecoration: "none" }} href="/hive/signal-kit">
+                        <span>לבנות את ערכת הצילום</span>
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <div>
+                    {data.scripts.map((s2) => {
+                      const filmed = data.filmedNumbers.includes(s2.number);
+                      return (
+                        <details key={s2.number} style={{ marginTop: 12 }}>
+                          <summary
+                            style={{ listStyle: "none", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+                          >
+                            <p className={sty.txt} style={{ flex: 1 }}>
+                              {filmed ? <span style={{ color: "#7FBF8E", fontWeight: 700 }}>✓ </span> : null}
+                              {s2.number}. {s2.title}
+                            </p>
+                            <a
+                              className={`${sty.btnCopy} ${filmed ? "" : sty.btnCard}`}
+                              style={{ flex: "0 0 auto", padding: "0 18px", textDecoration: "none" }}
+                              href={`/hive/signal-kit/broadcast/${data.extractionId}/${s2.number}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <span>{filmed ? "טייק נוסף" : "לצלם עכשיו"}</span>
+                            </a>
+                          </summary>
+                          <div style={{ padding: "10px 18px 6px 0", fontWeight: 300, fontSize: 16, lineHeight: 1.7 }}>
+                            <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s2.hook}</span>{" "}
+                            <span>{s2.body}</span>
+                            {s2.cta ? (
+                              <>
+                                {" "}
+                                <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s2.cta}</span>
+                              </>
+                            ) : null}
+                          </div>
+                        </details>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <section className={sty.zone} id="z-mine" data-tab-index={4} ref={(el) => { zonesRef.current[4] = el; }}>
@@ -520,13 +715,22 @@ export function KaveretClient({
           </div>
           <div className={sty.zrule} />
 
-          {([
-            ["ביו לאינסטגרם", data.bioInstagram, "bio"],
-            ["כותרת ללינקדאין", data.linkedinHeadline, "li"],
-            ["אודות לפייסבוק", data.facebookAbout, "fb"],
-            ["אודות לאתר", data.aboutSite, "about"],
-            ["מניפסט אישי", data.manifesto, "manifesto"],
-          ] as const).map(([label, text, key]) =>
+          {(() => {
+            // fallback texts can repeat (no content_kit yet) — show each once
+            const seen = new Set<string>();
+            return ([
+              ["ביו לאינסטגרם", data.bioInstagram, "bio"],
+              ["כותרת ללינקדאין", data.linkedinHeadline, "li"],
+              ["אודות לפייסבוק", data.facebookAbout, "fb"],
+              ["אודות לאתר", data.aboutSite, "about"],
+              ["מניפסט אישי", data.manifesto, "manifesto"],
+            ] as const).filter(([, text]) => {
+              const norm = text.trim().replace(/\s+/g, " ");
+              if (!norm || seen.has(norm)) return false;
+              seen.add(norm);
+              return true;
+            });
+          })().map(([label, text, key]) =>
             text.trim() ? (
               <div className={sty.trow} key={key}>
                 <div className={sty.head}><span className={sty.plat}>{label}</span><span className={sty.check}><span className={sty.v}>✓</span> באורך מדויק</span></div>
@@ -595,55 +799,17 @@ export function KaveretClient({
             </div>
           ) : null}
 
-          <div className={sty.zhead} style={{ marginTop: 34 }}>
-            <span className={sty.zt}><h2 style={{ fontSize: 19 }}>החודש</h2><span className={sty.hint}>שבעת הסרטונים של החודש</span></span>
-          </div>
-          <div className={sty.trow}>
-            <div className={sty.head}><span className={sty.plat}>סרטוני {data.monthLabel}</span><span className={sty.check}>{data.filmedCount} מתוך {data.scriptsTotal} צולמו</span></div>
-            {data.demo || !data.scripts.length ? (
-              <p className={sty.txt}>
-                {data.demo
-                  ? "כאן נטענים שבעת התסריטים החודשיים מהמנוי, כל אחד עם כפתור לצלם עכשיו."
-                  : "התסריטים החודשיים ייטענו כאן ברגע שערכת יום הצילום תיבנה."}
-              </p>
-            ) : (
-              <div>
-                {data.scripts.map((s2) => (
-                  <details key={s2.number} style={{ marginTop: 12 }}>
-                    <summary
-                      style={{
-                        listStyle: "none",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        cursor: "pointer",
-                      }}
-                    >
-                      <p className={sty.txt} style={{ flex: 1 }}>{s2.number}. {s2.title}</p>
-                      <a
-                        className={`${sty.btnCopy} ${sty.btnCard}`}
-                        style={{ flex: "0 0 auto", padding: "0 18px", textDecoration: "none" }}
-                        href={`/hive/signal-kit/broadcast/${data.extractionId}/${s2.number}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span>לצלם עכשיו</span>
-                      </a>
-                    </summary>
-                    <div style={{ padding: "10px 18px 6px 0", fontWeight: 300, fontSize: 16, lineHeight: 1.7 }}>
-                      <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s2.hook}</span>{" "}
-                      <span>{s2.body}</span>
-                      {s2.cta ? (
-                        <>
-                          {" "}
-                          <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s2.cta}</span>
-                        </>
-                      ) : null}
-                    </div>
-                  </details>
-                ))}
+          {data.demo ? (
+            <>
+              <div className={sty.zhead} style={{ marginTop: 34 }}>
+                <span className={sty.zt}><h2 style={{ fontSize: 19 }}>החודש</h2><span className={sty.hint}>שבעת הסרטונים של החודש</span></span>
               </div>
-            )}
-          </div>
+              <div className={sty.trow}>
+                <div className={sty.head}><span className={sty.plat}>סרטוני {data.monthLabel}</span><span className={sty.check}>{data.filmedCount} מתוך {data.scriptsTotal} צולמו</span></div>
+                <p className={sty.txt}>כאן נטענים שבעת התסריטים החודשיים מהמנוי, כל אחד עם כפתור לצלם עכשיו.</p>
+              </div>
+            </>
+          ) : null}
         </section>
 
         <a className={sty.wa} href={`https://wa.me/${data.waPhone}`} target="_blank" rel="noopener">

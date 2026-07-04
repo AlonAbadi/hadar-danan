@@ -51,7 +51,10 @@ const DEMO: KaveretData = {
   scriptsTotal: 7,
   scripts: [],
   extractionId: null,
-  challenge: null,
+  challengeDays: [],
+  completedDays: [],
+  challengeDone: false,
+  filmedNumbers: [],
   aboutSite: "",
   manifesto: "",
   reels: [],
@@ -117,13 +120,33 @@ export default async function KaveretPage({
     signal.signal ??
     "";
 
-  // Challenge day (completion-based, challenge_enrollments.current_day).
+  // Challenge enrollment — auto-created on first visit (the challenge content
+  // page convention, migration 032), so "סיימתי את היום" always has a target.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: enrollment } = await (db as any)
+  let { data: enrollment } = await (db as any)
     .from("challenge_enrollments")
-    .select("current_day")
+    .select("id, current_day, completed_at")
     .eq("user_id", userData.id)
     .maybeSingle();
+  if (!enrollment) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: created } = await (db as any)
+      .from("challenge_enrollments")
+      .insert({ user_id: userData.id })
+      .select("id, current_day, completed_at")
+      .maybeSingle();
+    enrollment = created;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: completions } = enrollment
+    ? await (db as any)
+        .from("challenge_day_completions")
+        .select("day_number")
+        .eq("enrollment_id", enrollment.id)
+    : { data: [] };
+  const completedDays: number[] = (completions ?? []).map(
+    (c: { day_number: number }) => c.day_number
+  );
 
   // Filmed count: distinct scripts with a finished reel for this extraction.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -156,17 +179,15 @@ export default async function KaveretPage({
     timeZone: "Asia/Jerusalem",
   }).format(new Date());
 
-  // Live challenge board: today's step from the shared challenge config.
+  // Live challenge board: full 0-7 config for in-page day chips + player.
   const challengeDayNum = Math.min(Math.max(enrollment?.current_day ?? 0, 0), 7);
-  const dayCfg = CHALLENGE_DAYS.find((d) => d.day === challengeDayNum) ?? null;
-  const challenge = dayCfg
-    ? {
-        day: challengeDayNum,
-        title: dayCfg.title,
-        videoId: dayCfg.videoId,
-        portrait: dayCfg.aspectRatio === "9:16",
-      }
-    : null;
+  const challengeDays = CHALLENGE_DAYS.filter((d) => d.day >= 0 && d.day <= 7).map((d) => ({
+    day: d.day,
+    title: d.title,
+    videoId: d.videoId,
+    portrait: d.aspectRatio === "9:16",
+  }));
+  const challengeDone = Boolean(enrollment?.completed_at) || completedDays.includes(7);
 
   // Produced reels for the my-content zone (same source as /api/broadcast/reels).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -234,7 +255,12 @@ export default async function KaveretPage({
     scriptsTotal: planVideos.length || 7,
     scripts: planVideos,
     extractionId: ext.id,
-    challenge,
+    challengeDays,
+    completedDays,
+    challengeDone,
+    filmedNumbers: Array.from(
+      new Set((readyEdits ?? []).map((e: { video_number: number }) => e.video_number))
+    ) as number[],
     aboutSite: String(kit.bio_long ?? ""),
     manifesto: String(kit.manifesto ?? ""),
     reels,
