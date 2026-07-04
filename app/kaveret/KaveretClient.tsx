@@ -1,0 +1,500 @@
+// כוורת האות — client render of the master mockup
+// (design/kaveret/beegood-kaveret-haot-master.html). The DOM structure, class
+// values and interaction logic are a one-to-one port; only the texts are the
+// member's own. Do not restyle by hand — visual-check compares against the
+// mockup at 1.5% tolerance.
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import sty from "./kaveret.module.css";
+
+export interface KaveretCard {
+  name: string;
+  use: string;
+  text: string;
+  file: string;
+}
+
+export interface KaveretData {
+  firstName: string;
+  gender: "m" | "f" | null;
+  signalText: string;
+  positioning: string;
+  persona: string;
+  cards: KaveretCard[];
+  identity: string;
+  bioInstagram: string;
+  linkedinHeadline: string;
+  facebookAbout: string;
+  challengeDay: number;
+  monthLabel: string;
+  filmedCount: number;
+  scriptsTotal: number;
+  scripts: { number: number; title: string }[];
+  extractionId: string | null;
+  waPhone: string;
+  demo: boolean;
+}
+
+const REVEAL_KEY = "kaveret_reveal_seen";
+
+// Signal words: the final clause (after the last comma) carries the gold.
+function signalWords(text: string): [string, number][] {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  let strongFrom = words.length;
+  for (let i = words.length - 1; i >= 0; i--) {
+    if (words[i].endsWith(",")) { strongFrom = i + 1; break; }
+    if (i === 0) strongFrom = Math.max(0, words.length - 4);
+  }
+  if (strongFrom >= words.length) strongFrom = Math.max(0, words.length - 4);
+  return words.map((w, i) => [w, i >= strongFrom ? 1 : 0]);
+}
+
+export function KaveretClient({
+  data,
+  cardsSplit,
+}: {
+  data: KaveretData;
+  cardsSplit: { lead: string; main: string }[];
+}) {
+  const [toastMsg, setToastMsg] = useState("הועתק ללוח");
+  const [toastOn, setToastOn] = useState(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [dot, setDot] = useState(0);
+  const [seen, setSeen] = useState(true); // SSR-safe: animate only after mount check
+  const carRef = useRef<HTMLDivElement | null>(null);
+  const spyLockRef = useRef(0);
+  const zonesRef = useRef<(HTMLElement | null)[]>([]);
+  const strategyRef = useRef<HTMLElement | null>(null);
+  const okTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const [okBtns, setOkBtns] = useState<Record<string, boolean>>({});
+  const pngBusy = useRef(false);
+
+  // Word reveal only on first visit per session (spec: kaveret_reveal_seen).
+  useEffect(() => {
+    try {
+      if (!sessionStorage.getItem(REVEAL_KEY)) {
+        setSeen(false);
+        sessionStorage.setItem(REVEAL_KEY, "1");
+      }
+    } catch { /* storage blocked — skip the animation */ }
+  }, []);
+
+  const toast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    setToastOn(true);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastOn(false), 1800);
+  }, []);
+
+  const copyText = useCallback(async (text: string, btnKey?: string) => {
+    const t = text.trim();
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(t);
+      ok = true;
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = t;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { ok = document.execCommand("copy"); } catch { /* stays false */ }
+      document.body.removeChild(ta);
+    }
+    toast(ok ? "הועתק ללוח" : "ההעתקה נכשלה");
+    if (ok && navigator.vibrate) navigator.vibrate(6);
+    if (ok && btnKey) {
+      setOkBtns((prev) => ({ ...prev, [btnKey]: true }));
+      const existing = okTimers.current.get(btnKey);
+      if (existing) clearTimeout(existing);
+      okTimers.current.set(
+        btnKey,
+        setTimeout(() => setOkBtns((prev) => ({ ...prev, [btnKey]: false })), 1500)
+      );
+    }
+  }, [toast]);
+
+  // Tab bar: sliding pill + scrollspy (IntersectionObserver, spy-locked while
+  // a tap-scroll is in flight — exactly the mockup behavior).
+  const goTab = useCallback((i: number) => {
+    spyLockRef.current = Date.now() + 900;
+    zonesRef.current[i]?.scrollIntoView({ behavior: "smooth" });
+    setActiveTab(i);
+    if (navigator.vibrate) navigator.vibrate(6);
+  }, []);
+
+  useEffect(() => {
+    const onScrollEnd = () => { spyLockRef.current = 0; };
+    if ("onscrollend" in window) addEventListener("scrollend", onScrollEnd);
+    const spy = new IntersectionObserver(
+      (es) => {
+        if (Date.now() < spyLockRef.current) return;
+        es.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const idx = Number((e.target as HTMLElement).dataset.tabIndex);
+          if (Number.isInteger(idx)) setActiveTab(idx);
+        });
+      },
+      { rootMargin: "-25% 0px -55% 0px" }
+    );
+    zonesRef.current.forEach((z) => { if (z) spy.observe(z); });
+    if (strategyRef.current) spy.observe(strategyRef.current);
+    return () => {
+      spy.disconnect();
+      removeEventListener("scrollend", onScrollEnd);
+    };
+  }, []);
+
+  // Carousel dots via absolute scroll progress (RTL-safe, per the spec).
+  const syncDots = useCallback(() => {
+    const car = carRef.current;
+    if (!car) return;
+    const max = car.scrollWidth - car.clientWidth;
+    if (max <= 0) return;
+    const pos = Math.min(Math.abs(car.scrollLeft), max);
+    const n = data.cards.length;
+    setDot(Math.min(n - 1, Math.round((pos / max) * (n - 1))));
+  }, [data.cards.length]);
+
+  // Card PNG: canvas render + share sheet, download fallback.
+  const makePNG = useCallback(async (idx: number) => {
+    if (pngBusy.current) return;
+    pngBusy.current = true;
+    setTimeout(() => { pngBusy.current = false; }, 1500);
+    const c = data.cards[idx];
+    const split = cardsSplit[idx];
+    await document.fonts.load("300 46px Assistant");
+    await document.fonts.load("800 64px Assistant");
+    const S = 1080;
+    const cv = document.createElement("canvas");
+    cv.width = S; cv.height = S;
+    const ctx = cv.getContext("2d")!;
+    ctx.direction = "rtl";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#0B0F18";
+    ctx.fillRect(0, 0, S, S);
+    const g = ctx.createRadialGradient(S / 2, 0, 0, S / 2, 0, S * 0.85);
+    g.addColorStop(0, "rgba(232,185,74,0.08)");
+    g.addColorStop(1, "rgba(232,185,74,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, S, S);
+    ctx.strokeStyle = "#9E7C3A";
+    ctx.lineWidth = 3;
+    const m = 60, L = 52;
+    ([[m, m, 1, 1], [S - m, m, -1, 1], [m, S - m, 1, -1], [S - m, S - m, -1, -1]] as const).forEach(
+      ([x, y, dx, dy]) => {
+        ctx.beginPath();
+        ctx.moveTo(x + dx * L, y);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x, y + dy * L);
+        ctx.stroke();
+      }
+    );
+    const wrapText = (text: string, mw: number) => {
+      const ws = text.split(" ");
+      const ls: string[] = [];
+      let l = "";
+      ws.forEach((w) => {
+        const t = l ? l + " " + w : w;
+        if (ctx.measureText(t).width > mw && l) { ls.push(l); l = w; } else l = t;
+      });
+      if (l) ls.push(l);
+      return ls;
+    };
+    ctx.fillStyle = "#9E7C3A";
+    ctx.font = "800 96px Assistant";
+    ctx.fillText('"', S / 2, 240);
+    ctx.fillStyle = "#9E9990";
+    ctx.font = "300 44px Assistant";
+    let y = 370;
+    wrapText(split.lead, 800).forEach((l) => { ctx.fillText(l, S / 2, y); y += 66; });
+    y += 24;
+    ctx.fillStyle = "#EDE9E1";
+    ctx.font = "800 62px Assistant";
+    wrapText(split.main, 800).forEach((l) => { ctx.fillText(l, S / 2, y); y += 90; });
+    const lg = ctx.createLinearGradient(S / 2 - 70, 0, S / 2 + 70, 0);
+    lg.addColorStop(0, "rgba(232,185,74,0)");
+    lg.addColorStop(0.5, "#E8B94A");
+    lg.addColorStop(1, "rgba(232,185,74,0)");
+    ctx.fillStyle = lg;
+    ctx.fillRect(S / 2 - 70, y + 8, 140, 3);
+    const blob = await new Promise<Blob | null>((r) => cv.toBlob(r, "image/png"));
+    if (!blob) return;
+    const file = new File([blob], c.file, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        toast("הכרטיס נשמר");
+        return;
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+      }
+    }
+    const a = document.createElement("a");
+    a.download = c.file;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast("הכרטיס נשמר");
+  }, [data.cards, cardsSplit, toast]);
+
+  const words = signalWords(data.signalText);
+  const letterTo = data.demo || data.gender !== "m" ? "מהדר אלייך" : "מהדר אליך";
+
+  const CopyIcon = (
+    <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>
+  );
+  const SaveIcon = (
+    <svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" /></svg>
+  );
+
+  const copyBtn = (key: string, text: string) => (
+    <button type="button" className={`${sty.btnCopy} ${okBtns[key] ? sty.okState : ""}`} onClick={() => copyText(text, key)}>
+      {CopyIcon}
+      <span>{okBtns[key] ? "הועתק" : "העתקה"}</span>
+    </button>
+  );
+
+  return (
+    <div className={sty.page} dir="rtl">
+      {/* pixel parity with the mockup: same hosted font, same weights */}
+      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+      <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+      <div className={sty.bgfix} aria-hidden="true" />
+      <div className={sty.glow} aria-hidden="true" />
+
+      <main className={sty.wrap}>
+        <header className={sty.top}>
+          <div className={sty.brand}><span className={sty.hex} />beegood</div>
+          <div className={sty.who}>הכוורת של <b>{data.firstName}</b></div>
+        </header>
+
+        <div className={sty.hero} id="top" data-tab-index={0} ref={(el) => { zonesRef.current[0] = el; }}>
+          <div className={sty.ghost} aria-hidden="true">הכוורת</div>
+          <div className={sty.k}>כוורת האות · חבילת התוכן שלך</div>
+          <h1><span className={sty.thin}>האות שלך,</span><br /><span className={sty.goldTxt}>ארוז לפעולה.</span></h1>
+        </div>
+
+        <div className={sty.board}>
+          <span className={sty.seal}>לוח האות שלך</span>
+          <span className={sty.bigq} aria-hidden="true">&quot;</span>
+          <div className={sty.txt}>
+            {words.map(([w, strong], i) => (
+              <span key={i}>
+                <span
+                  className={seen ? (strong ? sty.seenStrong : sty.seen) : strong ? sty.strong : sty.w}
+                  style={seen ? undefined : { animationDelay: `${0.15 + i * 0.05}s${strong ? ", 3s" : ""}` }}
+                >
+                  {w}
+                </span>{" "}
+              </span>
+            ))}
+          </div>
+          <div className={sty.bfoot}>
+            <span className={sty.sig}>האות של {data.firstName}</span>
+            <button type="button" className={`${sty.btnGold} ${okBtns.signal ? sty.okState : ""}`} onClick={() => copyText(data.signalText, "signal")}>
+              {CopyIcon}
+              <span>{okBtns.signal ? "הועתק" : "העתקה"}</span>
+            </button>
+          </div>
+        </div>
+
+        <section className={sty.zone} id="z-strategy" data-tab-index={0} ref={(el) => { strategyRef.current = el; }}>
+          <div className={sty.zhead}>
+            <span className={sty.zt}><h2>אסטרטגיה</h2><span className={sty.hint}>לעיניך בלבד, לא לפרסום</span></span>
+          </div>
+          <div className={sty.zrule} />
+
+          <details className={sty.disc} open>
+            <summary>
+              <span className={sty.st}>
+                <span className={sty.ic}><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M14.6 9.4l-1.8 4-4 1.8 1.8-4z" /></svg></span>
+                <span><span className={sty.t}>הצהרת המיקום שלך</span><br /><span className={sty.p}>המשפט שמכוון כל החלטה</span></span>
+              </span>
+              <span className={sty.chev}><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg></span>
+            </summary>
+            <div className={sty.body}>{data.positioning}</div>
+            <div className={sty.dfoot}>{copyBtn("pos", data.positioning)}</div>
+          </details>
+
+          <details className={sty.disc}>
+            <summary>
+              <span className={sty.st}>
+                <span className={sty.ic}><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4" /><path d="M5 19.5c1.3-3.2 3.9-4.8 7-4.8s5.7 1.6 7 4.8" /></svg></span>
+                <span><span className={sty.t}>הלקוח האידיאלי שלך</span><br /><span className={sty.p}>פרסונה מלאה</span></span>
+              </span>
+              <span className={sty.chev}><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg></span>
+            </summary>
+            <div className={sty.body}>{data.persona}</div>
+            <div className={sty.dfoot}>{copyBtn("persona", data.persona)}</div>
+          </details>
+        </section>
+
+        <section className={sty.zone} id="z-challenge" data-tab-index={1} ref={(el) => { zonesRef.current[1] = el; }}>
+          <div className={sty.zhead}>
+            <span className={sty.zn}>01</span>
+            <span className={sty.zt}><h2>אתגר האות</h2><span className={sty.hint}>שבעה ימים, צעד ביום</span></span>
+          </div>
+          <div className={sty.zrule} />
+          <div className={sty.trow}>
+            <div className={sty.head}><span className={sty.plat}>לוח האתגר שלך</span><span className={sty.check}>יום {data.challengeDay} מתוך 7</span></div>
+            <p className={sty.txt}>
+              {data.demo
+                ? "כאן נטען לוח האתגר החי מהערכה: הצעד היומי, הסטטוס, וההנחיה של הדר להיום."
+                : "הצעד היומי שלך מחכה בערכת האות. ממשיכים יום אחרי יום, בקצב שלך."}
+            </p>
+            <div className={sty.tfoot}>
+              <a className={sty.btnCopy} href="/hive/signal-kit"><span>להמשיך באתגר</span></a>
+            </div>
+          </div>
+        </section>
+
+        <section className={sty.zone} id="z-visual" data-tab-index={2} ref={(el) => { zonesRef.current[2] = el; }}>
+          <div className={sty.zhead}>
+            <span className={sty.zn}>02</span>
+            <span className={sty.zt}><h2>ויזואל</h2><span className={sty.hint}>החליקו בין הכרטיסים</span></span>
+          </div>
+          <div className={sty.zrule} />
+
+          <div className={sty.carousel} ref={carRef} onScroll={syncDots}>
+            {data.cards.map((c, i) => (
+              <div className={sty.vc} key={c.name}>
+                <div className={sty.frame}>
+                  <span className={`${sty.corner} ${sty.c1}`} /><span className={`${sty.corner} ${sty.c2}`} /><span className={`${sty.corner} ${sty.c3}`} /><span className={`${sty.corner} ${sty.c4}`} />
+                  <div className={sty.q}>&quot;</div>
+                  {cardsSplit[i].lead ? <div className={sty.lead}>{cardsSplit[i].lead}</div> : null}
+                  <div className={sty.main}>{cardsSplit[i].main}</div>
+                </div>
+                <div className={sty.meta}><span className={sty.name}>{c.name}</span><span className={sty.use}>{c.use}</span></div>
+                <div className={sty.vfoot}>
+                  <button type="button" className={`${sty.btnCopy} ${sty.btnCard}`} aria-label={`שמירת כרטיס ${c.name}`} onClick={() => makePNG(i)}>
+                    {SaveIcon}
+                    <span>שמירת הכרטיס</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className={sty.dots} aria-hidden="true">
+            {data.cards.map((_, i) => (
+              <span key={i} className={i === dot ? sty.on : undefined} />
+            ))}
+          </div>
+        </section>
+
+        <section className={sty.zone} id="z-filming" data-tab-index={3} ref={(el) => { zonesRef.current[3] = el; }}>
+          <div className={sty.zhead}>
+            <span className={sty.zn}>03</span>
+            <span className={sty.zt}><h2>יום הצילום</h2><span className={sty.hint}>לקרוא לפני המצלמה</span></span>
+          </div>
+          <div className={sty.zrule} />
+
+          <div className={sty.letterbox}>
+            <div className={sty.from}>{letterTo}</div>
+            <p>אם השיווק שלכם לא עובד היום, זה לא בגלל שאתם גרועים. זה כי אתם משחקים משחק שכבר לא מתקיים.</p>
+            <p className={sty.em}>בואו נבנה לכם יום אחד שבו אתם משחקים משחק חדש.</p>
+            <p className={sty.lsig}>הדר</p>
+          </div>
+
+          <div className={sty.trow}>
+            <div className={sty.head}><span className={sty.plat}>משפט הזהות שלכם</span><span className={sty.check}>לפתיחת כל סרטון</span></div>
+            <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(data.identity, "identity")}>{data.identity}</p>
+            <div className={sty.tfoot}>{copyBtn("identity", data.identity)}</div>
+          </div>
+        </section>
+
+        <section className={sty.zone} id="z-mine" data-tab-index={4} ref={(el) => { zonesRef.current[4] = el; }}>
+          <div className={sty.zhead}>
+            <span className={sty.zn}>04</span>
+            <span className={sty.zt}><h2>התכנים שלי</h2><span className={sty.hint}>נגיעה בטקסט מעתיקה מיד</span></span>
+          </div>
+          <div className={sty.zrule} />
+
+          {([
+            ["ביו לאינסטגרם", data.bioInstagram, "bio"],
+            ["כותרת ללינקדאין", data.linkedinHeadline, "li"],
+            ["אודות לפייסבוק", data.facebookAbout, "fb"],
+          ] as const).map(([label, text, key]) =>
+            text.trim() ? (
+              <div className={sty.trow} key={key}>
+                <div className={sty.head}><span className={sty.plat}>{label}</span><span className={sty.check}><span className={sty.v}>✓</span> באורך מדויק</span></div>
+                <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(text, key)}>{text}</p>
+                <div className={sty.tfoot}>{copyBtn(key, text)}</div>
+              </div>
+            ) : null
+          )}
+
+          <div className={sty.zhead} style={{ marginTop: 34 }}>
+            <span className={sty.zt}><h2 style={{ fontSize: 19 }}>החודש</h2><span className={sty.hint}>שבעת הסרטונים של החודש</span></span>
+          </div>
+          <div className={sty.trow}>
+            <div className={sty.head}><span className={sty.plat}>סרטוני {data.monthLabel}</span><span className={sty.check}>{data.filmedCount} מתוך {data.scriptsTotal} צולמו</span></div>
+            {data.demo || !data.scripts.length ? (
+              <p className={sty.txt}>
+                {data.demo
+                  ? "כאן נטענים שבעת התסריטים החודשיים מהמנוי, כל אחד עם כפתור לצלם עכשיו."
+                  : "התסריטים החודשיים ייטענו כאן ברגע שערכת יום הצילום תיבנה."}
+              </p>
+            ) : (
+              <div>
+                {data.scripts.map((s2) => (
+                  <div className={sty.tfoot} key={s2.number} style={{ alignItems: "center" }}>
+                    <p className={sty.txt} style={{ flex: 1 }}>{s2.number}. {s2.title}</p>
+                    <a
+                      className={`${sty.btnCopy} ${sty.btnCard}`}
+                      style={{ flex: "0 0 auto", padding: "0 18px", textDecoration: "none" }}
+                      href={`/hive/signal-kit/broadcast/${data.extractionId}/${s2.number}`}
+                    >
+                      <span>לצלם עכשיו</span>
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <a className={sty.wa} href={`https://wa.me/${data.waPhone}`} target="_blank" rel="noopener">
+          <span className={sty.ic}><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.2 8L3 21l1.1-4.6A9 9 0 1 1 21 12z" /></svg></span>
+          <span><span className={sty.t}>שאלה על הכוורת שלך?</span><br /><span className={sty.s}>הדר והצוות עונים בוואטסאפ</span></span>
+        </a>
+
+        <footer className={sty.note}>כוורת האות · beegood · שיטת TrueSignal</footer>
+      </main>
+
+      <nav className={sty.tabbar} aria-label="ניווט">
+        <span
+          className={sty.tbind}
+          aria-hidden="true"
+          style={{ transform: `translateX(calc(-${activeTab} * 100%))` }}
+        />
+        {([
+          ["האות", <svg key="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4" /><path d="M12 4v3M12 17v3M4 12h3M17 12h3" /></svg>],
+          ["אתגר", <svg key="i" viewBox="0 0 24 24"><path d="M8 4h8M12 4v5" /><circle cx="12" cy="14" r="6" /><path d="M12 12v2.5l1.8 1.2" /></svg>],
+          ["ויזואל", <svg key="i" viewBox="0 0 24 24"><rect x="4.5" y="4.5" width="15" height="15" rx="2" /><circle cx="9.5" cy="9.5" r="1.6" /><path d="M5 17l4.5-4.5 3 3 2.5-2.5L19 17" /></svg>],
+          ["צילום", <svg key="i" viewBox="0 0 24 24"><rect x="3.5" y="7" width="12" height="10" rx="2" /><path d="M15.5 10.5l4.5-2.5v8l-4.5-2.5z" /></svg>],
+          ["התכנים שלי", <svg key="i" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /></svg>],
+        ] as const).map(([label, icon], i) => (
+          <button
+            key={label}
+            type="button"
+            className={`${sty.tb} ${activeTab === i ? sty.on : ""}`}
+            aria-label={label}
+            aria-current={activeTab === i ? "true" : undefined}
+            onClick={() => goTab(i)}
+          >
+            {icon}
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <div className={`${sty.toast} ${toastOn ? sty.on : ""}`} role="status">
+        <span className={sty.ok}>✓</span><span>{toastMsg}</span>
+      </div>
+    </div>
+  );
+}

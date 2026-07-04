@@ -16,7 +16,9 @@ export function LayoutShell({
     FULL_SCREEN_ROUTES.includes(pathname) ||
     pathname.startsWith("/en") ||
     // חדר השידור is a full-viewport camera experience — no nav.
-    pathname.startsWith("/hive/signal-kit/broadcast");
+    pathname.startsWith("/hive/signal-kit/broadcast") ||
+    // כוורת האות has its own floating tab bar (design/kaveret mockup) — no nav.
+    pathname.startsWith("/kaveret");
 
   return (
     <>

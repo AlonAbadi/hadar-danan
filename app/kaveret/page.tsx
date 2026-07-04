@@ -1,0 +1,176 @@
+/**
+ * /kaveret — כוורת האות, the redesigned member home.
+ *
+ * Skeleton is IDENTICAL for every member (design/kaveret/beegood-kaveret-haot-master.html
+ * is the source of truth); only the texts inside come from the member's records:
+ * signal fields from signal_extractions, kit texts from signal.content_kit when
+ * present (with signal-field fallbacks), challenge day from challenge_enrollments,
+ * filmed count from broadcast_edits.
+ *
+ * Dev-only demo mode (?demo=1, NODE_ENV=development) renders the mockup's exact
+ * sample content with no auth — this is what scripts/visual-check.mjs compares
+ * pixel-for-pixel against the mockup.
+ */
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import type { Viewport } from "next";
+import { createServerClient as createSSRClient } from "@supabase/ssr";
+import { createServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
+import { KaveretClient, type KaveretData } from "./KaveretClient";
+
+export const dynamic = "force-dynamic";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#080C14",
+};
+
+// The mockup's sample content, verbatim — the visual-check baseline.
+const DEMO: KaveretData = {
+  firstName: "אלון",
+  gender: "m",
+  signalText: "בנית לעצמך שקט פנימי בתוך עולם שרץ, ועכשיו אתה קורא דרכו את התוצאה של מה שאדם עושה, עוד לפני שהוא מסתכל קדימה.",
+  positioning: "אתה הכתובת למי שחזק מספיק כדי להמשיך, אבל כבר מספיק עייף מלהמשיך לבד בלי שמישהו יקרא לאן זה בעצם הולך.",
+  persona: "הוא לא אדם שנשבר. הוא אדם שממשיך, וזה בדיוק מה שמטריד אותו. הוא קם בבוקר, הולך למקום שהוא לא בחר בו באמת, עושה את העבודה טוב, ולא מבין למה זה מרגיש כמו הליכה במקום. מבחוץ הוא נראה מסודר. בפנים יש שאלה שהוא לא שואל בקול, כי הוא לא בטוח שיש לה תשובה, ומפחד קצת שאם ישאל אותה הוא יצטרך לשנות משהו שעדיין לא מוכן להשתנות.",
+  cards: [
+    { name: "המשפט הציבורי", use: "לפוסט היכרות", text: "לאלה שיודעים שיש להם כיוון, אבל עדיין לא מצאו מי שרואה אותו לפניהם.", file: "beegood-signal-public.png" },
+    { name: "האות שלך", use: "לרגעים הגדולים", text: "בנית לעצמך שקט פנימי בתוך עולם שרץ, ועכשיו אתה קורא דרכו את התוצאה של מה שאדם עושה, עוד לפני שהוא מסתכל קדימה.", file: "beegood-signal-ot.png" },
+    { name: "ההבטחה", use: "לסטורי או להזמנה לשיחה", text: "אני עוזר לך לקרוא את עצמך לפני שאתה מתקדם.", file: "beegood-signal-promise.png" },
+  ],
+  identity: "אני קורא לאן העשייה שלך מובילה, לפני שאתה רואה את התמונה המלאה.",
+  bioInstagram: "קורא לאן העשייה שלך מובילה, לפני שאתה רואה את התמונה המלאה.",
+  linkedinHeadline: "מסנן את הרעש ומאתר לאן העשייה מובילה | אנשים שתקועים במקום הלא נכון | שקט כקריאה",
+  facebookAbout: "בניתי לעצמי שקט פנימי בתוך עולם שרץ, והיום אני קורא דרכו לאן העשייה של אנשים מובילה, עוד לפני שהם מסתכלים קדימה. אם אתה ממשיך כבר הרבה זמן בלי שמישהו יקרא איתך את הכיוון, אני כאן בשביל זה.",
+  challengeDay: 3,
+  monthLabel: "יולי",
+  filmedCount: 0,
+  scriptsTotal: 7,
+  scripts: [],
+  extractionId: null,
+  waPhone: "972000000000",
+  demo: true,
+};
+
+// Card text splitter: the last clause (after the final comma) becomes the bold
+// "main"; everything before it is the muted "lead". No comma = all main.
+function splitCard(text: string): { lead: string; main: string } {
+  const i = text.lastIndexOf(",");
+  if (i > 0 && i < text.length - 2) {
+    return { lead: text.slice(0, i + 1).trim(), main: text.slice(i + 1).trim() };
+  }
+  return { lead: "", main: text.trim() };
+}
+
+export default async function KaveretPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ demo?: string }>;
+}) {
+  const { demo } = await searchParams;
+  if (demo === "1" && process.env.NODE_ENV === "development") {
+    return <KaveretClient data={DEMO} cardsSplit={DEMO.cards.map((c) => splitCard(c.text))} />;
+  }
+
+  const cookieStore = await cookies();
+  const supabaseAuth = createSSRClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll(); }, setAll() {} } }
+  );
+  const { data: { user: authUser } } = await supabaseAuth.auth.getUser();
+  if (!authUser) redirect("/login?next=/kaveret");
+
+  const db = createServerClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: userData } = await (db as any)
+    .from("users")
+    .select("id, name, gender, hive_status")
+    .eq("auth_id", authUser.id)
+    .maybeSingle();
+  if (!userData) redirect("/account");
+  if (userData.hive_status !== "active") redirect("/hive");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: ext } = await (db as any)
+    .from("signal_extractions")
+    .select("id, signal")
+    .eq("user_id", userData.id)
+    .order("generated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!ext) redirect("/signal?from=kit");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const signal = (ext.signal ?? {}) as any;
+  const kit = signal.content_kit ?? {};
+  const identity =
+    signal.shoot_day?.identity_statement ??
+    signal.shoot_day_phase1?.identity_statement ??
+    signal.signal ??
+    "";
+
+  // Challenge day (completion-based, challenge_enrollments.current_day).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: enrollment } = await (db as any)
+    .from("challenge_enrollments")
+    .select("current_day")
+    .eq("user_id", userData.id)
+    .maybeSingle();
+
+  // Filmed count: distinct scripts with a finished reel for this extraction.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: readyEdits } = await (db as any)
+    .from("broadcast_edits")
+    .select("video_number")
+    .eq("extraction_id", ext.id)
+    .eq("status", "ready");
+  const filmedCount = new Set(
+    (readyEdits ?? []).map((e: { video_number: number }) => e.video_number)
+  ).size;
+
+  // Scripts for the monthly zone: number + title from the shoot-day plan.
+  const planVideos: { number: number; title: string }[] = Array.isArray(signal.shoot_day?.videos)
+    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      signal.shoot_day.videos.map((v: any) => ({ number: v.number, title: String(v.title ?? "") }))
+    : Array.from({ length: 12 }, (_, i) => i + 1)
+        .filter((n) => signal[`shoot_day_v${n}`])
+        .map((n) => ({ number: n, title: String(signal[`shoot_day_v${n}`].title ?? "") }));
+
+  const monthLabel = new Intl.DateTimeFormat("he-IL", {
+    month: "long",
+    timeZone: "Asia/Jerusalem",
+  }).format(new Date());
+
+  const data: KaveretData = {
+    firstName: userData.name?.split(" ")[0] ?? "",
+    gender: userData.gender === "m" ? "m" : userData.gender === "f" ? "f" : null,
+    signalText: String(signal.signal ?? ""),
+    positioning: String(kit.positioning_statement ?? signal.signal_promise ?? ""),
+    persona: String(kit.persona_description ?? signal.people ?? ""),
+    cards: [
+      { name: "המשפט הציבורי", use: "לפוסט היכרות", text: String(kit.bio_short ?? signal.people ?? ""), file: "beegood-signal-public.png" },
+      { name: "האות שלך", use: "לרגעים הגדולים", text: String(signal.signal ?? ""), file: "beegood-signal-ot.png" },
+      { name: "ההבטחה", use: "לסטורי או להזמנה לשיחה", text: String(signal.signal_promise ?? ""), file: "beegood-signal-promise.png" },
+    ].filter((c) => c.text.trim().length > 0),
+    identity: String(identity),
+    bioInstagram: String(kit.bio_short ?? signal.signal_promise ?? ""),
+    linkedinHeadline: String(
+      kit.linkedin_headline ??
+        [signal.central_tool, signal.element].filter(Boolean).join(" | ")
+    ),
+    facebookAbout: String(kit.bio_medium ?? signal.signal ?? ""),
+    challengeDay: Math.min(Math.max(enrollment?.current_day ?? 0, 0), 7),
+    monthLabel,
+    filmedCount,
+    scriptsTotal: planVideos.length || 7,
+    scripts: planVideos,
+    extractionId: ext.id,
+    waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
+    demo: false,
+  };
+
+  return <KaveretClient data={data} cardsSplit={data.cards.map((c) => splitCard(c.text))} />;
+}
