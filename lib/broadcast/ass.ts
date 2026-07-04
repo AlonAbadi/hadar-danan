@@ -67,7 +67,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Caption,Assistant,92,&H00E1E9ED,&H00FFFFFF,&H66140C08,&H00000000,1,0,0,0,100,100,0,0,1,4,1,2,70,70,340,-1
+Style: Caption,Assistant,104,&H00E1E9ED,&H00FFFFFF,&H66140C08,&H00000000,1,0,0,0,100,100,0,0,1,4,1,2,60,60,350,-1
 Style: Stamp,Assistant,36,&H004AB9E8,&H00FFFFFF,&H66140C08,&H00000000,0,0,0,0,100,100,0,0,1,2,0,8,90,90,96,-1
 
 [Events]
