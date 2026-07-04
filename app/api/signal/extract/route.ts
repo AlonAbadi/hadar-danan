@@ -28,6 +28,7 @@ import { determineBucket, type Bucket } from "@/lib/signal/score";
 import { determineFraming } from "@/lib/signal/framing";
 import { conversionScore } from "@/lib/signal/conversion-score";
 import { extractEvidence, routeV2Ending, type V2Ending } from "@/lib/signal/evidence";
+import { sendCapiEvent } from "@/lib/meta-capi";
 import { crisisFloor } from "@/lib/prompts/gap-engine";
 
 // Same recipients as /api/stage/apply and /api/quiz-result. Hardcoded by
@@ -366,6 +367,22 @@ export async function POST(req: NextRequest) {
       userId = created.id as string;
       occupationForPrompt = occupationStr || undefined;
       storedGender = detectedAtCreate;
+
+      // Meta CAPI Lead for a v2 lead created HERE (the skipper path skips
+      // /api/signup entirely). eventId mirrors signup's scheme (user.id /
+      // reg_<id>) so if the same user ever flows through signup too, Meta
+      // dedups instead of double-counting.
+      if (instrumentVersion === "v2_funnel") {
+        const capiUser = {
+          email:            emailStr,
+          phone:            phoneStr || undefined,
+          fbp:              req.cookies.get("_fbp")?.value,
+          fbc:              req.cookies.get("_fbc")?.value,
+          clientUserAgent:  req.headers.get("user-agent") ?? undefined,
+        };
+        void sendCapiEvent({ eventName: "Lead", eventId: userId, userData: capiUser, isTest: isTestRun });
+        void sendCapiEvent({ eventName: "CompleteRegistration", eventId: `reg_${userId}`, userData: capiUser, isTest: isTestRun });
+      }
       // Note: we intentionally do NOT fire USER_SIGNED_UP here. The generic
       // welcome pitches the full ladder, which doesn't fit a lead who just
       // generated their signal. Instead, SIGNAL_EXTRACTED fires below for

@@ -227,6 +227,15 @@ interface Draft {
 }
 
 export function KriahClient({ previewKey, isTest }: Props) {
+  // Entry beacon — the funnel denominator (fires once per mount).
+  const entryFired = useRef(false);
+  useEffect(() => {
+    if (entryFired.current) return;
+    entryFired.current = true;
+    track("s1");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Plant the tester cookie so the next visit works without ?key= (90 days).
   useEffect(() => {
     if (previewKey) {

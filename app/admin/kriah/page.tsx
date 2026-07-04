@@ -25,18 +25,26 @@ const C = {
   fg: "#EDE9E1", muted: "#9E9990", line: "#2C323E",
 };
 
-const STEP_ORDER = [
-  "s1", "s2_state", "s3_blocker", "s4_wish", "s6_reading", "s5_gate",
-  "s7_fork", "s8_bridge", "q1", "q2", "q3", "q4", "q5", "q6",
-  "s15_phone", "s16_full_reading",
+// The 2026-07-04 flow (gate moved before the letter): each row aggregates
+// the FUNNEL_STEP names that mean "reached/completed this stage".
+const STEP_ROWS: { label: string; keys: string[] }[] = [
+  { label: "כניסה",            keys: ["s1"] },
+  { label: "מצב עסק",          keys: ["s2_state"] },
+  { label: "חסם",              keys: ["s3_blocker"] },
+  { label: "מה ישתנה",         keys: ["s4_change"] },
+  { label: "התמונה",           keys: ["s6_reading"] },
+  { label: "המזלג",            keys: ["s7_fork"] },
+  { label: "גשר + שמירת מייל", keys: ["s8_bridge"] },
+  { label: "שאלה 1",           keys: ["q1_flow_zone"] },
+  { label: "שאלה 2",           keys: ["q2_effortless_mastery"] },
+  { label: "שאלה 3",           keys: ["q3_gratitude_mirror"] },
+  { label: "שאלה 4",           keys: ["q4_hard_period", "q4_hard_period_skipped"] },
+  { label: "שאלה 5",           keys: ["q5_what_helped"] },
+  { label: "שאלה 6",           keys: ["q6_message_to_past"] },
+  { label: "שער טלפון",        keys: ["s15_phone_gate"] },
+  { label: "מסך המשלוח",       keys: ["sendgate"] },
+  { label: "האות (סיום)",      keys: ["s16_full_reading"] },
 ];
-
-const STEP_LABELS: Record<string, string> = {
-  s1: "כניסה", s2_state: "מצב עסק", s3_blocker: "חסם", s4_wish: "מה ישתנה",
-  s6_reading: "התמונה", s5_gate: "שער מייל", s7_fork: "המזלג", s8_bridge: "גשר",
-  q1: "שאלה 1", q2: "שאלה 2", q3: "שאלה 3", q4: "שאלה 4", q5: "שאלה 5", q6: "שאלה 6",
-  s15_phone: "שער טלפון", s16_full_reading: "האות (סיום)",
-};
 
 const ENDING_LABELS: Record<string, string> = {
   concierge:   "קונסיירז' (רותח)",
@@ -94,8 +102,12 @@ export default async function AdminKriahPage() {
     stepCounts[key][isT ? "test" : "real"]++;
   }
 
-  const s7 = stepCounts["s7_fork"] ?? { real: 0, test: 0 };
-  const s8 = stepCounts["s8_bridge"] ?? { real: 0, test: 0 };
+  const rowCount = (keys: string[]) => keys.reduce(
+    (acc, k) => ({ real: acc.real + (stepCounts[k]?.real ?? 0), test: acc.test + (stepCounts[k]?.test ?? 0) }),
+    { real: 0, test: 0 },
+  );
+  const s7 = rowCount(["s7_fork"]);
+  const s8 = rowCount(["s8_bridge"]);
   const commitRate = (n: { real: number }, d: { real: number }) =>
     d.real > 0 ? Math.round((n.real / d.real) * 100) : null;
 
@@ -168,17 +180,17 @@ export default async function AdminKriahPage() {
           <h2 style={{ fontSize: 16, fontWeight: 800, color: C.goldMid, margin: "0 0 14px" }}>
             נטישה פר-מסך · 14 יום (FUNNEL_STEP)
           </h2>
-          {STEP_ORDER.every((k) => !(stepCounts[k]?.real || stepCounts[k]?.test)) ? (
+          {STEP_ROWS.every((r) => rowCount(r.keys).real + rowCount(r.keys).test === 0) ? (
             <p style={{ color: C.muted, fontSize: 14 }}>אין אירועים עדיין.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {STEP_ORDER.map((k) => {
-                const c = stepCounts[k] ?? { real: 0, test: 0 };
-                const max = Math.max(...STEP_ORDER.map((x) => (stepCounts[x]?.real ?? 0) + (stepCounts[x]?.test ?? 0)), 1);
+              {STEP_ROWS.map((r) => {
+                const c = rowCount(r.keys);
+                const max = Math.max(...STEP_ROWS.map((x) => { const cc = rowCount(x.keys); return cc.real + cc.test; }), 1);
                 const total = c.real + c.test;
                 return (
-                  <div key={k} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 92, fontSize: 12.5, color: C.muted, flexShrink: 0 }}>{STEP_LABELS[k] ?? k}</span>
+                  <div key={r.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ width: 118, fontSize: 12.5, color: C.muted, flexShrink: 0 }}>{r.label}</span>
                     <div style={{ flex: 1, background: "#0A0E16", borderRadius: 6, height: 18, overflow: "hidden" }}>
                       <div style={{ width: `${(total / max) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${C.goldMid}, ${C.gold})`, opacity: 0.85 }} />
                     </div>
