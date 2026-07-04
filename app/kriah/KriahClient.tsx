@@ -274,16 +274,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
   const [extractionId, setExtractionId] = useState<string | null>(null);
   const [ending, setEnding] = useState<"concierge" | "hive" | "pre_revenue" | "crisis_soft">("hive");
   const [occupation, setOccupation] = useState("");
-  const [dictationTipDismissed, setDictationTipDismissed] = useState(false);
   const [softCaptured, setSoftCaptured] = useState(false);   // email given at the S8 soft gate
   const [finalizing, setFinalizing]     = useState(false);
-  useEffect(() => {
-    try { if (sessionStorage.getItem("kriah_dict_tip") === "1") setDictationTipDismissed(true); } catch {}
-  }, []);
-  const dismissDictationTip = () => {
-    setDictationTipDismissed(true);
-    try { sessionStorage.setItem("kriah_dict_tip", "1"); } catch {}
-  };
   const [signal, setSignal]       = useState<SignalOutput | null>(null);
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
 
@@ -631,14 +623,31 @@ export function KriahClient({ previewKey, isTest }: Props) {
         {/* ── S1 · entry ── */}
         {screen === "s1" && (
           <Card>
-            <h1 style={{ fontSize: 30, fontWeight: 800, margin: "0 0 18px", lineHeight: 1.25, textAlign: "center" }}>
+            <div style={{ textAlign: "center", fontSize: 10.5, fontWeight: 800, letterSpacing: "0.22em", color: C.goldMid, marginBottom: 16 }}>
+              <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
+            </div>
+            <h1 style={{ fontSize: 31, fontWeight: 800, margin: "0 0 16px", lineHeight: 1.25, textAlign: "center" }}>
               המשפט שכבר מבדל אתכם
             </h1>
-            <p style={{ fontSize: 17, lineHeight: 1.65, color: C.fg, opacity: 0.92, margin: "0 0 14px", textAlign: "center" }}>
-              יש משפט אחד שמסביר למה לבחור דווקא בכם. הוא כבר קיים בכם, רק עוד לא נאמר בקול. הכלי הזה שומע אותו מהמילים שלכם, ומחזיר לכם אותו.
+            <p style={{ fontSize: 17.5, lineHeight: 1.7, color: C.fg, opacity: 0.95, margin: "0 0 6px", textAlign: "center" }}>
+              יש משפט אחד שמסביר למה לבחור דווקא בכם.
             </p>
-            <p style={{ fontSize: 15, color: C.muted, margin: "0 0 30px", textAlign: "center", lineHeight: 1.6 }}>
-              מתחילים בשלוש שאלות קצרות עכשיו. חינם.
+            <p style={{ fontSize: 17.5, lineHeight: 1.7, color: C.fg, opacity: 0.78, margin: "0 0 26px", textAlign: "center" }}>
+              הוא כבר קיים בכם. רק עוד לא נאמר בקול.
+            </p>
+            <div style={{ borderTop: `1px solid ${C.line}`, margin: "0 auto 22px", width: 56 }} />
+            <div style={{
+              display: "flex", justifyContent: "center", alignItems: "center", gap: 10,
+              fontSize: 13.5, color: C.muted, margin: "0 0 8px", flexWrap: "wrap",
+            }}>
+              <span>שלוש שאלות קצרות</span>
+              <span style={{ color: C.goldMid }}>←</span>
+              <span>תמונה ראשונית של העסק</span>
+              <span style={{ color: C.goldMid }}>←</span>
+              <span style={{ color: C.gold, fontWeight: 700 }}>המשפט שלכם</span>
+            </div>
+            <p style={{ fontSize: 13.5, color: C.muted, margin: "0 0 28px", textAlign: "center" }}>
+              נבנה מהמילים שלכם, לא מתבנית. חינם.
             </p>
             <div style={{ textAlign: "center" }}>
               <GoldButton onClick={() => goTo("s2", "s2_state")}>להתחיל</GoldButton>
@@ -663,6 +672,9 @@ export function KriahClient({ previewKey, isTest }: Props) {
                 </ChoiceButton>
               ))}
             </div>
+            <div style={{ marginTop: 20 }}>
+              <QuietLink onClick={() => setScreen("s1")}>← חזרה</QuietLink>
+            </div>
           </Card>
         )}
 
@@ -683,6 +695,9 @@ export function KriahClient({ previewKey, isTest }: Props) {
                 </ChoiceButton>
               ))}
             </div>
+            <div style={{ marginTop: 20 }}>
+              <QuietLink onClick={() => setScreen("s2")}>← חזרה</QuietLink>
+            </div>
           </Card>
         )}
 
@@ -698,7 +713,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
               rows={3}
               style={textareaStyle(90)}
             />
-            <div style={{ textAlign: "left", marginTop: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 24 }}>
+              <QuietLink onClick={() => setScreen("s3")}>← חזרה</QuietLink>
               <GoldButton
                 disabled={changeWish.trim().length < 2}
                 onClick={() => goTo("s6", "s6_reading")}
@@ -916,28 +932,9 @@ export function KriahClient({ previewKey, isTest }: Props) {
                 value={value}
                 onChange={(e) => setAnswers((a) => ({ ...a, [q.key]: e.target.value }))}
                 rows={6}
+                placeholder="🎙️ אפשר פשוט לדבר: לחצו על המיקרופון במקלדת"
                 style={textareaStyle(150)}
               />
-
-              {!dictationTipDismissed && (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8, marginTop: 8,
-                  background: "rgba(232,185,74,0.06)", border: `1px solid rgba(232,185,74,0.2)`,
-                  borderRadius: 10, padding: "8px 12px", fontSize: 12.5, color: C.muted, lineHeight: 1.5,
-                }}>
-                  <span style={{ flexShrink: 0 }}>🎙️</span>
-                  <span style={{ flex: 1 }}>
-                    טיפ: אפשר פשוט לדבר. לחצו על סימן המיקרופון במקלדת ודברו במקום להקליד. תשובות מדוברות יוצאות עשירות הרבה יותר.
-                  </span>
-                  <button
-                    onClick={dismissDictationTip}
-                    aria-label="סגירת הטיפ"
-                    style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 15, padding: 2, flexShrink: 0 }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              )}
 
               {!isQ4 && len < MIN_CHARS && (
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 12, color: C.muted }}>
