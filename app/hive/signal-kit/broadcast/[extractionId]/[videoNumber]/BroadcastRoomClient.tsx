@@ -328,7 +328,10 @@ export function BroadcastRoomClient({
               inset: 0,
               width: "100%",
               height: "100%",
-              objectFit: "cover",
+              // portrait source: exact 9:16 crop (WYSIWYG for the crop burn);
+              // landscape source: the full band, centered — WYSIWYG for the
+              // blur-pad burn that such takes get.
+              objectFit: rec.effAspect === "landscape" ? "contain" : "cover",
               transform: "scaleX(-1)", // selfie mirror; the recorded file stays true
             }}
           />
@@ -367,6 +370,7 @@ export function BroadcastRoomClient({
         hook={script.hook}
         body={script.body}
         cta={script.cta}
+        voiceSamplesRef={rec.rmsSamplesRef}
         running={rec.isRecording}
         onRegisterControls={(h) => {
           prompterRef.current = h;
