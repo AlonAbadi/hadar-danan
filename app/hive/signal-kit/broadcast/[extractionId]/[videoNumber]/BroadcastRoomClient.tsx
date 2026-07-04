@@ -6,12 +6,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { getBroadcastCopy, setBroadcastGender, type BroadcastGender } from "@/lib/broadcast-copy";
 import { Teleprompter, type TeleprompterHandle } from "./Teleprompter";
 import { useRecording, type FinishedTake } from "./useRecording";
 import { uploadManager, type TakeUpload } from "./uploadManager";
 import { ProcessingAndApproval } from "./ProcessingAndApproval";
+import { ActionButton, RoomStyles, TopBar } from "./ui";
+
+const KIT_HREF = "/hive/signal-kit";
 
 const MIN_TAKE_MS = 10_000;
 const MAX_TAKE_MS = 180_000;
@@ -222,6 +224,7 @@ export function BroadcastRoomClient({
   if (phase === "prep") {
     return (
       <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+        <RoomStyles />
         <PrepScreen
           script={script}
           videoTitle={videoTitle}
@@ -237,6 +240,7 @@ export function BroadcastRoomClient({
   if (phase === "pipeline" && editId) {
     return (
       <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+        <RoomStyles />
         <ProcessingAndApproval
           editId={editId}
           script={script}
@@ -253,6 +257,8 @@ export function BroadcastRoomClient({
   if (rec.cameraState === "unsupported") {
     return (
       <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+        <RoomStyles />
+        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לערכה" />
         <CenteredCard title={getBroadcastCopy("error.unsupported")} />
       </div>
     );
@@ -261,6 +267,8 @@ export function BroadcastRoomClient({
   if (rec.cameraState === "denied") {
     return (
       <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+        <RoomStyles />
+        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לערכה" />
         <PermissionDenied onRetry={rec.requestCamera} />
       </div>
     );
@@ -269,6 +277,7 @@ export function BroadcastRoomClient({
   if (phase === "review") {
     return (
       <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+        <RoomStyles />
         <TakeGallery
           takes={takes}
           uploads={uploads}
@@ -286,6 +295,7 @@ export function BroadcastRoomClient({
   // phase === "room"
   return (
     <div dir="rtl" style={shell} className="font-assistant">
+      <RoomStyles />
       <video
         ref={rec.attachPreview}
         autoPlay
@@ -300,6 +310,35 @@ export function BroadcastRoomClient({
           transform: "scaleX(-1)", // selfie mirror; the recorded file stays true
         }}
       />
+      {/* always a way out of the camera, even mid-session */}
+      {!rec.isRecording ? (
+        <button
+          type="button"
+          aria-label="יציאה"
+          className="br-btn"
+          onClick={() => {
+            rec.releaseCamera();
+            if (takes.length > 0) setPhase("review");
+            else window.location.href = KIT_HREF;
+          }}
+          style={{
+            position: "absolute",
+            top: "calc(env(safe-area-inset-top) + 10px)",
+            insetInlineEnd: 12,
+            zIndex: 30,
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            border: "1px solid rgba(237,233,225,0.3)",
+            background: "rgba(8,12,20,0.6)",
+            color: "#EDE9E1",
+            fontSize: 16,
+            cursor: "pointer",
+          }}
+        >
+          ✕
+        </button>
+      ) : null}
       <Teleprompter
         hook={script.hook}
         body={script.body}
@@ -365,6 +404,25 @@ export function BroadcastRoomClient({
             <span dir="ltr" style={{ fontVariantNumeric: "tabular-nums", fontSize: 15, color: "#EDE9E1" }}>
               {formatMs(rec.elapsedMs)}
             </span>
+          </div>
+        ) : null}
+        {rec.zoom ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <ZoomPill
+              label="-"
+              onClick={() =>
+                rec.setCameraZoom(Math.max(rec.zoom!.min, +(rec.zoom!.current - 0.25).toFixed(2)))
+              }
+            />
+            <span style={{ color: "#9E9990", fontSize: 12 }} dir="ltr">
+              זום {rec.zoom.current.toFixed(2).replace(/\.?0+$/, "")}x
+            </span>
+            <ZoomPill
+              label="+"
+              onClick={() =>
+                rec.setCameraZoom(Math.min(rec.zoom!.max, +(rec.zoom!.current + 0.25).toFixed(2)))
+              }
+            />
           </div>
         ) : null}
         <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
@@ -433,25 +491,10 @@ function PrepScreen({
   onReady: () => void;
 }) {
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 20px 120px" }}>
-      <Link
-        href="/hive/signal-kit"
-        style={{ color: "#9E9990", fontSize: 14, textDecoration: "none" }}
-      >
-        → חזרה
-      </Link>
-      <p
-        style={{
-          fontSize: 11,
-          letterSpacing: 1.6,
-          color: "#C9964A",
-          marginTop: 24,
-          fontWeight: 600,
-        }}
-      >
-        {getBroadcastCopy("prep.eyebrow")}
-      </p>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "8px 0 4px" }}>
+    <>
+    <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לערכה" />
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "16px 20px 120px" }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "16px 0 4px" }}>
         {videoTitle || getBroadcastCopy("prep.title")}
       </h1>
       <div
@@ -505,27 +548,14 @@ function PrepScreen({
           background: "linear-gradient(to top, #080C14 65%, transparent)",
         }}
       >
-        <button
-          type="button"
-          onClick={onReady}
-          style={{
-            width: "100%",
-            maxWidth: 640,
-            margin: "0 auto",
-            display: "block",
-            height: 52,
-            borderRadius: 12,
-            border: "none",
-            background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-            color: "#2a1d05",
-            fontSize: 17,
-            fontWeight: 700,
-          }}
-        >
-          {getBroadcastCopy("prep.cta")}
-        </button>
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+          <ActionButton variant="primary" onClick={onReady}>
+            {getBroadcastCopy("prep.cta")}
+          </ActionButton>
+        </div>
       </div>
     </div>
+    </>
   );
 }
 
@@ -557,10 +587,8 @@ function TakeGallery({
         ? getBroadcastCopy("director.encourage_after_take1")
         : null;
   return (
-    <div style={{ padding: "24px 0 140px" }}>
-      <h2 style={{ fontSize: 22, fontWeight: 700, color: "#EDE9E1", padding: "0 20px" }}>
-        {getBroadcastCopy("takes.title")}
-      </h2>
+    <div style={{ padding: "0 0 160px" }}>
+      <TopBar title={getBroadcastCopy("takes.title")} backHref={KIT_HREF} backLabel="לערכה" />
       {directorLine ? (
         <p
           style={{
@@ -677,48 +705,22 @@ function TakeGallery({
           gap: 10,
         }}
       >
-        <button
-          type="button"
+        <ActionButton
+          variant="primary"
+          busy={confirming}
+          busyLabel="הטייק נשלח לבמאית"
           disabled={
             !selectedTakeId ||
-            confirming ||
             selected?.outOfRange ||
             uploadOf(selectedTakeId ?? "")?.state !== "done"
           }
           onClick={onConfirm}
-          style={{
-            height: 52,
-            borderRadius: 12,
-            border: "none",
-            background:
-              selectedTakeId && !selected?.outOfRange && uploadOf(selectedTakeId)?.state === "done"
-                ? "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)"
-                : "#2C323E",
-            color:
-              selectedTakeId && !selected?.outOfRange && uploadOf(selectedTakeId)?.state === "done"
-                ? "#2a1d05"
-                : "#9E9990",
-            fontSize: 17,
-            fontWeight: 700,
-          }}
         >
-          {confirming ? "..." : getBroadcastCopy("takes.select_cta")}
-        </button>
-        <button
-          type="button"
-          onClick={onAnother}
-          style={{
-            height: 48,
-            borderRadius: 12,
-            border: "1px solid rgba(232,185,74,0.4)",
-            background: "transparent",
-            color: "#E8B94A",
-            fontSize: 16,
-            fontWeight: 600,
-          }}
-        >
+          {getBroadcastCopy("takes.select_cta")}
+        </ActionButton>
+        <ActionButton variant="secondary" onClick={onAnother}>
           {getBroadcastCopy("takes.another")}
-        </button>
+        </ActionButton>
       </div>
     </div>
   );
@@ -756,23 +758,11 @@ function PermissionDenied({ onRetry }: { onRetry: () => void }) {
           <li>{getBroadcastCopy("permission.step2")}</li>
           <li>{getBroadcastCopy("permission.step3")}</li>
         </ol>
-        <button
-          type="button"
-          onClick={onRetry}
-          style={{
-            marginTop: 18,
-            height: 48,
-            width: "100%",
-            borderRadius: 12,
-            border: "none",
-            background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-            color: "#2a1d05",
-            fontSize: 16,
-            fontWeight: 700,
-          }}
-        >
-          {getBroadcastCopy("permission.retry")}
-        </button>
+        <div style={{ marginTop: 18 }}>
+          <ActionButton variant="primary" onClick={onRetry}>
+            {getBroadcastCopy("permission.retry")}
+          </ActionButton>
+        </div>
       </div>
     </div>
   );
@@ -783,6 +773,29 @@ function CenteredCard({ title }: { title: string }) {
     <div style={{ maxWidth: 480, margin: "0 auto", padding: "120px 24px", textAlign: "center" }}>
       <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.7 }}>{title}</p>
     </div>
+  );
+}
+
+function ZoomPill({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="br-btn"
+      style={{
+        width: 34,
+        height: 28,
+        borderRadius: 14,
+        border: "1px solid rgba(232,185,74,0.35)",
+        background: "rgba(20,24,32,0.8)",
+        color: "#E8B94A",
+        fontSize: 14,
+        fontWeight: 700,
+        cursor: "pointer",
+      }}
+    >
+      {label}
+    </button>
   );
 }
 

@@ -1,20 +1,24 @@
 // חדר השידור — pipeline screens: "הבמאית עורכת" status, caption approval
 // (the human gate: nothing burns without approval), and the output screen.
 //
+// UX contract (QA round 3): every screen has a TopBar with a way back, every
+// long task shows live progress, and no state is ever a dead end — the
+// handoff screen keeps checking and flows into the output on its own.
 // Status transport: polling is the GUARANTEE (5s interval + on visibility),
-// Realtime is the accelerator. A dropped websocket can never strand the UI.
+// Realtime is the accelerator.
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import { getBroadcastCopy } from "@/lib/broadcast-copy";
 import { scriptToLines, type CaptionLine, type CaptionsPayload } from "@/lib/broadcast/captions";
 import type { ScriptShape } from "./BroadcastRoomClient";
+import { ActionButton, TopBar } from "./ui";
 
 const POLL_MS = 5000;
 const HANDOFF_MS = 90_000;
 const TRIM_STEP_MS = 250;
+const KIT_HREF = "/hive/signal-kit";
 
 interface EditSnapshot {
   status: "queued" | "transcribing" | "awaiting_captions" | "burning" | "ready" | "failed";
@@ -53,8 +57,7 @@ function useEditStatus(editId: string) {
     const onVis = () => document.visibilityState === "visible" && refresh();
     document.addEventListener("visibilitychange", onVis);
 
-    // Realtime accelerator — first Realtime use in this codebase; read-only,
-    // own-row, single-row filter (RLS SELECT policy authorizes it).
+    // Realtime accelerator — read-only, own-row, single-row filter.
     const supabase = createBrowserClient();
     let channel: ReturnType<typeof supabase.channel> | null = null;
     supabase.auth.getSession().then(({ data }) => {
@@ -100,97 +103,107 @@ export function ProcessingAndApproval({
 }) {
   const { snap, refresh } = useEditStatus(editId);
 
-  if (!snap) return <StageScreen active="transcribing" />;
-  if (snap.status === "queued" || snap.status === "transcribing") {
-    return <StageScreen active="transcribing" />;
+  if (!snap || snap.status === "queued" || snap.status === "transcribing") {
+    return <StageScreen stage="transcribing" onAnotherTake={onAnotherTake} />;
   }
   if (snap.status === "awaiting_captions") {
-    return (
-      <CaptionApproval
-        editId={editId}
-        snap={snap}
-        script={script}
-        onApproved={refresh}
-      />
-    );
+    return <CaptionApproval editId={editId} snap={snap} script={script} onApproved={refresh} />;
   }
   if (snap.status === "burning") {
-    return <BurningScreen editId={editId} />;
+    return <BurningScreen editId={editId} onAnotherTake={onAnotherTake} />;
   }
   if (snap.status === "ready") {
-    return <OutputScreen editId={editId} snap={snap} onAnotherTake={onAnotherTake} onRefresh={refresh} />;
+    return <OutputScreen editId={editId} snap={snap} onAnotherTake={onAnotherTake} />;
   }
-  // failed
+  // failed — never a dead end: retry path + way home
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", padding: "100px 24px", textAlign: "center" }}>
-      <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8 }}>
-        {getBroadcastCopy("error.processing_failed")}
-      </p>
-      <button type="button" onClick={onAnotherTake} style={secondaryBtn}>
-        {getBroadcastCopy("takes.another")}
-      </button>
-    </div>
+    <>
+      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לערכה" />
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
+        <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8 }}>
+          {getBroadcastCopy("error.processing_failed")}
+        </p>
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 10 }}>
+          <ActionButton variant="primary" onClick={onAnotherTake}>
+            {getBroadcastCopy("takes.another")}
+          </ActionButton>
+        </div>
+      </div>
+    </>
   );
 }
 
-function StageScreen({ active }: { active: "transcribing" | "burning" }) {
+// Live stage board: elapsed timer so a longer edit never looks stuck.
+function StageScreen({
+  stage,
+  onAnotherTake,
+}: {
+  stage: "transcribing" | "burning";
+  onAnotherTake?: () => void;
+}) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(iv);
+  }, []);
   const stages = [
     { key: "transcribing", label: getBroadcastCopy("processing.stage.transcribing") },
     { key: "awaiting_captions", label: getBroadcastCopy("processing.stage.awaiting_captions") },
     { key: "burning", label: getBroadcastCopy("processing.stage.burning") },
   ];
-  const activeIdx = active === "transcribing" ? 0 : 2;
+  const activeIdx = stage === "transcribing" ? 0 : 2;
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px" }}>
-      <h2 style={{ color: "#EDE9E1", fontSize: 22, fontWeight: 700, textAlign: "center" }}>
-        {getBroadcastCopy("processing.title")}
-      </h2>
-      <p style={{ color: "#9E9990", fontSize: 14, textAlign: "center", marginTop: 8 }}>
-        {getBroadcastCopy("director.breathing")}
-      </p>
-      <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 12 }}>
-        {stages.map((s, i) => (
-          <div
-            key={s.key}
-            style={{
-              background: "#141820",
-              borderRadius: 12,
-              padding: "14px 16px",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              opacity: i > activeIdx ? 0.5 : 1,
-            }}
-          >
-            {i < activeIdx ? (
-              <span style={{ color: "#7FD49B", fontWeight: 700 }}>✓</span>
-            ) : i === activeIdx ? (
-              <span
-                style={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: 8,
-                  border: "2px solid #2C323E",
-                  borderTopColor: "#E8B94A",
-                  animation: "spin 0.9s linear infinite",
-                  display: "inline-block",
-                }}
-              />
-            ) : (
-              <span style={{ width: 16, height: 16, borderRadius: 8, border: "2px solid #2C323E" }} />
-            )}
-            <span style={{ color: i === activeIdx ? "#EDE9E1" : "#9E9990", fontSize: 15 }}>
-              {s.label}
-            </span>
+    <>
+      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לערכה" />
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
+        <p style={{ color: "#9E9990", fontSize: 14, textAlign: "center" }}>
+          {getBroadcastCopy("director.breathing")}
+        </p>
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+          {stages.map((s, i) => (
+            <div
+              key={s.key}
+              style={{
+                background: "#141820",
+                borderRadius: 12,
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                opacity: i > activeIdx ? 0.45 : 1,
+              }}
+            >
+              {i < activeIdx ? (
+                <span style={{ color: "#7FD49B", fontWeight: 700 }}>✓</span>
+              ) : i === activeIdx ? (
+                <span className="br-spinner br-spinner-gold" />
+              ) : (
+                <span style={{ width: 16, height: 16, borderRadius: 8, border: "2px solid #2C323E" }} />
+              )}
+              <span style={{ color: i === activeIdx ? "#EDE9E1" : "#9E9990", fontSize: 15, flex: 1 }}>
+                {s.label}
+              </span>
+              {i === activeIdx ? (
+                <span dir="ltr" style={{ color: "#9E9990", fontSize: 12, fontVariantNumeric: "tabular-nums" }}>
+                  {elapsed}s
+                </span>
+              ) : null}
+            </div>
+          ))}
+        </div>
+        {onAnotherTake ? (
+          <div style={{ marginTop: 28 }}>
+            <ActionButton variant="ghost" onClick={onAnotherTake}>
+              {getBroadcastCopy("takes.another")}
+            </ActionButton>
           </div>
-        ))}
+        ) : null}
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </div>
+    </>
   );
 }
 
-function BurningScreen({ editId }: { editId: string }) {
+function BurningScreen({ editId, onAnotherTake }: { editId: string; onAnotherTake: () => void }) {
   const [handoff, setHandoff] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => {
@@ -199,19 +212,42 @@ function BurningScreen({ editId }: { editId: string }) {
     }, HANDOFF_MS);
     return () => clearTimeout(t);
   }, [editId]);
+
   if (handoff) {
+    // Not a dead end: keeps checking (parent polling), says so, and offers
+    // the way back. The moment the burn finishes this flows into the output.
     return (
-      <div style={{ maxWidth: 480, margin: "0 auto", padding: "120px 24px", textAlign: "center" }}>
-        <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, lineHeight: 1.7 }}>
-          {getBroadcastCopy("processing.handoff")}
-        </h2>
-        <p style={{ color: "#9E9990", fontSize: 14, marginTop: 12 }}>
-          {getBroadcastCopy("processing.handoff_note")}
-        </p>
-      </div>
+      <>
+        <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לערכה" />
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: "64px 24px", textAlign: "center" }}>
+          <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, lineHeight: 1.7 }}>
+            {getBroadcastCopy("processing.handoff")}
+          </h2>
+          <p
+            style={{
+              marginTop: 18,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              color: "#9E9990",
+              fontSize: 14,
+            }}
+          >
+            <span className="br-live-dot" /> ממשיכה לבדוק ברקע, המסך יתעדכן לבד
+          </p>
+          <p style={{ color: "#9E9990", fontSize: 13, marginTop: 8 }}>
+            {getBroadcastCopy("processing.handoff_note")}
+          </p>
+          <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 10 }}>
+            <ActionButton variant="secondary" href={KIT_HREF}>
+              חזרה לערכת האות
+            </ActionButton>
+          </div>
+        </div>
+      </>
     );
   }
-  return <StageScreen active="burning" />;
+  return <StageScreen stage="burning" onAnotherTake={onAnotherTake} />;
 }
 
 function CaptionApproval({
@@ -225,7 +261,8 @@ function CaptionApproval({
   script: ScriptShape;
   onApproved: () => void;
 }) {
-  const transcriptFailed = !snap.captions || snap.captions.source === "none" || !snap.captions.lines.length;
+  const transcriptFailed =
+    !snap.captions || snap.captions.source === "none" || !snap.captions.lines.length;
   const [mode, setMode] = useState<"captions" | "none" | "script_sync" | null>(
     transcriptFailed ? null : "captions"
   );
@@ -259,27 +296,31 @@ function CaptionApproval({
   // Fallback chooser when transcription failed.
   if (transcriptFailed && mode === null) {
     return (
-      <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px" }}>
-        <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, textAlign: "center" }}>
-          {getBroadcastCopy("captions.failed.title")}
-        </h2>
-        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-          <button type="button" style={optionCard} onClick={() => setMode("none")}>
-            {getBroadcastCopy("captions.failed.option_none")}
-          </button>
-          <button
-            type="button"
-            style={optionCard}
-            onClick={() => {
-              setLines(scriptToLines([script.hook, script.body, script.cta].filter(Boolean).join("\n")));
-              setSyncIdx(0);
-              setMode("script_sync");
-            }}
-          >
-            {getBroadcastCopy("captions.failed.option_script")}
-          </button>
+      <>
+        <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel="לערכה" />
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
+          <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, textAlign: "center" }}>
+            {getBroadcastCopy("captions.failed.title")}
+          </h2>
+          <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+            <ActionButton variant="secondary" onClick={() => setMode("none")}>
+              {getBroadcastCopy("captions.failed.option_none")}
+            </ActionButton>
+            <ActionButton
+              variant="secondary"
+              onClick={() => {
+                setLines(
+                  scriptToLines([script.hook, script.body, script.cta].filter(Boolean).join("\n"))
+                );
+                setSyncIdx(0);
+                setMode("script_sync");
+              }}
+            >
+              {getBroadcastCopy("captions.failed.option_script")}
+            </ActionButton>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -287,178 +328,186 @@ function CaptionApproval({
   if (mode === "script_sync") {
     const done = syncIdx >= lines.length;
     return (
-      <div style={{ maxWidth: 560, margin: "0 auto", padding: "24px 20px 140px" }}>
-        <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700 }}>
-          {getBroadcastCopy("captions.failed.option_script")}
-        </h2>
-        {snap.take_preview_url ? (
-          <video
-            ref={videoRef}
-            src={snap.take_preview_url}
-            playsInline
-            controls
-            style={portraitPreview("36dvh", 14)}
-          />
-        ) : null}
-        <div style={{ marginTop: 16 }}>
-          {lines.map((l, i) => (
-            <p
-              key={l.id}
-              style={{
-                padding: "8px 12px",
-                borderRadius: 8,
-                background: i === syncIdx ? "#1D2430" : "transparent",
-                color: i < syncIdx ? "#7FD49B" : i === syncIdx ? "#EDE9E1" : "#9E9990",
-                fontSize: 15,
-                lineHeight: 1.6,
-              }}
-            >
-              {l.text}
-            </p>
-          ))}
+      <>
+        <TopBar
+          title={getBroadcastCopy("captions.title")}
+          onBack={() => setMode(null)}
+          backLabel="לבחירה"
+        />
+        <div style={{ maxWidth: 560, margin: "0 auto", padding: "20px 20px 140px" }}>
+          {snap.take_preview_url ? (
+            <video
+              ref={videoRef}
+              src={snap.take_preview_url}
+              playsInline
+              controls
+              style={portraitPreview("34dvh", 0)}
+            />
+          ) : null}
+          <div style={{ marginTop: 16 }}>
+            {lines.map((l, i) => (
+              <p
+                key={l.id}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  background: i === syncIdx ? "#1D2430" : "transparent",
+                  color: i < syncIdx ? "#7FD49B" : i === syncIdx ? "#EDE9E1" : "#9E9990",
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                }}
+              >
+                {l.text}
+              </p>
+            ))}
+          </div>
+          <div style={stickyBar}>
+            {!done ? (
+              <ActionButton
+                variant="primary"
+                onClick={() => {
+                  const t = Math.round((videoRef.current?.currentTime ?? 0) * 1000);
+                  setLines((prev) =>
+                    prev.map((l, i) => {
+                      if (i === syncIdx)
+                        return { ...l, start_ms: i === 0 ? Math.max(0, t - 400) : l.start_ms, end_ms: t };
+                      if (i === syncIdx + 1) return { ...l, start_ms: t };
+                      return l;
+                    })
+                  );
+                  setSyncIdx((i) => i + 1);
+                }}
+              >
+                {getBroadcastCopy("captions.sync.next_line")} ({syncIdx + 1}/{lines.length})
+              </ActionButton>
+            ) : (
+              <ActionButton variant="primary" busy={submitting} onClick={submit}>
+                {getBroadcastCopy("captions.approve_cta")}
+              </ActionButton>
+            )}
+          </div>
         </div>
-        <div style={stickyBar}>
-          {!done ? (
-            <button
-              type="button"
-              style={primaryBtn(true)}
-              onClick={() => {
-                const t = Math.round((videoRef.current?.currentTime ?? 0) * 1000);
-                setLines((prev) =>
-                  prev.map((l, i) => {
-                    if (i === syncIdx) return { ...l, start_ms: i === 0 ? Math.max(0, t - 400) : l.start_ms, end_ms: t };
-                    if (i === syncIdx + 1) return { ...l, start_ms: t };
-                    return l;
-                  })
-                );
-                setSyncIdx((i) => i + 1);
-              }}
-            >
-              {getBroadcastCopy("captions.sync.next_line")} ({syncIdx + 1}/{lines.length})
-            </button>
-          ) : (
-            <button type="button" style={primaryBtn(!submitting)} disabled={submitting} onClick={submit}>
-              {getBroadcastCopy("captions.approve_cta")}
-            </button>
-          )}
-        </div>
-      </div>
+      </>
     );
   }
 
   // mode === "none" confirmation, or the standard caption editor.
   if (mode === "none") {
     return (
-      <div style={{ maxWidth: 480, margin: "0 auto", padding: "100px 24px", textAlign: "center" }}>
-        <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8 }}>
-          {getBroadcastCopy("captions.failed.option_none")}
-        </p>
-        <div style={{ marginTop: 20 }}>
-          <button type="button" style={primaryBtn(!submitting)} disabled={submitting} onClick={submit}>
-            {getBroadcastCopy("captions.approve_cta")}
-          </button>
+      <>
+        <TopBar
+          title={getBroadcastCopy("captions.title")}
+          onBack={() => setMode(null)}
+          backLabel="לבחירה"
+        />
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
+          <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8 }}>
+            {getBroadcastCopy("captions.failed.option_none")}
+          </p>
+          <div style={{ marginTop: 20 }}>
+            <ActionButton variant="primary" busy={submitting} onClick={submit}>
+              {getBroadcastCopy("captions.approve_cta")}
+            </ActionButton>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   const visible = lines.filter((l) => !l.deleted);
   return (
-    <div style={{ maxWidth: 560, margin: "0 auto", padding: "24px 20px 140px" }}>
-      <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700 }}>
-        {getBroadcastCopy("captions.title")}
-      </h2>
-      <p style={{ color: "#9E9990", fontSize: 13, marginTop: 6 }}>{getBroadcastCopy("captions.hint")}</p>
-      {snap.take_preview_url ? (
-        <video
-          src={snap.take_preview_url}
-          playsInline
-          controls
-          style={portraitPreview("36dvh", 14)}
-        />
-      ) : null}
-      {/* trim nudges — two text buttons, never a timeline */}
-      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-        <TrimCard
-          title={getBroadcastCopy("captions.trim_start.title")}
-          valueMs={trimStart}
-          onExpand={() => setTrimStart((v) => Math.max(0, v - TRIM_STEP_MS))}
-          onShrink={() => setTrimStart((v) => v + TRIM_STEP_MS)}
-        />
-        <TrimCard
-          title={getBroadcastCopy("captions.trim_end.title")}
-          valueMs={trimEnd}
-          onExpand={() => setTrimEnd((v) => v + TRIM_STEP_MS)}
-          onShrink={() => setTrimEnd((v) => Math.max(trimStart + 1000, v - TRIM_STEP_MS))}
-        />
-      </div>
-      <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-        {visible.map((l) => (
-          <div
-            key={l.id}
-            style={{
-              background: "#141820",
-              borderRadius: 10,
-              padding: 10,
-              display: "flex",
-              gap: 8,
-              alignItems: "flex-start",
-            }}
-          >
-            <textarea
-              dir="auto"
-              value={l.text}
-              rows={1}
-              onChange={(e) =>
-                setLines((prev) =>
-                  prev.map((x) => (x.id === l.id ? { ...x, text: e.target.value, edited: true } : x))
-                )
-              }
+    <>
+      <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel="לערכה" />
+      <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 140px" }}>
+        <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.hint")}</p>
+        {snap.take_preview_url ? (
+          <video src={snap.take_preview_url} playsInline controls style={portraitPreview("34dvh", 14)} />
+        ) : null}
+        {/* trim nudges — two text buttons, never a timeline */}
+        <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+          <TrimCard
+            title={getBroadcastCopy("captions.trim_start.title")}
+            valueMs={trimStart}
+            onExpand={() => setTrimStart((v) => Math.max(0, v - TRIM_STEP_MS))}
+            onShrink={() => setTrimStart((v) => v + TRIM_STEP_MS)}
+          />
+          <TrimCard
+            title={getBroadcastCopy("captions.trim_end.title")}
+            valueMs={trimEnd}
+            onExpand={() => setTrimEnd((v) => v + TRIM_STEP_MS)}
+            onShrink={() => setTrimEnd((v) => Math.max(trimStart + 1000, v - TRIM_STEP_MS))}
+          />
+        </div>
+        <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+          {visible.map((l) => (
+            <div
+              key={l.id}
               style={{
-                flex: 1,
-                background: "#1D2430",
-                border: "1px solid #2C323E",
-                borderRadius: 8,
-                color: "#EDE9E1",
-                fontSize: 16,
-                lineHeight: 1.6,
-                padding: "8px 10px",
-                resize: "none",
-                fontFamily: "inherit",
-              }}
-            />
-            <button
-              type="button"
-              aria-label={getBroadcastCopy("captions.delete_line")}
-              onClick={() =>
-                setLines((prev) => prev.map((x) => (x.id === l.id ? { ...x, deleted: true } : x)))
-              }
-              style={{
-                width: 40,
-                height: 40,
+                background: "#141820",
                 borderRadius: 10,
-                border: "1px solid #2C323E",
-                background: "transparent",
-                color: "#9E9990",
-                fontSize: 18,
+                padding: 10,
+                display: "flex",
+                gap: 8,
+                alignItems: "flex-start",
               }}
             >
-              ×
-            </button>
-          </div>
-        ))}
+              <textarea
+                dir="auto"
+                value={l.text}
+                rows={1}
+                onChange={(e) =>
+                  setLines((prev) =>
+                    prev.map((x) => (x.id === l.id ? { ...x, text: e.target.value, edited: true } : x))
+                  )
+                }
+                style={{
+                  flex: 1,
+                  background: "#1D2430",
+                  border: "1px solid #2C323E",
+                  borderRadius: 8,
+                  color: "#EDE9E1",
+                  fontSize: 16,
+                  lineHeight: 1.6,
+                  padding: "8px 10px",
+                  resize: "none",
+                  fontFamily: "inherit",
+                }}
+              />
+              <button
+                type="button"
+                aria-label={getBroadcastCopy("captions.delete_line")}
+                className="br-btn"
+                onClick={() =>
+                  setLines((prev) => prev.map((x) => (x.id === l.id ? { ...x, deleted: true } : x)))
+                }
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  border: "1px solid #2C323E",
+                  background: "transparent",
+                  color: "#9E9990",
+                  fontSize: 18,
+                  cursor: "pointer",
+                }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        <div style={stickyBar}>
+          <ActionButton
+            variant="primary"
+            busy={submitting}
+            disabled={visible.length === 0}
+            onClick={submit}
+          >
+            {getBroadcastCopy("captions.approve_cta")}
+          </ActionButton>
+        </div>
       </div>
-      <div style={stickyBar}>
-        <button
-          type="button"
-          style={primaryBtn(!submitting && visible.length > 0)}
-          disabled={submitting || visible.length === 0}
-          onClick={submit}
-        >
-          {getBroadcastCopy("captions.approve_cta")}
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -480,10 +529,10 @@ function TrimCard({
         {(valueMs / 1000).toFixed(2)}s
       </p>
       <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-        <button type="button" onClick={onExpand} style={miniBtn}>
+        <button type="button" onClick={onExpand} className="br-btn" style={miniBtn}>
           {getBroadcastCopy("captions.trim.expand")}
         </button>
-        <button type="button" onClick={onShrink} style={miniBtn}>
+        <button type="button" onClick={onShrink} className="br-btn" style={miniBtn}>
           {getBroadcastCopy("captions.trim.shrink")}
         </button>
       </div>
@@ -491,19 +540,17 @@ function TrimCard({
   );
 }
 
+// Output: the reel, share (the daily-use action), download, next steps.
+// No cover picker — Instagram generates covers automatically (QA round 3).
 function OutputScreen({
   editId,
   snap,
   onAnotherTake,
-  onRefresh,
 }: {
   editId: string;
   snap: EditSnapshot;
   onAnotherTake: () => void;
-  onRefresh: () => void;
 }) {
-  const [frameIdx, setFrameIdx] = useState<number | null>(null);
-  const [coverBusy, setCoverBusy] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
   const approvedRef = useRef(false);
 
@@ -513,8 +560,7 @@ function OutputScreen({
     fetch(`/api/broadcast/edits/${editId}/approve`, { method: "POST" }).catch(() => {});
   }, [editId]);
 
-  // iOS share sheet with the actual video file — Instagram appears as a
-  // target, which is the closest thing to "open the reel in Instagram".
+  // iOS share sheet with the actual video file — Instagram is a direct target.
   const canShareFiles =
     typeof navigator !== "undefined" &&
     typeof navigator.canShare === "function" &&
@@ -530,159 +576,61 @@ function OutputScreen({
       const file = new File([blob], "reel.mp4", { type: "video/mp4" });
       await navigator.share({ files: [file] });
     } catch {
-      /* user cancelled the sheet, or fetch failed — download stays available */
+      /* user closed the sheet or fetch failed — download stays available */
     } finally {
       setShareBusy(false);
     }
   }, [snap.output_url, approveOnce]);
 
-  const pickCover = useCallback(
-    async (i: number) => {
-      setFrameIdx(i);
-      setCoverBusy(true);
-      try {
-        const res = await fetch(`/api/broadcast/edits/${editId}/cover`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ frame_index: i }),
-        });
-        if (res.ok) onRefresh();
-      } finally {
-        setCoverBusy(false);
-      }
-    },
-    [editId, onRefresh]
-  );
-
   return (
-    <div style={{ maxWidth: 560, margin: "0 auto", padding: "24px 20px 160px" }}>
-      {snap.output_url ? (
-        <div style={{ position: "relative" }}>
-          <video
-            src={snap.output_url}
-            playsInline
-            controls
-            style={portraitPreview("52dvh", 0)}
-          />
-          <span
-            style={{
-              position: "absolute",
-              bottom: 12,
-              insetInlineEnd: 12,
-              border: "1px solid #E8B94A",
-              color: "#E8B94A",
-              borderRadius: 999,
-              padding: "3px 10px",
-              fontSize: 12,
-              letterSpacing: 0.5,
-              background: "rgba(8,12,20,0.6)",
-            }}
-          >
-            {getBroadcastCopy("output.stamp")}
-          </span>
-        </div>
-      ) : null}
-      {snap.cover_frames?.length ? (
-        <div style={{ marginTop: 20 }}>
-          <p style={{ color: "#EDE9E1", fontSize: 16, fontWeight: 700 }}>
-            {getBroadcastCopy("output.cover_title")}
-          </p>
-          <p style={{ color: "#9E9990", fontSize: 13, marginTop: 4 }}>
-            {getBroadcastCopy("output.cover_hint")}
-          </p>
-          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-            {snap.cover_frames.map((url, i) => (
-              <button
-                key={url}
-                type="button"
-                onClick={() => pickCover(i)}
-                disabled={coverBusy}
-                style={{
-                  flex: 1,
-                  padding: 0,
-                  borderRadius: 10,
-                  overflow: "hidden",
-                  border: frameIdx === i ? "2px solid #E8B94A" : "2px solid #2C323E",
-                  background: "transparent",
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" style={{ width: "100%", aspectRatio: "9/16", objectFit: "cover", display: "block" }} />
-              </button>
-            ))}
+    <>
+      <TopBar title="הרילס מוכן" backHref={KIT_HREF} backLabel="לערכה" />
+      <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 220px" }}>
+        {snap.output_url ? (
+          <div style={{ position: "relative" }}>
+            <video src={snap.output_url} playsInline controls style={portraitPreview("56dvh", 0)} />
           </div>
+        ) : null}
+        <p
+          style={{
+            marginTop: 18,
+            padding: "10px 14px",
+            borderInlineStart: "3px solid #E8B94A",
+            background: "#141820",
+            borderRadius: 8,
+            color: "#CDD1DA",
+            fontSize: 14,
+            lineHeight: 1.6,
+          }}
+        >
+          {getBroadcastCopy("director.release")}
+        </p>
+        <div style={{ ...stickyBar, flexDirection: "column", gap: 10 }}>
+          {snap.output_url && canShareFiles ? (
+            <ActionButton variant="primary" busy={shareBusy} busyLabel="מכינה את הקובץ" onClick={shareReel}>
+              {getBroadcastCopy("output.share")}
+            </ActionButton>
+          ) : null}
+          {snap.output_download_url ? (
+            <ActionButton
+              variant={canShareFiles ? "secondary" : "primary"}
+              href={snap.output_download_url}
+              onClick={approveOnce}
+            >
+              {getBroadcastCopy("output.download_video")}
+            </ActionButton>
+          ) : null}
+          <ActionButton variant="ghost" onClick={onAnotherTake}>
+            {getBroadcastCopy("takes.another")}
+          </ActionButton>
         </div>
-      ) : null}
-      <p
-        style={{
-          marginTop: 22,
-          padding: "10px 14px",
-          borderInlineStart: "3px solid #E8B94A",
-          background: "#141820",
-          borderRadius: 8,
-          color: "#CDD1DA",
-          fontSize: 14,
-          lineHeight: 1.6,
-        }}
-      >
-        {getBroadcastCopy("director.release")}
-      </p>
-      <div style={{ ...stickyBar, flexDirection: "column", gap: 10 }}>
-        {snap.output_url && canShareFiles ? (
-          <button
-            type="button"
-            disabled={shareBusy}
-            onClick={shareReel}
-            style={primaryBtn(!shareBusy)}
-          >
-            {shareBusy ? "..." : getBroadcastCopy("output.share")}
-          </button>
-        ) : null}
-        {snap.output_download_url ? (
-          <a
-            href={snap.output_download_url}
-            onClick={approveOnce}
-            style={{
-              ...(canShareFiles ? secondaryBtn : primaryBtn(true)),
-              marginTop: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textDecoration: "none",
-            }}
-          >
-            {getBroadcastCopy("output.download_video")}
-          </a>
-        ) : null}
-        {snap.cover_download_url ? (
-          <a
-            href={snap.cover_download_url}
-            style={{ ...secondaryBtn, marginTop: 0, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}
-          >
-            {getBroadcastCopy("output.download_cover")}
-          </a>
-        ) : null}
-        <button
-          type="button"
-          onClick={onAnotherTake}
-          style={{ background: "transparent", border: "none", color: "#9E9990", fontSize: 15 }}
-        >
-          {getBroadcastCopy("takes.another")}
-        </button>
-        <Link
-          href="/hive/signal-kit"
-          style={{ color: "#C9964A", fontSize: 13, textAlign: "center", textDecoration: "none" }}
-        >
-          {getBroadcastCopy("output.review_link")}
-        </Link>
       </div>
-    </div>
+    </>
   );
 }
 
 // Takes and outputs are portrait reels — lock the inline player to a centered
-// 9:16 frame instead of letting Safari letterbox it into a wide box
-// (first iPhone QA finding: "הציג לי לרוחב").
+// 9:16 frame instead of letting Safari letterbox it into a wide box.
 const portraitPreview = (height: string, marginTop: number): React.CSSProperties => ({
   display: "block",
   height,
@@ -705,40 +653,6 @@ const stickyBar: React.CSSProperties = {
   display: "flex",
 };
 
-const primaryBtn = (enabled: boolean): React.CSSProperties => ({
-  flex: 1,
-  height: 52,
-  borderRadius: 12,
-  border: "none",
-  background: enabled ? "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)" : "#2C323E",
-  color: enabled ? "#2a1d05" : "#9E9990",
-  fontSize: 17,
-  fontWeight: 700,
-});
-
-const secondaryBtn: React.CSSProperties = {
-  flex: 1,
-  height: 48,
-  borderRadius: 12,
-  border: "1px solid rgba(232,185,74,0.4)",
-  background: "transparent",
-  color: "#E8B94A",
-  fontSize: 16,
-  fontWeight: 600,
-  marginTop: 16,
-};
-
-const optionCard: React.CSSProperties = {
-  background: "#141820",
-  border: "1px solid rgba(232,185,74,0.2)",
-  borderRadius: 12,
-  padding: "18px 16px",
-  color: "#EDE9E1",
-  fontSize: 16,
-  fontWeight: 600,
-  textAlign: "center",
-};
-
 const miniBtn: React.CSSProperties = {
   border: "1px solid rgba(232,185,74,0.35)",
   background: "transparent",
@@ -746,4 +660,5 @@ const miniBtn: React.CSSProperties = {
   borderRadius: 8,
   padding: "6px 8px",
   fontSize: 12,
+  cursor: "pointer",
 };

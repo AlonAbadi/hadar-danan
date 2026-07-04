@@ -34,9 +34,17 @@ export async function GET() {
     const enriched = await Promise.all(
       items.map(async (item: { id: string; created_at: string }) => {
         const edit = edits?.find((e: any) => e.review_item_id === item.id);
+        // Thumbnail: the branded cover if one was made, else the first burn
+        // frame (always generated alongside the output).
+        let thumbPath: string | null = edit?.cover_path ?? null;
+        if (!thumbPath && edit?.output_path) {
+          const prefix = edit.output_path.split("/")[0];
+          const editId = edit.output_path.split("/").pop()?.replace(".mp4", "");
+          thumbPath = `${prefix}/covers/${editId}-frame0.jpg`;
+        }
         let coverUrl: string | null = null;
-        if (edit?.cover_path) {
-          const { data } = await db.storage.from(BUCKET).createSignedUrl(edit.cover_path, 3600);
+        if (thumbPath) {
+          const { data } = await db.storage.from(BUCKET).createSignedUrl(thumbPath, 3600);
           coverUrl = data?.signedUrl ?? null;
         }
         return {

@@ -28,10 +28,17 @@ export interface FinishedTake {
 
 export type CameraState = "idle" | "requesting" | "ready" | "denied" | "unsupported";
 
+export interface ZoomInfo {
+  min: number;
+  max: number;
+  current: number;
+}
+
 export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [isRecording, setIsRecording] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [zoom, setZoom] = useState<ZoomInfo | null>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -68,11 +75,28 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     }
     setCameraState("requesting");
     try {
+      // 4:3 portrait = the front sensor's NATIVE aspect. Requesting 9:16
+      // makes iOS pre-crop the sensor (the "zoomed-in" QA complaint); the
+      // burn normalizes to 9:16 server-side anyway.
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1920 }, frameRate: { ideal: 30 } },
+        video: { facingMode: "user", width: { ideal: 1440 }, height: { ideal: 1920 }, frameRate: { ideal: 30 } },
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
       streamRef.current = stream;
+
+      // Widest zoom the platform allows (iOS 17+ exposes a zoom capability),
+      // and surface the range so the UI can offer on-screen control.
+      const track = stream.getVideoTracks()[0];
+      try {
+        const caps = track.getCapabilities?.() as
+          | (MediaTrackCapabilities & { zoom?: { min: number; max: number } })
+          | undefined;
+        if (caps?.zoom && caps.zoom.max > caps.zoom.min) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await track.applyConstraints({ advanced: [{ zoom: caps.zoom.min } as any] });
+          setZoom({ min: caps.zoom.min, max: caps.zoom.max, current: caps.zoom.min });
+        }
+      } catch { /* zoom control is a nicety */ }
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play().catch(() => {});
@@ -211,10 +235,22 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     wakeLockRef.current?.release().catch(() => {});
   }, []);
 
+  const setCameraZoom = useCallback((value: number) => {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    track.applyConstraints({ advanced: [{ zoom: value } as any] }).then(
+      () => setZoom((z) => (z ? { ...z, current: value } : z)),
+      () => {}
+    );
+  }, []);
+
   return {
     cameraState,
     isRecording,
     elapsedMs,
+    zoom,
+    setCameraZoom,
     mimeSupported: mimeType !== null,
     attachPreview,
     requestCamera,
