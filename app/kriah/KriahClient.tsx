@@ -264,6 +264,14 @@ export function KriahClient({ previewKey, isTest }: Props) {
   const [extractionId, setExtractionId] = useState<string | null>(null);
   const [ending, setEnding] = useState<"concierge" | "hive" | "pre_revenue" | "crisis_soft">("hive");
   const [occupation, setOccupation] = useState("");
+  const [dictationTipDismissed, setDictationTipDismissed] = useState(false);
+  useEffect(() => {
+    try { if (sessionStorage.getItem("kriah_dict_tip") === "1") setDictationTipDismissed(true); } catch {}
+  }, []);
+  const dismissDictationTip = () => {
+    setDictationTipDismissed(true);
+    try { sessionStorage.setItem("kriah_dict_tip", "1"); } catch {}
+  };
   const [signal, setSignal]       = useState<SignalOutput | null>(null);
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
 
@@ -781,6 +789,26 @@ export function KriahClient({ previewKey, isTest }: Props) {
                 rows={6}
                 style={textareaStyle(150)}
               />
+
+              {!dictationTipDismissed && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8, marginTop: 8,
+                  background: "rgba(232,185,74,0.06)", border: `1px solid rgba(232,185,74,0.2)`,
+                  borderRadius: 10, padding: "8px 12px", fontSize: 12.5, color: C.muted, lineHeight: 1.5,
+                }}>
+                  <span style={{ flexShrink: 0 }}>🎙️</span>
+                  <span style={{ flex: 1 }}>
+                    טיפ: אפשר פשוט לדבר. לחצו על סימן המיקרופון במקלדת ודברו במקום להקליד. תשובות מדוברות יוצאות עשירות הרבה יותר.
+                  </span>
+                  <button
+                    onClick={dismissDictationTip}
+                    aria-label="סגירת הטיפ"
+                    style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 15, padding: 2, flexShrink: 0 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
 
               {!isQ4 && len < MIN_CHARS && (
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 12, color: C.muted }}>
