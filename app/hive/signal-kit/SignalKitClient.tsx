@@ -78,7 +78,7 @@ export function SignalKitClient({ firstName, occupation, tier: _tier, extraction
 }
 
 function SignalKitView({ firstName, occupation, extraction }: { firstName: string; occupation: string | null; extraction: Extraction }) {
-  const [tab, setTab] = useState<"challenge" | "visual" | "shoot_day" | "content">("challenge");
+  const [tab, setTab] = useState<"signal" | "challenge" | "visual" | "shoot_day" | "content">("signal");
   // NOTE: the content-kit fetch (text/strategy tabs) was removed with those
   // tabs — it triggered a paid Claude generation on every first page load.
   // Restore it together with the tabs if they ever come back.
@@ -106,7 +106,7 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, borderBottom: `1px solid ${C.line}`, marginBottom: 28, overflowX: "auto" }}>
-          {(["challenge", "visual", "shoot_day", "content"] as const).map((t) => (
+          {(["signal", "challenge", "visual", "shoot_day", "content"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -128,7 +128,8 @@ function SignalKitView({ firstName, occupation, extraction }: { firstName: strin
         </div>
 
         {/* Tab body */}
-        {tab === "challenge" && <ChallengeTab extraction={extraction} />}
+        {tab === "signal"    && <SignalTab extraction={extraction} />}
+        {tab === "challenge" && <ChallengeTab />}
         {tab === "visual"    && <VisualTab extractionId={extraction.id} />}
         {tab === "shoot_day" && <ShootDayTab extractionId={extraction.id} />}
         {tab === "content"   && <ContentTab onGoFilm={() => setTab("shoot_day")} />}
@@ -175,22 +176,26 @@ function VimeoEmbed({ id, portrait }: { id: string; portrait: boolean }) {
   );
 }
 
-function ChallengeTab({ extraction }: { extraction: Extraction }) {
+// The signal dashboard on its own — the kit's anchor tab.
+function SignalTab({ extraction }: { extraction: Extraction }) {
   const s = extraction.signal;
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.lineGold}`, borderRadius: 16, padding: "20px 22px" }}>
+      <div style={{ fontSize: 12, letterSpacing: 1.4, color: C.goldMid, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
+        לוח האות שלך
+      </div>
+      <div style={{ fontSize: 17, fontWeight: 700, color: C.fg, lineHeight: 1.55 }}>{s.signal}</div>
+      <DashRow label="הכאב שהוא פותר" value={s.pain_source} />
+      <DashRow label="ההבטחה" value={s.signal_promise} />
+      <DashRow label="הקהל שלך" value={s.people} />
+    </div>
+  );
+}
+
+function ChallengeTab() {
   const days = CHALLENGE_DAYS.filter((d) => d.day >= 0 && d.day <= 7);
   return (
     <div>
-      {/* Signal Dashboard — the anchor */}
-      <div style={{ background: C.card, border: `1px solid ${C.lineGold}`, borderRadius: 16, padding: "20px 22px", marginBottom: 22 }}>
-        <div style={{ fontSize: 12, letterSpacing: 1.4, color: C.goldMid, fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
-          לוח האות שלך
-        </div>
-        <div style={{ fontSize: 17, fontWeight: 700, color: C.fg, lineHeight: 1.55 }}>{s.signal}</div>
-        <DashRow label="הכאב שהוא פותר" value={s.pain_source} />
-        <DashRow label="ההבטחה" value={s.signal_promise} />
-        <DashRow label="הקהל שלך" value={s.people} />
-      </div>
-
       <p style={{ fontSize: 15, color: C.muted, lineHeight: 1.7, textAlign: "center", marginBottom: 24, maxWidth: 560, marginInline: "auto" }}>
         גילית את האות שלך. עכשיו 7 ימים להוציא אותו לעולם — כל יום, מתוך האות שלך.
       </p>
@@ -220,7 +225,8 @@ function ChallengeTab({ extraction }: { extraction: Extraction }) {
 // and the produced content. The text/strategy/monthly/review tabs still exist
 // as components + APIs — just unlisted, so restoring one is a one-line change.
 const TAB_LABELS: Record<string, string> = {
-  challenge: "האות",
+  signal:    "האות",
+  challenge: "אתגר",
   visual:    "ויזואל",
   shoot_day: "צילום",
   content:   "התכנים שלי",
