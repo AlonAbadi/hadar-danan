@@ -11,6 +11,12 @@ import { getOrCreateDailyReport, ilDate, type DailyReport } from "@/lib/kriah-re
 
 export const dynamic = "force-dynamic";
 
+// Report epoch (Alon, 2026-07-05): all telemetry collected before this moment
+// was asymmetric (the entry beacon shipped days after the other steps) and was
+// wiped. The report counts ONLY from here — leads/extractions before it exist
+// as business data but are excluded from the numbers.
+const REPORT_EPOCH = "2026-07-05T21:45:00Z";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,9 +57,10 @@ const ENDING_LABELS: Record<string, { label: string; color: string }> = {
 export default async function AdminKriahPage() {
   const supabase = createServerClient();
   const now = Date.now();
-  const dayAgo   = new Date(now - 24 * 60 * 60 * 1000).toISOString();
-  const weekAgo  = new Date(now - 7  * 24 * 60 * 60 * 1000).toISOString();
-  const twoWeeks = new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const clamp = (iso: string) => (iso > REPORT_EPOCH ? iso : REPORT_EPOCH);
+  const dayAgo   = clamp(new Date(now - 24 * 60 * 60 * 1000).toISOString());
+  const weekAgo  = clamp(new Date(now - 7  * 24 * 60 * 60 * 1000).toISOString());
+  const twoWeeks = clamp(new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString());
 
   const reportPromise = getOrCreateDailyReport(supabase);
   const [extRes, stepRes, offerJobsRes, welcomeLogsRes, testCountRes] = await Promise.all([

@@ -6,6 +6,9 @@
  * trailing week). Idempotent via the report_date unique constraint.
  */
 import Anthropic from "@anthropic-ai/sdk";
+
+// Must match app/admin/kriah — counting starts at the reset moment.
+const REPORT_EPOCH = "2026-07-05T21:45:00Z";
 import type { createServerClient } from "@/lib/supabase/server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,7 +50,8 @@ const STEP_KEYS: { label: string; keys: string[] }[] = [
 
 async function computeMetrics(supabase: ReturnType<typeof createServerClient>) {
   const now = new Date();
-  const since8d = new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString();
+  const raw8d = new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString();
+  const since8d = raw8d > REPORT_EPOCH ? raw8d : REPORT_EPOCH;
 
   const [extRes, stepRes] = await Promise.all([
     safeFrom(supabase, "signal_extractions")
