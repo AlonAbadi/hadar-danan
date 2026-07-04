@@ -13,8 +13,16 @@ const SPIKE_KEY = "br-spike-9c41e7a2f08d";
 const RLM = "‏";
 
 function resolveFfmpeg(): string {
+  // require("ffmpeg-static") returns a path anchored to the bundler's fake
+  // __dirname ("/ROOT/..."); the traced file actually lives under cwd.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const bundled = require("ffmpeg-static") as string;
+  const fromRequire = require("ffmpeg-static") as string;
+  const candidates = [
+    path.join(process.cwd(), "node_modules", "ffmpeg-static", "ffmpeg"),
+    fromRequire,
+  ];
+  const bundled = candidates.find((p) => existsSync(p));
+  if (!bundled) throw new Error(`ffmpeg binary not found; tried ${candidates.join(", ")}`);
   try {
     execFileSync(bundled, ["-version"], { stdio: "ignore" });
     return bundled;

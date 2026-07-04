@@ -11,8 +11,16 @@ let resolvedBinary: string | null = null;
 
 export function ffmpegPath(): string {
   if (resolvedBinary) return resolvedBinary;
+  // require("ffmpeg-static") returns a path anchored to the bundler's fake
+  // __dirname ("/ROOT/..."); the traced file actually lives under cwd.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const bundled = require("ffmpeg-static") as string;
+  const fromRequire = require("ffmpeg-static") as string;
+  const candidates = [
+    path.join(process.cwd(), "node_modules", "ffmpeg-static", "ffmpeg"),
+    fromRequire,
+  ];
+  const bundled = candidates.find((p) => existsSync(p));
+  if (!bundled) throw new Error(`ffmpeg binary not found; tried ${candidates.join(", ")}`);
   try {
     // Cheap exec-bit probe; throws EACCES when tracing stripped permissions.
     require("node:child_process").execFileSync(bundled, ["-version"], { stdio: "ignore" });
