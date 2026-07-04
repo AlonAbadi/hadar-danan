@@ -7,6 +7,7 @@
  * (leads, endings, hot leads), and whether the mail engine is moving.
  */
 import { createServerClient } from "@/lib/supabase/server";
+import { getOrCreateDailyReport, ilDate, type DailyReport } from "@/lib/kriah-report";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,7 @@ export default async function AdminKriahPage() {
   const weekAgo  = new Date(now - 7  * 24 * 60 * 60 * 1000).toISOString();
   const twoWeeks = new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString();
 
+  const reportPromise = getOrCreateDailyReport(supabase);
   const [extRes, stepRes, offerJobsRes, welcomeLogsRes, testCountRes] = await Promise.all([
     safeFrom(supabase, "signal_extractions")
       .select("id, user_id, routed_ending, evidence_score, key1_declared, truth_cell, source_utm, phone_given, generated_at")
@@ -132,6 +134,20 @@ export default async function AdminKriahPage() {
   const rows = STEP_ROWS.map((r) => ({ label: r.label, n: stepCount(r.keys) }));
   const maxN = Math.max(...rows.map((r) => r.n), 1);
 
+  const { today: todayReport, history: reportHistory } = await reportPromise;
+
+  // 7-day daily trend (entries / completions / hot) — Israel dates
+  const trendDays: { date: string; entries: number; completions: number; hot: number }[] = [];
+  for (let i = 0; i <= 6; i++) {
+    const d = ilDate(new Date(now - i * 24 * 60 * 60 * 1000));
+    trendDays.push({
+      date: d,
+      entries:     steps.filter((e) => e.metadata?.step === "s1" && ilDate(new Date(e.created_at)) === d).length,
+      completions: exts.filter((e) => ilDate(new Date(e.generated_at)) === d).length,
+      hot:         exts.filter((e) => e.routed_ending === "concierge" && ilDate(new Date(e.generated_at)) === d).length,
+    });
+  }
+
   const Stat = ({ label, v1, v7, v14 }: { label: string; v1: string | number; v7: string | number; v14: string | number }) => (
     <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "16px 16px" }}>
       <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 10 }}>{label}</div>
@@ -159,6 +175,47 @@ export default async function AdminKriahPage() {
         <p style={{ color: C.muted, fontSize: 14, marginBottom: 26 }}>
           תנועה אמיתית בלבד. חלון: 14 הימים האחרונים.
         </p>
+
+        {/* morning conclusions — generated once a day, dated */}
+        <div style={{
+          background: "rgba(232,185,74,0.05)", border: `1.5px solid rgba(232,185,74,0.35)`,
+          borderRadius: 16, padding: "22px 24px", marginBottom: 26,
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 800, color: C.gold, margin: 0 }}>☕ מסקנות הבוקר</h2>
+            <span style={{ fontSize: 12.5, color: C.muted }}>
+              {todayReport
+                ? `דוח ליום ${new Date(String(todayReport.report_date) + "T12:00:00").toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit", year: "numeric" })} (מנתח את אתמול)`
+                : "הדוח של היום ייווצר בפתיחה הראשונה אחרי 06:00"}
+            </span>
+          </div>
+          {todayReport ? (
+            <div style={{ fontSize: 14.5, lineHeight: 1.85, whiteSpace: "pre-wrap", color: C.fg }}>
+              {todayReport.conclusions}
+            </div>
+          ) : (
+            <p style={{ color: C.muted, fontSize: 13.5, margin: 0 }}>
+              {reportHistory.length > 0 ? "בינתיים, הדוח האחרון בהיסטוריה למטה." : "אין דוחות עדיין."}
+            </p>
+          )}
+          {reportHistory.length > 0 && (
+            <details style={{ marginTop: 14 }}>
+              <summary style={{ cursor: "pointer", fontSize: 13, color: C.goldMid }}>
+                דוחות קודמים ({reportHistory.length})
+              </summary>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 12 }}>
+                {reportHistory.map((r: DailyReport) => (
+                  <div key={String(r.report_date)} style={{ borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
+                    <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 6 }}>
+                      {new Date(String(r.report_date) + "T12:00:00").toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit", year: "numeric" })}
+                    </div>
+                    <div style={{ fontSize: 13.5, lineHeight: 1.8, whiteSpace: "pre-wrap", color: C.muted }}>{r.conclusions}</div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
 
         {/* headline stats in time windows */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginBottom: 14 }}>
@@ -214,6 +271,36 @@ export default async function AdminKriahPage() {
               })}
             </div>
           )}
+        </div>
+
+        {/* daily trend */}
+        <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20, marginBottom: 26 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: C.goldMid, margin: "0 0 14px" }}>יום-יום · 7 ימים</h2>
+          <table style={{ width: "100%", fontSize: 13.5, borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ color: C.muted, textAlign: "right" }}>
+                <th style={{ padding: "6px 4px" }}>יום</th>
+                <th style={{ padding: "6px 4px" }}>כניסות</th>
+                <th style={{ padding: "6px 4px" }}>אבחונים</th>
+                <th style={{ padding: "6px 4px" }}>השלמה</th>
+                <th style={{ padding: "6px 4px" }}>רותחים</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trendDays.map((d, i) => (
+                <tr key={d.date} style={{ borderTop: `1px solid ${C.line}`, opacity: i === 0 ? 1 : 0.85 }}>
+                  <td style={{ padding: "8px 4px", fontWeight: i === 0 ? 700 : 400 }}>
+                    {new Date(d.date + "T12:00:00").toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem", weekday: "short", day: "2-digit", month: "2-digit" })}
+                    {i === 0 ? " (היום)" : ""}
+                  </td>
+                  <td style={{ padding: "8px 4px" }}>{d.entries}</td>
+                  <td style={{ padding: "8px 4px" }}>{d.completions}</td>
+                  <td style={{ padding: "8px 4px", color: C.green }}>{d.entries > 0 ? `${Math.round((d.completions / d.entries) * 100)}%` : "—"}</td>
+                  <td style={{ padding: "8px 4px", color: d.hot > 0 ? C.red : C.muted }}>{d.hot}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 14 }}>
