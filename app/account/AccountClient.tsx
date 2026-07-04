@@ -127,7 +127,7 @@ const RECOMMENDED = [
   { label: "אתגר 7 ימים - ₪197",    href: "/challenge", product: "challenge_197"  },
   { label: "סדנה יום אחד - ₪1,080", href: "/workshop",  product: "workshop_1080"  },
   { label: "קורס דיגיטלי - ₪1,800", href: "/course",    product: "course_1800"    },
-  { label: "הכוורת - ₪97 לחודש",    href: "/hive",      product: null             },
+  { label: "כוורת האות - ₪590",      href: "/signal-hive", product: null            },
 ];
 
 // ── Styles ────────────────────────────────────────────────────
@@ -1158,7 +1158,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
             עדיין לא רכשת כלום
           </p>
           <p style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.6, maxWidth: 280, margin: "0 0 24px" }}>
-            כשתרכשי מסלול - אתגר, סדנה, קורס או הכוורת - הוא יופיע כאן ותקבלי גישה לתוכן.
+            כשתרכשי מסלול - אתגר, סדנה, קורס או כוורת האות - הוא יופיע כאן ותקבלי גישה לתוכן.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}>
             <Link

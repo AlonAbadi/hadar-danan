@@ -2614,7 +2614,7 @@ function HiveInvite() {
         "גישה לספריית בינג'",
       ]} />
 
-      <InviteCTA href="/hive" label="להצטרף לכוורת ←" />
+      <InviteCTA href="/signal-hive" label="להצטרף לכוורת האות ←" />
     </div>
   );
 }

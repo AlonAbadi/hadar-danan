@@ -17,5 +17,5 @@ export const GROUP3 = [
   { label: "שותפות",           price: "₪10k+",   href: "/partnership" },
 ];
 
-export const GROUP4 = [{ label: "הכוורת 🐝",        href: "/hive" }];
+export const GROUP4 = [{ label: "כוורת האות 🐝",     href: "/signal-hive" }];
 export const GROUP5 = [{ label: "האזור האישי שלי", href: "/my" }];

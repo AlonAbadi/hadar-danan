@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Old monthly Hive retired (2026-07-04, Alon) — only כוורת האות exists.
+      // Exact path only: /hive/members, /hive/signal-kit, /hive/terms stay live.
+      { source: "/hive", destination: "/signal-hive", permanent: true },
       // Quiz → kriah cutover (2026-07-04, Alon's approval). 308 preserves the
       // full query string, so live Meta ads keep their UTM attribution. The
       // quiz page code stays in the repo as the rollback path.
