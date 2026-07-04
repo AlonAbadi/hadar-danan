@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Broadcast Room (חדר השידור): the /api/broadcast/* functions spawn a static
+  // ffmpeg binary and burn ASS captions with the vendored Assistant font.
+  // File tracing can't see execFile targets, so both must be included by hand.
+  outputFileTracingIncludes: {
+    "/api/broadcast/**": [
+      "./node_modules/ffmpeg-static/ffmpeg",
+      "./assets/broadcast/fonts/**",
+    ],
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [390, 640, 828, 1080, 1200, 1920],
