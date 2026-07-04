@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { getBroadcastCopy } from "@/lib/broadcast-copy";
+import { getBroadcastCopy, setBroadcastGender, type BroadcastGender } from "@/lib/broadcast-copy";
 import { Teleprompter, type TeleprompterHandle } from "./Teleprompter";
 import { useRecording, type FinishedTake } from "./useRecording";
 import { uploadManager, type TakeUpload } from "./uploadManager";
@@ -39,15 +39,20 @@ export function BroadcastRoomClient({
   videoTitle,
   script,
   firstName,
+  gender,
 }: {
   extractionId: string;
   videoNumber: number;
   videoTitle: string;
   script: ScriptShape;
   firstName: string;
+  gender: BroadcastGender;
   supabaseUrl: string;
   supabaseAnonKey: string;
 }) {
+  // Set before any child renders so every getBroadcastCopy call resolves
+  // against the member's stored gender (users.gender, migration 051).
+  setBroadcastGender(gender);
   const [phase, setPhase] = useState<Phase>("prep");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [takes, setTakes] = useState<LocalTake[]>([]);

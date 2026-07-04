@@ -55,7 +55,7 @@ export default async function BroadcastRoomPage({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: userData } = await (db as any)
     .from("users")
-    .select("id, name, hive_status")
+    .select("id, name, hive_status, gender")
     .eq("auth_id", authUser.id)
     .maybeSingle();
 
@@ -96,6 +96,7 @@ export default async function BroadcastRoomPage({
       videoTitle={String(video.title ?? "")}
       script={script}
       firstName={userData.name?.split(" ")[0] ?? ""}
+      gender={userData.gender === "m" ? "m" : userData.gender === "f" ? "f" : null}
       supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
       supabaseAnonKey={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}
     />

@@ -1,13 +1,21 @@
 // חדר השידור — all user-facing microcopy in one place.
 //
-// Components must import via getBroadcastCopy(key) and never hold literals,
-// so Hadar's final wording lands here in one batch (and a DB override can
-// slot in behind the accessor later with zero component changes).
+// Components must import via getBroadcastCopy(key, gender) and never hold
+// literals, so Hadar's final wording lands here in one batch (and a DB
+// override can slot in behind the accessor later with zero component changes).
+//
+// Gender: values are either a plain string (neutral) or { f, m } — resolved
+// against users.gender (migration 051). No stored gender falls back to
+// feminine (the product's home audience).
 //
 // Vocabulary rules (spec): mandatory terms — "לצלם עכשיו", "הבמאית עורכת",
 // "טייק נוסף", "הורדת הווידאו", "הורדת הקאבר", "מצולם, לא מיוצר",
 // "הבמאית מסיימת". Forbidden — פרויקט, קליפ, אדיטור, רנדר, ייצוא.
 // No emoji, no em/en dashes. Lines marked [PLACEHOLDER] await Hadar's wording.
+
+export type BroadcastGender = "m" | "f" | null | undefined;
+
+type CopyValue = string | { f: string; m: string };
 
 export const BROADCAST_COPY = {
   // Entry button (shoot-day tab)
@@ -17,27 +25,35 @@ export const BROADCAST_COPY = {
   "prep.eyebrow": "חדר השידור",
   "prep.title": "התסריט שלך, פעם אחת ברצף",
   "prep.tip.eyeline": "מצלמה בגובה העיניים, פנים אל האור",
-  "prep.tip.one_friend": "את מדברת לחברה אחת, לא לקהל",
+  "prep.tip.one_friend": {
+    f: "את מדברת לחברה אחת, לא לקהל",
+    m: "אתה מדבר לחבר אחד, לא לקהל",
+  },
   "prep.tip.no_fixing": "לא מתקנים טייק באמצע. עוצרים ומתחילים טייק נוסף",
-  "prep.cta": "אני מוכנה",
+  "prep.cta": { f: "אני מוכנה", m: "אני מוכן" },
 
   // Screen 3 — broadcast room
   "room.pause": "השהיה",
   "room.restart": "מהתחלה",
   "room.speed": "מהירות",
   "room.size": "גודל",
-  "room.rotate_back": "סובבי חזרה למאונך",
+  "room.rotate_back": { f: "סובבי חזרה למאונך", m: "סובב חזרה למאונך" },
 
   // Director lines (הבמאית) — [PLACEHOLDER] items await Hadar's final wording
   "director.encourage_after_take1": "טייק שלישי הוא כמעט תמיד הטוב ביותר",
-  "director.perfectionism_after_take5":
-    "מהטייק החמישי את לא נהיית יותר אמיתית, רק יותר מבוקרת. בחרי אחד מהשלושה האחרונים",
-  "director.breathing": "הטייק אצלה. את יכולה לנשום",
+  "director.perfectionism_after_take5": {
+    f: "מהטייק החמישי את לא נהיית יותר אמיתית, רק יותר מבוקרת. בחרי אחד מהשלושה האחרונים",
+    m: "מהטייק החמישי אתה לא נהיה יותר אמיתי, רק יותר מבוקר. בחר אחד מהשלושה האחרונים",
+  },
+  "director.breathing": {
+    f: "הטייק אצלה. את יכולה לנשום",
+    m: "הטייק אצלה. אתה יכול לנשום",
+  },
   "director.release": "זה מצולם, זה אמיתי, וזה שלך", // [PLACEHOLDER]
 
   // Screen 4 — take selection
-  "takes.title": "בחרי טייק",
-  "takes.select_cta": "בחרי את הטייק הזה",
+  "takes.title": { f: "בחרי טייק", m: "בחר טייק" },
+  "takes.select_cta": { f: "בחרי את הטייק הזה", m: "בחר את הטייק הזה" },
   "takes.another": "טייק נוסף",
   "takes.uploading": "הטייק עולה",
   "takes.interrupted": "הצילום נעצר",
@@ -55,8 +71,11 @@ export const BROADCAST_COPY = {
 
   // Screen 5 — caption approval
   "captions.title": "אישור כתוביות",
-  "captions.hint": "תקני מילים שהתמלול פספס. שום טקסט לא נצרב בלי האישור שלך",
-  "captions.approve_cta": "אשרי וסיימי",
+  "captions.hint": {
+    f: "תקני מילים שהתמלול פספס. שום טקסט לא נצרב בלי האישור שלך",
+    m: "תקן מילים שהתמלול פספס. שום טקסט לא נצרב בלי האישור שלך",
+  },
+  "captions.approve_cta": { f: "אשרי וסיימי", m: "אשר וסיים" },
   "captions.delete_line": "מחיקת שורה",
   "captions.trim_start.title": "תחילת הטייק",
   "captions.trim_end.title": "סוף הטייק",
@@ -69,10 +88,15 @@ export const BROADCAST_COPY = {
 
   // Screen 6 — output
   "output.stamp": "מצולם, לא מיוצר",
+  "output.share": "שיתוף הרילס",
+  "output.share_hint": "נפתח מסך השיתוף, שם בוחרים אינסטגרם",
   "output.download_video": "הורדת הווידאו",
   "output.download_cover": "הורדת הקאבר",
   "output.cover_title": "הקאבר שלך",
-  "output.cover_hint": "ההוק נצרב על הפריים שתבחרי",
+  "output.cover_hint": {
+    f: "ההוק נצרב על הפריים שתבחרי",
+    m: "ההוק נצרב על הפריים שתבחר",
+  },
   "output.review_link": "הרילס שלך מחכה גם בביקורת פוסטים",
 
   // Review tab pending items
@@ -89,12 +113,25 @@ export const BROADCAST_COPY = {
   "permission.retry": "ניסיתי שוב",
   "error.upload_retry": "הטייק שמור אצלך. מנסות להעלות שוב",
   "error.processing_failed": "משהו לא הסתדר בעריכה. הטייק שלך שמור, אפשר לנסות שוב",
-  "error.unsupported": "הדפדפן הזה עוד לא יודע להקליט וידאו. עדכני את iOS או פתחי בספארי",
-  "error.open_in_safari": "כדי לצלם, פתחי את הקישור בספארי",
-} as const;
+  "error.unsupported": {
+    f: "הדפדפן הזה עוד לא יודע להקליט וידאו. עדכני את iOS או פתחי בספארי",
+    m: "הדפדפן הזה עוד לא יודע להקליט וידאו. עדכן את iOS או פתח בספארי",
+  },
+  "error.open_in_safari": { f: "כדי לצלם, פתחי את הקישור בספארי", m: "כדי לצלם, פתח את הקישור בספארי" },
+} as const satisfies Record<string, CopyValue>;
 
 export type BroadcastCopyKey = keyof typeof BROADCAST_COPY;
 
-export function getBroadcastCopy(key: BroadcastCopyKey): string {
-  return BROADCAST_COPY[key];
+// Session gender, set once by the room client on mount. One user per browser
+// session, so a module singleton is safe; explicit gender args still win.
+let sessionGender: BroadcastGender = null;
+
+export function setBroadcastGender(gender: BroadcastGender): void {
+  sessionGender = gender;
+}
+
+export function getBroadcastCopy(key: BroadcastCopyKey, gender?: BroadcastGender): string {
+  const value: CopyValue = BROADCAST_COPY[key];
+  if (typeof value === "string") return value;
+  return (gender ?? sessionGender) === "m" ? value.m : value.f;
 }

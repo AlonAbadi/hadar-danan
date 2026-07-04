@@ -21,16 +21,24 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const { data: edit } = await db
       .from("broadcast_edits")
       .select(
-        "id, status, error_detail, captions, trim_start_ms, trim_end_ms, output_path, cover_path, take_id"
+        "id, status, error_detail, captions, trim_start_ms, trim_end_ms, output_path, cover_path, take_id, video_number"
       )
       .eq("id", id)
       .eq("user_id", session.userId)
       .maybeSingle();
     if (!edit) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-    const sign = async (objectPath: string | null, ttl = 3600): Promise<string | null> => {
+    // downloadAs forces Content-Disposition: attachment — without it, iOS
+    // Safari plays cross-origin video links instead of saving them.
+    const sign = async (
+      objectPath: string | null,
+      ttl = 3600,
+      downloadAs?: string
+    ): Promise<string | null> => {
       if (!objectPath) return null;
-      const { data } = await db.storage.from(BUCKET).createSignedUrl(objectPath, ttl);
+      const { data } = await db.storage
+        .from(BUCKET)
+        .createSignedUrl(objectPath, ttl, downloadAs ? { download: downloadAs } : undefined);
       return data?.signedUrl ?? null;
     };
 
@@ -46,8 +54,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     let coverFrames: string[] | null = null;
     let outputUrl: string | null = null;
+    let outputDownloadUrl: string | null = null;
     if (edit.status === "ready" && edit.output_path) {
       outputUrl = await sign(edit.output_path, 7200);
+      outputDownloadUrl = await sign(edit.output_path, 7200, `reel-${edit.video_number ?? ""}.mp4`);
       const prefix = edit.output_path.split("/")[0];
       const frames = await Promise.all(
         Array.from({ length: COVER_FRAME_COUNT }, (_, i) =>
@@ -65,8 +75,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       trim_end_ms: edit.trim_end_ms,
       take_preview_url: takePreviewUrl,
       output_url: outputUrl,
+      output_download_url: outputDownloadUrl,
       cover_frames: coverFrames,
       cover_url: await sign(edit.cover_path ?? null, 7200),
+      cover_download_url: await sign(edit.cover_path ?? null, 7200, "cover.png"),
     });
   } catch (e) {
     await logBroadcastError("/api/broadcast/edits/[id] GET", e);

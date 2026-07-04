@@ -24,8 +24,10 @@ interface EditSnapshot {
   trim_end_ms: number | null;
   take_preview_url: string | null;
   output_url: string | null;
+  output_download_url: string | null;
   cover_frames: string[] | null;
   cover_url: string | null;
+  cover_download_url: string | null;
 }
 
 function useEditStatus(editId: string) {
@@ -502,6 +504,7 @@ function OutputScreen({
 }) {
   const [frameIdx, setFrameIdx] = useState<number | null>(null);
   const [coverBusy, setCoverBusy] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
   const approvedRef = useRef(false);
 
   const approveOnce = useCallback(() => {
@@ -509,6 +512,29 @@ function OutputScreen({
     approvedRef.current = true;
     fetch(`/api/broadcast/edits/${editId}/approve`, { method: "POST" }).catch(() => {});
   }, [editId]);
+
+  // iOS share sheet with the actual video file — Instagram appears as a
+  // target, which is the closest thing to "open the reel in Instagram".
+  const canShareFiles =
+    typeof navigator !== "undefined" &&
+    typeof navigator.canShare === "function" &&
+    navigator.canShare({ files: [new File([], "probe.mp4", { type: "video/mp4" })] });
+
+  const shareReel = useCallback(async () => {
+    if (!snap.output_url) return;
+    setShareBusy(true);
+    approveOnce();
+    try {
+      const res = await fetch(snap.output_url);
+      const blob = await res.blob();
+      const file = new File([blob], "reel.mp4", { type: "video/mp4" });
+      await navigator.share({ files: [file] });
+    } catch {
+      /* user cancelled the sheet, or fetch failed — download stays available */
+    } finally {
+      setShareBusy(false);
+    }
+  }, [snap.output_url, approveOnce]);
 
   const pickCover = useCallback(
     async (i: number) => {
@@ -602,18 +628,37 @@ function OutputScreen({
         {getBroadcastCopy("director.release")}
       </p>
       <div style={{ ...stickyBar, flexDirection: "column", gap: 10 }}>
-        {snap.output_url ? (
+        {snap.output_url && canShareFiles ? (
+          <button
+            type="button"
+            disabled={shareBusy}
+            onClick={shareReel}
+            style={primaryBtn(!shareBusy)}
+          >
+            {shareBusy ? "..." : getBroadcastCopy("output.share")}
+          </button>
+        ) : null}
+        {snap.output_download_url ? (
           <a
-            href={snap.output_url}
-            download
+            href={snap.output_download_url}
             onClick={approveOnce}
-            style={{ ...primaryBtn(true), display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}
+            style={{
+              ...(canShareFiles ? secondaryBtn : primaryBtn(true)),
+              marginTop: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textDecoration: "none",
+            }}
           >
             {getBroadcastCopy("output.download_video")}
           </a>
         ) : null}
-        {snap.cover_url ? (
-          <a href={snap.cover_url} download style={{ ...secondaryBtn, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
+        {snap.cover_download_url ? (
+          <a
+            href={snap.cover_download_url}
+            style={{ ...secondaryBtn, marginTop: 0, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}
+          >
             {getBroadcastCopy("output.download_cover")}
           </a>
         ) : null}
