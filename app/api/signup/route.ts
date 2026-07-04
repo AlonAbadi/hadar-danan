@@ -147,11 +147,14 @@ export async function POST(req: NextRequest) {
     (kriahPreviewAllowed(req.headers.get("x-kriah-preview")) ||
      process.env.UNIFIED_FUNNEL_ENABLED !== "true");
 
-  // Phone became schema-optional for the /kriah email gate (name+email only).
-  // Every other caller keeps the original hard requirement.
+  // Phone + name became schema-optional for the /kriah gates (the soft
+  // capture is email-only). Every other caller keeps the original rules.
   const isKriahGate = bodyAny?.instrument_version === "v2_funnel";
   if (!isKriahGate && !parsed.data.phone) {
     return NextResponse.json({ errors: { phone: "טלפון חסר" } }, { status: 422 });
+  }
+  if (!isKriahGate && (parsed.data.name ?? "").trim().length < 2) {
+    return NextResponse.json({ errors: { name: "שם חייב להכיל לפחות 2 תווים" } }, { status: 422 });
   }
 
   // Sanitize ab_variant — DB constraint only allows 'A' or 'B'
@@ -265,8 +268,9 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Enqueue welcome email job (immediate) ────────────────
-    // Find the welcome sequence step
-    const { data: welcomeSeq } = await supabase
+    // kriah leads skip the generic ladder chain entirely — their emails come
+    // from the SIGNAL_EXTRACTED chain at extraction time.
+    const { data: welcomeSeq } = isKriahGate ? { data: null } : await supabase
       .from("email_sequences")
       .select("id, subject, template_key")
       .eq("trigger_event", "USER_SIGNED_UP")
@@ -292,7 +296,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Enqueue follow-up email jobs at their scheduled times ─
-    const { data: followups } = await supabase
+    const { data: followups } = isKriahGate ? { data: null } : await supabase
       .from("email_sequences")
       .select("id, delay_hours, subject, template_key")
       .eq("trigger_event", "USER_SIGNED_UP")

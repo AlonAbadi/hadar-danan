@@ -13,10 +13,13 @@ const israeliPhone = z
   .transform((v) => v.replace(/[\s-]/g, ""));
 
 export const SignupSchema = z.object({
+  // Optional at schema level: the /kriah soft capture is email-only.
+  // /api/signup re-imposes the minimum for every other caller.
   name: z
     .string()
-    .min(2, "שם חייב להכיל לפחות 2 תווים")
-    .max(80, "שם ארוך מדי"),
+    .max(80, "שם ארוך מדי")
+    .optional()
+    .default(""),
   email: z.string().email("כתובת אימייל לא תקינה"),
   // Optional at schema level: the /kriah email gate collects name+email only.
   // /api/signup re-imposes the requirement for every other caller.

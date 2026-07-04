@@ -267,7 +267,7 @@ export async function POST(req: NextRequest) {
     if (!isValidEmail(emailStr)) {
       return NextResponse.json({ error: "אימייל לא תקין" }, { status: 400 });
     }
-    if (nameStr.length < 2) {
+    if (instrumentVersion !== "v2_funnel" && nameStr.length < 2) {
       return NextResponse.json({ error: "נדרש שם" }, { status: 400 });
     }
     // v2 (/kriah) collects phone as an optional field at S15 and never asks
@@ -530,6 +530,23 @@ export async function POST(req: NextRequest) {
       { error: "מנוע האות נתקל בשגיאה זמנית. נסה שוב בעוד רגע." },
       { status: 502 },
     );
+  }
+
+  // v2: the engine infers occupation from the answers (change 3). Backfill it
+  // onto the user when empty so the send gate can show it for confirmation
+  // and the handoff context strip picks it up.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const inferredOccupation = typeof (parsed as any).occupation === "string" && (parsed as any).occupation.trim()
+    ? String((parsed as any).occupation).trim().slice(0, 200) : null;
+  if (instrumentVersion === "v2_funnel" && inferredOccupation && !occupationForPrompt) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: occRow } = await (db as any).from("users").select("occupation").eq("id", userId).maybeSingle();
+      if (!occRow?.occupation) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (db as any).from("users").update({ occupation: inferredOccupation }).eq("id", userId);
+      }
+    } catch { /* best effort */ }
   }
 
   // ── v2 two-key routing (kriah only) — evidence + crisis + truth table ───
