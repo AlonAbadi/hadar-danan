@@ -12,7 +12,11 @@ export function LayoutShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideNav = FULL_SCREEN_ROUTES.includes(pathname) || pathname.startsWith("/en");
+  const hideNav =
+    FULL_SCREEN_ROUTES.includes(pathname) ||
+    pathname.startsWith("/en") ||
+    // חדר השידור is a full-viewport camera experience — no nav.
+    pathname.startsWith("/hive/signal-kit/broadcast");
 
   return (
     <>

@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/send-daily-challenge-whatsapp",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/broadcast-cleanup",
+      "schedule": "30 2 * * *"
     }
   ]
 }

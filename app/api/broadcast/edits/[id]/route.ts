@@ -1,0 +1,75 @@
+// חדר השידור — edit status snapshot. This GET is the polling GUARANTEE that
+// backs the Realtime accelerator; ready payloads include short-lived signed
+// URLs for the output, cover frames, and the selected-take preview.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase/server";
+import { logBroadcastError, resolveBroadcastSession } from "@/lib/broadcast/auth";
+
+export const dynamic = "force-dynamic";
+
+const BUCKET = "broadcast-takes";
+const COVER_FRAME_COUNT = 3;
+
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  try {
+    const session = await resolveBroadcastSession();
+    if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const db = createServerClient() as any;
+    const { data: edit } = await db
+      .from("broadcast_edits")
+      .select(
+        "id, status, error_detail, captions, trim_start_ms, trim_end_ms, output_path, cover_path, take_id"
+      )
+      .eq("id", id)
+      .eq("user_id", session.userId)
+      .maybeSingle();
+    if (!edit) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+    const sign = async (objectPath: string | null, ttl = 3600): Promise<string | null> => {
+      if (!objectPath) return null;
+      const { data } = await db.storage.from(BUCKET).createSignedUrl(objectPath, ttl);
+      return data?.signedUrl ?? null;
+    };
+
+    let takePreviewUrl: string | null = null;
+    if (edit.status === "awaiting_captions") {
+      const { data: take } = await db
+        .from("broadcast_takes")
+        .select("storage_path")
+        .eq("id", edit.take_id)
+        .maybeSingle();
+      takePreviewUrl = await sign(take?.storage_path ?? null);
+    }
+
+    let coverFrames: string[] | null = null;
+    let outputUrl: string | null = null;
+    if (edit.status === "ready" && edit.output_path) {
+      outputUrl = await sign(edit.output_path, 7200);
+      const prefix = edit.output_path.split("/")[0];
+      const frames = await Promise.all(
+        Array.from({ length: COVER_FRAME_COUNT }, (_, i) =>
+          sign(`${prefix}/covers/${edit.id}-frame${i}.jpg`)
+        )
+      );
+      coverFrames = frames.filter(Boolean) as string[];
+    }
+
+    return NextResponse.json({
+      status: edit.status,
+      error_detail: edit.error_detail,
+      captions: edit.captions,
+      trim_start_ms: edit.trim_start_ms,
+      trim_end_ms: edit.trim_end_ms,
+      take_preview_url: takePreviewUrl,
+      output_url: outputUrl,
+      cover_frames: coverFrames,
+      cover_url: await sign(edit.cover_path ?? null, 7200),
+    });
+  } catch (e) {
+    await logBroadcastError("/api/broadcast/edits/[id] GET", e);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
+}

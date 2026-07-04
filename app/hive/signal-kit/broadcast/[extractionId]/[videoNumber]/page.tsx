@@ -1,0 +1,91 @@
+/**
+ * /hive/signal-kit/broadcast/[extractionId]/[videoNumber] — חדר השידור
+ *
+ * Full-viewport self-filming teleprompter room for one shoot-day script.
+ * Gate mirrors /hive/signal-kit exactly, plus an OWNERSHIP check on the
+ * extraction (the id arrives via the URL here, not via "latest") and script
+ * existence for the requested video number.
+ */
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { createServerClient as createSSRClient } from "@supabase/ssr";
+import { createServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
+import { BroadcastRoomClient } from "./BroadcastRoomClient";
+
+export const dynamic = "force-dynamic";
+
+interface ScriptShape {
+  hook: string;
+  body: string;
+  cta?: string;
+}
+
+export default async function BroadcastRoomPage({
+  params,
+}: {
+  params: Promise<{ extractionId: string; videoNumber: string }>;
+}) {
+  const { extractionId, videoNumber: videoNumberRaw } = await params;
+  const videoNumber = Number(videoNumberRaw);
+  const self = `/hive/signal-kit/broadcast/${extractionId}/${videoNumberRaw}`;
+
+  const cookieStore = await cookies();
+  const supabaseAuth = createSSRClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll(); }, setAll() {} } }
+  );
+  const { data: { user: authUser } } = await supabaseAuth.auth.getUser();
+  if (!authUser) redirect(`/login?next=${encodeURIComponent(self)}`);
+
+  const db = createServerClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: userData } = await (db as any)
+    .from("users")
+    .select("id, name, hive_status")
+    .eq("auth_id", authUser.id)
+    .maybeSingle();
+
+  if (!userData) redirect("/account");
+  if (userData.hive_status !== "active") redirect("/hive");
+  if (!Number.isInteger(videoNumber) || videoNumber < 1 || videoNumber > 12) {
+    redirect("/hive/signal-kit");
+  }
+
+  // Ownership + script resolution from the JSONB plan.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: ext } = await (db as any)
+    .from("signal_extractions")
+    .select("id, user_id, signal")
+    .eq("id", extractionId)
+    .maybeSingle();
+  if (!ext || ext.user_id !== userData.id) redirect("/hive/signal-kit");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const signal = (ext.signal ?? {}) as any;
+  const fromPlan = Array.isArray(signal.shoot_day?.videos)
+    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      signal.shoot_day.videos.find((v: any) => v?.number === videoNumber)
+    : null;
+  const video = fromPlan ?? signal[`shoot_day_v${videoNumber}`] ?? null;
+  if (!video?.script?.hook) redirect("/hive/signal-kit");
+
+  const script: ScriptShape = {
+    hook: String(video.script.hook),
+    body: String(video.script.body ?? ""),
+    cta: video.script.cta ? String(video.script.cta) : undefined,
+  };
+
+  return (
+    <BroadcastRoomClient
+      extractionId={extractionId}
+      videoNumber={videoNumber}
+      videoTitle={String(video.title ?? "")}
+      script={script}
+      firstName={userData.name?.split(" ")[0] ?? ""}
+      supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
+      supabaseAnonKey={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}
+    />
+  );
+}
