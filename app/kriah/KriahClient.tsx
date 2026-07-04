@@ -1338,6 +1338,27 @@ function FullReading({
             תהיו טובים.
           </p>
         </div>
+
+        {/* Continuation — the ending is a gift, not a dead end. The hive lane
+            gets a soft, price-less bridge for hot-now intent (the full offer
+            still arrives by the day-2 email); everyone gets a way home. */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginTop: 30 }}>
+          {ending === "hive" && (
+            <a
+              href="/signal-hive"
+              style={{
+                display: "inline-block", color: C.gold, fontWeight: 700, fontSize: 15.5,
+                border: `1.5px solid rgba(232,185,74,0.5)`, borderRadius: 999,
+                padding: "12px 34px", textDecoration: "none",
+              }}
+            >
+              רוצים להמשיך כבר עכשיו? הצעד הבא ←
+            </a>
+          )}
+          <a href="/" style={{ color: C.muted, fontSize: 13.5, textDecoration: "underline" }}>
+            לעמוד הבית ←
+          </a>
+        </div>
       </div>
     </div>
   );
