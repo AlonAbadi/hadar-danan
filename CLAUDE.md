@@ -20,7 +20,7 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | Auth | Supabase Auth (email/password + Google OAuth) |
 | Email | Resend (`noreply@beegood.online` — **LIVE**, domain verified, DNS in Vercel) |
 | Payments | Cardcom LowProfile API (**live** — credentials set in Vercel) |
-| Deployment | Vercel (Hobby plan — GitHub auto-deploy on push) |
+| Deployment | Vercel (Pro plan + Fluid Compute — GitHub auto-deploy on push; VERCEL_SUPPORT_LARGE_FUNCTIONS=1 for the ffmpeg broadcast functions) |
 | External cron | cron-job.org → `/api/cron/jobs` every 5 minutes |
 
 ---
@@ -205,6 +205,9 @@ Full-stack automated sales funnel for Hadar Danan Ltd. Collects leads via a free
 | 051 | `051_users_gender.sql` | Applied — adds `gender` column on users + signal_extractions (m/f), plus `bucket` column on signal_extractions with CHECK constraint (challenge/strategy/hive/none). |
 | 052 | `052_signal_bucket_nurture.sql` | Applied — extends signal_extractions.bucket CHECK to also allow 'nurture'. Without this, all inserts that route to the new nurture bucket (commit a046816) silently failed the CHECK, leaving extractionId null and breaking the embedded share-card + share button + contest box on the result page. |
 | 053 | `053_signal_feedback.sql` | Pending — adds `feedback_rating` (CHECK in precise/close/missed) + `feedback_note` + `feedback_at` to signal_extractions. Powers the customer quality-of-result feedback widget at the bottom of the /signal result page (POST /api/signal/[id]/feedback). Used to iterate the LLM prompt against real signal — pull "missed" extractions, audit the answers→signal mapping, refine. |
+| 054-064 | (Applied — signal nurture/temperature, hive product, handoff queue, gap engine, isolation, kriah routing, credit ladder, premium outcomes) | |
+| 065 | `065_broadcast_room.sql` | Applied — חדר השידור: `review_items`, `broadcast_takes`, `broadcast_edits` (+RLS read-own, Realtime publication on broadcast_edits, `users.reels_count`) |
+| 066 | `066_broadcast_storage.sql` | Applied — private `broadcast-takes` bucket (600MB limit, video/image MIME allowlist) + storage RLS on the `{auth_uid}/` path prefix; deletion is service-role-only (cleanup cron) |
 
 ### Tables (20 total)
 
@@ -519,7 +522,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 
 ## Deployment
 
-- **Platform:** Vercel (Hobby plan)
+- **Platform:** Vercel (Pro plan + Fluid Compute)
 - **Trigger:** GitHub push to `main` auto-deploys (AlonAbadi/hadar-danan repo connected to Vercel)
 - **No manual deploy needed** — `npx vercel --prod` is no longer used
 - **Before committing:** `npx tsc --noEmit 2>&1 | grep "error TS" | grep -v ".next"`
@@ -599,6 +602,7 @@ UCHAT_API_KEY=                    # UChat Settings → API Keys → create new k
 - **Invoice tracking** — Cardcom webhook saves `invoice_number` + `invoice_link` (PDF URL) on `purchases` rows.
 - **User status archive** — `handled` and `not_relevant` added to user_status enum (migration 028) for CRM cleanup.
 - **Deals CRM** — `deals` table (migration 024) + `/admin/deals` page for tracking brand deals.
+- **Broadcast Room — חדר השידור (V1, July 2026)** — self-filming teleprompter inside the shoot-day tab. Every script card has a gold "לצלם עכשיו" → full-viewport route `/hive/signal-kit/broadcast/[extractionId]/[videoNumber]` (nav hidden via LayoutShell prefix): front camera + rAF teleprompter, 3-2-1 countdown, MediaRecorder (MP4 on Safari, webm on Chrome), immediate background TUS upload to `broadcast-takes` (6MB chunks, resume; iron rule — no take lost), take gallery, Whisper word-timestamp transcription (script sent as prompt), human caption approval (edit/delete + two trim-nudge buttons; fallbacks: no captions / script-as-captions manual sync), one-pass ffmpeg burn (trim → 1080x1920@30 → libass ASS captions + "מצולם, לא מיוצר" stamp), 3-frame cover choice rendered via HCTI, download = approve → pending item in ביקורת פוסטים (mark-only "פורסם"). Max 3 edit versions per script (partial unique index, failed runs don't count). Daily cleanup cron `/api/cron/broadcast-cleanup` (02:30 UTC): expired-take object-then-row deletion + 15-min stuck-edit sweep. **Critical ffmpeg/libass facts:** binary ships via `outputFileTracingIncludes` + vendored `assets/broadcast/fonts/Assistant-*.ttf`; resolve the binary from `process.cwd()` (bundler fakes `__dirname`); Hebrew bidi REQUIRES `Encoding: -1` in ASS styles; NEVER use `{\c}` override tags or nonzero `Spacing` (they split libass runs and reverse word order). Microcopy lives in `lib/broadcast-copy.ts` behind `getBroadcastCopy()`. Realtime on `broadcast_edits` is the FIRST and ONLY client-side Realtime use (read-own, single row) — polling every 5s is the guarantee, Realtime the accelerator. WhatsApp delayed-delivery uses template `hadar_reel_ready` (create in UChat before real sends). Test data uses `is_test=true` (QA user broadcast-qa@beegood.online).
 - **Shoot Day feature (V1, June 2026)** — flagship Hive perk at `/hive/signal-kit` (new 6th tab "יום הצילום"). Mode E of the Hadar Director Engine generates a complete shoot day plan from the user's signal: משפט-זהות + 4 עמודי מסר + 12 סרטונים מובנים ב-3 acts (זהות/סיפור/סמכות) + visual direction ("הפוך מהקטגוריה") + לו"ז 08:30-17:00 + 3 החלטות + 5 משפטי-מתנה. **Engine:** `lib/prompts/shoot-day-engine.ts` (4-pack architecture: identity+pillars in Sonnet → videos+strategy+gift_sentences in parallel = ~30-40s wall). **API:** `GET /api/signal/[id]/shoot-day` — cached on `signal.shoot_day`, ~$0.20 first call. **Magic #2 (Methodology Visibility):** each video card has "למה זה?" button revealing Hadar's actual corpus quote + mode + signature move. **Magic #7 (5-tier affirmation system):** `lib/hadar-voice.ts` orchestrates Hadar voice clips at key interaction triggers — placeholders in V1 (no audio), `HADAR_VOICE_ENABLED=false`. After Hadar recording day, drop 80 MP3s into `/public/voice/hadar/` and flip the flag (zero code changes). See `/Users/work/hadar-transcripts/BEEGOOD_PRODUCT_BUILD_PLAN.md` for full build plan + recording brief.
 
 ---
@@ -756,7 +760,7 @@ CSS classes used: `.nf-row`, `.nf-node`, `.nf-node-gold`, `.nf-card`, `.nf-conne
 - Never modify `schema.sql` after initial setup — create numbered migration files
 - Pattern: `supabase/migrations/NNN_description.sql`
 - Run manually in Supabase SQL Editor (no migration runner configured)
-- Next migration number: 054
+- Next migration number: 067
 
 **OG images:**
 - Always use static files from `/public/` — never dynamic `opengraph-image.tsx` routes
