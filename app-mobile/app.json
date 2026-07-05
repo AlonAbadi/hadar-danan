@@ -22,12 +22,22 @@
     },
     "android": {
       "package": "online.beegood.kaveret",
-      "permissions": ["CAMERA", "RECORD_AUDIO"]
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO"
+      ]
     },
     "plugins": [
-      ["expo-camera", { "cameraPermission": "חדר השידור מצלם אותך במצלמה הקדמית.", "microphonePermission": "המיקרופון מקליט את הקול שלך לרילס." }],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "חדר השידור מצלם אותך במצלמה הקדמית.",
+          "microphonePermission": "המיקרופון מקליט את הקול שלך לרילס."
+        }
+      ],
       "expo-media-library",
-      "expo-video"
+      "expo-video",
+      "expo-web-browser"
     ]
   }
 }
