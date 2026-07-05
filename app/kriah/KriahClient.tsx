@@ -498,6 +498,14 @@ export function KriahClient({ previewKey, isTest }: Props) {
   // the inferred occupation can prefill it. dest="finalize": skipper path —
   // gate came first; deliver the letter email right after extraction.
   const lastExtractDest = useRef<"sendgate" | "finalize">("finalize");
+  // Meta campaigns optimize on QuizComplete (carried over from the old /quiz).
+  // Fired once, on successful extraction — the moment the diagnosis is done.
+  const quizCompleteFired = useRef(false);
+  const fireQuizComplete = (ending: string | undefined) => {
+    if (quizCompleteFired.current || isTest) return;
+    quizCompleteFired.current = true;
+    if (typeof window !== "undefined") window.fbq?.("trackCustom", "QuizComplete", { funnel: "kriah_v2", ending: ending ?? "unknown" });
+  };
   const runExtract = async (dest: "sendgate" | "finalize" = "finalize") => {
     lastExtractDest.current = dest;
     goTo("loading", "loading");
@@ -543,6 +551,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
       // (confirmation, not data entry). Never overwrites what the user typed.
       const inferredOcc = (data.signal as SignalOutput)?.occupation;
       if (inferredOcc && !occupation.trim()) setOccupation(inferredOcc);
+
+      fireQuizComplete(typeof data.v2_ending === "string" ? data.v2_ending : undefined);
 
       if (dest === "sendgate") {
         goTo("sendgate", "sendgate");
