@@ -244,7 +244,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
   }, [previewKey]);
 
   const [ready, setReady]         = useState(false);
-  const [screen, setScreen]       = useState<Screen>("s1");
+  const [screen, setScreen] = useState<Screen>("s2");
   const [qIdx, setQIdx]           = useState(0);
 
   // Three choices
@@ -620,45 +620,25 @@ export function KriahClient({ previewKey, isTest }: Props) {
 
       <div style={{ width: "100%", maxWidth: 620, position: "relative", zIndex: 1 }}>
 
-        {/* ── S1 · entry ── */}
-        {screen === "s1" && (
-          <Card>
-            <div style={{ textAlign: "center", fontSize: 10.5, fontWeight: 800, letterSpacing: "0.22em", color: C.goldMid, marginBottom: 16 }}>
-              <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
-            </div>
-            <h1 style={{ fontSize: 31, fontWeight: 800, margin: "0 0 16px", lineHeight: 1.25, textAlign: "center" }}>
-              המשפט שכבר מבדל אתכם
-            </h1>
-            <p style={{ fontSize: 17.5, lineHeight: 1.7, color: C.fg, opacity: 0.95, margin: "0 0 6px", textAlign: "center" }}>
-              יש משפט אחד שמסביר למה לבחור דווקא בכם.
-            </p>
-            <p style={{ fontSize: 17.5, lineHeight: 1.7, color: C.fg, opacity: 0.78, margin: "0 0 26px", textAlign: "center" }}>
-              הוא כבר קיים בכם. רק עוד לא נאמר בקול.
-            </p>
-            <div style={{ borderTop: `1px solid ${C.line}`, margin: "0 auto 22px", width: 56 }} />
-            <div style={{
-              display: "flex", justifyContent: "center", alignItems: "center", gap: 10,
-              fontSize: 13.5, color: C.muted, margin: "0 0 8px", flexWrap: "wrap",
-            }}>
-              <span>שלוש שאלות קצרות</span>
-              <span style={{ color: C.goldMid }}>←</span>
-              <span>תמונה ראשונית של העסק</span>
-              <span style={{ color: C.goldMid }}>←</span>
-              <span style={{ color: C.gold, fontWeight: 700 }}>המשפט שלכם</span>
-            </div>
-            <p style={{ fontSize: 13.5, color: C.muted, margin: "0 0 28px", textAlign: "center" }}>
-              נבנה מהמילים שלכם, לא מתבנית. חינם.
-            </p>
-            <div style={{ textAlign: "center" }}>
-              <GoldButton onClick={() => goTo("s2", "s2_state")}>להתחיל</GoldButton>
-            </div>
-          </Card>
-        )}
-
         {/* ── S2 · business state ── */}
         {screen === "s2" && (
           <Card>
-            <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 22px", lineHeight: 1.35 }}>
+            {/* Landing framing — compact, above the first question. The v1
+                lesson: a blocking intro screen lost ~33% before Q1; the
+                promise lives here instead. */}
+            <div style={{ textAlign: "center", marginBottom: 26 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.22em", color: C.goldMid, marginBottom: 12 }}>
+                <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
+              </div>
+              <h1 style={{ fontSize: 27, fontWeight: 800, margin: "0 0 10px", lineHeight: 1.3 }}>
+                המשפט שכבר מבדל אתכם
+              </h1>
+              <p style={{ fontSize: 15.5, lineHeight: 1.65, color: C.muted, margin: 0 }}>
+                יש משפט אחד שמסביר למה לבחור דווקא בכם. מוצאים אותו כאן, מהמילים שלכם. חינם.
+              </p>
+              <div style={{ borderTop: `1px solid ${C.line}`, margin: "22px auto 0", width: 56 }} />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 20px", lineHeight: 1.35 }}>
               איפה העסק עומד היום?
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -671,9 +651,6 @@ export function KriahClient({ previewKey, isTest }: Props) {
                   {opt.label}
                 </ChoiceButton>
               ))}
-            </div>
-            <div style={{ marginTop: 20 }}>
-              <QuietLink onClick={() => setScreen("s1")}>← חזרה</QuietLink>
             </div>
           </Card>
         )}
