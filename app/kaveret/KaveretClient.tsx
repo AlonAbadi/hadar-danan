@@ -681,7 +681,13 @@ export function KaveretClient({
                             </p>
                             <a
                               className={`${sty.btnCopy} ${filmed ? "" : sty.btnCard}`}
-                              style={{ flex: "0 0 auto", padding: "0 18px", textDecoration: "none" }}
+                              style={{
+                                flex: "0 0 auto",
+                                padding: "0 22px",
+                                minHeight: 50,
+                                textDecoration: "none",
+                                boxShadow: filmed ? undefined : "0 8px 26px rgba(232,185,74,0.38)",
+                              }}
                               href={`/hive/signal-kit/broadcast/${data.extractionId}/${s2.number}`}
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -817,6 +823,7 @@ export function KaveretClient({
           <span><span className={sty.t}>שאלה על הכוורת שלך?</span><br /><span className={sty.s}>הדר והצוות עונים בוואטסאפ</span></span>
         </a>
 
+        {!data.demo ? <div style={{ height: 72 }} aria-hidden="true" /> : null}
         <footer className={sty.note}>כוורת האות · beegood · שיטת TrueSignal</footer>
       </main>
 

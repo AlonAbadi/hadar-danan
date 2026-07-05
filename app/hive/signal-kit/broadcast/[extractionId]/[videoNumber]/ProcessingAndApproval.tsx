@@ -93,10 +93,12 @@ function useEditStatus(editId: string) {
 
 export function ProcessingAndApproval({
   editId,
+  localTakeUrl,
   script,
   onAnotherTake,
 }: {
   editId: string;
+  localTakeUrl?: string | null;
   script: ScriptShape;
   firstName: string;
   onAnotherTake: () => void;
@@ -107,7 +109,15 @@ export function ProcessingAndApproval({
     return <StageScreen stage="transcribing" onAnotherTake={onAnotherTake} />;
   }
   if (snap.status === "awaiting_captions") {
-    return <CaptionApproval editId={editId} snap={snap} script={script} onApproved={refresh} />;
+    return (
+      <CaptionApproval
+        editId={editId}
+        snap={snap}
+        localTakeUrl={localTakeUrl}
+        script={script}
+        onApproved={refresh}
+      />
+    );
   }
   if (snap.status === "burning") {
     return <BurningScreen editId={editId} onAnotherTake={onAnotherTake} />;
@@ -253,14 +263,19 @@ function BurningScreen({ editId, onAnotherTake }: { editId: string; onAnotherTak
 function CaptionApproval({
   editId,
   snap,
+  localTakeUrl,
   script,
   onApproved,
 }: {
   editId: string;
   snap: EditSnapshot;
+  localTakeUrl?: string | null;
   script: ScriptShape;
   onApproved: () => void;
 }) {
+  // Local blob first: it plays instantly and never hits the black-screen
+  // signed-URL playback quirk in Chrome iOS; server URL is the reload path.
+  const previewSrc = localTakeUrl ?? snap.take_preview_url;
   const transcriptFailed =
     !snap.captions || snap.captions.source === "none" || !snap.captions.lines.length;
   const [mode, setMode] = useState<"captions" | "none" | "script_sync" | null>(
@@ -420,8 +435,8 @@ function CaptionApproval({
       <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel="לערכה" />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 140px" }}>
         <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.hint")}</p>
-        {snap.take_preview_url ? (
-          <video src={snap.take_preview_url} playsInline controls style={portraitPreview("34dvh", 14, true)} />
+        {previewSrc ? (
+          <video src={previewSrc} playsInline controls preload="metadata" style={portraitPreview("34dvh", 14, true)} />
         ) : null}
         {/* trim nudges — two text buttons, never a timeline */}
         <div style={{ display: "flex", gap: 10, marginTop: 16 }}>

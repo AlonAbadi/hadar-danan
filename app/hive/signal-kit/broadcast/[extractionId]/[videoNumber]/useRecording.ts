@@ -68,159 +68,63 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     }
   }, []);
 
-  // Ordered capture recipes (expert panel): the prize is TRUE PORTRAIT 3:4
-  // content (1440x1920 upright) — full vertical sensor FOV, only 25% width
-  // lost to the 9:16 crop. iPhone Safari sometimes hands back the LANDSCAPE
-  // sensor instead (rotation bookkeeping race), so each recipe is VERIFIED
-  // against the actually-delivered frames (videoWidth/Height after settle),
-  // never trusted from the request.
-  const CAPTURE_RECIPES: { name: string; video: MediaTrackConstraints }[] = [
-    {
-      // Full-sensor 12MP 4:3 (3088x2320-class): the native camera's WIDE
-      // selfie framing. Safari's 1440x1920 mode maps to the CROPPED selfie
-      // view — requesting the high-res format is the only way to the wide
-      // one. "ideal" degrades gracefully where the format doesn't exist.
-      name: "A0_fullsensor",
-      video: { facingMode: "user", width: { ideal: 2316 }, height: { ideal: 3088 }, aspectRatio: { ideal: 0.75 }, frameRate: { ideal: 30 } },
-    },
-    {
-      name: "A_portrait43",
-      video: { facingMode: "user", width: { ideal: 1440 }, height: { ideal: 1920 }, aspectRatio: { ideal: 0.75 }, frameRate: { ideal: 30 } },
-    },
-    {
-      name: "B_exact",
-      video: { facingMode: "user", width: { exact: 1440 }, height: { exact: 1920 }, frameRate: { ideal: 30 } },
-    },
-    {
-      name: "C_heightfirst",
-      video: { facingMode: "user", height: { ideal: 1920, min: 1600 }, aspectRatio: { ideal: 0.75 }, frameRate: { ideal: 30 } },
-    },
-    {
-      name: "D_1080p",
-      video: { facingMode: "user", width: { ideal: 1080 }, height: { ideal: 1920 }, frameRate: { ideal: 30 } },
-    },
-  ];
-  const AUDIO: MediaTrackConstraints = {
-    echoCancellation: true,
-    noiseSuppression: true,
-    autoGainControl: true,
-  };
-
-  const testRecord = useCallback(async (stream: MediaStream): Promise<boolean> => {
-    if (!mimeType) return false;
-    return new Promise<boolean>((resolve) => {
-      let gotData = false;
-      let rec: MediaRecorder;
-      try {
-        rec = new MediaRecorder(stream, { mimeType });
-      } catch {
-        resolve(false);
-        return;
-      }
-      const done = () => resolve(gotData);
-      rec.ondataavailable = (e) => {
-        if (e.data.size > 0) gotData = true;
-      };
-      rec.onerror = () => {
-        try { rec.stop(); } catch { /* already stopped */ }
-      };
-      rec.onstop = done;
-      try {
-        rec.start(120);
-        setTimeout(() => {
-          try { rec.stop(); } catch { done(); }
-        }, 600);
-      } catch {
-        resolve(false);
-      }
-    });
-  }, [mimeType]);
-
-  const measureStream = useCallback(async (stream: MediaStream, settleMs: number) => {
-    const probe = document.createElement("video");
-    probe.muted = true;
-    probe.playsInline = true;
-    probe.srcObject = stream;
-    await probe.play().catch(() => {});
-    await new Promise((r) => setTimeout(r, settleMs));
-    const w = probe.videoWidth;
-    const h = probe.videoHeight;
-    probe.srcObject = null;
-    return { w, h };
-  }, []);
-
-  // Must be called from a user gesture ("אני מוכנה").
+  // SINGLE acquisition (field data, iOS 26, Chrome+Safari: every constraint
+  // recipe — including full-sensor — returns the LANDSCAPE sensor, so a
+  // retry ladder only flashes the camera indicator repeatedly). One request,
+  // one gentle re-assert, honest measurement, done. The blur-pad burn and
+  // the aspect-aware stage handle whatever arrives.
   const requestCamera = useCallback(async () => {
     if (typeof MediaRecorder === "undefined" || !mimeType) {
       setCameraState("unsupported");
       return;
     }
     setCameraState("requesting");
-    const failed: string[] = [];
-    let accepted: { stream: MediaStream; recipe: string; w: number; h: number } | null = null;
-
-    for (const recipe of CAPTURE_RECIPES) {
-      // determinism: kill the previous track BEFORE re-requesting
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-      let stream: MediaStream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: recipe.video, audio: AUDIO });
-      } catch (e) {
-        if ((e as Error).name === "NotAllowedError") {
-          setCameraState("denied");
-          navigator.sendBeacon?.(
-            "/api/broadcast/client-event",
-            JSON.stringify({ type: "permission_denied" })
-          );
-          return;
-        }
-        failed.push(recipe.name);
-        continue;
-      }
-      streamRef.current = stream;
-      let { w, h } = await measureStream(stream, 1100);
-      if (w > h) {
-        // landscape content: one re-assert before giving up on this recipe
-        try {
-          await stream.getVideoTracks()[0].applyConstraints({ width: 1440, height: 1920, aspectRatio: 0.75 });
-          await new Promise((r) => setTimeout(r, 700));
-          ({ w, h } = await measureStream(stream, 100));
-        } catch { /* keep measured values */ }
-      }
-      if (h > w) {
-        // portrait content — verify the recorder can actually consume it
-        // (full-sensor formats can exceed the encoder) before accepting
-        if (await testRecord(stream)) {
-          accepted = { stream, recipe: recipe.name, w, h };
-          break;
-        }
-        failed.push(recipe.name + "_recorder");
-        stream.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-        continue;
-      }
-      failed.push(recipe.name + "_landscape");
-      if (recipe === CAPTURE_RECIPES[CAPTURE_RECIPES.length - 1] && (await testRecord(stream))) {
-        // ladder exhausted: keep the landscape stream rather than no camera —
-        // the WYSIWYG stage and the blur-pad burn both handle it honestly.
-        accepted = { stream, recipe: recipe.name + "_landscape_accepted", w, h };
-      } else {
-        stream.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-      }
-    }
-
-    if (!accepted) {
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 1440 },
+          height: { ideal: 1920 },
+          aspectRatio: { ideal: 0.75 },
+          frameRate: { ideal: 30 },
+        },
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+    } catch (e) {
       setCameraState("denied");
+      if ((e as Error).name === "NotAllowedError") {
+        navigator.sendBeacon?.(
+          "/api/broadcast/client-event",
+          JSON.stringify({ type: "permission_denied" })
+        );
+      }
       return;
     }
-    streamRef.current = accepted.stream;
-    setEffAspect(accepted.h >= accepted.w ? "portrait" : "landscape");
+    streamRef.current = stream;
 
-    // Widest zoom the platform allows (iOS 17+; front min is 1.0 — control
-    // only tightens, kept for completeness).
-    const track = accepted.stream.getVideoTracks()[0];
+    // Measure what actually arrived (never trust the request on iOS).
+    const probe = document.createElement("video");
+    probe.muted = true;
+    probe.playsInline = true;
+    probe.srcObject = stream;
+    await probe.play().catch(() => {});
+    await new Promise((r) => setTimeout(r, 700));
+    let w = probe.videoWidth;
+    let h = probe.videoHeight;
+    if (w > h) {
+      try {
+        await stream.getVideoTracks()[0].applyConstraints({ width: 1440, height: 1920, aspectRatio: 0.75 });
+        await new Promise((r) => setTimeout(r, 400));
+        w = probe.videoWidth;
+        h = probe.videoHeight;
+      } catch { /* keep what we have */ }
+    }
+    probe.srcObject = null;
+    setEffAspect(h >= w ? "portrait" : "landscape");
+
+    // Widest zoom the platform allows (front min is 1.0; kept for completeness).
+    const track = stream.getVideoTracks()[0];
     try {
       const caps = track.getCapabilities?.() as
         | (MediaTrackCapabilities & { zoom?: { min: number; max: number } })
@@ -233,12 +137,12 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     } catch { /* zoom control is a nicety */ }
 
     if (videoRef.current) {
-      videoRef.current.srcObject = accepted.stream;
+      videoRef.current.srcObject = stream;
       videoRef.current.play().catch(() => {});
     }
     setCameraState("ready");
 
-    // Field observability: which recipe actually won on which device.
+    // Field observability: what this device/browser actually delivered.
     try {
       const settings = track.getSettings();
       fetch("/api/broadcast/client-event", {
@@ -248,10 +152,9 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
         body: JSON.stringify({
           type: "capture_recipe",
           detail: JSON.stringify({
-            recipe: accepted.recipe,
-            measured: `${accepted.w}x${accepted.h}`,
+            recipe: "single_shot",
+            measured: `${w}x${h}`,
             settings: `${settings.width}x${settings.height}`,
-            failed,
           }),
         }),
       }).catch(() => {});
@@ -262,8 +165,7 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
         wakeLock?: { request: (t: string) => Promise<{ release: () => Promise<void> }> };
       }).wakeLock?.request("screen") ?? null;
     } catch { /* iOS < 16.4 — camera capture inhibits auto-lock anyway */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mimeType, measureStream]);
+  }, [mimeType]);
 
   const stopRecording = useCallback(() => {
     const rec = recorderRef.current;

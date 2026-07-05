@@ -38,6 +38,7 @@ export const BROADCAST_COPY = {
   "room.speed": "מהירות",
   "room.size": "גודל",
   "room.rotate_back": { f: "סובבי חזרה למאונך", m: "סובב חזרה למאונך" },
+  "room.native_capture": "לצלם במצלמת הטלפון",
 
   // Director lines (הבמאית) — [PLACEHOLDER] items await Hadar's final wording
   "director.encourage_after_take1": "טייק שלישי הוא כמעט תמיד הטוב ביותר",

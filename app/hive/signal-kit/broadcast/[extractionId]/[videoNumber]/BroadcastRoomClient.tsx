@@ -61,10 +61,61 @@ export function BroadcastRoomClient({
   const [selectedTakeId, setSelectedTakeId] = useState<string | null>(null);
   const [uploads, setUploads] = useState<TakeUpload[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
+  const [pipelineBlobUrl, setPipelineBlobUrl] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
   const [selecting, setSelecting] = useState(false);
   const prompterRef = useRef<TeleprompterHandle | null>(null);
   const takeCountRef = useRef(0);
+  const nativeInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Native-camera path: iOS 26 WebKit hands browsers the LANDSCAPE sensor no
+  // matter what (verified in the field, Chrome AND Safari), so the only way
+  // to the native portrait framing is the native camera itself. The file it
+  // returns enters the exact same pipeline (upload, whisper, burn, share).
+  const onNativeFile = useCallback(async (file: File) => {
+    const blobUrl = URL.createObjectURL(file);
+    const durationMs = await new Promise<number>((resolve) => {
+      const v = document.createElement("video");
+      v.preload = "metadata";
+      v.onloadedmetadata = () => resolve(Number.isFinite(v.duration) ? v.duration * 1000 : 0);
+      v.onerror = () => resolve(0);
+      v.src = blobUrl;
+    });
+    const outOfRange = durationMs > 0 && (durationMs < MIN_TAKE_MS || durationMs > MAX_TAKE_MS);
+    try {
+      const mime = (file.type || "video/mp4").split(";")[0];
+      const res = await fetch("/api/broadcast/takes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          extraction_id: extractionId,
+          video_number: videoNumber,
+          mime_type: mime === "video/quicktime" ? "video/quicktime" : "video/mp4",
+        }),
+      });
+      if (!res.ok) throw new Error(`create_${res.status}`);
+      const { take_id, object_name, content_type } = await res.json();
+      uploadManager.enqueue({
+        takeId: take_id,
+        blob: file,
+        objectName: object_name,
+        contentType: content_type,
+        durationSeconds: durationMs / 1000,
+        suggestedTrimStartMs: null,
+        suggestedTrimEndMs: null,
+      });
+      setTakes((prev) => [
+        ...prev,
+        { takeId: take_id, blobUrl, durationMs, interrupted: false, outOfRange },
+      ]);
+      rec.releaseCamera();
+      setPhase("review");
+      setBanner(null);
+    } catch {
+      setBanner(getBroadcastCopy("error.upload_retry"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extractionId, videoNumber]);
 
   const onTakeFinished = useCallback(async (take: FinishedTake) => {
     const outOfRange = take.durationMs < MIN_TAKE_MS || take.durationMs > MAX_TAKE_MS;
@@ -199,6 +250,7 @@ export function BroadcastRoomClient({
       if (!res.ok) throw new Error(`select_${res.status}`);
       const { edit_id } = await res.json();
       rec.releaseCamera();
+      setPipelineBlobUrl(takes.find((t) => t.takeId === takeId)?.blobUrl ?? null);
       setEditId(edit_id);
       setPhase("pipeline");
     } catch {
@@ -206,7 +258,7 @@ export function BroadcastRoomClient({
     } finally {
       setSelecting(false);
     }
-  }, [rec]);
+  }, [rec, takes]);
 
   const shell: React.CSSProperties = {
     position: "fixed",
@@ -243,6 +295,7 @@ export function BroadcastRoomClient({
         <RoomStyles />
         <ProcessingAndApproval
           editId={editId}
+          localTakeUrl={pipelineBlobUrl}
           script={script}
           firstName={firstName}
           onAnotherTake={() => {
@@ -488,21 +541,53 @@ export function BroadcastRoomClient({
             onClick={() => prompterRef.current?.pause()}
           />
         </div>
-        {takes.length > 0 && !rec.isRecording ? (
-          <button
-            type="button"
-            onClick={() => setPhase("review")}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "#9E9990",
-              fontSize: 14,
-              textDecoration: "underline",
-            }}
-          >
-            {getBroadcastCopy("takes.title")} ({takes.length})
-          </button>
+        {!rec.isRecording ? (
+          <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
+            <button
+              type="button"
+              className="br-btn"
+              onClick={() => nativeInputRef.current?.click()}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(237,233,225,0.3)",
+                borderRadius: 999,
+                padding: "8px 14px",
+                color: "#EDE9E1",
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              {getBroadcastCopy("room.native_capture")}
+            </button>
+            {takes.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setPhase("review")}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#9E9990",
+                  fontSize: 14,
+                  textDecoration: "underline",
+                }}
+              >
+                {getBroadcastCopy("takes.title")} ({takes.length})
+              </button>
+            ) : null}
+          </div>
         ) : null}
+        <input
+          ref={nativeInputRef}
+          type="file"
+          accept="video/*"
+          capture="user"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onNativeFile(f);
+            e.target.value = "";
+          }}
+        />
       </div>
       <style>{`@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.35 } }`}</style>
     </div>
