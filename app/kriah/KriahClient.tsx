@@ -806,18 +806,20 @@ export function KriahClient({ previewKey, isTest }: Props) {
             <h2 style={{ fontSize: 23, fontWeight: 800, margin: "0 0 14px", lineHeight: 1.4 }}>
               {blocker ? S7_CALLBACK[blocker] : S7_CALLBACK.message}
             </h2>
-            <p style={{ fontSize: 17, lineHeight: 1.7, margin: "0 0 24px", color: C.fg, opacity: 0.92 }}>
-              זה לא חסר לכם. זה כבר קיים, פשוט עוד לא נאמר בקול רם.
+            <p style={{ fontSize: 16.5, lineHeight: 1.75, margin: "0 0 14px", color: C.fg, opacity: 0.92 }}>
+              התמונה שקיבלתם היא האבחנה. עכשיו לפתרון עצמו.
             </p>
-
-            <p style={{ fontSize: 15.5, lineHeight: 1.7, margin: "0 0 6px", color: C.fg }}>
-              למשפט הזה אנחנו קוראים האות שלכם.
+            <p style={{ fontSize: 16.5, lineHeight: 1.75, margin: "0 0 14px", color: C.fg, opacity: 0.92 }}>
+              רוב העסקים בתחום שלכם מנסים לפתור את זה עם עוד תוכן: סרטונים, פוסטים כלליים על המקצוע. התוצאה מוכרת, הכול נראה אותו דבר, ואף אחד לא זוכר את מי לחפש.
             </p>
-            <p style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.7, margin: "0 0 18px", color: C.fg }}>
-              שש שאלות. הן דורשות כנות, לא זמן.
+            <p style={{ fontSize: 16.5, lineHeight: 1.75, margin: "0 0 14px", color: C.fg, opacity: 0.92 }}>
+              אנחנו פותרים את זה מלמעלה: קודם מזקקים את הדבר שרק אתם נותנים, ומזה נגזר כל השאר. <b style={{ color: C.gold }}>תוכן שאף מתחרה לא יכול לחקות, ופניות שמגיעות כשהלקוח כבר יודע למה דווקא אתם.</b> לזה אנחנו קוראים האות שלכם.
+            </p>
+            <p style={{ fontSize: 16, lineHeight: 1.75, margin: "0 0 18px", color: C.fg }}>
+              בשביל זה יש עוד שש שאלות. הן לא טופס, הן חומר הגלם: הבידול שלכם ייבנה מהמילים שלכם, ולכן הוא צריך אותן. <b>הן דורשות כנות, לא זמן.</b>
             </p>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-              <GoldButton onClick={() => goTo("s8", "s8_bridge")}>להמשיך לשש השאלות</GoldButton>
+              <GoldButton onClick={() => goTo("s8", "s8_bridge")}>להמשיך לבידול שלי ←</GoldButton>
               <QuietLink onClick={() => goTo("exit", "exit")}>
                 אפשר לעצור כאן
               </QuietLink>
