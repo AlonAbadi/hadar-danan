@@ -639,8 +639,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
               <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.92, margin: "0 0 8px" }}>
                 לזה יש פתרון, והוא לא עוד תוכן. בדקות הקרובות מגיעים יחד לשורש: <b style={{ color: C.gold }}>הסיבה שלקוחות בוחרים דווקא בכם.</b> ברגע שהיא ברורה, השיווק מפסיק להילחם, והלקוחות הנכונים מזהים אתכם לבד.
               </p>
-              <p style={{ fontSize: 14, lineHeight: 1.6, color: C.muted, margin: 0 }}>
-                מתחילים בשלוש שאלות קצרות. חינם.
+              <p style={{ fontSize: 14.5, lineHeight: 1.65, color: C.muted, margin: 0 }}>
+                בסוף הדרך הקצרה הזאת יש לכם את הבסיס שממנו נגזר כל השיווק: המסר, התוכן, והסיבה שפונים דווקא אליכם. מתחילים בשלוש שאלות. חינם.
               </p>
               <div style={{ borderTop: `1px solid ${C.line}`, margin: "22px auto 0", width: 56 }} />
             </div>
@@ -725,7 +725,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
             </p>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <QuietLink onClick={() => setScreen("s4")}>← חזרה</QuietLink>
-              <GoldButton onClick={() => goTo("s7", "s7_fork")}>להמשיך</GoldButton>
+              <GoldButton onClick={() => goTo("s7", "s7_fork")}>להמשיך לפתרון ←</GoldButton>
             </div>
           </Card>
         )}
@@ -835,7 +835,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
               עד כאן שאלנו על העסק. עכשיו זה עובר אליכם.
             </h2>
             <p style={{ fontSize: 16, lineHeight: 1.7, color: C.muted, margin: "0 0 26px", textAlign: "center" }}>
-              שש שאלות. אין תשובות נכונות, יש רק החומר שממנו נבנה המשפט שלכם.
+              שש שאלות. אין תשובות נכונות. כל מה שתכתבו כאן הופך לבסיס שממנו ייגזרו המסר, התוכן והפניות שלכם.
             </p>
             {!softCaptured && (
               <div style={{ marginBottom: 22 }}>
@@ -996,10 +996,13 @@ export function KriahClient({ previewKey, isTest }: Props) {
         {screen === "s15" && (
           <Card>
             <h2 style={{ fontSize: 23, fontWeight: 800, margin: "0 0 14px", lineHeight: 1.4 }}>
-              עוד פרט אחד, לבחירתכם.
+              זהו. החומר נאסף, והאות שלכם נבנה ממנו ממש עכשיו.
             </h2>
-            <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.9, margin: "0 0 24px" }}>
-              אם מהתמונה שלכם יעלה משהו שהדר תרצה להרחיב עליו אישית, בשיחה ולא במייל, בלי מספר פשוט לא נוכל לקיים את זה.
+            <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.9, margin: "0 0 18px" }}>
+              ממנו נגזר ההמשך: המסר, כיווני התוכן, והדרך שהלקוחות הנכונים מוצאים אתכם. שלב אחרי שלב, ואנחנו איתכם לכל אורכה.
+            </p>
+            <p style={{ fontSize: 15, lineHeight: 1.7, color: C.muted, margin: "0 0 24px" }}>
+              פרט אחד לבחירתכם: אם ממה שכתבתם יעלה משהו שהדר תרצה להרחיב עליו אישית, בשיחה ולא במייל, בלי מספר פשוט לא נוכל לקיים את זה.
             </p>
             <label htmlFor="kriah-phone" style={{ display: "block", fontSize: 14, color: C.muted, marginBottom: 6 }}>
               טלפון (רשות)
@@ -1339,16 +1342,21 @@ function FullReading({
             still arrives by the day-2 email); everyone gets a way home. */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, marginTop: 30 }}>
           {ending === "hive" && (
-            <a
-              href="/signal-hive"
-              style={{
-                display: "inline-block", color: C.gold, fontWeight: 700, fontSize: 15.5,
-                border: `1.5px solid rgba(232,185,74,0.5)`, borderRadius: 999,
-                padding: "12px 34px", textDecoration: "none",
-              }}
-            >
-              רוצים להמשיך כבר עכשיו? הצעד הבא ←
-            </a>
+            <>
+              <p style={{ fontSize: 14.5, lineHeight: 1.7, color: C.muted, margin: 0, textAlign: "center", maxWidth: 420 }}>
+                האות הוא הבסיס. מכאן בונים עליו את כל השאר: המסר, התוכן, והדרך שהלקוחות מגיעים.
+              </p>
+              <a
+                href="/signal-hive"
+                style={{
+                  display: "inline-block", color: C.gold, fontWeight: 700, fontSize: 15.5,
+                  border: `1.5px solid rgba(232,185,74,0.5)`, borderRadius: 999,
+                  padding: "12px 34px", textDecoration: "none",
+                }}
+              >
+                רוצים להמשיך כבר עכשיו? הצעד הבא ←
+              </a>
+            </>
           )}
           <a href="/" style={{ color: C.muted, fontSize: 13.5, textDecoration: "underline" }}>
             לעמוד הבית ←
