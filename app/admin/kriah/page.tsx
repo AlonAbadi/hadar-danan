@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 // was asymmetric (the entry beacon shipped days after the other steps) and was
 // wiped. The report counts ONLY from here — leads/extractions before it exist
 // as business data but are excluded from the numbers.
-const REPORT_EPOCH = "2026-07-04T21:45:00Z";
+const REPORT_EPOCH = "2026-07-05T09:31:00Z";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
@@ -29,11 +29,12 @@ const C = {
 };
 
 const STEP_ROWS: { label: string; keys: string[] }[] = [
-  { label: "כניסה",            keys: ["s1"] },
-  { label: "מצב עסק",          keys: ["s2_state"] },
-  { label: "חסם",              keys: ["s3_blocker"] },
-  { label: "מה ישתנה",         keys: ["s4_change"] },
-  { label: "התמונה",           keys: ["s6_reading"] },
+  // Landing and the business-state question are ONE screen (2026-07-05
+  // merge): s1 = the view, s3_blocker fires on answering it.
+  { label: "כניסה (מצב עסק)",  keys: ["s1"] },
+  { label: "ענו על מצב עסק",   keys: ["s3_blocker"] },
+  { label: "ענו על החסם",      keys: ["s4_change"] },
+  { label: "ענו מה ישתנה (התמונה)", keys: ["s6_reading"] },
   { label: "המזלג",            keys: ["s7_fork"] },
   { label: "גשר + שמירת מייל", keys: ["s8_bridge"] },
   { label: "שאלה 1",           keys: ["q1_flow_zone"] },

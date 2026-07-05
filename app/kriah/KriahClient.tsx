@@ -630,11 +630,17 @@ export function KriahClient({ previewKey, isTest }: Props) {
               <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.22em", color: C.goldMid, marginBottom: 12 }}>
                 <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
               </div>
-              <h1 style={{ fontSize: 27, fontWeight: 800, margin: "0 0 10px", lineHeight: 1.3 }}>
+              <h1 style={{ fontSize: 27, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.3 }}>
                 המשפט שכבר מבדל אתכם
               </h1>
-              <p style={{ fontSize: 15.5, lineHeight: 1.65, color: C.muted, margin: 0 }}>
-                יש משפט אחד שמסביר למה לבחור דווקא בכם. מוצאים אותו כאן, מהמילים שלכם. חינם.
+              <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.92, margin: "0 0 8px" }}>
+                אתם טובים במה שאתם עושים. להסביר את זה במשפט אחד, זה החלק שתמיד נתקע.
+              </p>
+              <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.92, margin: "0 0 8px" }}>
+                כשהמשפט הזה נמצא, הלקוחות הנכונים מזהים אתכם לבד. <b style={{ color: C.gold }}>בלי לרדוף, בלי לשכנע.</b>
+              </p>
+              <p style={{ fontSize: 14, lineHeight: 1.6, color: C.muted, margin: 0 }}>
+                מוצאים אותו כאן, מהמילים שלכם. חינם.
               </p>
               <div style={{ borderTop: `1px solid ${C.line}`, margin: "22px auto 0", width: 56 }} />
             </div>

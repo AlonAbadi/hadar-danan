@@ -8,7 +8,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 // Must match app/admin/kriah — counting starts at the reset moment.
-const REPORT_EPOCH = "2026-07-04T21:45:00Z";
+const REPORT_EPOCH = "2026-07-05T09:31:00Z";
 import type { createServerClient } from "@/lib/supabase/server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,9 +34,8 @@ function ilHour(d: Date): number {
 }
 
 const STEP_KEYS: { label: string; keys: string[] }[] = [
-  { label: "כניסה",       keys: ["s1"] },
-  { label: "מצב עסק",     keys: ["s2_state"] },
-  { label: "חסם",         keys: ["s3_blocker"] },
+  { label: "כניסה (מצב עסק)", keys: ["s1"] },
+  { label: "ענו על מצב עסק",  keys: ["s3_blocker"] },
   { label: "מה ישתנה",    keys: ["s4_change"] },
   { label: "התמונה",      keys: ["s6_reading"] },
   { label: "המזלג",       keys: ["s7_fork"] },
