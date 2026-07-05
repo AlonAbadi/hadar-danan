@@ -67,6 +67,49 @@ export function BroadcastRoomClient({
   const prompterRef = useRef<TeleprompterHandle | null>(null);
   const takeCountRef = useRef(0);
   const nativeInputRef = useRef<HTMLInputElement | null>(null);
+  const [nativeSheet, setNativeSheet] = useState<"closed" | "loading" | "ready" | "pip">("closed");
+  const [floatUrl, setFloatUrl] = useState<string | null>(null);
+  const floatVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Floating PiP prompter: a real MP4 of the scrolling script — iOS keeps
+  // PiP windows alive over other apps, including the native camera.
+  const openNativeSheet = useCallback(async () => {
+    setNativeSheet("loading");
+    try {
+      const wpm = Number(localStorage.getItem("broadcast_wpm")) || 130;
+      const res = await fetch("/api/broadcast/prompter-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ extraction_id: extractionId, video_number: videoNumber, wpm }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const { url } = await res.json();
+      setFloatUrl(url);
+      setNativeSheet("ready");
+    } catch {
+      setFloatUrl(null);
+      setNativeSheet("ready"); // still allow filming without the prompter
+    }
+  }, [extractionId, videoNumber]);
+
+  const startPiP = useCallback(async () => {
+    const v = floatVideoRef.current;
+    if (!v) return;
+    try {
+      await v.play();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wk = v as any;
+      if (typeof wk.webkitSetPresentationMode === "function") {
+        wk.webkitSetPresentationMode("picture-in-picture");
+      } else if (v.requestPictureInPicture) {
+        await v.requestPictureInPicture();
+      }
+      setNativeSheet("pip");
+    } catch {
+      // PiP refused — she can still read from the inline player
+      setNativeSheet("pip");
+    }
+  }, []);
 
   // Native-camera path: iOS 26 WebKit hands browsers the LANDSCAPE sensor no
   // matter what (verified in the field, Chrome AND Safari), so the only way
@@ -546,7 +589,7 @@ export function BroadcastRoomClient({
             <button
               type="button"
               className="br-btn"
-              onClick={() => nativeInputRef.current?.click()}
+              onClick={openNativeSheet}
               style={{
                 background: "transparent",
                 border: "1px solid rgba(237,233,225,0.3)",
@@ -574,6 +617,108 @@ export function BroadcastRoomClient({
                 {getBroadcastCopy("takes.title")} ({takes.length})
               </button>
             ) : null}
+          </div>
+        ) : null}
+        {nativeSheet !== "closed" ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 40,
+              background: "rgba(8,12,20,0.82)",
+              display: "flex",
+              alignItems: "flex-end",
+            }}
+            onClick={() => setNativeSheet("closed")}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "100%",
+                background: "#141820",
+                borderRadius: "18px 18px 0 0",
+                padding: "20px 20px calc(env(safe-area-inset-bottom) + 20px)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+              }}
+            >
+              <p style={{ color: "#EDE9E1", fontSize: 16, fontWeight: 700, textAlign: "center" }}>
+                {getBroadcastCopy("room.native_capture")}
+              </p>
+              {nativeSheet === "loading" ? (
+                <p style={{ color: "#9E9990", fontSize: 14, textAlign: "center" }}>
+                  <span className="br-spinner br-spinner-gold" /> {getBroadcastCopy("room.float_loading")}
+                </p>
+              ) : null}
+              {floatUrl ? (
+                <video
+                  ref={floatVideoRef}
+                  src={floatUrl}
+                  playsInline
+                  muted
+                  controls={nativeSheet === "pip"}
+                  style={{ width: 130, borderRadius: 10, alignSelf: "center", background: "#000" }}
+                />
+              ) : null}
+              {nativeSheet === "ready" && floatUrl ? (
+                <button
+                  type="button"
+                  className="br-btn"
+                  onClick={startPiP}
+                  style={{
+                    minHeight: 50,
+                    borderRadius: 12,
+                    border: "none",
+                    background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                    color: "#2a1d05",
+                    fontSize: 16,
+                    fontWeight: 700,
+                  }}
+                >
+                  {getBroadcastCopy("room.float_ready")}
+                </button>
+              ) : null}
+              {nativeSheet === "pip" || (nativeSheet === "ready" && !floatUrl) ? (
+                <button
+                  type="button"
+                  className="br-btn"
+                  onClick={() => nativeInputRef.current?.click()}
+                  style={{
+                    minHeight: 50,
+                    borderRadius: 12,
+                    border: "none",
+                    background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                    color: "#2a1d05",
+                    fontSize: 16,
+                    fontWeight: 700,
+                  }}
+                >
+                  {getBroadcastCopy("room.float_open_camera")}
+                </button>
+              ) : null}
+              {nativeSheet === "ready" && floatUrl ? (
+                <button
+                  type="button"
+                  className="br-btn"
+                  onClick={() => nativeInputRef.current?.click()}
+                  style={{
+                    minHeight: 46,
+                    borderRadius: 12,
+                    border: "1px solid rgba(232,185,74,0.4)",
+                    background: "transparent",
+                    color: "#E8B94A",
+                    fontSize: 15,
+                    fontWeight: 600,
+                  }}
+                >
+                  {getBroadcastCopy("room.float_skip")}
+                </button>
+              ) : null}
+              <p style={{ color: "#9E9990", fontSize: 12.5, textAlign: "center", lineHeight: 1.6 }}>
+                {getBroadcastCopy("room.float_hint")}
+              </p>
+            </div>
           </div>
         ) : null}
         <input

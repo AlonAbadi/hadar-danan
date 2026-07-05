@@ -39,6 +39,11 @@ export const BROADCAST_COPY = {
   "room.size": "גודל",
   "room.rotate_back": { f: "סובבי חזרה למאונך", m: "סובב חזרה למאונך" },
   "room.native_capture": "לצלם במצלמת הטלפון",
+  "room.float_loading": "מכינה את הטלפרומפטר הצף",
+  "room.float_ready": "הפעלת החלון הצף",
+  "room.float_skip": "לצלם בלי טלפרומפטר",
+  "room.float_open_camera": "פתיחת המצלמה",
+  "room.float_hint": "החלון הצף נשאר מעל המצלמה. אפשר לגרור אותו לפינה נוחה",
 
   // Director lines (הבמאית) — [PLACEHOLDER] items await Hadar's final wording
   "director.encourage_after_take1": "טייק שלישי הוא כמעט תמיד הטוב ביותר",
