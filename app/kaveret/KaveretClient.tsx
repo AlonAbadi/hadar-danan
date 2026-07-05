@@ -115,6 +115,7 @@ export function KaveretClient({
   const [okBtns, setOkBtns] = useState<Record<string, boolean>>({});
   const pngBusy = useRef(false);
   const [published, setPublished] = useState<Record<string, boolean>>({});
+  const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
   const [curDay, setCurDay] = useState(data.challengeDay);
   const [doneDays, setDoneDays] = useState<number[]>(data.completedDays);
   const [viewDay, setViewDay] = useState(data.challengeDay);
@@ -754,7 +755,7 @@ export function KaveretClient({
                   <span className={sty.hint}>מה שצילמת בחדר השידור</span>
                 </span>
               </div>
-              {data.reels.map((r) => {
+              {data.reels.filter((r) => !deletedReels[r.editId]).map((r) => {
                 const isPub = r.published || published[r.editId];
                 return (
                   <div className={sty.trow} key={r.editId}>
@@ -798,6 +799,23 @@ export function KaveretClient({
                           <span>פורסם</span>
                         </button>
                       ) : null}
+                      <button
+                        type="button"
+                        className={sty.btnCopy}
+                        style={{ opacity: 0.75 }}
+                        onClick={async () => {
+                          if (!window.confirm("למחוק את הרילס הזה לצמיתות? אי אפשר לשחזר אחרי מחיקה")) return;
+                          const res = await fetch(`/api/broadcast/edits/${r.editId}`, { method: "DELETE" }).catch(() => null);
+                          if (res?.ok) {
+                            setDeletedReels((prev) => ({ ...prev, [r.editId]: true }));
+                            toast("הרילס נמחק");
+                          } else {
+                            toast("המחיקה לא הצליחה, נסו שוב");
+                          }
+                        }}
+                      >
+                        <span>מחיקה</span>
+                      </button>
                     </div>
                   </div>
                 );

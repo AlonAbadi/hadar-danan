@@ -85,3 +85,56 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }
+
+// Member deletes a finished reel: storage objects first (output, cover
+// frames, custom cover), then the review item, then the edit row — the
+// version budget for that script frees up with it. Takes are untouched
+// (they expire on their own schedule).
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  try {
+    const session = await resolveBroadcastSession();
+    if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+    const db = createServerClient() as any;
+    const { data: edit } = await db
+      .from("broadcast_edits")
+      .select("id, status, output_path, cover_path, review_item_id")
+      .eq("id", id)
+      .eq("user_id", session.userId)
+      .maybeSingle();
+    if (!edit) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    if (edit.status === "transcribing" || edit.status === "burning") {
+      return NextResponse.json({ error: "busy" }, { status: 409 });
+    }
+
+    const prefix = (edit.output_path ?? edit.cover_path)?.split("/")[0];
+    const objects: string[] = [];
+    if (edit.output_path) objects.push(edit.output_path);
+    if (edit.cover_path) objects.push(edit.cover_path);
+    if (prefix) {
+      for (let i = 0; i < COVER_FRAME_COUNT; i++) {
+        objects.push(`${prefix}/covers/${edit.id}-frame${i}.jpg`);
+      }
+    }
+    if (objects.length) {
+      const { error: rmError } = await db.storage.from(BUCKET).remove(objects);
+      if (rmError) throw new Error(`delete:objects:${rmError.message}`);
+    }
+
+    if (edit.review_item_id) {
+      await db.from("review_items").delete().eq("id", edit.review_item_id).eq("user_id", session.userId);
+    }
+    const { error: delError } = await db
+      .from("broadcast_edits")
+      .delete()
+      .eq("id", edit.id)
+      .eq("user_id", session.userId);
+    if (delError) throw new Error(`delete:row:${delError.message}`);
+
+    return NextResponse.json({ deleted: true });
+  } catch (e) {
+    await logBroadcastError("/api/broadcast/edits/[id] DELETE", e);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
+}

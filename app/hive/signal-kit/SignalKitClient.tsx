@@ -587,6 +587,12 @@ function ContentTab({ onGoFilm }: { onGoFilm: () => void }) {
     }).catch(() => {});
   }
 
+  async function deleteReel(editId: string) {
+    if (!window.confirm("למחוק את הרילס הזה לצמיתות? אי אפשר לשחזר אחרי מחיקה")) return;
+    const res = await fetch(`/api/broadcast/edits/${editId}`, { method: "DELETE" }).catch(() => null);
+    if (res?.ok) setReels((prev) => prev.filter((r) => r.edit_id !== editId));
+  }
+
   if (loading) return <Loading text="טוען את התכנים שלך…" />;
 
   if (!reels.length) {
@@ -667,6 +673,17 @@ function ContentTab({ onGoFilm }: { onGoFilm: () => void }) {
                   פורסם
                 </button>
               ) : null}
+              <button
+                onClick={() => deleteReel(r.edit_id)}
+                aria-label="מחיקת הרילס"
+                style={{
+                  background: "transparent", color: C.muted, border: `1px solid ${C.line}`,
+                  borderRadius: 999, padding: "6px 12px", fontSize: 13, fontWeight: 700,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                מחיקה
+              </button>
             </div>
           </div>
         ))}
