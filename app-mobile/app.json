@@ -27,7 +27,6 @@
     "plugins": [
       ["expo-camera", { "cameraPermission": "חדר השידור מצלם אותך במצלמה הקדמית.", "microphonePermission": "המיקרופון מקליט את הקול שלך לרילס." }],
       "expo-media-library",
-      "expo-sharing",
       "expo-video"
     ]
   }
