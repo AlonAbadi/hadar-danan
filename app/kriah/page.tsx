@@ -6,8 +6,8 @@ import { KriahClient } from "./KriahClient";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "הסיבה שבוחרים דווקא בכם",
-  description: "הסיבה שלקוחות בוחרים דווקא בכם כבר קיימת. כאן מגלים אותה, מהמילים שלכם. חינם, מתחילים בשלוש שאלות קצרות.",
+  title: "השיווק לא עובד? זה לא בגלל התוכן",
+  description: "כשאין תשובה ברורה לשאלה למה דווקא אתם, שום תוכן לא יחזיק. כאן מגיעים לשורש: הסיבה שלקוחות בוחרים דווקא בכם. חינם.",
 };
 
 export default async function KriahPage({

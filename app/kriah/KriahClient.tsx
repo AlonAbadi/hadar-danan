@@ -631,16 +631,16 @@ export function KriahClient({ previewKey, isTest }: Props) {
                 <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
               </div>
               <h1 style={{ fontSize: 27, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.3 }}>
-                הסיבה שבוחרים דווקא בכם
+                השיווק לא עובד? זה לא בגלל התוכן.
               </h1>
               <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.92, margin: "0 0 8px" }}>
-                היא כבר קיימת. הלקוחות שלכם מרגישים אותה. רק להגיד אותה, זה החלק שתמיד נתקע.
+                עוד סרטון, עוד פוסט, עוד שיטה. כשאין תשובה ברורה לשאלה למה דווקא אתם, שום תוכן לא יחזיק.
               </p>
               <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.92, margin: "0 0 8px" }}>
-                כשהיא ברורה, מפסיקים לרדוף: <b style={{ color: C.gold }}>הלקוחות הנכונים מגיעים כשהם כבר יודעים למה אתם.</b>
+                לזה יש פתרון, והוא לא עוד תוכן. בדקות הקרובות מגיעים יחד לשורש: <b style={{ color: C.gold }}>הסיבה שלקוחות בוחרים דווקא בכם.</b> ברגע שהיא ברורה, השיווק מפסיק להילחם, והלקוחות הנכונים מזהים אתכם לבד.
               </p>
               <p style={{ fontSize: 14, lineHeight: 1.6, color: C.muted, margin: 0 }}>
-                מגלים אותה כאן, מהמילים שלכם. חינם.
+                מתחילים בשלוש שאלות קצרות. חינם.
               </p>
               <div style={{ borderTop: `1px solid ${C.line}`, margin: "22px auto 0", width: 56 }} />
             </div>
