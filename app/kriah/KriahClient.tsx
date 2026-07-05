@@ -723,7 +723,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
             }}>
               {LIMITATION_LINE}
             </p>
-            <div style={{ textAlign: "left" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <QuietLink onClick={() => setScreen("s4")}>← חזרה</QuietLink>
               <GoldButton onClick={() => goTo("s7", "s7_fork")}>להמשיך</GoldButton>
             </div>
           </Card>
@@ -789,7 +790,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
                   dark
                 />
               )}
-              <div style={{ textAlign: "left", marginTop: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                <QuietLink onClick={() => setScreen("s15")}>← חזרה</QuietLink>
                 <GoldButton onClick={() => void submitSendGate()} disabled={finalizing}>
                   {finalizing ? "שולחים..." : "שלחו לי את האות ←"}
                 </GoldButton>
@@ -819,6 +821,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
               <QuietLink onClick={() => goTo("exit", "exit")}>
                 אפשר לעצור כאן
               </QuietLink>
+              <QuietLink onClick={() => setScreen("s6")}>← חזרה</QuietLink>
             </div>
           </Card>
         )}
@@ -865,6 +868,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
               {!softCaptured && email.trim().length === 0 && (
                 <QuietLink onClick={startQuestions}>להמשיך בלי</QuietLink>
               )}
+              <QuietLink onClick={() => setScreen("s7")}>← חזרה</QuietLink>
             </div>
           </Card>
         )}
@@ -929,18 +933,17 @@ export function KriahClient({ previewKey, isTest }: Props) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 26, gap: 12 }}>
                 <button
                   onClick={() => {
-                    if (qIdx === 0) return;
+                    if (qIdx === 0) { setScreen("s8"); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
                     setQIdx((i) => i - 1);
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  disabled={qIdx === 0}
                   style={{
                     background: "transparent",
-                    color: qIdx === 0 ? "rgba(158,153,144,0.4)" : C.muted,
+                    color: C.muted,
                     border: `1px solid ${C.line}`,
                     borderRadius: 12,
                     padding: "12px 22px",
-                    cursor: qIdx === 0 ? "not-allowed" : "pointer",
+                    cursor: "pointer",
                     fontSize: 15,
                   }}
                 >
@@ -1014,6 +1017,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, marginTop: 28 }}>
               <GoldButton onClick={() => submitPhoneGate(true)}>המשיכו</GoldButton>
               <QuietLink onClick={() => submitPhoneGate(false)}>להמשיך בלי טלפון</QuietLink>
+              <QuietLink onClick={() => { setQIdx(QUESTIONS.length - 1); setScreen("q"); }}>← חזרה לשאלות</QuietLink>
             </div>
           </Card>
         )}
