@@ -3,7 +3,7 @@
 // Two-ID rule: authUserId (auth.users.id) verifies the session and names the
 // storage path prefix; userId (public.users.id) is the FK for every table row.
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
@@ -16,6 +16,30 @@ export interface BroadcastSession {
 }
 
 export async function resolveBroadcastSession(): Promise<BroadcastSession | null> {
+  // Mobile app path: Authorization: Bearer <supabase access token>.
+  // Validated against Supabase Auth directly; same two-ID resolution below.
+  const hdrs = await headers();
+  const bearer = hdrs.get("authorization")?.match(/^Bearer (.+)$/i)?.[1];
+  if (bearer) {
+    const db = createServerClient();
+    const {
+      data: { user: tokenUser },
+    } = await db.auth.getUser(bearer);
+    if (!tokenUser) return null;
+    const { data: userData } = await (db as any)
+      .from("users")
+      .select("id, hive_status, is_test")
+      .eq("auth_id", tokenUser.id)
+      .maybeSingle();
+    if (!userData) return null;
+    return {
+      authUserId: tokenUser.id,
+      userId: userData.id,
+      hiveActive: userData.hive_status === "active",
+      isTest: userData.is_test === true,
+    };
+  }
+
   const cookieStore = await cookies();
   const supabaseAuth = createSSRClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
