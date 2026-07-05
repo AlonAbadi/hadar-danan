@@ -1,6 +1,7 @@
 .next
 node_modules
 .claude
-scripts
+/scripts
+/app-mobile
 /supabase
 *.tsbuildinfo
