@@ -270,7 +270,17 @@ export function RecordScreen({
   // ---- camera + prompter ----
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
-      <CameraView ref={camRef} style={{ flex: 1 }} facing="front" mode="video" mirror />
+      {/* responsiveOrientation: without it iOS 26 stamps app recordings with a
+          landscape orientation even when the phone is held upright (the server
+          also self-heals that case, but correct-at-source beats corrected) */}
+      <CameraView
+        ref={camRef}
+        style={{ flex: 1 }}
+        facing="front"
+        mode="video"
+        mirror
+        responsiveOrientationWhenOrientationLocked
+      />
       {/* teleprompter over the lens */}
       <View
         {...pan.panHandlers}

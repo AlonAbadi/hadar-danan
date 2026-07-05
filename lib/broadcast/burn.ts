@@ -17,7 +17,7 @@ import type { CaptionsPayload } from "./captions";
 const BUCKET = "broadcast-takes";
 const COVER_FRACTIONS = [0.2, 0.45, 0.7];
 
-export type FramingStrategy = "portrait_crop" | "landscape_blurpad";
+export type FramingStrategy = "portrait_crop" | "landscape_blurpad" | "portrait_crop_app_rotated";
 
 export interface VideoFilterPlan {
   kind: "vf" | "complex";
@@ -32,13 +32,22 @@ export interface VideoFilterPlan {
 // sensor) get the industry-standard blur-pad — full frame as a band over a
 // blurred, dimmed fill, captions on the lower strip, stamp on the upper one.
 // Cropping a landscape source cannot fix "too zoomed in"; padding can.
+//
+// Exception: the native app (expo-camera on iOS 26) records a PORTRAIT pixel
+// buffer with a ±90° displaymatrix — effectively landscape after autorotation.
+// Browser MediaRecorder landscape takes never carry a rotation tag, so this
+// fingerprint (rotated + portrait buffer + landscape effective) uniquely
+// identifies app takes; those get the portrait center-crop, which reproduces
+// exactly what the app's portrait preview showed while filming.
 export function buildVideoFilter(dims: VideoDims | null, assPath: string): VideoFilterPlan {
   const landscape = dims !== null && dims.effWidth > dims.effHeight;
-  if (!landscape) {
+  const appRotated =
+    landscape && Math.abs(dims.rotation) % 180 === 90 && dims.width < dims.height;
+  if (!landscape || appRotated) {
     return {
       kind: "vf",
       value: `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
-      strategy: "portrait_crop",
+      strategy: appRotated ? "portrait_crop_app_rotated" : "portrait_crop",
       captionMarginV: 430,
       stampMarginV: 96,
     };
