@@ -8,7 +8,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 // Must match app/admin/kriah — counting starts at the reset moment.
-const REPORT_EPOCH = "2026-07-05T21:45:00Z";
+const REPORT_EPOCH = "2026-07-04T21:45:00Z";
 import type { createServerClient } from "@/lib/supabase/server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

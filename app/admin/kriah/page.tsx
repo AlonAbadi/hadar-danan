@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 // was asymmetric (the entry beacon shipped days after the other steps) and was
 // wiped. The report counts ONLY from here — leads/extractions before it exist
 // as business data but are excluded from the numbers.
-const REPORT_EPOCH = "2026-07-05T21:45:00Z";
+const REPORT_EPOCH = "2026-07-04T21:45:00Z";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
