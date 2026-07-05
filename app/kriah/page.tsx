@@ -6,7 +6,7 @@ import { KriahClient } from "./KriahClient";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "השיווק לא עובד? זה לא בגלל התוכן",
+  title: "השיווק לא עובד?",
   description: "כשאין תשובה ברורה לשאלה למה דווקא אתם, שום תוכן לא יחזיק. כאן מגיעים לשורש: הסיבה שלקוחות בוחרים דווקא בכם. חינם.",
 };
 

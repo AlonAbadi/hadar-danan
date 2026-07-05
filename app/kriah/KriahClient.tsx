@@ -631,7 +631,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
                 <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
               </div>
               <h1 style={{ fontSize: 27, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.3 }}>
-                השיווק לא עובד? זה לא בגלל התוכן.
+                השיווק לא עובד?
               </h1>
               <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.92, margin: "0 0 8px" }}>
                 עוד סרטון, עוד פוסט, עוד שיטה. כשאין תשובה ברורה לשאלה למה דווקא אתם, שום תוכן לא יחזיק.
