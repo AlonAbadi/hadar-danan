@@ -74,6 +74,11 @@ export function BroadcastRoomClient({
   // Floating PiP prompter: a real MP4 of the scrolling script — iOS keeps
   // PiP windows alive over other apps, including the native camera.
   const openNativeSheet = useCallback(async () => {
+    // CRITICAL: release our camera+mic FIRST. A live getUserMedia session
+    // makes iOS treat the page as an active call, and the native camera then
+    // refuses to record video ("not available while on a call") and pauses
+    // the PiP window.
+    rec.releaseCamera();
     setNativeSheet("loading");
     try {
       const wpm = Number(localStorage.getItem("broadcast_wpm")) || 130;
@@ -90,6 +95,7 @@ export function BroadcastRoomClient({
       setFloatUrl(null);
       setNativeSheet("ready"); // still allow filming without the prompter
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extractionId, videoNumber]);
 
   const startPiP = useCallback(async () => {
@@ -629,7 +635,10 @@ export function BroadcastRoomClient({
               display: "flex",
               alignItems: "flex-end",
             }}
-            onClick={() => setNativeSheet("closed")}
+            onClick={() => {
+              setNativeSheet("closed");
+              if (phase === "room") rec.requestCamera();
+            }}
           >
             <div
               onClick={(e) => e.stopPropagation()}
