@@ -723,9 +723,9 @@ export function KaveretClient({
           <div className={sty.zrule} />
 
           {(() => {
-            // fallback texts can repeat (no content_kit yet) — show each once
+            // outward texts come only from the content kit; show each once
             const seen = new Set<string>();
-            return ([
+            const rows = ([
               ["ביו לאינסטגרם", data.bioInstagram, "bio"],
               ["כותרת ללינקדאין", data.linkedinHeadline, "li"],
               ["אודות לפייסבוק", data.facebookAbout, "fb"],
@@ -737,15 +737,24 @@ export function KaveretClient({
               seen.add(norm);
               return true;
             });
-          })().map(([label, text, key]) =>
-            text.trim() ? (
+            if (!rows.length) {
+              return (
+                <div className={sty.trow}>
+                  <div className={sty.head}><span className={sty.plat}>התכנים לרשתות</span></div>
+                  <p className={sty.txt}>
+                    התכנים שלך לרשתות עדיין בהכנה. ברגע שהם מוכנים הם יופיעו כאן, כתובים ומדויקים לקהל שלך
+                  </p>
+                </div>
+              );
+            }
+            return rows.map(([label, text, key]) => (
               <div className={sty.trow} key={key}>
                 <div className={sty.head}><span className={sty.plat}>{label}</span><span className={sty.check}><span className={sty.v}>✓</span> באורך מדויק</span></div>
                 <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(text, key)}>{text}</p>
                 <div className={sty.tfoot}>{copyBtn(key, text)}</div>
               </div>
-            ) : null
-          )}
+            ));
+          })()}
 
           {!data.demo && data.reels.length ? (
             <div>

@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { logBroadcastError, resolveBroadcastSession } from "@/lib/broadcast/auth";
+import { pickPrimaryExtractionId } from "@/lib/signal/primary-extraction";
 
 export const dynamic = "force-dynamic";
 
@@ -14,13 +15,10 @@ export async function GET() {
     if (!session.hiveActive) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
     const db = createServerClient() as any;
-    const { data: ext } = await db
-      .from("signal_extractions")
-      .select("id, signal")
-      .eq("user_id", session.userId)
-      .order("generated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const primary = await pickPrimaryExtractionId(db, session.userId);
+    const { data: ext } = primary
+      ? await db.from("signal_extractions").select("id, signal").eq("id", primary.id).maybeSingle()
+      : { data: null };
     if (!ext) return NextResponse.json({ extraction_id: null, scripts: [] });
 
     const signal = ext.signal ?? {};

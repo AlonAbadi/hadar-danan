@@ -18,6 +18,7 @@ import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { CHALLENGE_DAYS } from "@/lib/challenge-config";
+import { pickPrimaryExtractionId } from "@/lib/signal/primary-extraction";
 import { KaveretClient, type KaveretData } from "./KaveretClient";
 
 export const dynamic = "force-dynamic";
@@ -101,14 +102,15 @@ export default async function KaveretPage({
   if (!userData) redirect("/account");
   if (userData.hive_status !== "active") redirect("/hive");
 
+  const primary = await pickPrimaryExtractionId(db, userData.id);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: ext } = await (db as any)
-    .from("signal_extractions")
-    .select("id, signal")
-    .eq("user_id", userData.id)
-    .order("generated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data: ext } = primary
+    ? await (db as any)
+        .from("signal_extractions")
+        .select("id, signal")
+        .eq("id", primary.id)
+        .maybeSingle()
+    : { data: null };
   if (!ext) redirect("/signal?from=kit");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -237,18 +239,21 @@ export default async function KaveretPage({
     signalText: String(signal.signal ?? ""),
     positioning: String(kit.positioning_statement ?? signal.signal_promise ?? ""),
     persona: String(kit.persona_description ?? signal.people ?? ""),
+    // Outward-facing texts come ONLY from the content kit — the kit is the
+    // translation layer from the inward diagnostic to audience-facing copy.
+    // Raw signal fields speak TO the member in second person ("בנית לעצמך"),
+    // so they are never valid stand-ins for a bio or an about (field bug:
+    // inward text dressed as social copy). The one deliberate exception is
+    // the signal card itself — the signal IS the product there.
     cards: [
-      { name: "המשפט הציבורי", use: "לפוסט היכרות", text: String(kit.bio_short ?? signal.people ?? ""), file: "beegood-signal-public.png" },
+      { name: "המשפט הציבורי", use: "לפוסט היכרות", text: String(kit.bio_short ?? ""), file: "beegood-signal-public.png" },
       { name: "האות שלך", use: "לרגעים הגדולים", text: String(signal.signal ?? ""), file: "beegood-signal-ot.png" },
       { name: "ההבטחה", use: "לסטורי או להזמנה לשיחה", text: String(signal.signal_promise ?? ""), file: "beegood-signal-promise.png" },
     ].filter((c) => c.text.trim().length > 0),
     identity: String(identity),
-    bioInstagram: String(kit.bio_short ?? signal.signal_promise ?? ""),
-    linkedinHeadline: String(
-      kit.linkedin_headline ??
-        [signal.central_tool, signal.element].filter(Boolean).join(" | ")
-    ),
-    facebookAbout: String(kit.bio_medium ?? signal.signal ?? ""),
+    bioInstagram: String(kit.bio_short ?? ""),
+    linkedinHeadline: String(kit.linkedin_headline ?? ""),
+    facebookAbout: String(kit.bio_medium ?? ""),
     challengeDay: challengeDayNum,
     monthLabel,
     filmedCount,

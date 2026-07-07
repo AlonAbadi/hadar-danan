@@ -11,6 +11,7 @@ import { cookies } from "next/headers";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { pickPrimaryExtractionId } from "@/lib/signal/primary-extraction";
 import { SignalKitClient } from "./SignalKitClient";
 
 export const dynamic = "force-dynamic";
@@ -36,15 +37,17 @@ export default async function SignalKitPage() {
   if (!userData) redirect("/account");
   if (userData.hive_status !== "active") redirect("/hive");
 
-  // Latest extraction (if any)
+  // Primary extraction — newest COMPLETE one, not newest (funnel re-runs
+  // create thin extractions that would hijack the kit).
+  const primary = await pickPrimaryExtractionId(db, userData.id);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: ext } = await (db as any)
-    .from("signal_extractions")
-    .select("id, signal, generated_at")
-    .eq("user_id", userData.id)
-    .order("generated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data: ext } = primary
+    ? await (db as any)
+        .from("signal_extractions")
+        .select("id, signal, generated_at")
+        .eq("id", primary.id)
+        .maybeSingle()
+    : { data: null };
 
   // Paid member with no diagnostic yet (bought directly from /signal-hive):
   // send them straight into the diagnostic instead of an empty kit. /signal
