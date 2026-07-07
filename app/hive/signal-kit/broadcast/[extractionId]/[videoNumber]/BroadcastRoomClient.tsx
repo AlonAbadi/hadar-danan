@@ -994,6 +994,10 @@ function TakeGallery({
 }
 
 function PermissionDenied({ onRetry }: { onRetry: () => void }) {
+  // Desktop visitors (field case: a member on Windows Chrome) get "film from
+  // your phone" as the headline — the browser steps below are iOS-specific.
+  const isDesktop =
+    typeof navigator !== "undefined" && !/iPhone|iPad|Android/i.test(navigator.userAgent);
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px" }}>
       <div
@@ -1006,25 +1010,27 @@ function PermissionDenied({ onRetry }: { onRetry: () => void }) {
         }}
       >
         <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700 }}>
-          {getBroadcastCopy("permission.title")}
+          {getBroadcastCopy(isDesktop ? "permission.desktop_title" : "permission.title")}
         </h2>
         <p style={{ color: "#CDD1DA", fontSize: 15, lineHeight: 1.7, marginTop: 10 }}>
-          {getBroadcastCopy("permission.body")}
+          {getBroadcastCopy(isDesktop ? "permission.desktop_body" : "permission.body")}
         </p>
-        <ol
-          style={{
-            textAlign: "start",
-            color: "#9E9990",
-            fontSize: 14,
-            lineHeight: 2,
-            marginTop: 14,
-            paddingInlineStart: 20,
-          }}
-        >
-          <li>{getBroadcastCopy("permission.step1")}</li>
-          <li>{getBroadcastCopy("permission.step2")}</li>
-          <li>{getBroadcastCopy("permission.step3")}</li>
-        </ol>
+        {!isDesktop ? (
+          <ol
+            style={{
+              textAlign: "start",
+              color: "#9E9990",
+              fontSize: 14,
+              lineHeight: 2,
+              marginTop: 14,
+              paddingInlineStart: 20,
+            }}
+          >
+            <li>{getBroadcastCopy("permission.step1")}</li>
+            <li>{getBroadcastCopy("permission.step2")}</li>
+            <li>{getBroadcastCopy("permission.step3")}</li>
+          </ol>
+        ) : null}
         <div style={{ marginTop: 18 }}>
           <ActionButton variant="primary" onClick={onRetry}>
             {getBroadcastCopy("permission.retry")}

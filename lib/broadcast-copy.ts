@@ -117,6 +117,9 @@ export const BROADCAST_COPY = {
   "permission.step2": "בוחרים הגדרות אתר",
   "permission.step3": "מצלמה ומיקרופון: אישור",
   "permission.retry": "ניסיתי שוב",
+  "permission.desktop_title": "הכי טוב לצלם מהטלפון",
+  "permission.desktop_body":
+    "חדר השידור בנוי לצילום סלפי עם המצלמה הקדמית של הטלפון. פתחו את אותו עמוד בטלפון, לחצו לצלם עכשיו, והטלפרומפטר כבר יחכה לכם שם",
   "error.upload_retry": "הטייק שמור אצלך. מנסות להעלות שוב",
   "error.processing_failed": "משהו לא הסתדר בעריכה. הטייק שלך שמור, אפשר לנסות שוב",
   "error.unsupported": {
