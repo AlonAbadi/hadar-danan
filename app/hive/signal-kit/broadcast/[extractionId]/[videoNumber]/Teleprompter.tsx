@@ -131,11 +131,17 @@ export function Teleprompter({
         const dbs = tail.map((s) => 20 * Math.log10(Math.max(s.rms, 1e-6)));
         const sorted = [...dbs].sort((a, b) => a - b);
         const p20 = sorted[Math.floor(sorted.length * 0.2)];
-        // asymmetric floor: falls fast, rises slow
+        // Adaptive floor. Downward always fast. Upward speed depends on state:
+        // pre-speech (armed) = the true ambient, learn it fast — a floor stuck
+        // at the -55 default in a noisy room keeps SNR high forever and the
+        // gate never closes (field bug: "לא נעצר כשהפסקתי לדבר"); during
+        // speech, rise slowly so the voice never becomes the floor; in
+        // post-speech silence, medium.
+        const riseMs = armedRef.current ? 400 : speakingRef.current ? 8000 : 1500;
         const f = floorDbRef.current;
         floorDbRef.current =
-          p20 < f ? f + (p20 - f) * Math.min(1, dt / 500) : f + (p20 - f) * Math.min(1, dt / 8000);
-        floorDbRef.current = Math.min(Math.max(floorDbRef.current, -75), -30);
+          p20 < f ? f + (p20 - f) * Math.min(1, dt / 400) : f + (p20 - f) * Math.min(1, dt / riseMs);
+        floorDbRef.current = Math.min(Math.max(floorDbRef.current, -75), -26);
 
         const last2 = dbs.slice(-2);
         const snrOn = last2.every((d) => d > floorDbRef.current + VAD_ON_DB);

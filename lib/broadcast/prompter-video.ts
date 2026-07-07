@@ -18,8 +18,12 @@ const H = 960;
 const FONT_SIZE = 46;
 const LINE_H = Math.round(FONT_SIZE * 1.5);
 const CHARS_PER_LINE = 16; // Hebrew at 46px inside ~460px of usable width
-const LEAD_MS = 2500; // read the opening before it moves
+const LEAD_MS = 1200; // text starts below the window — a short beat, then it rises in
 const TAIL_MS = 1500;
+// The visible prompter strip (the rest of the frame is masked to background).
+const WINDOW_TOP = 250;
+const WINDOW_BOTTOM = 640;
+const READ_LINE_Y = Math.round(WINDOW_TOP + (WINDOW_BOTTOM - WINDOW_TOP) * 0.33);
 
 function assTime(ms: number): string {
   const cs = Math.floor((ms % 1000) / 10);
@@ -37,7 +41,8 @@ export interface PrompterSpec {
 }
 
 export function prompterStoragePath(spec: PrompterSpec): string {
-  return `${spec.authPrefix}/prompter/v${spec.videoNumber}-w${spec.wpm}.mp4`;
+  // r2: windowed prompter (masked strip + read line) — bust the r1 cache.
+  return `${spec.authPrefix}/prompter/v${spec.videoNumber}-w${spec.wpm}-r2.mp4`;
 }
 
 // Renders the scroll and uploads it; returns the storage path.
@@ -61,11 +66,12 @@ export async function renderPrompterVideo(spec: PrompterSpec): Promise<string> {
   const scrollMs = Math.round((words / spec.wpm) * 60_000);
   const durationMs = LEAD_MS + scrollMs + TAIL_MS;
 
-  // One dialogue block, top-center anchored, moved from below the read area
-  // to fully past the top over the scroll window. libass wraps (WrapStyle 0)
-  // and handles Hebrew bidi (Encoding -1, proven by the burn spike).
-  const yStart = Math.round(H * 0.35);
-  const yEnd = -(textHeight + 60);
+  // A REAL prompter is a window, not a page: only a strip shows text (masked
+  // by drawbox bands below), the block enters from under the strip and exits
+  // above it, and a gold read line marks the pace. Showing the whole script
+  // at once was the field complaint ("מציג הכל בבת אחת").
+  const yStart = WINDOW_BOTTOM;
+  const yEnd = WINDOW_TOP - textHeight;
   const ass = `﻿[Script Info]
 ScriptType: v4.00+
 PlayResX: ${W}
@@ -91,7 +97,13 @@ Dialogue: 0,${assTime(0)},${assTime(durationMs)},P,,0,0,0,,{\\move(${W / 2},${yS
       "-f", "lavfi", "-i", `color=c=0x080C14:s=${W}x${H}:d=${(durationMs / 1000).toFixed(1)}:r=30`,
       "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono",
       "-shortest",
-      "-vf", `ass=${assPath}:fontsdir=${FONTS_DIR}`,
+      "-vf",
+      // ass renders the moving block; the drawboxes mask everything outside
+      // the window strip; the last drawbox is the gold read line.
+      `ass=${assPath}:fontsdir=${FONTS_DIR}` +
+        `,drawbox=x=0:y=0:w=${W}:h=${WINDOW_TOP}:color=0x080C14:t=fill` +
+        `,drawbox=x=0:y=${WINDOW_BOTTOM}:w=${W}:h=${H - WINDOW_BOTTOM}:color=0x080C14:t=fill` +
+        `,drawbox=x=20:y=${READ_LINE_Y}:w=${W - 40}:h=3:color=0xE8B94A@0.75:t=fill`,
       "-c:v", "libx264", "-preset", "veryfast", "-crf", "28", "-pix_fmt", "yuv420p",
       "-c:a", "aac", "-b:a", "32k",
       "-movflags", "+faststart",

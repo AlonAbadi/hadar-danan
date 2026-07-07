@@ -12,12 +12,18 @@ import path from "node:path";
 import { createServerClient } from "@/lib/supabase/server";
 import { runFfmpeg, scratchDir, scratchCleanup, probeVideoDims, FONTS_DIR, type VideoDims } from "./ffmpeg";
 import { buildAss } from "./ass";
+import { detectPersonWindow } from "./framing";
 import type { CaptionsPayload } from "./captions";
 
 const BUCKET = "broadcast-takes";
 const COVER_FRACTIONS = [0.2, 0.45, 0.7];
 
-export type FramingStrategy = "portrait_crop" | "landscape_blurpad" | "portrait_crop_app_rotated";
+export type FramingStrategy =
+  | "portrait_crop"
+  | "landscape_blurpad"
+  | "portrait_crop_app_rotated"
+  | "portrait_crop_person_centered"
+  | "landscape_blurpad_persons_wide";
 
 export interface VideoFilterPlan {
   kind: "vf" | "complex";
@@ -37,20 +43,55 @@ export interface VideoFilterPlan {
 // buffer with a ±90° displaymatrix — effectively landscape after autorotation.
 // Browser MediaRecorder landscape takes never carry a rotation tag, so this
 // fingerprint (rotated + portrait buffer + landscape effective) uniquely
-// identifies app takes; those get the portrait center-crop, which reproduces
-// exactly what the app's portrait preview showed while filming.
-export function buildVideoFilter(dims: VideoDims | null, assPath: string): VideoFilterPlan {
+// identifies app takes; those get a portrait crop. Where the crop lands is
+// person-aware (see runBurnStage): centered on the detected people, or the
+// blur-pad when they're too wide for a 9:16 window to hold.
+export function buildVideoFilter(
+  dims: VideoDims | null,
+  assPath: string,
+  personWindow?: { left: number; right: number } | null
+): VideoFilterPlan {
   const landscape = dims !== null && dims.effWidth > dims.effHeight;
   const appRotated =
     landscape && Math.abs(dims.rotation) % 180 === 90 && dims.width < dims.height;
-  if (!landscape || appRotated) {
+  if (!landscape) {
     return {
       kind: "vf",
       value: `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
-      strategy: appRotated ? "portrait_crop_app_rotated" : "portrait_crop",
+      strategy: "portrait_crop",
       captionMarginV: 430,
       stampMarginV: 96,
     };
+  }
+  if (appRotated) {
+    // 9:16 window out of the effective landscape frame.
+    const cropW = Math.round(((dims.effHeight * 9) / 16) / 2) * 2;
+    let strategy: FramingStrategy = "portrait_crop_app_rotated";
+    let cropX = Math.round((dims.effWidth - cropW) / 2);
+    if (personWindow) {
+      // Face span + breathing room on both sides — a face at the exact crop
+      // edge still reads as beheaded.
+      const padPx = dims.effWidth * 0.04;
+      const spanPx = (personWindow.right - personWindow.left) * dims.effWidth + padPx * 2;
+      if (spanPx > cropW) {
+        // People wider than the window — cropping would behead someone.
+        strategy = "landscape_blurpad_persons_wide";
+      } else {
+        const centerPx = ((personWindow.left + personWindow.right) / 2) * dims.effWidth;
+        cropX = Math.round(Math.min(Math.max(centerPx - cropW / 2, 0), dims.effWidth - cropW));
+        strategy = "portrait_crop_person_centered";
+      }
+    }
+    if (strategy !== "landscape_blurpad_persons_wide") {
+      return {
+        kind: "vf",
+        value: `crop=${cropW}:${dims.effHeight}:${cropX}:0,scale=1080:1920,fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
+        strategy,
+        captionMarginV: 430,
+        stampMarginV: 96,
+      };
+    }
+    // fall through to the blur-pad below
   }
   return {
     kind: "complex",
@@ -62,7 +103,7 @@ export function buildVideoFilter(dims: VideoDims | null, assPath: string): Video
       `[fg]scale=1080:-2:flags=lanczos[fgv];` +
       `[bgv][fgv]overlay=(W-w)/2:(H-h)/2:format=auto,setsar=1,fps=30,` +
       `ass=${assPath}:fontsdir=${FONTS_DIR}[v]`,
-    strategy: "landscape_blurpad",
+    strategy: appRotated ? "landscape_blurpad_persons_wide" : "landscape_blurpad",
     // 1080-wide band sits at y 555-1365: captions just below it on the blur
     // strip, stamp just above it — both clear of the Reels UI zones.
     captionMarginV: 400,
@@ -120,7 +161,24 @@ export async function runBurnStage(edit: EditRow): Promise<void> {
     // Framing decision from the EFFECTIVE source dims (autorotation-aware).
     const dims = await probeVideoDims(inputPath);
     const assPath = path.join(dir, "captions.ass");
-    const plan = buildVideoFilter(dims, assPath);
+
+    // Person-aware crop for app-rotated takes: a blind center-crop beheads
+    // off-center speakers (field case: a two-person take lost one of them).
+    let personWindow: Awaited<ReturnType<typeof detectPersonWindow>> = null;
+    const isAppRotated =
+      dims !== null &&
+      dims.effWidth > dims.effHeight &&
+      Math.abs(dims.rotation) % 180 === 90 &&
+      dims.width < dims.height;
+    if (isAppRotated) {
+      personWindow = await detectPersonWindow({
+        inputPath,
+        scratchDir: dir,
+        trimStartMs: trimStart,
+        trimmedMs: trimmedMs,
+      });
+    }
+    const plan = buildVideoFilter(dims, assPath, personWindow);
 
     // ASS with approved lines only (mode 'none' approved an empty set —
     // the stamp still burns). Margins depend on the framing strategy.
@@ -177,6 +235,9 @@ export async function runBurnStage(edit: EditRow): Promise<void> {
         src: dims ? `${dims.width}x${dims.height}r${dims.rotation}` : "probe_failed",
         eff: dims ? `${dims.effWidth}x${dims.effHeight}` : null,
         strategy: plan.strategy,
+        persons: personWindow
+          ? `${personWindow.left.toFixed(2)}-${personWindow.right.toFixed(2)}@${personWindow.frames}`
+          : null,
       }),
     });
 
