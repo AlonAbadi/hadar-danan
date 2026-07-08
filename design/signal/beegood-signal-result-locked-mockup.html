@@ -110,6 +110,22 @@
   .phone .rec { position:absolute; bottom:12px; width:26px; height:26px; border-radius:50%; border:2px solid var(--gold); }
   .phone .rec::after { content:""; position:absolute; inset:5px; border-radius:50%; background:var(--gold); }
 
+  /* challenge: open day-0 session */
+  .okchip { margin-inline-start:auto; display:inline-flex; align-items:center; gap:6px; flex:none;
+    font-size:11px; font-weight:700; color:var(--ok); letter-spacing:0.03em;
+    background:rgba(127,212,155,0.08); border:1px solid rgba(127,212,155,0.35); border-radius:999px; padding:5px 11px; }
+  .vidrow { position:relative; border-radius:14px; overflow:hidden; border:1px solid rgba(232,185,74,0.28);
+    background:radial-gradient(ellipse 120% 90% at 50% 0%, rgba(232,185,74,0.1), transparent 60%), #0B0F18;
+    aspect-ratio:16/9; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
+  .vidrow .play { width:52px; height:52px; border-radius:50%; display:grid; place-items:center;
+    background:linear-gradient(180deg,#F1D07E,#CE9C38); box-shadow:0 8px 24px rgba(232,185,74,0.35); }
+  .vidrow .play svg { width:20px; height:20px; fill:#171204; margin-inline-start:3px; }
+  .vidrow .vt { font-size:14px; font-weight:700; }
+  .vidrow .vs { color:var(--muted); font-size:11.5px; font-weight:300; margin-top:-6px; }
+  .days .lk { position:relative; }
+  .days .lk svg { position:absolute; top:-4px; inset-inline-end:-4px; width:13px; height:13px;
+    stroke:var(--gold-deep); fill:var(--bg); stroke-width:2; border-radius:50%; }
+
   /* unlock CTA */
   .unlock { margin-top:56px; text-align:center; position:relative;
     background:radial-gradient(ellipse 130% 100% at 50% 0%, rgba(232,185,74,0.12), transparent 55%), var(--card);
@@ -196,26 +212,31 @@
     </div>
   </section>
 
-  <!-- ══ locked 02: visual kit ══ -->
+    <!-- ══ 02: challenge, opening session OPEN ══ -->
   <section class="zone">
     <div class="zhead">
       <span class="zn">02</span>
-      <span class="zt"><h3>ערכת הוויזואל</h3><span class="hint">כרטיסים מעוצבים, מוכנים לפרסום</span></span>
-      <span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
+      <span class="zt"><h3>אתגר האות</h3><span class="hint">שבעה ימים, צעד ביום, עם הדר</span></span>
+      <span class="okchip">מפגש הפתיחה פתוח לך</span>
     </div>
-    <div class="trow locked">
-      <div class="content">
-        <div class="minicards">
-          <div class="m"><div class="q">"</div><div class="b1"></div><div class="b2"></div></div>
-          <div class="m"><div class="q">"</div><div class="b1"></div><div class="b2"></div></div>
-          <div class="m"><div class="q">"</div><div class="b1"></div><div class="b2"></div></div>
-        </div>
-        <p class="peek" style="margin-top:14px; font-size:13.5px; color:var(--muted)">המשפט הציבורי · האות שלך · ההבטחה. בצבע נקי או על תמונה, עם או בלי לוגו.</p>
+    <div class="trow">
+      <div class="vidrow">
+        <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        <span class="vt">מפגש הפתיחה עם הדר</span>
+        <span class="vs">פתוח לצפייה עכשיו, בלי תשלום</span>
       </div>
-      <div class="lockband">
-        <span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
-        <span class="t">שלושה כרטיסים בכל פורמט במה</span>
+      <button class="btn ghost" type="button">לצפות במפגש הפתיחה</button>
+      <div class="days" style="margin-top:16px">
+        <span class="on">0</span>
+        <span class="lk">1<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="lk">2<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="lk">3<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="lk">4<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="lk">5<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="lk">6<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="lk">7<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
       </div>
+      <p class="peek" style="margin-top:12px; font-size:13px; color:var(--muted)">שבעת הימים המלאים, כל יום סרטון ומשימה שמקרבת את האות לעולם, נפתחים בכוורת.</p>
     </div>
   </section>
 
@@ -266,21 +287,25 @@
     </div>
   </section>
 
-  <!-- ══ locked 05: challenge ══ -->
+    <!-- ══ locked 05: visual kit ══ -->
   <section class="zone">
     <div class="zhead">
       <span class="zn">05</span>
-      <span class="zt"><h3>אתגר האות</h3><span class="hint">שבעה ימים, צעד ביום, עם הדר</span></span>
+      <span class="zt"><h3>ערכת הוויזואל</h3><span class="hint">כרטיסים מעוצבים, מוכנים לפרסום</span></span>
       <span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
     </div>
     <div class="trow locked">
       <div class="content">
-        <div class="days"><span class="on">0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
-        <p class="peek" style="margin-top:14px; font-size:13.5px; color:var(--muted)">כל יום סרטון קצר ומשימה אחת שמקרבת את האות לעולם.</p>
+        <div class="minicards">
+          <div class="m"><div class="q">"</div><div class="b1"></div><div class="b2"></div></div>
+          <div class="m"><div class="q">"</div><div class="b1"></div><div class="b2"></div></div>
+          <div class="m"><div class="q">"</div><div class="b1"></div><div class="b2"></div></div>
+        </div>
+        <p class="peek" style="margin-top:14px; font-size:13.5px; color:var(--muted)">המשפט הציבורי · האות שלך · ההבטחה. בצבע נקי או על תמונה, עם או בלי לוגו.</p>
       </div>
       <div class="lockband">
         <span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
-        <span class="t">יום 0 נפתח ברגע ההצטרפות</span>
+        <span class="t">שלושה כרטיסים בכל פורמט במה</span>
       </div>
     </div>
   </section>
