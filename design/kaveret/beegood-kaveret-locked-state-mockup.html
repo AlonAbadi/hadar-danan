@@ -323,6 +323,42 @@
   .pct { display:inline-block; color:#7FD49B; font-size:14px; font-weight:800;
     background:rgba(127,212,155,0.1); border:1px solid rgba(127,212,155,0.35); border-radius:999px; padding:6px 16px; }
 
+  /* designed card (one real visual, open) */
+  .vc .frame.designed {
+    background:
+      radial-gradient(ellipse 90% 60% at 70% 20%, rgba(232,185,74,0.32), transparent 55%),
+      radial-gradient(ellipse 120% 80% at 20% 90%, rgba(58,96,110,0.5), transparent 60%),
+      linear-gradient(160deg, #1a2233 0%, #0e1520 45%, #131a14 100%);
+    border-color:rgba(232,185,74,0.45); }
+  .vc .frame.designed .lead, .vc .frame.designed .main { text-shadow:0 2px 14px rgba(0,0,0,0.75); }
+  .vc.lockedcard { position:relative; }
+  .vc.lockedcard .frame > *, .vc.lockedcard .meta, .vc.lockedcard .foot { filter:blur(6px); opacity:0.55; pointer-events:none; }
+  .vc.lockedcard .cardlock { position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; filter:none; opacity:1; }
+  .vc.lockedcard .cardlock .ic { width:42px; height:42px; border-radius:50%; display:grid; place-items:center;
+    background:rgba(232,185,74,0.12); border:1px solid rgba(232,185,74,0.45); }
+  .vc.lockedcard .cardlock .ic svg { width:18px; height:18px; stroke:var(--gold); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .vc.lockedcard .cardlock .t { font-size:12.5px; font-weight:700; text-shadow:0 2px 10px rgba(0,0,0,0.8); }
+  /* teleprompter demo phone */
+  .promptphone { width:200px; margin:16px auto 0; aspect-ratio:9/17.5; border-radius:24px; overflow:hidden; position:relative;
+    border:1.5px solid rgba(232,185,74,0.4); background:#000; box-shadow:0 20px 50px rgba(0,0,0,0.55); }
+  .promptphone .pstrip { position:absolute; top:0; left:0; right:0; height:44%; z-index:2;
+    background:rgba(8,12,20,0.86); backdrop-filter:blur(4px); padding:16px 12px 0; text-align:center; overflow:hidden;
+    -webkit-mask-image:linear-gradient(to bottom, black 0, black 62%, transparent 96%);
+    mask-image:linear-gradient(to bottom, black 0, black 62%, transparent 96%); }
+  .promptphone .pline { position:absolute; top:34%; left:8px; right:8px; height:2px; z-index:3;
+    background:linear-gradient(90deg, transparent, rgba(232,185,74,0.7), transparent); }
+  .promptphone .ptxt { font-size:12.5px; font-weight:700; line-height:1.65; color:#EDE9E1; }
+  .promptphone .ptxt .gold { color:var(--gold); }
+  .promptphone .pcam { position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse 70% 42% at 50% 62%, rgba(122,96,74,0.55), transparent 65%),
+      radial-gradient(ellipse 120% 70% at 50% 100%, rgba(28,36,52,0.9), transparent 70%),
+      linear-gradient(180deg, #101622 0%, #0a0e16 100%); }
+  .promptphone .prec { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); z-index:3;
+    width:34px; height:34px; border-radius:50%; border:2.5px solid var(--gold); }
+  .promptphone .prec::after { content:""; position:absolute; inset:6px; border-radius:50%; background:var(--gold); }
+  .promptcap { text-align:center; color:var(--muted); font-size:12px; font-weight:300; margin-top:10px; }
+
   /* strategy */
   details.disc { margin-top:16px; background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden; }
   details.disc summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -534,29 +570,31 @@
       </div>
     </div>
 
-    <div class="locked"><div class="content"><div class="carousel" id="carousel">
+    <div class="carousel" id="carousel">
       <div class="vc">
-        <div class="frame"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
-          <div class="q">"</div><div class="lead">לאלה שיודעים שיש להם כיוון,</div><div class="main">אבל עדיין לא מצאו מי שרואה אותו לפניהם.</div></div>
+        <div class="frame designed"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+          <div class="q">"</div><div class="lead">לאלה שיש להם רעיון גדול,</div><div class="main">אבל עוד לא מצאו מי שמתרגם אותו לשפה שמגשימה אותו.</div></div>
         <div class="meta"><span class="name">המשפט הציבורי</span><span class="use">לפוסט היכרות</span></div>
         <div class="foot"><button class="btn-copy" data-card="0" aria-label="שמירת כרטיס המשפט הציבורי"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span class="lbl">שמירת הכרטיס</span></button></div>
       </div>
-      <div class="vc">
+      <div class="vc lockedcard">
         <div class="frame"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
           <div class="q">"</div><div class="lead">בנית לעצמך שקט פנימי בתוך עולם שרץ, ועכשיו אתה קורא דרכו את התוצאה של מה שאדם עושה,</div><div class="main">עוד לפני שהוא מסתכל קדימה.</div></div>
         <div class="meta"><span class="name">האות שלך</span><span class="use">לרגעים הגדולים</span></div>
         <div class="foot"><button class="btn-copy" data-card="1" aria-label="שמירת כרטיס האות"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span class="lbl">שמירת הכרטיס</span></button></div>
+        <div class="cardlock"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="t">נפתח בכוורת</span></div>
       </div>
-      <div class="vc">
+      <div class="vc lockedcard">
         <div class="frame"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
           <div class="q">"</div><div class="lead">אני עוזר לך לקרוא את</div><div class="main">עצמך לפני שאתה מתקדם.</div></div>
         <div class="meta"><span class="name">ההבטחה</span><span class="use">לסטורי או להזמנה לשיחה</span></div>
         <div class="foot"><button class="btn-copy" data-card="2" aria-label="שמירת כרטיס ההבטחה"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span class="lbl">שמירת הכרטיס</span></button></div>
+        <div class="cardlock"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="t">נפתח בכוורת</span></div>
       </div>
     </div>
     <div class="dots" id="dots" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
 
-    <div class="subhead" style="position:relative"><h3>כל הפורמטים</h3><span class="hint">אותו אות, מותאם לכל במה</span><span class="newtag" style="top:-4px">חדש באיחוד</span></div>
+    <div class="locked" style="margin-top:8px"><div class="content"><div class="subhead" style="position:relative"><h3>כל הפורמטים</h3><span class="hint">אותו אות, מותאם לכל במה</span><span class="newtag" style="top:-4px">חדש באיחוד</span></div>
     <div class="fmt">
       <div class="f">
         <div class="fr sq"><div class="fq">"</div><div class="fl1"></div><div class="fl2"></div><span class="fbee">BEEGOOD</span></div>
@@ -575,14 +613,14 @@
         <div class="nm">באנר רחב</div><div class="us">ללינקדאין ולאתר</div>
       </div>
     </div>
-  </div><div class="lockband"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="t">שלושת הכרטיסים שלך, בכל פורמט במה</span></div></div>
+  </div><div class="lockband"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="t">כל פורמט, מהאות שלך. נפתח בכוורת</span></div></div>
   </section>
 
 
   <section class="zone" id="z-filming">
     <div class="zhead">
       <span class="zn">03</span>
-      <span class="zt"><h2>יום הצילום</h2><span class="hint">שבעה תסריטים וחדר שידור</span></span><span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
+      <span class="zt"><h2>יום הצילום</h2><span class="hint">חדר השידור, עם התסריטים שלך בפנים</span></span><span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
     </div>
     <div class="zrule"></div>
 
@@ -594,12 +632,18 @@
     </div>
 
     <div class="trow">
-      <div class="scriptrow"><span class="n">1</span><span class="tt">הרגע שהבנת שאתה מתרגם, לא מתכנת</span></div>
-      <div class="locked"><div class="content">
-        <div class="scriptrow"><span class="n">2</span><span class="tt">מה רואים אצלך בפגישה הראשונה</span></div>
-        <div class="scriptrow"><span class="n">3</span><span class="tt">הטעות שכל בעל עסק עושה מול טכנולוגיה</span></div>
-        <div class="scriptrow"><span class="n">4</span><span class="tt">איך נשמעת בהירות מערכתית</span></div>
-      </div><div class="lockband"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="t">עוד שישה תסריטים, כתובים בקול שלך</span></div></div>
+      <div class="head"><span class="plat">חדר השידור שלך</span><span class="check" style="color:#7FD49B">התסריט הראשון כבר טעון</span></div>
+      <div class="promptphone">
+        <div class="pcam"></div>
+        <div class="pstrip">
+          <div class="ptxt"><span class="gold">יש רגע אחד שמשנה הכול</span> אצל בעלי עסקים שעובדים איתי: הרגע שהם מבינים שהבעיה לא הייתה הרעיון, אלא התרגום שלו.</div>
+        </div>
+        <div class="pline"></div>
+        <div class="prec"></div>
+      </div>
+      <p class="promptcap">הטלפרומפטר עם התסריט שלך, על המצלמה הקדמית</p>
+      <p class="txt" style="font-size:13.5px; text-align:center">שבעה תסריטים בקול שלך. הטקסט רץ בקצב שלך, הבמאית חותכת, מוסיפה כתוביות ומחזירה רילס. מצולם, לא מיוצר.</p>
+      <div class="foot"><button class="btn-copy" style="opacity:0.85"><span style="display:inline-flex; align-items:center; gap:8px"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="lbl">לצלם עכשיו · נפתח בכוורת</span></span></button></div>
     </div>
 
     <div class="trow">
@@ -648,7 +692,7 @@
   <div class="unlock">
     <div class="k">כוורת האות</div>
     <h2>הכול כבר נוצר מהאות שלך.<br>נשאר רק לפתוח.</h2>
-    <p class="p">האסטרטגיה, האתגר המלא, שבעת התסריטים, חדר השידור, הכרטיסים והתכנים. הכול אישי, נגזר מהתשובות שלך.</p>
+    <p class="p">האסטרטגיה, האתגר המלא, חדר השידור עם שבעת התסריטים שלך, הכרטיסים והתכנים. הכול אישי, נגזר מהתשובות שלך.</p>
     <div class="price"><span class="was">₪980</span><b>₪590</b></div>
     <div style="margin-top:10px"><span class="pct">40% הנחה</span></div>
     <div class="offnote">תשלום אחד, בלי מנוי</div>
