@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>מוקאפ — עמוד תוצאת האות עם אזורי כוורת נעולים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#080C14; --card:#141820; --card-soft:#1D2430; --line:#2C323E;
+    --gold:#E8B94A; --gold-deep:#9E7C3A; --fg:#EDE9E1; --muted:#9E9990; --ok:#7FD49B;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--fg); font-family:'Assistant',sans-serif; overflow-x:hidden; }
+  .wrap { max-width:430px; margin:0 auto; padding:0 20px 140px; }
+
+  /* top bar */
+  .top { display:flex; align-items:center; justify-content:space-between; padding:18px 2px 0; }
+  .brand { font-size:15px; font-weight:800; letter-spacing:0.14em; color:var(--gold); }
+  .chip { font-size:11.5px; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:4px 12px; }
+
+  /* hero — the open signal */
+  .hero { padding:44px 0 8px; text-align:center; }
+  .kick { color:var(--gold-deep); font-size:13px; font-weight:700; letter-spacing:0.22em; }
+  .hero h1 { font-size:27px; font-weight:800; line-height:1.45; margin-top:16px; }
+  .hero h1 em { font-style:normal; color:var(--gold); }
+  .hero .sub { color:var(--muted); font-size:14px; font-weight:300; margin-top:14px; line-height:1.7; }
+
+  /* signal card (open) */
+  .vc { margin:26px auto 0; max-width:370px; }
+  .vc .frame { position:relative; aspect-ratio:1;
+    background:radial-gradient(ellipse 100% 70% at 50% 0%, rgba(232,185,74,0.08), transparent 60%), #0B0F18;
+    border:1px solid rgba(232,185,74,0.25); border-radius:18px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:11%; text-align:center; box-shadow:0 20px 55px rgba(0,0,0,0.5); }
+  .vc .corner { position:absolute; width:22px; height:22px; border-color:var(--gold-deep); border-style:solid; }
+  .c1{top:17px;right:17px;border-width:1.5px 1.5px 0 0}.c2{top:17px;left:17px;border-width:1.5px 0 0 1.5px}
+  .c3{bottom:17px;right:17px;border-width:0 1.5px 1.5px 0}.c4{bottom:17px;left:17px;border-width:0 0 1.5px 1.5px}
+  .vc .q { color:var(--gold-deep); font-size:30px; font-weight:800; margin-bottom:12px; }
+  .vc .main { font-size:17.5px; font-weight:700; line-height:1.65; }
+  .vc .bee { margin-top:14px; font-size:9.5px; letter-spacing:0.16em; color:var(--gold-deep); }
+  .btn { display:flex; align-items:center; justify-content:center; gap:9px; width:100%;
+    min-height:52px; margin-top:12px; border:none; border-radius:999px; cursor:pointer;
+    font-family:inherit; font-size:16.5px; font-weight:800; color:#171204;
+    background:linear-gradient(180deg,#F1D07E 0%,#E2B34A 55%,#CE9C38 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 18px rgba(232,185,74,0.25); }
+  .btn.ghost { background:rgba(232,185,74,0.08); color:var(--gold); border:1px solid rgba(232,185,74,0.4);
+    box-shadow:none; font-weight:700; }
+
+  /* transition */
+  .bridge { text-align:center; padding:52px 0 8px; }
+  .bridge .l { width:56px; height:1px; margin:0 auto 22px; background:linear-gradient(90deg,transparent,var(--gold-deep),transparent); }
+  .bridge h2 { font-size:21px; font-weight:800; line-height:1.5; }
+  .bridge h2 em { font-style:normal; color:var(--gold); }
+  .bridge p { color:var(--muted); font-size:14px; font-weight:300; margin-top:10px; line-height:1.7; }
+
+  /* zones */
+  .zone { padding-top:40px; }
+  .zhead { display:flex; align-items:center; gap:14px; }
+  .zn { font-size:34px; font-weight:800; color:transparent; -webkit-text-stroke:1px rgba(232,185,74,0.4); line-height:1; }
+  .zt h3 { font-size:18.5px; font-weight:800; }
+  .zt .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:300; margin-top:2px; }
+  .lockchip { margin-inline-start:auto; display:inline-flex; align-items:center; gap:6px; flex:none;
+    font-size:11px; font-weight:700; color:var(--gold); letter-spacing:0.03em;
+    background:rgba(232,185,74,0.09); border:1px solid rgba(232,185,74,0.35); border-radius:999px; padding:5px 11px; }
+  .lockchip svg { width:11px; height:11px; stroke:var(--gold); fill:none; stroke-width:2.2; stroke-linecap:round; }
+
+  .trow { margin-top:16px; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px 18px; position:relative; overflow:hidden; }
+
+  /* the lock pattern */
+  .locked .content { filter:blur(7px); opacity:0.55; user-select:none; pointer-events:none; }
+  .lockband { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    background:linear-gradient(180deg, rgba(8,12,20,0.15), rgba(8,12,20,0.55)); }
+  .lockband .ic { width:46px; height:46px; border-radius:50%; display:grid; place-items:center;
+    background:rgba(232,185,74,0.12); border:1px solid rgba(232,185,74,0.45); box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+  .lockband .ic svg { width:20px; height:20px; stroke:var(--gold); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .lockband .t { font-size:13.5px; font-weight:700; color:var(--fg); text-shadow:0 2px 10px rgba(0,0,0,0.8); }
+
+  /* peek: first words visible, rest fading into the blur */
+  .peek { font-size:16.5px; font-weight:400; line-height:1.8; }
+  .peek .open { filter:none; }
+  .label { color:var(--gold-deep); font-size:12px; font-weight:700; letter-spacing:0.06em; margin-bottom:6px; }
+
+  .scriptrow { display:flex; align-items:center; gap:12px; padding:13px 2px; border-bottom:1px solid rgba(44,50,62,0.6); }
+  .scriptrow:last-child { border-bottom:none; }
+  .scriptrow .n { flex:none; width:30px; height:30px; border-radius:9px; display:grid; place-items:center;
+    background:rgba(232,185,74,0.09); color:var(--gold); font-size:13.5px; font-weight:800; }
+  .scriptrow .tt { font-size:15px; font-weight:600; }
+
+  .minicards { display:flex; gap:10px; margin-top:6px; }
+  .minicards .m { flex:1; aspect-ratio:1; border-radius:12px; border:1px solid rgba(232,185,74,0.2);
+    background:radial-gradient(ellipse 100% 60% at 50% 0%, rgba(232,185,74,0.09), transparent 60%), #0B0F18;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:10px; }
+  .minicards .q { color:var(--gold-deep); font-size:15px; font-weight:800; line-height:1; }
+  .minicards .b1 { width:70%; height:4px; border-radius:2px; background:rgba(237,233,225,0.45); }
+  .minicards .b2 { width:48%; height:4px; border-radius:2px; background:rgba(237,233,225,0.2); }
+
+  .days { display:flex; gap:8px; margin-top:4px; }
+  .days span { flex:1; aspect-ratio:1; max-width:44px; border-radius:12px; display:grid; place-items:center;
+    font-size:14px; font-weight:800; color:var(--muted); background:var(--card-soft); border:1px solid var(--line); }
+  .days span.on { color:#171204; background:linear-gradient(180deg,#F1D07E,#CE9C38); border:none; }
+
+  .phone { width:120px; margin:6px auto 0; aspect-ratio:9/17; border-radius:18px; border:1.5px solid rgba(232,185,74,0.35);
+    background:#0B0F18; position:relative; display:flex; flex-direction:column; align-items:center; padding:12px 10px; gap:6px; }
+  .phone .cam { width:38px; height:5px; border-radius:3px; background:rgba(237,233,225,0.15); }
+  .phone .txt { width:80%; height:4px; border-radius:2px; background:rgba(232,185,74,0.5); }
+  .phone .txt2 { width:64%; height:4px; border-radius:2px; background:rgba(232,185,74,0.25); }
+  .phone .rec { position:absolute; bottom:12px; width:26px; height:26px; border-radius:50%; border:2px solid var(--gold); }
+  .phone .rec::after { content:""; position:absolute; inset:5px; border-radius:50%; background:var(--gold); }
+
+  /* unlock CTA */
+  .unlock { margin-top:56px; text-align:center; position:relative;
+    background:radial-gradient(ellipse 130% 100% at 50% 0%, rgba(232,185,74,0.12), transparent 55%), var(--card);
+    border:1px solid rgba(232,185,74,0.35); border-radius:22px; padding:30px 22px 26px; }
+  .unlock .k { color:var(--gold-deep); font-size:12px; font-weight:700; letter-spacing:0.2em; }
+  .unlock h2 { font-size:23px; font-weight:800; margin-top:10px; line-height:1.4; }
+  .unlock .p { color:var(--muted); font-size:14.5px; font-weight:300; line-height:1.75; margin-top:12px; }
+  .unlock .price { margin-top:18px; font-size:15px; }
+  .unlock .price b { font-size:26px; font-weight:800; color:var(--gold); }
+  .unlock .off { display:inline-block; margin-top:8px; color:var(--ok); font-size:13px; font-weight:700;
+    background:rgba(127,212,155,0.08); border:1px solid rgba(127,212,155,0.3); border-radius:999px; padding:5px 14px; }
+  .unlock .btn { margin-top:20px; }
+  .unlock .sec { margin-top:12px; color:var(--muted); font-size:13px; }
+  .unlock .sec a { color:var(--gold); text-decoration:none; font-weight:700; }
+
+  .foot { text-align:center; color:var(--muted); font-size:11.5px; font-weight:300; padding:42px 0 10px; line-height:1.8; }
+  .foot .ts { unicode-bidi:embed; direction:ltr; }
+
+  /* sticky unlock bar */
+  .sticky { position:fixed; bottom:0; left:0; right:0; z-index:30;
+    background:rgba(8,12,20,0.88); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    border-top:1px solid rgba(232,185,74,0.2); padding:12px 20px calc(env(safe-area-inset-bottom) + 12px); }
+  .sticky .in { max-width:430px; margin:0 auto; display:flex; align-items:center; gap:14px; }
+  .sticky .t { flex:1; }
+  .sticky .t .a { font-size:14.5px; font-weight:800; }
+  .sticky .t .b { font-size:12px; color:var(--muted); font-weight:300; }
+  .sticky .go { flex:none; display:inline-flex; align-items:center; justify-content:center;
+    min-height:46px; padding:0 22px; border:none; border-radius:999px; cursor:pointer;
+    font-family:inherit; font-size:15px; font-weight:800; color:#171204;
+    background:linear-gradient(180deg,#F1D07E 0%,#E2B34A 55%,#CE9C38 100%);
+    box-shadow:0 6px 18px rgba(232,185,74,0.3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <span class="brand">beegood</span>
+    <span class="chip">מנוע האות · TrueSignal</span>
+  </div>
+
+  <!-- ══ open: the signal itself ══ -->
+  <div class="hero">
+    <div class="kick">האות שלך, אלון</div>
+    <h1>בנית לעצמך, מהנדס בלי תואר, את היכולת לתרגם בין הרעיון לבין הדרישה הטכנית שמגשימה אותו. <em>וזה הדבר שבעלי עסקים מחפשים בנרות.</em></h1>
+    <div class="sub">זה האות שלך. הוא שלך לתמיד, ושמרנו לך אותו.</div>
+  </div>
+
+  <div class="vc">
+    <div class="frame">
+      <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+      <div class="q">"</div>
+      <div class="main">בנית לעצמך את היכולת לתרגם בין הרעיון לבין הדרישה הטכנית שמגשימה אותו.</div>
+      <div class="bee">BEEGOOD · TRUESIGNAL</div>
+    </div>
+    <button class="btn ghost" type="button">שמירת כרטיס האות</button>
+  </div>
+
+  <!-- ══ bridge ══ -->
+  <div class="bridge">
+    <div class="l"></div>
+    <h2>מהאות הזה כבר נגזר בשבילך <em>ארגז שלם</em>.</h2>
+    <p>לא הבטחה למשהו שייווצר. הוא כבר קיים, כתוב ומעוצב מהתשובות שלך. ככה הוא נראה מבפנים:</p>
+  </div>
+
+  <!-- ══ locked 01: strategy ══ -->
+  <section class="zone">
+    <div class="zhead">
+      <span class="zn">01</span>
+      <span class="zt"><h3>האסטרטגיה שלך</h3><span class="hint">לעיניך בלבד, לא לפרסום</span></span>
+      <span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
+    </div>
+    <div class="trow locked">
+      <div class="content">
+        <div class="label">הצהרת המיקום שלך</div>
+        <p class="peek">אתה הכתובת למי שחזק מספיק כדי להמשיך, אבל כבר מספיק עייף מלהמשיך לבד בלי שמישהו יקרא לאן זה הולך.</p>
+        <div class="label" style="margin-top:16px">הלקוח האידיאלי שלך</div>
+        <p class="peek">הם נמצאים היום במקום שאתה היית בו כשרצית לבנות משהו ולא היו לך הכלים להסביר למה אתה מתכוון.</p>
+      </div>
+      <div class="lockband">
+        <span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="t">נכתב מהתשובות שלך. נפתח בכוורת</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ locked 02: visual kit ══ -->
+  <section class="zone">
+    <div class="zhead">
+      <span class="zn">02</span>
+      <span class="zt"><h3>ערכת הוויזואל</h3><span class="hint">כרטיסים מעוצבים, מוכנים לפרסום</span></span>
+      <span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
+    </div>
+    <div class="trow locked">
+      <div class="content">
+        <div class="minicards">
+          <div class="m"><div class="q">"</div><div class="b1"></div><div class="b2"></div></div>
+          <div class="m"><div class="q">"</div><div class="b1"></div><div class="b2"></div></div>
+          <div class="m"><div class="q">"</div><div class="b1"></div><div class="b2"></div></div>
+        </div>
+        <p class="peek" style="margin-top:14px; font-size:13.5px; color:var(--muted)">המשפט הציבורי · האות שלך · ההבטחה. בצבע נקי או על תמונה, עם או בלי לוגו.</p>
+      </div>
+      <div class="lockband">
+        <span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="t">שלושה כרטיסים בכל פורמט במה</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ locked 03: scripts ══ -->
+  <section class="zone">
+    <div class="zhead">
+      <span class="zn">03</span>
+      <span class="zt"><h3>שבעת התסריטים שלך</h3><span class="hint">כתובים בקול שלך, מוכנים למצלמה</span></span>
+      <span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
+    </div>
+    <div class="trow">
+      <div class="scriptrow"><span class="n">1</span><span class="tt">הרגע שהבנת שאתה מתרגם, לא מתכנת</span></div>
+      <div class="locked" style="position:relative; border-radius:12px; overflow:hidden;">
+        <div class="content">
+          <div class="scriptrow"><span class="n">2</span><span class="tt">מה רואים אצלך בפגישה הראשונה</span></div>
+          <div class="scriptrow"><span class="n">3</span><span class="tt">הטעות שכל בעל עסק עושה מול טכנולוגיה</span></div>
+          <div class="scriptrow"><span class="n">4</span><span class="tt">איך נשמעת בהירות מערכתית</span></div>
+          <div class="scriptrow"><span class="n">5</span><span class="tt">הסיפור של הפרויקט שכמעט נפל</span></div>
+        </div>
+        <div class="lockband">
+          <span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+          <span class="t">עוד שישה תסריטים מחכים לך</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ locked 04: broadcast room ══ -->
+  <section class="zone">
+    <div class="zhead">
+      <span class="zn">04</span>
+      <span class="zt"><h3>חדר השידור</h3><span class="hint">מצלמים מהטלפון, מקבלים רילס גמור</span></span>
+      <span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
+    </div>
+    <div class="trow locked">
+      <div class="content">
+        <div class="phone">
+          <div class="cam"></div>
+          <div class="txt"></div><div class="txt2"></div><div class="txt"></div>
+          <div class="rec"></div>
+        </div>
+        <p class="peek" style="margin-top:14px; text-align:center; font-size:13.5px; color:var(--muted)">טלפרומפטר על המצלמה הקדמית. הבמאית חותכת, מוסיפה כתוביות ומחזירה רילס. מצולם, לא מיוצר.</p>
+      </div>
+      <div class="lockband">
+        <span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="t">התסריטים שלך כבר בפנים</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ locked 05: challenge ══ -->
+  <section class="zone">
+    <div class="zhead">
+      <span class="zn">05</span>
+      <span class="zt"><h3>אתגר האות</h3><span class="hint">שבעה ימים, צעד ביום, עם הדר</span></span>
+      <span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
+    </div>
+    <div class="trow locked">
+      <div class="content">
+        <div class="days"><span class="on">0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+        <p class="peek" style="margin-top:14px; font-size:13.5px; color:var(--muted)">כל יום סרטון קצר ומשימה אחת שמקרבת את האות לעולם.</p>
+      </div>
+      <div class="lockband">
+        <span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="t">יום 0 נפתח ברגע ההצטרפות</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ locked 06: social texts ══ -->
+  <section class="zone">
+    <div class="zhead">
+      <span class="zn">06</span>
+      <span class="zt"><h3>התכנים לרשתות</h3><span class="hint">ביו, אודות ומניפסט, באורך מדויק</span></span>
+      <span class="lockchip"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>כוורת</span>
+    </div>
+    <div class="trow locked">
+      <div class="content">
+        <div class="label">ביו לאינסטגרם</div>
+        <p class="peek">מתרגם בין החזון שלך לבין המערכת שתגשים אותו. בהירות לפני קוד.</p>
+        <div class="label" style="margin-top:16px">מניפסט אישי</div>
+        <p class="peek">אני לא בונה מערכות. אני בונה את הביטחון שהמערכת הנכונה נבנית.</p>
+      </div>
+      <div class="lockband">
+        <span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <span class="t">נגיעה מעתיקה. נפתח בכוורת</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ unlock ══ -->
+  <div class="unlock">
+    <div class="k">כוורת האות</div>
+    <h2>הכול כבר נוצר מהאות שלך.<br>נשאר רק לפתוח.</h2>
+    <p class="p">האסטרטגיה, הכרטיסים, שבעת התסריטים, חדר השידור, האתגר והתכנים. הכול נגזר מהתשובות שנתת עכשיו, אישי לחלוטין.</p>
+    <div class="price"><b>₪590</b> · תשלום אחד, בלי מנוי</div>
+    <span class="off">מתקזז במלואו מסדנת ההמשך</span>
+    <button class="btn" type="button">פותחים את הכוורת</button>
+    <div class="sec">כבר חבר כוורת? <a href="#">כניסה</a></div>
+  </div>
+
+  <div class="foot">
+    אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. <span class="ts">| TrueSignal</span>
+  </div>
+</div>
+
+<!-- sticky unlock -->
+<div class="sticky">
+  <div class="in">
+    <span class="t"><span class="a">כוורת האות · ₪590</span><br><span class="b">הכול כבר נוצר מהאות שלך</span></span>
+    <button class="go" type="button">לפתוח</button>
+  </div>
+</div>
+</body>
+</html>
