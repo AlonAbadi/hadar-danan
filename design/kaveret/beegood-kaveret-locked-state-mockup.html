@@ -299,6 +299,30 @@
     font-family:inherit; font-size:15px; font-weight:800; color:#171204;
     background:linear-gradient(180deg,#F1D07E 0%,#E2B34A 55%,#CE9C38 100%); box-shadow:0 6px 18px rgba(232,185,74,0.3); }
 
+  /* signal card (open, saveable) */
+  .sigcard { max-width:340px; margin:22px auto 0; }
+  .sigcard .frame { position:relative; aspect-ratio:1;
+    background:radial-gradient(ellipse 100% 70% at 50% 0%, rgba(232,185,74,0.08), transparent 60%), #0B0F18;
+    border:1px solid rgba(232,185,74,0.25); border-radius:18px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:11%; text-align:center; box-shadow:0 20px 55px rgba(0,0,0,0.5); }
+  .sigcard .sq { color:var(--gold-deep); font-size:28px; font-weight:800; margin-bottom:12px; }
+  .sigcard .sm { font-size:16.5px; font-weight:700; line-height:1.65; }
+  .sigcard .sb { margin-top:14px; font-size:9.5px; letter-spacing:0.16em; color:var(--gold-deep); }
+  .sigcard .scorner { position:absolute; width:22px; height:22px; border-color:var(--gold-deep); border-style:solid; }
+  .sc1{top:15px;right:15px;border-width:1.5px 1.5px 0 0}.sc2{top:15px;left:15px;border-width:1.5px 0 0 1.5px}
+  .sc3{bottom:15px;right:15px;border-width:0 1.5px 1.5px 0}.sc4{bottom:15px;left:15px;border-width:0 0 1.5px 1.5px}
+  .sigcard .save { display:flex; align-items:center; justify-content:center; gap:9px; width:100%;
+    min-height:50px; margin-top:12px; border-radius:999px; cursor:pointer;
+    font-family:inherit; font-size:16px; font-weight:800; color:#171204; border:none;
+    background:linear-gradient(180deg,#F1D07E 0%,#E2B34A 55%,#CE9C38 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 18px rgba(232,185,74,0.25); }
+  .sigcard .save svg { width:18px; height:18px; stroke:#171204; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  /* discount */
+  .was { text-decoration:line-through; color:var(--muted); font-size:17px; font-weight:400; margin-inline-end:8px; }
+  .pct { display:inline-block; color:#7FD49B; font-size:14px; font-weight:800;
+    background:rgba(127,212,155,0.1); border:1px solid rgba(127,212,155,0.35); border-radius:999px; padding:6px 16px; }
+
   /* strategy */
   details.disc { margin-top:16px; background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden; }
   details.disc summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -431,6 +455,16 @@
     </div>
   </div>
 
+
+  <div class="sigcard">
+    <div class="frame">
+      <span class="scorner sc1"></span><span class="scorner sc2"></span><span class="scorner sc3"></span><span class="scorner sc4"></span>
+      <div class="sq">"</div>
+      <div class="sm">בנית לעצמך את היכולת לתרגם בין הרעיון לבין הדרישה הטכנית שמגשימה אותו.</div>
+      <div class="sb">BEEGOOD · TRUESIGNAL</div>
+    </div>
+    <button class="save" type="button"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>שמירת כרטיס האות</button>
+  </div>
 
   <section class="zone" id="z-strategy" data-parent="#top">
     <div class="zhead">
@@ -613,9 +647,9 @@
     <div class="k">כוורת האות</div>
     <h2>הכול כבר נוצר מהאות שלך.<br>נשאר רק לפתוח.</h2>
     <p class="p">האסטרטגיה, האתגר המלא, שבעת התסריטים, חדר השידור, הכרטיסים והתכנים. הכול אישי, נגזר מהתשובות שלך.</p>
-    <div class="price"><b>₪590</b> · תשלום אחד, בלי מנוי</div>
-    <div><span class="off">מלוא הסכום מתקזז מסדנת ההמשך (₪1,800)</span></div>
-    <div class="offnote">ממשיכים לסדנה? הכוורת יצאה לך חינם.</div>
+    <div class="price"><span class="was">₪980</span><b>₪590</b></div>
+    <div style="margin-top:10px"><span class="pct">40% הנחה</span></div>
+    <div class="offnote">תשלום אחד, בלי מנוי</div>
     <button class="gobtn" type="button">פותחים את הכוורת</button>
     <div class="sec">כבר חבר כוורת? <a href="#">כניסה</a></div>
   </div>
@@ -630,7 +664,7 @@
 
 <div class="stickybar">
   <div class="in">
-    <span class="t"><span class="a">כוורת האות · ₪590 חד-פעמי</span><span class="b">מתקזז במלואו מסדנת ההמשך</span></span>
+    <span class="t"><span class="a">כוורת האות · ₪590 <span style="text-decoration:line-through; color:#9E9990; font-weight:400; font-size:12.5px">₪980</span></span><span class="b">40% הנחה · תשלום אחד, בלי מנוי</span></span>
     <button class="go" type="button">לפתוח</button>
   </div>
 </div>
