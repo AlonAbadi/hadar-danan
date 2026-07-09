@@ -139,14 +139,23 @@ export default async function KaveretPage({
     signal.signal ??
     "";
 
-  // Challenge enrollment — auto-created on first visit (the challenge content
-  // page convention, migration 032), so "סיימתי את היום" always has a target.
+  // Challenge enrollment (auto-created on first visit, migration 032
+  // convention) + filmed reels — independent queries, fired together so the
+  // first byte doesn't pay for them serially.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let { data: enrollment } = await (db as any)
-    .from("challenge_enrollments")
-    .select("id, current_day, completed_at")
-    .eq("user_id", userData.id)
-    .maybeSingle();
+  const [{ data: enrollmentRow }, { data: readyEdits }] = await Promise.all([
+    (db as any)
+      .from("challenge_enrollments")
+      .select("id, current_day, completed_at")
+      .eq("user_id", userData.id)
+      .maybeSingle(),
+    (db as any)
+      .from("broadcast_edits")
+      .select("video_number")
+      .eq("extraction_id", ext.id)
+      .eq("status", "ready"),
+  ]);
+  let enrollment = enrollmentRow;
   if (!enrollment) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: created } = await (db as any)
@@ -166,14 +175,6 @@ export default async function KaveretPage({
   const completedDays: number[] = (completions ?? []).map(
     (c: { day_number: number }) => c.day_number
   );
-
-  // Filmed count: distinct scripts with a finished reel for this extraction.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: readyEdits } = await (db as any)
-    .from("broadcast_edits")
-    .select("video_number")
-    .eq("extraction_id", ext.id)
-    .eq("status", "ready");
   const filmedCount = new Set(
     (readyEdits ?? []).map((e: { video_number: number }) => e.video_number)
   ).size;
@@ -208,47 +209,8 @@ export default async function KaveretPage({
   }));
   const challengeDone = Boolean(enrollment?.completed_at) || completedDays.includes(7);
 
-  // Produced reels for the my-content zone (same source as /api/broadcast/reels).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: reelEdits } = await (db as any)
-    .from("broadcast_edits")
-    .select("id, video_number, output_path, review_item_id, created_at")
-    .eq("user_id", userData.id)
-    .eq("status", "ready")
-    .order("created_at", { ascending: false })
-    .limit(20);
-  const reelItemIds = (reelEdits ?? []).map((e: { review_item_id: string | null }) => e.review_item_id).filter(Boolean);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: reelItems } = reelItemIds.length
-    ? await (db as any).from("review_items").select("id, status").in("id", reelItemIds)
-    : { data: [] };
-  const reels = await Promise.all(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (reelEdits ?? []).map(async (e: any) => {
-      const prefix = e.output_path?.split("/")[0];
-      const [thumb, download] = await Promise.all([
-        prefix
-          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (db as any).storage.from("broadcast-takes").createSignedUrl(`${prefix}/covers/${e.id}-frame0.jpg`, 3600)
-          : Promise.resolve({ data: null }),
-        e.output_path
-          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (db as any).storage.from("broadcast-takes").createSignedUrl(e.output_path, 7200, { download: `reel-${e.video_number}.mp4` })
-          : Promise.resolve({ data: null }),
-      ]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const item = (reelItems ?? []).find((i: any) => i.id === e.review_item_id);
-      return {
-        editId: e.id,
-        reviewItemId: e.review_item_id,
-        videoNumber: e.video_number,
-        createdAt: e.created_at,
-        published: item?.status === "published",
-        thumbUrl: thumb.data?.signedUrl ?? null,
-        downloadUrl: download.data?.signedUrl ?? null,
-      };
-    })
-  );
+  // Reels are hydrated client-side from /api/broadcast/reels — signing two
+  // storage URLs per reel here was the single biggest first-byte cost.
 
   const data: KaveretData = {
     firstName: userData.name?.split(" ")[0] ?? "",
@@ -296,7 +258,7 @@ export default async function KaveretPage({
     ) as number[],
     aboutSite: String(kit.bio_long ?? ""),
     manifesto: String(kit.manifesto ?? ""),
-    reels,
+    reels: [],
     waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
     demo: false,
   };

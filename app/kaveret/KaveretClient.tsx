@@ -137,6 +137,35 @@ export function KaveretClient({
   const [published, setPublished] = useState<Record<string, boolean>>({});
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
   const [assetBg, setAssetBg] = useState<"color" | "image">("color");
+  // Reels hydrate after first paint (server no longer signs storage URLs on
+  // the critical path). Shape mirrors the old server assembly.
+  const [reels, setReels] = useState<KaveretData["reels"]>(data.reels);
+  useEffect(() => {
+    if (data.demo) return;
+    let cancelled = false;
+    fetch("/api/broadcast/reels")
+      .then((r) => (r.ok ? r.json() : { reels: [] }))
+      .then((d) => {
+        if (cancelled || !Array.isArray(d.reels)) return;
+        setReels(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          d.reels.map((r: any) => ({
+            editId: r.edit_id,
+            reviewItemId: r.review_item_id,
+            videoNumber: r.video_number,
+            createdAt: r.created_at,
+            published: r.published === true,
+            thumbUrl: r.thumb_url ?? null,
+            downloadUrl: r.download_url ?? null,
+          }))
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.demo]);
   const [assetClean, setAssetClean] = useState(true);
   const [curDay, setCurDay] = useState(data.challengeDay);
   const [doneDays, setDoneDays] = useState<number[]>(data.completedDays);
@@ -398,7 +427,7 @@ export function KaveretClient({
         {!data.demo ? (() => {
           const allDone = data.challengeDone || doneDays.includes(7);
           const firstUnfilmed = data.scripts.find((sc) => !data.filmedNumbers.includes(sc.number));
-          const pendingReel = data.reels.find((r) => !r.published && !published[r.editId]);
+          const pendingReel = reels.find((r) => !r.published && !published[r.editId]);
           let label: string, sub: string, act: () => void;
           if (!allDone) {
             const started = doneDays.length > 0 || curDay > 0;
@@ -549,6 +578,7 @@ export function KaveretClient({
                     }}
                   >
                     <iframe
+                      loading="lazy"
                       src={`https://player.vimeo.com/video/${shown.videoId}`}
                       allow="autoplay; fullscreen; picture-in-picture"
                       style={{ width: "100%", height: "100%", border: 0 }}
@@ -817,7 +847,7 @@ export function KaveretClient({
             ));
           })()}
 
-          {!data.demo && data.reels.length ? (
+          {!data.demo && reels.length ? (
             <div>
               <div className={sty.zhead} style={{ marginTop: 34 }}>
                 <span className={sty.zt}>
@@ -825,7 +855,7 @@ export function KaveretClient({
                   <span className={sty.hint}>מה שצילמת בחדר השידור</span>
                 </span>
               </div>
-              {data.reels.filter((r) => !deletedReels[r.editId]).map((r) => {
+              {reels.filter((r) => !deletedReels[r.editId]).map((r) => {
                 const isPub = r.published || published[r.editId];
                 return (
                   <div className={sty.trow} key={r.editId}>
