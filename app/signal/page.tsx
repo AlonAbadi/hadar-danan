@@ -87,7 +87,7 @@ export default async function SignalPage({ searchParams }: { searchParams: Promi
         .limit(1)
         .maybeSingle();
       if (ext?.id) {
-        redirect("/hive/signal-kit");
+        redirect("/kaveret");
       }
     }
   }

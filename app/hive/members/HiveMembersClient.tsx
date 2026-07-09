@@ -194,7 +194,7 @@ export default function HiveMembersClient({
 
       {/* Signal Kit — Hive perk hub */}
       <Link
-        href="/hive/signal-kit"
+        href="/kaveret"
         style={{
           display: "block", textDecoration: "none",
           background: "linear-gradient(135deg, rgba(232,185,74,0.10), rgba(158,124,58,0.05))",

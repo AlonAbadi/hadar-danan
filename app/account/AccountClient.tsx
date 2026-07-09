@@ -1011,7 +1011,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
               )}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
-              <Link href="/hive/signal-kit" style={{ ...S.enterBtn, background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)", color: "#2a1d05", fontWeight: 800 }}>חבילת התוכן</Link>
+              <Link href="/kaveret" style={{ ...S.enterBtn, background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)", color: "#2a1d05", fontWeight: 800 }}>חבילת התוכן</Link>
               <Link href="/hive/members" style={{ ...S.enterBtn, background: "transparent", color: hiveTierInfo.color, border: `1px solid ${hiveTierInfo.color}44` }}>אזור החברים</Link>
             </div>
           </div>

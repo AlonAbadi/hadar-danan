@@ -349,7 +349,7 @@ function hiveMonthlyDrop(ctx: EmailTemplateContext): RenderedEmail {
         <p>10 רעיונות תוכן חדשים מחכים לך במערכת.</p>
         <p>כל אחד מהם נגזר מהאות הספציפי שלך — לא רעיונות גנריים שכל אחד בתחום שלך יכול לכתוב, אלא דווקא דברים שרק את/ה יכול/ה.</p>
         <p>הם נשמרים אצלך, אפשר לחזור אליהם כל החודש:</p>
-        <a class="cta" href="${APP_URL}/hive/signal-kit">לראות את הרעיונות שלי ←</a>
+        <a class="cta" href="${APP_URL}/kaveret">לראות את הרעיונות שלי ←</a>
         <p style="margin-top:24px">תזכורת קטנה: עבור כל רעיון יש לך בדף גם כפתור "בדוק טיוטה" ש-AI יקרא את הפוסט שלך ויגיד אם זה במדויק האות שלך או שיש דרך לחדד.</p>
         <hr class="divider"/>
         <p style="font-size:14px;color:#6b7280">${month ? "החודש: " + month : ""} · אם יש שאלה, <a href="https://wa.me/972539566961" style="color:#6b7280">הוואטסאפ פתוח</a>.</p>
@@ -816,7 +816,7 @@ function followup72h(ctx: EmailTemplateContext): RenderedEmail {
 
 function signalHiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
   const firstName  = ctx.name.split(" ")[0];
-  const accessLink = (ctx.access_link as string | undefined) ?? `${APP_URL}/hive/signal-kit`;
+  const accessLink = (ctx.access_link as string | undefined) ?? `${APP_URL}/kaveret`;
   const isMagic    = accessLink.includes("token=") || accessLink.includes("supabase");
   return {
     subject: `${firstName} — נכנסת לכוורת האות`,

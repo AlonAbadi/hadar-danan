@@ -73,11 +73,30 @@ const VISUAL_ASSETS = [
   { type: "quote-content-3", label: "כיוון תוכן #3" },
 ] as const;
 
-function assetUrl(extractionId: string, type: string): string {
-  const q = "style=editorial&bg=color&v=10";
+function assetUrl(extractionId: string, type: string, bg: "color" | "image" = "color", clean = true): string {
+  const q = `style=editorial&bg=${bg}&v=10${clean ? "&clean=1" : ""}`;
   return type === "share-card-default"
     ? `/api/signal/${extractionId}/share-card?${q}`
     : `/api/signal/${extractionId}/asset?type=${type}&${q}`;
+}
+
+// Signal-kit's visual controls, absorbed (the kit page now redirects here).
+function AssetPill({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        minHeight: 40, padding: "0 16px", borderRadius: 999, border: "none", cursor: "pointer",
+        fontFamily: "inherit", fontSize: 13.5, fontWeight: on ? 800 : 600,
+        color: on ? "#171204" : "#9E9990",
+        background: on ? "linear-gradient(180deg,#F1D07E 0%,#E2B34A 55%,#CE9C38 100%)" : "transparent",
+        boxShadow: on ? "inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 12px rgba(232,185,74,0.2)" : "none",
+      }}
+    >
+      {children}
+    </button>
+  );
 }
 
 const REVEAL_KEY = "kaveret_reveal_seen";
@@ -116,6 +135,8 @@ export function KaveretClient({
   const pngBusy = useRef(false);
   const [published, setPublished] = useState<Record<string, boolean>>({});
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
+  const [assetBg, setAssetBg] = useState<"color" | "image">("color");
+  const [assetClean, setAssetClean] = useState(true);
   const [curDay, setCurDay] = useState(data.challengeDay);
   const [doneDays, setDoneDays] = useState<number[]>(data.completedDays);
   const [viewDay, setViewDay] = useState(data.challengeDay);
@@ -599,13 +620,25 @@ export function KaveretClient({
                   <span className={sty.hint}>מוכנים לפיד, בהתאמה אישית</span>
                 </span>
               </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px 14px", margin: "14px 0 2px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, background: "#141820", border: "1px solid #2C323E", borderRadius: 999, padding: 5 }}>
+                  <span style={{ color: "#9E9990", fontSize: 12, fontWeight: 300, marginInlineStart: 12, marginInlineEnd: 4 }}>עיצוב</span>
+                  <AssetPill on={assetBg === "color"} onClick={() => setAssetBg("color")}>צבע נקי</AssetPill>
+                  <AssetPill on={assetBg === "image"} onClick={() => setAssetBg("image")}>תמונה ברמה גבוהה</AssetPill>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, background: "#141820", border: "1px solid #2C323E", borderRadius: 999, padding: 5 }}>
+                  <span style={{ color: "#9E9990", fontSize: 12, fontWeight: 300, marginInlineStart: 12, marginInlineEnd: 4 }}>ברנדינג</span>
+                  <AssetPill on={assetClean} onClick={() => setAssetClean(true)}>בלי לוגו</AssetPill>
+                  <AssetPill on={!assetClean} onClick={() => setAssetClean(false)}>עם לוגו beegood</AssetPill>
+                </div>
+              </div>
               <div className={sty.carousel}>
                 {VISUAL_ASSETS.map((a) => (
                   <div className={sty.vc} key={a.type}>
                     <div className={sty.frame} style={{ padding: 0, aspectRatio: "4 / 5" }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={assetUrl(data.extractionId!, a.type)}
+                        src={assetUrl(data.extractionId!, a.type, assetBg, assetClean)}
                         alt={a.label}
                         loading="lazy"
                         style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 18 }}
@@ -616,7 +649,7 @@ export function KaveretClient({
                       <a
                         className={`${sty.btnCopy} ${sty.btnCard}`}
                         style={{ textDecoration: "none" }}
-                        href={assetUrl(data.extractionId!, a.type)}
+                        href={assetUrl(data.extractionId!, a.type, assetBg, assetClean)}
                         download
                       >
                         <span>הורדת הנכס</span>

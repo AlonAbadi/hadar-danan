@@ -531,11 +531,11 @@ async function fulfillPurchase(
         const { data: linkData } = await supabase.auth.admin.generateLink({
           type:    "magiclink",
           email:   user.email,
-          options: { redirectTo: `${appUrl}/hive/signal-kit` },
+          options: { redirectTo: `${appUrl}/kaveret` },
         });
         signalHiveMagicLink = linkData?.properties?.action_link ?? null;
       } catch {
-        // non-fatal — the email falls back to a static /hive/signal-kit link
+        // non-fatal — the email falls back to a static /kaveret link
       }
     }
   }
