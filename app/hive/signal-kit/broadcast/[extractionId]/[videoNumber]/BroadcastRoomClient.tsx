@@ -414,9 +414,8 @@ export function BroadcastRoomClient({
       >
         <div
           style={{
-            width: "min(100vw, calc(100dvh * 9 / 16))",
-            aspectRatio: "9 / 16",
-            position: "relative",
+            position: "absolute",
+            inset: 0,
             overflow: "hidden",
           }}
         >
@@ -430,10 +429,10 @@ export function BroadcastRoomClient({
               inset: 0,
               width: "100%",
               height: "100%",
-              // portrait source: exact 9:16 crop (WYSIWYG for the crop burn);
-              // landscape source: the full band, centered — WYSIWYG for the
-              // blur-pad burn that such takes get.
-              objectFit: rec.effAspect === "landscape" ? "contain" : "cover",
+              // Full-bleed viewfinder (per Alon): the preview fills the whole
+              // screen like a native camera, whatever the sensor delivers.
+              // The recorded file keeps the sensor's own frame.
+              objectFit: "cover",
               transform: "scaleX(-1)", // selfie mirror; the recorded file stays true
             }}
           />
