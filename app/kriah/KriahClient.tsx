@@ -273,6 +273,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
   // Result
   const [extractionId, setExtractionId] = useState<string | null>(null);
   const [ending, setEnding] = useState<"concierge" | "hive" | "pre_revenue" | "crisis_soft">("hive");
+  const [kaveretUrl, setKaveretUrl] = useState<string | null>(null);
   const [occupation, setOccupation] = useState("");
   const [softCaptured, setSoftCaptured] = useState(false);   // email given at the S8 soft gate
   const [finalizing, setFinalizing]     = useState(false);
@@ -547,6 +548,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
           data.v2_ending === "pre_revenue" || data.v2_ending === "crisis_soft") {
         setEnding(data.v2_ending);
       }
+      if (typeof data.kaveret_url === "string") setKaveretUrl(data.kaveret_url);
       // Change 3: the engine's inferred occupation prefills the send gate
       // (confirmation, not data entry). Never overwrites what the user typed.
       const inferredOcc = (data.signal as SignalOutput)?.occupation;
@@ -1354,17 +1356,24 @@ function FullReading({
           {ending === "hive" && (
             <>
               <p style={{ fontSize: 14.5, lineHeight: 1.7, color: C.muted, margin: 0, textAlign: "center", maxWidth: 420 }}>
-                האות הוא הבסיס. מכאן בונים עליו את כל השאר: המסר, התוכן, והדרך שהלקוחות מגיעים.
+                {kaveretUrl
+                  ? "מהאות שלכם כבר נוצר ארגז שלם: הקריאה המלאה, כרטיס, תסריט ראשון. הכול שמור בכוורת שלכם."
+                  : "האות הוא הבסיס. מכאן בונים עליו את כל השאר: המסר, התוכן, והדרך שהלקוחות מגיעים."}
               </p>
               <a
-                href="/signal-hive"
-                style={{
+                href={kaveretUrl ?? "/signal-hive"}
+                style={kaveretUrl ? {
+                  display: "inline-block", color: "#171204", fontWeight: 800, fontSize: 16,
+                  background: "linear-gradient(180deg,#F1D07E 0%,#E2B34A 55%,#CE9C38 100%)",
+                  borderRadius: 999, padding: "14px 38px", textDecoration: "none",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 18px rgba(232,185,74,0.25)",
+                } : {
                   display: "inline-block", color: C.gold, fontWeight: 700, fontSize: 15.5,
                   border: `1.5px solid rgba(232,185,74,0.5)`, borderRadius: 999,
                   padding: "12px 34px", textDecoration: "none",
                 }}
               >
-                רוצים להמשיך כבר עכשיו? הצעד הבא ←
+                {kaveretUrl ? "לכניסה לכוורת שלכם ←" : "רוצים להמשיך כבר עכשיו? הצעד הבא ←"}
               </a>
             </>
           )}
