@@ -110,6 +110,7 @@ export const BROADCAST_COPY = {
   "review.mark_published": "פורסם",
 
   // Permission + errors
+  "room.placement_hint": "הרחיקו את הטלפון, הניחו אותו במקום יציב בגובה העיניים",
   "permission.title": "אנחנו צריכות את המצלמה",
   "permission.body":
     "חדר השידור מצלם אותך במצלמה הקדמית. הדפדפן חסם את הגישה, ככה פותחים אותה",

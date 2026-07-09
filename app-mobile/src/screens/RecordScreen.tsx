@@ -331,6 +331,11 @@ export function RecordScreen({
 
       {/* bottom controls */}
       <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, paddingBottom: 40, alignItems: "center", gap: 12 }}>
+        {!recording && countdown === null ? (
+          <Text style={{ color: "#CDD1DA", fontSize: 12.5, textAlign: "center", paddingHorizontal: 30 }}>
+            הרחיקו את הטלפון, הניחו אותו במקום יציב בגובה העיניים
+          </Text>
+        ) : null}
         {recording ? (
           <Text style={{ color: C.fg, fontSize: 15, fontVariant: ["tabular-nums"] }}>
             {Math.floor(elapsed / 60000)}:{String(Math.floor((elapsed % 60000) / 1000)).padStart(2, "0")}

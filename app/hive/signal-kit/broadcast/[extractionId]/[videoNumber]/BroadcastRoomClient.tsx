@@ -592,6 +592,9 @@ export function BroadcastRoomClient({
         </div>
         {!rec.isRecording ? (
           <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
+            <p style={{ color: "#CDD1DA", fontSize: 12.5, textAlign: "center", margin: 0, textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
+              {getBroadcastCopy("room.placement_hint")}
+            </p>
             <button
               type="button"
               className="br-btn"
