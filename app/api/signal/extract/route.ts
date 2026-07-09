@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { waitUntil } from "@vercel/functions";
 import { Resend } from "resend";
 import { generateAndStoreResultTeasers } from "@/lib/signal/result-teasers";
+import { kaveretLink } from "@/lib/signal/kaveret-token";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { kriahPreviewAllowed } from "@/lib/isolation";
@@ -982,5 +983,10 @@ export async function POST(req: NextRequest) {
     // B2 — soft refine suggestion. Inert unless SIGNAL_FRAMING_ENABLED + a
     // high-confidence "raw" read. Derived flag only; raw maturity never leaks.
     suggest_refine: determineFraming(parsed.routing_signal).suggestRefine,
+    // The unified home: when the kaveret switchover is on, the result screen
+    // hands everything below the reveal to the lead's locked kaveret.
+    ...(extractionId && process.env.KAVERET_RESULT_ENABLED === "1"
+      ? { kaveret_url: kaveretLink(extractionId) }
+      : {}),
   });
 }

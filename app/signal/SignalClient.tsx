@@ -74,6 +74,7 @@ export function SignalClient({
   const [answers, setAnswers]     = useState<SignalAnswers>({});
   const [signal, setSignal]       = useState<SignalOutput | null>(null);
   const [extractionId, setExtractionId] = useState<string | null>(null);
+  const [kaveretUrl, setKaveretUrl] = useState<string | null>(null);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [gender, setGender]       = useState<Gender>("f");
   const [bucket, setBucket]       = useState<Bucket>("challenge");
@@ -156,6 +157,7 @@ export function SignalClient({
               setBucket(data.bucket);
             }
             setSuggestRefine(data.suggest_refine === true);
+            if (typeof data.kaveret_url === "string") setKaveretUrl(data.kaveret_url);
             setPhase("result");
           }
         }
@@ -237,6 +239,7 @@ export function SignalClient({
         setBucket(data.bucket);
       }
       setSuggestRefine(data.suggest_refine === true);
+      if (typeof data.kaveret_url === "string") setKaveretUrl(data.kaveret_url);
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
       trackSignalCompleted({ bucket: typeof data.bucket === "string" ? data.bucket : undefined });
       setPhase("result");
@@ -450,6 +453,7 @@ export function SignalClient({
             gender={gender}
             bucket={bucket}
             suggestRefine={suggestRefine}
+            kaveretUrl={kaveretUrl}
           />
         )}
       </div>
@@ -1368,6 +1372,7 @@ interface ResultProps {
   gender:        Gender;
   bucket:        Bucket;
   suggestRefine?: boolean;
+  kaveretUrl?:   string | null;
 }
 
 // Gender-aware static labels. Most pronouns in unvowelled Hebrew are written
@@ -1389,7 +1394,7 @@ const labelsByGender = {
 
 function Result({
   firstName, signal, extractionId, ownerEmail, generatedAt, onRestart,
-  hiveActive = false, gender, bucket, suggestRefine = false,
+  hiveActive = false, gender, bucket, suggestRefine = false, kaveretUrl = null,
 }: ResultProps) {
   const dateStr = generatedAt
     ? new Date(generatedAt).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })
@@ -1538,9 +1543,44 @@ function Result({
         <span style={{ height: 1, flex: 1, background: "linear-gradient(90deg, transparent, #2C323E, transparent)" }} />
       </div>
 
+      {/* Unified home switchover: when the locked kaveret carries the rest of
+          the journey, the reveal ends with one door — everything below
+          (directions, card, offer) lives there now. */}
+      {kaveretUrl ? (
+        <div style={{
+          background:   "radial-gradient(ellipse 130% 100% at 50% 0%, rgba(232,185,74,0.12), transparent 55%), #141820",
+          border:       "1px solid rgba(232,185,74,0.35)",
+          borderRadius: 22,
+          padding:      "28px 22px",
+          textAlign:    "center",
+          maxWidth:     480,
+          marginInline: "auto",
+        }}>
+          <div style={{ color: "#9E7C3A", fontSize: 12, fontWeight: 700, letterSpacing: "0.2em" }}>כוורת האות</div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.45, margin: "10px 0 0", color: C.fg }}>
+            הכול נשמר לך במקום אחד.
+          </h2>
+          <p style={{ color: C.muted, fontSize: 14.5, lineHeight: 1.75, marginTop: 12 }}>
+            הקריאה המלאה, כרטיס האות, כיווני התוכן, ומה שכבר נוצר מהאות שלך. הכתובת שלך מעכשיו.
+          </p>
+          <a
+            href={kaveretUrl}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              minHeight: 54, marginTop: 20, borderRadius: 999, textDecoration: "none",
+              fontSize: 17, fontWeight: 800, color: "#171204",
+              background: "linear-gradient(180deg,#F1D07E 0%,#E2B34A 55%,#CE9C38 100%)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 18px rgba(232,185,74,0.25)",
+            }}
+          >
+            לכניסה לכוורת שלך
+          </a>
+        </div>
+      ) : null}
+
       {/* Content directions block — the 3 starting angles the LLM extracted.
           Visible inline so the user keeps them, not buried in shared cards. */}
-      {Array.isArray(signal.content_directions) && signal.content_directions.length === 3 && (
+      {!kaveretUrl && Array.isArray(signal.content_directions) && signal.content_directions.length === 3 && (
         <ContentDirectionsBlock directions={signal.content_directions} />
       )}
 
@@ -1548,26 +1588,28 @@ function Result({
           existing /api/signal/[id]/share-card PNG endpoint, wrapped in a gold
           frame so it doesn't blend with the dark Santosha page. Below: share
           actions and the compact monthly-contest box pointing to /contest. */}
-      {extractionId ? (
-        <CardPreviewBlock
-          extractionId={extractionId}
-          firstName={firstName}
-          signalText={signal.signal}
-          copyLabel={t.copy}
-        />
-      ) : (
-        <div className="result-actions" style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-          <CopyButton
-            text={`${signal.signal}\n\nTrueSignal© · beegood.online`}
-            label={t.copy}
+      {!kaveretUrl ? (
+        extractionId ? (
+          <CardPreviewBlock
+            extractionId={extractionId}
+            firstName={firstName}
+            signalText={signal.signal}
+            copyLabel={t.copy}
           />
-        </div>
-      )}
+        ) : (
+          <div className="result-actions" style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+            <CopyButton
+              text={`${signal.signal}\n\nTrueSignal© · beegood.online`}
+              label={t.copy}
+            />
+          </div>
+        )
+      ) : null}
 
       {/* B2 — soft, optional refine-with-Hadar invitation. Renders only when the
           server flag is on AND the read was a high-confidence "raw". Gift-framed,
           never a deficit verdict: the signal is whole; refining it is a choice. */}
-      {suggestRefine && (
+      {!kaveretUrl && suggestRefine && (
         <div style={{
           background:   "rgba(232,185,74,0.06)",
           border:       "1px solid rgba(232,185,74,0.20)",
@@ -1604,7 +1646,7 @@ function Result({
           (suggestRefine): a raw signal's single, clean next-step is the gentle
           "refine with Hadar" conversation above, not a self-serve sales card.
           Mature/ready signals get the bucket offer as usual. */}
-      {!suggestRefine && (
+      {!kaveretUrl && !suggestRefine && (
         <>
           <ResultBridge gender={gender} bucket={inviteBucket} />
           <InviteCard bucket={inviteBucket} signal={signal} />
