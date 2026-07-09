@@ -124,7 +124,7 @@ const QUESTIONS: Question[] = [
   {
     key:   "flow_zone",
     label: "רגע שבו שכחת מהזמן",
-    hint:  "מתי זה קרה בפעם האחרונה? איפה היית, מה עשית שם, ואיך פתאום גילית כמה זמן עבר.",
+    hint:  "מתי זה קרה לאחרונה? איפה היית ומה עשית שם.",
   },
   {
     key:   "effortless_mastery",
@@ -134,13 +134,13 @@ const QUESTIONS: Question[] = [
   {
     key:   "gratitude_mirror",
     label: "על מה אנשים מודים לך הכי הרבה?",
-    hint:  "לא מה שכתוב באתר. משפט תודה אחד שקיבלת באמת: מי אמר אותו, מה בדיוק נאמר, ומה השתנה אצלו. אפשר לצטט מילה במילה.",
+    hint:  "לא מה שכתוב באתר. תודה אחת אמיתית: מי אמר, מה בדיוק נאמר, ומה השתנה אצלו.",
     extraHint: "תודה אמיתית נחשבת גם מחבר, קולגה, או אדם שעזרת לו בדרך.",
   },
   {
     key:   "hard_period",
     label: "תקופה קשה שעברת. לא צריך את כל הסיפור, רק רגע אחד מתוכה.",
-    hint:  "אפשר לדלג, או לכתוב רק מה שמרגיש בסדר לחלוק. אין כאן רשות לחקור כאב שלא בחרת להעלות. אם כן, רגע אחד: איפה היית, מה קרה.",
+    hint:  "אפשר לדלג, או לחלוק רק מה שמרגיש בסדר. ואם כן, רגע אחד מתוכה: איפה היית, מה קרה.",
   },
   {
     key:   "what_helped",
@@ -661,14 +661,8 @@ export function KriahClient({ previewKey, isTest }: Props) {
               <h1 style={{ fontSize: 27, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.3 }}>
                 כולם מייצרים תוכן. למה שיבחרו דווקא בכם?
               </h1>
-              <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.92, margin: "0 0 8px" }}>
-                זו השאלה שהשיווק שלכם חייב לענות עליה, ורוב העסקים לא יודעים איך. אז הם מייצרים עוד סרטון, עוד פוסט, עוד שיטה. וזה לא מחזיק.
-              </p>
-              <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.92, margin: "0 0 8px" }}>
-                לזה יש פתרון, והוא לא עוד תוכן. בדקות הקרובות מגיעים יחד לשורש: <b style={{ color: C.gold }}>הסיבה שלקוחות בוחרים דווקא בכם.</b> ברגע שהיא ברורה, השיווק מפסיק להילחם, והלקוחות הנכונים מזהים אתכם לבד.
-              </p>
-              <p style={{ fontSize: 14.5, lineHeight: 1.65, color: C.muted, margin: 0 }}>
-                בסוף הדרך הקצרה הזאת יש לכם את הבסיס שממנו נגזר כל השיווק: המסר, התוכן, והסיבה שפונים דווקא אליכם. מתחילים בשלוש שאלות. חינם.
+              <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.92, margin: 0 }}>
+                רוב העסקים לא יודעים לענות, אז הם מייצרים עוד ועוד תוכן. וזה לא מחזיק. בדקות הקרובות מגיעים לשורש: <b style={{ color: C.gold }}>הסיבה שלקוחות בוחרים דווקא בכם.</b> שלוש שאלות. חינם.
               </p>
               <div style={{ borderTop: `1px solid ${C.line}`, margin: "22px auto 0", width: 56 }} />
             </div>
@@ -715,9 +709,12 @@ export function KriahClient({ previewKey, isTest }: Props) {
         {/* ── S4 · short free text ── */}
         {screen === "s4" && (
           <Card>
-            <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 22px", lineHeight: 1.35 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px", lineHeight: 1.35 }}>
               מה הכי חשוב שישתנה אצלכם בחודשיים הקרובים?
             </h2>
+            <p style={{ color: C.muted, fontSize: 14.5, margin: "0 0 18px" }}>
+              משפט אחד מספיק.
+            </p>
             <textarea
               value={changeWish}
               onChange={(e) => setChangeWish(e.target.value)}
@@ -835,16 +832,16 @@ export function KriahClient({ previewKey, isTest }: Props) {
               {blocker ? S7_CALLBACK[blocker] : S7_CALLBACK.message}
             </h2>
             <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 16px", color: C.fg, opacity: 0.92 }}>
-              שלוש תשובות, וכבר יש תמונה. אבל בואו נגיד את האמת: תמונה של הבעיה היא עדיין לא פתרון. בשביל פתרון צריך להגיע לשורש שלה.
+              שלוש תשובות, וכבר יש תמונה. אבל תמונה של הבעיה היא עדיין לא פתרון. הפתרון מתחיל בשאלה שרוב בעלי העסקים לא מצליחים לענות עליה במשפט: <b>למה שלקוח יבחר דווקא בכם?</b>
             </p>
             <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 16px", color: C.fg, opacity: 0.92 }}>
-              והשורש הוא שאלה אחת שרוב בעלי העסקים לא מצליחים לענות עליה במשפט: <b>למה שלקוח יבחר דווקא בכם?</b> לא כי אין תשובה. היא קיימת. הלקוחות הטובים שלכם מרגישים אותה בכל פעם שהם פוגשים אתכם. היא פשוט אף פעם לא נוסחה במילים. <b style={{ color: C.gold }}>לתשובה הזאת, כשהיא סוף סוף כתובה כך שאפשר לעבוד איתה, אנחנו קוראים האות שלכם.</b>
+              התשובה קיימת. הלקוחות הטובים שלכם מרגישים אותה בכל מפגש איתכם. היא פשוט אף פעם לא נוסחה במילים. <b style={{ color: C.gold }}>לתשובה הזאת אנחנו קוראים האות שלכם.</b>
             </p>
             <p style={{ fontSize: 16.5, lineHeight: 1.8, margin: "0 0 16px", color: C.fg, opacity: 0.92 }}>
-              כל השוק ינסה לפתור לכם את זה עם עוד תוכן: רעיונות להוקים, טכניקות צילום, נוסחאות. זה לא עובד, כי תוכן בלי בידול נשמע כמו כולם. אבל כשהאות ביד, כל מה שהיום נתקע מתחיל להסתדר סביבו: <b style={{ color: C.gold }}>יודעים מה להגיד בכל סרטון בלי להמציא מאפס, המסר נשמע אחד בכל מקום, והפניות מגיעות מאנשים שכבר יודעים למה דווקא אתם.</b>
+              כל השוק ינסה לפתור את זה בעוד תוכן, ותוכן בלי בידול נשמע כמו כולם. כשהאות ביד: <b style={{ color: C.gold }}>יודעים מה להגיד בכל סרטון, המסר אחד בכל מקום, והפניות מגיעות מאנשים שכבר יודעים למה דווקא אתם.</b>
             </p>
             <p style={{ fontSize: 16, lineHeight: 1.8, margin: "0 0 18px", color: C.fg }}>
-              ולמה עכשיו? כי שלוש התשובות שנתתם אמרו לנו איפה העסק עומד. מה שהן לא יכולות להגיד זה מי אתם, והאות נמצא בדיוק שם. לשם נכנס השלב הבא: <b style={{ color: C.gold }}>אבחון גילוי האות.</b> שש שאלות פתוחות, לא מבחן ולא טופס: המקום שבו האות שלכם כבר כתוב, במילים שלכם. <b>הן דורשות כנות, לא זמן.</b>
+              השלב הבא: <b style={{ color: C.gold }}>אבחון גילוי האות.</b> שש שאלות פתוחות עליכם, כי שם האות נמצא. <b>הן דורשות כנות, לא זמן.</b>
             </p>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
               <GoldButton onClick={() => goTo("s8", "s8_bridge")}>להתחיל את גילוי האות ←</GoldButton>
@@ -863,12 +860,12 @@ export function KriahClient({ previewKey, isTest }: Props) {
               עד כאן שאלנו על העסק. עכשיו זה עובר אליכם.
             </h2>
             <p style={{ fontSize: 16, lineHeight: 1.7, color: C.muted, margin: "0 0 26px", textAlign: "center" }}>
-              שש שאלות. אין תשובות נכונות. כל מה שתכתבו כאן הופך לבסיס שממנו ייגזרו המסר, התוכן והפניות שלכם.
+              שש שאלות. אין תשובות נכונות.
             </p>
             {!softCaptured && (
               <div style={{ marginBottom: 22 }}>
                 <label htmlFor="kriah-soft-email" style={{ display: "block", fontSize: 14.5, color: C.fg, marginBottom: 8, textAlign: "center" }}>
-                  לפני שמתחילים, לאן לשמור את ההתקדמות שלכם?
+                  לאן לשמור את ההתקדמות?
                 </label>
                 {gateErr && (
                   <div role="alert" style={{ marginBottom: 10, color: "#FF8888", fontSize: 13, textAlign: "center" }}>{gateErr}</div>
@@ -1027,10 +1024,10 @@ export function KriahClient({ previewKey, isTest }: Props) {
               זהו. החומר נאסף, והאות שלכם נבנה ממנו ממש עכשיו.
             </h2>
             <p style={{ fontSize: 16, lineHeight: 1.7, color: C.fg, opacity: 0.9, margin: "0 0 18px" }}>
-              ממנו נגזר ההמשך: המסר, כיווני התוכן, והדרך שהלקוחות הנכונים מוצאים אתכם. שלב אחרי שלב, ואנחנו איתכם לכל אורכה.
+              ממנו נגזר ההמשך: המסר, כיווני התוכן, והדרך שהלקוחות הנכונים מוצאים אתכם.
             </p>
             <p style={{ fontSize: 15, lineHeight: 1.7, color: C.muted, margin: "0 0 24px" }}>
-              פרט אחד לבחירתכם: אם ממה שכתבתם יעלה משהו שהדר תרצה להרחיב עליו אישית, בשיחה ולא במייל, בלי מספר פשוט לא נוכל לקיים את זה.
+              אם יעלה מהחומר משהו שהדר תרצה להרחיב עליו אישית, בשיחה, בלי מספר זה פשוט לא יקרה.
             </p>
             <label htmlFor="kriah-phone" style={{ display: "block", fontSize: 14, color: C.muted, marginBottom: 6 }}>
               טלפון (רשות)
