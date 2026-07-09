@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createBrowserClient } from "@/lib/supabase/browser";
 import { BeeWait } from "@/components/BeeWait";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { ShareButtons } from "@/components/signal/ShareButtons";
@@ -225,6 +226,7 @@ interface Draft {
   phone?:      string;
   occupation?: string;
   signal?:     SignalOutput | null;
+  googlePending?: boolean;   // set right before the OAuth redirect; consumed on return
 }
 
 export function KriahClient({ previewKey, isTest }: Props) {
@@ -292,6 +294,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
   const [errorMsg, setErrorMsg]   = useState<string | null>(null);
 
   const restoredRef = useRef(false);
+  const googleReturnRef = useRef(false);   // draft carried googlePending — OAuth round-trip
 
   // ── FUNNEL_STEP tracking (no ab_variant, no PageTracker) ──────────────────
   const track = useCallback((step: string) => {
@@ -341,6 +344,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         if (typeof d.phone === "string") setPhone(d.phone);
         if (d.signal)     setSignal(d.signal);
         if (typeof d.qIdx === "number" && d.qIdx >= 0 && d.qIdx < QUESTIONS.length) setQIdx(d.qIdx);
+        if (d.googlePending) googleReturnRef.current = true;
         if (d.screen) {
           // Never restore into transient screens.
           let s: Screen = d.screen;
@@ -374,9 +378,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
   // Consent here is by the inline legal line (not a checkbox) — the field's
   // whole purpose is saving progress + contact; the letter email itself is
   // requested explicitly at the send gate.
-  const submitSoftCapture = () => {
-    const em = email.trim().toLowerCase();
-    if (!em.includes("@") || !em.includes(".")) { setGateErr("כתובת אימייל לא תקינה"); return; }
+  const completeSoftCapture = useCallback((em: string, nm: string) => {
     setGateErr(null);
     const anonymousId = getCookie("anon_id");
     const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -387,7 +389,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
       method: "POST",
       headers,
       body: JSON.stringify({
-        name: name.trim() || "",
+        name: nm || "",
         email: em,
         marketing_consent: true,
         is_test: isTest,
@@ -399,7 +401,58 @@ export function KriahClient({ previewKey, isTest }: Props) {
     setSoftCaptured(true);
     setConsent(true);
     startQuestions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewKey, isTest]);
+
+  const submitSoftCapture = () => {
+    const em = email.trim().toLowerCase();
+    if (!em.includes("@") || !em.includes(".")) { setGateErr("כתובת אימייל לא תקינה"); return; }
+    completeSoftCapture(em, name.trim());
   };
+
+  // ── S8 · Google one-tap (verified email — the fake-email fix) ──────────────
+  // The draft lives in sessionStorage, which survives the same-tab OAuth
+  // round-trip; googlePending marks the trip so the return leg knows to
+  // auto-continue into the questions.
+  const startGoogleCapture = () => {
+    track("s8_google_click");
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      const d = raw ? (JSON.parse(raw) as Draft) : {};
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ ...d, googlePending: true, screen: "s8" }));
+    } catch {}
+    const supabase = createBrowserClient();
+    void supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent("/kriah")}` },
+    });
+  };
+
+  useEffect(() => {
+    if (!googleReturnRef.current) return;
+    googleReturnRef.current = false;
+    // Clear the pending flag so a plain reload never re-triggers this leg.
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const d = JSON.parse(raw) as Draft;
+        delete d.googlePending;
+        sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+      }
+    } catch {}
+    const supabase = createBrowserClient();
+    void supabase.auth.getUser().then(({ data }) => {
+      const verifiedEmail = data.user?.email?.toLowerCase();
+      if (!verifiedEmail) { track("s8_google_cancelled"); return; }  // cancelled at Google — stay on S8
+      const meta = (data.user?.user_metadata ?? {}) as { full_name?: string; name?: string };
+      const googleName = (meta.full_name || meta.name || "").trim();
+      setEmail(verifiedEmail);
+      setName((prev) => prev.trim() || googleName);
+      track("s8_google_return");
+      completeSoftCapture(verifiedEmail, googleName);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const startQuestions = () => {
     track("q1_flow_zone_shown");
@@ -864,12 +917,37 @@ export function KriahClient({ previewKey, isTest }: Props) {
             </p>
             {!softCaptured && (
               <div style={{ marginBottom: 22 }}>
-                <label htmlFor="kriah-soft-email" style={{ display: "block", fontSize: 14.5, color: C.fg, marginBottom: 8, textAlign: "center" }}>
+                <label htmlFor="kriah-soft-email" style={{ display: "block", fontSize: 14.5, color: C.fg, marginBottom: 12, textAlign: "center" }}>
                   לאן לשמור את ההתקדמות?
                 </label>
                 {gateErr && (
                   <div role="alert" style={{ marginBottom: 10, color: "#FF8888", fontSize: 13, textAlign: "center" }}>{gateErr}</div>
                 )}
+                <button
+                  onClick={startGoogleCapture}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                    width: "100%", background: "#fff", color: "#1f1f1f", border: "none",
+                    borderRadius: 12, padding: "13px 20px", fontFamily: "inherit",
+                    fontSize: 15.5, fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  <svg viewBox="0 0 48 48" style={{ width: 19, height: 19, flex: "none" }} aria-hidden>
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                  </svg>
+                  להמשיך עם Google
+                </button>
+                <p style={{ fontSize: 12, color: C.muted, margin: "8px 0 0", textAlign: "center", opacity: 0.85 }}>
+                  בלחיצה אחת, בלי סיסמה. כך האות יגיע למייל הנכון.
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0", color: C.muted, fontSize: 13 }}>
+                  <div style={{ flex: 1, height: 1, background: C.line }} />
+                  או עם מייל
+                  <div style={{ flex: 1, height: 1, background: C.line }} />
+                </div>
                 <input
                   id="kriah-soft-email"
                   type="email"
@@ -881,7 +959,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
                   style={{ ...inputStyle(), textAlign: "left" }}
                 />
                 <p style={{ fontSize: 11.5, color: C.muted, margin: "8px 0 0", textAlign: "center", opacity: 0.8 }}>
-                  בהזנת המייל אתם מאשרים קבלת עדכונים. אפשר להסיר הרשמה בכל רגע.
+                  בהזנת המייל או בהתחברות אתם מאשרים קבלת עדכונים. אפשר להסיר הרשמה בכל רגע.
                 </p>
               </div>
             )}
