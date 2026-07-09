@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { BeeWait } from "@/components/BeeWait";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { ShareButtons } from "@/components/signal/ShareButtons";
 
@@ -274,6 +275,16 @@ export function KriahClient({ previewKey, isTest }: Props) {
   const [extractionId, setExtractionId] = useState<string | null>(null);
   const [ending, setEnding] = useState<"concierge" | "hive" | "pre_revenue" | "crisis_soft">("hive");
   const [kaveretUrl, setKaveretUrl] = useState<string | null>(null);
+  const kaveretUrlRef = useRef<string | null>(null);
+
+  // The unified home: the funnel does not render its own result when the
+  // kaveret carries it — the loading bee stays up and the browser lands
+  // straight on the lead's locked kaveret.
+  const enterKaveret = (url: string): boolean => {
+    goTo("loading", "kaveret_enter");
+    window.location.assign(url);
+    return true;
+  };
   const [occupation, setOccupation] = useState("");
   const [softCaptured, setSoftCaptured] = useState(false);   // email given at the S8 soft gate
   const [finalizing, setFinalizing]     = useState(false);
@@ -426,6 +437,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         // Reading already generated (soft-capture path) — patch the lead
         // with the confirmed values + deliver the letter by email.
         await finalizeAndSend(extractionId);
+        if (kaveretUrlRef.current && enterKaveret(kaveretUrlRef.current)) return;
         goTo("s16", "s16_full_reading");
       } else {
         // Skipper path — extraction runs now with everything in hand.
@@ -548,7 +560,10 @@ export function KriahClient({ previewKey, isTest }: Props) {
           data.v2_ending === "pre_revenue" || data.v2_ending === "crisis_soft") {
         setEnding(data.v2_ending);
       }
-      if (typeof data.kaveret_url === "string") setKaveretUrl(data.kaveret_url);
+      if (typeof data.kaveret_url === "string") {
+        setKaveretUrl(data.kaveret_url);
+        kaveretUrlRef.current = data.kaveret_url;
+      }
       // Change 3: the engine's inferred occupation prefills the send gate
       // (confirmation, not data entry). Never overwrites what the user typed.
       const inferredOcc = (data.signal as SignalOutput)?.occupation;
@@ -560,6 +575,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         goTo("sendgate", "sendgate");
       } else {
         if (extId) await finalizeAndSend(extId);
+        if (kaveretUrlRef.current && enterKaveret(kaveretUrlRef.current)) return;
         goTo("s16", "s16_full_reading");
       }
     } catch {
@@ -1041,21 +1057,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
 
         {/* ── Loading ── */}
         {screen === "loading" && (
-          <Card center>
-            <div
-              style={{
-                width: 42, height: 42, margin: "0 auto 22px",
-                border: `3px solid ${C.line}`,
-                borderTopColor: C.gold,
-                borderRadius: "50%",
-                animation: "kriah-spin 1s linear infinite",
-              }}
-            />
-            <p style={{ fontSize: 18, fontWeight: 600, color: C.fg, margin: 0, lineHeight: 1.6 }}>
-              קוראים את מה שכתבתם...
-            </p>
-            <style>{`@keyframes kriah-spin { to { transform: rotate(360deg); } }`}</style>
-          </Card>
+          <BeeWait title="קוראים את מה שכתבתם" />
         )}
 
         {/* ── Error + retry ── */}
