@@ -366,6 +366,14 @@ const SIGNAL_WA = "https://wa.me/972539566961";
 
 function signalOffer(ctx: EmailTemplateContext): { isStrategy: boolean; href: string; cta: string } {
   const isStrategy = ctx.bucket === "strategy";
+  // Unified home: when the send handler resolved a kaveret link (switchover
+  // on), every nurture CTA leads there — the offer matching the lead's
+  // routing already lives on that page.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const kaveretUrl = (ctx as any).kaveretUrl;
+  if (typeof kaveretUrl === "string" && kaveretUrl) {
+    return { isStrategy, href: kaveretUrl, cta: "לכניסה לכוורת שלך ←" };
+  }
   return isStrategy
     ? { isStrategy, href: `${APP_URL}/strategy`, cta: "לקבוע פגישת אסטרטגיה ←" }
     : { isStrategy, href: `${APP_URL}/challenge`, cta: "להצטרף לאתגר ←" };
