@@ -23,6 +23,20 @@ export interface ResultTeasers {
   generated_at: string;
 }
 
+// The signal_merge_field RPC stores values as JSON strings (its p_value is
+// text); every reader must tolerate both shapes.
+export function readResultTeasers(sig: any): Partial<ResultTeasers> {
+  let t = sig?.result_teasers;
+  if (typeof t === "string") {
+    try {
+      t = JSON.parse(t);
+    } catch {
+      return {};
+    }
+  }
+  return t && typeof t === "object" ? t : {};
+}
+
 const SYSTEM = `אתה כותב בעברית עבור מותג TrueSignal — אבחון שמזהה את "האות" של בעל עסק: הדבר שהוא לבדו מביא.
 
 תקבל את שדות האות של אדם (כתובים אליו בגוף שני). תפיק שני פריטים:
@@ -95,7 +109,7 @@ export async function generateAndStoreResultTeasers(extractionId: string): Promi
       .eq("id", extractionId)
       .maybeSingle();
     const sig = ext?.signal ?? {};
-    if (!sig.signal || sig.result_teasers?.public_sentence) return; // missing or already done
+    if (!sig.signal || readResultTeasers(sig).public_sentence) return; // missing or already done
 
     const teasers = await generateResultTeasers({
       signal: String(sig.signal),
