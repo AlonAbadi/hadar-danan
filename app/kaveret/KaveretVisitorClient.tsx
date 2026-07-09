@@ -86,11 +86,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
       <div className={sty.bgfix} aria-hidden="true" />
       <div className={sty.glow} aria-hidden="true" />
       <main className={sty.wrap} style={{ paddingBottom: sale ? 120 : 60 }}>
-        <header className={sty.top}>
-          <div className={sty.brand}><span className={sty.hex} />beegood</div>
-          <div className={sty.who}>{data.firstName ? <>הכוורת של <b>{data.firstName}</b></> : "הכוורת שלך"}</div>
-        </header>
-        {/* ── hero: the open signal ── */}
+        {/* ── hero: the open signal (site nav renders above via LayoutShell) ── */}
         <div className={sty.hero} id="top">
           <div className={sty.ghost} aria-hidden="true">הכוורת</div>
           <div className={sty.k}>כוורת האות · כל זה כבר נוצר מהאות שלך</div>
@@ -157,14 +153,33 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
             <div className={sty.trow}>
               <div className={sty.head}>
                 <span className={sty.plat}>3 כיווני תוכן מהאות שלך</span>
-                <span className={sty.check} style={{ color: "#7FD49B" }}>חשופים במלואם</span>
+                <span className={sty.check} style={{ color: "#7FD49B" }}>הראשון חשוף במלואו</span>
               </div>
-              {data.directions.slice(0, 3).map((d, i) => (
-                <div className={sty.vScriptRow} key={i}>
-                  <span className={sty.vScriptN}>{i + 1}</span>
-                  <span className={sty.vScriptT}>{d}</span>
+              <div className={sty.vScriptRow}>
+                <span className={sty.vScriptN}>1</span>
+                <span className={sty.vScriptT}>{data.directions[0]}</span>
+              </div>
+              {data.directions.length > 1 ? (
+                <div className={sty.vLock}>
+                  <div className={sty.vLockContent}>
+                    {data.directions.slice(1, 3).map((d, i) => (
+                      <div className={sty.vScriptRow} key={i}>
+                        <span className={sty.vScriptN}>{i + 2}</span>
+                        <span className={sty.vScriptT}>{d}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <LockBand
+                    text={
+                      data.offer === "strategy"
+                        ? "עוד שני כיוונים, כלולים בליווי"
+                        : sale
+                          ? "עוד שני כיוונים נפתחים בכוורת"
+                          : "עוד שני כיוונים שמורים לך כאן"
+                    }
+                  />
                 </div>
-              ))}
+              ) : null}
               {sale ? (
                 <p className={sty.txt} style={{ fontSize: 13, marginTop: 12, color: "#ACA79E" }}>
                   {data.offer === "strategy"
@@ -370,8 +385,21 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
           </div>
         ) : null}
 
-        <footer className={sty.note} style={{ marginTop: 40 }}>
-          כוורת האות · beegood · שיטת TrueSignal
+        <footer style={{ marginTop: 48, padding: "28px 8px 10px", borderTop: "1px solid #2C323E", textAlign: "center", fontSize: 12, color: "#AAB0BD", lineHeight: 2 }}>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+            <a href="/privacy" style={{ color: "#AAB0BD", textDecoration: "none" }}>מדיניות פרטיות</a>
+            <a href="/terms" style={{ color: "#AAB0BD", textDecoration: "none" }}>תנאי שימוש</a>
+            <a href="/accessibility" style={{ color: "#AAB0BD", textDecoration: "none" }}>הצהרת נגישות</a>
+            <a href="/hive/terms" style={{ color: "#AAB0BD", textDecoration: "none" }}>תנאי מנוי הכוורת</a>
+          </div>
+          <p style={{ fontWeight: 600, marginTop: 6 }}>
+            אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
+          </p>
+          <p>© 2026 הדר דנן בע״מ | ח.פ. 516791555 · כל הזכויות שמורות</p>
+          <p>החילזון 5, רמת גן | 053-9566961</p>
+          <p>
+            <a href="/unsubscribe" style={{ color: "#AAB0BD" }}>לביטול הסכמה לדיוור</a>
+          </p>
         </footer>
       </main>
 

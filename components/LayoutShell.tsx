@@ -17,8 +17,9 @@ export function LayoutShell({
     pathname.startsWith("/en") ||
     // חדר השידור is a full-viewport camera experience — no nav.
     pathname.startsWith("/hive/signal-kit/broadcast") ||
-    // כוורת האות has its own floating tab bar (design/kaveret mockup) — no nav.
-    pathname.startsWith("/kaveret");
+    // כוורת האות (member home) has its own floating tab bar — no nav. The
+    // visitor state at /kaveret/i keeps the full site chrome deliberately.
+    (pathname.startsWith("/kaveret") && !pathname.startsWith("/kaveret/i"));
 
   return (
     <>

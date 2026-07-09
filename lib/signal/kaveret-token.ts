@@ -18,7 +18,7 @@ export function signKaveretToken(extractionId: string): string {
 
 export function kaveretLink(extractionId: string): string {
   const base = process.env.NEXT_PUBLIC_APP_URL || "https://www.beegood.online";
-  return `${base}/kaveret?t=${signKaveretToken(extractionId)}`;
+  return `${base}/kaveret/i?t=${signKaveretToken(extractionId)}`;
 }
 
 // Returns the extraction id when the token is authentic, else null.

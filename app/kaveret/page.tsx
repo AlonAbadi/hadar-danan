@@ -19,62 +19,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { CHALLENGE_DAYS } from "@/lib/challenge-config";
 import { pickPrimaryExtractionId } from "@/lib/signal/primary-extraction";
-import { verifyKaveretToken } from "@/lib/signal/kaveret-token";
-import { readResultTeasers } from "@/lib/signal/result-teasers";
 import { KaveretClient, type KaveretData } from "./KaveretClient";
-import { KaveretVisitorClient, type VisitorData } from "./KaveretVisitorClient";
-
-// Assembles the visitor-state payload for a token-authenticated lead.
-// Sensitive routings (crisis endings / money distress) get the warm path
-// with no sale layer at all.
-async function buildVisitorData(extractionId: string, token: string): Promise<VisitorData | null> {
-  const db = createServerClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: ext } = await (db as any)
-    .from("signal_extractions")
-    .select("id, user_id, signal, bucket, gender, routed_ending, distress_money")
-    .eq("id", extractionId)
-    .maybeSingle();
-  if (!ext?.signal?.signal) return null;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: leadUser } = ext.user_id
-    ? await (db as any).from("users").select("name, gender").eq("id", ext.user_id).maybeSingle()
-    : { data: null };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sig = ext.signal as any;
-  const sensitive =
-    ext.distress_money === true ||
-    ext.routed_ending === "crisis" ||
-    ext.routed_ending === "crisis_soft";
-  const offer: VisitorData["offer"] = sensitive
-    ? "sensitive"
-    : ext.bucket === "strategy"
-      ? "strategy"
-      : "hive";
-
-  const day0 = CHALLENGE_DAYS.find((d) => d.day === 0);
-  const gender = (ext.gender ?? leadUser?.gender) === "m" ? "m" : (ext.gender ?? leadUser?.gender) === "f" ? "f" : null;
-
-  return {
-    firstName: leadUser?.name?.split(" ")[0] ?? "",
-    gender,
-    signalText: String(sig.signal),
-    element: String(sig.element ?? ""),
-    promise: String(sig.signal_promise ?? ""),
-    tool: String(sig.central_tool ?? ""),
-    people: String(sig.people ?? ""),
-    directions: Array.isArray(sig.content_directions) ? sig.content_directions.map(String) : [],
-    publicSentence: readResultTeasers(sig).public_sentence ?? null,
-    firstScriptHook: readResultTeasers(sig).first_script_hook ?? null,
-    extractionId: ext.id,
-    offer,
-    day0VideoId: day0?.videoId ?? "1185862328",
-    waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
-    token,
-  };
-}
 
 export const dynamic = "force-dynamic";
 
@@ -138,17 +83,9 @@ export default async function KaveretPage({
     return <KaveretClient data={DEMO} cardsSplit={DEMO.cards.map((c) => splitCard(c.text))} />;
   }
 
-  // Visitor state: a lead arriving with a signed token sees their locked
-  // kaveret — no auth account needed. Members without a token continue to
-  // the auth path below unchanged.
-  if (t) {
-    const extractionIdFromToken = verifyKaveretToken(t);
-    if (extractionIdFromToken) {
-      const visitor = await buildVisitorData(extractionIdFromToken, t);
-      if (visitor) return <KaveretVisitorClient data={visitor} />;
-    }
-    redirect("/signal");
-  }
+  // Visitor tokens live at /kaveret/i (full site chrome there); keep old
+  // links working.
+  if (t) redirect(`/kaveret/i?t=${encodeURIComponent(t)}`);
 
   const cookieStore = await cookies();
   const supabaseAuth = createSSRClient<Database>(
