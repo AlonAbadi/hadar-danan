@@ -1077,6 +1077,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
             extractionId={extractionId}
             firstName={name.split(" ")[0] ?? ""}
             ending={ending}
+            kaveretUrl={kaveretUrl}
           />
         )}
 
@@ -1105,6 +1106,7 @@ function FullReading({
   extractionId,
   firstName,
   ending,
+  kaveretUrl,
 }: {
   signal:       SignalOutput;
   answers:      Record<string, string>;
@@ -1112,6 +1114,7 @@ function FullReading({
   extractionId: string | null;
   firstName:    string;
   ending:       "concierge" | "hive" | "pre_revenue" | "crisis_soft";
+  kaveretUrl:   string | null;
 }) {
   // P1 quote priority per the deck: Q6 (message_to_past), then Q3 (gratitude_mirror).
   const quoteSource =
