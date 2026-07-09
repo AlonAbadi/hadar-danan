@@ -74,6 +74,8 @@ const VISUAL_ASSETS = [
   { type: "quote-content-3", label: "כיוון תוכן #3" },
 ] as const;
 
+// Members always get logo-free assets — they paid; the beegood-branded look
+// exists only on the free card of the locked (pre-purchase) page.
 function assetUrl(extractionId: string, type: string, bg: "color" | "image" = "color", clean = true): string {
   const q = `style=editorial&bg=${bg}&v=10${clean ? "&clean=1" : ""}`;
   return type === "share-card-default"
@@ -166,7 +168,6 @@ export function KaveretClient({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.demo]);
-  const [assetClean, setAssetClean] = useState(true);
   const [curDay, setCurDay] = useState(data.challengeDay);
   const [doneDays, setDoneDays] = useState<number[]>(data.completedDays);
   const [viewDay, setViewDay] = useState(data.challengeDay);
@@ -684,11 +685,6 @@ export function KaveretClient({
                   <AssetPill on={assetBg === "color"} onClick={() => setAssetBg("color")}>צבע נקי</AssetPill>
                   <AssetPill on={assetBg === "image"} onClick={() => setAssetBg("image")}>תמונה ברמה גבוהה</AssetPill>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, background: "#141820", border: "1px solid #2C323E", borderRadius: 999, padding: 5 }}>
-                  <span style={{ color: "#9E9990", fontSize: 12, fontWeight: 300, marginInlineStart: 12, marginInlineEnd: 4 }}>ברנדינג</span>
-                  <AssetPill on={assetClean} onClick={() => setAssetClean(true)}>בלי לוגו</AssetPill>
-                  <AssetPill on={!assetClean} onClick={() => setAssetClean(false)}>עם לוגו beegood</AssetPill>
-                </div>
               </div>
               <div className={sty.carousel}>
                 {VISUAL_ASSETS.map((a) => (
@@ -696,7 +692,7 @@ export function KaveretClient({
                     <div className={sty.frame} style={{ padding: 0, aspectRatio: "4 / 5" }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={assetUrl(data.extractionId!, a.type, assetBg, assetClean)}
+                        src={assetUrl(data.extractionId!, a.type, assetBg)}
                         alt={a.label}
                         loading="lazy"
                         style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 18 }}
@@ -707,7 +703,7 @@ export function KaveretClient({
                       <a
                         className={`${sty.btnCopy} ${sty.btnCard}`}
                         style={{ textDecoration: "none" }}
-                        href={assetUrl(data.extractionId!, a.type, assetBg, assetClean)}
+                        href={assetUrl(data.extractionId!, a.type, assetBg)}
                         download
                       >
                         <span>הורדת הנכס</span>

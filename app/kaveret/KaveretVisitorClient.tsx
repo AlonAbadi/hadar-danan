@@ -72,7 +72,9 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
     }
   }, [data.offer, data.extractionId]);
 
-  const assetUrl = `/api/signal/${data.extractionId}/asset?type=quote-signal&style=editorial&bg=image&clean=1&v=10`;
+  // Pre-purchase artifacts carry the beegood branding (the logo comes off
+  // everywhere once she is a member).
+  const assetUrl = `/api/signal/${data.extractionId}/asset?type=quote-signal&style=editorial&bg=image&v=10`;
   const shareCardUrl = `/api/signal/${data.extractionId}/share-card?style=editorial&bg=color&v=10`;
   const hiveHref = "/signal-hive";
   const strategyHref = "/strategy/book";
