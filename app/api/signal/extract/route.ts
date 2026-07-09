@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { waitUntil } from "@vercel/functions";
 import { Resend } from "resend";
+import { generateAndStoreResultTeasers } from "@/lib/signal/result-teasers";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { kriahPreviewAllowed } from "@/lib/isolation";
@@ -674,6 +676,13 @@ export async function POST(req: NextRequest) {
       error:   String(e),
       payload: { userId },
     });
+  }
+
+  // Locked-kaveret teasers (public card sentence + first script hook) —
+  // generated in the background so the reveal is never delayed. Gated by env
+  // until the visitor-state page ships; failures never touch the funnel.
+  if (extractionId && process.env.KAVERET_RESULT_ENABLED === "1") {
+    waitUntil(generateAndStoreResultTeasers(extractionId));
   }
 
   // ── Increment landing_headline A/B conversion counter ───────────────────
