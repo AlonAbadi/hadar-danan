@@ -17,7 +17,7 @@ import type { Viewport } from "next";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
-import { CHALLENGE_DAYS } from "@/lib/challenge-config";
+import { CHALLENGE_DAYS, computeNextLiveMeetingDate } from "@/lib/challenge-config";
 import { pickPrimaryExtractionId } from "@/lib/signal/primary-extraction";
 import { KaveretClient, type KaveretData } from "./KaveretClient";
 
@@ -55,6 +55,7 @@ const DEMO: KaveretData = {
   challengeDays: [],
   completedDays: [],
   challengeDone: false,
+  liveMeeting: null,
   filmedNumbers: [],
   aboutSite: "",
   manifesto: "",
@@ -62,6 +63,18 @@ const DEMO: KaveretData = {
   waPhone: "972000000000",
   demo: true,
 };
+
+// "יום שלישי, 28 ביולי, בשעה 17:00" — same formatting the /challenge page
+// uses, pinned to Asia/Jerusalem.
+function formatLiveMeeting(d: Date): string {
+  const dayPart = new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem", weekday: "long", day: "numeric", month: "long",
+  }).format(d).replace(/,?\s*\d{4}$/, "");
+  const timePart = new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).format(d);
+  return `${dayPart}, בשעה ${timePart}`;
+}
 
 // Card text splitter: the last clause (after the final comma) becomes the bold
 // "main"; everything before it is the muted "lead". No comma = all main.
@@ -267,6 +280,17 @@ export default async function KaveretPage({
     challengeDays,
     completedDays,
     challengeDone,
+    liveMeeting: (() => {
+      const meeting = computeNextLiveMeetingDate();
+      const day8 = CHALLENGE_DAYS.find((d) => d.day === 8);
+      // The Zoom link publishes close to the session: show it only inside
+      // the final 3 days (the team refreshes it in challenge-config before
+      // each meeting, same flow as /challenge/content).
+      const soon = meeting.getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
+      const zoomUrl =
+        soon && day8?.videoId?.startsWith("http") ? day8.videoId : null;
+      return { label: formatLiveMeeting(meeting), zoomUrl };
+    })(),
     filmedNumbers: Array.from(
       new Set((readyEdits ?? []).map((e: { video_number: number }) => e.video_number))
     ) as number[],

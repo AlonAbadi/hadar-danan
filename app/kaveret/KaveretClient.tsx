@@ -35,6 +35,7 @@ export interface KaveretData {
   challengeDays: { day: number; title: string; videoId: string; portrait: boolean }[];
   completedDays: number[];
   challengeDone: boolean;
+  liveMeeting: { label: string; zoomUrl: string | null } | null;
   filmedNumbers: number[];
   aboutSite: string;
   manifesto: string;
@@ -578,6 +579,33 @@ export function KaveretClient({
               );
             })()}
           </div>
+
+          {data.liveMeeting ? (
+            <div className={sty.trow} style={{ marginTop: 16 }}>
+              <div className={sty.head}>
+                <span className={sty.plat}>מפגש הסיום החי עם הדר</span>
+                <span className={sty.check} style={{ color: "#7FD49B" }}>בזום, אחרי שבעת הימים</span>
+              </div>
+              <p className={sty.txt}>{data.liveMeeting.label}</p>
+              {data.liveMeeting.zoomUrl ? (
+                <div className={sty.tfoot}>
+                  <a
+                    className={sty.btnCopy}
+                    style={{ textDecoration: "none" }}
+                    href={data.liveMeeting.zoomUrl}
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <span>לכניסה למפגש בזום</span>
+                  </a>
+                </div>
+              ) : (
+                <p className={sty.txt} style={{ fontSize: 13, color: "#ACA79E", marginTop: 8 }}>
+                  הקישור לזום יפורסם כאן סמוך למפגש.
+                </p>
+              )}
+            </div>
+          ) : null}
         </section>
 
         <section className={sty.zone} id="z-visual" data-tab-index={2} ref={(el) => { zonesRef.current[2] = el; }}>
