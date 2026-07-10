@@ -172,10 +172,17 @@ export async function POST(
     );
   }
 
+  // Carry letter_from_hadar forward from phase-1 cache (set when GET
+  // /shoot-day ran the identity+pillars pack). Without this, /kaveret reads
+  // shoot_day.letter_from_hadar → null → static-fallback letter renders
+  // even though the model produced a personalized one moments earlier.
+  const cachedLetter = row.signal.shoot_day_phase1?.letter_from_hadar ?? null;
+
   const plan: ShootDayPlan = {
     identity_statement: stripEmDashes(identity_statement),
     pillars: normalizeShootDayText(pillars) as [Pillar, Pillar, Pillar, Pillar],
     videos:  [video1],
+    ...(cachedLetter ? { letter_from_hadar: cachedLetter } : {}),
   };
 
   if (!validateShootDayPlan(plan)) {

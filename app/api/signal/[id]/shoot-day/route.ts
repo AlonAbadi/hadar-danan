@@ -197,6 +197,7 @@ export async function GET(
       decisions:          strategy.decisions,
       gift_sentences:     gifts,
       ...(director ? { director } : {}),
+      ...(phase1.letter_from_hadar ? { letter_from_hadar: phase1.letter_from_hadar } : {}),
     } as ShootDayPlan;
 
     if (validateShootDayPlan(plan)) {
@@ -215,6 +216,7 @@ export async function GET(
   // `progress` let the builder know what is left to generate.
   if (cachedPlan || mergedVideos.length > 0) {
     const base = phase1 ?? { identity_statement: cachedPlan!.identity_statement, pillars: cachedPlan!.pillars };
+    const letterFromHadar = phase1?.letter_from_hadar ?? cachedPlan?.letter_from_hadar ?? null;
     const plan = {
       identity_statement: base.identity_statement,
       pillars:            base.pillars,
@@ -222,6 +224,7 @@ export async function GET(
       ...(strategy ? { visual_direction: strategy.visual_direction, schedule: strategy.schedule, decisions: strategy.decisions } : {}),
       ...(gifts ? { gift_sentences: gifts } : {}),
       ...(director ? { director } : {}),
+      ...(letterFromHadar ? { letter_from_hadar: letterFromHadar } : {}),
     } as ShootDayPlan;
     return NextResponse.json({
       phase:        "complete",

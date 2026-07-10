@@ -162,6 +162,11 @@ export type ShootDayPlan = {
   decisions?:          [Decision, Decision, Decision];
   gift_sentences?:     string[];         // 5 when present
   director?:           DirectorScript;   // Hadar's spoken direction (for video render)
+  // Phase-1 output. Propagated onto the plan by /finish so /kaveret can read
+  // it without a second network round-trip. Optional — legacy phase-1 caches
+  // predating 2026-07-10 don't have it, and the client falls back to a
+  // static letter in that case.
+  letter_from_hadar?:  LetterFromHadar;
 };
 
 // ── Shared rules baked into every sub-prompt ──────────────────────────
