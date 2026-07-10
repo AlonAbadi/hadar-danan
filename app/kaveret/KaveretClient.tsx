@@ -1249,21 +1249,29 @@ function EpisodesList({
       {identity && (
         <div
           style={{
-            marginBottom: 4,
-            padding: "10px 14px 10px 12px",
-            borderInlineStart: "2px solid rgba(232,185,74,0.5)",
-            background: "rgba(232,185,74,0.04)",
-            borderRadius: 8,
-            fontSize: 14,
-            lineHeight: 1.5,
+            marginBottom: 6,
+            padding: "14px 18px",
+            borderInlineStart: "3px solid #E8B94A",
+            background: "linear-gradient(90deg, rgba(232,185,74,0.08), rgba(232,185,74,0.02) 60%, transparent)",
+            borderRadius: 10,
             color: "#EDE9E1",
-            fontWeight: 300,
           }}
         >
-          <span style={{ color: "#9E9990", fontSize: 11, fontWeight: 700, letterSpacing: 1.1, display: "block", marginBottom: 4 }}>
+          <span
+            style={{
+              color: "#E8B94A",
+              fontSize: 11.5,
+              fontWeight: 800,
+              letterSpacing: 2,
+              display: "block",
+              marginBottom: 6,
+            }}
+          >
             הליבה של העונה
           </span>
-          {identity}
+          <span style={{ fontSize: 15, fontWeight: 400, lineHeight: 1.55, color: "#EDE9E1" }}>
+            {identity}
+          </span>
         </div>
       )}
       {Array.from({ length: 7 }, (_, i) => i + 1).map((n) => {
