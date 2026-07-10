@@ -737,7 +737,7 @@ export function KaveretClient({
             <div>
               <div className={sty.zhead} style={{ marginTop: 34 }}>
                 <span className={sty.zt}>
-                  <h2 style={{ fontSize: 19 }}>חבילת הסרטונים שלך</h2>
+                  <h2 style={{ fontSize: 19 }}>הפרקים בסדרה שלך</h2>
                   <span className={sty.hint}>{data.filmedCount} מתוך {data.scriptsTotal} צולמו</span>
                 </span>
               </div>
@@ -975,7 +975,7 @@ export function KaveretClient({
           {data.demo ? (
             <>
               <div className={sty.zhead} style={{ marginTop: 34 }}>
-                <span className={sty.zt}><h2 style={{ fontSize: 19 }}>חבילת הסרטונים שלך</h2><span className={sty.hint}>שבעה סרטונים במסגרת כוורת האות</span></span>
+                <span className={sty.zt}><h2 style={{ fontSize: 19 }}>הפרקים בסדרה שלך</h2><span className={sty.hint}>שבעה סרטונים במסגרת כוורת האות</span></span>
               </div>
               <div className={sty.trow}>
                 <div className={sty.head}><span className={sty.plat}>חבילת כוורת האות</span><span className={sty.check}>{data.filmedCount} מתוך {data.scriptsTotal} הופקו</span></div>
