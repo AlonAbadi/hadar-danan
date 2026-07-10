@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>גלריית הרילסים — 3 קונספטים מפאנל המוצר</title>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#080C14; --card:#141820; --line:#2C323E; --gold:#E8B94A; --gold-deep:#9E7C3A; --fg:#EDE9E1; --muted:#9E9990; --ok:#7FD49B; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:#04060B; font-family:'Assistant',sans-serif; color:var(--fg); padding:36px 24px 60px; }
+  h1 { text-align:center; font-size:24px; font-weight:800; }
+  h1 em { font-style:normal; color:var(--gold); }
+  .sub { text-align:center; color:var(--muted); font-size:13.5px; margin:8px auto 30px; max-width:640px; line-height:1.6; font-weight:400; }
+  .row { display:flex; gap:30px; justify-content:center; flex-wrap:wrap; align-items:flex-start; }
+  .opt { width:302px; }
+  .optlbl { text-align:center; margin-bottom:12px; }
+  .optlbl .n { display:inline-grid; place-items:center; width:28px; height:28px; border-radius:50%; background:linear-gradient(180deg,#F1D07E,#CE9C38); color:#171204; font-weight:800; font-size:14px; margin-bottom:6px; }
+  .optlbl .t { font-size:15.5px; font-weight:800; display:block; }
+  .optlbl .d { font-size:11px; color:var(--muted); display:block; margin-top:3px; line-height:1.55; min-height:52px; }
+  .phone { width:302px; height:640px; border-radius:34px; border:1.5px solid #232A38; overflow-y:auto; overflow-x:hidden; position:relative;
+    background:var(--bg); box-shadow:0 30px 80px rgba(0,0,0,0.6); scrollbar-width:none; }
+  .phone::-webkit-scrollbar { display:none; }
+  .zh { padding:20px 16px 0; }
+  .zh h2 { font-size:19px; font-weight:800; }
+  .zh .hint { color:var(--muted); font-size:11.5px; font-weight:300; display:block; margin-top:2px; }
+  .rule { height:1px; margin:12px 16px 0; background:linear-gradient(90deg, rgba(232,185,74,0.5), transparent); }
+
+  .thumb { position:relative; overflow:hidden; background:#0B0F18; }
+  .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .thumb .grad { position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(8,12,20,0.88) 100%); }
+  .play { position:absolute; top:50%; right:50%; transform:translate(50%,-50%); width:38px; height:38px; border-radius:50%;
+    background:rgba(8,12,20,0.55); backdrop-filter:blur(6px); display:grid; place-items:center; border:1px solid rgba(232,185,74,0.5); }
+  .play::after { content:""; border-style:solid; border-width:7px 0 7px 11px; border-color:transparent transparent transparent var(--gold); margin-right:-2px; }
+  .tag { font-size:9.5px; font-weight:700; border-radius:999px; padding:3px 9px; letter-spacing:0.02em; }
+  .tag.air { color:var(--ok); background:rgba(127,212,155,0.1); border:1px solid rgba(127,212,155,0.35); }
+  .tag.proc { color:var(--gold); background:rgba(232,185,74,0.1); border:1px solid rgba(232,185,74,0.35); }
+  .dots3 { position:absolute; top:8px; left:8px; width:26px; height:26px; border-radius:50%; background:rgba(8,12,20,0.6);
+    backdrop-filter:blur(6px); display:grid; place-items:center; color:#CDD1DA; font-weight:800; letter-spacing:1px; font-size:12px; border:none; cursor:pointer; }
+
+  /* ═══ 1: הכספת — 2-col grid, hero first ═══ */
+  .vault { padding:14px 16px 30px; }
+  .vault .counter { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .vault .counter .c { font-size:12px; font-weight:700; color:var(--gold); white-space:nowrap; }
+  .vault .counter .bar { flex:1; height:2px; background:rgba(232,185,74,0.15); border-radius:2px; overflow:hidden; }
+  .vault .counter .bar i { display:block; height:100%; width:43%; background:linear-gradient(90deg, var(--gold-deep), var(--gold)); }
+  .vault .hero { border-radius:16px; border:1px solid rgba(158,124,58,0.55); margin-bottom:12px; }
+  .vault .hero .thumb { aspect-ratio:9/12; border-radius:15px 15px 0 0; }
+  .vault .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .vault .cardv { border-radius:14px; border:1px solid rgba(158,124,58,0.4); overflow:hidden; background:var(--card); }
+  .vault .cardv .thumb { aspect-ratio:9/13; }
+  .vault .meta { padding:9px 10px 11px; }
+  .vault .meta .nm { font-size:12px; font-weight:700; line-height:1.45; }
+  .vault .hero .meta .nm { font-size:14.5px; }
+  .vault .meta .mm { display:flex; align-items:center; justify-content:space-between; margin-top:6px; color:var(--muted); font-size:10px; }
+
+  /* ═══ 2: כרכים — shelves with snap carousels ═══ */
+  .vol { padding:14px 0 30px; }
+  .vol .shelf { margin-bottom:20px; }
+  .vol .shelfhead { display:flex; align-items:baseline; gap:10px; padding:0 16px; margin-bottom:10px; }
+  .vol .shelfhead .vt { font-size:14px; font-weight:800; color:var(--gold); }
+  .vol .shelfhead .vs { font-size:10.5px; color:var(--muted); }
+  .vol .shelfhead .seal { margin-inline-start:auto; font-size:9.5px; font-weight:700; color:#171204; background:linear-gradient(180deg,#F1D07E,#CE9C38); border-radius:999px; padding:3px 10px; }
+  .vol .car { display:flex; gap:10px; overflow-x:auto; padding:2px 16px 6px; scroll-snap-type:x mandatory; scrollbar-width:none; }
+  .vol .car::-webkit-scrollbar { display:none; }
+  .vol .cardc { flex:0 0 132px; scroll-snap-align:start; }
+  .vol .cardc .thumb { aspect-ratio:9/16; border-radius:12px; border:1px solid rgba(232,185,74,0.25); }
+  .vol .cardc .nm { font-size:10.5px; font-weight:600; line-height:1.4; margin-top:6px; }
+  .vol .cardc .no { color:var(--gold-deep); font-weight:800; margin-inline-end:4px; }
+  .vol .stat { position:absolute; top:7px; right:7px; }
+  .vol .next { margin:0 16px; border:1px dashed rgba(158,153,144,0.3); border-radius:14px; padding:18px 14px; text-align:center; opacity:0.65; }
+  .vol .next .nt { font-size:12.5px; font-weight:700; color:var(--muted); }
+  .vol .next .ns { font-size:10.5px; color:rgba(158,153,144,0.7); margin-top:3px; }
+
+  /* ═══ 3: הסטודיו — hero + contact sheet + chips ═══ */
+  .stu { padding:14px 16px 30px; }
+  .stu .month { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .stu .month .m { font-size:11.5px; font-weight:700; color:var(--fg); white-space:nowrap; }
+  .stu .month .bar { flex:1; height:3px; background:rgba(232,185,74,0.14); border-radius:3px; overflow:hidden; }
+  .stu .month .bar i { display:block; height:100%; width:43%; background:linear-gradient(90deg, var(--gold-deep), var(--gold)); }
+  .stu .hero { position:relative; border-radius:16px; overflow:hidden; border:1px solid rgba(232,185,74,0.3); margin-bottom:12px; }
+  .stu .hero .thumb { aspect-ratio:9/11; }
+  .stu .hero .cap { position:absolute; bottom:0; right:0; left:0; padding:12px 14px; }
+  .stu .hero .cap .nm { font-size:14.5px; font-weight:800; }
+  .stu .hero .cap .st { font-size:10.5px; color:var(--ok); margin-top:2px; font-weight:600; }
+  .stu .chips { display:flex; gap:8px; margin:2px 0 12px; }
+  .stu .chip { font-size:11px; font-weight:700; color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:999px; padding:6px 14px; cursor:pointer; font-family:inherit; }
+  .stu .chip.on { color:#171204; background:linear-gradient(180deg,#F1D07E,#CE9C38); border-color:transparent; }
+  .stu .sheet { display:grid; grid-template-columns:repeat(3, 1fr); gap:9px; }
+  .stu .cards { border-radius:10px; overflow:hidden; position:relative; }
+  .stu .cards .thumb { aspect-ratio:9/16; }
+  .stu .cards .topline { position:absolute; top:0; right:0; left:0; height:2.5px; }
+  .stu .cards .topline.air { background:var(--ok); } .stu .cards .topline.proc { background:var(--gold); }
+  .stu .cards .dur { position:absolute; bottom:5px; left:6px; font-size:9px; font-weight:700; color:#fff; background:rgba(8,12,20,0.65); border-radius:6px; padding:1px 5px; }
+</style>
+</head>
+<body>
+  <h1>הרילסים שלך · <em>שלושה קונספטים</em></h1>
+  <p class="sub">זה הלב של תמורת המנוי העתידי: כל רילס חייב להרגיש נכס מופק, והספרייה — עושר שנצבר. שלוש גישות מפאנל המוצר. גללו בתוך הטלפונים.</p>
+
+  <div class="row">
+
+    <!-- ═══ 1: הכספת ═══ -->
+    <div class="opt">
+      <div class="optlbl"><span class="n">1</span><span class="t">הכספת</span>
+        <span class="d">אוסף נכסים: רשת 2 עמודות עם כרטיסי 9:16 אמיתיים, האחרון גיבור בראש. שם לפי ההוק, לא מספר. מונה נכסים עם קו זהב שמתמלא</span></div>
+      <div class="phone">
+        <div class="zh"><h2>האוסף שלך</h2><span class="hint">כל סרטון כאן הוא נכס מוגמר. הספרייה גדלה איתך</span></div>
+        <div class="rule"></div>
+        <div class="vault">
+          <div class="counter"><span class="c">3 נכסים באוסף</span><span class="bar"><i></i></span><span style="font-size:10px;color:var(--muted)">7</span></div>
+          <div class="hero cardv">
+            <div class="thumb"><img src="assets/reel-a.jpg" alt=""><span class="grad"></span><span class="play"></span>
+              <button class="dots3">···</button></div>
+            <div class="meta">
+              <div class="nm">הסרטון על למה בהירות קודמת להשקעה</div>
+              <div class="mm"><span>0:47 · 9 ביולי</span><span class="tag air">באוויר</span></div>
+            </div>
+          </div>
+          <div class="grid">
+            <div class="cardv">
+              <div class="thumb"><img src="assets/reel-b.jpg" alt=""><span class="grad"></span><button class="dots3">···</button></div>
+              <div class="meta"><div class="nm">על הפחד מהמצלמה</div>
+                <div class="mm"><span>0:38</span><span class="tag air">באוויר</span></div></div>
+            </div>
+            <div class="cardv">
+              <div class="thumb"><img src="assets/reel-c.jpg" alt=""><span class="grad"></span><button class="dots3">···</button></div>
+              <div class="meta"><div class="nm">על ההחלטה שדחית</div>
+                <div class="mm"><span>1:02</span><span class="tag proc">בעיבוד</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 2: כרכים ═══ -->
+    <div class="opt">
+      <div class="optlbl"><span class="n">2</span><span class="t">כרכים</span>
+        <span class="d">מדפים: כל חבילת 7 היא כרך בקרוסלה עם הצצה לכרטיס הבא. כרך שהושלם מקבל חותם זהב, ומדף "הכרך הבא" הדהוי זורע את המנוי בלי למכור</span></div>
+      <div class="phone">
+        <div class="zh"><h2>הכרכים שלך</h2><span class="hint">כל כרך, שבעה סרטונים. גוף עבודה שממשיך לגדול</span></div>
+        <div class="rule"></div>
+        <div class="vol">
+          <div class="shelf" style="margin-top:14px">
+            <div class="shelfhead"><span class="vt">כרך ראשון</span><span class="vs">3 מתוך 7</span></div>
+            <div class="car">
+              <div class="cardc">
+                <div class="thumb"><img src="assets/reel-a.jpg" alt=""><span class="grad"></span><span class="stat tag air">באוויר</span><span class="play" style="width:30px;height:30px"></span></div>
+                <div class="nm"><span class="no">01</span>על למה בהירות קודמת להשקעה</div>
+              </div>
+              <div class="cardc">
+                <div class="thumb"><img src="assets/reel-b.jpg" alt=""><span class="grad"></span><span class="stat tag air">באוויר</span></div>
+                <div class="nm"><span class="no">02</span>על הפחד מהמצלמה</div>
+              </div>
+              <div class="cardc">
+                <div class="thumb"><img src="assets/reel-c.jpg" alt=""><span class="grad"></span><span class="stat tag proc">בעיבוד</span></div>
+                <div class="nm"><span class="no">03</span>על ההחלטה שדחית</div>
+              </div>
+              <div class="cardc" style="opacity:0.4">
+                <div class="thumb" style="display:grid;place-items:center;border-style:dashed"><span style="font-size:22px;color:var(--gold-deep)">04</span></div>
+                <div class="nm" style="color:var(--muted)">התסריט הבא מחכה בחדר השידור</div>
+              </div>
+            </div>
+          </div>
+          <div class="next">
+            <div class="nt">הכרך הבא</div>
+            <div class="ns">שבעה סרטונים חדשים, כל חודש. נפתח בהמשך</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 3: הסטודיו ═══ -->
+    <div class="opt">
+      <div class="optlbl"><span class="n">3</span><span class="t">הסטודיו</span>
+        <span class="d">מרחב עבודה חי: גיבור גדול, לוח קונטקטים 3 עמודות, צ'יפים לסינון, ופס "3 מתוך 7 באוויר" שמנרמל קצב חודשי עוד לפני שהמנוי קיים</span></div>
+      <div class="phone">
+        <div class="zh"><h2>הסטודיו שלך</h2><span class="hint">כאן נולד גוף העבודה שלך. סרטון אחרי סרטון</span></div>
+        <div class="rule"></div>
+        <div class="stu" style="padding-top:14px">
+          <div class="month"><span class="m">3 מתוך 7 באוויר</span><span class="bar"><i></i></span></div>
+          <div class="hero">
+            <div class="thumb"><img src="assets/reel-a.jpg" alt=""><span class="grad"></span><span class="play"></span></div>
+            <div class="cap"><div class="nm">על למה בהירות קודמת להשקעה</div><div class="st">באוויר · 0:47</div></div>
+          </div>
+          <div class="chips">
+            <button class="chip on">הכול</button><button class="chip">באוויר</button><button class="chip">בעיבוד</button>
+          </div>
+          <div class="sheet">
+            <div class="cards"><span class="topline air"></span><div class="thumb"><img src="assets/reel-b.jpg" alt=""></div><span class="dur">0:38</span></div>
+            <div class="cards"><span class="topline proc"></span><div class="thumb"><img src="assets/reel-c.jpg" alt=""></div><span class="dur">1:02</span></div>
+            <div class="cards"><span class="topline air"></span><div class="thumb"><img src="assets/reel-a.jpg" alt=""></div><span class="dur">0:47</span></div>
+            <div class="cards" style="opacity:0.35"><div class="thumb" style="display:grid;place-items:center"><span style="font-size:18px;color:var(--gold-deep)">4</span></div></div>
+            <div class="cards" style="opacity:0.35"><div class="thumb" style="display:grid;place-items:center"><span style="font-size:18px;color:var(--gold-deep)">5</span></div></div>
+            <div class="cards" style="opacity:0.35"><div class="thumb" style="display:grid;place-items:center"><span style="font-size:18px;color:var(--gold-deep)">6</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+<script>
+  document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => {
+    c.parentElement.querySelectorAll(".chip").forEach((x) => x.classList.remove("on"));
+    c.classList.add("on");
+  }));
+</script>
+</body>
+</html>
