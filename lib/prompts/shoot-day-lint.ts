@@ -11,7 +11,7 @@
  * Clichés are LINTED (returned as warnings for logging), not auto-rewritten,
  * since rewriting changes meaning.
  */
-import { isApprovedQuoteSource, type Video } from "@/lib/prompts/shoot-day-engine";
+import { deriveReelsProfile, isApprovedQuoteSource, type Video } from "@/lib/prompts/shoot-day-engine";
 
 // ── 1. Em-dash strip ──────────────────────────────────────────────────
 // Replaces em/en dashes. A spaced dash (" - ") becomes a comma; a bare one
@@ -42,6 +42,15 @@ export function sanitizeHadarQuotes(videos: Video[]): Video[] {
       return { ...v, hadar_quote: { ...v.hadar_quote, source: "general" } };
     }
     return v;
+  });
+}
+
+// ── 2b. reels_profile backfill ────────────────────────────────────────
+// Legacy cached videos + models that forget the field: derive from duration.
+export function backfillReelsProfile(videos: Video[]): Video[] {
+  return videos.map((v) => {
+    if (v.reels_profile) return v;
+    return { ...v, reels_profile: deriveReelsProfile(v.duration) };
   });
 }
 

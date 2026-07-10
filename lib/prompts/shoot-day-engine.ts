@@ -46,15 +46,33 @@ export type Pillar = {
 export type VideoMode = "B" | "A" | "C" | "D";  // B=hook, A=story, C=framework, D=manifest
 export type VideoType = "IDENTITY" | "PILLAR_HOOK" | "STORY" | "FRAMEWORK" | "MYTH" | "CTA";
 
+// Reels format profile — dictates the internal beat structure of the script.
+// Derived from duration, but explicit in the output so Claude commits to a
+// specific rhythm (tight = 1 beat, standard = 2 beats, long = 3-4 beats).
+export type ReelsProfile = "tight" | "standard" | "long";
+
+// deriveReelsProfile: falls back when a legacy cached plan omits the field.
+// Mapping: ≤30s → tight, 31-60s → standard, ≥61s → long.
+export function deriveReelsProfile(duration: string): ReelsProfile {
+  const m = duration.match(/^(\d+)(s|m)?$/i);
+  if (!m) return "standard";
+  const n = parseInt(m[1], 10);
+  const seconds = m[2]?.toLowerCase() === "m" ? n * 60 : n;
+  if (seconds <= 30) return "tight";
+  if (seconds <= 60) return "standard";
+  return "long";
+}
+
 export type Video = {
-  number:      number;             // 1-7 (legacy cached plans may hold up to 12)
-  act:         1 | 2 | 3;          // 1=זהות, 2=סיפור, 3=סמכות
-  type:        VideoType;
-  mode:        VideoMode;
-  pillar:      1 | 2 | 3 | 4 | null;  // null for Identity and CTA
-  set:         "A" | "B";
-  duration:    string;             // "15s", "30s", "45s", "60s", "90s", "2m"
-  title:       string;             // Hebrew, the working title
+  number:        number;             // 1-7 (legacy cached plans may hold up to 12)
+  act:           1 | 2 | 3;          // 1=זהות, 2=סיפור, 3=סמכות
+  type:          VideoType;
+  mode:          VideoMode;
+  pillar:        1 | 2 | 3 | 4 | null;  // null for Identity and CTA
+  set:           "A" | "B";
+  duration:      string;             // "15s", "30s", "45s", "60s", "90s", "2m"
+  reels_profile?: ReelsProfile;      // NEW 2026-07-10; optional so legacy plans still validate
+  title:         string;             // Hebrew, the working title
 
   script: {
     hook:   string;       // First 3 seconds
@@ -219,6 +237,43 @@ Mode D (במה) — הדר עצמה (או דובר/ת-במה) מבצע/ת מול
 
 אזהרת-ברזל: אסור לערבב Mode B ו-Mode D באותו סרטון. ב-Mode B הלקוח/ה מדבר/ת אל הקהל שלו/ה והדר היא הבמאית מאחורי המצלמה, לכן אסור לכתוב signoff או מנטרה בסגנון הדר ("תהיו טובים", "אני אכניס לכם מה להגיד") בתוך פיו/ה של הלקוח/ה. ב-Mode D אין "לקוח מצולם" נפרד, הדובר/ת הוא/היא הדר או דמות-במה.`;
 
+// ── Reels format profiles ─────────────────────────────────────────────
+// Each video declares an EXPLICIT reels_profile so Claude commits to a
+// specific beat structure. Without this the model treats duration as a soft
+// hint and produces 60s scripts padded with fluff, or 15s scripts that try to
+// cram 3 body beats. Injected into every video-producing pack.
+const REELS_PROFILES = `פרופילי רילס (חובה לתייג כל סרטון בשדה reels_profile. המבנה הפנימי חייב להתאים לפרופיל):
+
+**tight** (≤30 שניות) — הרילס הקצר-נשימה, ברירת המחדל של 15-30s Reels.
+- Hook: שנייה 1. משפט אחד קצר, פותח בשלילה או שאלה חדה.
+- Body: beat אחד בלבד. רעיון אחד. אסור לפצל לשני רעיונות — זה כבר standard.
+- Close: פאנץ' ליין קטלני, לא CTA. משפט שנשאר במחשבה.
+- אורך תסריט: כ-50-80 מילים בעברית.
+- מתאים ל-VideoType: IDENTITY (V1), PILLAR_HOOK, MYTH, לעיתים CTA.
+
+**standard** (30-60 שניות) — הרילס הבינוני. hook + 2 beats + CTA רך.
+- Hook: 3 שניות. מציב מתח או שאלה שהצופה חייב/ת לגלות תשובה.
+- Body: 2 beats. beat 1 = בעיה/סתירה. beat 2 = תובנה/הפוך.
+- CTA: רך ומסקרן. "מי שרוצה להעמיק, פנייה בפרטי." לא "התקשרו עכשיו!!!".
+- אורך תסריט: כ-120-180 מילים בעברית.
+- מתאים ל-VideoType: PILLAR_HOOK ארוך, FRAMEWORK קצר, CTA.
+
+**long** (60-90+ שניות) — הפורמט הארוך יחסית. סיפור אמיתי או framework עמוק.
+- Hook: 3-5 שניות. מציב מתח + מבטיח תובנה שווה את הזמן.
+- Body: 3-4 beats. story arc (התחלה → משבר → פנייה → פתרון) או framework arc (X שאלות/סוגים/עקרונות).
+- Insight: לפני ה-CTA, נקודת-מפתח שתישאר. "זו הסיבה ש..."
+- CTA: ברור אבל בלי דחיפות מזויפת. הגדרה מלאה של הצעד הבא.
+- אורך תסריט: כ-220-350 מילים בעברית.
+- מתאים ל-VideoType: STORY, FRAMEWORK עמוק, CTA עם הצדקה מלאה.
+
+חוקי אכיפה נוקשים:
+1. Video 1 (IDENTITY) הוא תמיד tight ואינו כולל CTA.
+2. אם ה-hook לוקח יותר מ-3 שניות, זה לא tight.
+3. אם ה-body מכיל 2+ beats, זה לא tight — עלה ל-standard.
+4. אם ה-body מכיל 3+ beats, זה long. אחרת רדה ל-standard.
+5. long בלי insight מפורש = תסריט חלש. חובה לכלול משפט "זה בדיוק ה...".
+6. הפרופיל חייב להתאים ל-duration: 15/20/30s = tight, 45/60s = standard, 90s/2m = long.`;
+
 // ── Hadar quote provenance — closed allow-list (anti-fabrication) ─────
 // The model does NOT have the full corpus in context, only the ~15 quotes
 // embedded above. Left free, it invents plausible C-numbers, and Magic #2
@@ -322,6 +377,8 @@ ${HADAR_SIGNATURE_MOVES}
 
 ${HADAR_MODES}
 
+${REELS_PROFILES}
+
 ${HADAR_QUOTE_RULE}
 
 ## הסרטון הראשון: IDENTITY
@@ -348,6 +405,7 @@ ${HADAR_QUOTE_RULE}
     "pillar": null,
     "set": "A",
     "duration": "15s",
+    "reels_profile": "tight",
     "title": "...",
     "script": {"hook": "...", "body": "..."},
     "direction": {"visual": "...", "body_language": "...", "tone": "...", "eye_contact": "..."},
@@ -369,22 +427,24 @@ ${HADAR_SIGNATURE_MOVES}
 
 ${HADAR_MODES}
 
+${REELS_PROFILES}
+
 ${HADAR_QUOTE_RULE}
 
 ## מבנה 7 הסרטונים (מ-michael-kadosh shot list, מרוכז)
 
 ACT 1: זהות (3 סרטונים)
-- Video 1: IDENTITY. סרטון פתיחה. 15 שניות. מבטיח את משפט הזהות לקהל. Mode B. Set A.
-- Video 2: PILLAR_HOOK עמוד 1. 30 שניות. הוק חד. Mode B. Set A.
-- Video 3: PILLAR_HOOK עמוד 2. 60 שניות. Service Reframe מרכזי. Mode B. Set B.
+- Video 1: IDENTITY. סרטון פתיחה. 15 שניות. **reels_profile: tight**. מבטיח את משפט הזהות לקהל. Mode B. Set A.
+- Video 2: PILLAR_HOOK עמוד 1. 30 שניות. **reels_profile: tight**. הוק חד. Mode B. Set A.
+- Video 3: PILLAR_HOOK עמוד 2. 60 שניות. **reels_profile: standard**. Service Reframe מרכזי. Mode B. Set B.
 
 ACT 2: סיפור (2 סרטונים)
-- Video 4: STORY. 2 דקות. סיפור-תיק ספציפי. Mode A. Set B. בלי שמות, עם פרטים שגורמים להאמין.
-- Video 5: STORY. 2 דקות. הרגע הרגשי. Mode A. Set B. למה החיים מתחילים לזוז.
+- Video 4: STORY. 2 דקות. **reels_profile: long**. סיפור-תיק ספציפי. Mode A. Set B. בלי שמות, עם פרטים שגורמים להאמין.
+- Video 5: STORY. 2 דקות. **reels_profile: long**. הרגע הרגשי. Mode A. Set B. למה החיים מתחילים לזוז.
 
 ACT 3: סמכות (2 סרטונים)
-- Video 6: FRAMEWORK. 90 שניות. "3 השאלות שאני שואל בפגישה ראשונה". Mode C (Mode D רק אם הלקוח/ה הוא/היא דובר/ת-במה). Set A. בונה סמכות.
-- Video 7: CTA. 20 שניות. הזמנה ישירה אבל מנומקת. Mode B. Set A. בלי דחיפות מזויפת.
+- Video 6: FRAMEWORK. 90 שניות. **reels_profile: long**. "3 השאלות שאני שואל בפגישה ראשונה". Mode C (Mode D רק אם הלקוח/ה הוא/היא דובר/ת-במה). Set A. בונה סמכות.
+- Video 7: CTA. 20 שניות. **reels_profile: tight**. הזמנה ישירה אבל מנומקת. Mode B. Set A. בלי דחיפות מזויפת.
 
 הערה: עמודי המסר 3-4 לא מקבלים הוק ייעודי. הם מזינים את הסיפורים (Video 4-5) ואת ה-Framework (Video 6): כשבוחרים סיפור או מסגרת, העדף כאלה שמבטאים את העמודים שלא קיבלו הוק.
 
@@ -429,6 +489,7 @@ ACT 3: סמכות (2 סרטונים)
       "pillar": null,
       "set": "A",
       "duration": "15s",
+      "reels_profile": "tight",
       "title": "...",
       "script": {"hook": "...", "body": "..."},
       "direction": {"visual": "...", "body_language": "...", "tone": "...", "eye_contact": "..."},
@@ -850,6 +911,12 @@ export function validateVideo(v: unknown): v is Video {
   if (typeof x.number !== "number" || x.number < 1 || x.number > 12) return false;
   if (![1, 2, 3].includes(x.act as number)) return false;
   if (typeof x.title !== "string" || x.title.length === 0) return false;
+
+  // reels_profile is optional (added 2026-07-10). Legacy cached plans lack it.
+  // If present, must be one of the three valid values.
+  if (x.reels_profile !== undefined && x.reels_profile !== null) {
+    if (!["tight", "standard", "long"].includes(x.reels_profile as string)) return false;
+  }
 
   const script = x.script as Record<string, unknown>;
   if (!script || typeof script.hook !== "string" || typeof script.body !== "string") return false;
