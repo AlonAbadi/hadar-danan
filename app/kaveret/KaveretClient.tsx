@@ -42,6 +42,11 @@ export interface KaveretData {
   // Dynamic Hadar letter (2026-07-10). null → render the legacy static
   // fallback in the letterbox. Two-line shape: body diagnosis, close invitation.
   letterFromHadar: { body: string; close: string } | null;
+  // Pillars for the shoot-day plan. Loaded from signal.shoot_day_phase1 so
+  // <EpisodesList> can POST /shoot-day/videos for per-row generation without
+  // an extra round-trip. null → per-row build button is hidden (customer
+  // needs to run BuildShootDay first to seed phase 1).
+  pillars: unknown[] | null;
   reels: {
     editId: string;
     reviewItemId: string | null;
@@ -739,83 +744,35 @@ export function KaveretClient({
             <p className={sty.lsig}>הדר</p>
           </div>
 
-          <div className={sty.trow}>
-            <div className={sty.head}><span className={sty.plat}>משפט הזהות שלכם</span><span className={sty.check}>לפתיחת כל סרטון</span></div>
-            <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(data.identity, "identity")}>{data.identity}</p>
-            <div className={sty.tfoot}>{copyBtn("identity", data.identity)}</div>
-          </div>
-
           {!data.demo ? (
             <div>
-              <div className={sty.zhead} style={{ marginTop: 34 }}>
+              <div className={sty.zhead} style={{ marginTop: 24 }}>
                 <span className={sty.zt}>
-                  <h2 style={{ fontSize: 19 }}>הפרקים בסדרה שלך</h2>
-                  <span className={sty.hint}>{data.filmedCount} מתוך {data.scriptsTotal} צולמו</span>
+                  <h2 style={{ fontSize: 19 }}>הסדרה שלך</h2>
+                  <span className={sty.hint}>7 פרקים בהתאמה אישית לעסק שלך</span>
                 </span>
               </div>
-              {data.scripts.length > 0 && (
-                <p
-                  style={{
-                    marginTop: 8,
-                    color: "#ACA79E",
-                    fontSize: 13,
-                    fontWeight: 300,
-                    lineHeight: 1.6,
-                    fontStyle: "italic",
-                  }}
-                >
-                  הסקריפטים נוצרו בהתאמה אישית לעסק שלך.
-                </p>
-              )}
-              <div className={sty.trow}>
-                {!data.scripts.length ? (
+              <ShootDayProgress filmed={data.filmedCount} total={data.scriptsTotal} />
+              {data.scripts.length === 0 ? (
+                <div className={sty.trow}>
                   <BuildShootDay extractionId={data.extractionId} />
-                ) : (
-                  <div>
-                    {data.scripts.map((s2) => {
-                      const filmed = data.filmedNumbers.includes(s2.number);
-                      return (
-                        <details key={s2.number} style={{ marginTop: 12 }}>
-                          <summary
-                            style={{ listStyle: "none", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
-                          >
-                            <p className={sty.txt} style={{ flex: 1 }}>
-                              {filmed ? <span style={{ color: "#7FBF8E", fontWeight: 700 }}>✓ </span> : null}
-                              {s2.number}. {s2.title}
-                            </p>
-                            <a
-                              className={`${sty.btnCopy} ${filmed ? "" : sty.btnCard}`}
-                              style={{
-                                flex: "0 0 auto",
-                                padding: "0 22px",
-                                minHeight: 50,
-                                textDecoration: "none",
-                                boxShadow: filmed ? undefined : "0 8px 26px rgba(232,185,74,0.38)",
-                              }}
-                              href={`/hive/signal-kit/broadcast/${data.extractionId}/${s2.number}`}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <span>{filmed ? "טייק נוסף" : "לצלם עכשיו"}</span>
-                            </a>
-                          </summary>
-                          <div style={{ padding: "10px 18px 6px 0", fontWeight: 300, fontSize: 16, lineHeight: 1.7 }}>
-                            <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s2.hook}</span>{" "}
-                            <span>{s2.body}</span>
-                            {s2.cta ? (
-                              <>
-                                {" "}
-                                <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s2.cta}</span>
-                              </>
-                            ) : null}
-                          </div>
-                        </details>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <EpisodesList
+                  extractionId={data.extractionId}
+                  scripts={data.scripts}
+                  filmedNumbers={data.filmedNumbers}
+                  identity={data.identity}
+                />
+              )}
             </div>
-          ) : null}
+          ) : (
+            <div className={sty.trow}>
+              <div className={sty.head}><span className={sty.plat}>משפט הזהות שלכם</span><span className={sty.check}>לפתיחת כל סרטון</span></div>
+              <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(data.identity, "identity")}>{data.identity}</p>
+              <div className={sty.tfoot}>{copyBtn("identity", data.identity)}</div>
+            </div>
+          )}
         </section>
 
         <section className={sty.zone} id="z-mine" data-tab-index={4} ref={(el) => { zonesRef.current[4] = el; }}>
@@ -1140,6 +1097,334 @@ function BuildShootDay({ extractionId }: { extractionId: string | null }) {
 // come back with prose wrapping, esp. from 4xx paths).
 function safeJson(t: string): Record<string, unknown> | null {
   try { return JSON.parse(t); } catch { return null; }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ShootDayProgress + EpisodesList — the redesigned zone 03 UX.
+// Alon 2026-07-10 evening: the "מתוך N" counter went nonsensical
+// ("2 מתוך 1") whenever caching landed partial slices, only one script row
+// showed even though the season is always 7 episodes, no way to trigger
+// videos 2-7 after the initial build, and no progress feedback ("looks
+// stuck"). Fixed all four:
+//   • Total is now hardcoded at 7 (canonical shoot day).
+//   • 7 rows always render — each in one of three states (unbuilt,
+//     built-not-filmed, built-filmed) with the right CTA.
+//   • Unbuilt rows have "צור את הפרק"; POST /shoot-day/videos with
+//     numbers=[N]. Spinner + status text while generating.
+//   • ShootDayProgress renders a gold segmented bar so the customer sees
+//     "3 מתוך 7" as visual progress, not just text.
+// ─────────────────────────────────────────────────────────────────────
+
+const CANONICAL_TITLES: Record<number, string> = {
+  1: "משפט הזהות",
+  2: "הוק עמוד ראשון",
+  3: "הוק עמוד שני",
+  4: "סיפור-תיק",
+  5: "הרגע הרגשי",
+  6: "Framework",
+  7: "הזמנה",
+};
+
+function ShootDayProgress({ filmed, total }: { filmed: number; total: number }) {
+  const cells = Array.from({ length: total }, (_, i) => i < filmed);
+  return (
+    <div
+      style={{
+        marginTop: 14,
+        marginBottom: 10,
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+      }}
+    >
+      <div style={{ display: "flex", gap: 4, flex: 1 }}>
+        {cells.map((done, i) => (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              height: 6,
+              borderRadius: 3,
+              background: done
+                ? "linear-gradient(90deg,#F6DFA0,#E2B34A)"
+                : "rgba(232,185,74,0.14)",
+              boxShadow: done ? "0 0 8px rgba(232,185,74,0.35)" : undefined,
+              transition: "background .3s",
+            }}
+          />
+        ))}
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 700, color: "#E8B94A", flex: "0 0 auto" }}>
+        {filmed}/{total}
+      </span>
+    </div>
+  );
+}
+
+type BuiltScript = { number: number; title: string; hook: string; body: string; cta: string };
+
+function EpisodesList({
+  extractionId,
+  scripts,
+  filmedNumbers,
+  identity,
+}: {
+  extractionId: string | null;
+  scripts: BuiltScript[];
+  filmedNumbers: number[];
+  identity: string;
+}) {
+  const [localScripts, setLocalScripts] = useState<BuiltScript[]>(scripts);
+  const [generating, setGenerating]     = useState<Set<number>>(new Set());
+  const [errByNumber, setErrByNumber]   = useState<Record<number, string>>({});
+
+  const requestBuild = useCallback(async (n: number) => {
+    if (!extractionId) return;
+    setErrByNumber((p) => { const c = { ...p }; delete c[n]; return c; });
+    setGenerating((prev) => new Set(prev).add(n));
+    try {
+      // The videos endpoint wants identity + pillars. Fetch them fresh so we
+      // don't rely on client-cached copies going stale between page loads.
+      const r0 = await fetch(`/api/signal/${extractionId}/shoot-day`);
+      const d0 = safeJson(await r0.text()) as { identity_statement?: string; pillars?: unknown; phase?: string; plan?: { identity_statement?: string; pillars?: unknown } } | null;
+      if (!r0.ok || !d0) throw new Error(`שלב 1 נכשל (${r0.status})`);
+      const identityStmt = d0.identity_statement || d0.plan?.identity_statement || identity;
+      const pillars      = d0.pillars || d0.plan?.pillars;
+      if (!identityStmt || !Array.isArray(pillars) || pillars.length !== 4) {
+        throw new Error("לא ניתן להשיג את משפט הזהות + 4 עמודי המסר");
+      }
+
+      const r = await fetch(`/api/signal/${extractionId}/shoot-day/videos`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          identity_statement: identityStmt,
+          pillars,
+          numbers: [n],
+        }),
+      });
+      const d = safeJson(await r.text()) as { videos?: BuiltScript[]; error?: string; details?: string } | null;
+      if (!r.ok || !d?.videos || d.videos.length === 0) {
+        throw new Error(String(d?.error ?? `יצירה נכשלה (${r.status})`));
+      }
+      // Videos endpoint returns full Video objects; project to BuiltScript shape.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const v = d.videos[0] as any;
+      const built: BuiltScript = {
+        number: v.number,
+        title:  String(v.title ?? CANONICAL_TITLES[n] ?? `פרק ${n}`),
+        hook:   String(v.script?.hook ?? ""),
+        body:   String(v.script?.body ?? ""),
+        cta:    v.script?.cta ? String(v.script.cta) : "",
+      };
+      setLocalScripts((prev) => {
+        const withoutN = prev.filter((s) => s.number !== n);
+        return [...withoutN, built].sort((a, b) => a.number - b.number);
+      });
+    } catch (e) {
+      setErrByNumber((prev) => ({ ...prev, [n]: e instanceof Error ? e.message : String(e) }));
+    } finally {
+      setGenerating((prev) => { const c = new Set(prev); c.delete(n); return c; });
+    }
+  }, [extractionId, identity]);
+
+  const scriptByNumber = new Map(localScripts.map((s) => [s.number, s]));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 6 }}>
+      {Array.from({ length: 7 }, (_, i) => i + 1).map((n) => {
+        const s      = scriptByNumber.get(n);
+        const filmed = s ? filmedNumbers.includes(n) : false;
+        const inFlight = generating.has(n);
+        const err      = errByNumber[n];
+
+        // ── Unbuilt row ────────────────────────────────────────────────
+        if (!s) {
+          return (
+            <div
+              key={n}
+              style={{
+                background: "#141820",
+                border: "1px solid rgba(232,185,74,0.12)",
+                borderRadius: 14,
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <span
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 999,
+                  background: inFlight
+                    ? "linear-gradient(160deg,#F6DFA0,#9E7C3A)"
+                    : "rgba(232,185,74,0.1)",
+                  border: "1px solid rgba(232,185,74,0.3)",
+                  color: inFlight ? "#171204" : "#9E7C3A",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  flex: "0 0 auto",
+                }}
+              >
+                {n}
+              </span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15.5, color: "#EDE9E1", fontWeight: 700 }}>
+                  {CANONICAL_TITLES[n] ?? `פרק ${n}`}
+                </div>
+                {inFlight ? (
+                  <div style={{ fontSize: 12.5, color: "#E8B94A", fontWeight: 500, marginTop: 2 }}>
+                    <span style={{
+                      display: "inline-block",
+                      width: 8, height: 8, borderRadius: 999,
+                      background: "#E8B94A",
+                      marginInlineEnd: 6,
+                      animation: "kavPulse 1s ease-in-out infinite",
+                    }} />
+                    המנוע כותב את הפרק, כ-20 שניות
+                  </div>
+                ) : err ? (
+                  <div style={{ fontSize: 12.5, color: "#FF8888", fontWeight: 500, marginTop: 2 }}>{err}</div>
+                ) : (
+                  <div style={{ fontSize: 12.5, color: "#9E9990", fontWeight: 300, marginTop: 2 }}>
+                    עוד לא נכתב
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => requestBuild(n)}
+                disabled={inFlight || !extractionId}
+                style={{
+                  flex: "0 0 auto",
+                  padding: "0 18px",
+                  minHeight: 42,
+                  background: inFlight ? "rgba(232,185,74,0.1)" : "linear-gradient(180deg,#F1D07E,#E2B34A,#CE9C38)",
+                  color: inFlight ? "#9E9990" : "#171204",
+                  border: inFlight ? "1px solid rgba(232,185,74,0.3)" : "none",
+                  borderRadius: 999,
+                  fontFamily: "inherit",
+                  fontSize: 13.5,
+                  fontWeight: 800,
+                  cursor: inFlight ? "wait" : "pointer",
+                  boxShadow: inFlight ? undefined : "0 6px 18px rgba(232,185,74,0.28)",
+                }}
+              >
+                {inFlight ? "יוצר…" : err ? "לנסות שוב" : "צור את הפרק"}
+              </button>
+            </div>
+          );
+        }
+
+        // ── Built row (may or may not be filmed) ──────────────────────
+        return (
+          <details
+            key={n}
+            style={{
+              background: "#141820",
+              border: `1px solid ${filmed ? "rgba(127,191,142,0.28)" : "rgba(232,185,74,0.18)"}`,
+              borderRadius: 14,
+              padding: "14px 16px",
+            }}
+          >
+            <summary
+              style={{
+                listStyle: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                cursor: "pointer",
+              }}
+            >
+              <span
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 999,
+                  background: filmed ? "rgba(127,191,142,0.15)" : "linear-gradient(160deg,#F6DFA0,#9E7C3A)",
+                  color: filmed ? "#7FBF8E" : "#171204",
+                  border: filmed ? "1px solid rgba(127,191,142,0.4)" : "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  flex: "0 0 auto",
+                }}
+              >
+                {filmed ? "✓" : n}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15.5, color: "#EDE9E1", fontWeight: 700, lineHeight: 1.3 }}>
+                  {s.title}
+                </div>
+                <div style={{ fontSize: 12, color: "#9E9990", marginTop: 2 }}>
+                  {filmed ? "צולם. אפשר לצלם עוד טייק." : "מוכן לצילום"}
+                </div>
+              </div>
+              <a
+                href={`/hive/signal-kit/broadcast/${extractionId}/${n}`}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  flex: "0 0 auto",
+                  padding: "0 18px",
+                  minHeight: 42,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  background: filmed ? "rgba(232,185,74,0.1)" : "linear-gradient(180deg,#F1D07E,#E2B34A,#CE9C38)",
+                  color: filmed ? "#E8B94A" : "#171204",
+                  border: filmed ? "1px solid rgba(232,185,74,0.35)" : "none",
+                  borderRadius: 999,
+                  fontFamily: "inherit",
+                  fontSize: 13.5,
+                  fontWeight: 800,
+                  textDecoration: "none",
+                  boxShadow: filmed ? undefined : "0 6px 18px rgba(232,185,74,0.28)",
+                }}
+              >
+                {filmed ? "טייק נוסף" : "לצלם עכשיו"}
+              </a>
+            </summary>
+            <div
+              style={{
+                marginTop: 12,
+                padding: "12px 14px",
+                background: "rgba(0,0,0,0.24)",
+                border: "1px solid rgba(232,185,74,0.08)",
+                borderRadius: 10,
+                fontSize: 15,
+                fontWeight: 300,
+                color: "#EDE9E1",
+                lineHeight: 1.65,
+              }}
+            >
+              <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s.hook}</span>{" "}
+              <span>{s.body}</span>
+              {s.cta ? (
+                <>
+                  {" "}
+                  <span style={{ color: "#E8B94A", fontWeight: 700 }}>{s.cta}</span>
+                </>
+              ) : null}
+            </div>
+          </details>
+        );
+      })}
+
+      {/* pulse keyframe used by the "generating" dot above */}
+      <style>{`
+        @keyframes kavPulse {
+          0%,100% { opacity: 1; transform: scale(1); }
+          50%     { opacity: 0.35; transform: scale(0.65); }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────

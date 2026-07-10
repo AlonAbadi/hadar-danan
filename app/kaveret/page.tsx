@@ -62,6 +62,7 @@ const DEMO: KaveretData = {
   aboutSite: "",
   manifesto: "",
   letterFromHadar: null,
+  pillars: null,
   reels: [],
   waPhone: "972000000000",
   demo: true,
@@ -149,6 +150,16 @@ export default async function KaveretPage({
   const letterFromHadar =
     signal.shoot_day_phase1?.letter_from_hadar ??
     signal.shoot_day?.letter_from_hadar ??
+    null;
+
+  // Phase-1 pillars — needed on the client so <EpisodesList> can request
+  // per-video generation for the unbuilt rows (POST /shoot-day/videos wants
+  // identity_statement + pillars alongside numbers). Falls back to whatever
+  // is cached under shoot_day; when both are null the client hides the
+  // per-row "צור את הסקריפט" trigger (nothing to generate against).
+  const shootDayPillars =
+    signal.shoot_day_phase1?.pillars ??
+    signal.shoot_day?.pillars ??
     null;
 
   // Challenge enrollment (auto-created on first visit, migration 032
@@ -248,7 +259,10 @@ export default async function KaveretPage({
     challengeDay: challengeDayNum,
     monthLabel,
     filmedCount,
-    scriptsTotal: planVideos.length || 7,
+    // Canonical shoot day = 7 videos. Never scale to what happens to be cached
+    // — the header used to render "2 מתוך 1 צולמו" when only Video #1 had been
+    // generated but two edits landed under different numbers.
+    scriptsTotal: 7,
     scripts: planVideos,
     extractionId: ext.id,
     challengeDays,
@@ -273,6 +287,7 @@ export default async function KaveretPage({
     letterFromHadar: letterFromHadar
       ? { body: String(letterFromHadar.body ?? ""), close: String(letterFromHadar.close ?? "") }
       : null,
+    pillars: Array.isArray(shootDayPillars) ? shootDayPillars : null,
     reels: [],
     waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
     demo: false,
