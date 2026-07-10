@@ -1155,36 +1155,42 @@ function EpisodeViewer({
       role="dialog"
       aria-modal="true"
       aria-label={title}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(6,10,18,0.94)",
+        background: "rgba(6,10,18,0.96)",
         zIndex: 9500,
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        flexDirection: "column",
         backdropFilter: "blur(6px)",
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      {/* Title strip */}
+      {/* Title strip — fixed height, sits above the video */}
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          padding: "18px 20px 14px",
+          flex: "0 0 auto",
+          padding: "calc(14px + env(safe-area-inset-top)) 20px 12px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: 12,
-          background: "linear-gradient(180deg, rgba(6,10,18,0.7), transparent)",
-          pointerEvents: "none",
         }}
       >
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1", flex: 1 }}>
-          {title}
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div
+            style={{
+              fontSize: 15,
+              fontWeight: 700,
+              color: "#EDE9E1",
+              lineHeight: 1.3,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {title}
+          </div>
           <div style={{ fontSize: 11, color: isPublished ? "#7FBF8E" : "#E8B94A", fontWeight: 700, letterSpacing: 0.5, marginTop: 2 }}>
             {isPublished ? "באוויר" : "מוכן לפרסום"}
           </div>
@@ -1206,66 +1212,79 @@ function EpisodeViewer({
             cursor: "pointer",
             lineHeight: 1,
             flex: "0 0 auto",
-            pointerEvents: "auto",
           }}
         >
           ×
         </button>
       </div>
 
-      {/* Video */}
-      {streamUrl ? (
-        <video
-          key={streamUrl}
-          src={streamUrl}
-          controls
-          playsInline
-          autoPlay
-          preload="metadata"
-          style={{
-            maxHeight: "100%",
-            maxWidth: "100%",
-            width: "auto",
-            height: "auto",
-            aspectRatio: "9 / 16",
-            objectFit: "contain",
-            background: "#000",
-            borderRadius: 6,
-          }}
-        />
-      ) : (
-        <div style={{ color: "#EDE9E1", padding: 20 }}>הסרטון עוד לא זמין</div>
-      )}
-
-      {/* Floating action bar */}
+      {/* Video area — flex-grows to fill remaining space, video is
+          contained inside so native controls sit BELOW its own bottom edge
+          rather than colliding with our action pills. */}
       <div
         style={{
-          position: "absolute",
-          bottom: "calc(20px + env(safe-area-inset-bottom))",
-          left: 20,
-          right: 20,
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 16px",
+        }}
+      >
+        {streamUrl ? (
+          <video
+            key={streamUrl}
+            src={streamUrl}
+            controls
+            playsInline
+            autoPlay
+            preload="metadata"
+            style={{
+              maxHeight: "100%",
+              maxWidth: "100%",
+              aspectRatio: "9 / 16",
+              objectFit: "contain",
+              background: "#000",
+              borderRadius: 8,
+              boxShadow: "0 10px 40px rgba(0,0,0,0.6)",
+            }}
+          />
+        ) : (
+          <div style={{ color: "#EDE9E1", padding: 20 }}>הסרטון עוד לא זמין</div>
+        )}
+      </div>
+
+      {/* Action bar — its own strip below the video, so it never overlays
+          the native play/pause bar. Horizontally scrolls on very narrow
+          screens rather than wrapping to a second line. */}
+      <div
+        style={{
+          flex: "0 0 auto",
+          padding: "16px 16px calc(16px + env(safe-area-inset-bottom))",
           display: "flex",
           justifyContent: "center",
           gap: 10,
-          flexWrap: "wrap",
-          pointerEvents: "none",
+          overflowX: "auto",
+          scrollbarWidth: "none",
+          borderTop: "1px solid rgba(232,185,74,0.1)",
+          background: "linear-gradient(180deg, transparent, rgba(0,0,0,0.35))",
         }}
       >
-        <ViewerPill onClick={share} label="שיתוף" pointerEvents>
+        <ViewerPill onClick={share} label="שיתוף">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
             <path d="M8.6 10.6l6.8-4.1M8.6 13.4l6.8 4.1" />
           </svg>
         </ViewerPill>
 
-        <ViewerPill onClick={download} label="הורדה" primary pointerEvents>
+        <ViewerPill onClick={download} label="הורדה" primary>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 4v11m0 0l-4-4m4 4l4-4" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
           </svg>
         </ViewerPill>
 
         {!isPublished && reviewItemId && (
-          <ViewerPill onClick={() => { onMarkPublished(); onClose(); }} label="פורסם" pointerEvents>
+          <ViewerPill onClick={() => { onMarkPublished(); onClose(); }} label="פורסם">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12l4.5 4.5L20 6.5" />
             </svg>
@@ -1280,7 +1299,6 @@ function EpisodeViewer({
           }}
           label={deleting ? "מוחק…" : confirmDel ? "לחץ שוב לאישור" : "מחיקה"}
           danger
-          pointerEvents
         >
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 7h16" /><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
@@ -1293,14 +1311,13 @@ function EpisodeViewer({
 }
 
 function ViewerPill({
-  children, label, onClick, primary, danger, pointerEvents,
+  children, label, onClick, primary, danger,
 }: {
   children: React.ReactNode;
   label: string;
   onClick: () => void;
   primary?: boolean;
   danger?: boolean;
-  pointerEvents?: boolean;
 }) {
   const bg = primary
     ? "linear-gradient(180deg,#F1D07E,#E2B34A,#CE9C38)"
@@ -1331,10 +1348,11 @@ function ViewerPill({
         fontSize: 14,
         fontWeight: 700,
         cursor: "pointer",
+        flex: "0 0 auto",
+        whiteSpace: "nowrap",
         boxShadow: primary
           ? "0 8px 22px rgba(232,185,74,0.35)"
           : "0 6px 16px rgba(0,0,0,0.45)",
-        pointerEvents: pointerEvents ? "auto" : "none",
       }}
     >
       {children}
