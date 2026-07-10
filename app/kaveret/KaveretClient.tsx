@@ -1404,8 +1404,16 @@ function EpisodesList({
                 <div style={{ fontSize: 15.5, color: "#EDE9E1", fontWeight: 700, lineHeight: 1.3 }}>
                   {s.title}
                 </div>
-                <div style={{ fontSize: 12, color: "#9E9990", marginTop: 2 }}>
-                  {filmed ? "צולם. אפשר לצלם עוד טייק." : "מוכן לצילום"}
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: filmed ? "#7FBF8E" : "#E8B94A",
+                    fontWeight: filmed ? 600 : 700,
+                    marginTop: 3,
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  {filmed ? "צולם" : "מוכן לצילום"}
                 </div>
               </div>
               <a
