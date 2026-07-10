@@ -744,11 +744,22 @@ export function KaveretClient({
             <p className={sty.lsig}>הדר</p>
           </div>
 
-          <div>
-            <div className={sty.zhead} style={{ marginTop: 24 }}>
-              <span className={sty.zt}>
-                <h2 style={{ fontSize: 19 }}>הסדרה שלך</h2>
-                <span className={sty.hint}>7 פרקים בהתאמה אישית לעסק שלך</span>
+          <div style={{ marginTop: 32 }}>
+            {/* Divider: signal a new movement inside zone 03 (letter → series). */}
+            <div
+              aria-hidden="true"
+              style={{
+                height: 1,
+                background: "linear-gradient(90deg, transparent, rgba(232,185,74,0.28), transparent)",
+                marginBottom: 20,
+              }}
+            />
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
+              <h3 style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.2, color: "#EDE9E1", margin: 0 }}>
+                הסדרה שלך
+              </h3>
+              <span className={sty.hint} style={{ flex: "0 0 auto" }}>
+                7 פרקים בהתאמה אישית
               </span>
             </div>
             <ShootDayProgress filmed={data.filmedCount} total={data.scriptsTotal} />
