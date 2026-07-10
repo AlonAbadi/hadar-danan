@@ -207,20 +207,39 @@ function parseProposal(md) {
 }
 
 // ── inject into RAW_QUOTES ───────────────────────────────────────────
+// Section headings can be either legacy `## N.` (moves 9-15) or the bootstrap
+// pattern `## Move #N — <name>` (moves 1-8, added 2026-07-10 so the guardrail
+// against core-move auto-merge could be lifted). Both patterns are treated
+// equivalently for boundary detection and target-matching.
+function parseSectionHeading(line) {
+  // Same discipline as sync-hadar-corpus.mjs:
+  //   `## N.` (legacy) is authoritative for moves 9-15 only. For 1-8 the same
+  //   pattern names structural notes (Setup / Reformulation / etc.) — NOT moves.
+  //   `## Move #N — ...` is authoritative for moves 1-8 only.
+  const legacy = line.match(/^## (\d+)\./);
+  if (legacy) {
+    const n = parseInt(legacy[1], 10);
+    return (n >= 9 && n <= 15) ? n : null;
+  }
+  const core = line.match(/^## Move #(\d+)\b/);
+  if (core) {
+    const n = parseInt(core[1], 10);
+    return (n >= 1 && n <= 8) ? n : null;
+  }
+  return null;
+}
+
 function insertIntoSection(rawMd, moveNumber, quoteObj) {
-  // Find `## N.` section start. If not found, return null.
   const lines = rawMd.split("\n");
   let sectionStart = -1;
   let sectionEnd   = lines.length;
   for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(/^## (\d+)\./);
-    if (!m) continue;
-    const n = parseInt(m[1], 10);
+    const n = parseSectionHeading(lines[i]);
+    if (n == null) continue;
     if (sectionStart === -1 && n === moveNumber) {
       sectionStart = i;
     } else if (sectionStart !== -1 && n !== moveNumber) {
-      // The NEXT `## <number>.` heading closes our section, regardless of
-      // whether the numbers ascend (RAW_QUOTES has 15 before 12 in places).
+      // The NEXT recognized section heading closes our section.
       sectionEnd = i;
       break;
     }
@@ -228,13 +247,21 @@ function insertIntoSection(rawMd, moveNumber, quoteObj) {
   if (sectionStart === -1) return null;
 
   // Inside the section, find the LAST table data row so we can append below.
+  // If no data rows yet (empty bootstrap section), fall back to the separator
+  // row so the first insert appends the first real data row after it.
   let lastTableRowIdx = -1;
+  let separatorRowIdx = -1;
   for (let i = sectionStart; i < sectionEnd; i++) {
-    if (/^\s*\|/.test(lines[i]) && !/^\s*\|\s*[-|:\s]+\s*\|\s*$/.test(lines[i])) {
+    const l = lines[i];
+    if (!/^\s*\|/.test(l)) continue;
+    if (/^\s*\|\s*[-|:\s]+\s*\|\s*$/.test(l)) {
+      separatorRowIdx = i;
+    } else {
       lastTableRowIdx = i;
     }
   }
-  if (lastTableRowIdx === -1) return null; // Section has no table yet.
+  if (lastTableRowIdx === -1) lastTableRowIdx = separatorRowIdx;
+  if (lastTableRowIdx === -1) return null; // Section has no table at all.
 
   // Compute next sub-number by counting existing rows in this section.
   let existingCount = 0;
@@ -279,22 +306,6 @@ function main() {
     console.error(`❌ ${unclassified.length} approved row(s) are under "Unclassified" heading — no move number to route to.`);
     console.error(`   Move them under a "### Move #N" heading, or re-run with --allow-unclassified (dangerous).`);
     for (const u of unclassified) console.error(`   line ${u.lineIdx + 1}: "${u.quote.slice(0, 60)}..."`);
-    process.exit(1);
-  }
-
-  // Guardrail: HADAR_RAW_QUOTES.md sections 1-8 are historical structural
-  // notes (Setup / Reformulation / etc.), NOT numbered by signature move.
-  // Only moves 9-15 have `## N.` sections whose N == move number and can be
-  // auto-routed. For 1-8, the human must add quotes manually.
-  const legacyMoves = approvals.filter((a) => a.moveNumber != null && a.moveNumber < 9);
-  if (legacyMoves.length > 0) {
-    console.error(`❌ ${legacyMoves.length} approved row(s) target moves 1-8 — cannot be auto-merged.`);
-    console.error(`   RAW_QUOTES sections 1-8 are structural (Setup/Reformulation/etc.), not move-numbered.`);
-    console.error(`   Add these quotes manually to the appropriate section (e.g. Move #3 → \`## 7.3.\` Parable-Building):`);
-    for (const l of legacyMoves) {
-      console.error(`   Move #${l.moveNumber}: "${l.quote.slice(0, 80)}..." (${l.source})`);
-    }
-    console.error(`\n   Skipping these and continuing with moves 9-15 only. Re-run to retry.`);
     process.exit(1);
   }
 

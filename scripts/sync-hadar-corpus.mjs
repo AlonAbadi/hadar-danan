@@ -15,11 +15,14 @@
  *   npm run sync-corpus  (once added to package.json)
  *
  * PARSING RULES:
- *   - Sections are h2 headings with numeric prefix: `## N. ...` where N in 9..15.
+ *   - Two accepted section-heading patterns for moves 1-15:
+ *       a) `## N. ...` where N in 9..15  (legacy — archetype moves)
+ *       b) `## Move #N — ...` where N in 1..8  (bootstrap 2026-07-10 — core moves)
+ *   - Sections 1-8 as `## 1.`-`## 8.` are RESERVED for structural notes (Setup /
+ *     Reformulation / etc.) and are NOT scanned; core moves 1-8 live under the
+ *     `## Move #N —` pattern so they don't collide.
  *   - Each section's quotes live in a Markdown table. The first data row (after
  *     header + separator) begins with `| N.M | "quote" | source | type |`.
- *   - Only sections 9-15 (the archetype-specific moves) are synced. Sections 1-8
- *     are legacy structural notes and remain hand-managed in the engine prompt.
  *
  * OUTPUT: /Users/work/hadar-danan/lib/prompts/hadar-corpus-quotes.ts
  */
@@ -33,6 +36,14 @@ const RAW_QUOTES  = "/Users/work/hadar-transcripts/HADAR_RAW_QUOTES.md";
 const OUTPUT_FILE = path.join(REPO_ROOT, "lib/prompts/hadar-corpus-quotes.ts");
 
 const MOVE_NAMES = {
+  1:  "External→Internal Translation",
+  2:  "Service Reframe",
+  3:  "אני אקביל לך Parable-Building",
+  4:  "Tangible Metaphor Anchor",
+  5:  "Sold-Inversion",
+  6:  "Self-as-Example",
+  7:  "Projective Embodiment",
+  8:  "Anti-Flattery",
   9:  "Sensory-to-Business Translation",
   10: "Process-as-Proof",
   11: "Receptive Embodiment",
@@ -56,11 +67,15 @@ function parseQuotes(mdContent) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Detect a move section header: ## N. ...
-    const headerMatch = line.match(/^## (\d+)\.\s/);
-    if (headerMatch) {
-      const n = parseInt(headerMatch[1], 10);
-      if (n >= 9 && n <= 15) {
+    // Detect a move section header. Two accepted patterns:
+    //   a) `## N. ...`         → move N (only 9-15; 1-8 as `## N.` are structural)
+    //   b) `## Move #N — ...`  → move N (only 1-8; 9-15 use pattern (a))
+    const legacyMatch = line.match(/^## (\d+)\.\s/);
+    const coreMatch   = line.match(/^## Move #(\d+)\b/);
+    if (legacyMatch || coreMatch) {
+      const n = parseInt((legacyMatch || coreMatch)[1], 10);
+      const legalRange = legacyMatch ? (n >= 9 && n <= 15) : (n >= 1 && n <= 8);
+      if (legalRange) {
         currentMove = n;
         byMove[currentMove] = byMove[currentMove] || [];
       } else {
@@ -144,7 +159,7 @@ export const CORPUS_QUOTES_BY_MOVE: Record<number, CorpusQuote[]> = ${
   // Build the injection block: a Hebrew directive + verbatim examples per move.
   // Claude will pattern-match against these when generating video scripts.
   const injectionBlockLines = [
-    "דוגמאות ציטוטים verbatim מהקורפוס לכל מהלך ארכיטיפי (9-15). מדובר בדוגמאות שהדר אמרה בפועל, לא בהמצאות. חקה את הסגנון, המבנה והקצב, אבל אל תשתמש בציטוטים המדויקים האלה בפלט של הלקוח/ה, אלא אם הם כללים (Sold-Inversion pattern וכד'). כל ציטוט מסומן במקור (C-number) לצורך provenance.",
+    "דוגמאות ציטוטים verbatim מהקורפוס לכל מהלך (1-15). מדובר בדוגמאות שהדר אמרה בפועל, לא בהמצאות. חקה את הסגנון, המבנה והקצב, אבל אל תשתמש בציטוטים המדויקים האלה בפלט של הלקוח/ה, אלא אם הם כללים (Sold-Inversion pattern וכד'). כל ציטוט מסומן במקור (C-number) לצורך provenance.",
     "",
   ];
 
