@@ -47,6 +47,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       GIFT_SENTENCES_PACK_SYSTEM,
       buildGiftSentencesContextMessage(gate.ctx, identity_statement, pillars),
       GIFT_SENTENCES_PACK_MAX_TOKENS,
+      { extractionId: id, occupation: gate.ctx.occupation },
     );
   } catch (e) {
     return NextResponse.json({ error: "Gift sentences generation failed", details: String(e) }, { status: 500 });

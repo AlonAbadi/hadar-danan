@@ -28,7 +28,11 @@
 // Verbatim Hadar quotes per archetype-specific move (9-15), auto-synced from
 // /Users/work/hadar-transcripts/HADAR_RAW_QUOTES.md. To refresh after adding
 // new corpus quotes, run: `npm run sync-corpus`. See lib/prompts/hadar-corpus-quotes.ts.
-import { INJECTED_QUOTES } from "./hadar-corpus-quotes";
+// Since 2026-07-10 the quote block is customized per-customer at request time
+// via `buildInjectedQuotesForCustomer` (see hadar-corpus-selection.ts). The
+// static INJECTED_QUOTES export is retained for scripts/demo tooling but no
+// longer feeds the production prompts — instead the SYSTEM strings embed a
+// `__CUSTOMER_INJECTED_QUOTES__` placeholder that route handlers substitute.
 
 export const SHOOT_DAY_MODEL_SONNET = "claude-sonnet-4-6";
 export const SHOOT_DAY_MODEL_HAIKU  = "claude-haiku-4-5-20251001";
@@ -218,7 +222,7 @@ const HADAR_SIGNATURE_MOVES = `15 המהלכים של הדר (8 גרעיניים
 המנטרה הקנונית של 2026-06-25 (Hadar-as-author, C4078): "אין בחירה, אין תנועה. אין תנועה, אין שיווק. אין שיווק, אין מכירות. אין מכירות, אין עסק." דגם: chain-collapse rhetoric — שרשרת קצרה של שלילות שמובילה למסקנה הכרחית. שימושי לפתיחת hook ב-Mode B.
 המטאפורה הקנונית של 2026-06-25 (Mirvi DNA, C4336): "תדמייני שאת כולך רשת של אור, כמו ביום העצמאות. כשאת מתחילה להתרחק מה-DNA שלך, מכבה מנורה. מכבה עוד מנורה. עם השנים, איך הרשת שלך נראית? חושך." זוהי המטאפורה הכי חזקה למותגים טיפוליים/טרנספורמטיביים. עבר-כל-ארכיטיפים: כל מותג שמדבר על אובדן עצמי יכול להשתמש בתבנית "רשת מנורות שמכבות".
 
-${INJECTED_QUOTES}`;
+__CUSTOMER_INJECTED_QUOTES__`;
 
 // ── Modes — the VOICE each video is shot in (distinct from archetype) ─
 // Every video carries a `mode` letter. The mode dictates WHO speaks and HOW.

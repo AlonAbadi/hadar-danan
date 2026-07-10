@@ -48,6 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       STRATEGY_PACK_SYSTEM,
       buildStrategyContextMessage(gate.ctx, identity_statement, pillars),
       STRATEGY_PACK_MAX_TOKENS,
+      { extractionId: id, occupation: gate.ctx.occupation },
     );
   } catch (e) {
     return NextResponse.json({ error: "Strategy generation failed", details: String(e) }, { status: 500 });

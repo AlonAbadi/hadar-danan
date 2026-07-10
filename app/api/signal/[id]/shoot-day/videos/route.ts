@@ -22,6 +22,7 @@ import {
   normalizeShootDayText,
   sanitizeHadarQuotes,
   lintShootDay,
+  lintCorpusLeaks,
 } from "@/lib/prompts/shoot-day-lint";
 import {
   gateAndBuildContext,
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       VIDEOS_PACK_SYSTEM,
       buildVideosContextMessage(gate.ctx, identity_statement, pillars, numbers),
       Math.min(numbers.length * TOKENS_PER_VIDEO, VIDEOS_PACK_MAX_TOKENS),
+      { extractionId: id, occupation: gate.ctx.occupation },
     );
   } catch (e) {
     return NextResponse.json({ error: "Videos generation failed", details: String(e) }, { status: 500 });
@@ -94,6 +96,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const warnings = lintShootDay(videos);
   if (warnings.length) console.warn(`[shoot-day videos ${numbers.join(",")}] lint:`, warnings);
+
+  // Anti-verbatim leak enforcement (Alon 2026-07-10 rule): if the model
+  // reproduces 5+ consecutive words from any corpus quote in a
+  // customer-facing field, we reject the pack and let the caller retry.
+  // Retries hit the same prompt but different sampling, so a second attempt
+  // usually clears the leak. Persistent leakage = prompt regression, alert
+  // via error log.
+  const leaks = lintCorpusLeaks(videos.map((v) => v.script));
+  if (leaks.length > 0) {
+    console.error(`[shoot-day videos ${numbers.join(",")}] corpus-leak reject:`, leaks);
+    return NextResponse.json(
+      { error: "Verbatim corpus leak detected — retrying", details: leaks[0] },
+      { status: 422 },
+    );
+  }
 
   // Cache each video in its own field so parallel/sequential calls never
   // overwrite one another.

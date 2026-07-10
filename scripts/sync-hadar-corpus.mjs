@@ -156,10 +156,24 @@ export const CORPUS_QUOTES_BY_MOVE: Record<number, CorpusQuote[]> = ${
 
 `;
 
-  // Build the injection block: a Hebrew directive + verbatim examples per move.
-  // Claude will pattern-match against these when generating video scripts.
+  // Build the injection block. THE FRAME MATTERS.
+  // Old framing ("verbatim examples, imitate style") caused the model to leak
+  // exact phrases from the corpus into customer output. Alon flagged this as
+  // an IP-leak vector on 2026-07-10: (a) competitors could reverse-engineer
+  // Hadar's playbook from a paying customer's public reel, (b) two customers
+  // in the same archetype would get near-identical scripts, breaking the
+  // "בהתאמה אישית" promise.
+  // New framing: quotes are PATTERN SAMPLES to reverse-engineer, not text to
+  // reuse. The model must extract the underlying rhetorical mechanism and
+  // regenerate in the customer's domain, in the customer's voice.
   const injectionBlockLines = [
-    "דוגמאות ציטוטים verbatim מהקורפוס לכל מהלך (1-15). מדובר בדוגמאות שהדר אמרה בפועל, לא בהמצאות. חקה את הסגנון, המבנה והקצב, אבל אל תשתמש בציטוטים המדויקים האלה בפלט של הלקוח/ה, אלא אם הם כללים (Sold-Inversion pattern וכד'). כל ציטוט מסומן במקור (C-number) לצורך provenance.",
+    "בלוק לימוד פנימי — לא לפלט. אלה תבניות מהקול של הדר, לא ציטוטים לשימוש.",
+    "",
+    "הכלל הברזל: אסור להשתמש באף אחד מהמשפטים למטה verbatim בפלט של הלקוח/ה. אסור להשתמש בחמש מילים רצופות מכל משפט למטה. הפלט הוא של הלקוח/ה — בעולם שלו/ה, בשפה שלו/ה, עם הדוגמאות שלו/ה.",
+    "",
+    "מה כן לעשות: לקרוא כל משפט, לחלץ את המנגנון הרטורי (המבנה הקצבי, מהלך המחשבה, סוג המטפורה, נקודת ההיפוך). לזרוק את המילים. לכתוב מחדש מהיסוד עם החומר של הלקוח/ה. אם אני מזהה שהוצאת משפט של הדר עם שמות הוחלפו — פסלתי את הפלט.",
+    "",
+    "הדוגמאות פר מהלך:",
     "",
   ];
 

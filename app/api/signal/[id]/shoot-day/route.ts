@@ -32,6 +32,7 @@ import {
   type ShootDayContext,
   type Video,
 } from "@/lib/prompts/shoot-day-engine";
+import { personalizeSystemPrompt } from "@/lib/prompts/hadar-corpus-selection";
 
 // Slices written by the Phase 3 endpoints are stored as JSON strings via the
 // atomic merge RPC. Parse one back into an object, tolerating already-parsed
@@ -262,7 +263,7 @@ export async function GET(
     const resp = await client.messages.create({
       model:      SHOOT_DAY_MODEL_SONNET,
       max_tokens: IDENTITY_PILLARS_PACK_MAX_TOKENS,
-      system:     IDENTITY_PILLARS_PACK_SYSTEM,
+      system:     personalizeSystemPrompt(IDENTITY_PILLARS_PACK_SYSTEM, { extractionId: id, occupation: ctx.occupation }),
       messages:   [{ role: "user", content: buildContextMessage(ctx) }],
     });
 

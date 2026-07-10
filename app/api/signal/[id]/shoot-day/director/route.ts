@@ -57,6 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       DIRECTOR_PACK_SYSTEM,
       buildDirectorContextMessage(gate.ctx, identity_statement, pillars, videos),
       DIRECTOR_PACK_MAX_TOKENS,
+      { extractionId: id, occupation: gate.ctx.occupation },
     );
   } catch (e) {
     return NextResponse.json({ error: "Director generation failed", details: String(e) }, { status: 500 });

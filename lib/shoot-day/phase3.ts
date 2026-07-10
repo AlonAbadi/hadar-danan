@@ -14,6 +14,7 @@ import {
   SHOOT_DAY_MODEL_SONNET,
   type ShootDayContext,
 } from "@/lib/prompts/shoot-day-engine";
+import { personalizeSystemPrompt, type CustomerCorpusCtx } from "@/lib/prompts/hadar-corpus-selection";
 
 export type GateResult =
   | { ok: true; ctx: ShootDayContext; supabase: ReturnType<typeof createServerClient>; signal: Record<string, unknown> }
@@ -74,13 +75,26 @@ export async function gateAndBuildContext(req: NextRequest, id: string): Promise
   return { ok: true, ctx, supabase, signal: row.signal };
 }
 
-/** One Sonnet call, returns the joined text content. */
-export async function runPack(system: string, user: string, maxTokens: number): Promise<string> {
+/**
+ * One Sonnet call, returns the joined text content. Since 2026-07-10 accepts
+ * an optional `customerCtx` — when provided, the SYSTEM prompt has its
+ * `__CUSTOMER_INJECTED_QUOTES__` placeholder replaced with a per-customer
+ * quote sample (same-domain filtered, deterministically shuffled by
+ * extractionId). Pass it wherever a customer is on the other end; skip it for
+ * internal/tooling calls (there are none in prod at time of writing).
+ */
+export async function runPack(
+  system: string,
+  user: string,
+  maxTokens: number,
+  customerCtx?: CustomerCorpusCtx,
+): Promise<string> {
+  const finalSystem = customerCtx ? personalizeSystemPrompt(system, customerCtx) : system;
   const client = new Anthropic();
   const resp = await client.messages.create({
     model:      SHOOT_DAY_MODEL_SONNET,
     max_tokens: maxTokens,
-    system,
+    system:     finalSystem,
     messages:   [{ role: "user", content: user }],
   });
   return resp.content

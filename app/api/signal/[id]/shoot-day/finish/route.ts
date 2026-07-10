@@ -32,7 +32,9 @@ import {
   normalizeShootDayText,
   sanitizeHadarQuotes,
   stripEmDashes,
+  lintCorpusLeaks,
 } from "@/lib/prompts/shoot-day-lint";
+import { personalizeSystemPrompt } from "@/lib/prompts/hadar-corpus-selection";
 
 export const runtime     = "nodejs";
 export const dynamic     = "force-dynamic";
@@ -138,7 +140,7 @@ export async function POST(
     const videoRes = await client.messages.create({
       model:      SHOOT_DAY_MODEL_SONNET,
       max_tokens: SINGLE_VIDEO_PACK_MAX_TOKENS,
-      system:     SINGLE_VIDEO_PACK_SYSTEM,
+      system:     personalizeSystemPrompt(SINGLE_VIDEO_PACK_SYSTEM, { extractionId: id, occupation: ctx.occupation }),
       messages:   [{ role: "user", content: buildSingleVideoContextMessage(ctx, identity_statement, pillars) }],
     });
     videoText = videoRes.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
@@ -158,6 +160,18 @@ export async function POST(
 
   // ── Assemble + cache (with deterministic output guards) ──────────────
   const video1 = sanitizeHadarQuotes(normalizeShootDayText([videoParsed.video]))[0];
+
+  // Anti-verbatim leak check (Alon 2026-07-10). Same policy as the /videos
+  // route: reject the pack and let the client retry so the model resamples.
+  const leaks1 = lintCorpusLeaks(video1.script);
+  if (leaks1.length > 0) {
+    console.error(`[shoot-day finish ${id}] corpus-leak reject:`, leaks1);
+    return NextResponse.json(
+      { error: "Verbatim corpus leak detected — retrying", details: leaks1[0] },
+      { status: 422 },
+    );
+  }
+
   const plan: ShootDayPlan = {
     identity_statement: stripEmDashes(identity_statement),
     pillars: normalizeShootDayText(pillars) as [Pillar, Pillar, Pillar, Pillar],

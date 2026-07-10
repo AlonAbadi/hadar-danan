@@ -12,6 +12,7 @@
  * since rewriting changes meaning.
  */
 import { deriveReelsProfile, isApprovedQuoteSource, type Video } from "@/lib/prompts/shoot-day-engine";
+import { CORPUS_QUOTES_BY_MOVE } from "@/lib/prompts/hadar-corpus-quotes";
 
 // ── 1. Em-dash strip ──────────────────────────────────────────────────
 // Replaces em/en dashes. A spaced dash (" - ") becomes a comma; a bare one
@@ -61,6 +62,71 @@ const CLICHES = [
   "פותרים בעיות", "תהליך מדהים", "משנה חיים", "בלעדי", "המהפכה",
   "מסע", "העצמה", "שינוי תודעתי", "אנשי מקצוע", "מומחים",
 ];
+
+// ── 3. Anti-verbatim leak (IP protection) ────────────────────────────
+// The engine is trained on Hadar's actual quotes. Per Alon 2026-07-10, no
+// verbatim run from the corpus may reach a paying customer's output — two
+// customers in the same archetype would get identical text, and any
+// competitor watching a customer's public reel could reverse-engineer
+// Hadar's playbook. We check every string field in the video output for
+// a 5+ word overlap with any corpus quote. `sanitizeText` strips
+// Hebrew punctuation, collapses whitespace, and lowercases (Latin letters
+// only) so the comparison ignores cosmetics.
+
+const CORPUS_STRINGS_CACHE: string[] = Object.values(CORPUS_QUOTES_BY_MOVE)
+  .flat()
+  .map((q) => q.quote);
+
+function tokenize(s: string): string[] {
+  return s
+    .replace(/["""''.,:;!?()[\]{}«»<>—–\-\/\\|]/g, " ")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+const CORPUS_TOKENS: string[][] = CORPUS_STRINGS_CACHE.map(tokenize);
+
+/**
+ * Returns the FIRST corpus 5-word overlap detected, or null if clean.
+ * Used both as a leak detector (hard block) and lint warning.
+ */
+export function detectCorpusLeak(text: string, minWords = 5): { corpus: string; run: string } | null {
+  const outTokens = tokenize(text);
+  if (outTokens.length < minWords) return null;
+  for (let i = 0; i <= outTokens.length - minWords; i++) {
+    const window = outTokens.slice(i, i + minWords);
+    for (let j = 0; j < CORPUS_TOKENS.length; j++) {
+      const corpus = CORPUS_TOKENS[j];
+      // Search this window inside the corpus quote.
+      for (let k = 0; k <= corpus.length - minWords; k++) {
+        let match = true;
+        for (let w = 0; w < minWords; w++) {
+          if (corpus[k + w] !== window[w]) { match = false; break; }
+        }
+        if (match) return { corpus: CORPUS_STRINGS_CACHE[j], run: window.join(" ") };
+      }
+    }
+  }
+  return null;
+}
+
+/** Same shape as lintShootDay — walks the tree and returns warnings for leaks. */
+export function lintCorpusLeaks(value: unknown): string[] {
+  const warnings: string[] = [];
+  const walk = (v: unknown, path: string) => {
+    if (typeof v === "string" && v.length > 0) {
+      const hit = detectCorpusLeak(v);
+      if (hit) warnings.push(`corpus-leak at ${path}: "${hit.run}" (matches: "${hit.corpus.slice(0, 60)}…")`);
+    } else if (Array.isArray(v)) {
+      v.forEach((item, i) => walk(item, `${path}[${i}]`));
+    } else if (v && typeof v === "object") {
+      for (const [k, val] of Object.entries(v)) walk(val, path ? `${path}.${k}` : k);
+    }
+  };
+  walk(value, "");
+  return warnings;
+}
 
 /** Returns a list of human-readable warnings (cliché hits, leftover dashes). */
 export function lintShootDay(value: unknown): string[] {
