@@ -886,6 +886,167 @@ export async function getABProposals() {
   }));
 }
 
+// ─── Broadcast Room Analytics ─────────────────────────
+// Powers /admin/broadcast — measures how the shoot-day scripts (per video_number)
+// actually convert into published Reels through חדר השידור. Bad scripts show up
+// as high takes-per-published, low downloaded / marked-published rate.
+
+export interface BroadcastPerScriptStat {
+  video_number:      number;       // 1-12 (canonical structure is 1-7)
+  takes:             number;       // rows in broadcast_takes
+  distinct_users:    number;       // users who tried to film this script
+  edits_started:     number;       // rows in broadcast_edits
+  edits_ready:       number;       // status='ready'
+  edits_failed:      number;       // status='failed'
+  edits_downloaded:  number;       // downloaded_at IS NOT NULL
+  published:         number;       // review_items via edit → status='published'
+  publish_rate:      number;       // published / edits_ready  (0-1)
+  takes_per_ready:   number;       // takes / edits_ready — proxy for script difficulty (retakes)
+}
+
+export interface BroadcastOverviewStats {
+  total_users:              number;
+  total_takes:              number;
+  total_edits_started:      number;
+  total_edits_ready:        number;
+  total_edits_failed:       number;
+  total_downloaded:         number;
+  total_published:          number;
+  overall_publish_rate:     number;   // total_published / total_edits_ready
+  overall_takes_per_ready:  number;   // total_takes / total_edits_ready
+  per_script:               BroadcastPerScriptStat[];
+  recent_activity:          Array<{
+    at:            string;
+    event:         'take' | 'edit_ready' | 'downloaded' | 'published';
+    video_number:  number;
+    user_email?:   string | null;
+  }>;
+}
+
+export async function getBroadcastStats(): Promise<BroadcastOverviewStats> {
+  const supabase = createServerClient();
+
+  // Fetch base sets (small enough — v1 is single-tenant Hive, expected < 10K rows).
+  // Use any-casts to bypass the auto-generated type gaps for the broadcast_* tables.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const takesRes = await (supabase as any)
+    .from('broadcast_takes')
+    .select('id, user_id, video_number, created_at, is_test')
+    .eq('is_test', false);
+  const takes: Array<{ id: string; user_id: string; video_number: number; created_at: string }> = takesRes.data ?? [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editsRes = await (supabase as any)
+    .from('broadcast_edits')
+    .select('id, user_id, video_number, status, downloaded_at, review_item_id, updated_at, is_test')
+    .eq('is_test', false);
+  const edits: Array<{
+    id: string; user_id: string; video_number: number; status: string;
+    downloaded_at: string | null; review_item_id: string | null; updated_at: string;
+  }> = editsRes.data ?? [];
+
+  // Review items — join to distinguish 'published' vs 'pending' vs 'dismissed'.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reviewRes = await (supabase as any)
+    .from('review_items')
+    .select('id, status, published_at, source, is_test')
+    .eq('is_test', false)
+    .eq('source', 'broadcast');
+  const reviewByItemId = new Map<string, { status: string; published_at: string | null }>();
+  for (const r of (reviewRes.data ?? []) as Array<{ id: string; status: string; published_at: string | null }>) {
+    reviewByItemId.set(r.id, r);
+  }
+
+  // Bucket by video_number.
+  const buckets = new Map<number, {
+    takes: number; users: Set<string>;
+    edits_started: number; edits_ready: number; edits_failed: number;
+    edits_downloaded: number; published: number;
+  }>();
+  const bucket = (n: number) => {
+    let b = buckets.get(n);
+    if (!b) {
+      b = { takes: 0, users: new Set(), edits_started: 0, edits_ready: 0, edits_failed: 0, edits_downloaded: 0, published: 0 };
+      buckets.set(n, b);
+    }
+    return b;
+  };
+
+  for (const t of takes) {
+    const b = bucket(t.video_number);
+    b.takes++;
+    b.users.add(t.user_id);
+  }
+  for (const e of edits) {
+    const b = bucket(e.video_number);
+    b.edits_started++;
+    if (e.status === 'ready')  b.edits_ready++;
+    if (e.status === 'failed') b.edits_failed++;
+    if (e.downloaded_at)       b.edits_downloaded++;
+    if (e.review_item_id) {
+      const r = reviewByItemId.get(e.review_item_id);
+      if (r?.status === 'published') b.published++;
+    }
+  }
+
+  const per_script: BroadcastPerScriptStat[] = Array.from(buckets.entries())
+    .map(([n, b]) => ({
+      video_number:      n,
+      takes:             b.takes,
+      distinct_users:    b.users.size,
+      edits_started:     b.edits_started,
+      edits_ready:       b.edits_ready,
+      edits_failed:      b.edits_failed,
+      edits_downloaded:  b.edits_downloaded,
+      published:         b.published,
+      publish_rate:      b.edits_ready > 0 ? b.published / b.edits_ready : 0,
+      takes_per_ready:   b.edits_ready > 0 ? b.takes / b.edits_ready : 0,
+    }))
+    .sort((a, b) => a.video_number - b.video_number);
+
+  // Overall aggregates.
+  const total_takes           = takes.length;
+  const total_users           = new Set(takes.map((t) => t.user_id)).size;
+  const total_edits_started   = edits.length;
+  const total_edits_ready     = edits.filter((e) => e.status === 'ready').length;
+  const total_edits_failed    = edits.filter((e) => e.status === 'failed').length;
+  const total_downloaded      = edits.filter((e) => e.downloaded_at).length;
+  const total_published       = edits.filter((e) => {
+    if (!e.review_item_id) return false;
+    return reviewByItemId.get(e.review_item_id)?.status === 'published';
+  }).length;
+
+  // Recent activity feed (last 20 events).
+  const events: BroadcastOverviewStats['recent_activity'] = [];
+  for (const t of takes) events.push({ at: t.created_at, event: 'take', video_number: t.video_number });
+  for (const e of edits) {
+    if (e.status === 'ready') events.push({ at: e.updated_at, event: 'edit_ready', video_number: e.video_number });
+    if (e.downloaded_at)      events.push({ at: e.downloaded_at, event: 'downloaded', video_number: e.video_number });
+    if (e.review_item_id) {
+      const r = reviewByItemId.get(e.review_item_id);
+      if (r?.status === 'published' && r.published_at) {
+        events.push({ at: r.published_at, event: 'published', video_number: e.video_number });
+      }
+    }
+  }
+  events.sort((a, b) => b.at.localeCompare(a.at));
+  const recent_activity = events.slice(0, 20);
+
+  return {
+    total_users,
+    total_takes,
+    total_edits_started,
+    total_edits_ready,
+    total_edits_failed,
+    total_downloaded,
+    total_published,
+    overall_publish_rate:    total_edits_ready > 0 ? total_published / total_edits_ready : 0,
+    overall_takes_per_ready: total_edits_ready > 0 ? total_takes / total_edits_ready : 0,
+    per_script,
+    recent_activity,
+  };
+}
+
 // ─── Product Map ──────────────────────────────────────
 export const PRODUCT_MAP: Record<string, { name: string; nameEn: string; price: number }> = {
   free_training: { name: 'שיעור במתנה', nameEn: 'Free Training', price: 0 },
