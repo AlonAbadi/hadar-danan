@@ -727,20 +727,13 @@ export function KaveretClient({
           </div>
           <div className={sty.zrule} />
 
-          <div className={sty.letterbox}>
-            {data.letterFromHadar ? (
-              <>
-                <p>{data.letterFromHadar.body}</p>
-                <p className={sty.em}>{data.letterFromHadar.close}</p>
-              </>
-            ) : (
-              <>
-                <p>אם השיווק שלכם לא עובד היום, זה לא בגלל שאתם גרועים. זה כי אתם משחקים משחק שכבר לא מתקיים.</p>
-                <p className={sty.em}>בואו נבנה לכם יום אחד שבו אתם משחקים משחק חדש.</p>
-              </>
-            )}
-            <p className={sty.lsig}>הדר</p>
-          </div>
+          {data.letterFromHadar && (
+            <div className={sty.letterbox}>
+              <p>{data.letterFromHadar.body}</p>
+              <p className={sty.em}>{data.letterFromHadar.close}</p>
+              <p className={sty.lsig}>הדר</p>
+            </div>
+          )}
 
           <div style={{ marginTop: 32 }}>
             {/* Divider: signal a new movement inside zone 03 (letter → series). */}
@@ -760,18 +753,20 @@ export function KaveretClient({
                 7 פרקים בהתאמה אישית
               </span>
             </div>
-            <ShootDayProgress filmed={data.filmedCount} total={data.scriptsTotal} />
             {data.scripts.length === 0 ? (
               <div className={sty.trow}>
                 <BuildShootDay extractionId={data.extractionId} />
               </div>
             ) : (
-              <EpisodesList
-                extractionId={data.extractionId}
-                scripts={data.scripts}
-                filmedNumbers={data.filmedNumbers}
-                identity={data.identity}
-              />
+              <>
+                <ShootDayProgress filmed={data.filmedCount} total={data.scriptsTotal} />
+                <EpisodesList
+                  extractionId={data.extractionId}
+                  scripts={data.scripts}
+                  filmedNumbers={data.filmedNumbers}
+                  identity={data.identity}
+                />
+              </>
             )}
           </div>
         </section>
