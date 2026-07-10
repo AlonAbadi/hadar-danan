@@ -112,6 +112,7 @@ export const BROADCAST_COPY = {
 
   // Permission + errors
   "room.placement_hint": "הרחיקו את הטלפון, הניחו אותו במקום יציב בגובה העיניים",
+  "room.placement_hint_desktop": "הגביהו את המסך כך שהמצלמה בגובה העיניים, והביטו אליה כשאתם מדברים",
   "permission.title": "אנחנו צריכות את המצלמה",
   "permission.body":
     "חדר השידור מצלם אותך במצלמה הקדמית. הדפדפן חסם את הגישה, ככה פותחים אותה",
@@ -119,9 +120,13 @@ export const BROADCAST_COPY = {
   "permission.step2": "בוחרים הגדרות אתר",
   "permission.step3": "מצלמה ומיקרופון: אישור",
   "permission.retry": "ניסיתי שוב",
-  "permission.desktop_title": "הכי טוב לצלם מהטלפון",
+  "permission.desktop_title": "אנחנו צריכות את המצלמה",
   "permission.desktop_body":
-    "חדר השידור בנוי לצילום סלפי עם המצלמה הקדמית של הטלפון. פתחו את אותו עמוד בטלפון, לחצו לצלם עכשיו, והטלפרומפטר כבר יחכה לכם שם",
+    "חדר השידור מצלם אתכם במצלמת המחשב. הדפדפן חסם את הגישה, ככה פותחים אותה",
+  "permission.d_step1": "לוחצים על סמל המצלמה בשורת הכתובת",
+  "permission.d_step2": "בוחרים לאפשר מצלמה ומיקרופון",
+  "permission.d_step3": "מרעננים את העמוד",
+  "permission.desktop_alt": "מעדיפים סלפי? אותו עמוד עובד גם מהטלפון",
   "error.upload_retry": "הטייק שמור אצלך. מנסות להעלות שוב",
   "error.processing_failed": "משהו לא הסתדר בעריכה. הטייק שלך שמור, אפשר לנסות שוב",
   "error.unsupported": {

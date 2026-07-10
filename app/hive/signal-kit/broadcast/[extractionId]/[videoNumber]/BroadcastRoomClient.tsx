@@ -69,6 +69,13 @@ export function BroadcastRoomClient({
   const nativeInputRef = useRef<HTMLInputElement | null>(null);
   const [nativeSheet, setNativeSheet] = useState<"closed" | "loading" | "ready" | "pip">("closed");
   const [floatUrl, setFloatUrl] = useState<string | null>(null);
+  // Desktop is a first-class filming surface (landscape webcam ships
+  // full-frame like any landscape take); detected post-mount to keep
+  // hydration clean. Governs the phone-only affordances below.
+  const [isDesktopUA, setIsDesktopUA] = useState(false);
+  useEffect(() => {
+    setIsDesktopUA(!/iPhone|iPad|Android/i.test(navigator.userAgent));
+  }, []);
   const floatVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // Floating PiP prompter: a real MP4 of the scrolling script — iOS keeps
@@ -609,24 +616,26 @@ export function BroadcastRoomClient({
         {!rec.isRecording ? (
           <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
             <p style={{ color: "#CDD1DA", fontSize: 12.5, textAlign: "center", margin: 0, textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
-              {getBroadcastCopy("room.placement_hint")}
+              {getBroadcastCopy(isDesktopUA ? "room.placement_hint_desktop" : "room.placement_hint")}
             </p>
-            <button
-              type="button"
-              className="br-btn"
-              onClick={openNativeSheet}
-              style={{
-                background: "transparent",
-                border: "1px solid rgba(237,233,225,0.3)",
-                borderRadius: 999,
-                padding: "8px 14px",
-                color: "#EDE9E1",
-                fontSize: 13,
-                fontWeight: 600,
-              }}
-            >
-              {getBroadcastCopy("room.native_capture")}
-            </button>
+            {!isDesktopUA ? (
+              <button
+                type="button"
+                className="br-btn"
+                onClick={openNativeSheet}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(237,233,225,0.3)",
+                  borderRadius: 999,
+                  padding: "8px 14px",
+                  color: "#EDE9E1",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                {getBroadcastCopy("room.native_capture")}
+              </button>
+            ) : null}
             {takes.length > 0 ? (
               <button
                 type="button"
@@ -1034,8 +1043,7 @@ function PermissionDenied({ onRetry }: { onRetry: () => void }) {
         <p style={{ color: "#CDD1DA", fontSize: 15, lineHeight: 1.7, marginTop: 10 }}>
           {getBroadcastCopy(isDesktop ? "permission.desktop_body" : "permission.body")}
         </p>
-        {!isDesktop ? (
-          <ol
+        <ol
             style={{
               textAlign: "start",
               color: "#9E9990",
@@ -1045,10 +1053,14 @@ function PermissionDenied({ onRetry }: { onRetry: () => void }) {
               paddingInlineStart: 20,
             }}
           >
-            <li>{getBroadcastCopy("permission.step1")}</li>
-            <li>{getBroadcastCopy("permission.step2")}</li>
-            <li>{getBroadcastCopy("permission.step3")}</li>
-          </ol>
+          <li>{getBroadcastCopy(isDesktop ? "permission.d_step1" : "permission.step1")}</li>
+          <li>{getBroadcastCopy(isDesktop ? "permission.d_step2" : "permission.step2")}</li>
+          <li>{getBroadcastCopy(isDesktop ? "permission.d_step3" : "permission.step3")}</li>
+        </ol>
+        {isDesktop ? (
+          <p style={{ color: "#9E9990", fontSize: 13, marginTop: 12 }}>
+            {getBroadcastCopy("permission.desktop_alt")}
+          </p>
         ) : null}
         <div style={{ marginTop: 18 }}>
           <ActionButton variant="primary" onClick={onRetry}>
