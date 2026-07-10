@@ -39,6 +39,9 @@ export interface KaveretData {
   filmedNumbers: number[];
   aboutSite: string;
   manifesto: string;
+  // Dynamic Hadar letter (2026-07-10). null → render the legacy static
+  // fallback in the letterbox. Two-line shape: body diagnosis, close invitation.
+  letterFromHadar: { body: string; close: string } | null;
   reels: {
     editId: string;
     reviewItemId: string | null;
@@ -722,8 +725,17 @@ export function KaveretClient({
 
           <div className={sty.letterbox}>
             <div className={sty.from}>{letterTo}</div>
-            <p>אם השיווק שלכם לא עובד היום, זה לא בגלל שאתם גרועים. זה כי אתם משחקים משחק שכבר לא מתקיים.</p>
-            <p className={sty.em}>בואו נבנה לכם יום אחד שבו אתם משחקים משחק חדש.</p>
+            {data.letterFromHadar ? (
+              <>
+                <p>{data.letterFromHadar.body}</p>
+                <p className={sty.em}>{data.letterFromHadar.close}</p>
+              </>
+            ) : (
+              <>
+                <p>אם השיווק שלכם לא עובד היום, זה לא בגלל שאתם גרועים. זה כי אתם משחקים משחק שכבר לא מתקיים.</p>
+                <p className={sty.em}>בואו נבנה לכם יום אחד שבו אתם משחקים משחק חדש.</p>
+              </>
+            )}
             <p className={sty.lsig}>הדר</p>
           </div>
 
@@ -741,6 +753,20 @@ export function KaveretClient({
                   <span className={sty.hint}>{data.filmedCount} מתוך {data.scriptsTotal} צולמו</span>
                 </span>
               </div>
+              {data.scripts.length > 0 && (
+                <p
+                  style={{
+                    marginTop: 8,
+                    color: "#ACA79E",
+                    fontSize: 13,
+                    fontWeight: 300,
+                    lineHeight: 1.6,
+                    fontStyle: "italic",
+                  }}
+                >
+                  הסקריפטים נוצרו בהתאמה אישית לעסק שלך.
+                </p>
+              )}
               <div className={sty.trow}>
                 {!data.scripts.length ? (
                   <>

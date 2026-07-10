@@ -351,6 +351,20 @@ ${HADAR_SIGNATURE_MOVES}
 - evidence: 1-2 משפטים, מה מוכיח שזה נכון אצל הלקוח/ה הזה/זו ספציפית
 - scene: 1-2 משפטים, איך נראה הסרטון לעמוד הזה
 
+## המכתב מהדר (letter_from_hadar)
+
+מכתב פתיחה קצר של הדר ללקוח/ה, מיושב מעל 7 הסרטונים בממשק הכוורת. שני מהלכים בלבד:
+
+body (משפט או שניים): אבחון-מדויק של המצב הנוכחי של הלקוח/ה. אסור להתחיל ב"את/ה" — פותחים בעולם שלו/ה. לא דיאגנוזה כללית, אלא נקודת-לחץ ספציפית שנחשפה בסיגנל שלו/ה. אסור לצטט את הסיגנל verbatim — פרפרזה, בקול הדר.
+
+close (משפט אחד, סוגר): הזמנה לתהליך ההצילום כפתרון. חייב לכלול את הפועל "נבנה" או "נעשה" בצירוף "יום צילום". טון חם-סמכותי. לא CTA מכירה. הזמנה של הבמאית.
+
+טון: הדר לא ממכירה. היא אבחנה. שני משפטים, כאילו רשמה בפנקס לעצמה. אסור סופרלטיבים ("מדהים", "יוצא דופן"). אסור צירופים גנריים ("היום זה הזמן", "אתה מוכן"). הכתיבה כמו נגיעה מדויקת באזור פצוע.
+
+דוגמאות איך צריך להישמע (לא לחזור על המילים, רק הטון):
+- לעורך דין: "הלקוחות שלך לא מודדים אותך במילים. הם מודדים אותך ברגעים שבהם שמרת עליהם מדבר שהם לא ידעו שקורה. בוא נבנה יום צילום שיראה את זה בלי להצטרך להגיד את זה."
+- למעצבת פנים: "הן קונות אצלך שקט, לא רהיטים. את הרגע שבו הן נכנסות הביתה ולא צריכות להזיז אף רהיט בראש שלהן. בואי נעשה יום צילום שמראה איך את בונה את הרגע הזה, לא רק את החלל."
+
 ## פלט
 
 החזר JSON תקין בלבד, ללא markdown, ללא הסברים:
@@ -362,7 +376,11 @@ ${HADAR_SIGNATURE_MOVES}
     {"number": 2, "title": "...", "message": "...", "evidence": "...", "scene": "..."},
     {"number": 3, "title": "...", "message": "...", "evidence": "...", "scene": "..."},
     {"number": 4, "title": "...", "message": "...", "evidence": "...", "scene": "..."}
-  ]
+  ],
+  "letter_from_hadar": {
+    "body": "...",
+    "close": "..."
+  }
 }`;
 
 // ── Pack 2a: Single Video #1 (V1 — fast path, ~10-15s wall) ──────────
@@ -901,12 +919,22 @@ export function validatePillar(p: unknown): p is Pillar {
   );
 }
 
-export function validateIdentityPillarsPack(data: unknown): data is { identity_statement: string; pillars: Pillar[] } {
+export interface LetterFromHadar { body: string; close: string }
+
+export function validateIdentityPillarsPack(data: unknown): data is { identity_statement: string; pillars: Pillar[]; letter_from_hadar?: LetterFromHadar } {
   if (!data || typeof data !== "object") return false;
   const x = data as Record<string, unknown>;
   if (typeof x.identity_statement !== "string" || x.identity_statement.length < 10) return false;
   if (!Array.isArray(x.pillars) || x.pillars.length !== 4) return false;
-  return x.pillars.every(validatePillar);
+  if (!x.pillars.every(validatePillar)) return false;
+  // letter_from_hadar is optional (added 2026-07-10). Legacy phase-1 caches
+  // lack it and must still validate. When present, both sub-fields required.
+  if (x.letter_from_hadar !== undefined && x.letter_from_hadar !== null) {
+    const l = x.letter_from_hadar as Record<string, unknown>;
+    if (typeof l.body !== "string" || l.body.length < 8) return false;
+    if (typeof l.close !== "string" || l.close.length < 8) return false;
+  }
+  return true;
 }
 
 export function validateVideo(v: unknown): v is Video {

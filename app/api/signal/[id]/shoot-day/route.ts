@@ -286,6 +286,7 @@ export async function GET(
       shoot_day_phase1: {
         identity_statement: parsed.identity_statement,
         pillars:            parsed.pillars,
+        letter_from_hadar:  parsed.letter_from_hadar ?? null,
         generated_at:       new Date().toISOString(),
       },
     };

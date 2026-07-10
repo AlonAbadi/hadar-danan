@@ -61,6 +61,7 @@ const DEMO: KaveretData = {
   filmedNumbers: [],
   aboutSite: "",
   manifesto: "",
+  letterFromHadar: null,
   reels: [],
   waPhone: "972000000000",
   demo: true,
@@ -140,6 +141,15 @@ export default async function KaveretPage({
     signal.shoot_day_phase1?.identity_statement ??
     signal.signal ??
     "";
+
+  // Dynamic Hadar letter (added 2026-07-10). Falls back to the static letter
+  // in KaveretClient if the phase-1 pack didn't yet produce one (older
+  // customers, or the field regressed from the model). Two-line shape:
+  // { body, close } — body sets the diagnosis, close invites to the shoot.
+  const letterFromHadar =
+    signal.shoot_day_phase1?.letter_from_hadar ??
+    signal.shoot_day?.letter_from_hadar ??
+    null;
 
   // Challenge enrollment (auto-created on first visit, migration 032
   // convention) + filmed reels — independent queries, fired together so the
@@ -260,6 +270,9 @@ export default async function KaveretPage({
     ) as number[],
     aboutSite: String(kit.bio_long ?? ""),
     manifesto: String(kit.manifesto ?? ""),
+    letterFromHadar: letterFromHadar
+      ? { body: String(letterFromHadar.body ?? ""), close: String(letterFromHadar.close ?? "") }
+      : null,
     reels: [],
     waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
     demo: false,
