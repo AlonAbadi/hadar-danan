@@ -250,47 +250,34 @@
   /* ===== floating glass tab bar with sliding pill ===== */
   .tabbar {
     position:fixed;
-    left:14px; right:14px;
-    bottom:calc(12px + env(safe-area-inset-bottom));
+    right:50%;
+    transform:translateX(50%);
+    bottom:calc(14px + env(safe-area-inset-bottom));
     z-index:60;
-    max-width:560px;
-    margin:0 auto;
     display:flex;
-    padding:7px;
-    border-radius:999px;
-    background:rgba(15,19,27,0.82);
-    backdrop-filter:blur(24px) saturate(160%);
-    -webkit-backdrop-filter:blur(24px) saturate(160%);
-    border:1px solid rgba(232,185,74,0.22);
-    box-shadow:0 14px 46px rgba(0,0,0,0.6), inset 0 1px 0 rgba(246,223,160,0.08);
-  }
-  .tbind {
-    position:absolute;
-    top:7px; bottom:7px;
-    right:7px;
-    width:calc((100% - 14px) / 5);
-    border-radius:999px;
-    background:linear-gradient(160deg,var(--gold-hi) 0%,var(--gold) 35%,var(--gold-deep));
-    box-shadow:0 6px 20px rgba(232,185,74,0.35);
-    transition:transform .4s cubic-bezier(.3,1.2,.3,1);
-    pointer-events:none;
+    align-items:center;
+    padding:7px 10px;
+    border-radius:26px;
+    background:rgba(20,24,32,0.78);
+    backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
+    border:0.5px solid rgba(232,185,74,0.16);
   }
   .tb {
-    flex:1;
-    position:relative;
-    z-index:1;
-    min-height:60px;
+    width:54px;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
     background:none; border:none;
-    color:#8D887F;
+    color:rgba(158,153,144,0.75);
     font-family:inherit;
     cursor:pointer;
+    padding:2px 0;
     transition:color .25s;
-    border-radius:999px;
   }
-  .tb svg { width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
-  .tb span { font-size:11.5px; font-weight:700; letter-spacing:0.01em; }
-  .tb.on { color:#080C14; }
+  .tb svg { width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; transition:transform .25s cubic-bezier(.34,1.4,.4,1); }
+  .tb span { font-size:9.5px; font-weight:500; letter-spacing:0.02em; }
+  .tb.on { color:var(--gold); }
+  .tb.on svg { transform:translateY(-1px) scale(1.05); }
+  .tb.on span { font-weight:700; }
   #toast { position:fixed; bottom:calc(104px + env(safe-area-inset-bottom)); right:50%;
     transform:translate(50%,20px); z-index:99;
     display:flex; align-items:center; gap:9px;
@@ -314,12 +301,7 @@
 
 <main class="wrap">
 
-  <header class="top">
-    <div class="brand"><span class="hex"></span>beegood</div>
-    <div class="who">הכוורת של <b>אלון</b></div>
-  </header>
-
-  <div class="hero" id="top">
+    <div class="hero" id="top">
     <div class="ghost" aria-hidden="true">הכוורת</div>
     <div class="k">כוורת האות · חבילת התוכן שלך</div>
     <h1><span class="thin">האות שלך,</span><br><span class="gold">ארוז לפעולה.</span></h1>
@@ -477,7 +459,6 @@
 </main>
 
 <nav class="tabbar" aria-label="ניווט">
-  <span class="tbind" id="tbind" aria-hidden="true"></span>
   <button class="tb on" data-go="#top" aria-label="האות">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3"/></svg>
     <span>האות</span>
@@ -496,7 +477,7 @@
   </button>
   <button class="tb" data-go="#z-mine" aria-label="התכנים שלי">
     <svg viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
-    <span>התכנים שלי</span>
+    <span>התכנים</span>
   </button>
 </nav>
 
@@ -524,13 +505,11 @@
   const dcells=[...document.querySelectorAll('.tb')];
   const dzones=dcells.map(c=>document.querySelector(c.dataset.go));
   const spyTargets=[...dzones, document.getElementById('z-strategy')];
-  const tbind=document.getElementById('tbind');
   function setActive(i){
     dcells.forEach(c=>{c.classList.remove('on');c.removeAttribute('aria-current');});
     dcells[i].classList.add('on');
     dcells[i].setAttribute('aria-current','true');
     /* RTL: tab 0 sits at right edge; slide left by i widths */
-    tbind.style.transform='translateX(calc(-'+i+' * 100%))';
   }
   let spyLock=0;
   dcells.forEach((c,i)=>c.addEventListener('click',()=>{

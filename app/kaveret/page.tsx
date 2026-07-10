@@ -19,6 +19,8 @@ import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { CHALLENGE_DAYS, computeNextLiveMeetingDate } from "@/lib/challenge-config";
 import { pickPrimaryExtractionId } from "@/lib/signal/primary-extraction";
+import { MobileNavServer } from "@/components/MobileNavServer";
+import { DesktopNavServer } from "@/components/DesktopNavServer";
 import { KaveretClient, type KaveretData } from "./KaveretClient";
 
 export const dynamic = "force-dynamic";
@@ -263,5 +265,16 @@ export default async function KaveretPage({
     demo: false,
   };
 
-  return <KaveretClient data={data} cardsSplit={data.cards.map((c) => splitCard(c.text))} />;
+  // Per Alon: the member home carries the site's own top banner (LayoutShell
+  // hides the global nav for /kaveret, so it renders here; the demo/gate
+  // branch above stays nav-less on purpose).
+  return (
+    <>
+      <MobileNavServer />
+      <DesktopNavServer />
+      <div style={{ paddingTop: 64 }}>
+        <KaveretClient data={data} cardsSplit={data.cards.map((c) => splitCard(c.text))} />
+      </div>
+    </>
+  );
 }

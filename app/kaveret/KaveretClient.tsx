@@ -390,10 +390,6 @@ export function KaveretClient({
       <div className={sty.glow} aria-hidden="true" />
 
       <main className={sty.wrap}>
-        <header className={sty.top}>
-          <div className={sty.brand}><span className={sty.hex} />beegood</div>
-          <div className={sty.who}>הכוורת של <b>{data.firstName}</b></div>
-        </header>
 
         <div className={sty.hero} id="top" data-tab-index={0} ref={(el) => { zonesRef.current[0] = el; }}>
           <div className={sty.ghost} aria-hidden="true">הכוורת</div>
@@ -942,17 +938,12 @@ export function KaveretClient({
       </main>
 
       <nav className={sty.tabbar} aria-label="ניווט">
-        <span
-          className={sty.tbind}
-          aria-hidden="true"
-          style={{ transform: `translateX(calc(-${activeTab} * 100%))` }}
-        />
         {([
           ["האות", <svg key="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4" /><path d="M12 4v3M12 17v3M4 12h3M17 12h3" /></svg>],
           ["אתגר", <svg key="i" viewBox="0 0 24 24"><path d="M8 4h8M12 4v5" /><circle cx="12" cy="14" r="6" /><path d="M12 12v2.5l1.8 1.2" /></svg>],
           ["ויזואל", <svg key="i" viewBox="0 0 24 24"><rect x="4.5" y="4.5" width="15" height="15" rx="2" /><circle cx="9.5" cy="9.5" r="1.6" /><path d="M5 17l4.5-4.5 3 3 2.5-2.5L19 17" /></svg>],
           ["צילום", <svg key="i" viewBox="0 0 24 24"><rect x="3.5" y="7" width="12" height="10" rx="2" /><path d="M15.5 10.5l4.5-2.5v8l-4.5-2.5z" /></svg>],
-          ["התכנים שלי", <svg key="i" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /></svg>],
+          ["התכנים", <svg key="i" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /></svg>],
         ] as const).map(([label, icon], i) => (
           <button
             key={label}
