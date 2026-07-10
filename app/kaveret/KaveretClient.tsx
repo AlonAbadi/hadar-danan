@@ -147,6 +147,7 @@ export function KaveretClient({
   const [published, setPublished] = useState<Record<string, boolean>>({});
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [viewerEditId, setViewerEditId] = useState<string | null>(null);
   const [assetBg, setAssetBg] = useState<"color" | "image">("color");
   // Reels hydrate after first paint (server no longer signs storage URLs on
   // the critical path). Shape mirrors the old server assembly.
@@ -802,14 +803,13 @@ export function KaveretClient({
                   const isPub = r.published || published[r.editId];
                   const script = data.scripts.find((s) => s.number === r.videoNumber);
                   const epName = script?.title || `הפרק שצולם ב-${new Date(r.createdAt).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}`;
-                  const menuOn = openMenu === r.editId;
                   return (
                     <div className={sty.seCard} key={r.editId}>
                       <button
                         type="button"
                         className={sty.seThumb}
-                        aria-label={`נגן פרק ${idx + 1}`}
-                        onClick={() => r.downloadUrl && window.open(r.downloadUrl, "_blank", "noopener")}
+                        aria-label={`פתח פרק ${idx + 1}`}
+                        onClick={() => setViewerEditId(r.editId)}
                       >
                         {r.thumbUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -821,52 +821,6 @@ export function KaveretClient({
                       <span className={`${sty.seTag} ${isPub ? sty.seTagAir : sty.seTagWait}`}>
                         {isPub ? "באוויר" : "מוכן לפרסום"}
                       </span>
-                      <button
-                        type="button"
-                        className={sty.seDots}
-                        aria-label="פעולות"
-                        onClick={() => setOpenMenu(menuOn ? null : r.editId)}
-                      >
-                        ···
-                      </button>
-                      {menuOn ? (
-                        <div className={sty.seMenu}>
-                          {r.downloadUrl ? (
-                            <a href={r.downloadUrl} onClick={() => setOpenMenu(null)}>הורדה</a>
-                          ) : null}
-                          {!isPub && r.reviewItemId ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPublished((prev) => ({ ...prev, [r.editId]: true }));
-                                fetch(`/api/broadcast/review-items/${r.reviewItemId}/publish`, { method: "POST" }).catch(() => {});
-                                setOpenMenu(null);
-                                toast("סומן כפורסם");
-                              }}
-                            >
-                              פורסם
-                            </button>
-                          ) : null}
-                          <button
-                            type="button"
-                            className={sty.seDanger}
-                            onClick={async () => {
-                              if (!window.confirm("למחוק את הפרק הזה לצמיתות? אי אפשר לשחזר אחרי מחיקה")) return;
-                              const res = await fetch(`/api/broadcast/edits/${r.editId}`, { method: "DELETE" }).catch(() => null);
-                              setOpenMenu(null);
-                              if (res?.ok) {
-                                setDeletedReels((prev) => ({ ...prev, [r.editId]: true }));
-                                toast("הפרק נמחק");
-                              } else {
-                                toast("המחיקה לא הצליחה, נסו שוב");
-                              }
-                            }}
-                          >
-                            מחיקה
-                          </button>
-                          <button type="button" onClick={() => setOpenMenu(null)} style={{ opacity: 0.7 }}>סגירה</button>
-                        </div>
-                      ) : null}
                       <div className={sty.seName}>
                         <span className={sty.seNo}>{String(idx + 1).padStart(2, "0")}</span>
                         {epName}
@@ -999,6 +953,40 @@ export function KaveretClient({
       <div className={`${sty.toast} ${toastOn ? sty.on : ""}`} role="status">
         <span className={sty.ok}>✓</span><span>{toastMsg}</span>
       </div>
+
+      {viewerEditId && (() => {
+        const r = reels.find((x) => x.editId === viewerEditId);
+        if (!r) return null;
+        const script = data.scripts.find((s) => s.number === r.videoNumber);
+        const title  = script?.title || `הפרק שצולם ב-${new Date(r.createdAt).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}`;
+        const isPub  = r.published || published[r.editId];
+        return (
+          <EpisodeViewer
+            editId={r.editId}
+            reviewItemId={r.reviewItemId}
+            title={title}
+            downloadUrl={r.downloadUrl}
+            isPublished={isPub}
+            onClose={() => setViewerEditId(null)}
+            onMarkPublished={() => {
+              setPublished((prev) => ({ ...prev, [r.editId]: true }));
+              fetch(`/api/broadcast/review-items/${r.reviewItemId}/publish`, { method: "POST" }).catch(() => {});
+              toast("סומן כפורסם");
+            }}
+            onDelete={async () => {
+              const res = await fetch(`/api/broadcast/edits/${r.editId}`, { method: "DELETE" }).catch(() => null);
+              if (res?.ok) {
+                setDeletedReels((prev) => ({ ...prev, [r.editId]: true }));
+                setViewerEditId(null);
+                toast("הפרק נמחק");
+              } else {
+                toast("המחיקה לא הצליחה, נסו שוב");
+              }
+            }}
+            onShareResult={(msg) => toast(msg)}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -1093,6 +1081,266 @@ function BuildShootDay({ extractionId }: { extractionId: string | null }) {
 // come back with prose wrapping, esp. from 4xx paths).
 function safeJson(t: string): Record<string, unknown> | null {
   try { return JSON.parse(t); } catch { return null; }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// EpisodeViewer — video modal for zone 04 reels.
+// Alon 2026-07-11: clicking a reel used to open `?download=true` in a new
+// tab (Chrome/Safari treat the storage URL as a forced download), so tapping
+// a video on mobile started a download instead of showing the video. Now
+// tap → this modal — 9:16 native <video> autoplay, floating action pills at
+// bottom for share (Web Share API + WhatsApp fallback), download, mark
+// published, delete. Same handler surface as the removed "..." dropdown,
+// but reachable from the primary interaction instead of a hidden triple-dot.
+// ─────────────────────────────────────────────────────────────────────
+function EpisodeViewer({
+  editId, reviewItemId, title, downloadUrl, isPublished,
+  onClose, onMarkPublished, onDelete, onShareResult,
+}: {
+  editId: string;
+  reviewItemId: string | null;
+  title: string;
+  downloadUrl: string | null;
+  isPublished: boolean;
+  onClose: () => void;
+  onMarkPublished: () => void;
+  onDelete: () => Promise<void>;
+  onShareResult: (msg: string) => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
+
+  // Strip the ?download=true param the storage URL ships with so <video> can
+  // stream it instead of triggering a browser download.
+  const streamUrl = downloadUrl
+    ? downloadUrl.replace(/([?&])download=true(&?)/, (_, sep, tail) => (tail ? sep : "")).replace(/[?&]$/, "")
+    : null;
+
+  const share = useCallback(async () => {
+    if (!downloadUrl) { onShareResult("אין קישור זמין"); return; }
+    // Prefer native share sheet — supports files on iOS + Android.
+    // Fall back to copying the URL if unavailable.
+    const nav = typeof navigator !== "undefined" ? navigator : null;
+    if (nav?.share) {
+      try {
+        await nav.share({ title, url: downloadUrl });
+        onShareResult("הפרק שותף");
+        return;
+      } catch {
+        /* user cancelled — silent */
+        return;
+      }
+    }
+    try {
+      await nav?.clipboard?.writeText(downloadUrl);
+      onShareResult("הקישור הועתק ללוח");
+    } catch {
+      onShareResult("שיתוף לא נתמך במכשיר זה");
+    }
+  }, [downloadUrl, title, onShareResult]);
+
+  const download = useCallback(() => {
+    if (!downloadUrl) { onShareResult("אין קישור זמין"); return; }
+    // Existing download URL from Supabase Storage carries ?download=true,
+    // which coerces browsers to treat the response as a file attachment.
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = `${title || `beegood-episode-${editId}`}.mp4`;
+    a.rel = "noopener";
+    a.click();
+  }, [downloadUrl, title, editId, onShareResult]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(6,10,18,0.94)",
+        zIndex: 9500,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backdropFilter: "blur(6px)",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* Title strip */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: "18px 20px 14px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          background: "linear-gradient(180deg, rgba(6,10,18,0.7), transparent)",
+          pointerEvents: "none",
+        }}
+      >
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#EDE9E1", flex: 1 }}>
+          {title}
+          <div style={{ fontSize: 11, color: isPublished ? "#7FBF8E" : "#E8B94A", fontWeight: 700, letterSpacing: 0.5, marginTop: 2 }}>
+            {isPublished ? "באוויר" : "מוכן לפרסום"}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="סגירה"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 999,
+            background: "rgba(232,185,74,0.14)",
+            border: "1px solid rgba(232,185,74,0.35)",
+            color: "#E8B94A",
+            fontSize: 22,
+            fontWeight: 700,
+            fontFamily: "inherit",
+            cursor: "pointer",
+            lineHeight: 1,
+            flex: "0 0 auto",
+            pointerEvents: "auto",
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Video */}
+      {streamUrl ? (
+        <video
+          key={streamUrl}
+          src={streamUrl}
+          controls
+          playsInline
+          autoPlay
+          preload="metadata"
+          style={{
+            maxHeight: "100%",
+            maxWidth: "100%",
+            width: "auto",
+            height: "auto",
+            aspectRatio: "9 / 16",
+            objectFit: "contain",
+            background: "#000",
+            borderRadius: 6,
+          }}
+        />
+      ) : (
+        <div style={{ color: "#EDE9E1", padding: 20 }}>הסרטון עוד לא זמין</div>
+      )}
+
+      {/* Floating action bar */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "calc(20px + env(safe-area-inset-bottom))",
+          left: 20,
+          right: 20,
+          display: "flex",
+          justifyContent: "center",
+          gap: 10,
+          flexWrap: "wrap",
+          pointerEvents: "none",
+        }}
+      >
+        <ViewerPill onClick={share} label="שיתוף" pointerEvents>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+            <path d="M8.6 10.6l6.8-4.1M8.6 13.4l6.8 4.1" />
+          </svg>
+        </ViewerPill>
+
+        <ViewerPill onClick={download} label="הורדה" primary pointerEvents>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 4v11m0 0l-4-4m4 4l4-4" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+          </svg>
+        </ViewerPill>
+
+        {!isPublished && reviewItemId && (
+          <ViewerPill onClick={() => { onMarkPublished(); onClose(); }} label="פורסם" pointerEvents>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12l4.5 4.5L20 6.5" />
+            </svg>
+          </ViewerPill>
+        )}
+
+        <ViewerPill
+          onClick={async () => {
+            if (!confirmDel) { setConfirmDel(true); setTimeout(() => setConfirmDel(false), 3500); return; }
+            setDeleting(true);
+            try { await onDelete(); } finally { setDeleting(false); }
+          }}
+          label={deleting ? "מוחק…" : confirmDel ? "לחץ שוב לאישור" : "מחיקה"}
+          danger
+          pointerEvents
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 7h16" /><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+            <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+          </svg>
+        </ViewerPill>
+      </div>
+    </div>
+  );
+}
+
+function ViewerPill({
+  children, label, onClick, primary, danger, pointerEvents,
+}: {
+  children: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  primary?: boolean;
+  danger?: boolean;
+  pointerEvents?: boolean;
+}) {
+  const bg = primary
+    ? "linear-gradient(180deg,#F1D07E,#E2B34A,#CE9C38)"
+    : danger
+    ? "rgba(255,136,136,0.14)"
+    : "rgba(20,24,32,0.9)";
+  const color = primary ? "#171204" : danger ? "#FF9F9F" : "#EDE9E1";
+  const border = primary
+    ? "none"
+    : danger
+    ? "1px solid rgba(255,136,136,0.4)"
+    : "1px solid rgba(232,185,74,0.3)";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        minHeight: 44,
+        padding: "0 18px",
+        background: bg,
+        color,
+        border,
+        borderRadius: 999,
+        fontFamily: "inherit",
+        fontSize: 14,
+        fontWeight: 700,
+        cursor: "pointer",
+        boxShadow: primary
+          ? "0 8px 22px rgba(232,185,74,0.35)"
+          : "0 6px 16px rgba(0,0,0,0.45)",
+        pointerEvents: pointerEvents ? "auto" : "none",
+      }}
+    >
+      {children}
+      <span>{label}</span>
+    </button>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────
