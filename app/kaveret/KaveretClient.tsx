@@ -769,14 +769,7 @@ export function KaveretClient({
               )}
               <div className={sty.trow}>
                 {!data.scripts.length ? (
-                  <>
-                    <p className={sty.txt}>ערכת יום הצילום שלך עוד לא נבנתה. זה לוקח כמה דקות, ומחכה לך בערכה.</p>
-                    <div className={sty.tfoot}>
-                      <a className={`${sty.btnCopy} ${sty.btnCard}`} style={{ textDecoration: "none" }} href="/hive/signal-kit">
-                        <span>לבנות את ערכת הצילום</span>
-                      </a>
-                    </div>
-                  </>
+                  <BuildShootDay extractionId={data.extractionId} />
                 ) : (
                   <div>
                     {data.scripts.map((s2) => {
@@ -1011,7 +1004,15 @@ export function KaveretClient({
           ) : null}
         </section>
 
-        <a className={sty.wa} href={`https://wa.me/${data.waPhone}`} target="_blank" rel="noopener">
+        <KaveretChatLauncher />
+        <a
+          className={sty.wa}
+          href={`https://wa.me/${data.waPhone}`}
+          target="_blank"
+          rel="noopener"
+          style={{ display: "none" }}
+          aria-hidden="true"
+        >
           <span className={sty.ic}><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-13.2 8L3 21l1.1-4.6A9 9 0 1 1 21 12z" /></svg></span>
           <span><span className={sty.t}>שאלה על הכוורת שלך?</span><br /><span className={sty.s}>הדר והצוות עונים בוואטסאפ</span></span>
         </a>
@@ -1044,6 +1045,454 @@ export function KaveretClient({
 
       <div className={`${sty.toast} ${toastOn ? sty.on : ""}`} role="status">
         <span className={sty.ok}>✓</span><span>{toastMsg}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// BuildShootDay — the empty-state builder.
+// The old "לבנות את ערכת הצילום" button was an <a href="/hive/signal-kit">
+// pointing at a route that has since become a redirect back to /kaveret.
+// Alon flagged the resulting no-op 2026-07-10 evening. Now the button runs
+// the actual generation flow inline:
+//   1. GET  /api/signal/[id]/shoot-day       → identity + pillars + letter
+//   2. POST /api/signal/[id]/shoot-day/finish → Video #1 (identity, 15s)
+// Videos 2-7 are generated on demand when the customer expands each row
+// (existing /videos batching lives in the ShootDayBuilder flow); after step 2
+// the page reloads so the just-cached Video #1 shows up and the letterbox
+// renders the customer-tuned letter_from_hadar.
+// ─────────────────────────────────────────────────────────────────────
+function BuildShootDay({ extractionId }: { extractionId: string | null }) {
+  const [state, setState]   = useState<"idle" | "phase1" | "phase2" | "done" | "err">("idle");
+  const [errMsg, setErrMsg] = useState<string>("");
+
+  const build = useCallback(async () => {
+    if (!extractionId) {
+      setErrMsg("חסר extractionId — פנה לתמיכה");
+      setState("err");
+      return;
+    }
+    try {
+      setState("phase1");
+      const r1 = await fetch(`/api/signal/${extractionId}/shoot-day`);
+      const t1 = await r1.text();
+      const d1 = safeJson(t1) as { phase?: string; identity_statement?: string; pillars?: unknown; error?: string } | null;
+      if (!r1.ok || !d1) throw new Error(String(d1?.error ?? `שלב 1 נכשל (${r1.status})`));
+
+      // If the plan is already fully cached, jump straight to reload.
+      if (d1.phase !== "complete") {
+        if (!d1.identity_statement || !d1.pillars) {
+          throw new Error("שלב 1 לא החזיר identity+pillars");
+        }
+        setState("phase2");
+        const r2 = await fetch(`/api/signal/${extractionId}/shoot-day/finish`, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({
+            identity_statement: d1.identity_statement,
+            pillars:            d1.pillars,
+          }),
+        });
+        const t2 = await r2.text();
+        const d2 = safeJson(t2) as { plan?: unknown; error?: string } | null;
+        if (!r2.ok || !d2?.plan) throw new Error(String(d2?.error ?? `שלב 2 נכשל (${r2.status})`));
+      }
+      setState("done");
+      // The page reads shoot_day slices on the server; a hard reload picks up
+      // the new phase-1 fields (identity, letter_from_hadar) + Video #1.
+      window.location.reload();
+    } catch (e) {
+      setErrMsg(e instanceof Error ? e.message : String(e));
+      setState("err");
+    }
+  }, [extractionId]);
+
+  return (
+    <>
+      <p className={sty.txt}>ערכת יום הצילום שלך עוד לא נבנתה. זה לוקח כמה דקות, ומחכה לך בערכה.</p>
+      {state === "err" && (
+        <p className={sty.txt} style={{ color: "#FF8888", marginTop: 10, fontSize: 14 }}>
+          {errMsg}
+        </p>
+      )}
+      <div className={sty.tfoot}>
+        <button
+          type="button"
+          className={`${sty.btnCopy} ${sty.btnCard}`}
+          onClick={build}
+          disabled={state === "phase1" || state === "phase2"}
+          style={{ cursor: state === "phase1" || state === "phase2" ? "wait" : "pointer" }}
+        >
+          <span>
+            {state === "phase1" ? "מחלץ את משפט הזהות שלך…" :
+             state === "phase2" ? "בונה את הסרטון הראשון…" :
+             state === "done"   ? "רגע…" :
+             "לבנות את ערכת הצילום"}
+          </span>
+        </button>
+      </div>
+    </>
+  );
+}
+
+// Same JSON-tolerant parser used elsewhere in the client (fetch bodies can
+// come back with prose wrapping, esp. from 4xx paths).
+function safeJson(t: string): Record<string, unknown> | null {
+  try { return JSON.parse(t); } catch { return null; }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// KaveretChatLauncher + KaveretChat
+// Post-purchase Q&A bot (Alon 2026-07-10 evening) — replaces the WhatsApp
+// handoff at the bottom of /kaveret. Knowledge scope: all Hive components
+// (signal / 7-day challenge / monthly live / visual / shoot day / broadcast
+// room / monthly-season model). System prompt lives in lib/prompts/
+// kaveret-chat.ts; API at /api/kaveret/chat. Ephemeral conversation — not
+// persisted server-side, resets on modal close.
+// ─────────────────────────────────────────────────────────────────────
+type ChatMsg = { role: "user" | "assistant"; content: string };
+
+function KaveretChatLauncher() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        style={{
+          marginTop: 40,
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 15,
+          background: "linear-gradient(100deg, rgba(232,185,74,0.12), rgba(232,185,74,0.04))",
+          border: "1px solid rgba(232,185,74,0.35)",
+          borderRadius: 18,
+          padding: 18,
+          color: "#EDE9E1",
+          fontFamily: "inherit",
+          cursor: "pointer",
+          textAlign: "right",
+        }}
+        aria-label="פתיחת שיחת עזרה"
+      >
+        <span
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 999,
+            background: "linear-gradient(160deg,#F6DFA0,#9E7C3A)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#171204",
+            flex: "0 0 auto",
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 6h16v10H8l-4 4z" />
+            <path d="M8 10h8M8 13h5" />
+          </svg>
+        </span>
+        <span style={{ flex: 1 }}>
+          <span style={{ fontSize: 16, fontWeight: 800, display: "block" }}>שאלה על הכוורת שלך?</span>
+          <span style={{ fontSize: 13, color: "#ACA79E", fontWeight: 300 }}>
+            שאלו כל דבר, עונה תוך שניות
+          </span>
+        </span>
+      </button>
+      {open && <KaveretChat onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+function KaveretChat({ onClose }: { onClose: () => void }) {
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [draft, setDraft]       = useState("");
+  const [busy, setBusy]         = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, busy]);
+
+  const send = useCallback(async () => {
+    const text = draft.trim();
+    if (!text || busy) return;
+    setError(null);
+    setDraft("");
+    const nextMsgs: ChatMsg[] = [...messages, { role: "user", content: text }];
+    setMessages(nextMsgs);
+    setBusy(true);
+    try {
+      const r = await fetch("/api/kaveret/chat", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ messages: nextMsgs }),
+      });
+      const t = await r.text();
+      const d = safeJson(t) as { role?: string; content?: string; error?: string } | null;
+      if (!r.ok || !d?.content) {
+        throw new Error(String(d?.error ?? `שגיאה (${r.status})`));
+      }
+      setMessages((prev) => [...prev, { role: "assistant", content: d.content! }]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }, [draft, busy, messages]);
+
+  const suggestions = [
+    "איך עובד יום הצילום?",
+    "מתי המפגש הלייב הבא?",
+    "מה יש לי בטאב ויזואל?",
+    "אחרי 7 הפרקים, מה קורה?",
+  ];
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="שיחה על הכוורת"
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(6,10,18,0.75)",
+        zIndex: 9000,
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        backdropFilter: "blur(4px)",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 620,
+          maxHeight: "88vh",
+          background: "#0D1119",
+          borderTop: "1px solid rgba(232,185,74,0.3)",
+          borderRadius: "22px 22px 0 0",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 -20px 60px rgba(0,0,0,0.55)",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "16px 20px 12px",
+            borderBottom: "1px solid rgba(232,185,74,0.14)",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#EDE9E1" }}>שאלה על הכוורת</div>
+            <div style={{ fontSize: 12, color: "#ACA79E", fontWeight: 300, marginTop: 2 }}>
+              עונה תוך שניות, מבוסס על תכולת הכוורת שלכם
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="סגירה"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 999,
+              background: "rgba(232,185,74,0.1)",
+              border: "1px solid rgba(232,185,74,0.3)",
+              color: "#E8B94A",
+              cursor: "pointer",
+              fontSize: 18,
+              fontWeight: 800,
+              fontFamily: "inherit",
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div
+          ref={scrollRef}
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "16px 20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
+          {messages.length === 0 && (
+            <>
+              <div
+                style={{
+                  padding: "14px 16px",
+                  background: "rgba(232,185,74,0.06)",
+                  border: "1px solid rgba(232,185,74,0.18)",
+                  borderRadius: 14,
+                  color: "#EDE9E1",
+                  fontSize: 15,
+                  lineHeight: 1.65,
+                  fontWeight: 300,
+                }}
+              >
+                שלום. אני יודע כל מה שיש בכוורת שלך. שאלו על האות, על אתגר 7 הימים, על המפגש החי החודשי, על יום הצילום או על הפרקים שלכם. אני עונה תוך שניות.
+              </div>
+              <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {suggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setDraft(s)}
+                    disabled={busy}
+                    style={{
+                      background: "transparent",
+                      color: "#E8B94A",
+                      border: "1px solid rgba(232,185,74,0.35)",
+                      borderRadius: 999,
+                      padding: "6px 12px",
+                      fontSize: 12.5,
+                      fontFamily: "inherit",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {messages.map((m, i) => (
+            <div
+              key={i}
+              style={{
+                alignSelf: m.role === "user" ? "flex-start" : "flex-end",
+                maxWidth: "82%",
+                padding: "10px 14px",
+                borderRadius: 14,
+                background: m.role === "user" ? "linear-gradient(180deg,#F6DFA0,#E2B34A)" : "#141820",
+                border: m.role === "user" ? "none" : "1px solid rgba(232,185,74,0.16)",
+                color: m.role === "user" ? "#171204" : "#EDE9E1",
+                fontSize: 15,
+                fontWeight: m.role === "user" ? 600 : 300,
+                lineHeight: 1.55,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              {m.content}
+            </div>
+          ))}
+
+          {busy && (
+            <div
+              style={{
+                alignSelf: "flex-end",
+                padding: "10px 14px",
+                borderRadius: 14,
+                background: "#141820",
+                border: "1px solid rgba(232,185,74,0.16)",
+                color: "#ACA79E",
+                fontSize: 14,
+                fontWeight: 300,
+                fontStyle: "italic",
+              }}
+            >
+              רגע…
+            </div>
+          )}
+
+          {error && (
+            <div
+              style={{
+                alignSelf: "center",
+                padding: "8px 12px",
+                borderRadius: 10,
+                background: "rgba(255,136,136,0.08)",
+                border: "1px solid rgba(255,136,136,0.3)",
+                color: "#FF8888",
+                fontSize: 13,
+              }}
+            >
+              {error}
+            </div>
+          )}
+        </div>
+
+        {/* Input */}
+        <form
+          onSubmit={(e) => { e.preventDefault(); send(); }}
+          style={{
+            padding: "12px 16px calc(14px + env(safe-area-inset-bottom))",
+            borderTop: "1px solid rgba(232,185,74,0.14)",
+            display: "flex",
+            gap: 10,
+            alignItems: "flex-end",
+          }}
+        >
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder="כתבו כאן שאלה…"
+            rows={1}
+            disabled={busy}
+            dir="rtl"
+            style={{
+              flex: 1,
+              minHeight: 44,
+              maxHeight: 140,
+              padding: "10px 14px",
+              background: "#141820",
+              border: "1px solid rgba(232,185,74,0.25)",
+              borderRadius: 14,
+              color: "#EDE9E1",
+              fontFamily: "inherit",
+              fontSize: 15,
+              fontWeight: 300,
+              resize: "none",
+              lineHeight: 1.5,
+            }}
+          />
+          <button
+            type="submit"
+            disabled={busy || draft.trim().length === 0}
+            style={{
+              flex: "0 0 auto",
+              height: 44,
+              padding: "0 18px",
+              background: "linear-gradient(180deg,#F6DFA0,#E2B34A)",
+              border: "none",
+              borderRadius: 999,
+              color: "#171204",
+              fontFamily: "inherit",
+              fontSize: 14,
+              fontWeight: 800,
+              cursor: busy || draft.trim().length === 0 ? "not-allowed" : "pointer",
+              opacity: busy || draft.trim().length === 0 ? 0.5 : 1,
+            }}
+          >
+            שלח
+          </button>
+        </form>
       </div>
     </div>
   );
