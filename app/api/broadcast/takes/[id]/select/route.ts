@@ -44,6 +44,18 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const version = (count ?? 0) + 1;
     if (version > 3) return NextResponse.json({ error: "version_limit" }, { status: 409 });
 
+    // Season cap (second gate — takes may predate the cap): 7 non-failed
+    // edits per member; deleting an episode frees a slot.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { count: seasonCount } = await (db as any)
+      .from("broadcast_edits")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", session.userId)
+      .neq("status", "failed");
+    if ((seasonCount ?? 0) >= 7) {
+      return NextResponse.json({ error: "season_full" }, { status: 409 });
+    }
+
     const { data: edit, error } = await db
       .from("broadcast_edits")
       .insert({

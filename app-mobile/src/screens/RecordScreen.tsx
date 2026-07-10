@@ -200,8 +200,12 @@ export function RecordScreen({
         .catch(() => {
           setUploadPct((prev) => ({ ...prev, [created.take_id]: -1 }));
         });
-    } catch {
-      Alert.alert("שגיאה", "הטייק שמור בטלפון. בדקו חיבור ונסו שוב");
+    } catch (e) {
+      if (e instanceof Error && e.message.includes(":409")) {
+        Alert.alert("העונה מלאה", "שבעה פרקים באוויר. כדי לצלם פרק חדש, מחקו פרק מהסדרה שלכם בכוורת");
+      } else {
+        Alert.alert("שגיאה", "הטייק שמור בטלפון. בדקו חיבור ונסו שוב");
+      }
     }
   };
 

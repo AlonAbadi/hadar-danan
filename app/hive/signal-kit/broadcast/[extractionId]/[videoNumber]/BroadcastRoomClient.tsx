@@ -142,6 +142,14 @@ export function BroadcastRoomClient({
           mime_type: mime === "video/quicktime" ? "video/quicktime" : "video/mp4",
         }),
       });
+      if (res.status === 409) {
+        const code = (await res.json().catch(() => ({})))?.error;
+        if (code === "season_full") {
+          setBanner(getBroadcastCopy("takes.season_full"));
+          return;
+        }
+        throw new Error("create_409");
+      }
       if (!res.ok) throw new Error(`create_${res.status}`);
       const { take_id, object_name, content_type } = await res.json();
       uploadManager.enqueue({
@@ -179,6 +187,14 @@ export function BroadcastRoomClient({
           mime_type: take.mimeType,
         }),
       });
+      if (res.status === 409) {
+        const code = (await res.json().catch(() => ({})))?.error;
+        if (code === "season_full") {
+          setBanner(getBroadcastCopy("takes.season_full"));
+          return;
+        }
+        throw new Error("create_409");
+      }
       if (!res.ok) throw new Error(`create_${res.status}`);
       const { take_id, object_name, content_type } = await res.json();
       // Iron rule: upload starts NOW, in the background.
@@ -293,7 +309,8 @@ export function BroadcastRoomClient({
     try {
       const res = await fetch(`/api/broadcast/takes/${takeId}/select`, { method: "POST" });
       if (res.status === 409) {
-        setBanner(getBroadcastCopy("takes.version_limit"));
+        const code = (await res.json().catch(() => ({})))?.error;
+        setBanner(getBroadcastCopy(code === "season_full" ? "takes.season_full" : "takes.version_limit"));
         return;
       }
       if (!res.ok) throw new Error(`select_${res.status}`);

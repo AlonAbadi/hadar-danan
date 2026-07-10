@@ -61,6 +61,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "script_not_found" }, { status: 404 });
     }
 
+    // Season cap: the package grants 7 episodes. At 7 non-failed edits the
+    // member must delete an episode (frees the slot) before filming again.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { count: seasonCount } = await (db as any)
+      .from("broadcast_edits")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", session.userId)
+      .neq("status", "failed");
+    if ((seasonCount ?? 0) >= 7) {
+      return NextResponse.json({ error: "season_full" }, { status: 409 });
+    }
+
     const takeId = randomUUID();
     const storagePath = `${session.authUserId}/takes/${takeId}.${ext}`;
     const { error } = await (db as any).from("broadcast_takes").insert({
