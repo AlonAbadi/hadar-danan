@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>תפריט תחתון — סבב עדין: 4 אופציות מפאנל מעצבים</title>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#080C14; --card:#141820; --line:#2C323E; --gold:#E8B94A; --fg:#EDE9E1; --muted:#9E9990; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:#04060B; font-family:'Assistant',sans-serif; color:var(--fg); padding:36px 24px 60px; }
+  h1 { text-align:center; font-size:24px; font-weight:800; }
+  h1 em { font-style:normal; color:var(--gold); }
+  .sub { text-align:center; color:var(--muted); font-size:13.5px; font-weight:400; margin:8px 0 30px; max-width:620px; margin-inline:auto; line-height:1.6; }
+  .row { display:flex; gap:26px; justify-content:center; flex-wrap:wrap; }
+  .opt { width:270px; }
+  .optlbl { text-align:center; margin-bottom:12px; }
+  .optlbl .n { display:inline-grid; place-items:center; width:28px; height:28px; border-radius:50%; background:linear-gradient(180deg,#F1D07E,#CE9C38); color:#171204; font-weight:800; font-size:14px; margin-bottom:6px; }
+  .optlbl .t { font-size:15px; font-weight:800; display:block; }
+  .optlbl .d { font-size:11px; color:var(--muted); display:block; margin-top:2px; line-height:1.5; min-height:50px; }
+  .phone { width:270px; height:520px; border-radius:32px; border:1.5px solid #232A38; overflow:hidden; position:relative;
+    background:var(--bg); box-shadow:0 30px 80px rgba(0,0,0,0.6); }
+  .bk { padding:22px 15px; }
+  .bk .k { color:var(--gold); font-size:8.5px; letter-spacing:0.28em; font-weight:700; text-align:center; }
+  .bk h2 { font-size:19px; font-weight:800; text-align:center; margin-top:8px; line-height:1.35; }
+  .bk h2 .thin { font-weight:300; }
+  .bk h2 .g { color:var(--gold); }
+  .board { margin-top:14px; background:radial-gradient(ellipse 120% 90% at 50% 0%, rgba(232,185,74,0.09), transparent 60%), var(--card);
+    border:1px solid rgba(232,185,74,0.28); border-radius:15px; padding:14px 13px; }
+  .board .s { color:#9E7C3A; font-size:8px; letter-spacing:0.2em; font-weight:700; }
+  .board p { font-size:12px; line-height:1.7; font-weight:300; margin-top:7px; }
+  .trow { margin-top:11px; background:var(--card); border:1px solid var(--line); border-radius:13px; padding:12px 13px; }
+  .trow .h { font-size:12px; font-weight:800; }
+  .trow p { color:var(--muted); font-size:10.5px; line-height:1.6; margin-top:4px; }
+
+  .it { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:none; border:none; cursor:pointer; font-family:inherit; transition:color .25s, opacity .25s; }
+  .it svg { stroke:currentColor; fill:none; stroke-linecap:round; stroke-linejoin:round; transition:transform .25s cubic-bezier(.34,1.4,.4,1); }
+
+  /* ── 4: Hairline Pill (SSENSE) ── */
+  .bar.o4 { position:absolute; bottom:16px; right:50%; transform:translateX(50%); height:48px;
+    display:flex; align-items:center; padding:0 12px; border-radius:24px;
+    background:rgba(20,24,32,0.72); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+    border:0.5px solid rgba(232,185,74,0.14); }
+  .bar.o4 .it { width:52px; height:48px; color:#9E9990; gap:0; }
+  .bar.o4 .it svg { width:20px; height:20px; stroke-width:1.5; }
+  .bar.o4 .it .dot { position:absolute; bottom:6px; width:3px; height:3px; border-radius:50%; background:var(--gold);
+    opacity:0; transform:translateY(2px); transition:all .28s cubic-bezier(0.32,0.72,0,1); }
+  .bar.o4 .it.on { color:var(--gold); }
+  .bar.o4 .it.on .dot { opacity:1; transform:translateY(0); }
+
+  /* ── 5: Glass Ledge (iOS 26) ── */
+  .bar.o5 { position:absolute; bottom:8px; left:18px; right:18px; height:50px;
+    display:flex; align-items:center; padding:6px; border-radius:25px;
+    background:rgba(8,12,20,0.55); backdrop-filter:blur(40px) saturate(160%); -webkit-backdrop-filter:blur(40px) saturate(160%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.25); }
+  .bar.o5 .it { flex:1; height:100%; color:#9E9990; gap:1px; }
+  .bar.o5 .it svg { width:21px; height:21px; stroke-width:1.75; }
+  .bar.o5 .pill { position:absolute; top:50%; right:6px; width:calc((100% - 12px)/5); height:30px; transform:translateY(-50%);
+    display:flex; align-items:center; justify-content:center; pointer-events:none;
+    transition:transform .34s cubic-bezier(.3,1.15,.35,1); }
+  .bar.o5 .pill::after { content:""; width:38px; height:28px; border-radius:14px; background:rgba(232,185,74,0.10); display:block; }
+  .bar.o5 .it.on { color:var(--gold); }
+  .bar.o5 .it span { font-size:0; font-weight:600; color:var(--gold); opacity:0; height:0; transition:all .2s; }
+  .bar.o5 .it.on span { font-size:9px; opacity:1; height:11px; }
+
+  /* ── 6: Warm Minimal Dock (Airbnb) ── */
+  .bar.o6 { position:absolute; bottom:0; left:0; right:0; height:58px;
+    display:flex; align-items:flex-start; padding-top:8px;
+    background:rgba(8,12,20,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border-top:0.5px solid rgba(158,153,144,0.12); }
+  .bar.o6 .it { flex:1; color:rgba(158,153,144,0.7); gap:3px; }
+  .bar.o6 .it svg { width:22px; height:22px; stroke-width:1.5; }
+  .bar.o6 .it span { font-size:9.5px; font-weight:500; letter-spacing:0.02em; }
+  .bar.o6 .it.on { color:var(--gold); }
+  .bar.o6 .it.on svg { transform:translateY(-1px) scale(1.04); }
+
+  /* ── 7: Underline (Linear/Arc) ── */
+  .bar.o7 { position:absolute; bottom:14px; right:50%; transform:translateX(50%); height:44px;
+    display:flex; align-items:center; padding:0 8px; border-radius:22px;
+    background:rgba(20,24,32,0.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,0.04); box-shadow:0 1px 0 rgba(0,0,0,0.3); }
+  .bar.o7 .it { width:50px; height:44px; color:#EDEAE4; opacity:0.55; gap:0; }
+  .bar.o7 .it svg { width:19px; height:19px; stroke-width:1.5; }
+  .bar.o7 .rule { position:absolute; bottom:7px; right:8px; width:50px; height:1.5px; pointer-events:none;
+    display:flex; justify-content:center; transition:transform .3s cubic-bezier(0.65,0,0.35,1); }
+  .bar.o7 .rule::after { content:""; width:12px; height:1.5px; border-radius:1px; background:var(--gold); display:block; }
+  .bar.o7 .it.on { opacity:1; color:#EDEAE4; }
+</style>
+</head>
+<body>
+  <h1>הסבב העדין · <em>ארבע אופציות מפאנל המעצבים</em></h1>
+  <p class="sub">ארבע אסכולות: בוטיק אופנה (קו שערה), זכוכית iOS 26, העגינה החמה של Airbnb, והמינימליזם המערכתי של Linear. קטן יותר, שקט יותר, קווים דקים. לחצו על הפריטים.</p>
+
+  <div class="row" id="row"></div>
+
+<script>
+const ICONS = {
+  signal: '<svg viewBox="0 0 24 24"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><circle cx="12" cy="12" r="2.6"/></svg>',
+  challenge: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.8V13l2.3 1.8M9.8 3h4.4"/></svg>',
+  visual: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="9" cy="9" r="1.6"/><path d="M4.5 16.5l4.3-4.3 2.9 2.9 3.4-3.4 4.4 4.4"/></svg>',
+  film: '<svg viewBox="0 0 24 24"><rect x="3" y="6.8" width="12.2" height="10.4" rx="3"/><path d="M15.2 10.6l5.8-3.2v9.2l-5.8-3.2"/></svg>',
+  mine: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.8" height="6.8" rx="2"/><rect x="13.2" y="4" width="6.8" height="6.8" rx="2"/><rect x="4" y="13.2" width="6.8" height="6.8" rx="2"/><rect x="13.2" y="13.2" width="6.8" height="6.8" rx="2"/></svg>',
+};
+const TABS = [["signal","האות"],["challenge","אתגר"],["visual","ויזואל"],["film","צילום"],["mine","התכנים"]];
+const OPTS = [
+  { cls:"o4", n:"4", t:"קו שערה", d:"קומפקטי, מחבק את התוכן. מסגרת זהב דקה כשערה, בלי צל בכלל. פעיל: גוון זהב + נקודה של 3 פיקסלים. אייקונים 20px בקו 1.5", extra:'<span class="dot"></span>', ind:"" },
+  { cls:"o5", n:"5", t:"מדף זכוכית", d:"iOS 26: זכוכית אמיתית, העמוד זוהר מבעד. פיל-מיקרו זהב שקוף מחליק, אייקון נשאר קווי, תווית 9px רק לפעיל", extra:"<span></span>", ind:'<span class="pill"></span>' },
+  { cls:"o6", n:"6", t:"עגינה חמה", d:"בלי ריחוף בכלל: מעוגן לקצה עם קו עליון דק. אייקון 22px + תווית קבועה 9.5px. פעיל: גוון בלבד, בלי שום צורה", extra:"<span>LBL</span>", ind:"" },
+  { cls:"o7", n:"7", t:"קו מתחת", d:"הקיצון השקט: 44px, אייקונים 19px. הפעיל לבן-חם, והזהב שמור לקו של 12x1.5 פיקסלים שמחליק מתחת. בלי תוויות", extra:'', ind:'<span class="rule"></span>' },
+];
+const row = document.getElementById("row");
+OPTS.forEach((o) => {
+  const el = document.createElement("div");
+  el.className = "opt";
+  el.innerHTML = `
+    <div class="optlbl"><span class="n">${o.n}</span><span class="t">${o.t}</span><span class="d">${o.d}</span></div>
+    <div class="phone">
+      <div class="bk">
+        <div class="k">כוורת האות</div>
+        <h2><span class="thin">האות שלך,</span><br><span class="g">ארוז לפעולה.</span></h2>
+        <div class="board"><div class="s">לוח האות שלך</div>
+          <p>בנית לעצמך שקט פנימי בתוך עולם שרץ, ועכשיו אתה קורא דרכו את התוצאה של מה שאדם עושה.</p></div>
+        <div class="trow"><div class="h">מפגש הסיום החי עם הדר</div><p>יום שלישי, 28 ביולי, בשעה 17:00</p></div>
+      </div>
+      <nav class="bar ${o.cls}">
+        ${o.ind}
+        ${TABS.map(([k, lbl], i) => `
+          <button class="it${i === 0 ? " on" : ""}" data-i="${i}" aria-label="${lbl}">
+            ${ICONS[k]}
+            ${o.extra === "<span>LBL</span>" ? `<span>${lbl}</span>` : o.extra}
+          </button>`).join("")}
+      </nav>
+    </div>`;
+  row.appendChild(el);
+  const bar = el.querySelector(".bar");
+  const slider = bar.querySelector(".pill, .rule");
+  bar.querySelectorAll(".it").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      bar.querySelectorAll(".it").forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+      if (slider) {
+        const step = o.cls === "o7" ? 50 : null;
+        if (o.cls === "o5") slider.style.transform = `translateY(-50%) translateX(-${btn.dataset.i * 100}%)`;
+        if (o.cls === "o7") slider.style.transform = `translateX(-${btn.dataset.i * step}px)`;
+      }
+    });
+  });
+});
+</script>
+</body>
+</html>
