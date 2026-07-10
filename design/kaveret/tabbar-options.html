@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>תפריט תחתון — 3 אופציות בהשראת אינסטגרם</title>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#080C14; --card:#141820; --line:#2C323E; --gold:#E8B94A; --gold-hi:#F6DFA0; --gold-deep:#9E7C3A; --fg:#EDE9E1; --muted:#9E9990; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:#04060B; font-family:'Assistant',sans-serif; color:var(--fg); padding:36px 24px 60px; }
+  h1 { text-align:center; font-size:24px; font-weight:800; }
+  h1 em { font-style:normal; color:var(--gold); }
+  .sub { text-align:center; color:var(--muted); font-size:13.5px; font-weight:400; margin:8px 0 30px; }
+  .row { display:flex; gap:34px; justify-content:center; flex-wrap:wrap; }
+  .opt { width:300px; }
+  .optlbl { text-align:center; margin-bottom:12px; }
+  .optlbl .n { display:inline-grid; place-items:center; width:30px; height:30px; border-radius:50%; background:linear-gradient(180deg,#F1D07E,#CE9C38); color:#171204; font-weight:800; font-size:15px; margin-bottom:6px; }
+  .optlbl .t { font-size:15.5px; font-weight:800; display:block; }
+  .optlbl .d { font-size:11.5px; color:var(--muted); display:block; margin-top:2px; line-height:1.5; }
+  .phone { width:300px; height:560px; border-radius:34px; border:1.5px solid #232A38; overflow:hidden; position:relative;
+    background:var(--bg); box-shadow:0 30px 80px rgba(0,0,0,0.6); }
+  /* backdrop: a slice of the kaveret so the contrast reads for real */
+  .bk { padding:24px 16px; }
+  .bk .k { color:var(--gold); font-size:9px; letter-spacing:0.28em; font-weight:700; text-align:center; }
+  .bk h2 { font-size:21px; font-weight:800; text-align:center; margin-top:8px; line-height:1.35; }
+  .bk h2 .thin { font-weight:300; }
+  .bk h2 .g { color:var(--gold); }
+  .board { margin-top:16px; background:radial-gradient(ellipse 120% 90% at 50% 0%, rgba(232,185,74,0.09), transparent 60%), var(--card);
+    border:1px solid rgba(232,185,74,0.28); border-radius:16px; padding:16px 14px; }
+  .board .s { color:var(--gold-deep); font-size:8.5px; letter-spacing:0.2em; font-weight:700; }
+  .board p { font-size:13px; line-height:1.7; font-weight:300; margin-top:8px; }
+  .trow { margin-top:12px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
+  .trow .h { font-size:13px; font-weight:800; }
+  .trow p { color:var(--muted); font-size:11.5px; line-height:1.6; margin-top:5px; }
+
+  /* ═══ shared bar geometry (IG: floating, roomy, bold) ═══ */
+  .bar { position:absolute; left:10px; right:10px; bottom:12px; display:flex; align-items:center; padding:6px; border-radius:999px; }
+  .it { flex:1; position:relative; z-index:1; height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    background:none; border:none; cursor:pointer; font-family:inherit; border-radius:999px; transition:color .22s; }
+  .it svg { width:26px; height:26px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s; }
+  .it:active svg { transform:scale(0.88); }
+  .it .f { display:none; }
+  .it.on .f { display:block; } .it.on .o { display:none; }
+
+  /* ── אופציה 1: אינסטגרם כהה — אייקונים בלבד, הדגשה בהירה ── */
+  .bar.o1 { background:rgba(16,20,28,0.92); backdrop-filter:blur(24px) saturate(150%); -webkit-backdrop-filter:blur(24px) saturate(150%);
+    border:1px solid rgba(255,255,255,0.07); box-shadow:0 16px 50px rgba(0,0,0,0.65); }
+  .bar.o1 .it > span:last-child, .bar.o2 .it > span:last-child { display:none; }
+  .bar.o1 .it { color:#B9B4AA; }
+  .bar.o1 .it.on { color:#080C14; }
+  .bar.o1 .ind { position:absolute; top:6px; bottom:6px; right:6px; width:calc((100% - 12px)/5); border-radius:999px;
+    background:#F4EFE6; box-shadow:0 6px 18px rgba(0,0,0,0.35); transition:transform .38s cubic-bezier(.3,1.2,.3,1); }
+
+  /* ── אופציה 2: הבר הבהיר — אחד לאחד כמו אינסטגרם ── */
+  .bar.o2 { background:#F4EFE6; border:1px solid rgba(0,0,0,0.06);
+    box-shadow:0 18px 55px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.8); }
+  .bar.o2 .it { color:#2A2A28; }
+  .bar.o2 .it.on { color:#0B0B0A; }
+  .bar.o2 .ind { position:absolute; top:6px; bottom:6px; right:6px; width:calc((100% - 12px)/5); border-radius:999px;
+    background:#E4DCCB; transition:transform .38s cubic-bezier(.3,1.2,.3,1); }
+  .bar.o2 .it svg { stroke-width:2.3; }
+
+  /* ── אופציה 3: זהב מדויק — אייקון מלא + תווית פעילה בלבד ── */
+  .bar.o3 { background:rgba(15,19,27,0.9); backdrop-filter:blur(24px) saturate(160%); -webkit-backdrop-filter:blur(24px) saturate(160%);
+    border:1px solid rgba(232,185,74,0.2); box-shadow:0 16px 50px rgba(0,0,0,0.65); }
+  .bar.o3 .it { color:#A8A399; }
+  .bar.o3 .it.on { color:var(--gold); }
+  .bar.o3 .it > span:last-child { font-size:0px; font-weight:800; letter-spacing:0.01em; opacity:0; transition:all .22s; height:0; overflow:hidden; }
+  .bar.o3 .it.on > span:last-child { font-size:10px; opacity:1; height:12px; }
+  .bar.o3 .it.on svg { filter:drop-shadow(0 3px 10px rgba(232,185,74,0.45)); }
+</style>
+</head>
+<body>
+  <h1>התפריט התחתון · <em>שלוש אופציות</em></h1>
+  <p class="sub">גיאומטריה, גודל אייקונים וקונטרסט בפרופורציות של אינסטגרם. לחצו על הפריטים להרגיש את המעבר.</p>
+
+  <div class="row" id="row"></div>
+
+<script>
+const ICONS = {
+  signal: {
+    o: '<svg viewBox="0 0 24 24"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><circle cx="12" cy="12" r="3"/></svg>',
+    f: '<svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M12 2.6l8.2 4.7v9.4L12 21.4l-8.2-4.7V7.3zM12 9a3 3 0 100 6 3 3 0 000-6z" fill-rule="evenodd"/></svg>'
+  },
+  challenge: {
+    o: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 2M9.5 3h5"/></svg>',
+    f: '<svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M9.5 2.5h5v2h-5zM12 5.5a7.5 7.5 0 110 15 7.5 7.5 0 010-15zm.9 4h-1.8v4.2l3.1 2.5 1.1-1.4-2.4-1.9z"/></svg>'
+  },
+  visual: {
+    o: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="9" cy="9" r="1.8"/><path d="M4.5 17l4.5-4.5 3 3 3.5-3.5 4 4"/></svg>',
+    f: '<svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M7.5 3h9A4.5 4.5 0 0121 7.5v9a4.5 4.5 0 01-4.5 4.5h-9A4.5 4.5 0 013 16.5v-9A4.5 4.5 0 017.5 3zM9 7.2A1.8 1.8 0 109 10.8 1.8 1.8 0 009 7.2zm-4 9.3l4-4 3 3 3.5-3.5L19.5 16v.5a3 3 0 01-3 3h-9a3 3 0 01-2.5-1.3z"/></svg>'
+  },
+  film: {
+    o: '<svg viewBox="0 0 24 24"><rect x="3" y="6.5" width="12.5" height="11" rx="3"/><path d="M15.5 10.5l5.5-3v9l-5.5-3"/></svg>',
+    f: '<svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M6 6h6.5a3 3 0 013 3v6a3 3 0 01-3 3H6a3 3 0 01-3-3V9a3 3 0 013-3zm10.5 4.2l4.5-2.6v8.8l-4.5-2.6z"/></svg>'
+  },
+  mine: {
+    o: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="2"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="2"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="2"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="2"/></svg>',
+    f: '<svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M5.5 3.5h3.4a2 2 0 012 2v3.4a2 2 0 01-2 2H5.5a2 2 0 01-2-2V5.5a2 2 0 012-2zm9.6 0h3.4a2 2 0 012 2v3.4a2 2 0 01-2 2h-3.4a2 2 0 01-2-2V5.5a2 2 0 012-2zm-9.6 9.6h3.4a2 2 0 012 2v3.4a2 2 0 01-2 2H5.5a2 2 0 01-2-2v-3.4a2 2 0 012-2zm9.6 0h3.4a2 2 0 012 2v3.4a2 2 0 01-2 2h-3.4a2 2 0 01-2-2v-3.4a2 2 0 012-2z"/></svg>'
+  },
+};
+const TABS = [
+  ["signal", "האות"], ["challenge", "אתגר"], ["visual", "ויזואל"], ["film", "צילום"], ["mine", "התכנים שלי"],
+];
+const OPTS = [
+  { cls: "o1", n: "1", t: "אינסטגרם כהה", d: "אייקונים בלבד, מלאים במצב פעיל, הדגשה בהירה מחליקה — הקצב של איסטגרם על הפלטה שלנו", ind: true },
+  { cls: "o2", n: "2", t: "הבר הבהיר", d: "אחד לאחד הבר של אינסטגרם: קרם בהיר צף על העמוד הכהה, אייקונים שחורים מודגשים", ind: true },
+  { cls: "o3", n: "3", t: "זהב מדויק", d: "כהה ונקי, אייקון פעיל מלא בזהב עם תווית שמופיעה רק לפעיל — הכי קרוב ל-DNA הקיים", ind: false },
+];
+const row = document.getElementById("row");
+OPTS.forEach((o) => {
+  const el = document.createElement("div");
+  el.className = "opt";
+  el.innerHTML = `
+    <div class="optlbl"><span class="n">${o.n}</span><span class="t">${o.t}</span><span class="d">${o.d}</span></div>
+    <div class="phone">
+      <div class="bk">
+        <div class="k">כוורת האות</div>
+        <h2><span class="thin">האות שלך,</span><br><span class="g">ארוז לפעולה.</span></h2>
+        <div class="board"><div class="s">לוח האות שלך</div>
+          <p>בנית לעצמך שקט פנימי בתוך עולם שרץ, ועכשיו אתה קורא דרכו את התוצאה של מה שאדם עושה.</p></div>
+        <div class="trow"><div class="h">מפגש הסיום החי עם הדר</div><p>יום שלישי, 28 ביולי, בשעה 17:00 · הקישור לזום יפורסם סמוך למפגש</p></div>
+      </div>
+      <nav class="bar ${o.cls}">
+        ${o.ind ? '<span class="ind"></span>' : ""}
+        ${TABS.map(([k, lbl], i) => `
+          <button class="it${i === 0 ? " on" : ""}" data-i="${i}" aria-label="${lbl}">
+            <span class="o">${ICONS[k].o}</span><span class="f">${ICONS[k].f}</span>
+            <span>${lbl}</span>
+          </button>`).join("")}
+      </nav>
+    </div>`;
+  row.appendChild(el);
+  const bar = el.querySelector(".bar");
+  const ind = bar.querySelector(".ind");
+  bar.querySelectorAll(".it").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      bar.querySelectorAll(".it").forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+      if (ind) ind.style.transform = `translateX(-${btn.dataset.i * 100}%)`;
+    });
+  });
+});
+</script>
+</body>
+</html>
