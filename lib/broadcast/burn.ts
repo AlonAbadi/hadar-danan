@@ -32,11 +32,23 @@ export interface VideoFilterPlan {
 // Framing (per Alon, 2026-07-09): the footage keeps its own frame. Portrait
 // sources get the exact 9:16 crop chain as always; landscape sources (however
 // they were captured — browser, app, mis-rotated) ship FULL-FRAME at their
-// native aspect: no blur-pad bands, no person crops. Captions hug the bottom
-// of whatever canvas the take defines; no stamp is burned into the video.
+// native aspect.
+//
+// Exception restored 2026-07-10 evening after regression report: expo-camera
+// on iOS 26 records a PORTRAIT pixel buffer with a ±90° displaymatrix — after
+// autorotation the effective dims read as landscape even though the user
+// held the phone vertically and saw a 9:16 preview. If we let those takes
+// through the landscape_fullframe branch we ship 16:9 with letterboxing on
+// top and bottom, which is what Alon reported today. Fingerprint the case
+// (landscape effective + ±90 rotation + raw buffer taller than wide) and
+// route to the portrait crop chain — same treatment as commit e906f00.
 export function buildVideoFilter(dims: VideoDims | null, assPath: string): VideoFilterPlan {
   const landscape = dims !== null && dims.effWidth > dims.effHeight;
-  if (!landscape) {
+  const appRotatedFromPortrait =
+    landscape &&
+    Math.abs(dims.rotation) % 180 === 90 &&
+    dims.width < dims.height;
+  if (!landscape || appRotatedFromPortrait) {
     return {
       kind: "vf",
       value: `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,

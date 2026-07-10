@@ -374,7 +374,6 @@ export function KaveretClient({
   }, [data.cards, cardsSplit, toast]);
 
   const words = signalWords(data.signalText);
-  const letterTo = data.demo || data.gender !== "m" ? "מהדר אלייך" : "מהדר אליך";
 
   const CopyIcon = (
     <svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>
@@ -729,7 +728,6 @@ export function KaveretClient({
           <div className={sty.zrule} />
 
           <div className={sty.letterbox}>
-            <div className={sty.from}>{letterTo}</div>
             {data.letterFromHadar ? (
               <>
                 <p>{data.letterFromHadar.body}</p>
