@@ -220,10 +220,10 @@ function renderProposal(findings) {
   lines.push("");
   lines.push("## Review flow");
   lines.push("");
-  lines.push("1. Read each proposed quote below. Delete any that feel weak or already-covered.");
-  lines.push("2. For quotes you approve: copy them into the matching `## N.` section of `HADAR_RAW_QUOTES.md` as new table rows.");
-  lines.push("3. For new-pattern candidates: if you approve one, add a new `## N.` section to `HADAR_RAW_QUOTES.md` and register the move in `HADAR_SIGNATURE_MOVES` in `lib/prompts/shoot-day-engine.ts`.");
-  lines.push("4. Run `npm run sync-corpus` to propagate quotes to the engine.");
+  lines.push("1. Read each proposed quote below.");
+  lines.push("2. To approve a row, flip `[ ]` at the start of the row to `[x]`. Rows without `[x]` are skipped on merge.");
+  lines.push("3. Run: `npm run merge-proposal PROPOSALS/" + `${date}-${args.label}.md` + "` — script inserts approved rows into `HADAR_RAW_QUOTES.md`, auto-runs sync-corpus, moves this file to `PROCESSED/`.");
+  lines.push("4. For new-pattern candidates: NOT auto-merged. To promote one, edit `HADAR_RAW_QUOTES.md` (new `## N.` section) AND `lib/prompts/shoot-day-engine.ts` (register the move + archetype routing).");
   lines.push("");
 
   // Aggregate stats.
@@ -263,13 +263,13 @@ function renderProposal(findings) {
       const moveLabel = k === "unclassified" ? "Unclassified (needs manual routing)" : `Move #${k}`;
       lines.push(`### ${moveLabel}`);
       lines.push("");
-      lines.push("| # | Quote | Source | Type | Notes |");
-      lines.push("|---|---|---|---|---|");
+      lines.push("| Approve | # | Quote | Source | Type | Notes |");
+      lines.push("|---|---|---|---|---|---|");
       for (const [i, q] of byMove.get(k).entries()) {
         const quote = String(q.quote ?? "").replace(/\|/g, "\\|").trim();
         const type  = String(q.type ?? "").replace(/\|/g, "\\|");
         const notes = String(q.notes ?? "").replace(/\|/g, "\\|");
-        lines.push(`| ${i + 1} | "${quote}" | ${q.source} | ${type} | ${notes} |`);
+        lines.push(`| [ ] | ${i + 1} | "${quote}" | ${q.source} | ${type} | ${notes} |`);
       }
       lines.push("");
     }
