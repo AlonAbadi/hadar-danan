@@ -736,7 +736,7 @@ export function KaveretClient({
             <div>
               <div className={sty.zhead} style={{ marginTop: 34 }}>
                 <span className={sty.zt}>
-                  <h2 style={{ fontSize: 19 }}>סרטוני {data.monthLabel}</h2>
+                  <h2 style={{ fontSize: 19 }}>חבילת הסרטונים שלך</h2>
                   <span className={sty.hint}>{data.filmedCount} מתוך {data.scriptsTotal} צולמו</span>
                 </span>
               </div>
@@ -804,40 +804,6 @@ export function KaveretClient({
             <span className={sty.zt}><h2>התכנים שלי</h2><span className={sty.hint}>נגיעה בטקסט מעתיקה מיד</span></span>
           </div>
           <div className={sty.zrule} />
-
-          {(() => {
-            // outward texts come only from the content kit; show each once
-            const seen = new Set<string>();
-            const rows = ([
-              ["ביו לאינסטגרם", data.bioInstagram, "bio"],
-              ["כותרת ללינקדאין", data.linkedinHeadline, "li"],
-              ["אודות לפייסבוק", data.facebookAbout, "fb"],
-              ["אודות לאתר", data.aboutSite, "about"],
-              ["מניפסט אישי", data.manifesto, "manifesto"],
-            ] as const).filter(([, text]) => {
-              const norm = text.trim().replace(/\s+/g, " ");
-              if (!norm || seen.has(norm)) return false;
-              seen.add(norm);
-              return true;
-            });
-            if (!rows.length) {
-              return (
-                <div className={sty.trow}>
-                  <div className={sty.head}><span className={sty.plat}>התכנים לרשתות</span></div>
-                  <p className={sty.txt}>
-                    התכנים שלך לרשתות עדיין בהכנה. ברגע שהם מוכנים הם יופיעו כאן, כתובים ומדויקים לקהל שלך
-                  </p>
-                </div>
-              );
-            }
-            return rows.map(([label, text, key]) => (
-              <div className={sty.trow} key={key}>
-                <div className={sty.head}><span className={sty.plat}>{label}</span><span className={sty.check}><span className={sty.v}>✓</span> באורך מדויק</span></div>
-                <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(text, key)}>{text}</p>
-                <div className={sty.tfoot}>{copyBtn(key, text)}</div>
-              </div>
-            ));
-          })()}
 
           {!data.demo && reels.length ? (
             <div>
@@ -915,14 +881,49 @@ export function KaveretClient({
             </div>
           ) : null}
 
+          {(() => {
+            // outward texts come only from the content kit; show each once
+            const seen = new Set<string>();
+            const rows = ([
+              ["ביו לאינסטגרם", data.bioInstagram, "bio"],
+              ["כותרת ללינקדאין", data.linkedinHeadline, "li"],
+              ["אודות לפייסבוק", data.facebookAbout, "fb"],
+              ["אודות לאתר", data.aboutSite, "about"],
+              ["מניפסט אישי", data.manifesto, "manifesto"],
+            ] as const).filter(([, text]) => {
+              const norm = text.trim().replace(/\s+/g, " ");
+              if (!norm || seen.has(norm)) return false;
+              seen.add(norm);
+              return true;
+            });
+            if (!rows.length) {
+              return (
+                <div className={sty.trow}>
+                  <div className={sty.head}><span className={sty.plat}>התכנים לרשתות</span></div>
+                  <p className={sty.txt}>
+                    התכנים שלך לרשתות עדיין בהכנה. ברגע שהם מוכנים הם יופיעו כאן, כתובים ומדויקים לקהל שלך
+                  </p>
+                </div>
+              );
+            }
+            return rows.map(([label, text, key]) => (
+              <div className={sty.trow} key={key}>
+                <div className={sty.head}><span className={sty.plat}>{label}</span><span className={sty.check}><span className={sty.v}>✓</span> באורך מדויק</span></div>
+                <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(text, key)}>{text}</p>
+                <div className={sty.tfoot}>{copyBtn(key, text)}</div>
+              </div>
+            ));
+          })()}
+
+
           {data.demo ? (
             <>
               <div className={sty.zhead} style={{ marginTop: 34 }}>
-                <span className={sty.zt}><h2 style={{ fontSize: 19 }}>החודש</h2><span className={sty.hint}>שבעת הסרטונים של החודש</span></span>
+                <span className={sty.zt}><h2 style={{ fontSize: 19 }}>חבילת הסרטונים שלך</h2><span className={sty.hint}>שבעה סרטונים במסגרת כוורת האות</span></span>
               </div>
               <div className={sty.trow}>
-                <div className={sty.head}><span className={sty.plat}>סרטוני {data.monthLabel}</span><span className={sty.check}>{data.filmedCount} מתוך {data.scriptsTotal} צולמו</span></div>
-                <p className={sty.txt}>כאן נטענים שבעת התסריטים החודשיים מהמנוי, כל אחד עם כפתור לצלם עכשיו.</p>
+                <div className={sty.head}><span className={sty.plat}>חבילת כוורת האות</span><span className={sty.check}>{data.filmedCount} מתוך {data.scriptsTotal} הופקו</span></div>
+                <p className={sty.txt}>שבעת התסריטים שלך, כל אחד עם כפתור לצלם עכשיו.</p>
               </div>
             </>
           ) : null}
