@@ -138,6 +138,7 @@ export function KaveretClient({
   const pngBusy = useRef(false);
   const [published, setPublished] = useState<Record<string, boolean>>({});
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [assetBg, setAssetBg] = useState<"color" | "image">("color");
   // Reels hydrate after first paint (server no longer signs storage URLs on
   // the critical path). Shape mirrors the old server assembly.
@@ -805,79 +806,118 @@ export function KaveretClient({
           </div>
           <div className={sty.zrule} />
 
-          {!data.demo && reels.length ? (
+          {!data.demo ? (
             <div>
-              <div className={sty.zhead} style={{ marginTop: 34 }}>
+              <div className={sty.zhead} style={{ marginTop: 8 }}>
                 <span className={sty.zt}>
-                  <h2 style={{ fontSize: 19 }}>הרילסים שלך</h2>
-                  <span className={sty.hint}>מה שצילמת בחדר השידור</span>
+                  <h2 style={{ fontSize: 19 }}>הסדרה שלך</h2>
+                  <span className={sty.hint}>כל עונה, שבעה פרקים. גוף עבודה שממשיך לגדול</span>
                 </span>
               </div>
-              {reels.filter((r) => !deletedReels[r.editId]).map((r) => {
-                const isPub = r.published || published[r.editId];
-                return (
-                  <div className={sty.trow} key={r.editId}>
-                    <div className={sty.head}>
-                      <span className={sty.plat}>
-                        {r.videoNumber ? `רילס לתסריט ${r.videoNumber}` : "רילס"}
-                      </span>
-                      <span className={sty.check}>
-                        {isPub ? <><span className={sty.v}>✓</span> פורסם</> : "ממתין לפרסום"}
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      {r.thumbUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={r.thumbUrl}
-                          alt=""
-                          style={{ width: 48, height: 85, objectFit: "cover", borderRadius: 10, border: "1px solid rgba(232,185,74,0.16)" }}
-                        />
-                      ) : null}
-                      <span className={sty.txt} style={{ flex: 1 }}>
-                        {new Date(r.createdAt).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}
-                      </span>
-                    </div>
-                    <div className={sty.tfoot}>
-                      {r.downloadUrl ? (
-                        <a className={sty.btnCopy} href={r.downloadUrl} style={{ textDecoration: "none" }}>
-                          <span>הורדה</span>
-                        </a>
-                      ) : null}
-                      {!isPub && r.reviewItemId ? (
-                        <button
-                          type="button"
-                          className={sty.btnCopy}
-                          onClick={() => {
-                            setPublished((prev) => ({ ...prev, [r.editId]: true }));
-                            fetch(`/api/broadcast/review-items/${r.reviewItemId}/publish`, { method: "POST" }).catch(() => {});
-                            toast("סומן כפורסם");
-                          }}
-                        >
-                          <span>פורסם</span>
-                        </button>
-                      ) : null}
+
+              <div className={sty.seShelfHead}>
+                <span className={sty.seT}>עונה ראשונה</span>
+                <span className={sty.seS}>
+                  {reels.filter((r) => !deletedReels[r.editId]).length} מתוך {data.scriptsTotal || 7} פרקים
+                </span>
+                {reels.filter((r) => !deletedReels[r.editId]).length >= (data.scriptsTotal || 7) ? (
+                  <span className={sty.seSeal}>העונה הושלמה</span>
+                ) : null}
+              </div>
+
+              <div className={sty.seCar}>
+                {reels.filter((r) => !deletedReels[r.editId]).map((r, idx) => {
+                  const isPub = r.published || published[r.editId];
+                  const script = data.scripts.find((s) => s.number === r.videoNumber);
+                  const epName = script?.title || `הפרק שצולם ב-${new Date(r.createdAt).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}`;
+                  const menuOn = openMenu === r.editId;
+                  return (
+                    <div className={sty.seCard} key={r.editId}>
                       <button
                         type="button"
-                        className={sty.btnCopy}
-                        style={{ opacity: 0.75 }}
-                        onClick={async () => {
-                          if (!window.confirm("למחוק את הרילס הזה לצמיתות? אי אפשר לשחזר אחרי מחיקה")) return;
-                          const res = await fetch(`/api/broadcast/edits/${r.editId}`, { method: "DELETE" }).catch(() => null);
-                          if (res?.ok) {
-                            setDeletedReels((prev) => ({ ...prev, [r.editId]: true }));
-                            toast("הרילס נמחק");
-                          } else {
-                            toast("המחיקה לא הצליחה, נסו שוב");
-                          }
-                        }}
+                        className={sty.seThumb}
+                        aria-label={`נגן פרק ${idx + 1}`}
+                        onClick={() => r.downloadUrl && window.open(r.downloadUrl, "_blank", "noopener")}
                       >
-                        <span>מחיקה</span>
+                        {r.thumbUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={r.thumbUrl} alt="" loading="lazy" />
+                        ) : null}
+                        <span className={sty.seGrad} />
+                        <span className={sty.sePlay} />
                       </button>
+                      <span className={`${sty.seTag} ${isPub ? sty.seTagAir : sty.seTagWait}`}>
+                        {isPub ? "באוויר" : "מוכן לפרסום"}
+                      </span>
+                      <button
+                        type="button"
+                        className={sty.seDots}
+                        aria-label="פעולות"
+                        onClick={() => setOpenMenu(menuOn ? null : r.editId)}
+                      >
+                        ···
+                      </button>
+                      {menuOn ? (
+                        <div className={sty.seMenu}>
+                          {r.downloadUrl ? (
+                            <a href={r.downloadUrl} onClick={() => setOpenMenu(null)}>הורדה</a>
+                          ) : null}
+                          {!isPub && r.reviewItemId ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPublished((prev) => ({ ...prev, [r.editId]: true }));
+                                fetch(`/api/broadcast/review-items/${r.reviewItemId}/publish`, { method: "POST" }).catch(() => {});
+                                setOpenMenu(null);
+                                toast("סומן כפורסם");
+                              }}
+                            >
+                              פורסם
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className={sty.seDanger}
+                            onClick={async () => {
+                              if (!window.confirm("למחוק את הפרק הזה לצמיתות? אי אפשר לשחזר אחרי מחיקה")) return;
+                              const res = await fetch(`/api/broadcast/edits/${r.editId}`, { method: "DELETE" }).catch(() => null);
+                              setOpenMenu(null);
+                              if (res?.ok) {
+                                setDeletedReels((prev) => ({ ...prev, [r.editId]: true }));
+                                toast("הפרק נמחק");
+                              } else {
+                                toast("המחיקה לא הצליחה, נסו שוב");
+                              }
+                            }}
+                          >
+                            מחיקה
+                          </button>
+                          <button type="button" onClick={() => setOpenMenu(null)} style={{ opacity: 0.7 }}>סגירה</button>
+                        </div>
+                      ) : null}
+                      <div className={sty.seName}>
+                        <span className={sty.seNo}>{String(idx + 1).padStart(2, "0")}</span>
+                        {epName}
+                      </div>
                     </div>
+                  );
+                })}
+                {reels.filter((r) => !deletedReels[r.editId]).length < (data.scriptsTotal || 7) ? (
+                  <div className={sty.seNextCard}>
+                    <button type="button" className={sty.seThumb} onClick={() => goTab(3)} aria-label="לצלם את הפרק הבא">
+                      <span className={sty.seNum}>
+                        {String(reels.filter((r) => !deletedReels[r.editId]).length + 1).padStart(2, "0")}
+                      </span>
+                    </button>
+                    <div className={sty.seName} style={{ color: "#9E9990" }}>הפרק הבא מחכה בחדר השידור</div>
                   </div>
-                );
-              })}
+                ) : null}
+              </div>
+
+              <div className={sty.seNext}>
+                <div className={sty.seNt}>העונה הבאה</div>
+                <div className={sty.seNs}>שבעה פרקים חדשים בכל חודש, במסגרת המנוי לכוורת. נפתח בקרוב</div>
+              </div>
             </div>
           ) : null}
 
