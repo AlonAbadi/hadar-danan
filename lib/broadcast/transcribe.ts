@@ -10,6 +10,7 @@ import { writeFileSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { createServerClient } from "@/lib/supabase/server";
 import { runFfmpeg, scratchDir, scratchCleanup } from "./ffmpeg";
+import { findShootDayVideo } from "@/lib/signal/shoot-day-slices";
 import {
   buildWhisperPrompt,
   groupWordsIntoLines,
@@ -35,10 +36,7 @@ async function setStatus(db: any, editId: string, patch: Record<string, unknown>
 }
 
 function extractScript(signal: any, videoNumber: number): string {
-  const fromPlan = Array.isArray(signal?.shoot_day?.videos)
-    ? signal.shoot_day.videos.find((v: any) => v?.number === videoNumber)
-    : null;
-  const video = fromPlan ?? signal?.[`shoot_day_v${videoNumber}`] ?? null;
+  const video = findShootDayVideo(signal, videoNumber);
   const s = video?.script ?? {};
   return [s.hook, s.body, s.cta].filter(Boolean).join("\n");
 }

@@ -19,6 +19,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { CHALLENGE_DAYS, computeNextLiveMeetingDate } from "@/lib/challenge-config";
 import { pickPrimaryExtractionId } from "@/lib/signal/primary-extraction";
+import { collectShootDayVideos } from "@/lib/signal/shoot-day-slices";
 import { MobileNavServer } from "@/components/MobileNavServer";
 import { DesktopNavServer } from "@/components/DesktopNavServer";
 import { KaveretClient, type KaveretData } from "./KaveretClient";
@@ -215,11 +216,13 @@ export default async function KaveretPage({
     body: String(v.script?.body ?? ""),
     cta: v.script?.cta ? String(v.script.cta) : "",
   });
-  const planVideos = Array.isArray(signal.shoot_day?.videos)
-    ? signal.shoot_day.videos.map(toScript)
-    : Array.from({ length: 12 }, (_, i) => i + 1)
-        .filter((n) => signal[`shoot_day_v${n}`])
-        .map((n) => toScript(signal[`shoot_day_v${n}`]));
+  // Stitch shoot_day.videos + per-video slices (v1..v7) into one canonical
+  // list. Slices win on conflict (they're the fresh per-row regens fired
+  // from /kaveret's EpisodesList). Without this merge, a customer who used
+  // "צור את הפרק" for videos 2-7 saw them vanish on refresh — the plan
+  // still held only video 1 from /finish while the JSON-stringified slice
+  // rows sat unclaimed.
+  const planVideos = collectShootDayVideos(signal).map(toScript);
 
   const monthLabel = new Intl.DateTimeFormat("he-IL", {
     month: "long",

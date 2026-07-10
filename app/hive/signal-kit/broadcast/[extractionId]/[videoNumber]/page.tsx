@@ -13,6 +13,7 @@ import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { BroadcastRoomClient } from "./BroadcastRoomClient";
+import { findShootDayVideo } from "@/lib/signal/shoot-day-slices";
 
 export const dynamic = "force-dynamic";
 
@@ -74,14 +75,12 @@ export default async function BroadcastRoomPage({
     .maybeSingle();
   if (!ext || ext.user_id !== userData.id) redirect("/hive/signal-kit");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const signal = (ext.signal ?? {}) as any;
-  const fromPlan = Array.isArray(signal.shoot_day?.videos)
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      signal.shoot_day.videos.find((v: any) => v?.number === videoNumber)
-    : null;
-  const video = fromPlan ?? signal[`shoot_day_v${videoNumber}`] ?? null;
-  if (!video?.script?.hook) redirect("/hive/signal-kit");
+  // Per-video slices land as JSON strings via signal_merge_field, plan
+  // videos land as objects. findShootDayVideo hides the shape difference —
+  // without it (Alon 2026-07-11), tapping לצלם עכשיו on any generated
+  // video 2-7 redirected here → back to /hive/signal-kit → back to /kaveret.
+  const video = findShootDayVideo(ext.signal, videoNumber);
+  if (!video?.script?.hook) redirect("/kaveret");
 
   const script: ScriptShape = {
     hook: String(video.script.hook),

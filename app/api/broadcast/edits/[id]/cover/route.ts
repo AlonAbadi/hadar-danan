@@ -7,6 +7,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { logBroadcastError, resolveBroadcastSession } from "@/lib/broadcast/auth";
 import { createHctiImage } from "@/lib/htmlcsstoimage";
 import { getBroadcastCopy } from "@/lib/broadcast-copy";
+import { findShootDayVideo } from "@/lib/signal/shoot-day-slices";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -65,11 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .select("signal")
       .eq("id", edit.extraction_id)
       .maybeSingle();
-    const signal = ext?.signal ?? {};
-    const fromPlan = Array.isArray(signal.shoot_day?.videos)
-      ? signal.shoot_day.videos.find((v: any) => v?.number === edit.video_number)
-      : null;
-    const hook = String((fromPlan ?? signal[`shoot_day_v${edit.video_number}`])?.script?.hook ?? "");
+    const hook = String(findShootDayVideo(ext?.signal, edit.video_number)?.script?.hook ?? "");
 
     const { html, css } = coverHtml(signed.signedUrl, hook);
     const result = await createHctiImage({

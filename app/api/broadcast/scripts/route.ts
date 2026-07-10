@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { logBroadcastError, resolveBroadcastSession } from "@/lib/broadcast/auth";
 import { pickPrimaryExtractionId } from "@/lib/signal/primary-extraction";
+import { collectShootDayVideos } from "@/lib/signal/shoot-day-slices";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +30,7 @@ export async function GET() {
       body: String(v.script?.body ?? ""),
       cta: v.script?.cta ? String(v.script.cta) : "",
     });
-    const scripts = Array.isArray(signal.shoot_day?.videos)
-      ? signal.shoot_day.videos.map(toScript)
-      : Array.from({ length: 12 }, (_, i) => i + 1)
-          .filter((n) => signal[`shoot_day_v${n}`])
-          .map((n) => toScript(signal[`shoot_day_v${n}`]));
+    const scripts = collectShootDayVideos(signal).map(toScript);
 
     const { data: readyEdits } = await db
       .from("broadcast_edits")

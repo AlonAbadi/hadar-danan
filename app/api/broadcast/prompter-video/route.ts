@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { logBroadcastError, resolveBroadcastSession } from "@/lib/broadcast/auth";
 import { renderPrompterVideo } from "@/lib/broadcast/prompter-video";
+import { findShootDayVideo } from "@/lib/signal/shoot-day-slices";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -33,11 +34,7 @@ export async function POST(req: NextRequest) {
     if (!ext || ext.user_id !== session.userId) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
-    const signal = ext.signal ?? {};
-    const fromPlan = Array.isArray(signal.shoot_day?.videos)
-      ? signal.shoot_day.videos.find((v: any) => v?.number === videoNumber)
-      : null;
-    const video = fromPlan ?? signal[`shoot_day_v${videoNumber}`];
+    const video = findShootDayVideo(ext.signal, videoNumber);
     if (!video?.script?.hook) return NextResponse.json({ error: "script_not_found" }, { status: 404 });
 
     const storagePath = await renderPrompterVideo({
