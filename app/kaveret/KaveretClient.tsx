@@ -1325,20 +1325,19 @@ function EpisodesList({
                 disabled={inFlight || !extractionId}
                 style={{
                   flex: "0 0 auto",
-                  padding: "0 18px",
-                  minHeight: 42,
-                  background: inFlight ? "rgba(232,185,74,0.1)" : "linear-gradient(180deg,#F1D07E,#E2B34A,#CE9C38)",
-                  color: inFlight ? "#9E9990" : "#171204",
-                  border: inFlight ? "1px solid rgba(232,185,74,0.3)" : "none",
+                  padding: "0 16px",
+                  minHeight: 40,
+                  background: "transparent",
+                  color: inFlight ? "#9E9990" : err ? "#FFB0B0" : "#E8B94A",
+                  border: `1px solid ${inFlight ? "rgba(232,185,74,0.28)" : err ? "rgba(255,136,136,0.5)" : "rgba(232,185,74,0.55)"}`,
                   borderRadius: 999,
                   fontFamily: "inherit",
-                  fontSize: 13.5,
-                  fontWeight: 800,
+                  fontSize: 13,
+                  fontWeight: 700,
                   cursor: inFlight ? "wait" : "pointer",
-                  boxShadow: inFlight ? undefined : "0 6px 18px rgba(232,185,74,0.28)",
                 }}
               >
-                {inFlight ? "יוצר…" : err ? "לנסות שוב" : "צור את הפרק"}
+                {inFlight ? "יוצר…" : err ? "לנסות שוב" : "לכתוב את הפרק"}
               </button>
             </div>
           );
@@ -1395,22 +1394,39 @@ function EpisodesList({
                 onClick={(e) => e.stopPropagation()}
                 style={{
                   flex: "0 0 auto",
-                  padding: "0 18px",
-                  minHeight: 42,
                   display: "inline-flex",
                   alignItems: "center",
-                  background: filmed ? "rgba(232,185,74,0.1)" : "linear-gradient(180deg,#F1D07E,#E2B34A,#CE9C38)",
-                  color: filmed ? "#E8B94A" : "#171204",
-                  border: filmed ? "1px solid rgba(232,185,74,0.35)" : "none",
-                  borderRadius: 999,
+                  gap: 6,
+                  ...(filmed
+                    ? {
+                        padding: "0 2px",
+                        minHeight: 40,
+                        background: "transparent",
+                        color: "#9E9990",
+                        border: "none",
+                        borderRadius: 0,
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        textDecoration: "underline",
+                        textDecorationColor: "rgba(158,153,144,0.4)",
+                        textUnderlineOffset: 3,
+                      }
+                    : {
+                        padding: "0 20px",
+                        minHeight: 44,
+                        background: "linear-gradient(180deg,#F1D07E,#E2B34A,#CE9C38)",
+                        color: "#171204",
+                        border: "none",
+                        borderRadius: 999,
+                        fontSize: 14,
+                        fontWeight: 800,
+                        textDecoration: "none",
+                        boxShadow: "0 6px 18px rgba(232,185,74,0.28)",
+                      }),
                   fontFamily: "inherit",
-                  fontSize: 13.5,
-                  fontWeight: 800,
-                  textDecoration: "none",
-                  boxShadow: filmed ? undefined : "0 6px 18px rgba(232,185,74,0.28)",
                 }}
               >
-                {filmed ? "טייק נוסף" : "לצלם עכשיו"}
+                {filmed ? "טייק נוסף" : "לצלם עכשיו ←"}
               </a>
             </summary>
             <div
