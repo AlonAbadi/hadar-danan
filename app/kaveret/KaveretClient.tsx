@@ -744,35 +744,27 @@ export function KaveretClient({
             <p className={sty.lsig}>הדר</p>
           </div>
 
-          {!data.demo ? (
-            <div>
-              <div className={sty.zhead} style={{ marginTop: 24 }}>
-                <span className={sty.zt}>
-                  <h2 style={{ fontSize: 19 }}>הסדרה שלך</h2>
-                  <span className={sty.hint}>7 פרקים בהתאמה אישית לעסק שלך</span>
-                </span>
+          <div>
+            <div className={sty.zhead} style={{ marginTop: 24 }}>
+              <span className={sty.zt}>
+                <h2 style={{ fontSize: 19 }}>הסדרה שלך</h2>
+                <span className={sty.hint}>7 פרקים בהתאמה אישית לעסק שלך</span>
+              </span>
+            </div>
+            <ShootDayProgress filmed={data.filmedCount} total={data.scriptsTotal} />
+            {data.scripts.length === 0 ? (
+              <div className={sty.trow}>
+                <BuildShootDay extractionId={data.extractionId} />
               </div>
-              <ShootDayProgress filmed={data.filmedCount} total={data.scriptsTotal} />
-              {data.scripts.length === 0 ? (
-                <div className={sty.trow}>
-                  <BuildShootDay extractionId={data.extractionId} />
-                </div>
-              ) : (
-                <EpisodesList
-                  extractionId={data.extractionId}
-                  scripts={data.scripts}
-                  filmedNumbers={data.filmedNumbers}
-                  identity={data.identity}
-                />
-              )}
-            </div>
-          ) : (
-            <div className={sty.trow}>
-              <div className={sty.head}><span className={sty.plat}>משפט הזהות שלכם</span><span className={sty.check}>לפתיחת כל סרטון</span></div>
-              <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(data.identity, "identity")}>{data.identity}</p>
-              <div className={sty.tfoot}>{copyBtn("identity", data.identity)}</div>
-            </div>
-          )}
+            ) : (
+              <EpisodesList
+                extractionId={data.extractionId}
+                scripts={data.scripts}
+                filmedNumbers={data.filmedNumbers}
+                identity={data.identity}
+              />
+            )}
+          </div>
         </section>
 
         <section className={sty.zone} id="z-mine" data-tab-index={4} ref={(el) => { zonesRef.current[4] = el; }}>
@@ -1232,6 +1224,26 @@ function EpisodesList({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 6 }}>
+      {identity && (
+        <div
+          style={{
+            marginBottom: 4,
+            padding: "10px 14px 10px 12px",
+            borderInlineStart: "2px solid rgba(232,185,74,0.5)",
+            background: "rgba(232,185,74,0.04)",
+            borderRadius: 8,
+            fontSize: 14,
+            lineHeight: 1.5,
+            color: "#EDE9E1",
+            fontWeight: 300,
+          }}
+        >
+          <span style={{ color: "#9E9990", fontSize: 11, fontWeight: 700, letterSpacing: 1.1, display: "block", marginBottom: 4 }}>
+            הליבה של העונה
+          </span>
+          {identity}
+        </div>
+      )}
       {Array.from({ length: 7 }, (_, i) => i + 1).map((n) => {
         const s      = scriptByNumber.get(n);
         const filmed = s ? filmedNumbers.includes(n) : false;
