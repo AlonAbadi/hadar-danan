@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "sync-corpus": "node scripts/sync-hadar-corpus.mjs"
+    "sync-corpus": "node scripts/sync-hadar-corpus.mjs",
+    "deep-read": "node scripts/deep-read-transcripts.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.86.1",
