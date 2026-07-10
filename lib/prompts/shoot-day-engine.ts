@@ -25,6 +25,11 @@
  *   - All output grounded in the user's specific signal, never generic
  */
 
+// Verbatim Hadar quotes per archetype-specific move (9-15), auto-synced from
+// /Users/work/hadar-transcripts/HADAR_RAW_QUOTES.md. To refresh after adding
+// new corpus quotes, run: `npm run sync-corpus`. See lib/prompts/hadar-corpus-quotes.ts.
+import { INJECTED_QUOTES } from "./hadar-corpus-quotes";
+
 export const SHOOT_DAY_MODEL_SONNET = "claude-sonnet-4-6";
 export const SHOOT_DAY_MODEL_HAIKU  = "claude-haiku-4-5-20251001";
 
@@ -193,7 +198,9 @@ const HADAR_SIGNATURE_MOVES = `15 המהלכים של הדר (8 גרעיניים
 המנטרה הקנונית של 2026-06-16 (Toko Aroma, C4367): "הכול חייב לנגן." כל פלט חייב להישמע כמו שהוא מנגן, לא כמו שהוא מסביר. **בדיקה עצמית לפני כל פלט**: אם משפט אחד נשמע כמו הסבר ולא כמו מנגינה, פסול אותו וכתוב מחדש.
 המנטרה הקנונית של 2026-06-24 (Toko Aroma, C4377): "הריח הוא האיש מחירות הכי שקט שיש." דגם: ה-X שלך הוא איש המכירות השקט. למותגי silent-mechanism, יש לפענח את ה-X (ריח, צבע, אקוסטיקה, רטט) ולנסח את אותה משוואה.
 המנטרה הקנונית של 2026-06-25 (Hadar-as-author, C4078): "אין בחירה, אין תנועה. אין תנועה, אין שיווק. אין שיווק, אין מכירות. אין מכירות, אין עסק." דגם: chain-collapse rhetoric — שרשרת קצרה של שלילות שמובילה למסקנה הכרחית. שימושי לפתיחת hook ב-Mode B.
-המטאפורה הקנונית של 2026-06-25 (Mirvi DNA, C4336): "תדמייני שאת כולך רשת של אור, כמו ביום העצמאות. כשאת מתחילה להתרחק מה-DNA שלך, מכבה מנורה. מכבה עוד מנורה. עם השנים, איך הרשת שלך נראית? חושך." זוהי המטאפורה הכי חזקה למותגים טיפוליים/טרנספורמטיביים. עבר-כל-ארכיטיפים: כל מותג שמדבר על אובדן עצמי יכול להשתמש בתבנית "רשת מנורות שמכבות".`;
+המטאפורה הקנונית של 2026-06-25 (Mirvi DNA, C4336): "תדמייני שאת כולך רשת של אור, כמו ביום העצמאות. כשאת מתחילה להתרחק מה-DNA שלך, מכבה מנורה. מכבה עוד מנורה. עם השנים, איך הרשת שלך נראית? חושך." זוהי המטאפורה הכי חזקה למותגים טיפוליים/טרנספורמטיביים. עבר-כל-ארכיטיפים: כל מותג שמדבר על אובדן עצמי יכול להשתמש בתבנית "רשת מנורות שמכבות".
+
+${INJECTED_QUOTES}`;
 
 // ── Modes — the VOICE each video is shot in (distinct from archetype) ─
 // Every video carries a `mode` letter. The mode dictates WHO speaks and HOW.
