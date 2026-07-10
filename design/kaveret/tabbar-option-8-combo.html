@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>אופציה 8 — שילוב 4+6, בהיר וכהה</title>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { background:#04060B; font-family:'Assistant',sans-serif; color:#EDE9E1; padding:36px 24px 60px; }
+  h1 { text-align:center; font-size:24px; font-weight:800; }
+  h1 em { font-style:normal; color:#E8B94A; }
+  .sub { text-align:center; color:#9E9990; font-size:13.5px; font-weight:400; margin:8px 0 30px; line-height:1.6; }
+  .row { display:flex; gap:40px; justify-content:center; flex-wrap:wrap; }
+  .opt { width:300px; }
+  .optlbl { text-align:center; margin-bottom:12px; }
+  .optlbl .t { font-size:16px; font-weight:800; display:block; }
+  .optlbl .d { font-size:11.5px; color:#9E9990; display:block; margin-top:3px; line-height:1.5; }
+  .phone { width:300px; height:560px; border-radius:34px; border:1.5px solid #232A38; overflow:hidden; position:relative; box-shadow:0 30px 80px rgba(0,0,0,0.6); }
+
+  /* ── page backdrops ── */
+  .phone.dark { background:#080C14; color:#EDE9E1; }
+  .phone.light { background:#F6F2EA; color:#1C1914; }
+  .bk { padding:24px 16px; }
+  .bk .k { font-size:9px; letter-spacing:0.28em; font-weight:700; text-align:center; }
+  .dark .bk .k { color:#E8B94A; } .light .bk .k { color:#9E7C3A; }
+  .bk h2 { font-size:21px; font-weight:800; text-align:center; margin-top:8px; line-height:1.35; }
+  .bk h2 .thin { font-weight:300; }
+  .dark .bk h2 .g { color:#E8B94A; } .light .bk h2 .g { color:#9E7C3A; }
+  .board { margin-top:16px; border-radius:16px; padding:16px 14px; }
+  .dark .board { background:radial-gradient(ellipse 120% 90% at 50% 0%, rgba(232,185,74,0.09), transparent 60%), #141820; border:1px solid rgba(232,185,74,0.28); }
+  .light .board { background:radial-gradient(ellipse 120% 90% at 50% 0%, rgba(158,124,58,0.08), transparent 60%), #FFFFFF; border:1px solid rgba(158,124,58,0.3); box-shadow:0 10px 30px rgba(28,25,20,0.06); }
+  .board .s { font-size:8.5px; letter-spacing:0.2em; font-weight:700; }
+  .dark .board .s { color:#9E7C3A; } .light .board .s { color:#9E7C3A; }
+  .board p { font-size:13px; line-height:1.7; font-weight:300; margin-top:8px; }
+  .trow { margin-top:12px; border-radius:14px; padding:14px; }
+  .dark .trow { background:#141820; border:1px solid #2C323E; }
+  .light .trow { background:#FFFFFF; border:1px solid rgba(28,25,20,0.08); box-shadow:0 8px 24px rgba(28,25,20,0.05); }
+  .trow .h { font-size:13px; font-weight:800; }
+  .trow p { font-size:11.5px; line-height:1.6; margin-top:5px; }
+  .dark .trow p { color:#9E9990; } .light .trow p { color:#6E675C; }
+
+  /* ── the combined bar: 4's hairline compact float + 6's labels & tint-only active ── */
+  .bar { position:absolute; bottom:14px; right:50%; transform:translateX(50%);
+    display:flex; align-items:center; padding:7px 10px; border-radius:26px; }
+  .dark .bar { background:rgba(20,24,32,0.78); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+    border:0.5px solid rgba(232,185,74,0.16); }
+  .light .bar { background:rgba(255,255,255,0.82); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+    border:0.5px solid rgba(158,124,58,0.28); box-shadow:0 10px 34px rgba(28,25,20,0.1); }
+  .it { width:54px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    background:none; border:none; cursor:pointer; font-family:inherit; transition:color .25s, opacity .25s; padding:2px 0; }
+  .it svg { width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round;
+    transition:transform .25s cubic-bezier(.34,1.4,.4,1); }
+  .it span { font-size:9.5px; font-weight:500; letter-spacing:0.02em; }
+  .dark .it { color:rgba(158,153,144,0.75); }
+  .light .it { color:rgba(90,84,74,0.75); }
+  .dark .it.on { color:#E8B94A; }
+  .light .it.on { color:#9E7C3A; }
+  .it.on svg { transform:translateY(-1px) scale(1.05); }
+  .it.on span { font-weight:700; }
+</style>
+</head>
+<body>
+  <h1>אופציה 8 · <em>השילוב</em></h1>
+  <p class="sub">הגוף של 4 (צף, קומפקטי, קו שערה, בלי צל) עם הנשמה של 6 (תוויות קבועות זעירות, פעיל = גוון בלבד). אותו רכיב בשני עולמות.</p>
+
+  <div class="row" id="row"></div>
+
+<script>
+const ICONS = {
+  signal: '<svg viewBox="0 0 24 24"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><circle cx="12" cy="12" r="2.6"/></svg>',
+  challenge: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.8V13l2.3 1.8M9.8 3h4.4"/></svg>',
+  visual: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="9" cy="9" r="1.6"/><path d="M4.5 16.5l4.3-4.3 2.9 2.9 3.4-3.4 4.4 4.4"/></svg>',
+  film: '<svg viewBox="0 0 24 24"><rect x="3" y="6.8" width="12.2" height="10.4" rx="3"/><path d="M15.2 10.6l5.8-3.2v9.2l-5.8-3.2"/></svg>',
+  mine: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.8" height="6.8" rx="2"/><rect x="13.2" y="4" width="6.8" height="6.8" rx="2"/><rect x="4" y="13.2" width="6.8" height="6.8" rx="2"/><rect x="13.2" y="13.2" width="6.8" height="6.8" rx="2"/></svg>',
+};
+const TABS = [["signal","האות"],["challenge","אתגר"],["visual","ויזואל"],["film","צילום"],["mine","התכנים"]];
+const VARIANTS = [
+  { mode: "dark", t: "כהה — הכוורת של היום", d: "זכוכית כהה, קו שערה זהב, פעיל זהב מלא" },
+  { mode: "light", t: "בהיר — אותו רכיב באור", d: "שנהב שקוף, קו שערה זהב-עמוק, פעיל בזהב כהה (ניגודיות מלאה)" },
+];
+const row = document.getElementById("row");
+VARIANTS.forEach((v) => {
+  const el = document.createElement("div");
+  el.className = "opt";
+  el.innerHTML = `
+    <div class="optlbl"><span class="t">${v.t}</span><span class="d">${v.d}</span></div>
+    <div class="phone ${v.mode}">
+      <div class="bk">
+        <div class="k">כוורת האות</div>
+        <h2><span class="thin">האות שלך,</span><br><span class="g">ארוז לפעולה.</span></h2>
+        <div class="board"><div class="s">לוח האות שלך</div>
+          <p>בנית לעצמך שקט פנימי בתוך עולם שרץ, ועכשיו אתה קורא דרכו את התוצאה של מה שאדם עושה.</p></div>
+        <div class="trow"><div class="h">מפגש הסיום החי עם הדר</div><p>יום שלישי, 28 ביולי, בשעה 17:00 · הקישור לזום יפורסם סמוך למפגש</p></div>
+      </div>
+      <nav class="bar">
+        ${TABS.map(([k, lbl], i) => `
+          <button class="it${i === 0 ? " on" : ""}" aria-label="${lbl}">
+            ${ICONS[k]}
+            <span>${lbl}</span>
+          </button>`).join("")}
+      </nav>
+    </div>`;
+  row.appendChild(el);
+  el.querySelectorAll(".it").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      el.querySelectorAll(".it").forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+    });
+  });
+});
+</script>
+</body>
+</html>
