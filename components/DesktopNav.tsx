@@ -23,8 +23,11 @@ const DROPDOWN_ITEMS = [
   { label: "המסלול האחר",       price: "במועמדות", href: "/apply", accent: true },
 ];
 
-const EXTRA_LINKS = [
-  { label: "הכוורת 🐝",        href: "/hive" },
+// Members never see the hive SALES page in the menu — their item leads home.
+const EXTRA_LINKS = (hiveActive: boolean) => [
+  hiveActive
+    ? { label: "הכוורת שלי 🐝", href: "/kaveret" }
+    : { label: "הכוורת 🐝", href: "/hive" },
   { label: "האזור האישי שלי", href: "/account" },
 ];
 
@@ -40,9 +43,10 @@ const LINK_STYLE = (active: boolean): React.CSSProperties => ({
 
 interface DesktopNavProps {
   userInitial?: string | null;
+  hiveActive?: boolean;
 }
 
-export function DesktopNav({ userInitial = null }: DesktopNavProps) {
+export function DesktopNav({ userInitial = null, hiveActive = false }: DesktopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [dropOpen, setDropOpen]   = useState(false);
@@ -231,7 +235,7 @@ export function DesktopNav({ userInitial = null }: DesktopNavProps) {
           )}
         </div>
 
-        {EXTRA_LINKS.map((link) => (
+        {EXTRA_LINKS(hiveActive).map((link) => (
           <Link
             key={link.href}
             href={link.href}

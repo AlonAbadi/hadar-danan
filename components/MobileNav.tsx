@@ -28,14 +28,19 @@ const ITEMS_GROUP3 = [
   { label: "המסלול האחר",        price: "במועמדות", href: "/apply", accent: true },
 ];
 
-const ITEMS_GROUP4 = [{ label: "הכוורת 🐝",        href: "/hive" }];
+// Members never see the hive SALES page in the menu — their item leads home.
+const ITEMS_GROUP4 = (hiveActive: boolean) =>
+  hiveActive
+    ? [{ label: "הכוורת שלי 🐝", href: "/kaveret" }]
+    : [{ label: "הכוורת 🐝", href: "/hive" }];
 const ITEMS_GROUP5 = [{ label: "האזור האישי שלי", href: "/account" }];
 
 interface MobileNavProps {
   userInitial?: string | null;
+  hiveActive?: boolean;
 }
 
-export function MobileNav({ userInitial = null }: MobileNavProps) {
+export function MobileNav({ userInitial = null, hiveActive = false }: MobileNavProps) {
   const [open, setOpen]               = useState(false);
   const [accordionOpen, setAccordion] = useState(false);
   const [signingOut, setSigningOut]   = useState(false);
@@ -294,7 +299,7 @@ export function MobileNav({ userInitial = null }: MobileNavProps) {
           <Divider />
 
           {/* Group 4 */}
-          {ITEMS_GROUP4.map((item) => (
+          {ITEMS_GROUP4(hiveActive).map((item) => (
             <DrawerItem key={item.href} item={item} active={pathname === item.href} onClose={close} />
           ))}
 
