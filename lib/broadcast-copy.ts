@@ -43,7 +43,7 @@ export const BROADCAST_COPY = {
   "room.float_ready": "הפעלת החלון הצף",
   "room.float_skip": "לצלם בלי טלפרומפטר",
   "room.float_open_camera": "פתיחת המצלמה",
-  "room.float_hint": "החלון הצף נשאר מעל המצלמה. אפשר לגרור אותו לפינה נוחה",
+  "room.float_hint": "החלון הצף נשאר מעל המצלמה. גרירה מזיזה אותו, נגיעה עוצרת ומחדשת את הגלילה",
 
   // Director lines (הבמאית) — [PLACEHOLDER] items await Hadar's final wording
   "director.encourage_after_take1": "טייק שלישי הוא כמעט תמיד הטוב ביותר",

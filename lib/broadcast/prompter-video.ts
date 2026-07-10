@@ -13,17 +13,24 @@ import { createServerClient } from "@/lib/supabase/server";
 import { runFfmpeg, scratchDir, scratchCleanup, FONTS_DIR } from "./ffmpeg";
 
 const BUCKET = "broadcast-takes";
-const W = 540;
-const H = 960;
-const FONT_SIZE = 46;
+// r3 (per Alon): the floating window opens WIDE (16:9 — a broad PiP strip),
+// with big type and the in-page prompter's color language (gold hook/cta).
+const W = 960;
+const H = 540;
+const FONT_SIZE = 58;
 const LINE_H = Math.round(FONT_SIZE * 1.5);
-const CHARS_PER_LINE = 16; // Hebrew at 46px inside ~460px of usable width
+const CHARS_PER_LINE = 27; // Hebrew at 58px inside ~860px of usable width
 const LEAD_MS = 1200; // text starts below the window — a short beat, then it rises in
 const TAIL_MS = 1500;
 // The visible prompter strip (the rest of the frame is masked to background).
-const WINDOW_TOP = 250;
-const WINDOW_BOTTOM = 640;
+const WINDOW_TOP = 96;
+const WINDOW_BOTTOM = 440;
 const READ_LINE_Y = Math.round(WINDOW_TOP + (WINDOW_BOTTOM - WINDOW_TOP) * 0.33);
+const BLOCK_GAP = Math.round(LINE_H * 0.35);
+
+function estHeight(text: string): number {
+  return Math.max(1, Math.ceil(text.length / CHARS_PER_LINE)) * LINE_H;
+}
 
 function assTime(ms: number): string {
   const cs = Math.floor((ms % 1000) / 10);
@@ -41,8 +48,8 @@ export interface PrompterSpec {
 }
 
 export function prompterStoragePath(spec: PrompterSpec): string {
-  // r2: windowed prompter (masked strip + read line) — bust the r1 cache.
-  return `${spec.authPrefix}/prompter/v${spec.videoNumber}-w${spec.wpm}-r2.mp4`;
+  // r3: wide window, big type, colored hook/cta — bust older caches.
+  return `${spec.authPrefix}/prompter/v${spec.videoNumber}-w${spec.wpm}-r3.mp4`;
 }
 
 // Renders the scroll and uploads it; returns the storage path.
@@ -59,20 +66,35 @@ export async function renderPrompterVideo(spec: PrompterSpec): Promise<string> {
     .list(dirName, { search: fileName, limit: 1 });
   if (existing?.some((o: { name: string }) => o.name === fileName)) return storagePath;
 
-  const text = [spec.hook, spec.body, spec.cta].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
-  const words = text.split(" ").length;
-  const estLines = Math.max(3, Math.ceil(text.length / CHARS_PER_LINE));
-  const textHeight = estLines * LINE_H;
+  const hook = spec.hook.replace(/\s+/g, " ").trim();
+  const body = (spec.body ?? "").replace(/\s+/g, " ").trim();
+  const cta = (spec.cta ?? "").replace(/\s+/g, " ").trim();
+  const words = [hook, body, cta].filter(Boolean).join(" ").split(" ").length;
   const scrollMs = Math.round((words / spec.wpm) * 60_000);
   const durationMs = LEAD_MS + scrollMs + TAIL_MS;
 
-  // A REAL prompter is a window, not a page: only a strip shows text (masked
-  // by drawbox bands below), the block enters from under the strip and exits
-  // above it, and a gold read line marks the pace. Showing the whole script
-  // at once was the field complaint ("מציג הכל בבת אחת").
-  const yStart = WINDOW_BOTTOM;
-  const yEnd = WINDOW_TOP - textHeight;
-  const ass = `﻿[Script Info]
+  // Three stacked blocks (hook gold, body ivory, cta gold) moving in lockstep.
+  // COLOR LIVES IN THE STYLE, never in override tags — the spike proved
+  // {\c} tags split bidi runs and reverse Hebrew word order.
+  const hookH = hook ? estHeight(hook) : 0;
+  const bodyH = body ? estHeight(body) : 0;
+  const ctaH = cta ? estHeight(cta) : 0;
+  const totalH =
+    hookH + bodyH + ctaH + (body ? BLOCK_GAP : 0) + (cta ? BLOCK_GAP : 0);
+  const travel = totalH + (WINDOW_BOTTOM - WINDOW_TOP) + 60;
+
+  const esc = (t: string) => t.replace(/\{/g, "(").replace(/\}/g, ")");
+  const block = (style: string, text: string, offset: number): string => {
+    const yStart = WINDOW_BOTTOM + offset;
+    return `Dialogue: 0,${assTime(0)},${assTime(durationMs)},${style},,0,0,0,,{\move(${W / 2},${yStart},${W / 2},${yStart - travel},${LEAD_MS},${LEAD_MS + scrollMs})}${esc(text)}`;
+  };
+  const events: string[] = [];
+  let offset = 0;
+  if (hook) { events.push(block("PHook", hook, offset)); offset += hookH + BLOCK_GAP; }
+  if (body) { events.push(block("PBody", body, offset)); offset += bodyH + BLOCK_GAP; }
+  if (cta) { events.push(block("PCta", cta, offset)); }
+
+  const ass = `\ufeff[Script Info]
 ScriptType: v4.00+
 PlayResX: ${W}
 PlayResY: ${H}
@@ -81,11 +103,13 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: P,Assistant,${FONT_SIZE},&H00EDE9E1,&H00FFFFFF,&H00140C08,&H00000000,1,0,0,0,100,100,0,0,1,2,0,8,40,40,0,-1
+Style: PHook,Assistant,${FONT_SIZE},&H004AB9E8,&H00FFFFFF,&H00140C08,&H00000000,1,0,0,0,100,100,0,0,1,2,0,8,40,40,0,-1
+Style: PBody,Assistant,${FONT_SIZE},&H00E1E9ED,&H00FFFFFF,&H00140C08,&H00000000,1,0,0,0,100,100,0,0,1,2,0,8,40,40,0,-1
+Style: PCta,Assistant,${FONT_SIZE},&H004AB9E8,&H00FFFFFF,&H00140C08,&H00000000,1,0,0,0,100,100,0,0,1,2,0,8,40,40,0,-1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,${assTime(0)},${assTime(durationMs)},P,,0,0,0,,{\\move(${W / 2},${yStart},${W / 2},${yEnd},${LEAD_MS},${LEAD_MS + scrollMs})}${text.replace(/\{/g, "(").replace(/\}/g, ")")}
+${events.join("\n")}
 `;
 
   const dir = scratchDir(`prompter-${spec.videoNumber}-${spec.wpm}`);

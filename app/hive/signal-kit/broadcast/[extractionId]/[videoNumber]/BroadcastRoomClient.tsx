@@ -686,7 +686,7 @@ export function BroadcastRoomClient({
                   playsInline
                   muted
                   controls={nativeSheet === "pip"}
-                  style={{ width: 130, borderRadius: 10, alignSelf: "center", background: "#000" }}
+                  style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 10, alignSelf: "center", background: "#000" }}
                 />
               ) : null}
               {nativeSheet === "ready" && floatUrl ? (
