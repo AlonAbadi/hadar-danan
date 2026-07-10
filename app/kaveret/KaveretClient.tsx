@@ -921,16 +921,24 @@ export function KaveretClient({
             </div>
           ) : null}
 
+          <div className={sty.zhead} style={{ marginTop: 34 }}>
+            <span className={sty.zt}>
+              <h2 style={{ fontSize: 19 }}>התכנים לרשתות</h2>
+              <span className={sty.hint}>ביו, אודות ומניפסט. לחיצה פותחת, נגיעה בטקסט מעתיקה</span>
+            </span>
+          </div>
+          <div className={sty.zrule} />
+
           {(() => {
             // outward texts come only from the content kit; show each once
             const seen = new Set<string>();
             const rows = ([
-              ["ביו לאינסטגרם", data.bioInstagram, "bio"],
-              ["כותרת ללינקדאין", data.linkedinHeadline, "li"],
-              ["אודות לפייסבוק", data.facebookAbout, "fb"],
-              ["אודות לאתר", data.aboutSite, "about"],
-              ["מניפסט אישי", data.manifesto, "manifesto"],
-            ] as const).filter(([, text]) => {
+              ["ביו לאינסטגרם", "קצר ומדויק לפרופיל", data.bioInstagram, "bio"],
+              ["כותרת ללינקדאין", "שורת המיצוב המקצועית", data.linkedinHeadline, "li"],
+              ["אודות לפייסבוק", "פסקת ההיכרות המלאה", data.facebookAbout, "fb"],
+              ["אודות לאתר", "הגרסה הארוכה", data.aboutSite, "about"],
+              ["מניפסט אישי", "האני-מאמין שלך", data.manifesto, "manifesto"],
+            ] as const).filter(([, , text]) => {
               const norm = text.trim().replace(/\s+/g, " ");
               if (!norm || seen.has(norm)) return false;
               seen.add(norm);
@@ -946,12 +954,20 @@ export function KaveretClient({
                 </div>
               );
             }
-            return rows.map(([label, text, key]) => (
-              <div className={sty.trow} key={key}>
-                <div className={sty.head}><span className={sty.plat}>{label}</span><span className={sty.check}><span className={sty.v}>✓</span> באורך מדויק</span></div>
-                <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(text, key)}>{text}</p>
-                <div className={sty.tfoot}>{copyBtn(key, text)}</div>
-              </div>
+            return rows.map(([label, sub, text, key]) => (
+              <details className={sty.disc} key={key}>
+                <summary>
+                  <span className={sty.st}>
+                    <span className={sty.ic}><svg viewBox="0 0 24 24"><path d="M8 4h8a2 2 0 0 1 2 2v14l-2-1.5L14 20l-2-1.5L10 20l-2-1.5L6 20V6a2 2 0 0 1 2-2z" /><path d="M9.5 9h5M9.5 12.5h5" /></svg></span>
+                    <span><span className={sty.t}>{label}</span><br /><span className={sty.p}>{sub}</span></span>
+                  </span>
+                  <span className={sty.chev}><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg></span>
+                </summary>
+                <div className={sty.body}>
+                  <p className={`${sty.txt} ${sty.txtCopy}`} onClick={() => copyText(text, key)} style={{ margin: 0 }}>{text}</p>
+                </div>
+                <div className={sty.dfoot}>{copyBtn(key, text)}</div>
+              </details>
             ));
           })()}
 
