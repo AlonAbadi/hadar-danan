@@ -1126,9 +1126,23 @@ function ShootDayProgress({ filmed, total }: { filmed: number; total: number }) 
         marginBottom: 10,
         display: "flex",
         alignItems: "center",
-        gap: 10,
+        gap: 12,
       }}
     >
+      {/* Counter FIRST in DOM so RTL flex-row puts it on the right (leading edge). */}
+      <span
+        style={{
+          flex: "0 0 auto",
+          fontSize: 12,
+          fontWeight: 800,
+          color: "#E8B94A",
+          letterSpacing: 0.5,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        <span dir="ltr" style={{ unicodeBidi: "isolate" }}>{filmed}/{total}</span>
+        <span style={{ color: "#7A756D", fontWeight: 500, marginInlineStart: 4 }}>צולמו</span>
+      </span>
       <div style={{ display: "flex", gap: 4, flex: 1 }}>
         {cells.map((done, i) => (
           <div
@@ -1146,9 +1160,6 @@ function ShootDayProgress({ filmed, total }: { filmed: number; total: number }) 
           />
         ))}
       </div>
-      <span style={{ fontSize: 12, fontWeight: 700, color: "#E8B94A", flex: "0 0 auto" }}>
-        {filmed}/{total}
-      </span>
     </div>
   );
 }
