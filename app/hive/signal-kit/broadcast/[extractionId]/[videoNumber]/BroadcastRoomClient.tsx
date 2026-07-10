@@ -405,6 +405,7 @@ export function BroadcastRoomClient({
       <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
         <TakeGallery
+          onBackToCamera={() => { setPhase("room"); if (rec.cameraState !== "ready") rec.requestCamera(); }}
           takes={takes}
           uploads={uploads}
           selectedTakeId={selectedTakeId}
@@ -861,9 +862,11 @@ function TakeGallery({
   onSelect,
   onConfirm,
   onAnother,
+  onBackToCamera,
   confirming,
   banner,
 }: {
+  onBackToCamera: () => void;
   takes: LocalTake[];
   uploads: TakeUpload[];
   selectedTakeId: string | null;
@@ -885,7 +888,7 @@ function TakeGallery({
     <div style={{ padding: "0 0 160px" }}>
       <TopBar
         title={getBroadcastCopy("takes.title")}
-        onBack={() => { setPhase("room"); if (rec.cameraState !== "ready") rec.requestCamera(); }}
+        onBack={onBackToCamera}
         backLabel="חזרה לצילום"
         extraHref={KIT_HREF}
         extraLabel="לערכה"
