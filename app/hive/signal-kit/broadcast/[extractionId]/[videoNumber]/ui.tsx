@@ -30,11 +30,15 @@ export function TopBar({
   backHref,
   onBack,
   backLabel = "חזרה",
+  extraHref,
+  extraLabel,
 }: {
   title: string;
   backHref?: string;
   onBack?: () => void;
   backLabel?: string;
+  extraHref?: string;
+  extraLabel?: string;
 }) {
   const back = (
     <span
@@ -85,7 +89,17 @@ export function TopBar({
         <span style={{ width: 60 }} />
       )}
       <span style={{ color: "#EDE9E1", fontSize: 15, fontWeight: 700 }}>{title}</span>
-      <span style={{ width: 60 }} />
+      {extraHref && extraLabel ? (
+        <Link
+          href={extraHref}
+          className="br-btn"
+          style={{ textDecoration: "none", color: "#9E9990", fontSize: 13, fontWeight: 600, minWidth: 60, textAlign: "left" }}
+        >
+          {extraLabel}
+        </Link>
+      ) : (
+        <span style={{ width: 60 }} />
+      )}
     </div>
   );
 }

@@ -883,7 +883,13 @@ function TakeGallery({
         : null;
   return (
     <div style={{ padding: "0 0 160px" }}>
-      <TopBar title={getBroadcastCopy("takes.title")} backHref={KIT_HREF} backLabel="לערכה" />
+      <TopBar
+        title={getBroadcastCopy("takes.title")}
+        onBack={() => { setPhase("room"); if (rec.cameraState !== "ready") rec.requestCamera(); }}
+        backLabel="חזרה לצילום"
+        extraHref={KIT_HREF}
+        extraLabel="לערכה"
+      />
       {directorLine ? (
         <p
           style={{

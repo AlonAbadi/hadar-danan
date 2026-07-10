@@ -34,15 +34,19 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "duration_out_of_range" }, { status: 422 });
     }
 
-    // Version = count of non-failed edits for this script + 1; cap at 3.
-    const { count } = await db
+    // Version = the smallest free slot in {1,2,3}. Deleting an episode frees
+    // its slot (field bug: versions {1,3} occupied after a deletion made
+    // count+1 collide with 3 and block filming forever). Cap = 3 ACTIVE
+    // versions, aligned with the delete-to-refilm model.
+    const { data: versionRows } = await db
       .from("broadcast_edits")
-      .select("id", { count: "exact", head: true })
+      .select("version")
       .eq("extraction_id", take.extraction_id)
       .eq("video_number", take.video_number)
       .neq("status", "failed");
-    const version = (count ?? 0) + 1;
-    if (version > 3) return NextResponse.json({ error: "version_limit" }, { status: 409 });
+    const taken = new Set((versionRows ?? []).map((r: { version: number }) => r.version));
+    const version = [1, 2, 3].find((v) => !taken.has(v));
+    if (!version) return NextResponse.json({ error: "version_limit" }, { status: 409 });
 
     // Season cap (second gate — takes may predate the cap): 7 non-failed
     // edits per member; deleting an episode frees a slot.
