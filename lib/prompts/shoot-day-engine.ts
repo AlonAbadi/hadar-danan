@@ -145,6 +145,15 @@ export type Video = {
     text:   string;       // ציטוט מהקורפוס שמסביר את התבנית
     source: string;       // "Hadar-lesson-1 / michael-kadosh.txt / ..."
   };
+
+  // 2026-07-11 addition. Present only on V7 TESTIMONIAL_CTA.
+  // Hadar's rule (HADAR_FUNNEL_FRAMEWORK): testimonial value is created by
+  // steering the client's own client to VOICE THE SIGNAL. So V7 must ship
+  // a small set of interview questions the customer will pose to their
+  // clients — precise enough that the answers echo the signal statement,
+  // not generic marketing praise. Optional so all other videos and any
+  // pre-existing cached V7 slice still validate.
+  client_interview_questions?: string[];
 };
 
 export type VisualDirection = {
@@ -705,8 +714,16 @@ ${HADAR_QUOTE_RULE}
 ────────────────────────────────────────────
 **Video 7 — TESTIMONIAL_CTA** (עדות + הזמנה, יום 7). 30s. tight. Mode B. Set A. **ACT 3**. משלב את כל 4 העמודים.
 
+**עקרון קנוני של הדר (HADAR_FUNNEL_FRAMEWORK 2026-07-11):** הערך של סרטוני עדות לא נוצר מהעדות עצמה — הוא נוצר **מהשאלות ששואלים את המרואיין**. השאלות חייבות **להוליך את הלקוח לומר את משפט האות בפיו**. עדות שלא מגיעה מהאות היא רק תוכן חם — היא לא מחברת את הקהל למה שהעסק פותר.
+
 - **פורמט פתיחה חובה**: תוצאה של לקוח בודד, ספציפית, בלי שם. פרט חריג — **התוצאה שהיא לא ציפתה לה**, לא הבסיסית.
 - **דרישה בגוף**: משפט אחד למה זה קרה (בקול הדר: "ראיתי / שמתי בפניו / תרגמנו"). משפט אחד למי הסרטון הזה מיועד (לא לכולם — filter statement).
+- **חובה חדשה — client_interview_questions:** בסרטון 7 בלבד, שדה נוסף בפלט בשם client_interview_questions — מערך של **3-5 שאלות ראיון** שהלקוח (בעלת/בעל האות) ישאל את הלקוחות שלה/שלו בעדות. כל שאלה חייבת:
+  1. להיות פתוחה (לא כן/לא).
+  2. להיבנות **סביב מילה מרכזית או פער** שיצא באות — כך שהתשובה של המרואיין תיצור במילים שלו את משפט האות.
+  3. **לא לשאול "מה קיבלת מהשירות?"** (גנרי) — אלא לכוון את הזיכרון של המרואיין לרגע ספציפי (רגע לפני-אחרי, רגע של תובנה, רגע של פחד שהתפוגג).
+  4. להישמע כמו שאלה שהדר עצמה הייתה שואלת — לא מרואיין עסקי סטנדרטי.
+  דוגמאות סגנון (התאם לאות של הלקוח): "מה חשבת שאתה מחפש לפני שהתחלנו, ומה גילית שאתה באמת חיפשת?" / "מתי הבנת שהבעיה הייתה במקום אחר ממה שחשבת?" / "מה השאלה שאף אחד לא שאל אותך על זה קודם?" / "אילו מילים יצאו לך שלא היו לך קודם?" השאלות **לא הופכות לחלק מהתסריט של V7**; הן פלט עצמאי שהלקוח ישתמש בו בסטים הבאים שלו.
 - **סגירה — CTA קצר וישיר בסגנון הדר, לא "מילה אחת":**
   - הקורפוס של הדר (Mode D): CTAs שלה קצרים ופיזיים: **"פשוט תבואו."** / **"תלחצו כאן."** / **"תלחצו על הקישור בביו."** — לפעמים עם signoff **"תהיו טובים."** או **"רק תזכרו:"**.
   - הפורמט המומלץ ל-V7: קריאה קצרה (2-6 מילים) המפנה לפעולה קונקרטית, ואם המוד הוא Mode D אפשר לסגור ב־"תהיו טובים." אם הלקוח הוא הדובר (Mode B) — לא לחקות את המנטרה של הדר; לבחור קריאה בסגנון של הלקוח.
@@ -782,7 +799,23 @@ ${HADAR_QUOTE_RULE}
     },
     ... 6 more ...
   ]
-}`;
+}
+
+**חשוב לסרטון 7 (TESTIMONIAL_CTA) בלבד:** ההוצאה של סרטון 7 חייבת לכלול שדה נוסף בשם client_interview_questions — מערך של 3-5 מחרוזות עבריות (ראה הוראה מפורטת בבלוק Video 7 למעלה). דוגמת פורמט לסרטון 7:
+
+{
+  "number": 7,
+  "type": "TESTIMONIAL_CTA",
+  ... (כל השדות הרגילים) ...
+  "hadar_quote": {"text": "...", "source": "..."},
+  "client_interview_questions": [
+    "שאלה 1 שמכוונת את המרואיין למילה מרכזית מהאות",
+    "שאלה 2 שמכוונת לרגע לפני-אחרי ספציפי",
+    "שאלה 3 שמכוונת למה הוא לא היה יודע להגיד לפני"
+  ]
+}
+
+השדה client_interview_questions הוא אך ורק בסרטון 7. אסור להוסיפו לסרטונים 1-6.`;
 
 // ── Pack 3: Visual Direction + Schedule + 3 Decisions ────────────────
 
@@ -1234,6 +1267,14 @@ export function validateVideo(v: unknown): v is Video {
 
   const quote = x.hadar_quote as Record<string, unknown>;
   if (!quote || typeof quote.text !== "string" || typeof quote.source !== "string") return false;
+
+  // client_interview_questions is optional (added 2026-07-11). When present
+  // must be an array of non-empty strings. Only V7 TESTIMONIAL_CTA carries
+  // it, but we allow any video to omit it.
+  if (x.client_interview_questions !== undefined && x.client_interview_questions !== null) {
+    if (!Array.isArray(x.client_interview_questions)) return false;
+    if (!x.client_interview_questions.every((q) => typeof q === "string" && q.length > 0)) return false;
+  }
 
   return true;
 }
