@@ -109,12 +109,13 @@ function renderLeadCard(lead: FinalLead, index: number): string {
 }
 
 export interface MorningMetrics {
-  newLeads:   number;
-  signals:    number;
-  quizzes:    number;
-  salesCount: number;
-  revenue:    number;
-  hotLeads:   number;
+  newLeads:     number;
+  signals:      number;
+  quizzes:      number;
+  salesCount:   number;
+  revenue:      number;
+  hotLeads:     number;
+  creditErrors: number; // Anthropic "credit too low" errors in the last 24h
 }
 
 // The morning business summary — yesterday's snapshot + how many hot leads are
@@ -156,6 +157,20 @@ export function renderMorningSummary(args: {
       <tr>${statCell(String(m.quizzes), "קוויזים")}${statCell(m.salesCount > 0 ? `${m.salesCount} · ${money}` : "0", "מכירות")}</tr>
     </table>`;
 
+  // Signal-engine health line. Green + quiet when healthy; a loud red alert
+  // when Anthropic credit failed in the window (the engine stops producing
+  // signals silently, so this is the one line that must not be missable).
+  const healthBox = m.creditErrors > 0
+    ? `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:rgba(224,122,106,0.12);border:1px solid ${COLOR.red};border-radius:10px;margin:14px 0 0 0">
+      <tr><td style="padding:14px 18px">
+        <div style="font-size:14px;font-weight:800;color:${COLOR.red};margin-bottom:3px">🔴 מנוע האות: כשל קרדיט (${m.creditErrors})</div>
+        <div style="font-size:12px;color:${COLOR.fg};line-height:1.6">הקרדיט באנטרופיק נגמר ומנוע האות הפסיק לייצר אותות. <a href="https://console.anthropic.com/settings/billing" style="color:${COLOR.goldLight};text-decoration:none;font-weight:700">לטעינת קרדיט ←</a></div>
+      </td></tr>
+    </table>`
+    : `
+    <div style="font-size:12px;color:#7FD49B;margin:12px 0 0 0">✓ מנוע האות תקין · ${m.signals} אותות ב-24 השעות האחרונות</div>`;
+
   const hotBox = `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:rgba(232,185,74,0.08);border:1px solid ${COLOR.gold};border-radius:12px;margin:20px 0 8px 0">
       <tr><td style="padding:20px;text-align:center">
@@ -181,6 +196,7 @@ export function renderMorningSummary(args: {
           <p style="margin:0;font-size:14px;color:${COLOR.fgMuted}">${esc(dateHe)} · תמונת מצב קצרה לפתיחת היום.</p>
           ${taoBox}
           ${statsGrid}
+          ${healthBox}
           ${hotBox}
           <p style="margin:20px 0 8px 0;font-size:11px;color:${COLOR.fgMuted};line-height:1.7;border-top:1px solid ${COLOR.border};padding-top:14px">
             סיכום יומי אוטומטי בכל בוקר (א-ה). אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | TrueSignal©

@@ -23,6 +23,7 @@ import {
   validateContentKit,
   type ContentKit,
 } from "@/lib/prompts/content-kit-engine";
+import { isCreditError, alertCreditExhausted } from "@/lib/signal/credit-alert";
 
 export const runtime     = "nodejs";
 export const dynamic     = "force-dynamic";
@@ -181,6 +182,7 @@ export async function GET(
       error:   String(e),
       payload: { extractionId: id },
     });
+    if (isCreditError(e)) await alertCreditExhausted(supabase, "api/signal/[id]/content-kit");
     return NextResponse.json(
       { error: "Content Kit generation failed. Try again in a moment." },
       { status: 502 },

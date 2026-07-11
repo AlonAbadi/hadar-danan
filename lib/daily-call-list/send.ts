@@ -48,7 +48,14 @@ async function getMorningMetrics(
       .gte(col, startISO).lt(col, endISO);
     return count ?? 0;
   };
-  const [newLeads, signals, quizzes, salesRes, leads] = await Promise.all([
+  // Signal-engine health: did any Anthropic "credit too low" error fire in the
+  // window? If so, the engine was (or is) down and needs credit reloaded.
+  const creditErrorsPromise = safeFrom(supabase, "error_logs")
+    .select("id", { count: "exact", head: true })
+    .ilike("error", "%credit balance%")
+    .gte("created_at", startISO).lt("created_at", endISO);
+
+  const [newLeads, signals, quizzes, salesRes, leads, creditRes] = await Promise.all([
     countIn("users", "created_at"),
     countIn("signal_extractions", "generated_at"),
     countIn("quiz_results", "created_at"),
@@ -56,12 +63,14 @@ async function getMorningMetrics(
       .select("amount, amount_paid")
       .eq("status", "completed").gte("created_at", startISO).lt("created_at", endISO),
     getImmediateLeads(supabase),
+    creditErrorsPromise,
   ]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sales = (salesRes.data ?? []) as any[];
   const revenue = sales.reduce((n, p) => n + Number(p.amount_paid ?? p.amount ?? 0), 0);
   const hotLeads = leads.filter((l) => l.stage === "queue").length;
-  return { newLeads, signals, quizzes, salesCount: sales.length, revenue, hotLeads };
+  const creditErrors = creditRes?.count ?? 0;
+  return { newLeads, signals, quizzes, salesCount: sales.length, revenue, hotLeads, creditErrors };
 }
 
 function getRecipients(): string[] {

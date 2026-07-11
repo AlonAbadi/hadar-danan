@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { waitUntil } from "@vercel/functions";
+import { isCreditError, alertCreditExhausted } from "@/lib/signal/credit-alert";
 import { Resend } from "resend";
 import { generateAndStoreResultTeasers } from "@/lib/signal/result-teasers";
 import { kaveretLink } from "@/lib/signal/kaveret-token";
@@ -546,6 +547,7 @@ export async function POST(req: NextRequest) {
           : rawJson,
       },
     });
+    if (isCreditError(error)) await alertCreditExhausted(db, "api/signal/extract");
     return NextResponse.json(
       { error: "מנוע האות נתקל בשגיאה זמנית. נסה שוב בעוד רגע." },
       { status: 502 },

@@ -13,6 +13,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { SIGNAL_QUESTIONS } from "@/lib/prompts/signal-engine";
+import { isCreditError, alertCreditExhausted } from "@/lib/signal/credit-alert";
 import {
   SIGNAL_PROBE_MODEL,
   SIGNAL_PROBE_MAX_TOKENS,
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest) {
         error:   err instanceof Error ? err.message : String(err),
         payload: { questionKey },
       });
+      if (isCreditError(err)) await alertCreditExhausted(db, "api/signal/probe");
     } catch {
       // swallow — soft-fail open
     }
