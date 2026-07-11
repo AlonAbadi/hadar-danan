@@ -155,6 +155,10 @@ export function BroadcastRoomClient({
           setBanner(getBroadcastCopy("takes.season_full"));
           return;
         }
+        if (code === "version_limit") {
+          setBanner(getBroadcastCopy("takes.version_limit"));
+          return;
+        }
         throw new Error("create_409");
       }
       if (!res.ok) throw new Error(`create_${res.status}`);
@@ -198,6 +202,10 @@ export function BroadcastRoomClient({
         const code = (await res.json().catch(() => ({})))?.error;
         if (code === "season_full") {
           setBanner(getBroadcastCopy("takes.season_full"));
+          return;
+        }
+        if (code === "version_limit") {
+          setBanner(getBroadcastCopy("takes.version_limit"));
           return;
         }
         throw new Error("create_409");

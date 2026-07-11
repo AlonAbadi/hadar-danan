@@ -73,6 +73,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "season_full" }, { status: 409 });
     }
 
+    // Version cap: 3 takes per script. Enforced also at /takes/[id]/select as
+    // the last-line defense, but doing it here saves the customer from
+    // recording a fourth take that would be rejected on select. Alon
+    // 2026-07-11: "תבנה מנגנון שאוכף את זה ומסביר את זה".
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { count: versionCount } = await (db as any)
+      .from("broadcast_edits")
+      .select("id", { count: "exact", head: true })
+      .eq("extraction_id", extractionId)
+      .eq("video_number", videoNumber)
+      .neq("status", "failed");
+    if ((versionCount ?? 0) >= 3) {
+      return NextResponse.json({ error: "version_limit" }, { status: 409 });
+    }
+
     const takeId = randomUUID();
     const storagePath = `${session.authUserId}/takes/${takeId}.${ext}`;
     const { error } = await (db as any).from("broadcast_takes").insert({

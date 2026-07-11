@@ -47,6 +47,17 @@ export interface KaveretData {
   // an extra round-trip. null → per-row build button is hidden (customer
   // needs to run BuildShootDay first to seed phase 1).
   pillars: unknown[] | null;
+  // Filming caps (Alon 2026-07-11). takesPerScript = live count of non-failed
+  // edits per video_number; takesCap = the ceiling (3). seasonUsed = live
+  // count across the entire season; seasonCap = the ceiling (7). Both bounds
+  // drive the client-side gate on לצלם עכשיו — the same limits are enforced
+  // server-side at /api/broadcast/takes and /takes/[id]/select, but showing
+  // the count on-row saves the customer from starting a recording that will
+  // fail on upload.
+  takesPerScript: Record<number, number>;
+  seasonUsed: number;
+  seasonCap: number;
+  takesCap: number;
   reels: {
     editId: string;
     reviewItemId: string | null;
@@ -766,6 +777,10 @@ export function KaveretClient({
                   scripts={data.scripts}
                   filmedNumbers={data.filmedNumbers}
                   identity={data.identity}
+                  takesPerScript={data.takesPerScript}
+                  takesCap={data.takesCap}
+                  seasonUsed={data.seasonUsed}
+                  seasonCap={data.seasonCap}
                 />
               </>
             )}
@@ -1441,12 +1456,21 @@ function EpisodesList({
   scripts,
   filmedNumbers,
   identity,
+  takesPerScript,
+  takesCap,
+  seasonUsed,
+  seasonCap,
 }: {
   extractionId: string | null;
   scripts: BuiltScript[];
   filmedNumbers: number[];
   identity: string;
+  takesPerScript: Record<number, number>;
+  takesCap: number;
+  seasonUsed: number;
+  seasonCap: number;
 }) {
+  const seasonFull = seasonUsed >= seasonCap;
   const [localScripts, setLocalScripts] = useState<BuiltScript[]>(scripts);
   const [generating, setGenerating]     = useState<Set<number>>(new Set());
   const [errByNumber, setErrByNumber]   = useState<Record<number, string>>({});
@@ -1659,61 +1683,109 @@ function EpisodesList({
               >
                 {filmed ? "✓" : n}
               </span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15.5, color: "#EDE9E1", fontWeight: 700, lineHeight: 1.3 }}>
-                  {s.title}
-                </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: filmed ? "#7FBF8E" : "#E8B94A",
-                    fontWeight: filmed ? 600 : 700,
-                    marginTop: 3,
-                    letterSpacing: 0.2,
-                  }}
-                >
-                  {filmed ? "צולם" : "מוכן לצילום"}
-                </div>
-              </div>
-              <a
-                href={`/hive/signal-kit/broadcast/${extractionId}/${n}`}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  flex: "0 0 auto",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  ...(filmed
-                    ? {
-                        padding: "0 2px",
-                        minHeight: 40,
-                        background: "transparent",
-                        color: "#9E9990",
-                        border: "none",
-                        borderRadius: 0,
-                        fontSize: 12.5,
-                        fontWeight: 700,
-                        textDecoration: "underline",
-                        textDecorationColor: "rgba(158,153,144,0.4)",
-                        textUnderlineOffset: 3,
-                      }
-                    : {
-                        padding: "0 20px",
-                        minHeight: 44,
-                        background: "linear-gradient(180deg,#F1D07E,#E2B34A,#CE9C38)",
-                        color: "#171204",
-                        border: "none",
-                        borderRadius: 999,
-                        fontSize: 14,
-                        fontWeight: 800,
-                        textDecoration: "none",
-                        boxShadow: "0 6px 18px rgba(232,185,74,0.28)",
-                      }),
-                  fontFamily: "inherit",
-                }}
-              >
-                {filmed ? "טייק נוסף" : "לצלם עכשיו ←"}
-              </a>
+              {(() => {
+                const takes    = takesPerScript[n] ?? 0;
+                const takesFull = takes >= takesCap;
+                const blocked   = seasonFull || takesFull;
+                const statusLabel = filmed
+                  ? "צולם"
+                  : seasonFull
+                    ? `העונה מלאה (${seasonCap}/${seasonCap} פרקים) — מחקו פרק`
+                    : takesFull
+                      ? `הפרק הזה מלא (${takesCap}/${takesCap} טייקים) — מחקו טייק`
+                      : "מוכן לצילום";
+                const statusColor = filmed
+                  ? "#7FBF8E"
+                  : blocked
+                    ? "#FF9F9F"
+                    : "#E8B94A";
+                return (
+                  <>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15.5, color: "#EDE9E1", fontWeight: 700, lineHeight: 1.3 }}>
+                        {s.title}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: statusColor,
+                          fontWeight: 700,
+                          marginTop: 3,
+                          letterSpacing: 0.2,
+                        }}
+                      >
+                        {statusLabel}
+                      </div>
+                      {!blocked && takes > 0 && (
+                        <div style={{ fontSize: 11, color: "#9E9990", fontWeight: 300, marginTop: 2, letterSpacing: 0.1 }}>
+                          {takes}/{takesCap} טייקים בפרק
+                        </div>
+                      )}
+                    </div>
+                    {blocked ? (
+                      <span
+                        style={{
+                          flex: "0 0 auto",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          padding: "0 16px",
+                          minHeight: 40,
+                          background: "rgba(255,159,159,0.08)",
+                          color: "#9E9990",
+                          border: "1px dashed rgba(255,159,159,0.35)",
+                          borderRadius: 999,
+                          fontSize: 12.5,
+                          fontWeight: 700,
+                          fontFamily: "inherit",
+                          cursor: "not-allowed",
+                        }}
+                      >
+                        לא ניתן לצלם
+                      </span>
+                    ) : (
+                      <a
+                        href={`/hive/signal-kit/broadcast/${extractionId}/${n}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          flex: "0 0 auto",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          ...(filmed
+                            ? {
+                                padding: "0 2px",
+                                minHeight: 40,
+                                background: "transparent",
+                                color: "#9E9990",
+                                border: "none",
+                                borderRadius: 0,
+                                fontSize: 12.5,
+                                fontWeight: 700,
+                                textDecoration: "underline",
+                                textDecorationColor: "rgba(158,153,144,0.4)",
+                                textUnderlineOffset: 3,
+                              }
+                            : {
+                                padding: "0 20px",
+                                minHeight: 44,
+                                background: "linear-gradient(180deg,#F1D07E,#E2B34A,#CE9C38)",
+                                color: "#171204",
+                                border: "none",
+                                borderRadius: 999,
+                                fontSize: 14,
+                                fontWeight: 800,
+                                textDecoration: "none",
+                                boxShadow: "0 6px 18px rgba(232,185,74,0.28)",
+                              }),
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        {filmed ? "טייק נוסף" : "לצלם עכשיו ←"}
+                      </a>
+                    )}
+                  </>
+                );
+              })()}
             </summary>
             <div
               style={{

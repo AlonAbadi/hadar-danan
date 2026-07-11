@@ -68,6 +68,10 @@ const DEMO: KaveretData = {
   manifesto: "",
   letterFromHadar: null,
   pillars: null,
+  takesPerScript: { 1: 1 },
+  seasonUsed: 1,
+  seasonCap: 7,
+  takesCap: 3,
   reels: [],
   waPhone: "972000000000",
   demo: true,
@@ -179,9 +183,9 @@ export default async function KaveretPage({
       .maybeSingle(),
     (db as any)
       .from("broadcast_edits")
-      .select("video_number")
+      .select("video_number, status")
       .eq("extraction_id", ext.id)
-      .eq("status", "ready"),
+      .neq("status", "failed"),
   ]);
   let enrollment = enrollmentRow;
   if (!enrollment) {
@@ -203,9 +207,22 @@ export default async function KaveretPage({
   const completedDays: number[] = (completions ?? []).map(
     (c: { day_number: number }) => c.day_number
   );
+  // filmedNumbers = the set of video_numbers with a `ready` (finished) edit.
+  // takesPerScript = count of non-failed edits per video_number (max 3 per
+  // Alon's rule). seasonUsed = total non-failed edits across the season
+  // (max 7). Together they let <EpisodesList/> gate the לצלם עכשיו button
+  // client-side without a round-trip.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const readyEditRows = (readyEdits ?? []) as { video_number: number; status: string }[];
   const filmedCount = new Set(
-    (readyEdits ?? []).map((e: { video_number: number }) => e.video_number)
+    readyEditRows.filter((e) => e.status === "ready").map((e) => e.video_number)
   ).size;
+  const takesPerScript: Record<number, number> = {};
+  for (const e of readyEditRows) {
+    if (e.status === "failed") continue;
+    takesPerScript[e.video_number] = (takesPerScript[e.video_number] ?? 0) + 1;
+  }
+  const seasonUsed = readyEditRows.filter((e) => e.status !== "failed").length;
 
   // Scripts for the monthly zone: number + title from the shoot-day plan.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -287,8 +304,12 @@ export default async function KaveretPage({
       return { label: formatLiveMeeting(meeting), zoomUrl };
     })(),
     filmedNumbers: Array.from(
-      new Set((readyEdits ?? []).map((e: { video_number: number }) => e.video_number))
+      new Set(readyEditRows.filter((e) => e.status === "ready").map((e) => e.video_number))
     ) as number[],
+    takesPerScript,
+    seasonUsed,
+    seasonCap: 7,
+    takesCap: 3,
     aboutSite: String(kit.bio_long ?? ""),
     manifesto: String(kit.manifesto ?? ""),
     letterFromHadar: letterFromHadar
