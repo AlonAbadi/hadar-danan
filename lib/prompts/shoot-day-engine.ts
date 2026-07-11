@@ -657,10 +657,17 @@ ${HADAR_QUOTE_RULE}
 **Video 5 — OBJECTIONS** (פירוק התנגדויות, יום 5). 60s. standard. Mode B. Set A. **ACT 2**. משרת עמוד 2.
 
 - **פורמט פתיחה חובה**: ההתנגדות **בציטוט מדויק**, במרכאות, כפי שלקוח היה אומר בטלפון. לא פרפרזה.
-- **דרישה בגוף**: לפרק את ההתנגדות דרך אחד משני מסלולים: (א) סיפור על לקוח שהיה במקום הזה והצליח, (ב) פירוק ישיר של ההנחה השגויה שמאחורי ההתנגדות.
-- **סגירה**: לא לשמור את הפתרון לפגישה. משפט אחרון שאומר "עכשיו אתה יודע."
-- **איסורים**: לא "אנשים נוטים לחשוב ש..." לא "יש חשש ש...". לא לרשום את ההתנגדות בגוף שלישי — חובה גוף ראשון כמו שהלקוח אומר.
-- **תבנית דוגמה**: "'אני מפחד שאם אני אצלם את עצמי, אני אראה גרוע.' זה המשפט שאני שומע כמעט מכל אחד שאני פוגש. אני עוצר. מה שאני עומד להסביר לך — אני יודע שהוא לא נוח לשמוע. אבל האמת היא שאתה **כבר** נראה גרוע — במקום שאתה לא רואה. כי כשאתה לא מצלם, המתחרים שלך כן. וזה הם שמעצבים איך אנשים חושבים על התחום שלכם, לא אתה."
+- **דרישה בגוף — שלושה מסלולים אפשריים (בחר אחד):**
+  - (א) **Biographical / Self-as-example (מומלץ ביותר כשמתאים):** הדר עצמה חוותה את ההתנגדות. "אני מבין את זה. הייתי שם. [סיפור אישי קצר של הדר שהחזיקה באותה מחשבה, מה קרה, מה גילתה]." זה מפעיל מהלך #6 Self-as-example, יוצר עומק בעל-כורחי, ומגן על הIP (אי אפשר להעתיק ביוגרפיה).
+  - (ב) **סיפור על לקוח בודד שהיה במקום הזה** (עם פרטים חושיים, בלי שם).
+  - (ג) **פירוק ישיר של ההנחה השגויה** שמאחורי ההתנגדות (Category-Rename / Reclaim).
+- **סגירה**: משפט אחרון שאומר "עכשיו אתה יודע" **בלי להשתמש במילים האלה בפועל**. פותח שאלה שרלוונטית ל־V6/V7.
+- **איסורים**:
+  - לא "אנשים נוטים לחשוב ש…" / "יש חשש ש…" (הכללה).
+  - לא לרשום את ההתנגדות בגוף שלישי — חובה גוף ראשון כמו שהלקוח אומר.
+  - לא לפרש שתיקה של הלקוח (Silence-Interpretation Ban).
+  - לא הכרזה שאתה עומד להסביר משהו (Meta-Transition Ban).
+- **תבנית דוגמה — מסלול (א) Biographical (מומלץ):** "'אני לא מוכן עדיין.' שמעתי את זה השבוע. שמעתי את זה החודש שעבר. שמעתי את זה לפני שנה. אני מבין את זה. הייתי שם. ישבתי בתפקיד שנתן לי את כל מה שאמרו לי לרצות, ועיכבתי את השאלה הזאת כי פחדתי מה היא תגיד עליי. אבל הנה מה שאני יודע עכשיו: הפחד לא נעלם כשאתה מחכה. הוא מתחזק. המוכנות לא מגיעה לפני השיחה. היא מגיעה בתוכה."
 
 ────────────────────────────────────────────
 **Video 6 — STORY_OPINION** (סיפור + דעה, יום 6). 90s. long. Mode A. Set B. **ACT 3**. משרת עמוד 4.
@@ -706,7 +713,17 @@ ${HADAR_QUOTE_RULE}
    - eye_contact: ספציפי.
 
 4. **signature_move**:
-   - name: השם של אחד מ-15 המהלכים של הדר. בחר לפי ארכיטיפ המותג (ראה כללי הניתוב למעלה). 1-8 יציבים בכל תחום; 9-15 נבחרים לפי ארכיטיפ. אסור לציין מהלך שאינו ברשימת ה-15.
+   - name: **חובה לבחור מדויק מרשימת 15 השמות המאושרים** — הרשימה סגורה, אסור להמציא שמות חדשים. וגם — **אסור לתייג מהלך אחד בשם של מהלך אחר** (למשל: "seeing beneath what the client said" = Receptive Embodiment, לא Diagnostic-Framework Reveal; "מוכנות היא לא לפני, היא בתוך" = Category-Rename / Reclaim, לא Service Reframe). קרא את הסרטון שכתבת ואמת את התיוג נגד ההגדרה של המהלך.
+   - **הרשימה הסגורה של 15 השמות** (העתק מדויק, כולל אנגלית):
+     `External→Internal Translation` · `Service Reframe` · `אני אקביל לך Parable Building` · `Tangible Metaphor Anchor` · `Sold-Inversion` · `Self-as-example` · `Embodiment direction (Projective)` · `Anti-flattery` · `Sensory-to-Business Translation` · `Process-as-Proof` · `Receptive Embodiment` · `Specificity-as-Service` · `Silent Authority Positioning` · `Category-Rename / Reclaim` · `Diagnostic-Framework Reveal`
+   - **מיפוי מומלץ לפי סוג סרטון** (הימנע מהמלצה זו רק אם יש סיבה חזקה):
+     · PROBLEM → External→Internal Translation / Service Reframe
+     · STORY → Sensory-to-Business Translation / Specificity-as-Service
+     · GENIUS → **Receptive Embodiment** (רואה לפני שנאמר) — לא Diagnostic-Framework Reveal אלא אם באמת יש 3 פרמטרים מנוסחים
+     · CRITIQUE → Service Reframe / Category-Rename / Reclaim / Sold-Inversion
+     · OBJECTIONS → Category-Rename / Reclaim / Self-as-example (עם biographical Hadar-was-there)
+     · STORY_OPINION → Category-Rename / Reclaim / Service Reframe
+     · TESTIMONIAL_CTA → Specificity-as-Service / Receptive Embodiment
    - explanation: 1 שורה — איך הסרטון הזה משתמש במהלך.
 
 5. **anti_category**:
