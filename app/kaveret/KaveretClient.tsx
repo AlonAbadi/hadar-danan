@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import sty from "./kaveret.module.css";
+import { KAVERET_SEASONS, KAVERET_SEASONS_INTRO, type KaveretSeason } from "@/lib/kaveret-seasons";
 
 export interface KaveretCard {
   name: string;
@@ -864,10 +865,7 @@ export function KaveretClient({
                 ) : null}
               </div>
 
-              <div className={sty.seNext}>
-                <div className={sty.seNt}>העונה הבאה</div>
-                <div className={sty.seNs}>שבעה פרקים חדשים בכל חודש, במסגרת המנוי לכוורת. נפתח בקרוב</div>
-              </div>
+              <SeasonsRoadmap />
             </div>
           ) : null}
 
@@ -1849,6 +1847,66 @@ function EpisodesList({
         );
       })}
 
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SeasonsRoadmap — the /kaveret monthly-subscription is open-ended. Every
+// month a new season generates: same signal, different angle. This strip
+// makes that pipeline visible so a subscriber sees the shape of what's
+// coming, not just the current season. Season definitions are canonical
+// in lib/kaveret-seasons.ts. First season = live (current). One click on
+// any card opens a Netflix-style detail row with "what" + "why" copy.
+// ─────────────────────────────────────────────────────────────────────
+function SeasonsRoadmap() {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  const seasons = KAVERET_SEASONS;
+  const visible = showAll ? seasons : seasons.slice(0, 5);
+  const openSeason = openIdx !== null ? seasons.find((s) => s.number === openIdx) ?? null : null;
+
+  const statusLabel = (s: KaveretSeason["status"]): string =>
+    s === "live" ? "העונה שלכם" : s === "next" ? "העונה הבאה" : s === "coming" ? "בקרוב" : "בהמשך";
+
+  return (
+    <div className={sty.roadWrap}>
+      <div className={sty.roadHead}>
+        <span className={sty.roadTitle}>מפת העונות של המנוי</span>
+      </div>
+      <p className={sty.roadIntro}>{KAVERET_SEASONS_INTRO}</p>
+      <div className={sty.roadStrip}>
+        {visible.map((s) => (
+          <button
+            key={s.number}
+            type="button"
+            onClick={() => setOpenIdx(openIdx === s.number ? null : s.number)}
+            className={`${sty.roadCard} ${sty[s.status]}`}
+            style={{ textAlign: "start", fontFamily: "inherit", cursor: "pointer" }}
+          >
+            <div className={sty.roadTop}>
+              <span className={sty.roadNo}>עונה {String(s.number).padStart(2, "0")}</span>
+              <span className={sty.roadPill}>{statusLabel(s.status)}</span>
+            </div>
+            <div className={sty.roadCardTitle}>{s.title}</div>
+            <p className={sty.roadTag}>{s.tagline}</p>
+            <div className={sty.roadMeta}>{s.episodes} פרקים</div>
+          </button>
+        ))}
+      </div>
+      {!showAll && seasons.length > visible.length ? (
+        <button type="button" className={sty.roadExpand} onClick={() => setShowAll(true)}>
+          עוד {seasons.length - visible.length} עונות ←
+        </button>
+      ) : null}
+      {openSeason ? (
+        <div className={sty.roadDetail}>
+          <h4>עונה {openSeason.number} · {openSeason.title}</h4>
+          <p>{openSeason.what}</p>
+          <p className="why">{openSeason.why}</p>
+        </div>
+      ) : null}
     </div>
   );
 }
