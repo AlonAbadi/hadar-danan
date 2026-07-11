@@ -799,7 +799,7 @@ export function KaveretClient({
         <section className={sty.zone} id="z-mine" data-tab-index={4} ref={(el) => { zonesRef.current[4] = el; }}>
           <div className={sty.zhead}>
             <span className={sty.zn}>04</span>
-            <span className={sty.zt}><h2>התכנים שלי</h2><span className={sty.hint}>נגיעה בטקסט מעתיקה מיד</span></span>
+            <span className={sty.zt}><h2>התכנים שלי</h2><span className={sty.hint}>הפרקים שכבר צילמת</span></span>
           </div>
           <div className={sty.zrule} />
 
