@@ -82,9 +82,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     parsed = parseJsonResponse(text);
   } catch (e) {
+    try {
+      await gate.supabase.from("error_logs").insert({
+        context: "shoot-day videos JSON parse failed",
+        error: String(e),
+        payload: { extractionId: id, numbers, raw: text.slice(0, 4000) },
+      });
+    } catch { /* ignore */ }
     return NextResponse.json({ error: "Videos JSON parse failed", details: String(e), raw: text.slice(0, 500) }, { status: 500 });
   }
   if (!validateVideosPack(parsed)) {
+    try {
+      await gate.supabase.from("error_logs").insert({
+        context: "shoot-day videos pack invalid shape",
+        error: "validateVideosPack returned false",
+        payload: { extractionId: id, numbers, raw: text.slice(0, 8000) },
+      });
+    } catch { /* ignore */ }
     return NextResponse.json({ error: "Videos pack invalid shape", raw: text.slice(0, 500) }, { status: 500 });
   }
 
