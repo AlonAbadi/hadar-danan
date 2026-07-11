@@ -52,6 +52,10 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
   const rmsRef = useRef<{ t: number; rms: number }[]>([]);
   const rmsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const interruptedRef = useRef(false);
+  // Flipped by whichever finish path runs first (onstop or the stop-timeout
+  // guard in stopRecording). Whichever wins locks the other out so we never
+  // hand off the same take twice.
+  const stopHandledRef = useRef(true);
   const onFinishedRef = useRef(onTakeFinished);
   onFinishedRef.current = onTakeFinished;
 
@@ -169,7 +173,49 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
 
   const stopRecording = useCallback(() => {
     const rec = recorderRef.current;
-    if (rec && rec.state !== "inactive") rec.stop();
+    if (!rec || rec.state === "inactive") return;
+
+    // Belt-and-suspenders finish. iOS Safari MediaRecorder can silently
+    // fail to fire `onstop` after `stop()` on the 3rd+ take of a session
+    // (memory pressure, orientation change during recording, or the audio
+    // context being suspended by the OS). Alon 2026-07-11 hit this at
+    // take 3 — the phase stayed "room" forever because `isRecording`
+    // depended on `onstop` running.
+    //
+    // (a) requestData() before stop() forces any pending timeslice chunk
+    //     out, so the blob is complete even if onstop misfires.
+    // (b) after stop(), watch for onstop to fire within 3s. If it doesn't,
+    //     assemble the blob from the accumulated chunks and hand off to
+    //     the same onFinished path onstop would have taken. Guarded by
+    //     `stopHandledRef` so we never fire twice.
+    try { rec.requestData(); } catch { /* browser doesn't support it — harmless */ }
+    stopHandledRef.current = false;
+    rec.stop();
+
+    setTimeout(() => {
+      if (stopHandledRef.current) return; // onstop already ran, we're fine
+      stopHandledRef.current = true;
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      if (rmsIntervalRef.current) { clearInterval(rmsIntervalRef.current); rmsIntervalRef.current = null; }
+      audioCtxRef.current?.close().catch(() => {});
+      audioCtxRef.current = null;
+      setIsRecording(false);
+
+      const chunks = chunksRef.current;
+      chunksRef.current = [];
+      const durationMs = performance.now() - startedAtRef.current;
+      const type = chunks[0]?.type || rec.mimeType || "video/mp4";
+      const blob = new Blob(chunks, { type });
+      const trims = suggestTrims(rmsRef.current, durationMs);
+      onFinishedRef.current({
+        blob,
+        mimeType: type,
+        durationMs,
+        suggestedTrimStartMs: trims?.start ?? null,
+        suggestedTrimEndMs: trims?.end ?? null,
+        interrupted: true, // fell through the guard — mark it so we log it
+      });
+    }, 3000);
   }, []);
 
   const startRecording = useCallback(() => {
@@ -212,13 +258,18 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     });
     chunksRef.current = [];
     interruptedRef.current = false;
+    stopHandledRef.current = false;
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
     recorder.onstop = () => {
+      // Guard race with stopRecording's timeout fallback. First writer wins.
+      if (stopHandledRef.current) return;
+      stopHandledRef.current = true;
+
       const durationMs = performance.now() - startedAtRef.current;
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (rmsIntervalRef.current) clearInterval(rmsIntervalRef.current);
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      if (rmsIntervalRef.current) { clearInterval(rmsIntervalRef.current); rmsIntervalRef.current = null; }
       audioCtxRef.current?.close().catch(() => {});
       audioCtxRef.current = null;
       setIsRecording(false);
