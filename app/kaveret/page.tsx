@@ -232,6 +232,13 @@ export default async function KaveretPage({
     hook: String(v.script?.hook ?? ""),
     body: String(v.script?.body ?? ""),
     cta: v.script?.cta ? String(v.script.cta) : "",
+    // 2026-07-11 addition: V7 TESTIMONIAL_CTA carries client_interview_questions
+    // — the questions the customer will pose to their own clients so testimonial
+    // answers voice the signal. Kept as string[] | undefined so a legacy V7
+    // (pre-R6) simply hides the card.
+    interviewQuestions: Array.isArray(v.client_interview_questions)
+      ? v.client_interview_questions.filter((q: unknown) => typeof q === "string" && q.length > 0)
+      : undefined,
   });
   // Stitch shoot_day.videos + per-video slices (v1..v7) into one canonical
   // list. Slices win on conflict (they're the fresh per-row regens fired

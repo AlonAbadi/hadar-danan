@@ -30,7 +30,7 @@ export interface KaveretData {
   monthLabel: string;
   filmedCount: number;
   scriptsTotal: number;
-  scripts: { number: number; title: string; hook: string; body: string; cta: string }[];
+  scripts: { number: number; title: string; hook: string; body: string; cta: string; interviewQuestions?: string[] }[];
   extractionId: string | null;
   challengeDays: { day: number; title: string; videoId: string; portrait: boolean }[];
   completedDays: number[];
@@ -1479,7 +1479,7 @@ function ShootDayProgress({ filmed, total }: { filmed: number; total: number }) 
   );
 }
 
-type BuiltScript = { number: number; title: string; hook: string; body: string; cta: string };
+type BuiltScript = { number: number; title: string; hook: string; body: string; cta: string; interviewQuestions?: string[] };
 
 function EpisodesList({
   extractionId,
@@ -1543,6 +1543,9 @@ function EpisodesList({
         hook:   String(v.script?.hook ?? ""),
         body:   String(v.script?.body ?? ""),
         cta:    v.script?.cta ? String(v.script.cta) : "",
+        interviewQuestions: Array.isArray(v.client_interview_questions)
+          ? v.client_interview_questions.filter((q: unknown): q is string => typeof q === "string" && q.length > 0)
+          : undefined,
       };
       setLocalScripts((prev) => {
         const withoutN = prev.filter((s) => s.number !== n);
@@ -1839,10 +1842,98 @@ function EpisodesList({
                 </>
               ) : null}
             </div>
+            {s.interviewQuestions && s.interviewQuestions.length > 0 ? (
+              <InterviewQuestionsCard questions={s.interviewQuestions} />
+            ) : null}
           </details>
         );
       })}
 
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// InterviewQuestionsCard — Hadar's canonical rule (HADAR_FUNNEL_FRAMEWORK
+// 2026-07-11): a testimonial video's value doesn't come from the testimonial
+// itself. It comes from the questions the customer asks their own clients —
+// questions built so the answer voices the signal statement in the client's
+// words. The engine emits these on V7 as `client_interview_questions`; this
+// card renders them under the V7 script with a copy-all action so the
+// customer can paste them into WhatsApp/email before booking a testimonial
+// call.
+// ─────────────────────────────────────────────────────────────────────
+function InterviewQuestionsCard({ questions }: { questions: string[] }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(async () => {
+    const text = questions.map((q, i) => `${i + 1}. ${q}`).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* clipboard blocked — do nothing */
+    }
+  }, [questions]);
+
+  return (
+    <div
+      style={{
+        marginTop: 10,
+        padding: "12px 14px",
+        background: "rgba(232,185,74,0.06)",
+        border: "1px solid rgba(232,185,74,0.18)",
+        borderRadius: 10,
+        color: "#EDE9E1",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 8,
+        }}
+      >
+        <span
+          style={{
+            color: "#E8B94A",
+            fontSize: 11.5,
+            fontWeight: 800,
+            letterSpacing: 2,
+          }}
+        >
+          שאלות לראיון עדות
+        </span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          style={{
+            background: "transparent",
+            border: "1px solid rgba(232,185,74,0.4)",
+            color: "#E8B94A",
+            padding: "4px 10px",
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer",
+            fontFamily: "inherit",
+          }}
+        >
+          {copied ? "הועתקו ✓" : "העתק הכל"}
+        </button>
+      </div>
+      <p style={{ fontSize: 12.5, color: "#9E9990", margin: "0 0 10px", lineHeight: 1.55 }}>
+        השאלות האלה מכוונות את הלקוח שלך לומר בפיו את משפט האות. שאל אותן בראיון עדות לפני שאתה מקליט.
+      </p>
+      <ol style={{ margin: 0, paddingInlineStart: 20, fontSize: 14.5, lineHeight: 1.7 }}>
+        {questions.map((q, i) => (
+          <li key={i} style={{ marginBottom: 4 }}>
+            {q}
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
