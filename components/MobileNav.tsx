@@ -19,13 +19,13 @@ const ITEMS_GROUP2 = [
 const ITEMS_GROUP3 = [
   { label: "הדרכה חינמית",       price: "חינם",    href: "/training" },
   { label: "אתגר 7 ימים",        price: "₪197",    priceOriginal: "₪297", href: "/challenge" },
+  { label: "כוורת האות",         price: "₪590",    href: "/signal-hive", accent: true },
   { label: "סדנה יום אחד",       price: "₪1,080",  href: "/workshop" },
-  { label: "קורס דיגיטלי",       price: "₪1,800",  href: "/course" },
   { label: "פגישת אסטרטגיה",     price: "₪4,000",  href: "/strategy" },
   { label: "יום צילום פרמיום",   price: "₪14,000", href: "/premium" },
   { label: "שותפות",             price: "+₪10k",   href: "/partnership" },
   { label: "אטלייה ליוצרי תוכן", price: "בהתאמה", href: "/atelier" },
-  { label: "המסלול האחר",        price: "במועמדות", href: "/apply", accent: true },
+  { label: "המסלול האחר",        price: "במועמדות", href: "/apply" },
 ];
 
 // Members never see the hive SALES page in the menu — their item leads home.
