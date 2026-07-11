@@ -406,6 +406,15 @@ export function KaveretClient({
       {/* pixel parity with the mockup: same hosted font, same weights */}
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+      {/* Shared pulse keyframe — used by BuildShootDay and EpisodesList
+          to show that generation is in flight. Hoisted here so both
+          empty state and populated state have access without duplicating. */}
+      <style>{`
+        @keyframes kavPulse {
+          0%,100% { opacity: 1; transform: scale(1); }
+          50%     { opacity: 0.35; transform: scale(0.65); }
+        }
+      `}</style>
       <div className={sty.bgfix} aria-hidden="true" />
       <div className={sty.glow} aria-hidden="true" />
 
@@ -1064,6 +1073,12 @@ function BuildShootDay({ extractionId }: { extractionId: string | null }) {
     }
   }, [extractionId]);
 
+  const working = state === "phase1" || state === "phase2" || state === "done";
+  const label =
+    state === "phase1" ? "מחלצים את משפט הזהות שלך…" :
+    state === "phase2" ? "בונים את הסרטון הראשון…" :
+    state === "done"   ? "רגע…" :
+    "לבנות את ערכת הצילום";
   return (
     <>
       <p className={sty.txt}>ערכת יום הצילום שלך עוד לא נבנתה. זה לוקח כמה דקות, ומחכה לך בערכה.</p>
@@ -1077,15 +1092,27 @@ function BuildShootDay({ extractionId }: { extractionId: string | null }) {
           type="button"
           className={`${sty.btnCopy} ${sty.btnCard}`}
           onClick={build}
-          disabled={state === "phase1" || state === "phase2"}
-          style={{ cursor: state === "phase1" || state === "phase2" ? "wait" : "pointer" }}
+          disabled={working}
+          style={{
+            cursor: working ? "wait" : "pointer",
+            gap: 10,
+          }}
         >
-          <span>
-            {state === "phase1" ? "מחלץ את משפט הזהות שלך…" :
-             state === "phase2" ? "בונה את הסרטון הראשון…" :
-             state === "done"   ? "רגע…" :
-             "לבנות את ערכת הצילום"}
-          </span>
+          {working && (
+            <span
+              aria-hidden="true"
+              style={{
+                display: "inline-block",
+                width: 10,
+                height: 10,
+                borderRadius: 999,
+                background: "#171204",
+                marginInlineEnd: 4,
+                animation: "kavPulse 1s ease-in-out infinite",
+              }}
+            />
+          )}
+          <span>{label}</span>
         </button>
       </div>
     </>
@@ -1611,7 +1638,7 @@ function EpisodesList({
                       marginInlineEnd: 6,
                       animation: "kavPulse 1s ease-in-out infinite",
                     }} />
-                    המנוע כותב את הפרק, כ-20 שניות
+                    כותבים את הפרק, כ-20 שניות
                   </div>
                 ) : err ? (
                   <div style={{ fontSize: 12.5, color: "#FF8888", fontWeight: 500, marginTop: 2 }}>{err}</div>
@@ -1813,13 +1840,6 @@ function EpisodesList({
         );
       })}
 
-      {/* pulse keyframe used by the "generating" dot above */}
-      <style>{`
-        @keyframes kavPulse {
-          0%,100% { opacity: 1; transform: scale(1); }
-          50%     { opacity: 0.35; transform: scale(0.65); }
-        }
-      `}</style>
     </div>
   );
 }

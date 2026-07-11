@@ -18,7 +18,9 @@ import { ActionButton, TopBar } from "./ui";
 const POLL_MS = 5000;
 const HANDOFF_MS = 90_000;
 const TRIM_STEP_MS = 250;
-const KIT_HREF = "/hive/signal-kit";
+// Direct to /kaveret to kill the /hive/signal-kit → /kaveret redirect bounce
+// (Alon 2026-07-11).
+const KIT_HREF = "/kaveret";
 
 interface EditSnapshot {
   status: "queued" | "transcribing" | "awaiting_captions" | "burning" | "ready" | "failed";
@@ -128,7 +130,7 @@ export function ProcessingAndApproval({
   // failed — never a dead end: retry path + way home
   return (
     <>
-      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לערכה" />
+      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
         <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8 }}>
           {getBroadcastCopy("error.processing_failed")}
@@ -164,7 +166,7 @@ function StageScreen({
   const activeIdx = stage === "transcribing" ? 0 : 2;
   return (
     <>
-      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לערכה" />
+      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
         <p style={{ color: "#9E9990", fontSize: 14, textAlign: "center" }}>
           {getBroadcastCopy("director.breathing")}
@@ -228,7 +230,7 @@ function BurningScreen({ editId, onAnotherTake }: { editId: string; onAnotherTak
     // the way back. The moment the burn finishes this flows into the output.
     return (
       <>
-        <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לערכה" />
+        <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "64px 24px", textAlign: "center" }}>
           <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, lineHeight: 1.7 }}>
             {getBroadcastCopy("processing.handoff")}
@@ -312,7 +314,7 @@ function CaptionApproval({
   if (transcriptFailed && mode === null) {
     return (
       <>
-        <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel="לערכה" />
+        <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
           <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, textAlign: "center" }}>
             {getBroadcastCopy("captions.failed.title")}
@@ -432,7 +434,7 @@ function CaptionApproval({
   const visible = lines.filter((l) => !l.deleted);
   return (
     <>
-      <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel="לערכה" />
+      <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 140px" }}>
         <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.hint")}</p>
         {previewSrc ? (
@@ -608,7 +610,7 @@ function OutputScreen({
 
   return (
     <>
-      <TopBar title="הרילס מוכן" backHref={KIT_HREF} backLabel="לערכה" />
+      <TopBar title="הרילס מוכן" backHref={KIT_HREF} backLabel="לפרקים שלי" />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 220px" }}>
         {snap.output_url ? (
           <div style={{ position: "relative" }}>
@@ -651,6 +653,13 @@ function OutputScreen({
           ) : null}
           <ActionButton variant="ghost" onClick={onAnotherTake}>
             {getBroadcastCopy("takes.another")}
+          </ActionButton>
+          {/* Explicit exit back to the season view. The TopBar's
+              "→ לפרקים שלי" is easy to miss on a phone once the customer
+              scrolls to the share/download sticky bar; this ghost link
+              gives them the same escape from inside the action rail. */}
+          <ActionButton variant="ghost" href={KIT_HREF}>
+            סיימתי לפרק הזה, חזרה לפרקים שלי ←
           </ActionButton>
         </div>
       </div>

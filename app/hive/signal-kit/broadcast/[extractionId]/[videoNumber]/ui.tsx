@@ -45,13 +45,15 @@ export function TopBar({
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: 6,
-        color: "#C9964A",
-        fontSize: 14,
-        fontWeight: 600,
+        gap: 8,
+        color: "#E8B94A",
+        fontSize: 16,
+        fontWeight: 700,
+        padding: "4px 6px",
+        letterSpacing: 0.2,
       }}
     >
-      <span style={{ fontSize: 17 }}>→</span> {backLabel}
+      <span style={{ fontSize: 20, fontWeight: 800 }}>→</span> {backLabel}
     </span>
   );
   return (

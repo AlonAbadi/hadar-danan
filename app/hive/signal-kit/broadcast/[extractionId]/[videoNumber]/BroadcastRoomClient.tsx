@@ -13,7 +13,10 @@ import { uploadManager, type TakeUpload } from "./uploadManager";
 import { ProcessingAndApproval } from "./ProcessingAndApproval";
 import { ActionButton, RoomStyles, TopBar } from "./ui";
 
-const KIT_HREF = "/hive/signal-kit";
+// Alon 2026-07-11: direct to /kaveret instead of the /hive/signal-kit
+// redirect double-bounce that was making the whole broadcast flow feel like
+// it "restarted the page" when the customer wanted to go back.
+const KIT_HREF = "/kaveret";
 
 const MIN_TAKE_MS = 10_000;
 const MAX_TAKE_MS = 180_000;
@@ -392,7 +395,7 @@ export function BroadcastRoomClient({
     return (
       <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
-        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לערכה" />
+        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
         <CenteredCard title={getBroadcastCopy("error.unsupported")} />
       </div>
     );
@@ -402,7 +405,7 @@ export function BroadcastRoomClient({
     return (
       <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
-        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לערכה" />
+        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
         <PermissionDenied onRetry={rec.requestCamera} />
       </div>
     );
@@ -796,7 +799,7 @@ function PrepScreen({
 }) {
   return (
     <>
-    <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לערכה" />
+    <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "16px 20px 120px" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "16px 0 4px" }}>
         {videoTitle || getBroadcastCopy("prep.title")}
@@ -899,7 +902,7 @@ function TakeGallery({
         onBack={onBackToCamera}
         backLabel="חזרה לצילום"
         extraHref={KIT_HREF}
-        extraLabel="לערכה"
+        extraLabel="לפרקים שלי"
       />
       {directorLine ? (
         <p
