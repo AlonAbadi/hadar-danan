@@ -162,13 +162,13 @@ export function SignalHiveCTA({ whatsappPhone, initialEmail = "" }: { whatsappPh
       return (
         <button onClick={() => hasPhone ? doCheckout(quizUserId) : setPhase("phone")}
           className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold">
-          {quizName ? `${quizName}, ` : ""}להצטרף לכוורת האות · ₪{LIST_PRICE} ←
+          אני מצטרף לכוורת האות · ₪{LIST_PRICE}
         </button>
       );
     }
     return (
       <button onClick={() => setPhase("form")} className="w-full rounded-full py-4 text-lg font-bold active:scale-[0.98] btn-cta-gold">
-        להצטרף לכוורת האות · ₪{LIST_PRICE} ←
+        אני מצטרף לכוורת האות · ₪{LIST_PRICE}
       </button>
     );
   }
