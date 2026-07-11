@@ -38,7 +38,7 @@ export default function BroadcastClient({ stats }: { stats: BroadcastOverviewSta
   const {
     total_users, total_takes, total_edits_started, total_edits_ready, total_edits_failed,
     total_downloaded, total_published, overall_publish_rate, overall_takes_per_ready,
-    per_script, recent_activity,
+    per_script, recent_activity, today, producers,
   } = stats;
 
   // Merge canonical structure with observed data so we always render 7 rows.
@@ -65,6 +65,50 @@ export default function BroadcastClient({ stats }: { stats: BroadcastOverviewSta
         titleEn="Broadcast Room Analytics"
         subtitle="איזה תסריטים באמת מייצרים רילסים מפורסמים — feedback loop למנוע הדר"
       />
+
+      <KpiGrid cols={3}>
+        <KpiCard label="טייקים היום"   value={today.takes.toLocaleString()}     icon="🎬"
+          variant={today.takes > 0 ? 'gold' : undefined} />
+        <KpiCard label="רילסים שהושלמו היום" value={today.reels.toLocaleString()} icon="🎥"
+          variant={today.reels > 0 ? 'success' : undefined} />
+        <KpiCard label="חברות שצילמו היום"  value={today.producers.toLocaleString()} icon="👥"
+          variant={today.producers > 0 ? 'gold' : undefined} />
+      </KpiGrid>
+
+      <SectionCard title="מי מייצר" titleEn="Producers">
+        {producers.length === 0 ? (
+          <EmptyState icon="🎬" title="אף אחת עוד לא צילמה" description="ברגע שחברה תצלם טייק ראשון היא תופיע כאן." />
+        ) : (
+          <DataTable
+            columns={[
+              { key: 'who',    label: 'חברה',            align: 'right' },
+              { key: 'tToday', label: 'טייקים היום',      align: 'right' },
+              { key: 'tAll',   label: 'טייקים סה"כ',     align: 'right' },
+              { key: 'ready',  label: 'רילסים מוכנים',   align: 'right' },
+              { key: 'pub',    label: 'פורסמו',           align: 'right' },
+              { key: 'last',   label: 'פעילות אחרונה',    align: 'right' },
+            ]}
+            rows={producers.map((p) => ({
+              key: p.user_id,
+              who: (
+                <div>
+                  <div style={{ fontWeight: 700 }}>{p.name}</div>
+                  <div style={{ fontSize: 12, color: '#9E9990', direction: 'ltr', textAlign: 'right' }}>{p.email}</div>
+                </div>
+              ),
+              tToday: p.takes_today > 0
+                ? <Badge variant="gold">{p.takes_today}</Badge>
+                : <span style={{ color: '#9E9990' }}>0</span>,
+              tAll: p.takes_total.toLocaleString(),
+              ready: p.reels_ready.toLocaleString(),
+              pub: p.published > 0 ? <Badge variant="success">{p.published}</Badge> : '0',
+              last: p.last_at
+                ? new Date(p.last_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : '—',
+            }))}
+          />
+        )}
+      </SectionCard>
 
       <KpiGrid cols={4}>
         <KpiCard label="משתמשים שצילמו"     value={total_users.toLocaleString()}       icon="👥" />
@@ -166,6 +210,7 @@ export default function BroadcastClient({ stats }: { stats: BroadcastOverviewSta
           <DataTable
             columns={[
               { key: 'at',    label: 'זמן',       align: 'right' },
+              { key: 'who',   label: 'מי',        align: 'right' },
               { key: 'event', label: 'אירוע',    align: 'right' },
               { key: 'v',     label: 'סרטון',    align: 'right' },
             ]}
@@ -178,7 +223,8 @@ export default function BroadcastClient({ stats }: { stats: BroadcastOverviewSta
               const meta = VIDEO_LABELS[e.video_number];
               return {
                 key: `${e.at}-${i}`,
-                at: <span style={{ fontSize: 12, color: '#9E9990' }}>{new Date(e.at).toLocaleString('he-IL')}</span>,
+                at: <span style={{ fontSize: 12, color: '#9E9990' }}>{new Date(e.at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })}</span>,
+                who: <span style={{ fontWeight: 700 }}>{e.user_name || e.user_email || '—'}</span>,
                 event: <Badge variant={activityVariant(e.event)}>{label}</Badge>,
                 v: meta ? `#${e.video_number} · ${meta.title}` : `#${e.video_number}`,
               };

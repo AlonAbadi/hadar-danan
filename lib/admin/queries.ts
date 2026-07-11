@@ -920,6 +920,23 @@ export interface BroadcastOverviewStats {
     event:         'take' | 'edit_ready' | 'downloaded' | 'published';
     video_number:  number;
     user_email?:   string | null;
+    user_name?:    string | null;
+  }>;
+  // "מי צילם היום" — Israel calendar day.
+  today: {
+    takes:      number;
+    reels:      number;
+    producers:  number;
+  };
+  producers: Array<{
+    user_id:      string;
+    name:         string;
+    email:        string;
+    takes_total:  number;
+    takes_today:  number;
+    reels_ready:  number;
+    published:    number;
+    last_at:      string | null;
   }>;
 }
 
@@ -1016,11 +1033,62 @@ export async function getBroadcastStats(): Promise<BroadcastOverviewStats> {
     return reviewByItemId.get(e.review_item_id)?.status === 'published';
   }).length;
 
+  // ── the person dimension (Alon 2026-07-11: "מי עשה סרטונים היום") ──
+  const jlmDay = (iso: string) =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date(iso));
+  const todayStr = jlmDay(new Date().toISOString());
+
+  const userIds = Array.from(new Set([...takes.map((t) => t.user_id), ...edits.map((e) => e.user_id)]));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const usersRes = userIds.length
+    ? await (supabase as any).from('users').select('id, name, email').in('id', userIds)
+    : { data: [] };
+  const usersById = new Map<string, { name: string | null; email: string | null }>();
+  for (const u of (usersRes.data ?? []) as Array<{ id: string; name: string | null; email: string | null }>) {
+    usersById.set(u.id, { name: u.name, email: u.email });
+  }
+
+  const producerMap = new Map<string, {
+    takes_total: number; takes_today: number; reels_ready: number; published: number; last_at: string | null;
+  }>();
+  const producer = (uid: string) => {
+    let p = producerMap.get(uid);
+    if (!p) { p = { takes_total: 0, takes_today: 0, reels_ready: 0, published: 0, last_at: null }; producerMap.set(uid, p); }
+    return p;
+  };
+  for (const t of takes) {
+    const p = producer(t.user_id);
+    p.takes_total++;
+    if (jlmDay(t.created_at) === todayStr) p.takes_today++;
+    if (!p.last_at || t.created_at > p.last_at) p.last_at = t.created_at;
+  }
+  for (const e of edits) {
+    const p = producer(e.user_id);
+    if (e.status === 'ready') p.reels_ready++;
+    if (e.review_item_id && reviewByItemId.get(e.review_item_id)?.status === 'published') p.published++;
+    if (e.updated_at && (!p.last_at || e.updated_at > p.last_at)) p.last_at = e.updated_at;
+  }
+  const producers = Array.from(producerMap.entries())
+    .map(([uid, p]) => ({
+      user_id: uid,
+      name: usersById.get(uid)?.name || '—',
+      email: usersById.get(uid)?.email || '',
+      ...p,
+    }))
+    .sort((a, b) => (b.last_at ?? '').localeCompare(a.last_at ?? ''));
+
+  const today = {
+    takes: takes.filter((t) => jlmDay(t.created_at) === todayStr).length,
+    reels: edits.filter((e) => e.status === 'ready' && jlmDay(e.updated_at) === todayStr).length,
+    producers: new Set(takes.filter((t) => jlmDay(t.created_at) === todayStr).map((t) => t.user_id)).size,
+  };
+
+
   // Recent activity feed (last 20 events).
   const events: BroadcastOverviewStats['recent_activity'] = [];
-  for (const t of takes) events.push({ at: t.created_at, event: 'take', video_number: t.video_number });
+  for (const t of takes) events.push({ at: t.created_at, event: 'take', video_number: t.video_number, user_name: usersById.get(t.user_id)?.name ?? null, user_email: usersById.get(t.user_id)?.email ?? null });
   for (const e of edits) {
-    if (e.status === 'ready') events.push({ at: e.updated_at, event: 'edit_ready', video_number: e.video_number });
+    if (e.status === 'ready') events.push({ at: e.updated_at, event: 'edit_ready', video_number: e.video_number, user_name: usersById.get(e.user_id)?.name ?? null, user_email: usersById.get(e.user_id)?.email ?? null });
     if (e.downloaded_at)      events.push({ at: e.downloaded_at, event: 'downloaded', video_number: e.video_number });
     if (e.review_item_id) {
       const r = reviewByItemId.get(e.review_item_id);
@@ -1033,6 +1101,8 @@ export async function getBroadcastStats(): Promise<BroadcastOverviewStats> {
   const recent_activity = events.slice(0, 20);
 
   return {
+    today,
+    producers,
     total_users,
     total_takes,
     total_edits_started,

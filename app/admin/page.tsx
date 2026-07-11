@@ -81,6 +81,7 @@ const NAV_CARDS = [
   { title: 'זום אתגר — 23.6', desc: 'משתתפי הזום הקרוב, טלפונים, התקדמות',  href: '/admin/upcoming/challenge-zoom', group: 'תוכן', icon: '🎥' },
   { title: 'סדנה — 30.7',     desc: 'נרשמי הסדנה הקרובה, טלפונים ופרטים',    href: '/admin/upcoming/workshop',       group: 'תוכן', icon: '🎤' },
   { title: 'הכוורת',          desc: 'חברי קהילה, MRR, שימור מנויים',          href: '/admin/community',   group: 'קהילה',    icon: '🐝' },
+  { title: 'חדר השידור',      desc: 'מי מצלמת, טייקים, רילסים ופרסומים',      href: '/admin/broadcast',   group: 'קהילה',    icon: '🎬' },
   { title: 'מנוע האות',       desc: 'אבחוני TrueSignal© של לידים — האות שלהם',  href: '/admin/signal',      group: 'קהילה',    icon: '✨' },
   { title: 'מודל MMM',        desc: 'הקצאת תקציב, רגרסיה, תחזיות',           href: '/admin/mmm',         group: 'אנליטיקה', icon: '🔬' },
   { title: 'לוגים ומערכת',    desc: 'שגיאות, אירועים, מעקב מערכת',           href: '/admin/system',      group: 'מערכת',    icon: '⚙️' },
