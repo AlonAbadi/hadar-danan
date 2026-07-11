@@ -48,7 +48,42 @@ export type Pillar = {
 };
 
 export type VideoMode = "B" | "A" | "C" | "D";  // B=hook, A=story, C=framework, D=manifest
-export type VideoType = "IDENTITY" | "PILLAR_HOOK" | "STORY" | "FRAMEWORK" | "MYTH" | "CTA";
+// The 7 video formats align with Hadar's 7-day challenge methodology
+// (updated 2026-07-11 per Alon; replaces the earlier michael-kadosh shot
+// list). Each corresponds to one day of the challenge; the shoot day
+// packages the whole methodology in a single filming session.
+// Legacy types (IDENTITY / PILLAR_HOOK / STORY / FRAMEWORK / MYTH / CTA)
+// stay recognised so cached plans still validate — the new plans emit the
+// challenge-aligned types below.
+export type VideoType =
+  | "PROBLEM"        // day 1 — סרטון בעיה
+  | "STORY"          // day 2 — סרטון סיפור (מסר גדול מתוך סיפור אישי)
+  | "GENIUS"         // day 3 — אזור הגאונות
+  | "CRITIQUE"       // day 4 — סרטון ביקורת / דעה
+  | "OBJECTIONS"     // day 5 — פירוק התנגדויות
+  | "STORY_OPINION"  // day 6 — סיפור מהחיים + דעה מקצועית
+  | "TESTIMONIAL_CTA"// day 7 — עדות + הזמנה
+  // Legacy types kept for backward compat with cached plans; new plans
+  // must emit the challenge-aligned types above.
+  | "IDENTITY"
+  | "PILLAR_HOOK"
+  | "FRAMEWORK"
+  | "MYTH"
+  | "CTA";
+
+// Retention technique for the hook AND the whole script. Alon 2026-07-11:
+// "הוק שאחרי שלוש שניות הצופה נשאר עם סקרנות להמשיך לצפות עד הסוף".
+// The engine picks one per video from the seven techniques defined in
+// HOOK_TECHNIQUES; the hook, body, and (where present) CTA are architected
+// as one continuous mechanism so watch-through is engineered, not hoped for.
+export type HookTechnique =
+  | "open_loop"
+  | "contradiction_setup"
+  | "pattern_interrupt"
+  | "stakes_escalation"
+  | "cliffhanger_chain"
+  | "reveal_delay"
+  | "domain_transfer";
 
 // Reels format profile — dictates the internal beat structure of the script.
 // Derived from duration, but explicit in the output so Claude commits to a
@@ -83,6 +118,11 @@ export type Video = {
     body:   string;       // Middle content
     cta?:   string;       // Optional close (only on CTA video)
   };
+
+  // Retention technique that governs the whole script (hook → body → cta).
+  // Optional in the type to survive legacy caches that predate the field;
+  // new prompts REQUIRE it. See HOOK_TECHNIQUES.
+  hook_technique?: HookTechnique;
 
   direction: {
     visual:        string;    // "פאן קרוב, רקע אדמתי, אור צד טבעי"
@@ -258,30 +298,61 @@ const REELS_PROFILES = `פרופילי רילס (חובה לתייג כל סרט
 - Body: beat אחד בלבד. רעיון אחד. אסור לפצל לשני רעיונות — זה כבר standard.
 - Close: פאנץ' ליין קטלני, לא CTA. משפט שנשאר במחשבה.
 - אורך תסריט: כ-50-80 מילים בעברית.
-- מתאים ל-VideoType: IDENTITY (V1), PILLAR_HOOK, MYTH, לעיתים CTA.
+- מתאים ל-VideoType: PROBLEM (V1), TESTIMONIAL_CTA (V7).
 
 **standard** (30-60 שניות) — הרילס הבינוני. hook + 2 beats + CTA רך.
 - Hook: 3 שניות. מציב מתח או שאלה שהצופה חייב/ת לגלות תשובה.
 - Body: 2 beats. beat 1 = בעיה/סתירה. beat 2 = תובנה/הפוך.
 - CTA: רך ומסקרן. "מי שרוצה להעמיק, פנייה בפרטי." לא "התקשרו עכשיו!!!".
 - אורך תסריט: כ-120-180 מילים בעברית.
-- מתאים ל-VideoType: PILLAR_HOOK ארוך, FRAMEWORK קצר, CTA.
+- מתאים ל-VideoType: GENIUS (V3), CRITIQUE (V4), OBJECTIONS (V5).
 
 **long** (60-90+ שניות) — הפורמט הארוך יחסית. סיפור אמיתי או framework עמוק.
 - Hook: 3-5 שניות. מציב מתח + מבטיח תובנה שווה את הזמן.
 - Body: 3-4 beats. story arc (התחלה → משבר → פנייה → פתרון) או framework arc (X שאלות/סוגים/עקרונות).
 - Insight: לפני ה-CTA, נקודת-מפתח שתישאר. "זו הסיבה ש..."
 - CTA: ברור אבל בלי דחיפות מזויפת. הגדרה מלאה של הצעד הבא.
+- מתאים ל-VideoType: STORY (V2), STORY_OPINION (V6).
 - אורך תסריט: כ-220-350 מילים בעברית.
 - מתאים ל-VideoType: STORY, FRAMEWORK עמוק, CTA עם הצדקה מלאה.
 
 חוקי אכיפה נוקשים:
-1. Video 1 (IDENTITY) הוא תמיד tight ואינו כולל CTA.
+1. Video 1 (PROBLEM) הוא תמיד tight ואינו כולל CTA.
 2. אם ה-hook לוקח יותר מ-3 שניות, זה לא tight.
 3. אם ה-body מכיל 2+ beats, זה לא tight — עלה ל-standard.
 4. אם ה-body מכיל 3+ beats, זה long. אחרת רדה ל-standard.
 5. long בלי insight מפורש = תסריט חלש. חובה לכלול משפט "זה בדיוק ה...".
 6. הפרופיל חייב להתאים ל-duration: 15/20/30s = tight, 45/60s = standard, 90s/2m = long.`;
+
+// ── Retention / hook techniques ───────────────────────────────────────
+// Alon 2026-07-11: "לא שיתפס או יעצר רק אלא גם שימשיך בצפייה עד הסוף".
+// The hook by itself buys you the first 3 seconds. What keeps a viewer to
+// the last frame is a retention MECHANISM that opens something in the hook
+// and closes it only near the end. This block gives the engine seven such
+// mechanisms; each video must commit to one, and the whole script — hook,
+// body, close/CTA — must serve that mechanism. Retention is engineered,
+// not hoped for.
+const HOOK_TECHNIQUES = `שבע טכניקות רטנציה — הצופה נשאר עד הסוף (חובה: כל סרטון בוחר בדיוק אחת ומצהיר עליה בשדה hook_technique, וכל התסריט — hook, body, close — משרת אותה כמכניזם אחד):
+
+**open_loop** (לולאה פתוחה) — ההוק מציב שאלה או תעלומה שהתשובה שלה חבויה בסוף. אסור לתת רמז לתשובה ב-hook או ב-beat הראשון; רק ב-beat האחרון או במשפט הפאנץ' התשובה נחשפת. דוגמה: "רוב הלקוחות שאני מפסיד — מפסיד בגלל טעות אחת ספציפית שאני חוזר עליה כבר שנתיים." הצופה חייב לצפות עד הסוף כדי לגלות איזו טעות.
+
+**contradiction_setup** (סתירה מכוונת) — ההוק אומר משפט שהצופה חושב "זה לא ייתכן / זה הפוך ממה שכולם אומרים." הגוף מגן על הסתירה בשלושה טיעונים שנותנים לצופה אב-אישור מודרג. הסוף אומר: "לכן זה בדיוק מה שקורה." שימושי במיוחד ל-CRITIQUE ול-STORY_OPINION.
+
+**pattern_interrupt** (שבירת דפוס) — ההוק פותח באמצע — כאילו התחלנו סרטון קודם. מילה ראשונה: "אבל..." / "רגע..." / "לא..." / "טוב..." הצופה נעצר כי הוא לא מבין את ההקשר; הבגוף חוזר אחורה ומספר את ההקשר. שיטה חזקה במיוחד לסרטוני OBJECTIONS ולסרטוני GENIUS.
+
+**stakes_escalation** (העלאת סיכון) — כל beat מעלה את המחיר האישי של אי-פעולה. אין "זה כדאי" — יש "אם לא תעשה את זה, בעוד שנתיים אתה שם, בעוד ארבע שנים אתה שם." הצופה נשאר כי הוא צריך לדעת עד לאן זה מוביל. חובה: ה-close מציב את הרגע האחרון של יכולת התיקון.
+
+**cliffhanger_chain** (שרשרת מתח) — כל beat מסתיים במילה שדוחפת ל-beat הבא. "אבל..." / "רגע..." / "החלק המעניין הוא..." / "הסוד הוא..." / "וזה עוד לא הכל." הגוף אף פעם לא נגמר בנקודה — הוא נגמר בפסיק שמכריח את הצופה לחכות. שימושי במיוחד ל-STORY ול-STORY_OPINION.
+
+**reveal_delay** (עיכוב חשיפה) — ההוק מבטיח תובנה גדולה ("אני עומד לספר לכם למה 90% מסרטוני העסק לא עובדים") אבל התובנה מגיעה רק ב-70% מהזמן. הגוף בונה קונטקסט מבלי לחשוף את התשובה. חובה: אסור להשתמש בשיטה הזאת בסרטון תחת 45 שניות — אין מספיק זמן לבניית הציפייה.
+
+**domain_transfer** (העברת תחום) — ההוק פותח בעולם אחר לגמרי מזה של הלקוח/ה. סיפור על שף, ריצה, סבתא, אביזר יומיומי. הגוף מפתח את הסיפור. הסוף מוריד את הדימוי חזרה לעולם של הלקוח/ה עם משפט אחד קצר: "וזה בדיוק מה שקורה עם [X]." הכי חזק ל-STORY ול-GENIUS, ובלתי-אפשרי לסרטוני PROBLEM (הבעיה חייבת להיות בעולם הלקוח).
+
+חוקי אכיפה של הטכניקות:
+1. בחירת הטכניקה חייבת להיות מנומקת ולפי סוג הסרטון. Video 1 PROBLEM לא יכול להיות domain_transfer. Video 4 CRITIQUE אינו יכול להיות reveal_delay בסרטון קצר.
+2. הטכניקה חייבת להיות ניכרת בכל שלושת החלקים (hook, body, close). אם הטכניקה היא open_loop אבל הגוף כבר עונה על השאלה — נכשלת.
+3. אסור לערבב שתי טכניקות באותו סרטון. עדיפה טכניקה אחת ממומשת מלא מ-שתיים חצי-ממומשות.
+4. הגרסה שנשלחת ללקוח/ה חייבת להצהיר על הטכניקה בשדה hook_technique.`;
 
 // ── Hadar quote provenance — closed allow-list (anti-fabrication) ─────
 // The model does NOT have the full corpus in context, only the ~15 quotes
@@ -406,18 +477,24 @@ ${HADAR_MODES}
 
 ${REELS_PROFILES}
 
+${HOOK_TECHNIQUES}
+
 ${HADAR_QUOTE_RULE}
 
-## הסרטון הראשון: IDENTITY
+## הסרטון הראשון: PROBLEM (סרטון בעיה — יום 1 באתגר של הדר)
 
-זה סרטון הפתיחה של יום הצילום. 15 שניות. Mode B. ACT 1 (זהות). Set A. ללא pillar.
+זה סרטון הפתיחה של יום הצילום. 30 שניות. Mode B. ACT 1. Set A. משרת את עמוד 1.
 
-תפקידו: להבטיח את משפט הזהות לקהל, בקול הלקוח/ה, בלי להסביר אותו.
+**תפקידו**: לדבר את הבעיה של הקהל בקולו של הלקוח/ה, מבפנים — לא מבחוץ. הצופה חייב לחשוב "זה בדיוק אני." אין CTA. אין פתרון. משפט הזהות אינו נאמר — הוא ההוויה שממנה הבעיה מדוברת.
 
-המבנה הקנוני:
-- hook: 3 השניות הראשונות. פותח בבעיה או בשלילה, לא ב-"שלום".
-- body: 8-10 שניות. הלקוח/ה אומר/ת את משפט הזהות בקולו/ה הוא/היא, נשען על מהלך אחד של הדר.
-- אין CTA על הסרטון הראשון.
+**חובה — פתיחה עם רגש ספציפי, לא עם קטגוריה**: לא "הרבה בעלי עסקים מרגישים ש..." אלא "אתם פותחים את הפרופיל של המתחרה בפעם השלישית היום, ומרגישים את זה בבטן." הצופה מזהה את עצמו בפרט, לא בכותרת.
+
+**רטנציה**: הסרטון תמיד משתמש ב-hook_technique אחד מהשבעה. Video 1 מתאים במיוחד ל-open_loop (השאלה נחשפת בסוף), stakes_escalation (המחיר עולה בכל beat), או pattern_interrupt (פתיחה באמצע משפט). לא domain_transfer (הבעיה חייבת להיות בעולם הלקוח).
+
+## המבנה הפנימי (reels_profile: tight)
+- hook: 3 השניות הראשונות. פותח את מכניזם ה-hook_technique.
+- body: 20-25 שניות. פירוק הבעיה בבֶּיט אחד. לא רשימה יבשה — הרחבה: למה זה קורה? מה הם מרגישים? מה הם אומרים לעצמם ברגע הזה?
+- close: פאנץ' ליין קטלני שסוגר את hook_technique אבל **משאיר את הבעיה פתוחה**. אין פתרון. אין CTA. משפט שנשאר במחשבה.
 
 ## פלט — סרטון אחד בלבד
 
@@ -427,12 +504,13 @@ ${HADAR_QUOTE_RULE}
   "video": {
     "number": 1,
     "act": 1,
-    "type": "IDENTITY",
+    "type": "PROBLEM",
     "mode": "B",
-    "pillar": null,
+    "pillar": 1,
     "set": "A",
-    "duration": "15s",
+    "duration": "30s",
     "reels_profile": "tight",
+    "hook_technique": "open_loop",
     "title": "...",
     "script": {"hook": "...", "body": "..."},
     "direction": {"visual": "...", "body_language": "...", "tone": "...", "eye_contact": "..."},
@@ -456,49 +534,60 @@ ${HADAR_MODES}
 
 ${REELS_PROFILES}
 
+${HOOK_TECHNIQUES}
+
 ${HADAR_QUOTE_RULE}
 
-## מבנה 7 הסרטונים (מ-michael-kadosh shot list, מרוכז)
+## מבנה 7 הסרטונים — לפי 7 השיטות שהדר מלמדת באתגר
 
-ACT 1: זהות (3 סרטונים)
-- Video 1: IDENTITY. סרטון פתיחה. 15 שניות. **reels_profile: tight**. מבטיח את משפט הזהות לקהל. Mode B. Set A.
-- Video 2: PILLAR_HOOK עמוד 1. 30 שניות. **reels_profile: tight**. הוק חד. Mode B. Set A.
-- Video 3: PILLAR_HOOK עמוד 2. 60 שניות. **reels_profile: standard**. Service Reframe מרכזי. Mode B. Set B.
+הסרטונים מקבילים אחת-לאחת ל-7 ימי האתגר של הדר. כל סרטון הוא ביטוי מלא של שיטה, לא variant של הסרטון הקודם. משפט הזהות (identity_statement) הוא הצפון המנחה שכל 7 הסרטונים משרתים — אבל הוא לא מבוצע כטקסט. הוא ההוויה שממנה כל סרטון מדבר.
 
-ACT 2: סיפור (2 סרטונים)
-- Video 4: STORY. 2 דקות. **reels_profile: long**. סיפור-תיק ספציפי. Mode A. Set B. בלי שמות, עם פרטים שגורמים להאמין.
-- Video 5: STORY. 2 דקות. **reels_profile: long**. הרגע הרגשי. Mode A. Set B. למה החיים מתחילים לזוז.
+ACT 1: הצפת בעיה + חיבור רגשי (2 סרטונים)
+- **Video 1 — PROBLEM (סרטון בעיה, יום 1 באתגר).** 30 שניות. **reels_profile: tight**. Mode B. Set A. **מטרה**: לדבר את הבעיה של הקהל בקול שלו, מבפנים, לא מבחוץ. הצופה חייב לחשוב "זה בדיוק אני." אין CTA. אין פתרון. יש סיום שנשאר עם הבעיה פתוחה — הפתרון הוא בסרטונים הבאים. **חובה**: לפתוח את הבעיה עם רגש ספציפי, לא עם קטגוריה. לא "הרבה בעלי עסקים מתלבטים" — כן "אתם פותחים את הפרופיל של המתחרה שוב, ומרגישים את זה בבטן."
 
-ACT 3: סמכות (2 סרטונים)
-- Video 6: FRAMEWORK. 90 שניות. **reels_profile: long**. "3 השאלות שאני שואל בפגישה ראשונה". Mode C (Mode D רק אם הלקוח/ה הוא/היא דובר/ת-במה). Set A. בונה סמכות.
-- Video 7: CTA. 20 שניות. **reels_profile: tight**. הזמנה ישירה אבל מנומקת. Mode B. Set A. בלי דחיפות מזויפת.
+- **Video 2 — STORY (סרטון סיפור, יום 2 באתגר).** 90 שניות. **reels_profile: long**. Mode A. Set B. **מטרה**: לקחת חוויה אישית ולהעביר דרכה מסר גדול יותר. הסיפור הוא הרכב, המסר הוא היעד. **חובה**: אחרי שסופר הסיפור, לשאול בקול "למה סיפרתי לכם את זה?" ואז לענות. הצופה יבין שיש כאן מטרה, לא מילוי זמן. בלי שמות אמיתיים. פרטים קונקרטיים (שעה, מקום, משפט שנאמר) שגורמים להאמין.
 
-הערה: עמודי המסר 3-4 לא מקבלים הוק ייעודי. הם מזינים את הסיפורים (Video 4-5) ואת ה-Framework (Video 6): כשבוחרים סיפור או מסגרת, העדף כאלה שמבטאים את העמודים שלא קיבלו הוק.
+ACT 2: בידול אישי + עמדה מקצועית (2 סרטונים)
+- **Video 3 — GENIUS (אזור הגאונות, יום 3 באתגר).** 60 שניות. **reels_profile: standard**. Mode B. Set B. **מטרה**: לצלם את הרגע הספציפי שרק הלקוח/ה יודע/ת לעשות. לא הסבר על מה הוא/היא עושה — הרגע עצמו. **חובה**: להימנע מהגרסה המלוטשת של המקצוע. הרגע חייב להיראות כמו שיושב מולם בפגישה, לא כמו הצגה. השאלה המנחה: "באיזה רגע לקוח אמר לך 'וואו, זה מטורף'?" — הסרטון הוא ניסוח של הרגע הזה.
+
+- **Video 4 — CRITIQUE (סרטון ביקורת / דעה, יום 4 באתגר).** 45 שניות. **reels_profile: standard**. Mode B. Set A. **מטרה**: לומר את מה שהלקוח/ה תמיד רצה/רצתה להגיד ללקוח בשיחת מכירה אבל לא אמר/ה. אחד משני סוגים: (א) ביקורת על מה שלקוחות עושים לא נכון, (ב) ביקורת על מה שקורה בתחום/בקטגוריה. **חובה**: ישיר, לא אגרסיבי. חינוך, לא התקפה. אסור להיות "מסונן" — הקהל מחפש את הדעה האמיתית, לא את הגרסה המקצוענית הבטוחה.
+
+ACT 3: פירוק חסמים + סגירה (3 סרטונים)
+- **Video 5 — OBJECTIONS (פירוק התנגדויות, יום 5 באתגר).** 60 שניות. **reels_profile: standard**. Mode B. Set A. **מטרה**: לזהות התנגדות אחת שיושבת ראש בקהל — גם אחת שלא נאמרת בקול — ולפרק אותה בסרטון. **שני מסלולים**: (א) לספר את הסיפור של לקוח שהיה במקום ההתנגדות והצליח (רמת אמון עולה בלי לומר מילה על עצמך), (ב) לדבר את ההתנגדות ישירות: "הרבה אנשים אומרים לי שהם מפחדים ש..." ולפתור בגוף הסרטון. **חובה**: לא לשמור להתנגדות לשיחה. עד שמישהו מגיע לפגישה, ההתנגדות כבר צריכה להיות מטופלת.
+
+- **Video 6 — STORY_OPINION (סיפור + דעה, יום 6 באתגר).** 90 שניות. **reels_profile: long**. Mode A. Set B. **מטרה**: לקחת משהו שהלקוח/ה ראה/תה, שמע/עה או חוותה — כתבה, שיחה, קייס — ולהוסיף עליו את הפרספקטיבה המקצועית. **חובה**: הסיפור הוא ספציפי, הדעה היא רחבה. הדעה היא הבידול, לא הסיפור. אסור להיות ג'נריים — הצופה מחפש נקודת מבט שרק הלקוח/ה יכול/ה להביא. חד, לפעמים אפילו מקומם — זה מה שנשאר בזיכרון.
+
+- **Video 7 — TESTIMONIAL_CTA (עדות מובנית + הזמנה, יום 7 באתגר).** 30 שניות. **reels_profile: tight**. Mode B. Set A. **מטרה**: להזמין את הצופה להיות העדות הבאה. **מבנה**: לפתוח בתוצאה ספציפית של לקוח קיים (בלי שם, עם פרט חריג — "התוצאה שאף אחד לא ציפה לה"), לגזור מכך את ההזמנה. **חובה**: הזמנה עם הצדקה. לא "התקשרו עכשיו" אלא "אם מה שסיפרתי כאן נשמע כמו הבעיה שלכם — כתבו לי במילה אחת מה הכי בוער."
+
+הערה על העמודים (pillars): 4 עמודי המסר מזינים את כל 7 הסרטונים. כל סרטון חייב לשרת עמוד אחד לפחות. חלוקה קנונית: PROBLEM = עמוד 1, STORY = עמוד 2, GENIUS = עמוד 3, CRITIQUE = עמוד 4 או 1, OBJECTIONS = עמוד 2, STORY_OPINION = עמוד 4, TESTIMONIAL_CTA = משלב את כל 4 (משפט אחד לכל אחד).
 
 ## לכל סרטון
 
 כל סרטון חייב לכלול:
 
-1. **script**:
-   - hook: 3 השניות הראשונות. משפט שעוצר את הגלילה. רוב הסרטונים פותחים בבעיה, לא ב-hook קליל.
-   - body: התוכן המרכזי. מתפתח דרך אחד ממהלכי הדר.
-   - cta (רק לסרטון 7): הזמנה ישירה.
+1. **hook_technique**: בדיוק אחד מהשמות הבאים (ראה בלוק "שבע טכניקות רטנציה" למעלה):
+   open_loop / contradiction_setup / pattern_interrupt / stakes_escalation / cliffhanger_chain / reveal_delay / domain_transfer. הבחירה חייבת להתאים לסוג הסרטון (VideoType) ולאורך שלו (reels_profile). הטכניקה חייבת להיות ניכרת בכל שלושת החלקים של ה-script — לא רק ב-hook.
 
-2. **direction**:
+2. **script**:
+   - hook: 3 השניות הראשונות. משפט שעוצר את הגלילה **ופותח את המכניזם של hook_technique**. הפתיחה חייבת לגרום סקרנות שרק סופו של הסרטון יסגור.
+   - body: התוכן המרכזי. מפתח את מכניזם הרטנציה שהוקם ב-hook, בלי לחשוף עדיין את התשובה/הסגירה (חוץ אם הטכניקה היא stakes_escalation או cliffhanger_chain שבהן ה-body דוחף את הצופה קדימה במקום לעכב).
+   - cta (רק לסרטון 7, TESTIMONIAL_CTA): הזמנה ישירה, מנומקת, בלי דחיפות מזויפת. **חובה**: ה-CTA סוגר את מכניזם ה-hook_technique שהוקם ב-hook (מגלה את התשובה של ה-open_loop / מבהיר את הסתירה / מוריד את ה-domain_transfer חזרה לעולם של הצופה / וכו').
+
+3. **direction**:
    - visual: framing + רקע + תאורה. ספציפי.
    - body_language: לפחות הוראה אחת. "לא לזוז בכיסא" / "ידיים יציבות" / "מבט ישיר לקאם".
    - tone: 1-2 מילים. "סטואי" / "חם" / "שקט" / "אסרטיבי".
    - eye_contact: ספציפי.
 
-3. **signature_move**:
+4. **signature_move**:
    - name: השם של אחד מ-15 המהלכים של הדר. בחר לפי ארכיטיפ המותג (ראה כללי הניתוב למעלה). 1-8 יציבים בכל תחום; 9-15 נבחרים לפי ארכיטיפ. אסור לציין מהלך שאינו ברשימת ה-15.
    - explanation: 1 שורה — איך הסרטון הזה משתמש במהלך.
 
-4. **anti_category**:
+5. **anti_category**:
    - competitor_norm: מה כולם בקטגוריה של הלקוח/ה עושים בסרטונים דומים. ספציפי.
    - your_inversion: למה הסרטון של המשתמש שונה בדיוק במקום הזה.
 
-5. **hadar_quote** (ראה כלל ציטוט-הדר למעלה, אכיפה קשיחה):
+6. **hadar_quote** (ראה כלל ציטוט-הדר למעלה, אכיפה קשיחה):
    - text: ציטוט קצר מתוך המאגר המאושר שמסביר את התבנית של הסרטון, או פרפרזה כללית
    - source: רק מתוך הרשימה המאושרת (C4367 / C4377 / C4078 / C4336 / C4079 / C1201 / C4332 / C0870 / michael-kadosh.txt / Hadar-lesson-1). אם אין התאמה: "general". אסור להמציא C-number.
 
@@ -511,12 +600,13 @@ ACT 3: סמכות (2 סרטונים)
     {
       "number": 1,
       "act": 1,
-      "type": "IDENTITY",
+      "type": "PROBLEM",
       "mode": "B",
-      "pillar": null,
+      "pillar": 1,
       "set": "A",
-      "duration": "15s",
+      "duration": "30s",
       "reels_profile": "tight",
+      "hook_technique": "open_loop",
       "title": "...",
       "script": {"hook": "...", "body": "..."},
       "direction": {"visual": "...", "body_language": "...", "tone": "...", "eye_contact": "..."},
@@ -953,6 +1043,15 @@ export function validateVideo(v: unknown): v is Video {
   // If present, must be one of the three valid values.
   if (x.reels_profile !== undefined && x.reels_profile !== null) {
     if (!["tight", "standard", "long"].includes(x.reels_profile as string)) return false;
+  }
+
+  // hook_technique is optional (added 2026-07-11 with the challenge-methodology
+  // realignment). Legacy plans lack it. If present, must be one of the seven
+  // techniques defined in HOOK_TECHNIQUES.
+  if (x.hook_technique !== undefined && x.hook_technique !== null) {
+    const ok = ["open_loop", "contradiction_setup", "pattern_interrupt", "stakes_escalation",
+                "cliffhanger_chain", "reveal_delay", "domain_transfer"];
+    if (!ok.includes(x.hook_technique as string)) return false;
   }
 
   const script = x.script as Record<string, unknown>;

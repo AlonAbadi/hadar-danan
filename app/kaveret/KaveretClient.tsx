@@ -1419,14 +1419,17 @@ function ViewerPill({
 //     "3 מתוך 7" as visual progress, not just text.
 // ─────────────────────────────────────────────────────────────────────
 
+// Titles for the seven episodes — one per methodology from Hadar's
+// 7-day challenge (Alon 2026-07-11 realignment). Used as placeholders on
+// unbuilt rows and as fallbacks when the generated video lacks a title.
 const CANONICAL_TITLES: Record<number, string> = {
-  1: "משפט הזהות",
-  2: "הוק עמוד ראשון",
-  3: "הוק עמוד שני",
-  4: "סיפור-תיק",
-  5: "הרגע הרגשי",
-  6: "Framework",
-  7: "הזמנה",
+  1: "סרטון בעיה",
+  2: "סרטון סיפור",
+  3: "אזור הגאונות",
+  4: "סרטון דעה",
+  5: "פירוק התנגדויות",
+  6: "סיפור + דעה",
+  7: "עדות + הזמנה",
 };
 
 function ShootDayProgress({ filmed, total }: { filmed: number; total: number }) {
