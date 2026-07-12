@@ -637,15 +637,18 @@ export function KriahClient({ previewKey, isTest }: Props) {
     }
   };
 
-  const submitPhoneGate = (withPhone: boolean) => {
-    if (withPhone) {
-      const ph = phone.trim();
-      if (ph && !/^[0-9+\-\s()]{9,20}$/.test(ph)) {
-        setPhoneErr("מספר טלפון לא תקין");
-        return;
-      }
-    } else {
-      setPhone("");
+  const submitPhoneGate = () => {
+    // Phone is mandatory (2026-07-12): it's the intent filter. Someone who
+    // won't leave a number isn't going to become a customer, and we don't
+    // spend the engine on them — extraction runs only after this gate.
+    const ph = phone.trim();
+    if (!ph) {
+      setPhoneErr("צריך מספר טלפון כדי לקבל את האות");
+      return;
+    }
+    if (!/^[0-9+\-\s()]{9,20}$/.test(ph)) {
+      setPhoneErr("מספר טלפון לא תקין");
+      return;
     }
     setPhoneErr(null);
     // Soft-captured leads have an email → the reading can generate now, and
@@ -1105,10 +1108,10 @@ export function KriahClient({ previewKey, isTest }: Props) {
               ממנו נגזר ההמשך: המסר, כיווני התוכן, והדרך שהלקוחות הנכונים מוצאים אתכם.
             </p>
             <p style={{ fontSize: 15, lineHeight: 1.7, color: C.muted, margin: "0 0 24px" }}>
-              אם יעלה מהחומר משהו שהדר תרצה להרחיב עליו אישית, בשיחה, בלי מספר זה פשוט לא יקרה.
+              לשם נשלח את האות, ואם יעלה ממנו משהו שהדר תרצה להרחיב עליו אישית, בשיחה, בלי מספר זה פשוט לא יקרה.
             </p>
             <label htmlFor="kriah-phone" style={{ display: "block", fontSize: 14, color: C.muted, marginBottom: 6 }}>
-              טלפון (רשות)
+              הטלפון שלכם
             </label>
             <input
               id="kriah-phone"
@@ -1123,8 +1126,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
               <p role="alert" style={{ marginTop: 8, color: "#FF8888", fontSize: 13 }}>{phoneErr}</p>
             )}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18, marginTop: 28 }}>
-              <GoldButton onClick={() => submitPhoneGate(true)}>המשיכו</GoldButton>
-              <QuietLink onClick={() => submitPhoneGate(false)}>להמשיך בלי טלפון</QuietLink>
+              <GoldButton onClick={() => submitPhoneGate()}>קבלו את האות ←</GoldButton>
               <QuietLink onClick={() => { setQIdx(QUESTIONS.length - 1); setScreen("q"); }}>← חזרה לשאלות</QuietLink>
             </div>
           </Card>

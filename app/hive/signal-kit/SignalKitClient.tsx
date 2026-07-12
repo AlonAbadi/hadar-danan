@@ -68,7 +68,7 @@ export function SignalKitClient({ firstName, occupation, tier: _tier, extraction
             צריך שתעבור/י את אבחון האות.
             5 שאלות פתוחות, כעשר דקות, ואז כל ההמשך נבנה ממנה.
           </p>
-          <Link href="/signal" style={ctaStyle}>לאבחון האות שלי ←</Link>
+          <Link href="/kriah" style={ctaStyle}>לאבחון האות שלי ←</Link>
         </div>
       </div>
     );

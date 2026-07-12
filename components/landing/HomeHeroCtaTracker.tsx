@@ -59,7 +59,7 @@ export function HomeHeroCtaTracker({ abVariant }: Props) {
         anonymous_id: anonymousId,
         metadata: {
           page:            "/",
-          target:          "/signal",
+          target:          "/kriah",
           ab_variant:      abVariant,
           experiment_name: "landing_headline_click",
         },

@@ -82,8 +82,8 @@ export default async function KaveretVisitorPage({
 }) {
   const { t } = await searchParams;
   const extractionId = verifyKaveretToken(t);
-  if (!extractionId) redirect("/signal");
+  if (!extractionId) redirect("/kriah");
   const visitor = await buildVisitorData(extractionId, t!);
-  if (!visitor) redirect("/signal");
+  if (!visitor) redirect("/kriah");
   return <KaveretVisitorClient data={visitor} />;
 }

@@ -8,7 +8,7 @@ import { useState, useTransition } from "react";
 const NAV_LINKS = [
   { label: "אודות",      href: "/about" }, // הצוות מאוחד כאן (קישור פנימי /team עדיין חי)
   { label: "בינג׳",      href: "/binge" },
-  { label: "האות שלך",   href: "/signal" },
+  { label: "האות שלך",   href: "/kriah" },
 ];
 
 const DROPDOWN_ITEMS = [

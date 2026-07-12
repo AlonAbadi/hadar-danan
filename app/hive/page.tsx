@@ -112,7 +112,7 @@ export default async function HivePage({ searchParams }: { searchParams: Promise
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link
-              href="/signal"
+              href="/kriah"
               style={{
                 background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
                 color:        "#2a1d05",

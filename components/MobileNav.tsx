@@ -13,7 +13,7 @@ const ITEMS_GROUP1 = [
 ];
 
 const ITEMS_GROUP2 = [
-  { label: "האות שלך", href: "/signal" },
+  { label: "האות שלך", href: "/kriah" },
 ];
 
 const ITEMS_GROUP3 = [

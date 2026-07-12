@@ -1044,7 +1044,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
         לא מה שאתה מוכר, אלא מה שרק אתה יכול לתת.
       </p>
       <Link
-        href="/signal"
+        href="/kriah"
         style={{
           display:      "inline-block",
           background:   "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
@@ -1115,7 +1115,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
 
       <div style={{ ...S.card, display: "flex", justifyContent: "center", padding: "14px" }}>
         <Link
-          href="/signal"
+          href="/kriah"
           style={{
             display:        "inline-block",
             background:     "transparent",

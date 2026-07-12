@@ -177,7 +177,7 @@ export default function ContestTermsPage() {
           <div style={{ marginBottom: 12 }}>
             <Link href="/" style={{ color: "#E8B94A", textDecoration: "none" }}>חזרה לדף הבית</Link>
             {" | "}
-            <Link href="/signal" style={{ color: "#E8B94A", textDecoration: "none" }}>מנוע האות</Link>
+            <Link href="/kriah" style={{ color: "#E8B94A", textDecoration: "none" }}>מנוע האות</Link>
             {" | "}
             <Link href="/privacy" style={{ color: "#E8B94A", textDecoration: "none" }}>מדיניות פרטיות</Link>
           </div>
