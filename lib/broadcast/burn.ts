@@ -53,7 +53,9 @@ export function buildVideoFilter(dims: VideoDims | null, assPath: string): Video
       kind: "vf",
       value: `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
       strategy: "portrait_crop",
-      captionMarginV: 430,
+      // Top-anchored (Alignment 8): caption block starts just below the
+      // vertical middle, like Hadar's published reels.
+      captionMarginV: Math.round(1920 * 0.525),
       stampMarginV: 96,
       playResX: 1080,
       playResY: 1920,
@@ -65,7 +67,7 @@ export function buildVideoFilter(dims: VideoDims | null, assPath: string): Video
     kind: "vf",
     value: `scale=${outW}:${outH},fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
     strategy: "landscape_fullframe",
-    captionMarginV: Math.max(40, Math.round(outH * 0.05)),
+    captionMarginV: Math.round(outH * 0.525),
     stampMarginV: 96,
     playResX: outW,
     playResY: outH,

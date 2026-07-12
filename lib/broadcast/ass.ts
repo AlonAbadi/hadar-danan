@@ -36,7 +36,11 @@ export interface BuildAssOptions {
   trimStartMs: number;
   durationMs: number; // trimmed duration
   stamp: boolean;
-  captionMarginV?: number; // default 430 (portrait crop layout)
+  // Captions anchor TOP-CENTER (Alignment 8): MarginV is the distance from
+  // the TOP of the canvas to the first caption line, so two-line captions
+  // grow downward — matching Hadar's published-reel style (block slightly
+  // below vertical center).
+  captionMarginV?: number; // default ≈52.5% of canvas height
   stampMarginV?: number; // default 96
   // Output canvas — landscape full-frame outputs pass their own dims; type
   // scales off the canvas height so captions read the same at any aspect.
@@ -63,15 +67,16 @@ export function buildAss(lines: CaptionLine[], opts: BuildAssOptions): string {
     );
   }
 
-  const capMv = opts.captionMarginV ?? 430;
-  const stampMv = opts.stampMarginV ?? 96;
   const prX = opts.playResX ?? 1080;
   const prY = opts.playResY ?? 1920;
-  // Type scales with canvas height (104px was tuned on a 1920-tall grid).
-  const capFs = Math.round((104 * prY) / 1920);
+  const capMv = opts.captionMarginV ?? Math.round(prY * 0.525);
+  const stampMv = opts.stampMarginV ?? 96;
+  // Matched to Hadar's published reels (2026-07-12 examples): pure white,
+  // heavy weight, thick solid-black outline, ~72px on a 1920 grid, block
+  // sitting just below vertical center. Type scales with canvas height.
+  const capFs = Math.round((72 * prY) / 1920);
+  const capOutline = Math.max(3, Math.round((7 * prY) / 1920));
   const stampFs = Math.round((36 * prY) / 1920);
-  // Caption margin keeps text above the Reels UI zone (portrait) or hugs the
-  // bottom of a full-frame landscape canvas; Stamp sits top-center.
   return `﻿[Script Info]
 ScriptType: v4.00+
 PlayResX: ${prX}
@@ -81,7 +86,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Caption,Assistant,${capFs},&H00E1E9ED,&H00FFFFFF,&H66140C08,&H00000000,1,0,0,0,100,100,0,0,1,4,1,2,60,60,${capMv},-1
+Style: Caption,Assistant,${capFs},&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,${capOutline},0,8,60,60,${capMv},-1
 Style: Stamp,Assistant,${stampFs},&H004AB9E8,&H00FFFFFF,&H66140C08,&H00000000,0,0,0,0,100,100,0,0,1,2,0,8,90,90,${stampMv},-1
 
 [Events]
