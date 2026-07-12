@@ -88,6 +88,20 @@ export default async function BroadcastRoomPage({
     cta: video.script.cta ? String(video.script.cta) : undefined,
   };
 
+  // Resume an in-flight edit: an approval waiting (or a burn running) should
+  // land the user straight back in the pipeline, not at the prep screen.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: activeEdit } = await (db as any)
+    .from("broadcast_edits")
+    .select("id, status")
+    .eq("extraction_id", extractionId)
+    .eq("video_number", videoNumber)
+    .eq("user_id", userData.id)
+    .in("status", ["queued", "transcribing", "awaiting_captions", "burning"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
     <BroadcastRoomClient
       extractionId={extractionId}
@@ -98,6 +112,7 @@ export default async function BroadcastRoomPage({
       gender={userData.gender === "m" ? "m" : userData.gender === "f" ? "f" : null}
       supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
       supabaseAnonKey={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}
+      initialEditId={activeEdit?.id ?? null}
     />
   );
 }

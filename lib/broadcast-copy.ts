@@ -106,6 +106,8 @@ export const BROADCAST_COPY = {
   "output.share": "שיתוף הרילס",
   "output.share_hint": "נפתח מסך השיתוף, שם בוחרים אינסטגרם",
   "output.download_video": "הורדת הווידאו",
+  "output.reedit": "עריכה מחדש",
+  "output.reedit_gone": "חומר הגלם של הפרק כבר לא שמור, אפשר לצלם טייק חדש",
   "output.download_cover": "הורדת הקאבר",
   "output.cover_title": "הקאבר שלך",
   "output.cover_hint": {

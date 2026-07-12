@@ -45,6 +45,7 @@ export function BroadcastRoomClient({
   script,
   firstName,
   gender,
+  initialEditId = null,
 }: {
   extractionId: string;
   videoNumber: number;
@@ -54,16 +55,19 @@ export function BroadcastRoomClient({
   gender: BroadcastGender;
   supabaseUrl: string;
   supabaseAnonKey: string;
+  initialEditId?: string | null;
 }) {
   // Set before any child renders so every getBroadcastCopy call resolves
   // against the member's stored gender (users.gender, migration 051).
   setBroadcastGender(gender);
-  const [phase, setPhase] = useState<Phase>("prep");
+  // An in-flight edit (approval pending, burn running) resumes straight into
+  // the pipeline — entering through prep would strand it unreachable.
+  const [phase, setPhase] = useState<Phase>(initialEditId ? "pipeline" : "prep");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [takes, setTakes] = useState<LocalTake[]>([]);
   const [selectedTakeId, setSelectedTakeId] = useState<string | null>(null);
   const [uploads, setUploads] = useState<TakeUpload[]>([]);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(initialEditId);
   const [pipelineBlobUrl, setPipelineBlobUrl] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
   const [selecting, setSelecting] = useState(false);

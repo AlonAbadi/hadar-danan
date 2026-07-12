@@ -124,7 +124,7 @@ export function ProcessingAndApproval({
     return <BurningScreen editId={editId} onAnotherTake={onAnotherTake} />;
   }
   if (snap.status === "ready") {
-    return <OutputScreen editId={editId} snap={snap} onAnotherTake={onAnotherTake} />;
+    return <OutputScreen editId={editId} snap={snap} onAnotherTake={onAnotherTake} onReopened={refresh} />;
   }
   // failed — never a dead end: retry path + way home
   return (
@@ -287,7 +287,9 @@ function CaptionApproval({
   const [trimEnd, setTrimEnd] = useState(snap.trim_end_ms ?? 0);
   const [submitting, setSubmitting] = useState(false);
   const [syncIdx, setSyncIdx] = useState(0);
-  const [transform, setTransform] = useState<CaptionTransform>({ z: 1, cx: 0.5, cy: 0.5 });
+  const [transform, setTransform] = useState<CaptionTransform>(
+    () => snap.captions?.transform ?? { z: 1, cx: 0.5, cy: 0.5 }
+  );
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const previewRef = useRef<HTMLVideoElement | null>(null);
 
@@ -773,14 +775,36 @@ function OutputScreen({
   editId,
   snap,
   onAnotherTake,
+  onReopened,
 }: {
   editId: string;
   snap: EditSnapshot;
   onAnotherTake: () => void;
+  onReopened: () => void;
 }) {
   const [shareFile, setShareFile] = useState<File | null>(null);
+  const [reopening, setReopening] = useState(false);
+  const [reopenNote, setReopenNote] = useState<string | null>(null);
   const approvedRef = useRef(false);
   const shareFetchedRef = useRef(false);
+
+  const reopen = useCallback(async () => {
+    setReopening(true);
+    setReopenNote(null);
+    try {
+      const res = await fetch(`/api/broadcast/edits/${editId}/reopen`, { method: "POST" });
+      if (res.status === 410) {
+        setReopenNote(getBroadcastCopy("output.reedit_gone"));
+        return;
+      }
+      if (!res.ok) throw new Error(String(res.status));
+      onReopened(); // snapshot flips to awaiting_captions → the editor renders
+    } catch {
+      setReopenNote(getBroadcastCopy("error.upload_retry"));
+    } finally {
+      setReopening(false);
+    }
+  }, [editId, onReopened]);
 
   const approveOnce = useCallback(() => {
     if (approvedRef.current) return;
@@ -860,6 +884,12 @@ function OutputScreen({
             >
               {getBroadcastCopy("output.download_video")}
             </ActionButton>
+          ) : null}
+          <ActionButton variant="ghost" busy={reopening} onClick={reopen}>
+            {getBroadcastCopy("output.reedit")}
+          </ActionButton>
+          {reopenNote ? (
+            <p style={{ color: "#9E9990", fontSize: 13, textAlign: "center", margin: 0 }}>{reopenNote}</p>
           ) : null}
           <ActionButton variant="ghost" onClick={onAnotherTake}>
             {getBroadcastCopy("takes.another")}

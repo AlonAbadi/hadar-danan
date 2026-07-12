@@ -1006,6 +1006,20 @@ export function KaveretClient({
               }
             }}
             onShareResult={(msg) => toast(msg)}
+            onReedit={
+              data.extractionId && r.videoNumber
+                ? async () => {
+                    const res = await fetch(`/api/broadcast/edits/${r.editId}/reopen`, { method: "POST" }).catch(() => null);
+                    if (res?.ok) {
+                      window.location.href = `/hive/signal-kit/broadcast/${data.extractionId}/${r.videoNumber}`;
+                    } else if (res?.status === 410) {
+                      toast("חומר הגלם כבר לא שמור, אפשר לצלם טייק חדש");
+                    } else {
+                      toast("הפעולה לא הצליחה, נסו שוב");
+                    }
+                  }
+                : undefined
+            }
           />
         );
       })()}
@@ -1135,7 +1149,7 @@ function safeJson(t: string): Record<string, unknown> | null {
 // ─────────────────────────────────────────────────────────────────────
 function EpisodeViewer({
   editId, reviewItemId, title, downloadUrl, isPublished,
-  onClose, onMarkPublished, onDelete, onShareResult,
+  onClose, onMarkPublished, onDelete, onShareResult, onReedit,
 }: {
   editId: string;
   reviewItemId: string | null;
@@ -1146,9 +1160,11 @@ function EpisodeViewer({
   onMarkPublished: () => void;
   onDelete: () => Promise<void>;
   onShareResult: (msg: string) => void;
+  onReedit?: () => Promise<void>;
 }) {
   const [deleting, setDeleting] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [reediting, setReediting] = useState(false);
 
   // Strip the ?download=true param the storage URL ships with so <video> can
   // stream it instead of triggering a browser download.
@@ -1322,6 +1338,21 @@ function EpisodeViewer({
             <path d="M12 4v11m0 0l-4-4m4 4l4-4" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
           </svg>
         </ViewerPill>
+
+        {onReedit && (
+          <ViewerPill
+            onClick={async () => {
+              if (reediting) return;
+              setReediting(true);
+              try { await onReedit(); } finally { setReediting(false); }
+            }}
+            label={reediting ? "פותח…" : "עריכה"}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+          </ViewerPill>
+        )}
 
         {!isPublished && reviewItemId && (
           <ViewerPill onClick={() => { onMarkPublished(); onClose(); }} label="פורסם">
