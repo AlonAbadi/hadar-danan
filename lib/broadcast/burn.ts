@@ -142,6 +142,26 @@ export async function runBurnStage(edit: EditRow): Promise<void> {
       .maybeSingle();
     if (!take) throw new Error("burn:take_missing");
 
+    // Member language for the ASS bidi handling (EN lines must not carry the
+    // RLM prefix — a strong-RTL char that flips all-Latin lines under
+    // Encoding -1 first-strong autodetect). Best-effort: default Hebrew.
+    let language: "he" | "en" = "he";
+    try {
+      const { data: editRow } = await db
+        .from("broadcast_edits")
+        .select("extraction_id")
+        .eq("id", edit.id)
+        .maybeSingle();
+      if (editRow?.extraction_id) {
+        const { data: ext } = await db
+          .from("signal_extractions")
+          .select("signal")
+          .eq("id", editRow.extraction_id)
+          .maybeSingle();
+        if (ext?.signal?.language === "en") language = "en";
+      }
+    } catch { /* language stays he */ }
+
     const { data: blob, error: dlError } = await db.storage
       .from(BUCKET)
       .download(take.storage_path);
@@ -179,6 +199,7 @@ export async function runBurnStage(edit: EditRow): Promise<void> {
         stampMarginV: plan.stampMarginV,
         playResX: plan.playResX,
         playResY: plan.playResY,
+        language,
       }),
       "utf8"
     );

@@ -9,7 +9,7 @@
  *
  * Gate chain is IDENTICAL to the Hebrew page: Supabase auth session → users
  * row by auth_id → hive_status === "active" (else /en/hive) → primary
- * extraction (else /en/signal). If the member's primary extraction happens to
+ * extraction (else /en/reading). If the member's primary extraction happens to
  * be a Hebrew one (edge case), we still render whatever text is there.
  */
 import { redirect } from "next/navigation";
@@ -66,7 +66,7 @@ export default async function EnKaveretPage() {
         .eq("id", primary.id)
         .maybeSingle()
     : { data: null };
-  if (!ext) redirect("/en/signal");
+  if (!ext) redirect("/en/reading");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const signal = (ext.signal ?? {}) as any;

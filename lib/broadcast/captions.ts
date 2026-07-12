@@ -36,20 +36,35 @@ export interface CaptionsPayload {
   transform?: CaptionTransform | null;
 }
 
+export type CaptionLanguage = "he" | "en";
+
 // Single-line phrases only — max ~17 chars (~3 Hebrew words) fits the
-// Fontsize 104 captions inside the 960px usable width.
+// Fontsize 104 captions inside the 960px usable width. Latin glyphs run
+// narrower, so English lines take more characters at the same point size.
 const MAX_LINE_CHARS = 17;
+const MAX_LINE_CHARS_EN = 28;
 const HARD_BREAK_GAP_MS = 500;
 const SOFT_BREAK_GAP_MS = 280;
 const MIN_LINE_MS = 600;
 const LINGER_MS = 200;
 
+const maxLineChars = (lang: CaptionLanguage) => (lang === "en" ? MAX_LINE_CHARS_EN : MAX_LINE_CHARS);
+
 // Words a Hebrew caption line should not end on (reads broken mid-thought).
 const NO_TRAILING = new Set(["לא", "של", "עם", "כי", "אם", "על", "את", "גם", "רק", "אז"]);
+// English equivalents — articles, prepositions, conjunctions, possessives.
+const NO_TRAILING_EN = new Set([
+  "a", "an", "the", "of", "to", "and", "or", "in", "on", "at", "for", "with", "your", "my",
+]);
 
 const endsSentence = (w: string) => /[.?!,:]$/.test(w);
 
-export function groupWordsIntoLines(words: CaptionWord[]): CaptionLine[] {
+export function groupWordsIntoLines(words: CaptionWord[], lang: CaptionLanguage = "he"): CaptionLine[] {
+  const maxChars = maxLineChars(lang);
+  const noTrailing = lang === "en" ? NO_TRAILING_EN : NO_TRAILING;
+  // English Whisper words arrive capitalized mid-sentence sometimes; Hebrew
+  // has no case so the he path stays byte-identical.
+  const trails = (w: string) => noTrailing.has(lang === "en" ? w.toLowerCase() : w);
   const lines: CaptionLine[] = [];
   let buf: CaptionWord[] = [];
 
@@ -72,10 +87,10 @@ export function groupWordsIntoLines(words: CaptionWord[]): CaptionLine[] {
     if (prev) {
       const gap = word.s - prev.e;
       const lineLen = buf.reduce((n, w) => n + w.w.length + 1, 0);
-      const wouldOverflow = lineLen + word.w.length > MAX_LINE_CHARS;
+      const wouldOverflow = lineLen + word.w.length > maxChars;
       const hardBreak = gap >= HARD_BREAK_GAP_MS;
       const softBreak = (gap >= SOFT_BREAK_GAP_MS || endsSentence(prev.w)) && lineLen >= 8;
-      if ((hardBreak || softBreak || wouldOverflow) && !NO_TRAILING.has(prev.w)) {
+      if ((hardBreak || softBreak || wouldOverflow) && !trails(prev.w)) {
         flush();
       } else if (wouldOverflow) {
         // Overflow but previous word must not trail: move it to the next line.
@@ -97,7 +112,7 @@ export function groupWordsIntoLines(words: CaptionWord[]): CaptionLine[] {
     if (
       last &&
       tiny &&
-      last.text.length + line.text.length + 1 <= MAX_LINE_CHARS &&
+      last.text.length + line.text.length + 1 <= maxChars &&
       line.start_ms - last.end_ms < HARD_BREAK_GAP_MS
     ) {
       last.text = `${last.text} ${line.text}`;
@@ -116,20 +131,21 @@ export function groupWordsIntoLines(words: CaptionWord[]): CaptionLine[] {
 
 // Fallback path: the original script as caption lines with no timings —
 // the user syncs manually on the approval screen ("השורה הבאה").
-export function scriptToLines(script: string): CaptionLine[] {
+export function scriptToLines(script: string, lang: CaptionLanguage = "he"): CaptionLine[] {
+  const maxChars = maxLineChars(lang);
   const rough = script
     .split(/\n+|(?<=[.?!])\s+/)
     .map((s) => s.trim())
     .filter(Boolean);
   const chunks: string[] = [];
   for (const sentence of rough) {
-    if (sentence.length <= MAX_LINE_CHARS) {
+    if (sentence.length <= maxChars) {
       chunks.push(sentence);
       continue;
     }
     let buf = "";
     for (const word of sentence.split(/\s+/)) {
-      if (buf && buf.length + word.length + 1 > MAX_LINE_CHARS) {
+      if (buf && buf.length + word.length + 1 > maxChars) {
         chunks.push(buf);
         buf = word;
       } else {
@@ -153,7 +169,12 @@ export function scriptToLines(script: string): CaptionLine[] {
 // audio — Whisper drifted into hallucinated English/garbage while the SAME
 // audio transcribed near-perfectly with no prompt (verified 2026-07-12 on a
 // real failed take). The prompt biases, it does not anchor.
-export function buildWhisperPrompt(script: string): string {
+//
+// English: no prompt at all. An English script IS Latin text — sending it
+// would be the exact poisoning already proven, and there are no distinctive
+// foreign tokens for it to contribute.
+export function buildWhisperPrompt(script: string, lang: CaptionLanguage = "he"): string {
+  if (lang === "en") return "";
   return Array.from(
     new Set(script.match(/[A-Za-z][A-Za-z0-9'&-]*/g) ?? [])
   ).join(" ").slice(0, 200);
@@ -165,7 +186,15 @@ export function buildWhisperPrompt(script: string): string {
 // dead zones between consecutive words mid-take, or Latin-script bleed into a
 // Hebrew-only recording. Condemned transcripts route to the existing fallback
 // chooser (script-as-captions / no captions) instead of being burned.
-export function transcriptLooksBroken(words: CaptionWord[], lines: CaptionLine[]): string | null {
+//
+// The latin_ratio signal is Hebrew-only: English speech is 100% Latin script,
+// so it would condemn every healthy English transcript. stretched_line and
+// word_gap apply to both languages.
+export function transcriptLooksBroken(
+  words: CaptionWord[],
+  lines: CaptionLine[],
+  lang: CaptionLanguage = "he"
+): string | null {
   for (const line of lines) {
     if (!line.deleted && line.end_ms - line.start_ms > 8000) {
       return `stretched_line:${line.end_ms - line.start_ms}ms`;
@@ -175,8 +204,10 @@ export function transcriptLooksBroken(words: CaptionWord[], lines: CaptionLine[]
     const gap = words[i].s - words[i - 1].e;
     if (gap > 8000) return `word_gap:${gap}ms`;
   }
-  const text = lines.filter((l) => !l.deleted).map((l) => l.text).join(" ");
-  const latin = (text.match(/[A-Za-z]/g) ?? []).length;
-  if (text.length > 20 && latin / text.length > 0.2) return `latin_ratio:${latin}/${text.length}`;
+  if (lang === "he") {
+    const text = lines.filter((l) => !l.deleted).map((l) => l.text).join(" ");
+    const latin = (text.match(/[A-Za-z]/g) ?? []).length;
+    if (text.length > 20 && latin / text.length > 0.2) return `latin_ratio:${latin}/${text.length}`;
+  }
   return null;
 }

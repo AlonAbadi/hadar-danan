@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase/browser";
-import { getBroadcastCopy } from "@/lib/broadcast-copy";
+import { getBroadcastCopy, getBroadcastLanguage, type BroadcastLanguage } from "@/lib/broadcast-copy";
 import { scriptToLines, type CaptionLine, type CaptionsPayload, type CaptionTransform } from "@/lib/broadcast/captions";
 import type { ScriptShape } from "./BroadcastRoomClient";
 import { ActionButton, TopBar } from "./ui";
@@ -97,12 +97,14 @@ export function ProcessingAndApproval({
   editId,
   localTakeUrl,
   script,
+  language = "he",
   onAnotherTake,
 }: {
   editId: string;
   localTakeUrl?: string | null;
   script: ScriptShape;
   firstName: string;
+  language?: BroadcastLanguage;
   onAnotherTake: () => void;
 }) {
   const { snap, refresh } = useEditStatus(editId);
@@ -117,6 +119,7 @@ export function ProcessingAndApproval({
         snap={snap}
         localTakeUrl={localTakeUrl}
         script={script}
+        language={language}
         onApproved={refresh}
       />
     );
@@ -130,7 +133,7 @@ export function ProcessingAndApproval({
   // failed — never a dead end: retry path + way home
   return (
     <>
-      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
+      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
         <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8 }}>
           {getBroadcastCopy("error.processing_failed")}
@@ -166,7 +169,7 @@ function StageScreen({
   const activeIdx = stage === "transcribing" ? 0 : 2;
   return (
     <>
-      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
+      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
         <p style={{ color: "#9E9990", fontSize: 14, textAlign: "center" }}>
           {getBroadcastCopy("director.breathing")}
@@ -230,7 +233,7 @@ function BurningScreen({ editId, onAnotherTake }: { editId: string; onAnotherTak
     // the way back. The moment the burn finishes this flows into the output.
     return (
       <>
-        <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
+        <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "64px 24px", textAlign: "center" }}>
           <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, lineHeight: 1.7 }}>
             {getBroadcastCopy("processing.handoff")}
@@ -245,14 +248,14 @@ function BurningScreen({ editId, onAnotherTake }: { editId: string; onAnotherTak
               fontSize: 14,
             }}
           >
-            <span className="br-live-dot" /> ממשיכה לבדוק ברקע, המסך יתעדכן לבד
+            <span className="br-live-dot" /> {getBroadcastCopy("processing.checking_bg")}
           </p>
           <p style={{ color: "#9E9990", fontSize: 13, marginTop: 8 }}>
             {getBroadcastCopy("processing.handoff_note")}
           </p>
           <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 10 }}>
             <ActionButton variant="secondary" href={KIT_HREF}>
-              חזרה לערכת האות
+              {getBroadcastCopy("nav.to_kit")}
             </ActionButton>
           </div>
         </div>
@@ -267,12 +270,14 @@ function CaptionApproval({
   snap,
   localTakeUrl,
   script,
+  language = "he",
   onApproved,
 }: {
   editId: string;
   snap: EditSnapshot;
   localTakeUrl?: string | null;
   script: ScriptShape;
+  language?: BroadcastLanguage;
   onApproved: () => void;
 }) {
   // Local blob first: it plays instantly. Without one (resume / re-edit),
@@ -322,7 +327,7 @@ function CaptionApproval({
   if (transcriptFailed && mode === null) {
     return (
       <>
-        <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
+        <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
           <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, textAlign: "center" }}>
             {getBroadcastCopy("captions.failed.title")}
@@ -335,7 +340,10 @@ function CaptionApproval({
               variant="secondary"
               onClick={() => {
                 setLines(
-                  scriptToLines([script.hook, script.body, script.cta].filter(Boolean).join("\n"))
+                  scriptToLines(
+                    [script.hook, script.body, script.cta].filter(Boolean).join("\n"),
+                    language
+                  )
                 );
                 setSyncIdx(0);
                 setMode("script_sync");
@@ -357,7 +365,7 @@ function CaptionApproval({
         <TopBar
           title={getBroadcastCopy("captions.title")}
           onBack={() => setMode(null)}
-          backLabel="לבחירה"
+          backLabel={getBroadcastCopy("captions.back_to_choice")}
         />
         <div style={{ maxWidth: 560, margin: "0 auto", padding: "20px 20px 140px" }}>
           {previewSrc ? (
@@ -423,7 +431,7 @@ function CaptionApproval({
         <TopBar
           title={getBroadcastCopy("captions.title")}
           onBack={() => setMode(null)}
-          backLabel="לבחירה"
+          backLabel={getBroadcastCopy("captions.back_to_choice")}
         />
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
           <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8 }}>
@@ -442,7 +450,7 @@ function CaptionApproval({
   const visible = lines.filter((l) => !l.deleted);
   return (
     <>
-      <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
+      <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 140px" }}>
         <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.hint")}</p>
         {previewSrc ? (
@@ -807,11 +815,14 @@ function FilmstripTrimmer({
           </div>
         </div>
       </div>
-      <p dir="rtl" style={{ color: "#EDE9E1", fontSize: 13, marginTop: 6, fontVariantNumeric: "tabular-nums" }}>
+      <p
+        dir={getBroadcastLanguage() === "en" ? "ltr" : "rtl"}
+        style={{ color: "#EDE9E1", fontSize: 13, marginTop: 6, fontVariantNumeric: "tabular-nums" }}
+      >
         {getBroadcastCopy("captions.trim.selected")}{" "}
         <span dir="ltr">{fmt(trimStart)}–{fmt(trimEnd || durationMs)}</span>
         {" · "}
-        {Math.max(0, Math.round(((trimEnd || durationMs) - trimStart) / 1000))} שניות
+        {Math.max(0, Math.round(((trimEnd || durationMs) - trimStart) / 1000))} {getBroadcastCopy("captions.trim.seconds")}
       </p>
     </div>
   );
@@ -892,7 +903,7 @@ function OutputScreen({
 
   return (
     <>
-      <TopBar title="הרילס מוכן" backHref={KIT_HREF} backLabel="לפרקים שלי" />
+      <TopBar title={getBroadcastCopy("output.ready_title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 220px" }}>
         {snap.output_url ? (
           <div style={{ position: "relative" }}>
@@ -918,7 +929,7 @@ function OutputScreen({
             <ActionButton
               variant="primary"
               busy={!shareFile}
-              busyLabel="מכינה את הקובץ לשיתוף"
+              busyLabel={getBroadcastCopy("output.preparing_share")}
               onClick={shareReel}
             >
               {getBroadcastCopy("output.share")}
@@ -947,7 +958,7 @@ function OutputScreen({
               scrolls to the share/download sticky bar; this ghost link
               gives them the same escape from inside the action rail. */}
           <ActionButton variant="ghost" href={KIT_HREF}>
-            סיימתי לפרק הזה, חזרה לפרקים שלי ←
+            {getBroadcastCopy("output.done_link")}
           </ActionButton>
         </div>
       </div>
@@ -1154,11 +1165,14 @@ function ZoomPanPreview({
           </div>
         ) : null}
       </div>
-      <div dir="rtl" style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+      <div
+        dir={getBroadcastLanguage() === "en" ? "ltr" : "rtl"}
+        style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}
+      >
         <button
           type="button"
           className="br-btn"
-          aria-label={playing ? "השהיה" : "ניגון"}
+          aria-label={getBroadcastCopy(playing ? "room.pause" : "room.play")}
           onClick={() => {
             const v = videoRef.current;
             if (!v) return;
@@ -1190,7 +1204,7 @@ function ZoomPanPreview({
             </svg>
           )}
         </button>
-        <span style={{ color: "#9E9990", fontSize: 12, whiteSpace: "nowrap" }}>זום</span>
+        <span style={{ color: "#9E9990", fontSize: 12, whiteSpace: "nowrap" }}>{getBroadcastCopy("room.zoom")}</span>
         <input
           type="range"
           dir="ltr"
@@ -1200,7 +1214,7 @@ function ZoomPanPreview({
           value={z}
           onChange={(e) => onChange(clampT({ ...transform, z: Number(e.target.value) }))}
           style={{ flex: 1, accentColor: "#C9964A" }}
-          aria-label="זום"
+          aria-label={getBroadcastCopy("room.zoom")}
         />
         {!identity ? (
           <button

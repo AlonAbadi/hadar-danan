@@ -88,6 +88,10 @@ export default async function BroadcastRoomPage({
     cta: video.script.cta ? String(video.script.cta) : undefined,
   };
 
+  // Language source of truth: the extraction's signal jsonb. English members
+  // (/en funnel) carry signal.language === "en"; everyone else is Hebrew.
+  const language: "he" | "en" = ext.signal?.language === "en" ? "en" : "he";
+
   // Resume an in-flight edit: an approval waiting (or a burn running) should
   // land the user straight back in the pipeline, not at the prep screen.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,6 +114,7 @@ export default async function BroadcastRoomPage({
       script={script}
       firstName={userData.name?.split(" ")[0] ?? ""}
       gender={userData.gender === "m" ? "m" : userData.gender === "f" ? "f" : null}
+      language={language}
       supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
       supabaseAnonKey={process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}
       initialEditId={activeEdit?.id ?? null}

@@ -4,6 +4,7 @@
 "use client";
 
 import Link from "next/link";
+import { getBroadcastCopy, getBroadcastLanguage } from "@/lib/broadcast-copy";
 
 export function RoomStyles() {
   return (
@@ -29,7 +30,7 @@ export function TopBar({
   title,
   backHref,
   onBack,
-  backLabel = "חזרה",
+  backLabel,
   extraHref,
   extraLabel,
 }: {
@@ -40,6 +41,8 @@ export function TopBar({
   extraHref?: string;
   extraLabel?: string;
 }) {
+  // Back points toward the page start: → on the RTL Hebrew room, ← in English.
+  const isEn = getBroadcastLanguage() === "en";
   const back = (
     <span
       style={{
@@ -53,7 +56,8 @@ export function TopBar({
         letterSpacing: 0.2,
       }}
     >
-      <span style={{ fontSize: 20, fontWeight: 800 }}>→</span> {backLabel}
+      <span style={{ fontSize: 20, fontWeight: 800 }}>{isEn ? "←" : "→"}</span>{" "}
+      {backLabel ?? getBroadcastCopy("nav.back")}
     </span>
   );
   return (

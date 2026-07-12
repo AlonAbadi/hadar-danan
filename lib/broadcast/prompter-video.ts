@@ -20,6 +20,7 @@ const H = 540;
 const FONT_SIZE = 58;
 const LINE_H = Math.round(FONT_SIZE * 1.5);
 const CHARS_PER_LINE = 27; // Hebrew at 58px inside ~860px of usable width
+const CHARS_PER_LINE_EN = 34; // Latin glyphs run narrower at the same size
 const LEAD_MS = 1200; // text starts below the window — a short beat, then it rises in
 const TAIL_MS = 1500;
 // The visible prompter strip (the rest of the frame is masked to background).
@@ -28,8 +29,8 @@ const WINDOW_BOTTOM = 440;
 const READ_LINE_Y = Math.round(WINDOW_TOP + (WINDOW_BOTTOM - WINDOW_TOP) * 0.33);
 const BLOCK_GAP = Math.round(LINE_H * 0.35);
 
-function estHeight(text: string): number {
-  return Math.max(1, Math.ceil(text.length / CHARS_PER_LINE)) * LINE_H;
+function estHeight(text: string, charsPerLine: number): number {
+  return Math.max(1, Math.ceil(text.length / charsPerLine)) * LINE_H;
 }
 
 function assTime(ms: number): string {
@@ -45,11 +46,14 @@ export interface PrompterSpec {
   hook: string;
   body: string;
   cta?: string;
+  language?: "he" | "en"; // default he — Hebrew renders keep their cache keys
 }
 
 export function prompterStoragePath(spec: PrompterSpec): string {
   // r3: wide window, big type, colored hook/cta — bust older caches.
-  return `${spec.authPrefix}/prompter/v${spec.videoNumber}-w${spec.wpm}-r3.mp4`;
+  // English renders get their own suffix so cached Hebrew files never collide.
+  const langSuffix = spec.language === "en" ? "-en" : "";
+  return `${spec.authPrefix}/prompter/v${spec.videoNumber}-w${spec.wpm}-r3${langSuffix}.mp4`;
 }
 
 // Renders the scroll and uploads it; returns the storage path.
@@ -69,6 +73,7 @@ export async function renderPrompterVideo(spec: PrompterSpec): Promise<string> {
   const hook = spec.hook.replace(/\s+/g, " ").trim();
   const body = (spec.body ?? "").replace(/\s+/g, " ").trim();
   const cta = (spec.cta ?? "").replace(/\s+/g, " ").trim();
+  const charsPerLine = spec.language === "en" ? CHARS_PER_LINE_EN : CHARS_PER_LINE;
   const words = [hook, body, cta].filter(Boolean).join(" ").split(" ").length;
   const scrollMs = Math.round((words / spec.wpm) * 60_000);
   const durationMs = LEAD_MS + scrollMs + TAIL_MS;
@@ -76,9 +81,9 @@ export async function renderPrompterVideo(spec: PrompterSpec): Promise<string> {
   // Three stacked blocks (hook gold, body ivory, cta gold) moving in lockstep.
   // COLOR LIVES IN THE STYLE, never in override tags — the spike proved
   // {\c} tags split bidi runs and reverse Hebrew word order.
-  const hookH = hook ? estHeight(hook) : 0;
-  const bodyH = body ? estHeight(body) : 0;
-  const ctaH = cta ? estHeight(cta) : 0;
+  const hookH = hook ? estHeight(hook, charsPerLine) : 0;
+  const bodyH = body ? estHeight(body, charsPerLine) : 0;
+  const ctaH = cta ? estHeight(cta, charsPerLine) : 0;
   const totalH =
     hookH + bodyH + ctaH + (body ? BLOCK_GAP : 0) + (cta ? BLOCK_GAP : 0);
   const travel = totalH + (WINDOW_BOTTOM - WINDOW_TOP) + 60;

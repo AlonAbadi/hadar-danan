@@ -6,7 +6,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getBroadcastCopy, setBroadcastGender, type BroadcastGender } from "@/lib/broadcast-copy";
+import {
+  getBroadcastCopy,
+  getBroadcastLanguage,
+  setBroadcastGender,
+  setBroadcastLanguage,
+  type BroadcastGender,
+  type BroadcastLanguage,
+} from "@/lib/broadcast-copy";
 import { Teleprompter, type TeleprompterHandle } from "./Teleprompter";
 import { useRecording, type FinishedTake } from "./useRecording";
 import { uploadManager, type TakeUpload } from "./uploadManager";
@@ -45,6 +52,7 @@ export function BroadcastRoomClient({
   script,
   firstName,
   gender,
+  language = "he",
   initialEditId = null,
 }: {
   extractionId: string;
@@ -53,13 +61,17 @@ export function BroadcastRoomClient({
   script: ScriptShape;
   firstName: string;
   gender: BroadcastGender;
+  language?: BroadcastLanguage;
   supabaseUrl: string;
   supabaseAnonKey: string;
   initialEditId?: string | null;
 }) {
   // Set before any child renders so every getBroadcastCopy call resolves
-  // against the member's stored gender (users.gender, migration 051).
+  // against the member's stored gender (users.gender, migration 051) and the
+  // extraction's language (signal.language, "en" for /en members).
   setBroadcastGender(gender);
+  setBroadcastLanguage(language);
+  const dir = language === "en" ? "ltr" : "rtl";
   // An in-flight edit (approval pending, burn running) resumes straight into
   // the pipeline — entering through prep would strand it unreachable.
   const [phase, setPhase] = useState<Phase>(initialEditId ? "pipeline" : "prep");
@@ -370,7 +382,7 @@ export function BroadcastRoomClient({
 
   if (phase === "prep") {
     return (
-      <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+      <div dir={dir} style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
         <PrepScreen
           script={script}
@@ -386,13 +398,14 @@ export function BroadcastRoomClient({
 
   if (phase === "pipeline" && editId) {
     return (
-      <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+      <div dir={dir} style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
         <ProcessingAndApproval
           editId={editId}
           localTakeUrl={pipelineBlobUrl}
           script={script}
           firstName={firstName}
+          language={language}
           onAnotherTake={() => {
             setEditId(null);
             anotherTake();
@@ -404,9 +417,9 @@ export function BroadcastRoomClient({
 
   if (rec.cameraState === "unsupported") {
     return (
-      <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+      <div dir={dir} style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
-        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
+        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
         <CenteredCard title={getBroadcastCopy("error.unsupported")} />
       </div>
     );
@@ -414,9 +427,9 @@ export function BroadcastRoomClient({
 
   if (rec.cameraState === "denied") {
     return (
-      <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+      <div dir={dir} style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
-        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
+        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
         <PermissionDenied onRetry={rec.requestCamera} />
       </div>
     );
@@ -424,7 +437,7 @@ export function BroadcastRoomClient({
 
   if (phase === "review") {
     return (
-      <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+      <div dir={dir} style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
         <TakeGallery
           onBackToCamera={() => { setPhase("room"); if (rec.cameraState !== "ready") rec.requestCamera(); }}
@@ -443,7 +456,7 @@ export function BroadcastRoomClient({
 
   // phase === "room"
   return (
-    <div dir="rtl" style={shell} className="font-assistant">
+    <div dir={dir} style={shell} className="font-assistant">
       <RoomStyles />
       {/* WYSIWYG stage: the preview is EXACTLY the 9:16 frame the burn will
           produce (iPhone QA: Safari records the full landscape sensor, so a
@@ -489,7 +502,7 @@ export function BroadcastRoomClient({
       {!rec.isRecording ? (
         <button
           type="button"
-          aria-label="יציאה"
+          aria-label={getBroadcastCopy("room.exit")}
           className="br-btn"
           onClick={() => {
             rec.releaseCamera();
@@ -518,6 +531,7 @@ export function BroadcastRoomClient({
         hook={script.hook}
         body={script.body}
         cta={script.cta}
+        language={language}
         voiceSamplesRef={rec.rmsSamplesRef}
         // Desktop starts the recorder during the countdown (capture warm-up),
         // but the prompter must not run — its auto-start effect would let the
@@ -594,7 +608,7 @@ export function BroadcastRoomClient({
               }
             />
             <span style={{ color: "#9E9990", fontSize: 12 }} dir="ltr">
-              זום {rec.zoom.current.toFixed(2).replace(/\.?0+$/, "")}x
+              {getBroadcastCopy("room.zoom")} {rec.zoom.current.toFixed(2).replace(/\.?0+$/, "")}x
             </span>
             <ZoomPill
               label="+"
@@ -611,7 +625,7 @@ export function BroadcastRoomClient({
           />
           <button
             type="button"
-            aria-label={rec.isRecording ? "עצירה" : "הקלטה"}
+            aria-label={getBroadcastCopy(rec.isRecording ? "room.stop" : "room.record")}
             onClick={rec.isRecording ? stopTake : beginCountdown}
             style={{
               width: 72,
@@ -813,7 +827,7 @@ function PrepScreen({
 }) {
   return (
     <>
-    <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel="לפרקים שלי" />
+    <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "16px 20px 120px" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "16px 0 4px" }}>
         {videoTitle || getBroadcastCopy("prep.title")}
@@ -914,9 +928,9 @@ function TakeGallery({
       <TopBar
         title={getBroadcastCopy("takes.title")}
         onBack={onBackToCamera}
-        backLabel="חזרה לצילום"
+        backLabel={getBroadcastCopy("nav.back_to_camera")}
         extraHref={KIT_HREF}
-        extraLabel="לפרקים שלי"
+        extraLabel={getBroadcastCopy("nav.to_episodes")}
       />
       {directorLine ? (
         <p
@@ -938,7 +952,7 @@ function TakeGallery({
         <p style={{ margin: "12px 20px 0", color: "#E8B94A", fontSize: 14 }}>{banner}</p>
       ) : null}
       <div
-        dir="rtl"
+        dir={getBroadcastLanguage() === "en" ? "ltr" : "rtl"}
         style={{
           display: "flex",
           gap: 14,
@@ -983,7 +997,7 @@ function TakeGallery({
                   color: "#9E9990",
                 }}
               >
-                <span>טייק {i + 1}{t.interrupted ? ` · ${getBroadcastCopy("takes.interrupted")}` : ""}</span>
+                <span>{getBroadcastCopy("takes.take_label")} {i + 1}{t.interrupted ? ` · ${getBroadcastCopy("takes.interrupted")}` : ""}</span>
                 <span dir="ltr" style={{ fontVariantNumeric: "tabular-nums" }}>
                   {formatMs(t.durationMs)}
                 </span>
@@ -1037,7 +1051,7 @@ function TakeGallery({
         <ActionButton
           variant="primary"
           busy={confirming}
-          busyLabel="הטייק נשלח לבמאית"
+          busyLabel={getBroadcastCopy("takes.sending")}
           disabled={
             !selectedTakeId ||
             selected?.outOfRange ||

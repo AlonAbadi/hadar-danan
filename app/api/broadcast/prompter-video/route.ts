@@ -44,6 +44,9 @@ export async function POST(req: NextRequest) {
       hook: String(video.script.hook),
       body: String(video.script.body ?? ""),
       cta: video.script.cta ? String(video.script.cta) : undefined,
+      // English members (signal.language === "en") get the wider Latin line
+      // metrics and a "-en" cache key so Hebrew renders never collide.
+      language: ext.signal?.language === "en" ? "en" : "he",
     });
 
     const { data: signed } = await db.storage.from(BUCKET).createSignedUrl(storagePath, 7200);

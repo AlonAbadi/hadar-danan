@@ -46,10 +46,17 @@ export interface BuildAssOptions {
   // scales off the canvas height so captions read the same at any aspect.
   playResX?: number; // default 1080
   playResY?: number; // default 1920
+  // "en" skips the RLM prefix on caption lines: RLM is a strong RTL char, so
+  // with Encoding -1 (first-strong autodetect) it would flip an all-Latin
+  // line to an RTL base direction. Default "he" — Hebrew output unchanged.
+  language?: "he" | "en";
 }
 
 export function buildAss(lines: CaptionLine[], opts: BuildAssOptions): string {
   const events: string[] = [];
+  // Caption-line direction mark. The stamp keeps its hardcoded RLM + Hebrew
+  // string regardless of language (stamp: false in production anyway).
+  const lineRlm = opts.language === "en" ? "" : RLM;
 
   if (opts.stamp) {
     events.push(
@@ -63,7 +70,7 @@ export function buildAss(lines: CaptionLine[], opts: BuildAssOptions): string {
     const end = line.end_ms - opts.trimStartMs;
     if (end <= 0) continue;
     events.push(
-      `Dialogue: 0,${assTime(start)},${assTime(Math.min(end, opts.durationMs))},Caption,,0,0,0,,${RLM}${escapeAss(line.text)}`
+      `Dialogue: 0,${assTime(start)},${assTime(Math.min(end, opts.durationMs))},Caption,,0,0,0,,${lineRlm}${escapeAss(line.text)}`
     );
   }
 

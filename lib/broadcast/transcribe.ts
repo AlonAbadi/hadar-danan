@@ -15,6 +15,7 @@ import {
   buildWhisperPrompt,
   groupWordsIntoLines,
   transcriptLooksBroken,
+  type CaptionLanguage,
   type CaptionsPayload,
   type CaptionWord,
 } from "./captions";
@@ -65,13 +66,17 @@ export async function runTranscribeStage(edit: EditRow): Promise<void> {
     const audioPath = path.join(dir, "audio.m4a");
     await runFfmpeg(["-i", inputPath, "-vn", "-ac", "1", "-ar", "16000", "-c:a", "aac", "-b:a", "64k", audioPath]);
 
-    // Original script as the Hebrew-accuracy prompt.
+    // Original script as the Hebrew-accuracy prompt. The extraction's signal
+    // also carries the member's language (signal.language === "en" for /en
+    // members) — that decides the Whisper language, the prompt policy, and
+    // the garbage-transcript heuristics.
     const { data: extraction } = await db
       .from("signal_extractions")
       .select("signal")
       .eq("id", edit.extraction_id)
       .maybeSingle();
     const script = extractScript(extraction?.signal, edit.video_number);
+    const language: CaptionLanguage = extraction?.signal?.language === "en" ? "en" : "he";
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error("transcribe:openai_unconfigured");
@@ -79,12 +84,12 @@ export async function runTranscribeStage(edit: EditRow): Promise<void> {
     const fd = new FormData();
     fd.append("file", new Blob([new Uint8Array(readFileSync(audioPath))], { type: "audio/mp4" }), "audio.m4a");
     fd.append("model", "whisper-1");
-    fd.append("language", "he");
+    fd.append("language", language);
     fd.append("response_format", "verbose_json");
     fd.append("timestamp_granularities[]", "word");
     fd.append("timestamp_granularities[]", "segment");
     // Distinctive Latin terms only — NEVER the script text (see buildWhisperPrompt).
-    const prompt = script ? buildWhisperPrompt(script) : "";
+    const prompt = script ? buildWhisperPrompt(script, language) : "";
     if (prompt) fd.append("prompt", prompt);
 
     const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
@@ -108,8 +113,8 @@ export async function runTranscribeStage(edit: EditRow): Promise<void> {
     })).filter((w) => w.w.length > 0);
     if (!words.length) throw new Error("transcribe:empty_transcript");
 
-    const lines = groupWordsIntoLines(words);
-    const broken = transcriptLooksBroken(words, lines);
+    const lines = groupWordsIntoLines(words, language);
+    const broken = transcriptLooksBroken(words, lines, language);
     if (broken) throw new Error(`transcribe:broken_transcript:${broken}`);
     const captions: CaptionsPayload = {
       source: "whisper",

@@ -16,7 +16,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { getBroadcastCopy } from "@/lib/broadcast-copy";
+import { getBroadcastCopy, type BroadcastLanguage } from "@/lib/broadcast-copy";
 
 const WPM_MIN = 80;
 const WPM_MAX = 220;
@@ -54,6 +54,7 @@ export function Teleprompter({
   running,
   voiceSamplesRef,
   onRegisterControls,
+  language = "he",
 }: {
   hook: string;
   body: string;
@@ -61,7 +62,9 @@ export function Teleprompter({
   running: boolean;
   voiceSamplesRef?: React.MutableRefObject<readonly { t: number; rms: number }[]>;
   onRegisterControls?: (h: TeleprompterHandle) => void;
+  language?: BroadcastLanguage;
 }) {
+  const dir = language === "en" ? "ltr" : "rtl";
   const [wpm, setWpm] = useState(() => {
     if (typeof window === "undefined") return WPM_DEFAULT;
     const saved = Number(localStorage.getItem("broadcast_wpm"));
@@ -276,7 +279,7 @@ export function Teleprompter({
     <>
       <div
         ref={stripRef}
-        dir="rtl"
+        dir={dir}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -364,7 +367,7 @@ export function Teleprompter({
 
       {/* control row — a SIBLING of the strip: taps here can never pause */}
       <div
-        dir="rtl"
+        dir={dir}
         style={{
           position: "absolute",
           top: `calc(env(safe-area-inset-top) + ${stripH} + 6px)`,
@@ -408,7 +411,7 @@ export function Teleprompter({
             fontWeight: 700,
           }}
         >
-          עצירה בשקט
+          {getBroadcastCopy("room.vad_toggle")}
         </button>
         <button
           type="button"
@@ -424,7 +427,7 @@ export function Teleprompter({
             fontWeight: 700,
           }}
         >
-          א{fontSize === SIZE_STEPS[2] ? "-" : "+"}
+          {language === "en" ? "A" : "א"}{fontSize === SIZE_STEPS[2] ? "-" : "+"}
         </button>
       </div>
     </>
