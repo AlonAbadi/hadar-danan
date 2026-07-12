@@ -1299,7 +1299,15 @@ export function validateVideo(v: unknown): v is Video {
   if (!v || typeof v !== "object") return false;
   const x = v as Record<string, unknown>;
   if (typeof x.number !== "number" || x.number < 1 || x.number > 12) return false;
-  if (![1, 2, 3].includes(x.act as number)) return false;
+  // The model occasionally copies the video number into act ("act": 4 on
+  // video 4) — act is fully derivable from the number, so repair instead of
+  // rejecting the whole pack (2026-07-11 invalid-shape incident).
+  if (![1, 2, 3].includes(x.act as number)) {
+    const derived = (Object.entries(ACT_VIDEO_NUMBERS) as unknown as [string, number[]][])
+      .find(([, nums]) => nums.includes(x.number as number))?.[0];
+    if (!derived) return false;
+    x.act = Number(derived);
+  }
   if (typeof x.title !== "string" || x.title.length === 0) return false;
 
   // reels_profile is optional (added 2026-07-10). Legacy cached plans lack it.
