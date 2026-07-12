@@ -275,8 +275,34 @@ function CaptionApproval({
   onApproved: () => void;
 }) {
   // Local blob first: it plays instantly and never hits the black-screen
-  // signed-URL playback quirk in Chrome iOS; server URL is the reload path.
-  const previewSrc = localTakeUrl ?? snap.take_preview_url;
+  // signed-URL playback quirk in Chrome iOS. When there is no local blob
+  // (resume / re-edit), non-Safari iOS browsers can't STREAM the signed URL
+  // at all (QA-proven CriOS quirk) — so the take is fetched once and played
+  // as a local blob; fetch() is unaffected by the quirk.
+  const [fetchedBlobUrl, setFetchedBlobUrl] = useState<string | null>(null);
+  const needsBlobFetch =
+    !localTakeUrl &&
+    typeof navigator !== "undefined" &&
+    /CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+  useEffect(() => {
+    if (!needsBlobFetch || !snap.take_preview_url || fetchedBlobUrl) return;
+    let cancelled = false;
+    let url: string | null = null;
+    fetch(snap.take_preview_url)
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+      .then((blob) => {
+        url = URL.createObjectURL(blob);
+        if (!cancelled) setFetchedBlobUrl(url);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      if (url && cancelled) URL.revokeObjectURL(url);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsBlobFetch, snap.take_preview_url]);
+  const previewSrc = localTakeUrl ?? fetchedBlobUrl ?? (needsBlobFetch ? null : snap.take_preview_url);
+  const previewLoading = needsBlobFetch && !fetchedBlobUrl;
   const transcriptFailed =
     !snap.captions || snap.captions.source === "none" || !snap.captions.lines.length;
   const [mode, setMode] = useState<"captions" | "none" | "script_sync" | null>(
@@ -356,10 +382,10 @@ function CaptionApproval({
           backLabel="לבחירה"
         />
         <div style={{ maxWidth: 560, margin: "0 auto", padding: "20px 20px 140px" }}>
-          {snap.take_preview_url ? (
+          {previewSrc ? (
             <video
               ref={videoRef}
-              src={snap.take_preview_url}
+              src={previewSrc}
               playsInline
               controls
               style={portraitPreview("34dvh", 0, true)}
@@ -448,6 +474,24 @@ function CaptionApproval({
             transform={transform}
             onChange={setTransform}
           />
+        ) : previewLoading ? (
+          <div
+            style={{
+              height: "34dvh",
+              aspectRatio: "9 / 16",
+              margin: "14px auto 0",
+              borderRadius: 12,
+              background: "#141820",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#9E9990",
+              fontSize: 13,
+            }}
+          >
+            <span className="br-live-dot" style={{ marginInlineEnd: 8 }} />
+            טוען את הווידאו…
+          </div>
         ) : null}
         {/* WhatsApp-style trim: frame strip + draggable start/end handles */}
         {previewSrc ? (
@@ -1133,19 +1177,19 @@ function ZoomPanPreview({
           >
             <span
               style={{
-                width: 54,
-                height: 54,
+                width: 56,
+                height: 56,
                 borderRadius: "50%",
-                background: "rgba(8,12,20,0.55)",
+                background: "rgba(8,12,20,0.6)",
+                border: "1px solid rgba(232,185,74,0.4)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#EDE9E1",
-                fontSize: 20,
-                paddingInlineStart: 4,
               }}
             >
-              ▶
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="#E8B94A" style={{ marginInlineStart: 3 }}>
+                <path d="M7 4.5v15l13-7.5z" />
+              </svg>
             </span>
           </div>
         ) : null}
@@ -1169,15 +1213,27 @@ function ZoomPanPreview({
             border: "1px solid rgba(232,185,74,0.35)",
             background: "transparent",
             color: "#E8B94A",
-            fontSize: 15,
             cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {playing ? "❚❚" : "▶"}
+          {playing ? (
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+              <rect x="5.5" y="4" width="4.4" height="16" rx="1.2" />
+              <rect x="14.1" y="4" width="4.4" height="16" rx="1.2" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style={{ marginInlineStart: 2 }}>
+              <path d="M7 4.5v15l13-7.5z" />
+            </svg>
+          )}
         </button>
         <span style={{ color: "#9E9990", fontSize: 12, whiteSpace: "nowrap" }}>זום</span>
         <input
           type="range"
+          dir="ltr"
           min={1}
           max={2.5}
           step={0.01}
