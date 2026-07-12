@@ -91,6 +91,11 @@ export const BROADCAST_COPY = {
     m: "גרור את הידיות בקצוות כדי לחתוך את ההתחלה והסוף",
   },
   "captions.trim.selected": "נבחר",
+  "captions.zoom.hint": {
+    f: "גררי את התמונה למיקום שנוח לך, וקרבי בצביטה או בסליידר. מה שרואים כאן זה מה שנצרב",
+    m: "גרור את התמונה למיקום שנוח לך, וקרב בצביטה או בסליידר. מה שרואים כאן זה מה שנצרב",
+  },
+  "captions.zoom.reset": "איפוס מסגור",
   "captions.failed.title": "התמלול לא הסתדר הפעם",
   "captions.failed.option_none": "רילס בלי כתוביות",
   "captions.failed.option_script": "התסריט ככתוביות, בסנכרון באישור שלך",

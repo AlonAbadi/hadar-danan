@@ -12,7 +12,7 @@ import path from "node:path";
 import { createServerClient } from "@/lib/supabase/server";
 import { runFfmpeg, scratchDir, scratchCleanup, probeVideoDims, FONTS_DIR, type VideoDims } from "./ffmpeg";
 import { buildAss } from "./ass";
-import type { CaptionsPayload } from "./captions";
+import type { CaptionsPayload, CaptionTransform } from "./captions";
 
 const BUCKET = "broadcast-takes";
 const COVER_FRACTIONS = [0.2, 0.45, 0.7];
@@ -42,16 +42,37 @@ export interface VideoFilterPlan {
 // top and bottom, which is what Alon reported today. Fingerprint the case
 // (landscape effective + ±90 rotation + raw buffer taller than wide) and
 // route to the portrait crop chain — same treatment as commit e906f00.
-export function buildVideoFilter(dims: VideoDims | null, assPath: string): VideoFilterPlan {
+export function buildVideoFilter(
+  dims: VideoDims | null,
+  assPath: string,
+  transform?: CaptionTransform | null
+): VideoFilterPlan {
   const landscape = dims !== null && dims.effWidth > dims.effHeight;
   const appRotatedFromPortrait =
     landscape &&
     Math.abs(dims.rotation) % 180 === 90 &&
     dims.width < dims.height;
   if (!landscape || appRotatedFromPortrait) {
+    // User zoom/pan from the approval screen: crop the chosen 9:16 window
+    // (base cover window / z, centered on cx,cy) then scale — WYSIWYG with
+    // the client preview, which runs the identical math. Needs probed dims;
+    // without them (or without a transform) the legacy cover chain runs.
+    let cropChain = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920`;
+    if (dims && transform && (transform.z > 1.005 || Math.abs(transform.cx - 0.5) > 0.005 || Math.abs(transform.cy - 0.5) > 0.005)) {
+      const W = dims.effWidth;
+      const H = dims.effHeight;
+      const z = Math.min(2.5, Math.max(1, transform.z));
+      const w0 = Math.min(W, (H * 9) / 16);
+      const h0 = (w0 * 16) / 9;
+      const w = Math.max(2, Math.floor(w0 / z / 2) * 2);
+      const h = Math.max(2, Math.floor(h0 / z / 2) * 2);
+      const x = Math.round(Math.min(W - w, Math.max(0, transform.cx * W - w / 2)) / 2) * 2;
+      const y = Math.round(Math.min(H - h, Math.max(0, transform.cy * H - h / 2)) / 2) * 2;
+      cropChain = `crop=${w}:${h}:${x}:${y},scale=1080:1920`;
+    }
     return {
       kind: "vf",
-      value: `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
+      value: `${cropChain},fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
       strategy: "portrait_crop",
       // Top-anchored (Alignment 8): caption block starts just below the
       // vertical middle, like Hadar's published reels.
@@ -124,7 +145,7 @@ export async function runBurnStage(edit: EditRow): Promise<void> {
     // Framing decision from the EFFECTIVE source dims (autorotation-aware).
     const dims = await probeVideoDims(inputPath);
     const assPath = path.join(dir, "captions.ass");
-    const plan = buildVideoFilter(dims, assPath);
+    const plan = buildVideoFilter(dims, assPath, edit.captions?.transform ?? null);
 
     // ASS with approved lines only (mode 'none' approved an empty set —
     // the stamp still burns). Margins depend on the framing strategy.

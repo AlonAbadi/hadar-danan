@@ -19,11 +19,21 @@ export interface CaptionLine {
   edited: boolean;
 }
 
+// User-chosen framing for the burn (zoom/pan on the caption-approval screen).
+// cx/cy are the visible-window CENTER normalized to the effective source
+// dims (0..1); z is the zoom factor over the base 9:16 cover window.
+export interface CaptionTransform {
+  z: number; // 1..2.5
+  cx: number;
+  cy: number;
+}
+
 export interface CaptionsPayload {
   source: "whisper" | "script" | "none";
   words: CaptionWord[];
   lines: CaptionLine[];
   approved_at: string | null;
+  transform?: CaptionTransform | null;
 }
 
 // Single-line phrases only — max ~17 chars (~3 Hebrew words) fits the

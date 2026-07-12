@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import { getBroadcastCopy } from "@/lib/broadcast-copy";
-import { scriptToLines, type CaptionLine, type CaptionsPayload } from "@/lib/broadcast/captions";
+import { scriptToLines, type CaptionLine, type CaptionsPayload, type CaptionTransform } from "@/lib/broadcast/captions";
 import type { ScriptShape } from "./BroadcastRoomClient";
 import { ActionButton, TopBar } from "./ui";
 
@@ -287,6 +287,7 @@ function CaptionApproval({
   const [trimEnd, setTrimEnd] = useState(snap.trim_end_ms ?? 0);
   const [submitting, setSubmitting] = useState(false);
   const [syncIdx, setSyncIdx] = useState(0);
+  const [transform, setTransform] = useState<CaptionTransform>({ z: 1, cx: 0.5, cy: 0.5 });
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const previewRef = useRef<HTMLVideoElement | null>(null);
 
@@ -301,6 +302,7 @@ function CaptionApproval({
           lines: mode === "none" ? [] : lines,
           trim_start_ms: trimStart,
           trim_end_ms: trimEnd,
+          transform,
         }),
       });
       if (!res.ok) throw new Error(String(res.status));
@@ -308,7 +310,7 @@ function CaptionApproval({
     } catch {
       setSubmitting(false);
     }
-  }, [editId, mode, lines, trimStart, trimEnd, onApproved]);
+  }, [editId, mode, lines, trimStart, trimEnd, transform, onApproved]);
 
   // Fallback chooser when transcription failed.
   if (transcriptFailed && mode === null) {
@@ -438,7 +440,12 @@ function CaptionApproval({
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 140px" }}>
         <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.hint")}</p>
         {previewSrc ? (
-          <video ref={previewRef} src={previewSrc} playsInline controls preload="metadata" style={portraitPreview("34dvh", 14, true)} />
+          <ZoomPanPreview
+            src={previewSrc}
+            videoRef={previewRef}
+            transform={transform}
+            onChange={setTransform}
+          />
         ) : null}
         {/* WhatsApp-style trim: frame strip + draggable start/end handles */}
         {previewSrc ? (
@@ -867,6 +874,242 @@ function OutputScreen({
         </div>
       </div>
     </>
+  );
+}
+
+// Zoom/pan framing editor over the take preview — WYSIWYG with the burn:
+// the visible 9:16 window here IS the crop the server cuts (identical math
+// in buildVideoFilter). Drag to reposition, pinch or slider to zoom, tap to
+// play/pause. Portrait sources only — landscape takes ship full-frame by
+// policy, so those get the plain player.
+function ZoomPanPreview({
+  src,
+  videoRef,
+  transform,
+  onChange,
+}: {
+  src: string;
+  videoRef: React.MutableRefObject<HTMLVideoElement | null>;
+  transform: CaptionTransform;
+  onChange: (t: CaptionTransform) => void;
+}) {
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const [vid, setVid] = useState({ w: 0, h: 0 });
+  const [playing, setPlaying] = useState(false);
+  const tRef = useRef(transform);
+  tRef.current = transform;
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<{ dist: number; z: number } | null>(null);
+  const movedRef = useRef(false);
+
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const portrait = vid.w > 0 && vid.h > vid.w;
+  const s0 = vid.w && box.w ? Math.max(box.w / vid.w, box.h / vid.h) : 0;
+
+  const clampT = useCallback(
+    (t: CaptionTransform): CaptionTransform => {
+      if (!vid.w || !s0) return t;
+      const z = Math.min(2.5, Math.max(1, t.z));
+      const halfW = box.w / (2 * z * s0 * vid.w);
+      const halfH = box.h / (2 * z * s0 * vid.h);
+      return {
+        z,
+        cx: halfW >= 0.5 ? 0.5 : Math.min(1 - halfW, Math.max(halfW, t.cx)),
+        cy: halfH >= 0.5 ? 0.5 : Math.min(1 - halfH, Math.max(halfH, t.cy)),
+      };
+    },
+    [vid, box, s0]
+  );
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    movedRef.current = false;
+    if (pointersRef.current.size === 2) {
+      const [a, b] = [...pointersRef.current.values()];
+      pinchRef.current = { dist: Math.hypot(a.x - b.x, a.y - b.y), z: tRef.current.z };
+    }
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const prev = pointersRef.current.get(e.pointerId);
+    if (!prev) return;
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const t = tRef.current;
+    if (pointersRef.current.size === 2 && pinchRef.current) {
+      const [a, b] = [...pointersRef.current.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (dist > 0 && pinchRef.current.dist > 0) {
+        movedRef.current = true;
+        onChange(clampT({ ...t, z: pinchRef.current.z * (dist / pinchRef.current.dist) }));
+      }
+      return;
+    }
+    const dx = e.clientX - prev.x;
+    const dy = e.clientY - prev.y;
+    if (Math.abs(dx) + Math.abs(dy) > 2) movedRef.current = true;
+    if (s0 && vid.w) {
+      onChange(
+        clampT({
+          ...t,
+          cx: t.cx - dx / (t.z * s0 * vid.w),
+          cy: t.cy - dy / (t.z * s0 * vid.h),
+        })
+      );
+    }
+  };
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    pointersRef.current.delete(e.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
+    if (pointersRef.current.size === 0 && !movedRef.current) {
+      const v = videoRef.current;
+      if (v) {
+        if (v.paused) v.play().catch(() => {});
+        else v.pause();
+      }
+    }
+  };
+
+  const identity = transform.z <= 1.005 && Math.abs(transform.cx - 0.5) <= 0.005 && Math.abs(transform.cy - 0.5) <= 0.005;
+  const { z, cx, cy } = transform;
+
+  // Landscape source: full-frame policy, no framing editor.
+  if (vid.w > 0 && !portrait) {
+    return (
+      <video
+        ref={(el) => { videoRef.current = el; }}
+        src={src}
+        playsInline
+        controls
+        preload="metadata"
+        style={portraitPreview("34dvh", 14, true)}
+      />
+    );
+  }
+
+  return (
+    <div>
+      <div
+        ref={boxRef}
+        style={{
+          position: "relative",
+          height: "34dvh",
+          aspectRatio: "9 / 16",
+          width: "auto",
+          maxWidth: "100%",
+          margin: "14px auto 0",
+          borderRadius: 12,
+          background: "#000",
+          overflow: "hidden",
+        }}
+      >
+        <video
+          ref={(el) => { videoRef.current = el; }}
+          src={src}
+          playsInline
+          preload="metadata"
+          onLoadedMetadata={(e) =>
+            setVid({ w: e.currentTarget.videoWidth, h: e.currentTarget.videoHeight })
+          }
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          style={
+            vid.w && s0
+              ? {
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  width: vid.w * s0,
+                  height: vid.h * s0,
+                  maxWidth: "none",
+                  transformOrigin: "0 0",
+                  transform: `translate(${box.w / 2 - z * s0 * cx * vid.w}px, ${box.h / 2 - z * s0 * cy * vid.h}px) scale(${z})`,
+                }
+              : { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }
+          }
+        />
+        <div
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          style={{ position: "absolute", inset: 0, touchAction: "none", cursor: "grab" }}
+        />
+        {!playing ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+            }}
+          >
+            <span
+              style={{
+                width: 54,
+                height: 54,
+                borderRadius: "50%",
+                background: "rgba(8,12,20,0.55)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#EDE9E1",
+                fontSize: 20,
+                paddingInlineStart: 4,
+              }}
+            >
+              ▶
+            </span>
+          </div>
+        ) : null}
+      </div>
+      <div dir="rtl" style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+        <span style={{ color: "#9E9990", fontSize: 12, whiteSpace: "nowrap" }}>זום</span>
+        <input
+          type="range"
+          min={1}
+          max={2.5}
+          step={0.01}
+          value={z}
+          onChange={(e) => onChange(clampT({ ...transform, z: Number(e.target.value) }))}
+          style={{ flex: 1, accentColor: "#C9964A" }}
+          aria-label="זום"
+        />
+        {!identity ? (
+          <button
+            type="button"
+            className="br-btn"
+            onClick={() => onChange({ z: 1, cx: 0.5, cy: 0.5 })}
+            style={{
+              border: "1px solid rgba(232,185,74,0.35)",
+              background: "transparent",
+              color: "#E8B94A",
+              borderRadius: 8,
+              padding: "5px 9px",
+              fontSize: 12,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {getBroadcastCopy("captions.zoom.reset")}
+          </button>
+        ) : null}
+      </div>
+      <p style={{ color: "#9E9990", fontSize: 12, marginTop: 4 }}>
+        {getBroadcastCopy("captions.zoom.hint")}
+      </p>
+    </div>
   );
 }
 

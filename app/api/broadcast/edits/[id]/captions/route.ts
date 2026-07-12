@@ -38,6 +38,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const trimStart = Math.max(0, Math.round(Number(body.trim_start_ms) || 0));
     const trimEnd = Math.max(0, Math.round(Number(body.trim_end_ms) || 0));
 
+    // Framing transform (zoom/pan from the approval screen) — clamp hard;
+    // identity stores as null so legacy burns stay byte-identical.
+    const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+    const tz = Math.min(2.5, Math.max(1, Number(body.transform?.z) || 1));
+    const tcx = clamp01(Number(body.transform?.cx) || 0.5);
+    const tcy = clamp01(Number(body.transform?.cy) || 0.5);
+    const transform =
+      tz > 1.005 || Math.abs(tcx - 0.5) > 0.005 || Math.abs(tcy - 0.5) > 0.005
+        ? { z: tz, cx: tcx, cy: tcy }
+        : null;
+
     const db = createServerClient() as any;
     const { data: current } = await db
       .from("broadcast_edits")
@@ -52,6 +63,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       words: current.captions?.words ?? [],
       lines: mode === "none" ? [] : lines,
       approved_at: new Date().toISOString(),
+      transform,
     };
 
     // The optimistic lock: only one approval wins.
