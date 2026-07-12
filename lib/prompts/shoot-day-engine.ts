@@ -1409,3 +1409,54 @@ export function validateShootDayPlan(data: unknown): data is ShootDayPlan {
   // function invocation under the 60s limit.
   return true;
 }
+
+// ── English output layer (2026-07-13) ─────────────────────────────────
+// English members (signal_extractions.signal.language === "en") receive
+// their full 7-episode plan in English. The Hebrew system prompts above are
+// Hadar's brand Torah — they are NEVER forked or translated into parallel
+// English constants. Instead, this rider is APPENDED to whichever pack
+// system prompt is being run (see withLanguage). It overrides the OUTPUT
+// LANGUAGE only; the method, moves, modes, act structure, and the JSON
+// validation schema stay exactly as the Hebrew prompt defines them, so the
+// Hebrew path stays byte-identical and every validator keeps passing.
+
+export type ShootDayLanguage = "he" | "en";
+
+/** Derive the plan language from a loaded signal_extractions.signal JSONB. */
+export function shootDayLanguage(signal: unknown): ShootDayLanguage {
+  const s = signal as Record<string, unknown> | null | undefined;
+  return s?.language === "en" ? "en" : "he";
+}
+
+export const EN_OUTPUT_DIRECTIVE = `## ENGLISH OUTPUT DIRECTIVE (overrides output language only — every rule above stays in force)
+
+This member's signal is in ENGLISH. Everything defined above — the method, the signature moves, the modes, the reels profiles, the retention techniques, the act structure, the video types, the season-continuity rules, and the exact JSON schema — stays EXACTLY as written. Only the language of the OUTPUT changes. Follow all of the following:
+
+1. EVERY free-text output field is written in natural, spoken ENGLISH. Scripts (hook / body / cta) are spoken-word English written for the camera — the rhythm of a native English speaker actually talking — never translated-sounding Hebrew. The same applies to titles, identity_statement, pillars (title / message / evidence / scene), letter_from_hadar, direction fields (visual / body_language / tone / eye_contact), signature_move.explanation, anti_category (competitor_norm / your_inversion), gift_sentences, visual_direction free text (forbidden-color descriptions, cinematography, philosophy, references), schedule activity + hint lines, decisions text + urgency, client_interview_questions, and the director monologue + notes.
+
+2. Machine values stay EXACTLY as the schema defines them, byte for byte: all JSON keys, and the values of type, mode, set, act, pillar, number, duration, reels_profile, hook_technique, and the three decision type values ("זהותית" / "תפעולית" / "קוגניטיבית"). These are validated identifiers, not display text — never translate them.
+
+3. hadar_quote handling: the source field stays VERBATIM from the approved source list above (C-numbers / michael-kadosh.txt / Hadar-lesson-1 / general) — never translate, transliterate, or alter it. The text field is a faithful ENGLISH RENDERING of that teaching, prefixed exactly with: "Hadar's teaching, rendered in English: ". Example: {"text": "Hadar's teaching, rendered in English: everything has to play like music, not explain itself.", "source": "C4367"}. Never invent a source; if none fits, use "general" with a general English paraphrase (still carrying the exact prefix).
+
+4. signature_move.name: choose EXACTLY from the closed list of approved move-name labels above, character for character, including the Hebrew-labeled one ("אני אקביל לך Parable Building"). The name is a validated identifier. The explanation next to it is written in English.
+
+5. Punctuation: plain hyphen (-) only — NEVER an em dash (—, U+2014) and never an en dash. No exclamation marks. No emoji, no markdown. The Hebrew register rule (no loanwords) is void in English; write idiomatic English instead.
+
+6. Gender: the Hebrew grammatical-gender guidance above (לשון זכר / לשון נקבה) and any gender line in the user message are void in English — English first-person and second-person are naturally ungendered. Address the member simply as "you". Keep the INTENT of the address rules: when Hadar / BeeGood speaks about or to the member, warm direct "you"; when the member speaks to their audience through a script, the member's own natural voice.
+
+7. Hadar's Hebrew mantras, sign-offs, and canonical lines, wherever they would appear inside an output field, are rendered as natural English carrying the same teaching (for example, a Mode D sign-off in the spirit of "תהיו טובים" becomes a natural English equivalent, not transliterated Hebrew). Never paste raw Hebrew into an English member's free-text output fields.
+
+8. Every ban above applies to the English output with full force, in spirit and in letter: the marketing-cliche ban (their English equivalents: "game-changer", "unlock", "transform your life", "empower", "journey", "next level", "thought leader", "experts"), the Meta-Transition Ban ("and I want to tell you something...", "let me stop here for a second...", "in this video we'll talk about..."), the Capability Ban, the Silence-Interpretation Ban, and positivity-through-expansion ("it's not just X, it's also Y").
+
+Final self-check before returning JSON: every free-text field reads as fluent spoken English; every identifier field matches the schema verbatim; hadar_quote.source is verbatim from the approved list and hadar_quote.text starts exactly with "Hadar's teaching, rendered in English: ".`;
+
+/**
+ * Wrap a pack system prompt for the member's language. Hebrew ("he") returns
+ * the prompt untouched (byte-identical path); English appends the
+ * EN_OUTPUT_DIRECTIVE rider. Safe to compose with personalizeSystemPrompt in
+ * either order — the __CUSTOMER_INJECTED_QUOTES__ placeholder sits mid-prompt
+ * and the rider is appended at the end.
+ */
+export function withLanguage(system: string, lang: ShootDayLanguage): string {
+  return lang === "en" ? system + "\n\n" + EN_OUTPUT_DIRECTIVE : system;
+}

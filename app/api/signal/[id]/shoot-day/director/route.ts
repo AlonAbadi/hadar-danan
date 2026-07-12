@@ -15,6 +15,8 @@ import {
   buildDirectorContextMessage,
   validateDirectorPack,
   validatePillar,
+  shootDayLanguage,
+  withLanguage,
   type Pillar,
 } from "@/lib/prompts/shoot-day-engine";
 import { normalizeShootDayText } from "@/lib/prompts/shoot-day-lint";
@@ -51,10 +53,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const gate = await gateAndBuildContext(req, id);
   if (!gate.ok) return gate.response;
 
+  // English members (signal.language === "en") get the EN output rider —
+  // Hadar's director monologue + notes render in English for them.
+  const lang = shootDayLanguage(gate.signal);
+
   let text = "";
   try {
     text = await runPack(
-      DIRECTOR_PACK_SYSTEM,
+      withLanguage(DIRECTOR_PACK_SYSTEM, lang),
       buildDirectorContextMessage(gate.ctx, identity_statement, pillars, videos),
       DIRECTOR_PACK_MAX_TOKENS,
       { extractionId: id, occupation: gate.ctx.occupation },

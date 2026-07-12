@@ -16,6 +16,8 @@ import {
   buildVideosContextMessage,
   validateVideosPack,
   validatePillar,
+  shootDayLanguage,
+  withLanguage,
   type Pillar,
 } from "@/lib/prompts/shoot-day-engine";
 import {
@@ -65,11 +67,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const gate = await gateAndBuildContext(req, id);
   if (!gate.ok) return gate.response;
 
+  // English members (signal.language === "en") get the EN output rider
+  // appended to the system prompt; Hebrew members hit identical bytes.
+  const lang = shootDayLanguage(gate.signal);
+
   // ── Generate the requested videos ────────────────────────────────────
   let text = "";
   try {
     text = await runPack(
-      VIDEOS_PACK_SYSTEM,
+      withLanguage(VIDEOS_PACK_SYSTEM, lang),
       buildVideosContextMessage(gate.ctx, identity_statement, pillars, numbers),
       Math.min(numbers.length * TOKENS_PER_VIDEO, VIDEOS_PACK_MAX_TOKENS),
       { extractionId: id, occupation: gate.ctx.occupation },

@@ -24,6 +24,8 @@ import {
   validateSingleVideoPack,
   validateShootDayPlan,
   validatePillar,
+  shootDayLanguage,
+  withLanguage,
   type ShootDayPlan,
   type ShootDayContext,
   type Pillar,
@@ -137,10 +139,16 @@ export async function POST(
   let videoText = "";
   try {
     const client = new Anthropic();
+    // English members (signal.language === "en") get the EN output rider;
+    // Hebrew members hit the exact same prompt bytes as before.
+    const lang = shootDayLanguage(row.signal);
     const videoRes = await client.messages.create({
       model:      SHOOT_DAY_MODEL_SONNET,
       max_tokens: SINGLE_VIDEO_PACK_MAX_TOKENS,
-      system:     personalizeSystemPrompt(SINGLE_VIDEO_PACK_SYSTEM, { extractionId: id, occupation: ctx.occupation }),
+      system:     withLanguage(
+        personalizeSystemPrompt(SINGLE_VIDEO_PACK_SYSTEM, { extractionId: id, occupation: ctx.occupation }),
+        lang,
+      ),
       messages:   [{ role: "user", content: buildSingleVideoContextMessage(ctx, identity_statement, pillars) }],
     });
     videoText = videoRes.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
