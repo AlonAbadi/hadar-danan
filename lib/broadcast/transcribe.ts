@@ -14,6 +14,7 @@ import { findShootDayVideo } from "@/lib/signal/shoot-day-slices";
 import {
   buildWhisperPrompt,
   groupWordsIntoLines,
+  transcriptLooksBroken,
   type CaptionsPayload,
   type CaptionWord,
 } from "./captions";
@@ -82,7 +83,9 @@ export async function runTranscribeStage(edit: EditRow): Promise<void> {
     fd.append("response_format", "verbose_json");
     fd.append("timestamp_granularities[]", "word");
     fd.append("timestamp_granularities[]", "segment");
-    if (script) fd.append("prompt", buildWhisperPrompt(script));
+    // Distinctive Latin terms only — NEVER the script text (see buildWhisperPrompt).
+    const prompt = script ? buildWhisperPrompt(script) : "";
+    if (prompt) fd.append("prompt", prompt);
 
     const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
@@ -106,6 +109,8 @@ export async function runTranscribeStage(edit: EditRow): Promise<void> {
     if (!words.length) throw new Error("transcribe:empty_transcript");
 
     const lines = groupWordsIntoLines(words);
+    const broken = transcriptLooksBroken(words, lines);
+    if (broken) throw new Error(`transcribe:broken_transcript:${broken}`);
     const captions: CaptionsPayload = {
       source: "whisper",
       words,
@@ -137,7 +142,7 @@ export async function runTranscribeStage(edit: EditRow): Promise<void> {
     // fallback paths (no captions / script-as-captions manual sync) live
     // there. Only infrastructure failures (missing take, download, ffmpeg)
     // dead-end at 'failed' where retry is the path.
-    const whisperFailure = /openai_|empty_transcript/.test(err.message);
+    const whisperFailure = /openai_|empty_transcript|broken_transcript/.test(err.message);
     if (whisperFailure) {
       const emptyCaptions: CaptionsPayload = { source: "none", words: [], lines: [], approved_at: null };
       await setStatus(db, edit.id, {

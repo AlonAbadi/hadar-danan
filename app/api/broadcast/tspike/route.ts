@@ -7,6 +7,7 @@ import { writeFileSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { createServerClient } from "@/lib/supabase/server";
 import { runFfmpeg, scratchDir, scratchCleanup } from "@/lib/broadcast/ffmpeg";
+import { runTranscribeStage } from "@/lib/broadcast/transcribe";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -17,8 +18,26 @@ export async function POST(req: NextRequest) {
   if (req.headers.get("x-spike-key") !== SPIKE_KEY) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
-  const { take_id, variant, prompt } = await req.json();
+  const { take_id, variant, prompt, edit_id } = await req.json();
   const db = createServerClient() as any;
+
+  // Re-run the (fixed) transcription stage on an existing edit — parks it back
+  // at awaiting_captions with fresh captions.
+  if (variant === "requeue" && edit_id) {
+    const { data: edit } = await db
+      .from("broadcast_edits")
+      .select("id, take_id, user_id, extraction_id, video_number, status")
+      .eq("id", edit_id)
+      .maybeSingle();
+    if (!edit) return NextResponse.json({ error: "edit_not_found" }, { status: 404 });
+    await runTranscribeStage(edit);
+    const { data: after } = await db
+      .from("broadcast_edits")
+      .select("status, captions, error_detail")
+      .eq("id", edit_id)
+      .maybeSingle();
+    return NextResponse.json({ ok: true, status: after?.status, error_detail: after?.error_detail, lines: after?.captions?.lines ?? null });
+  }
   const { data: take } = await db
     .from("broadcast_takes")
     .select("id, storage_path")

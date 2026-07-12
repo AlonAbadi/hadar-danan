@@ -138,12 +138,35 @@ export function scriptToLines(script: string): CaptionLine[] {
   }));
 }
 
-// Whisper prompt: the API keeps only the FINAL 224 tokens, so pass distinctive
-// terms (Latin/loanwords Whisper actually misses) + the script head, capped.
+// Whisper prompt: distinctive Latin/loanword terms ONLY. Passing the script
+// text itself as the prompt turned out to poison decoding on Hebrew webcam
+// audio — Whisper drifted into hallucinated English/garbage while the SAME
+// audio transcribed near-perfectly with no prompt (verified 2026-07-12 on a
+// real failed take). The prompt biases, it does not anchor.
 export function buildWhisperPrompt(script: string): string {
-  const distinctive = Array.from(
-    new Set(script.match(/[A-Za-z][A-Za-z0-9'&-]*|"[^"]+"/g) ?? [])
-  ).join(" ");
-  const head = script.replace(/\s+/g, " ").trim();
-  return `${distinctive} ${head}`.trim().slice(0, 350);
+  return Array.from(
+    new Set(script.match(/[A-Za-z][A-Za-z0-9'&-]*/g) ?? [])
+  ).join(" ").slice(0, 200);
+}
+
+// Garbage-transcript detector. Whisper failures don't error — they return
+// confidently wrong output. Three signals, any one condemns the transcript:
+// stretched words (a caption line spanning many seconds of "speech"), long
+// dead zones between consecutive words mid-take, or Latin-script bleed into a
+// Hebrew-only recording. Condemned transcripts route to the existing fallback
+// chooser (script-as-captions / no captions) instead of being burned.
+export function transcriptLooksBroken(words: CaptionWord[], lines: CaptionLine[]): string | null {
+  for (const line of lines) {
+    if (!line.deleted && line.end_ms - line.start_ms > 8000) {
+      return `stretched_line:${line.end_ms - line.start_ms}ms`;
+    }
+  }
+  for (let i = 1; i < words.length; i++) {
+    const gap = words[i].s - words[i - 1].e;
+    if (gap > 8000) return `word_gap:${gap}ms`;
+  }
+  const text = lines.filter((l) => !l.deleted).map((l) => l.text).join(" ");
+  const latin = (text.match(/[A-Za-z]/g) ?? []).length;
+  if (text.length > 20 && latin / text.length > 0.2) return `latin_ratio:${latin}/${text.length}`;
+  return null;
 }
