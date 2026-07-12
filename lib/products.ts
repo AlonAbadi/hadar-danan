@@ -101,6 +101,17 @@ export const PRODUCT_MAP = {
   course_1800:    { name: "קורס דיגיטלי",         price: 1800  },
   strategy_4000:  { name: "פגישת אסטרטגיה",      price: 4000  },
   premium_14000:  { name: "יום צילום פרמיום",    price: 14000 },
+  // English edition of כוורת האות — priced and charged in USD (Cardcom
+  // CoinId 2, English payment page). If the terminal rejects USD at
+  // page-creation time, checkout retries in ILS at EN_HIVE_FALLBACK_ILS.
+  signal_hive_en_149: { name: "The Signal Hive", price: 149 },
 } as const;
 
 export type ProductKey = keyof typeof PRODUCT_MAP;
+
+// English hive pricing (display + charge). Anchor/discount mirrors the
+// Hebrew ₪980→₪590 (40% off) structure.
+export const EN_HIVE_PRICE_USD = 149;
+export const EN_HIVE_ANCHOR_USD = 249;
+export const EN_HIVE_FALLBACK_ILS = 590;
+export const USD_PRODUCTS: ReadonlySet<string> = new Set(["signal_hive_en_149"]);

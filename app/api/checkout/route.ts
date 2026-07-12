@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 import { z } from "zod";
-import { PRODUCT_MAP, type ProductKey } from "@/lib/products";
+import { PRODUCT_MAP, EN_HIVE_FALLBACK_ILS, type ProductKey } from "@/lib/products";
 import { sendCapiEvent } from "@/lib/meta-capi";
 import { kriahPreviewAllowed } from "@/lib/isolation";
 import { computeCredit } from "@/lib/credit-ladder";
@@ -55,6 +55,7 @@ const BodySchema = z.object({
   product: z.enum([
     "challenge_197",
     "signal_hive_590",
+    "signal_hive_en_149",
     "workshop_1080",
     "course_1800",
     "strategy_4000",
@@ -82,7 +83,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const { product, user_id, coupon_code } = body.data;
+  const { product: requestedProduct, user_id, coupon_code } = body.data;
+
+  // The Signal Hive (English edition): charged in USD on an English Cardcom
+  // page. The DB product_type enum has no EN value (DDL is manual), so the
+  // purchase row stores the Hebrew twin `signal_hive_590` — currency "USD"
+  // is the English marker (webhook uses it for the /en redirect).
+  const isEnHive = requestedProduct === "signal_hive_en_149";
+  const product = isEnHive ? "signal_hive_590" : requestedProduct;
+  const enHiveUsd = isEnHive ? PRICES["signal_hive_en_149"] : null;
 
   // ── v2 isolation ──
   // A test checkout may NEVER open a live Cardcom session for a real product.
@@ -138,7 +147,9 @@ export async function POST(req: NextRequest) {
 
   // `amount` stays the BILLED amount (net), same semantics as always — the
   // gross is derivable from the price list; credit_applied records the delta.
-  const amount = coupon
+  const amount = isEnHive
+    ? (enHiveUsd as number) // USD list price; coupons/credit are ILS-domain and do not apply
+    : coupon
     ? coupon.finalPrice
     : Math.max(0, grossBase - creditRes.credit);
 
@@ -157,7 +168,7 @@ export async function POST(req: NextRequest) {
       amount,
       credit_applied:            creditRes.credit,
       credit_source_purchase_id: creditRes.sourcePurchaseId,
-      currency: "ILS",
+      currency: isEnHive ? "USD" : "ILS",
       status: "pending",
       meta_fbp:         req.cookies.get("_fbp")?.value ?? null,
       meta_fbc:         req.cookies.get("_fbc")?.value ?? null,
@@ -225,7 +236,7 @@ export async function POST(req: NextRequest) {
   const customerName  = userRow?.name  ?? "";
   const customerEmail = userRow?.email ?? "";
   const customerPhone = userRow?.phone ?? "";
-  const baseDesc    = INVOICE_DESCRIPTIONS[product] ?? NAMES[product];
+  const baseDesc    = isEnHive ? "The Signal Hive - beegood" : (INVOICE_DESCRIPTIONS[product] ?? NAMES[product]);
   const invoiceDesc = creditRes.credit > 0
     ? `${baseDesc} ₪${grossBase.toLocaleString("en-US")} בקיזוז ₪${creditRes.credit}${creditRes.sourceInvoice ? ` (חשבונית #${creditRes.sourceInvoice})` : ""}, לחיוב ₪${amount.toLocaleString("en-US")}`
     : baseDesc;
@@ -236,8 +247,8 @@ export async function POST(req: NextRequest) {
     TerminalNumber: terminal,
     UserName:       apiName,
     SumToBill:      String(amount),
-    CoinId:         "1",          // ILS
-    Language:       "he",
+    CoinId:         isEnHive ? "2" : "1",          // 2 = USD (EN hive), 1 = ILS
+    Language:       isEnHive ? "en" : "he",
     APILevel:       "10",
     Codepage:       "65001",
     Operation:      "1",          // charge only (no tokenization needed)
@@ -247,7 +258,9 @@ export async function POST(req: NextRequest) {
 
     // Redirect URLs (NEVER rely on these alone — webhook is the source of truth)
     // oid= passed for Meta Pixel browser/CAPI event_id deduplication
-    SuccessRedirectUrl: product === "challenge_197"
+    SuccessRedirectUrl: isEnHive
+      ? `${appUrl}/en/hive/success?oid=${purchase.id}`
+      : product === "challenge_197"
       ? `${appUrl}/challenge/thank-you?oid=${purchase.id}`
       : product === "signal_hive_590"
       ? `${appUrl}/signal-hive/success?oid=${purchase.id}`
@@ -287,8 +300,8 @@ export async function POST(req: NextRequest) {
     "InvoiceHead.CustName":      customerName,
     "InvoiceHead.SendByEmail":   "true",
     "InvoiceHead.Email":         customerEmail,
-    "InvoiceHead.Language":      "he",
-    "InvoiceHead.CoinID":        "1",
+    "InvoiceHead.Language":      isEnHive ? "en" : "he",
+    "InvoiceHead.CoinID":        isEnHive ? "2" : "1",
     "InvoiceLines.Description":  invoiceDesc,
     "InvoiceLines.Price":        String(amount),
     "InvoiceLines.Quantity":     "1",
@@ -303,7 +316,7 @@ export async function POST(req: NextRequest) {
     fbc:              req.cookies.get("_fbc")?.value,
     clientUserAgent:  req.headers.get("user-agent") ?? undefined,
   };
-  const icCustomData = { value: amount, currency: "ILS", contentName: product, contentIds: [product] };
+  const icCustomData = { value: amount, currency: isEnHive ? "USD" : "ILS", contentName: requestedProduct, contentIds: [requestedProduct] };
   const productIcEvent = PRODUCT_IC_EVENT[product];
 
   const [, , cardcomRes] = await Promise.all([
@@ -334,9 +347,40 @@ export async function POST(req: NextRequest) {
   ]);
 
   const text         = await cardcomRes.text();
-  const resultParams = new URLSearchParams(text);
-  const responseCode    = resultParams.get("ResponseCode");
-  const lowProfileCode  = resultParams.get("LowProfileCode");
+  let resultParams   = new URLSearchParams(text);
+  let responseCode   = resultParams.get("ResponseCode");
+  let lowProfileCode = resultParams.get("LowProfileCode");
+
+  // USD terminal support is a Cardcom account setting we cannot verify from
+  // here. If the USD page-create is refused, retry ONCE in ILS at the
+  // documented fallback price (the payment page stays in English) and stamp
+  // the purchase row accordingly, so the buyer is never dead-ended.
+  if (isEnHive && (responseCode !== "0" || !lowProfileCode)) {
+    await supabase.from("error_logs").insert({
+      context: "api/checkout en-hive usd fallback",
+      error:   `USD create refused (code ${responseCode}) — retrying in ILS`,
+      payload: { responseCode, description: resultParams.get("Description") },
+    });
+    params.set("CoinId", "1");
+    params.set("InvoiceHead.CoinID", "1");
+    params.set("SumToBill", String(EN_HIVE_FALLBACK_ILS));
+    params.set("InvoiceLines.Price", String(EN_HIVE_FALLBACK_ILS));
+    const retryRes = await fetch("https://secure.cardcom.solutions/Interface/LowProfile.aspx", {
+      method:  "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body:    params.toString(),
+    });
+    resultParams   = new URLSearchParams(await retryRes.text());
+    responseCode   = resultParams.get("ResponseCode");
+    lowProfileCode = resultParams.get("LowProfileCode");
+    if (responseCode === "0" && lowProfileCode) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from("purchases")
+        .update({ amount: EN_HIVE_FALLBACK_ILS, currency: "ILS" })
+        .eq("id", purchase.id);
+    }
+  }
 
   if (responseCode !== "0" || !lowProfileCode) {
     await supabase.from("error_logs").insert({

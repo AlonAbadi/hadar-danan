@@ -205,7 +205,7 @@ async function fulfillPurchase(
     })
     .eq("id", purchaseId)
     .eq("status", "pending")   // only update pending — prevents overwriting refunds
-    .select("id, user_id, product, amount, meta_fbp, meta_fbc, meta_client_ip, meta_user_agent, is_test, credit_applied, credit_source_purchase_id")
+    .select("id, user_id, product, amount, currency, meta_fbp, meta_fbc, meta_client_ip, meta_user_agent, is_test, credit_applied, credit_source_purchase_id")
     .single();
 
   if (purchaseErr || !purchase) {
@@ -522,6 +522,9 @@ async function fulfillPurchase(
   // so the buyer lands straight in their kit. The SIGNAL_HIVE_PURCHASED event +
   // welcome email are enqueued by the productEvent path below.
   if (purchase.product === "signal_hive_590") {
+    // currency === "USD" marks the English edition (The Signal Hive) — same
+    // enum product, English member home.
+    const enBuyer = purchase.currency === "USD";
     await supabase
       .from("users")
       .update({ hive_status: "active", hive_started_at: new Date().toISOString() })
@@ -531,7 +534,7 @@ async function fulfillPurchase(
         const { data: linkData } = await supabase.auth.admin.generateLink({
           type:    "magiclink",
           email:   user.email,
-          options: { redirectTo: `${appUrl}/kaveret` },
+          options: { redirectTo: `${appUrl}${enBuyer ? "/en/kaveret" : "/kaveret"}` },
         });
         signalHiveMagicLink = linkData?.properties?.action_link ?? null;
       } catch {

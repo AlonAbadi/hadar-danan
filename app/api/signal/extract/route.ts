@@ -27,6 +27,12 @@ import {
   buildSignalUserMessageV2,
   isValidAnswersV2,
 } from "@/lib/prompts/signal-engine-v2";
+import {
+  SIGNAL_ENGINE_EN_V2_SYSTEM_PROMPT,
+  buildSignalUserMessageEnV2,
+  crisisFloorEn,
+} from "@/lib/prompts/signal-engine-en-v2";
+import { bucketFromRoutingEn } from "@/lib/prompts/signal-engine-en";
 import { detectGender, type Gender } from "@/lib/gender/detect";
 import { determineBucket, type Bucket } from "@/lib/signal/score";
 import { determineFraming } from "@/lib/signal/framing";
@@ -426,7 +432,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const isV2Run = instrumentVersion === "v2_funnel";
+  // English unified funnel: same six keys and v2 mechanics, English engine.
+  const isV2En = instrumentVersion === "v2_funnel_en";
+  const isV2Run = instrumentVersion === "v2_funnel" || isV2En;
   if (isV2Run ? !isValidAnswersV2(answers) : !isValidAnswers(answers)) {
     return NextResponse.json(
       { error: "צריך לענות על לפחות שלוש שאלות, בכל אחת לפחות שמונה תווים." },
@@ -455,12 +463,17 @@ export async function POST(req: NextRequest) {
     //   3. If parse/validation still fails, retry ONCE with a sharper
     //      follow-up message — covers max_tokens truncation, malformed
     //      JSON, and missing-required-field cases
-    const baseUserMessage = (isV2Run
+    const baseUserMessage = (isV2En
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? buildSignalUserMessageEnV2(answers as any, nameForPrompt, occupationForPrompt)
+      : isV2Run
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? buildSignalUserMessageV2(answers as any, nameForPrompt, occupationForPrompt, genderForPrompt)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       : buildSignalUserMessage(answers as any, nameForPrompt, occupationForPrompt, genderForPrompt))
-      + "\n\nהחזר אך ורק את אובייקט ה-JSON. בלי טקסט לפניו, בלי טקסט אחריו, בלי גושי קוד. התחל את התשובה בתו { וסיים בתו }.";
+      + (isV2En
+        ? "\n\nReturn ONLY the JSON object. No text before it, no text after it, no code fences. Start with { and end with }."
+        : "\n\nהחזר אך ורק את אובייקט ה-JSON. בלי טקסט לפניו, בלי טקסט אחריו, בלי גושי קוד. התחל את התשובה בתו { וסיים בתו }.");
 
     // Inner helper: one full LLM call + parse + validate. Throws on any
     // failure so the outer logic can decide whether to retry.
@@ -468,7 +481,9 @@ export async function POST(req: NextRequest) {
       const requestParams = {
         model:      SIGNAL_ENGINE_MODEL,
         max_tokens: SIGNAL_ENGINE_MAX_TOKENS,
-        system:     isV2Run ? SIGNAL_ENGINE_V2_SYSTEM_PROMPT : SIGNAL_ENGINE_SYSTEM_PROMPT,
+        system:     isV2En ? SIGNAL_ENGINE_EN_V2_SYSTEM_PROMPT
+          : isV2Run ? SIGNAL_ENGINE_V2_SYSTEM_PROMPT
+          : SIGNAL_ENGINE_SYSTEM_PROMPT,
         messages: [{ role: "user" as const, content: userContent }],
       };
 
@@ -523,7 +538,9 @@ export async function POST(req: NextRequest) {
 
       parseRetryUsed = true;
       const sharperMessage = baseUserMessage
-        + "\n\nהתשובה הקודמת לא הייתה JSON תקין או הייתה חסרה שדות חובה. החזר עכשיו אך ורק את אובייקט ה-JSON המלא, על פי הסכמה במדויק, התחל בתו { וסיים בתו }. בלי שום טקסט נוסף.";
+        + (isV2En
+          ? "\n\nThe previous response was not valid JSON or was missing required fields. Return now ONLY the full JSON object, exactly per the schema. Start with { and end with }. No other text."
+          : "\n\nהתשובה הקודמת לא הייתה JSON תקין או הייתה חסרה שדות חובה. החזר עכשיו אך ורק את אובייקט ה-JSON המלא, על פי הסכמה במדויק, התחל בתו { וסיים בתו }. בלי שום טקסט נוסף.");
       parsed = await callAndParse(sharperMessage);
     }
   } catch (error) {
@@ -560,7 +577,7 @@ export async function POST(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const inferredOccupation = typeof (parsed as any).occupation === "string" && (parsed as any).occupation.trim()
     ? String((parsed as any).occupation).trim().slice(0, 200) : null;
-  if (instrumentVersion === "v2_funnel" && inferredOccupation && !occupationForPrompt) {
+  if (isV2Run && inferredOccupation && !occupationForPrompt) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: occRow } = await (db as any).from("users").select("occupation").eq("id", userId).maybeSingle();
@@ -595,6 +612,25 @@ export async function POST(req: NextRequest) {
       });
     } catch {
       v2Route = { ending: "hive", cell: "route_error" };
+    }
+  } else if (isV2En) {
+    // English routing: no Hebrew evidence LLM. Deterministic crisis floor +
+    // the routing_signal read. Signal Hive is THE English product — hive is
+    // the default ending; only a clearly established/high-fit founder routes
+    // to the concierge (strategy) lane, and fresh pain routes out of sale.
+    try {
+      const ansRec = answers as Record<string, string | undefined>;
+      if (crisisFloorEn(ansRec)) {
+        v2Route = { ending: "crisis_soft", cell: "en_crisis" };
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const enBucket = bucketFromRoutingEn(parsed.routing_signal as any);
+        v2Route = enBucket === "premium"
+          ? { ending: "concierge", cell: "en_premium" }
+          : { ending: "hive", cell: "en_hive" };
+      }
+    } catch {
+      v2Route = { ending: "hive", cell: "en_route_error" };
     }
   }
 
@@ -633,6 +669,14 @@ export async function POST(req: NextRequest) {
     }
     if (Object.keys(utmObj).length > 0) sourceUtm = utmObj;
   } catch { /* attribution is best-effort */ }
+
+  // Language rides inside the signal jsonb (no schema change needed): every
+  // downstream reader — teasers, emails, member home, broadcast room — keys
+  // its language off sig.language === "en".
+  if (isV2En) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (parsed as any).language = "en";
+  }
 
   const generatedAt = new Date().toISOString();
   let extractionId: string | null = null;
@@ -717,8 +761,8 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).from("events").insert({
       user_id:  userId,
-      type:     "SIGNAL_EXTRACTED",
-      metadata: { source: authUser ? "authenticated" : "anonymous_gate" },
+      type:     isV2En ? "SIGNAL_EXTRACTED_EN" : "SIGNAL_EXTRACTED",
+      metadata: { source: authUser ? "authenticated" : "anonymous_gate", ...(isV2En ? { locale: "en" } : {}) },
       is_test:  isTestRun,
     });
 
@@ -732,14 +776,15 @@ export async function POST(req: NextRequest) {
     const { data: rawSeqs } = suppressChain ? { data: [] } : await (db as any)
       .from("email_sequences")
       .select("id, subject, template_key, delay_hours")
-      .eq("trigger_event", "SIGNAL_EXTRACTED")
+      .eq("trigger_event", isV2En ? "SIGNAL_EXTRACTED_EN" : "SIGNAL_EXTRACTED")
       .eq("active", true);
     // v2 leads get ONLY the welcome from the legacy chain — the day1-12
     // nurture pitches by the OLD bucket and would collide with the kriah
     // day-2 offer (double, contradictory selling).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const seqs = isV2Run
-      ? (rawSeqs ?? []).filter((q: any) => q.template_key === "signal_welcome")
+      ? (rawSeqs ?? []).filter((q: any) =>
+          q.template_key === (isV2En ? "signal_welcome_en" : "signal_welcome"))
       : rawSeqs;
 
     if (seqs && seqs.length) {
@@ -778,7 +823,7 @@ export async function POST(req: NextRequest) {
           const { data: offerSeqs } = await (db as any)
             .from("email_sequences")
             .select("id, subject, template_key, delay_hours")
-            .eq("trigger_event", "KRIAH_CORE_LEAD")
+            .eq("trigger_event", isV2En ? "KRIAH_CORE_LEAD_EN" : "KRIAH_CORE_LEAD")
             .eq("active", true);
           if (offerSeqs && offerSeqs.length) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -811,7 +856,7 @@ export async function POST(req: NextRequest) {
           const { data: fallbackSeqs } = await (db as any)
             .from("email_sequences")
             .select("id, subject, template_key, delay_hours")
-            .eq("trigger_event", "SIGNAL_STRATEGY_LEAD")
+            .eq("trigger_event", isV2En ? "SIGNAL_STRATEGY_LEAD_EN" : "SIGNAL_STRATEGY_LEAD")
             .eq("active", true);
           if (fallbackSeqs && fallbackSeqs.length) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -988,7 +1033,7 @@ export async function POST(req: NextRequest) {
     // The unified home: when the kaveret switchover is on, the result screen
     // hands everything below the reveal to the lead's locked kaveret.
     ...(extractionId && process.env.KAVERET_RESULT_ENABLED === "1"
-      ? { kaveret_url: kaveretLink(extractionId) }
+      ? { kaveret_url: kaveretLink(extractionId, isV2En ? "en" : "he") }
       : {}),
   });
 }

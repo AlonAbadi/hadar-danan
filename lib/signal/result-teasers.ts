@@ -49,6 +49,18 @@ const SYSTEM = `אתה כותב בעברית עבור מותג TrueSignal — א
 
 החזר JSON בלבד: {"public_sentence": "...", "first_script_hook": "..."}`;
 
+const SYSTEM_EN = `You write in English for the TrueSignal brand - a diagnostic that identifies a business owner's "signal": the thing only they bring.
+
+You receive a person's signal fields (written to them in second person). Produce two items:
+
+1. "public_sentence" - one sentence that faces OUTWARD, to this person's audience (not to them!). Preferred shape: "For those who..." or a direct address to the audience. It will be printed on a card shared on social feeds. Up to 20 words. No profession label, no clichés, no superlatives.
+
+2. "first_script_hook" - one opening line for their first video: a hook spoken to camera in first person, in their voice, about the moment or insight at the heart of their signal. Up to 22 words. Spoken language, not written language. No "hey", no self-introduction.
+
+Rules: no em dashes (use a plain hyphen), no emoji, no quotation marks around the text, no exclamation marks.
+
+Return JSON only: {"public_sentence": "...", "first_script_hook": "..."}`;
+
 export async function generateResultTeasers(input: {
   signal: string;
   element?: string;
@@ -56,27 +68,34 @@ export async function generateResultTeasers(input: {
   centralTool?: string;
   people?: string;
   contentDirections?: string[];
+  language?: "he" | "en";
 }): Promise<Omit<ResultTeasers, "generated_at"> | null> {
   try {
+    const en = input.language === "en";
+    const L = en
+      ? { signal: "The signal", element: "The element", promise: "What the signal promises", tool: "The central tool", people: "The audience", directions: "Content directions" }
+      : { signal: "האות", element: "האלמנט", promise: "מה האות מבטיח", tool: "הכלי המרכזי", people: "הקהל", directions: "כיווני תוכן" };
     const anthropic = new Anthropic();
     const res = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 400,
-      system: SYSTEM,
+      system: en ? SYSTEM_EN : SYSTEM,
       messages: [
         {
           role: "user",
           content: [
-            `האות: ${input.signal}`,
-            input.element ? `האלמנט: ${input.element}` : "",
-            input.signalPromise ? `מה האות מבטיח: ${input.signalPromise}` : "",
-            input.centralTool ? `הכלי המרכזי: ${input.centralTool}` : "",
-            input.people ? `הקהל: ${input.people}` : "",
+            `${L.signal}: ${input.signal}`,
+            input.element ? `${L.element}: ${input.element}` : "",
+            input.signalPromise ? `${L.promise}: ${input.signalPromise}` : "",
+            input.centralTool ? `${L.tool}: ${input.centralTool}` : "",
+            input.people ? `${L.people}: ${input.people}` : "",
             input.contentDirections?.length
-              ? `כיווני תוכן: ${input.contentDirections.join(" | ")}`
+              ? `${L.directions}: ${input.contentDirections.join(" | ")}`
               : "",
             "",
-            'החזר JSON בלבד: {"public_sentence": "...", "first_script_hook": "..."}',
+            en
+              ? 'Return JSON only: {"public_sentence": "...", "first_script_hook": "..."}'
+              : 'החזר JSON בלבד: {"public_sentence": "...", "first_script_hook": "..."}',
           ]
             .filter(Boolean)
             .join("\n"),
@@ -120,6 +139,7 @@ export async function generateAndStoreResultTeasers(extractionId: string): Promi
       contentDirections: Array.isArray(sig.content_directions)
         ? sig.content_directions.map(String)
         : undefined,
+      language: sig.language === "en" ? "en" : "he",
     });
     if (!teasers) return;
 

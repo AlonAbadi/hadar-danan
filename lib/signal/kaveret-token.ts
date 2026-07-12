@@ -16,9 +16,10 @@ export function signKaveretToken(extractionId: string): string {
   return `${extractionId}.${hmacFor(extractionId)}`;
 }
 
-export function kaveretLink(extractionId: string): string {
+export function kaveretLink(extractionId: string, language?: "he" | "en" | null): string {
   const base = process.env.NEXT_PUBLIC_APP_URL || "https://www.beegood.online";
-  return `${base}/kaveret/i?t=${signKaveretToken(extractionId)}`;
+  const path = language === "en" ? "/en/kaveret/i" : "/kaveret/i";
+  return `${base}${path}?t=${signKaveretToken(extractionId)}`;
 }
 
 // Returns the extraction id when the token is authentic, else null.
