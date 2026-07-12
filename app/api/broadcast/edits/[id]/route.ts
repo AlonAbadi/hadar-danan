@@ -74,6 +74,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       trim_start_ms: edit.trim_start_ms,
       trim_end_ms: edit.trim_end_ms,
       take_preview_url: takePreviewUrl,
+      // Same-origin streaming proxy — the ONLY <video> source that streams
+      // on non-Safari iOS browsers (cross-origin signed URLs don't).
+      take_media_url:
+        edit.status === "awaiting_captions" && edit.take_id
+          ? `/api/broadcast/takes/${edit.take_id}/media`
+          : null,
       output_url: outputUrl,
       output_download_url: outputDownloadUrl,
       cover_frames: coverFrames,

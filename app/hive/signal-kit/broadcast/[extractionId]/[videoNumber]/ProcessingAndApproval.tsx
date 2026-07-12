@@ -28,6 +28,7 @@ interface EditSnapshot {
   trim_start_ms: number | null;
   trim_end_ms: number | null;
   take_preview_url: string | null;
+  take_media_url: string | null;
   output_url: string | null;
   output_download_url: string | null;
   cover_frames: string[] | null;
@@ -274,35 +275,12 @@ function CaptionApproval({
   script: ScriptShape;
   onApproved: () => void;
 }) {
-  // Local blob first: it plays instantly and never hits the black-screen
-  // signed-URL playback quirk in Chrome iOS. When there is no local blob
-  // (resume / re-edit), non-Safari iOS browsers can't STREAM the signed URL
-  // at all (QA-proven CriOS quirk) — so the take is fetched once and played
-  // as a local blob; fetch() is unaffected by the quirk.
-  const [fetchedBlobUrl, setFetchedBlobUrl] = useState<string | null>(null);
-  const needsBlobFetch =
-    !localTakeUrl &&
-    typeof navigator !== "undefined" &&
-    /CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
-  useEffect(() => {
-    if (!needsBlobFetch || !snap.take_preview_url || fetchedBlobUrl) return;
-    let cancelled = false;
-    let url: string | null = null;
-    fetch(snap.take_preview_url)
-      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
-      .then((blob) => {
-        url = URL.createObjectURL(blob);
-        if (!cancelled) setFetchedBlobUrl(url);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-      if (url && cancelled) URL.revokeObjectURL(url);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needsBlobFetch, snap.take_preview_url]);
-  const previewSrc = localTakeUrl ?? fetchedBlobUrl ?? (needsBlobFetch ? null : snap.take_preview_url);
-  const previewLoading = needsBlobFetch && !fetchedBlobUrl;
+  // Local blob first: it plays instantly. Without one (resume / re-edit),
+  // the same-origin streaming proxy — non-Safari iOS browsers refuse to
+  // stream cross-origin signed storage URLs in <video> (QA-proven CriOS
+  // quirk), and same-origin bytes also keep canvas thumbnails untainted.
+  // The raw signed URL is the last resort for old snapshots.
+  const previewSrc = localTakeUrl ?? snap.take_media_url ?? snap.take_preview_url;
   const transcriptFailed =
     !snap.captions || snap.captions.source === "none" || !snap.captions.lines.length;
   const [mode, setMode] = useState<"captions" | "none" | "script_sync" | null>(
@@ -474,24 +452,6 @@ function CaptionApproval({
             transform={transform}
             onChange={setTransform}
           />
-        ) : previewLoading ? (
-          <div
-            style={{
-              height: "34dvh",
-              aspectRatio: "9 / 16",
-              margin: "14px auto 0",
-              borderRadius: 12,
-              background: "#141820",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#9E9990",
-              fontSize: 13,
-            }}
-          >
-            <span className="br-live-dot" style={{ marginInlineEnd: 8 }} />
-            טוען את הווידאו…
-          </div>
         ) : null}
         {/* WhatsApp-style trim: frame strip + draggable start/end handles */}
         {previewSrc ? (
