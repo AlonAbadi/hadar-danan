@@ -42,6 +42,28 @@ export interface VideoFilterPlan {
 // top and bottom, which is what Alon reported today. Fingerprint the case
 // (landscape effective + ±90 rotation + raw buffer taller than wide) and
 // route to the portrait crop chain — same treatment as commit e906f00.
+// User zoom/pan (approval screen): crop the chosen window — the base window
+// divided by z, centered on (cx,cy) — before scaling. WYSIWYG with the
+// client preview, which runs the identical math. Returns null for identity.
+function transformCrop(
+  W: number,
+  H: number,
+  w0: number,
+  h0: number,
+  transform: CaptionTransform | null | undefined
+): string | null {
+  if (!transform) return null;
+  const meaningful =
+    transform.z > 1.005 || Math.abs(transform.cx - 0.5) > 0.005 || Math.abs(transform.cy - 0.5) > 0.005;
+  if (!meaningful) return null;
+  const z = Math.min(2.5, Math.max(1, transform.z));
+  const w = Math.max(2, Math.floor(w0 / z / 2) * 2);
+  const h = Math.max(2, Math.floor(h0 / z / 2) * 2);
+  const x = Math.round(Math.min(W - w, Math.max(0, transform.cx * W - w / 2)) / 2) * 2;
+  const y = Math.round(Math.min(H - h, Math.max(0, transform.cy * H - h / 2)) / 2) * 2;
+  return `crop=${w}:${h}:${x}:${y}`;
+}
+
 export function buildVideoFilter(
   dims: VideoDims | null,
   assPath: string,
@@ -53,22 +75,15 @@ export function buildVideoFilter(
     Math.abs(dims.rotation) % 180 === 90 &&
     dims.width < dims.height;
   if (!landscape || appRotatedFromPortrait) {
-    // User zoom/pan from the approval screen: crop the chosen 9:16 window
-    // (base cover window / z, centered on cx,cy) then scale — WYSIWYG with
-    // the client preview, which runs the identical math. Needs probed dims;
-    // without them (or without a transform) the legacy cover chain runs.
+    // Base window: the 9:16 cover crop. Needs probed dims; without them (or
+    // without a transform) the legacy cover chain runs.
     let cropChain = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920`;
-    if (dims && transform && (transform.z > 1.005 || Math.abs(transform.cx - 0.5) > 0.005 || Math.abs(transform.cy - 0.5) > 0.005)) {
+    if (dims) {
       const W = dims.effWidth;
       const H = dims.effHeight;
-      const z = Math.min(2.5, Math.max(1, transform.z));
       const w0 = Math.min(W, (H * 9) / 16);
-      const h0 = (w0 * 16) / 9;
-      const w = Math.max(2, Math.floor(w0 / z / 2) * 2);
-      const h = Math.max(2, Math.floor(h0 / z / 2) * 2);
-      const x = Math.round(Math.min(W - w, Math.max(0, transform.cx * W - w / 2)) / 2) * 2;
-      const y = Math.round(Math.min(H - h, Math.max(0, transform.cy * H - h / 2)) / 2) * 2;
-      cropChain = `crop=${w}:${h}:${x}:${y},scale=1080:1920`;
+      const crop = transformCrop(W, H, w0, (w0 * 16) / 9, transform);
+      if (crop) cropChain = `${crop},scale=1080:1920`;
     }
     return {
       kind: "vf",
@@ -84,9 +99,12 @@ export function buildVideoFilter(
   }
   const outW = Math.min(1920, Math.floor(dims.effWidth / 2) * 2);
   const outH = Math.floor((outW * dims.effHeight) / dims.effWidth / 2) * 2;
+  // Landscape keeps its own frame (full-frame policy) — zoom/pan reframes
+  // WITHIN that frame: base window = the whole frame, output dims unchanged.
+  const crop = transformCrop(dims.effWidth, dims.effHeight, dims.effWidth, dims.effHeight, transform);
   return {
     kind: "vf",
-    value: `scale=${outW}:${outH},fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
+    value: `${crop ? `${crop},` : ""}scale=${outW}:${outH},fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
     strategy: "landscape_fullframe",
     captionMarginV: Math.round(outH * 0.525),
     stampMarginV: 96,

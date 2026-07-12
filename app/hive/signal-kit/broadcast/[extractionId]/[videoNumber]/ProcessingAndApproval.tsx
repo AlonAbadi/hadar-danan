@@ -878,10 +878,10 @@ function OutputScreen({
 }
 
 // Zoom/pan framing editor over the take preview — WYSIWYG with the burn:
-// the visible 9:16 window here IS the crop the server cuts (identical math
-// in buildVideoFilter). Drag to reposition, pinch or slider to zoom, tap to
-// play/pause. Portrait sources only — landscape takes ship full-frame by
-// policy, so those get the plain player.
+// the visible window here IS the crop the server cuts (identical math in
+// buildVideoFilter). Drag to reposition, pinch or slider to zoom, tap to
+// play/pause. Portrait sources edit inside the 9:16 window; landscape
+// sources keep their own frame (full-frame policy) and reframe within it.
 function ZoomPanPreview({
   src,
   videoRef,
@@ -982,25 +982,20 @@ function ZoomPanPreview({
   const identity = transform.z <= 1.005 && Math.abs(transform.cx - 0.5) <= 0.005 && Math.abs(transform.cy - 0.5) <= 0.005;
   const { z, cx, cy } = transform;
 
-  // Landscape source: full-frame policy, no framing editor.
-  if (vid.w > 0 && !portrait) {
-    return (
-      <video
-        ref={(el) => { videoRef.current = el; }}
-        src={src}
-        playsInline
-        controls
-        preload="metadata"
-        style={portraitPreview("34dvh", 14, true)}
-      />
-    );
-  }
-
-  return (
-    <div>
-      <div
-        ref={boxRef}
-        style={{
+  // Portrait: the editing window is the 9:16 output crop. Landscape: the
+  // window is the source's own frame (full-frame policy — reframe within).
+  const boxStyle: React.CSSProperties =
+    vid.w > 0 && !portrait
+      ? {
+          position: "relative",
+          width: "100%",
+          aspectRatio: `${vid.w} / ${vid.h}`,
+          margin: "14px auto 0",
+          borderRadius: 12,
+          background: "#000",
+          overflow: "hidden",
+        }
+      : {
           position: "relative",
           height: "34dvh",
           aspectRatio: "9 / 16",
@@ -1010,8 +1005,11 @@ function ZoomPanPreview({
           borderRadius: 12,
           background: "#000",
           overflow: "hidden",
-        }}
-      >
+        };
+
+  return (
+    <div>
+      <div ref={boxRef} style={boxStyle}>
         <video
           ref={(el) => { videoRef.current = el; }}
           src={src}
