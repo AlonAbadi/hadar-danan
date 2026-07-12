@@ -568,6 +568,33 @@ function FilmstripTrimmer({
   const boundsRef = useRef({ start: trimStart, end: trimEnd, duration: 0 });
   boundsRef.current = { start: trimStart, end: trimEnd, duration: durationMs };
 
+  // Duration truth ladder: the hidden thumbnail video when it loads, else
+  // the MAIN preview player. iOS Safari does not load detached <video>
+  // elements reliably — the element must live in the DOM (offscreen) and be
+  // load()ed explicitly, every seek needs a timeout, and even then the main
+  // player is the fallback that keeps the handles alive with no thumbnails.
+  const reportDuration = useCallback(
+    (ms: number) => {
+      setDurationMs((prev) => {
+        if (prev > 0 || ms <= 0) return prev;
+        onDuration(ms);
+        return ms;
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const d = previewRef.current?.duration;
+      if (d && isFinite(d) && d > 0) reportDuration(Math.round(d * 1000));
+      if (boundsRef.current.duration > 0) clearInterval(iv);
+    }, 400);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]);
+
   useEffect(() => {
     let cancelled = false;
     const video = document.createElement("video");
@@ -575,30 +602,44 @@ function FilmstripTrimmer({
     video.muted = true;
     video.playsInline = true;
     video.preload = "auto";
+    video.style.cssText = "position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;";
+    document.body.appendChild(video);
     video.src = src;
+    video.load();
+
+    const withTimeout = <T,>(p: Promise<T>, ms: number) =>
+      Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
     const seekTo = (t: number) =>
-      new Promise<void>((resolve) => {
-        video.onseeked = () => resolve();
-        video.currentTime = t;
-      });
+      withTimeout(
+        new Promise<void>((resolve) => {
+          video.onseeked = () => resolve();
+          video.currentTime = t;
+        }),
+        2000
+      );
 
     (async () => {
-      await new Promise<void>((resolve, reject) => {
-        video.onloadedmetadata = () => resolve();
-        video.onerror = () => reject(new Error("thumb_load"));
-      });
+      await withTimeout(
+        new Promise<void>((resolve, reject) => {
+          video.onloadedmetadata = () => resolve();
+          video.onerror = () => reject(new Error("thumb_load"));
+        }),
+        8000
+      );
       // Chrome MediaRecorder webm reports Infinity until forced to the end.
       if (!isFinite(video.duration)) {
-        await new Promise<void>((resolve) => {
-          video.ondurationchange = () => isFinite(video.duration) && resolve();
-          video.currentTime = 1e7;
-        });
+        await withTimeout(
+          new Promise<void>((resolve) => {
+            video.ondurationchange = () => isFinite(video.duration) && resolve();
+            video.currentTime = 1e7;
+          }),
+          4000
+        );
       }
       const dur = video.duration;
       if (cancelled || !isFinite(dur) || dur <= 0) return;
-      setDurationMs(Math.round(dur * 1000));
-      onDuration(Math.round(dur * 1000));
+      reportDuration(Math.round(dur * 1000));
 
       const canvas = document.createElement("canvas");
       canvas.width = 72;
@@ -622,10 +663,13 @@ function FilmstripTrimmer({
         }
         setThumbs([...collected]);
       }
-    })().catch(() => {});
+    })().catch(() => {
+      /* thumbnails are decorative; the preview-player fallback owns duration */
+    });
     return () => {
       cancelled = true;
       video.removeAttribute("src");
+      video.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src]);
@@ -1044,10 +1088,14 @@ function ZoomPanPreview({
           ref={(el) => { videoRef.current = el; }}
           src={src}
           playsInline
-          preload="metadata"
-          onLoadedMetadata={(e) =>
-            setVid({ w: e.currentTarget.videoWidth, h: e.currentTarget.videoHeight })
-          }
+          preload="auto"
+          onLoadedMetadata={(e) => {
+            const v = e.currentTarget;
+            setVid({ w: v.videoWidth, h: v.videoHeight });
+            // iOS Safari paints nothing until a play or a seek — nudge a
+            // frame onto the screen so the editor never opens black.
+            try { v.currentTime = Math.max(v.currentTime, 0.05); } catch { /* not seekable yet */ }
+          }}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           style={
@@ -1103,6 +1151,30 @@ function ZoomPanPreview({
         ) : null}
       </div>
       <div dir="rtl" style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+        <button
+          type="button"
+          className="br-btn"
+          aria-label={playing ? "השהיה" : "ניגון"}
+          onClick={() => {
+            const v = videoRef.current;
+            if (!v) return;
+            if (v.paused) v.play().catch(() => {});
+            else v.pause();
+          }}
+          style={{
+            width: 38,
+            height: 38,
+            flex: "0 0 auto",
+            borderRadius: 10,
+            border: "1px solid rgba(232,185,74,0.35)",
+            background: "transparent",
+            color: "#E8B94A",
+            fontSize: 15,
+            cursor: "pointer",
+          }}
+        >
+          {playing ? "❚❚" : "▶"}
+        </button>
         <span style={{ color: "#9E9990", fontSize: 12, whiteSpace: "nowrap" }}>זום</span>
         <input
           type="range"
