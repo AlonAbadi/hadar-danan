@@ -39,10 +39,14 @@ export function BeeWait({
   title,
   showFacts = true,
   durationMs = 22_000,
+  dir = "rtl",
 }: {
   title: string;
   showFacts?: boolean;
   durationMs?: number;
+  /** "ltr" for the English funnel — the bee facts stay Hebrew, so English
+   *  callers should also pass showFacts={false}. */
+  dir?: "rtl" | "ltr";
 }) {
   const [progress, setProgress] = useState(4);
   const [factIdx, setFactIdx] = useState(() => Math.floor(Math.random() * BEE_FACTS.length));
@@ -66,7 +70,7 @@ export function BeeWait({
 
   return (
     <div
-      dir="rtl"
+      dir={dir}
       style={{
         background: C.card,
         border: `1px solid ${C.line}`,

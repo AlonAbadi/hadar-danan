@@ -278,12 +278,13 @@ export async function POST(req: NextRequest) {
     if (!isValidEmail(emailStr)) {
       return NextResponse.json({ error: "אימייל לא תקין" }, { status: 400 });
     }
-    if (instrumentVersion !== "v2_funnel" && nameStr.length < 2) {
+    // v2 funnels (/kriah + /en/reading) soft-capture email-only leads,
+    // collect phone at S15 and treat occupation as optional — name, phone
+    // and occupation all stay REQUIRED for the live v1 funnel.
+    const isV2 = instrumentVersion === "v2_funnel" || instrumentVersion === "v2_funnel_en";
+    if (!isV2 && nameStr.length < 2) {
       return NextResponse.json({ error: "נדרש שם" }, { status: 400 });
     }
-    // v2 (/kriah) collects phone as an optional field at S15 and never asks
-    // for occupation — both stay REQUIRED for the live v1 funnel.
-    const isV2 = instrumentVersion === "v2_funnel";
     if (!isV2 && !/^[0-9+\-\s()]{9,20}$/.test(phoneStr)) {
       return NextResponse.json({ error: "טלפון לא תקין" }, { status: 400 });
     }

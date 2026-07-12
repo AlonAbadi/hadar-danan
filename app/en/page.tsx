@@ -44,7 +44,7 @@ export default function EnHomePage() {
             </span>
           </Link>
           <Link
-            href="/en/signal"
+            href="/en/reading"
             style={{
               fontSize: 13,
               fontWeight: 600,
@@ -117,7 +117,7 @@ export default function EnHomePage() {
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", marginTop: 48 }}>
           <Link
-            href="/en/signal"
+            href="/en/reading"
             style={{
               fontSize: 15,
               fontWeight: 700,
@@ -489,7 +489,7 @@ export default function EnHomePage() {
                 This is the entry to BeeGood. It is free, and what you receive is yours to keep.
               </p>
               <Link
-                href="/en/signal"
+                href="/en/reading"
                 style={{
                   marginTop: 32,
                   fontSize: 15,
@@ -677,7 +677,7 @@ export default function EnHomePage() {
           Five questions stand between you and the sentence you have been trying to say for years. It is free to start.
         </p>
         <Link
-          href="/en/signal"
+          href="/en/reading"
           style={{
             marginTop: 44,
             fontSize: 16,
@@ -758,7 +758,7 @@ const LAYERS = [
     title: "Signal Intelligence",
     body: "Who are you, and what can only you uniquely offer? This layer extracts the authentic signal that no competitor can copy.",
     cta: "Start here, free →",
-    href: "/en/signal",
+    href: "/en/reading",
   },
   {
     num: "02",

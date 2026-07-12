@@ -147,9 +147,10 @@ export async function POST(req: NextRequest) {
     (kriahPreviewAllowed(req.headers.get("x-kriah-preview")) ||
      process.env.UNIFIED_FUNNEL_ENABLED !== "true");
 
-  // Phone + name became schema-optional for the /kriah gates (the soft
-  // capture is email-only). Every other caller keeps the original rules.
-  const isKriahGate = bodyAny?.instrument_version === "v2_funnel";
+  // Phone + name became schema-optional for the /kriah + /en/reading gates
+  // (the soft capture is email-only). Every other caller keeps the original rules.
+  const isKriahGate = bodyAny?.instrument_version === "v2_funnel" ||
+    bodyAny?.instrument_version === "v2_funnel_en";
   if (!isKriahGate && !parsed.data.phone) {
     return NextResponse.json({ errors: { phone: "טלפון חסר" } }, { status: 422 });
   }
