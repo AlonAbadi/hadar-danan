@@ -22,9 +22,15 @@ const WPM_MIN = 80;
 const WPM_MAX = 220;
 const WPM_DEFAULT = 130; // recorded-content guidance; Hebrew on-camera sweet spot
 const SIZE_STEPS = [34, 40, 48];
+// Desktop: a full-width prompter reads edge-to-edge and the eye loses the
+// line (Hadar 2026-07-12) — so the text lives in a narrow centered column
+// (few words per line) with a bigger face, like hardware prompters.
+const DESKTOP_SIZE_STEPS = [46, 56, 66];
+const DESKTOP_MAX_TEXT_W = 620;
 const START_GRACE_MS = 900;
 const READ_LINE_FRACTION = 0.32;
 const STRIP_H = "min(30dvh, 270px)";
+const DESKTOP_STRIP_H = "min(42dvh, 440px)";
 
 // Voice gate (expert VAD spec, essentials): dB-domain adaptive floor with
 // hysteresis; hold after ~700ms of silence; eased open/close.
@@ -71,6 +77,11 @@ export function Teleprompter({
     return localStorage.getItem("broadcast_vad") !== "off";
   });
   const [paused, setPaused] = useState(false);
+  // Post-mount so SSR markup stays the mobile baseline (no hydration drift).
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    setIsDesktop(!("ontouchstart" in window));
+  }, []);
 
   const wordCount = `${hook} ${body} ${cta ?? ""}`.trim().split(/\s+/).filter(Boolean).length;
 
@@ -104,7 +115,7 @@ export function Teleprompter({
     const el = textRef.current;
     if (!el || wordCount === 0) return;
     pxPerWordRef.current = Math.max(el.offsetHeight / wordCount, 1.5);
-  }, [wordCount, sizeIdx, hook, body, cta]);
+  }, [wordCount, sizeIdx, isDesktop, hook, body, cta]);
 
   const tick = useCallback((ts: number) => {
     if (!runningRef.current) return;
@@ -258,7 +269,8 @@ export function Teleprompter({
     }
   };
 
-  const fontSize = SIZE_STEPS[sizeIdx];
+  const fontSize = (isDesktop ? DESKTOP_SIZE_STEPS : SIZE_STEPS)[sizeIdx];
+  const stripH = isDesktop ? DESKTOP_STRIP_H : STRIP_H;
 
   return (
     <>
@@ -281,7 +293,7 @@ export function Teleprompter({
           insetInlineStart: 0,
           insetInlineEnd: 0,
           paddingTop: "env(safe-area-inset-top)",
-          height: STRIP_H,
+          height: stripH,
           background: "rgba(8,12,20,0.82)",
           backdropFilter: "blur(6px)",
           WebkitBackdropFilter: "blur(6px)",
@@ -309,9 +321,11 @@ export function Teleprompter({
         <div
           ref={innerRef}
           style={{
-            paddingTop: `calc(${STRIP_H} * ${READ_LINE_FRACTION} * 0.6)`,
+            paddingTop: `calc(${stripH} * ${READ_LINE_FRACTION} * 0.6)`,
             paddingBottom: 320,
             paddingInline: 20,
+            maxWidth: isDesktop ? DESKTOP_MAX_TEXT_W : undefined,
+            marginInline: "auto",
             textAlign: "center",
             fontSize,
             lineHeight: 1.5,
@@ -353,7 +367,7 @@ export function Teleprompter({
         dir="rtl"
         style={{
           position: "absolute",
-          top: `calc(env(safe-area-inset-top) + ${STRIP_H} + 6px)`,
+          top: `calc(env(safe-area-inset-top) + ${stripH} + 6px)`,
           insetInlineStart: 12,
           insetInlineEnd: 12,
           zIndex: 21,

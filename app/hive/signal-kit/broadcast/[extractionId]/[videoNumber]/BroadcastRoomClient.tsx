@@ -291,6 +291,12 @@ export function BroadcastRoomClient({
     setCountdown(3);
     beep(880, 130);
     prompterRef.current?.restart();
+    // Desktop: the recorder attaches NOW so the Mac capture stall (frames
+    // freeze for seconds while the camera renegotiates — Hadar 2026-07-12,
+    // Continuity-Camera signature) burns inside the countdown; markGo() at
+    // "go" floors the trim so the countdown head never ships. iPhone keeps
+    // the QA-proven late start (beeps stay out of the take).
+    if (isDesktopUA) rec.startRecording();
     let n = 3;
     const iv = setInterval(() => {
       n -= 1;
@@ -301,7 +307,8 @@ export function BroadcastRoomClient({
         // one beat of silence: the go-tone dies before the mic opens, and
         // she gets a breath before the prompter's grace period begins
         setTimeout(() => {
-          rec.startRecording();
+          if (isDesktopUA) rec.markGo();
+          else rec.startRecording();
           prompterRef.current?.start();
         }, 350);
       } else {
@@ -309,7 +316,7 @@ export function BroadcastRoomClient({
         setCountdown(n);
       }
     }, 1000);
-  }, [countdown, rec, beep]);
+  }, [countdown, rec, beep, isDesktopUA]);
 
   const stopTake = useCallback(() => {
     prompterRef.current?.pause();

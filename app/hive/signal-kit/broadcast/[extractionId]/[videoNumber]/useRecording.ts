@@ -52,6 +52,11 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
   const rmsRef = useRef<{ t: number; rms: number }[]>([]);
   const rmsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const interruptedRef = useRef(false);
+  // Desktop warm-up: recording starts at countdown start so the Mac capture
+  // stall (frames freeze for seconds when the recorder attaches — Continuity
+  // Camera renegotiation) burns inside the countdown. markGo() stamps the
+  // real take start; suggested trims never begin before it.
+  const goOffsetRef = useRef(0);
   // Flipped by whichever finish path runs first (onstop or the stop-timeout
   // guard in stopRecording). Whichever wins locks the other out so we never
   // hand off the same take twice.
@@ -207,11 +212,13 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
       const type = chunks[0]?.type || rec.mimeType || "video/mp4";
       const blob = new Blob(chunks, { type });
       const trims = suggestTrims(rmsRef.current, durationMs);
+      const floor = goOffsetRef.current;
       onFinishedRef.current({
         blob,
         mimeType: type,
         durationMs,
-        suggestedTrimStartMs: trims?.start ?? null,
+        suggestedTrimStartMs:
+          trims || floor > 0 ? Math.max(trims?.start ?? 0, floor) : null,
         suggestedTrimEndMs: trims?.end ?? null,
         interrupted: true, // fell through the guard — mark it so we log it
       });
@@ -277,11 +284,13 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
       const blob = new Blob(chunksRef.current, { type: mimeType });
       chunksRef.current = [];
       const trims = suggestTrims(rmsRef.current, durationMs);
+      const floor = goOffsetRef.current;
       onFinishedRef.current({
         blob,
         mimeType,
         durationMs,
-        suggestedTrimStartMs: trims?.start ?? null,
+        suggestedTrimStartMs:
+          trims || floor > 0 ? Math.max(trims?.start ?? 0, floor) : null,
         suggestedTrimEndMs: trims?.end ?? null,
         interrupted: interruptedRef.current,
       });
@@ -292,6 +301,7 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     };
     recorderRef.current = recorder;
     startedAtRef.current = performance.now();
+    goOffsetRef.current = 0;
     setElapsedMs(0);
     timerRef.current = setInterval(
       () => setElapsedMs(performance.now() - startedAtRef.current),
@@ -300,6 +310,14 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     recorder.start(1000); // 1s timeslice shrinks the unprotected window
     setIsRecording(true);
   }, [mimeType]);
+
+  // Stamp the real take start ("go") when recording began early (desktop
+  // countdown warm-up) — everything before it is countdown, trimmed away.
+  const markGo = useCallback(() => {
+    if (recorderRef.current?.state === "recording") {
+      goOffsetRef.current = performance.now() - startedAtRef.current;
+    }
+  }, []);
 
   // Interruption: anything that hides the page mid-recording ends the take —
   // the flushed chunks assemble into a playable partial take.
@@ -366,6 +384,7 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     requestCamera,
     releaseCamera,
     startRecording,
+    markGo,
     stopRecording,
   };
 }
