@@ -515,7 +515,10 @@ export function BroadcastRoomClient({
         body={script.body}
         cta={script.cta}
         voiceSamplesRef={rec.rmsSamplesRef}
-        running={rec.isRecording}
+        // Desktop starts the recorder during the countdown (capture warm-up),
+        // but the prompter must not run — its auto-start effect would let the
+        // countdown beeps trip the voice gate and scroll the text early.
+        running={rec.isRecording && countdown === null}
         onRegisterControls={(h) => {
           prompterRef.current = h;
         }}
