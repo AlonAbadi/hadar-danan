@@ -17,7 +17,6 @@ import { ActionButton, TopBar } from "./ui";
 
 const POLL_MS = 5000;
 const HANDOFF_MS = 90_000;
-const TRIM_STEP_MS = 250;
 // Direct to /kaveret to kill the /hive/signal-kit → /kaveret redirect bounce
 // (Alon 2026-07-11).
 const KIT_HREF = "/kaveret";
@@ -289,6 +288,7 @@ function CaptionApproval({
   const [submitting, setSubmitting] = useState(false);
   const [syncIdx, setSyncIdx] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const previewRef = useRef<HTMLVideoElement | null>(null);
 
   const submit = useCallback(async () => {
     setSubmitting(true);
@@ -438,23 +438,25 @@ function CaptionApproval({
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 140px" }}>
         <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.hint")}</p>
         {previewSrc ? (
-          <video src={previewSrc} playsInline controls preload="metadata" style={portraitPreview("34dvh", 14, true)} />
+          <video ref={previewRef} src={previewSrc} playsInline controls preload="metadata" style={portraitPreview("34dvh", 14, true)} />
         ) : null}
-        {/* trim nudges — two text buttons, never a timeline */}
-        <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-          <TrimCard
-            title={getBroadcastCopy("captions.trim_start.title")}
-            valueMs={trimStart}
-            onExpand={() => setTrimStart((v) => Math.max(0, v - TRIM_STEP_MS))}
-            onShrink={() => setTrimStart((v) => v + TRIM_STEP_MS)}
+        {/* WhatsApp-style trim: frame strip + draggable start/end handles */}
+        {previewSrc ? (
+          <FilmstripTrimmer
+            src={previewSrc}
+            trimStart={trimStart}
+            trimEnd={trimEnd}
+            previewRef={previewRef}
+            onDuration={(d) => {
+              setTrimEnd((prev) => (prev > 0 ? Math.min(prev, d) : d));
+              setTrimStart((prev) => Math.min(prev, Math.max(0, d - 1000)));
+            }}
+            onChange={(s, e) => {
+              setTrimStart(s);
+              setTrimEnd(e);
+            }}
           />
-          <TrimCard
-            title={getBroadcastCopy("captions.trim_end.title")}
-            valueMs={trimEnd}
-            onExpand={() => setTrimEnd((v) => v + TRIM_STEP_MS)}
-            onShrink={() => setTrimEnd((v) => Math.max(trimStart + 1000, v - TRIM_STEP_MS))}
-          />
-        </div>
+        ) : null}
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
           {visible.map((l) => (
             <div
@@ -528,31 +530,232 @@ function CaptionApproval({
   );
 }
 
-function TrimCard({
-  title,
-  valueMs,
-  onExpand,
-  onShrink,
+// WhatsApp-style trimmer: a strip of frames from the take with two draggable
+// gold handles. Dragging a handle seeks the preview player to that exact
+// moment so the cut point is chosen by eye, not by numbers. The video time
+// axis always runs left-to-right (dir="ltr") even on this RTL page.
+const THUMB_COUNT = 8;
+const MIN_SELECTION_MS = 1000;
+const HANDLE_W = 22;
+
+function FilmstripTrimmer({
+  src,
+  trimStart,
+  trimEnd,
+  previewRef,
+  onDuration,
+  onChange,
 }: {
-  title: string;
-  valueMs: number;
-  onExpand: () => void;
-  onShrink: () => void;
+  src: string;
+  trimStart: number;
+  trimEnd: number;
+  previewRef: React.RefObject<HTMLVideoElement | null>;
+  onDuration: (durationMs: number) => void;
+  onChange: (startMs: number, endMs: number) => void;
 }) {
+  const [durationMs, setDurationMs] = useState(0);
+  const [thumbs, setThumbs] = useState<string[]>([]);
+  const stripRef = useRef<HTMLDivElement | null>(null);
+  const boundsRef = useRef({ start: trimStart, end: trimEnd, duration: 0 });
+  boundsRef.current = { start: trimStart, end: trimEnd, duration: durationMs };
+
+  useEffect(() => {
+    let cancelled = false;
+    const video = document.createElement("video");
+    video.crossOrigin = "anonymous";
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.src = src;
+
+    const seekTo = (t: number) =>
+      new Promise<void>((resolve) => {
+        video.onseeked = () => resolve();
+        video.currentTime = t;
+      });
+
+    (async () => {
+      await new Promise<void>((resolve, reject) => {
+        video.onloadedmetadata = () => resolve();
+        video.onerror = () => reject(new Error("thumb_load"));
+      });
+      // Chrome MediaRecorder webm reports Infinity until forced to the end.
+      if (!isFinite(video.duration)) {
+        await new Promise<void>((resolve) => {
+          video.ondurationchange = () => isFinite(video.duration) && resolve();
+          video.currentTime = 1e7;
+        });
+      }
+      const dur = video.duration;
+      if (cancelled || !isFinite(dur) || dur <= 0) return;
+      setDurationMs(Math.round(dur * 1000));
+      onDuration(Math.round(dur * 1000));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 72;
+      canvas.height = 128;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const collected: string[] = [];
+      for (let i = 0; i < THUMB_COUNT; i++) {
+        await seekTo(((i + 0.5) / THUMB_COUNT) * dur);
+        if (cancelled) return;
+        try {
+          const vw = video.videoWidth;
+          const vh = video.videoHeight;
+          const scale = Math.max(canvas.width / vw, canvas.height / vh);
+          const dw = vw * scale;
+          const dh = vh * scale;
+          ctx.drawImage(video, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+          collected.push(canvas.toDataURL("image/jpeg", 0.55));
+        } catch {
+          return; // CORS-tainted canvas — strip stays as dark placeholders
+        }
+        setThumbs([...collected]);
+      }
+    })().catch(() => {});
+    return () => {
+      cancelled = true;
+      video.removeAttribute("src");
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]);
+
+  const msFromClientX = (clientX: number) => {
+    const rect = stripRef.current?.getBoundingClientRect();
+    const { duration } = boundsRef.current;
+    if (!rect || !duration) return 0;
+    const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    return Math.round(frac * duration);
+  };
+
+  const seekPreview = (ms: number) => {
+    const v = previewRef.current;
+    if (v && Math.abs(v.currentTime * 1000 - ms) > 80) {
+      v.pause();
+      v.currentTime = ms / 1000;
+    }
+  };
+
+  const startDrag = (which: "start" | "end") => (down: React.PointerEvent<HTMLDivElement>) => {
+    down.preventDefault();
+    const el = down.currentTarget;
+    el.setPointerCapture(down.pointerId);
+    const onMove = (e: PointerEvent) => {
+      const ms = msFromClientX(e.clientX);
+      const { start, end, duration } = boundsRef.current;
+      if (which === "start") {
+        const next = Math.min(ms, end - MIN_SELECTION_MS);
+        onChange(Math.max(0, next), end);
+        seekPreview(Math.max(0, next));
+      } else {
+        const next = Math.max(ms, start + MIN_SELECTION_MS);
+        onChange(start, Math.min(duration, next));
+        seekPreview(Math.min(duration, next));
+      }
+    };
+    const onUp = () => {
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+    };
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
+  };
+
+  const pct = (ms: number) => (durationMs ? (ms / durationMs) * 100 : 0);
+  const startPct = pct(trimStart);
+  const endPct = pct(durationMs ? trimEnd || durationMs : 0);
+  const fmt = (ms: number) => {
+    const s = Math.round(ms / 1000);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  };
+  const handleStyle: React.CSSProperties = {
+    position: "absolute",
+    top: -4,
+    bottom: -4,
+    width: HANDLE_W,
+    background: "linear-gradient(135deg, #E8B94A, #C9964A)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "ew-resize",
+    touchAction: "none",
+    zIndex: 3,
+  };
+
   return (
-    <div style={{ flex: 1, background: "#141820", borderRadius: 10, padding: 12 }}>
-      <p style={{ color: "#9E9990", fontSize: 12 }}>{title}</p>
-      <p dir="ltr" style={{ color: "#EDE9E1", fontSize: 15, fontVariantNumeric: "tabular-nums", marginTop: 2 }}>
-        {(valueMs / 1000).toFixed(2)}s
-      </p>
-      <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-        <button type="button" onClick={onExpand} className="br-btn" style={miniBtn}>
-          {getBroadcastCopy("captions.trim.expand")}
-        </button>
-        <button type="button" onClick={onShrink} className="br-btn" style={miniBtn}>
-          {getBroadcastCopy("captions.trim.shrink")}
-        </button>
+    <div style={{ marginTop: 16 }}>
+      <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.trim.strip_hint")}</p>
+      <div dir="ltr" style={{ padding: `4px ${HANDLE_W}px`, marginTop: 8 }}>
+        <div
+          ref={stripRef}
+          style={{
+            position: "relative",
+            height: 56,
+            borderRadius: 8,
+            background: "#141820",
+          }}
+        >
+          <div style={{ position: "absolute", inset: 0, display: "flex", borderRadius: 8, overflow: "hidden" }}>
+            {Array.from({ length: THUMB_COUNT }, (_, i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  backgroundImage: thumbs[i] ? `url(${thumbs[i]})` : undefined,
+                  backgroundColor: "#1D2430",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
+            ))}
+          </div>
+          {/* dimmed cut-away zones */}
+          <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: `${startPct}%`, background: "rgba(8,12,20,0.72)", borderRadius: "8px 0 0 8px", zIndex: 1 }} />
+          <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: `${100 - endPct}%`, background: "rgba(8,12,20,0.72)", borderRadius: "0 8px 8px 0", zIndex: 1 }} />
+          {/* selection frame */}
+          <div
+            style={{
+              position: "absolute",
+              top: -4,
+              bottom: -4,
+              left: `${startPct}%`,
+              width: `${Math.max(0, endPct - startPct)}%`,
+              border: "3px solid #C9964A",
+              borderLeft: "none",
+              borderRight: "none",
+              zIndex: 2,
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            role="slider"
+            aria-label={getBroadcastCopy("captions.trim_start.title")}
+            aria-valuenow={Math.round(trimStart / 1000)}
+            onPointerDown={startDrag("start")}
+            style={{ ...handleStyle, left: `calc(${startPct}% - ${HANDLE_W}px)`, borderRadius: "8px 0 0 8px" }}
+          >
+            <span style={{ color: "#0D1018", fontSize: 15, fontWeight: 800 }}>‹</span>
+          </div>
+          <div
+            role="slider"
+            aria-label={getBroadcastCopy("captions.trim_end.title")}
+            aria-valuenow={Math.round((trimEnd || durationMs) / 1000)}
+            onPointerDown={startDrag("end")}
+            style={{ ...handleStyle, left: `${endPct}%`, borderRadius: "0 8px 8px 0" }}
+          >
+            <span style={{ color: "#0D1018", fontSize: 15, fontWeight: 800 }}>›</span>
+          </div>
+        </div>
       </div>
+      <p dir="rtl" style={{ color: "#EDE9E1", fontSize: 13, marginTop: 6, fontVariantNumeric: "tabular-nums" }}>
+        {getBroadcastCopy("captions.trim.selected")}{" "}
+        <span dir="ltr">{fmt(trimStart)}–{fmt(trimEnd || durationMs)}</span>
+        {" · "}
+        {Math.max(0, Math.round(((trimEnd || durationMs) - trimStart) / 1000))} שניות
+      </p>
     </div>
   );
 }
@@ -692,12 +895,3 @@ const stickyBar: React.CSSProperties = {
   display: "flex",
 };
 
-const miniBtn: React.CSSProperties = {
-  border: "1px solid rgba(232,185,74,0.35)",
-  background: "transparent",
-  color: "#E8B94A",
-  borderRadius: 8,
-  padding: "6px 8px",
-  fontSize: 12,
-  cursor: "pointer",
-};

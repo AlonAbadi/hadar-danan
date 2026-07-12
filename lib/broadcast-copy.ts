@@ -86,8 +86,11 @@ export const BROADCAST_COPY = {
   "captions.delete_line": "מחיקת שורה",
   "captions.trim_start.title": "תחילת הטייק",
   "captions.trim_end.title": "סוף הטייק",
-  "captions.trim.expand": "להרחיב עוד רגע",
-  "captions.trim.shrink": "לצמצם עוד רגע",
+  "captions.trim.strip_hint": {
+    f: "גררי את הידיות בקצוות כדי לחתוך את ההתחלה והסוף",
+    m: "גרור את הידיות בקצוות כדי לחתוך את ההתחלה והסוף",
+  },
+  "captions.trim.selected": "נבחר",
   "captions.failed.title": "התמלול לא הסתדר הפעם",
   "captions.failed.option_none": "רילס בלי כתוביות",
   "captions.failed.option_script": "התסריט ככתוביות, בסנכרון באישור שלך",
