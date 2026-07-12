@@ -1579,10 +1579,21 @@ ${content}
 </html>`;
 }
 
+// Unified home (English): when the send handler resolved a kaveret link
+// (switchover on), CTAs lead to the lead's locked /en/kaveret/i page —
+// mirrors how the Hebrew signalOffer() prefers ctx.kaveretUrl.
+function enKaveretUrl(ctx: EmailTemplateContext): string | null {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const kaveretUrl = (ctx as any).kaveretUrl;
+  return typeof kaveretUrl === "string" && kaveretUrl ? kaveretUrl : null;
+}
+
 function signalWelcomeEn(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
   const extractionId = typeof ctx.extraction_id === "string" ? ctx.extraction_id : "";
-  const resultUrl = extractionId ? `${APP_URL}/en/signal/result/${extractionId}` : `${APP_URL}/en`;
+  const kaveretUrl = enKaveretUrl(ctx);
+  const resultUrl =
+    kaveretUrl ?? (extractionId ? `${APP_URL}/en/signal/result/${extractionId}` : `${APP_URL}/en`);
   return {
     subject: `${firstName}, your signal`,
     html: enBase(`
@@ -1593,7 +1604,7 @@ function signalWelcomeEn(ctx: EmailTemplateContext): RenderedEmail {
       <div class="en-body">
         <p class="lede">What you wrote was worth saying back to you.</p>
         <p>Your signal is saved. Yours for life, returnable any time. The page is set up the way a letter is - slow, signed, and meant for one reader.</p>
-        <a class="en-cta" href="${resultUrl}">Open your signal &rarr;</a>
+        <a class="en-cta" href="${resultUrl}">${kaveretUrl ? "Your reading is saved here" : "Open your signal"} &rarr;</a>
 
         <div class="en-rule"></div>
 
@@ -1673,7 +1684,7 @@ function signalDay5En(ctx: EmailTemplateContext): RenderedEmail {
       <div class="en-header"><div class="en-eyebrow">TrueSignal©</div><h1>${firstName}, the hard part</h1></div>
       <div class="en-body">
         ${body}
-        <a class="en-cta" href="${premium ? SIGNAL_WA_EN : `${APP_URL}/en/strategy`}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
+        <a class="en-cta" href="${premium ? SIGNAL_WA_EN : enKaveretUrl(ctx) ?? `${APP_URL}/en/strategy`}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
         <div class="en-signoff">Hadar</div>
       </div>
     `),
@@ -1702,7 +1713,7 @@ function signalDay8En(ctx: EmailTemplateContext): RenderedEmail {
       <div class="en-header"><div class="en-eyebrow">TrueSignal©</div><h1>${firstName}, what you walk away with</h1></div>
       <div class="en-body">
         ${body}
-        <a class="en-cta" href="${premium ? SIGNAL_WA_EN : `${APP_URL}/en/strategy`}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
+        <a class="en-cta" href="${premium ? SIGNAL_WA_EN : enKaveretUrl(ctx) ?? `${APP_URL}/en/strategy`}">${premium ? "Talk to Hadar about a shoot day" : "Book a strategy session"} &rarr;</a>
         <div class="en-signoff">Hadar</div>
       </div>
     `),
@@ -1730,6 +1741,78 @@ function signalDay12En(ctx: EmailTemplateContext): RenderedEmail {
   };
 }
 
+// /en/kriah day-2 offer (KRIAH_CORE_LEAD_EN · ~40h): mirrors the Hebrew
+// kriahHiveOffer — the $149 offer stays OFF the ending screen, the sentence
+// gets a day to prove itself, then this email carries The Signal Hive.
+// Suppressed at send time if the lead already purchased (send-email.ts guard).
+function kriahHiveOfferEn(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
+  const sentence  = typeof ctx.signal_sentence === "string" && ctx.signal_sentence.trim()
+    ? ctx.signal_sentence.trim() : null;
+  const hiveUrl = enKaveretUrl(ctx) ?? `${APP_URL}/en/hive`;
+  return {
+    subject: "Does your sentence still hold?",
+    html: enBase(`
+      <div class="en-header">
+        <div class="en-eyebrow">TrueSignal©</div>
+        <h1>${firstName}, does your sentence still hold?</h1>
+      </div>
+      <div class="en-body">
+        ${sentence ? `<p class="lede" style="background:#F4EFE4;border:1px solid rgba(33,27,18,0.10);border-radius:4px;padding:14px 18px;">"${sentence}"</p>` : ""}
+        <p>Two days have passed.</p>
+        <p>If that sentence is still circling in your head, that is the sign we wait for. A real signal does not let go.</p>
+        <p>Now the part that turns it from an insight into a business.</p>
+        <p>Your signal is the base, and everything else is drawn from it - the message, the content, the way the right people find you. Without it, every new post starts from zero and sounds like everyone else.</p>
+        <p>That is what we built <strong>The Signal Hive</strong> for. Inside:</p>
+        <p>Your signal system - the message and the map, built from your reading.<br>
+        Seven scripted episodes you film with a teleprompter in the broadcast room.<br>
+        Captions burned in, ready to publish.<br>
+        Your bio, about page, and manifesto - written.<br>
+        Designed visual assets that make you unmistakable.</p>
+        <p>One payment of $149 (was $249). Immediate access. No pressure - you enter when it feels like the time.</p>
+        <a class="en-cta" href="${hiveUrl}">Enter your hive &rarr;</a>
+        <div class="en-rule"></div>
+        <p>Be good,</p>
+        <div class="en-signoff">the beegood team</div>
+      </div>
+    `),
+  };
+}
+
+// Day-3 fallback for an English concierge-lane lead who hasn't booked the
+// meeting yet (SIGNAL_STRATEGY_LEAD_EN · 72h). Re-opens the conversation and
+// carries The Signal Hive as the start-on-your-own path, so the concierge
+// promise never leaves the lead with nothing to act on. Suppressed at send
+// time by send-email.ts if the lead booked / was dismissed / purchased.
+function signalStrategyFallbackEn(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
+  const hiveUrl = enKaveretUrl(ctx) ?? `${APP_URL}/en/hive`;
+  return {
+    subject: "Still here, still yours",
+    html: enBase(`
+      <div class="en-header">
+        <div class="en-eyebrow">TrueSignal©</div>
+        <h1>${firstName}, your signal is still here</h1>
+      </div>
+      <div class="en-body">
+        <p>${firstName},</p>
+        <p>Three days ago your signal was put into words.</p>
+        <p>Hadar read it herself. No meeting happened yet, and that is fine.</p>
+        <p>The door is still open: a short call, no cost, no commitment. You go over your signal together and the one step that follows from it.</p>
+        <a class="en-cta" href="${SIGNAL_WA_EN}">Set up the call on WhatsApp &rarr;</a>
+        <div class="en-rule"></div>
+        <p>And if you are the kind of person who prefers to start alone, at your own pace:</p>
+        <p><strong>The Signal Hive.</strong> Your signal system, seven scripted episodes you film in the broadcast room, captions burned in, your bio and manifesto written, designed visual assets.</p>
+        <p>$149, immediate access.</p>
+        <a class="en-cta" href="${hiveUrl}">Enter your hive &rarr;</a>
+        <p>Both paths start from the same place: the signal you already have.</p>
+        <div class="en-signoff">Hadar &amp; Alon</div>
+        <div class="en-signoff-line">Founders of beegood</div>
+      </div>
+    `),
+  };
+}
+
 // ── Template registry ─────────────────────────────────────────
 type TemplateFn = (ctx: EmailTemplateContext) => RenderedEmail;
 
@@ -1747,11 +1830,22 @@ const TEMPLATES: Record<string, TemplateFn> = {
   signal_day12:                signalDay12,
   // SIGNAL_EXTRACTED_EN welcome (English /en/signal flow)
   signal_welcome_en:           signalWelcomeEn,
+  signal_day1_en:              signalDay1En,
+  signal_day3_en:              signalDay3En,
+  signal_day5_en:              signalDay5En,
+  signal_day8_en:              signalDay8En,
+  signal_day12_en:             signalDay12En,
+  // Legacy pre-rename day keys — kept ONLY so already-queued jobs still
+  // render. fromNameFor() and the kaveret injection key off the `_en`
+  // suffix, so all new enqueues must use the signal_dayN_en keys above.
   en_signal_day1:              signalDay1En,
   en_signal_day3:              signalDay3En,
   en_signal_day5:              signalDay5En,
   en_signal_day8:              signalDay8En,
   en_signal_day12:             signalDay12En,
+  // English v2 funnel (KRIAH_CORE_LEAD_EN / SIGNAL_STRATEGY_LEAD_EN)
+  kriah_hive_offer_en:         kriahHiveOfferEn,
+  signal_strategy_fallback_en: signalStrategyFallbackEn,
   // Manual on-demand full result email
   signal_result_full:          signalResultFull,
   // Hive monthly content drop announcement

@@ -47,7 +47,7 @@ export async function handleSendEmail(
   // ── Suppress signal offer emails once the lead has converted ──
   // The value/story emails (day1/day3) are harmless, but stop pitching the
   // product (day5/8/12) to someone who already bought.
-  const SUPPRESS_IF_PURCHASED = new Set(["signal_day5", "signal_day8", "signal_day12", "kriah_hive_offer"]);
+  const SUPPRESS_IF_PURCHASED = new Set(["signal_day5", "signal_day8", "signal_day12", "kriah_hive_offer", "kriah_hive_offer_en"]);
   if (SUPPRESS_IF_PURCHASED.has(template_key)) {
     const { data: purchased } = await supabase
       .from("purchases")
@@ -64,7 +64,7 @@ export async function handleSendEmail(
   // still hasn't moved: skip it if a meeting was booked, the lead was
   // dismissed, the status advanced past "lead machine" territory, or they
   // already bought something (any purchase means the funnel worked).
-  if (template_key === "signal_strategy_fallback") {
+  if (template_key === "signal_strategy_fallback" || template_key === "signal_strategy_fallback_en") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: u } = await (supabase as any)
       .from("users")
@@ -97,11 +97,17 @@ export async function handleSendEmail(
   // and point at the lead's locked kaveret: signed token link, computed
   // from their primary extraction. Best-effort — templates keep their
   // pre-kaveret CTAs when absent.
+  // English templates (identified by the `_en` key suffix) get the ENGLISH
+  // locked page (/en/kaveret/i). kriah_hive_offer_en is included even though
+  // its Hebrew twin isn't a signal_ key — its CTA IS the kaveret page.
+  // Hebrew behavior is unchanged.
   let kaveretUrl: string | undefined;
-  if (template_key.startsWith("signal_") && process.env.KAVERET_RESULT_ENABLED === "1") {
+  const isEnTemplate = template_key.endsWith("_en");
+  const wantsKaveret = template_key.startsWith("signal_") || template_key === "kriah_hive_offer_en";
+  if (wantsKaveret && process.env.KAVERET_RESULT_ENABLED === "1") {
     try {
       const primary = await pickPrimaryExtractionId(supabase, user_id);
-      if (primary) kaveretUrl = kaveretLink(primary.id);
+      if (primary) kaveretUrl = kaveretLink(primary.id, isEnTemplate ? "en" : undefined);
     } catch {
       // observability only
     }
