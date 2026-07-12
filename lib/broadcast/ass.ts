@@ -71,11 +71,13 @@ export function buildAss(lines: CaptionLine[], opts: BuildAssOptions): string {
   const prY = opts.playResY ?? 1920;
   const capMv = opts.captionMarginV ?? Math.round(prY * 0.525);
   const stampMv = opts.stampMarginV ?? 96;
-  // Matched to Hadar's published reels (2026-07-12 examples): pure white,
-  // heavy weight, thick solid-black outline, ~72px on a 1920 grid, block
-  // sitting just below vertical center. Type scales with canvas height.
-  const capFs = Math.round((72 * prY) / 1920);
-  const capOutline = Math.max(3, Math.round((7 * prY) / 1920));
+  // Matched to Hadar's published reels (2026-07-12 examples, measured against
+  // the reference posts pixel-for-pixel — the IG post frame shows the video
+  // at full width): pure white, heavy weight, thick solid-black outline,
+  // ~90px on a 1920 grid, block sitting just below vertical center. Type
+  // scales with canvas height.
+  const capFs = Math.round((90 * prY) / 1920);
+  const capOutline = Math.max(3, Math.round((8 * prY) / 1920));
   const stampFs = Math.round((36 * prY) / 1920);
   return `﻿[Script Info]
 ScriptType: v4.00+
