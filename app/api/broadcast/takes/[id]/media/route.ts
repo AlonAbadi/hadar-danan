@@ -15,7 +15,12 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
 const BUCKET = "broadcast-takes";
-const PASS_HEADERS = ["content-type", "content-length", "content-range", "accept-ranges", "etag", "last-modified"];
+const PASS_HEADERS = ["content-type", "content-length", "content-range", "etag", "last-modified"];
+// Every response is a bounded 206 chunk: Vercel functions cap the response
+// body (~4.5MB) — proxying an 80MB "give me everything" request truncates
+// mid-file and playback dies after a few seconds. Capped chunks keep each
+// response tiny and the player simply asks for the next range.
+const CHUNK = 3 * 1024 * 1024;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -32,13 +37,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .maybeSingle();
     if (!take?.storage_path) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
+    const m = /bytes=(\d+)-(\d*)/.exec(req.headers.get("range") ?? "");
+    const start = m ? Number(m[1]) : 0;
+    const wantEnd = m && m[2] ? Number(m[2]) : Number.POSITIVE_INFINITY;
+    const end = Math.min(wantEnd, start + CHUNK - 1);
+
     const upstream = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/${BUCKET}/${take.storage_path}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
           apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          ...(req.headers.get("range") ? { Range: req.headers.get("range")! } : {}),
+          Range: `bytes=${start}-${end}`,
         },
       }
     );
@@ -51,9 +61,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       const v = upstream.headers.get(h);
       if (v) headers.set(h, v);
     }
-    if (!headers.has("accept-ranges")) headers.set("accept-ranges", "bytes");
+    headers.set("accept-ranges", "bytes");
     headers.set("cache-control", "private, max-age=3600");
-    return new Response(upstream.body, { status: upstream.status, headers });
+    // Always 206 + Content-Range (storage clamps past-EOF requests): the
+    // media stack sees a range-capable server and keeps requesting chunks.
+    return new Response(upstream.body, { status: 206, headers });
   } catch (e) {
     await logBroadcastError("/api/broadcast/takes/[id]/media", e);
     return NextResponse.json({ error: "server_error" }, { status: 500 });
