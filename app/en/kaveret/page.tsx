@@ -98,6 +98,11 @@ export default async function EnKaveretPage() {
     takesPerScript[e.video_number] = (takesPerScript[e.video_number] ?? 0) + 1;
   }
   const seasonUsed = readyEditRows.length;
+  // Episodes with an edit mid-pipeline (filmed, not yet ready) — the row must
+  // read as "in the editing room", never as season-locked.
+  const pendingNumbers = Array.from(
+    new Set(readyEditRows.filter((e) => e.status !== "ready").map((e) => e.video_number))
+  ) as number[];
 
   // Episode scripts: shoot_day.videos merged with the per-video slices
   // (v1..v7) — slices win on conflict, same stitch as the Hebrew page.
@@ -135,6 +140,7 @@ export default async function EnKaveretPage() {
     scripts,
     extractionId: ext.id,
     filmedNumbers,
+    pendingNumbers,
     takesPerScript,
     seasonUsed,
     seasonCap: SEASON_CAP_EN_FREE,

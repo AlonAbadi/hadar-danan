@@ -56,6 +56,7 @@ export interface HiveHomeData {
   scripts: EpisodeScript[];
   extractionId: string | null;
   filmedNumbers: number[];
+  pendingNumbers: number[];
   takesPerScript: Record<number, number>;
   seasonUsed: number;
   seasonCap: number;
@@ -420,6 +421,7 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
                 extractionId={data.extractionId}
                 scripts={data.scripts}
                 filmedNumbers={data.filmedNumbers}
+                pendingNumbers={data.pendingNumbers}
                 identity={data.identity}
                 takesPerScript={data.takesPerScript}
                 takesCap={data.takesCap}
@@ -1196,6 +1198,7 @@ function EpisodesList({
   extractionId,
   scripts,
   filmedNumbers,
+  pendingNumbers,
   identity,
   takesPerScript,
   takesCap,
@@ -1206,6 +1209,7 @@ function EpisodesList({
   extractionId: string | null;
   scripts: EpisodeScript[];
   filmedNumbers: number[];
+  pendingNumbers: number[];
   identity: string;
   takesPerScript: Record<number, number>;
   takesCap: number;
@@ -1323,7 +1327,7 @@ function EpisodesList({
         </div>
       )}
 
-      {freePlan && !seasonFull && (
+      {freePlan && filmedNumbers.length === 0 && pendingNumbers.length === 0 && (
         <div
           style={{
             padding: "16px 20px",
@@ -1343,7 +1347,7 @@ function EpisodesList({
         </div>
       )}
 
-      {freePlan && seasonFull && (
+      {freePlan && filmedNumbers.length >= seasonCap && (
         <div
           style={{
             padding: "18px 20px",
@@ -1488,21 +1492,75 @@ function EpisodesList({
           );
         }
 
+        // ── Free plan, episodes 2-7: title only, always ───────────────
+        // Even when a full script exists (legacy generations) it is not
+        // shown - the free season is episode one; the rest are the map.
+        if (freePlan && n > 1) {
+          return (
+            <div
+              key={n}
+              style={{
+                background: C.card,
+                border: `1px solid ${C.border}`,
+                borderRadius: 14,
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <EpisodeBadge state="idle">{n}</EpisodeBadge>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>
+                  <span style={{ color: C.textFaint, fontWeight: 700, marginRight: 8 }}>Episode {pad2(n)}</span>
+                  {s?.title || CANONICAL_TITLES[n] || ""}
+                </div>
+                <div style={{ fontSize: 12.5, color: C.textFaint, marginTop: 2 }}>
+                  Part of your full season - opens later
+                </div>
+              </div>
+              <span
+                style={{
+                  flex: "0 0 auto",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "0 14px",
+                  minHeight: 38,
+                  background: "rgba(194,151,63,0.07)",
+                  color: C.gold,
+                  border: "1px dashed rgba(194,151,63,0.4)",
+                  borderRadius: 999,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  cursor: "default",
+                }}
+              >
+                Opening soon
+              </span>
+            </div>
+          );
+        }
+
         // ── Built row (may or may not be filmed) ──────────────────────
+        const pending = pendingNumbers.includes(n);
         const takes = takesPerScript[n] ?? 0;
         const takesFull = takes >= takesCap;
-        const blocked = seasonFull || takesFull;
-        const freeLocked = freePlan && seasonFull && !filmed;
+        const blocked = !pending && (freePlan ? takesFull : seasonFull || takesFull);
+        // A mid-pipeline edit on this episode owns the season slot - the row
+        // reads as "in the editing room" and links back into the pipeline.
+        const freeLocked = freePlan && seasonFull && !filmed && !pending && n !== 1;
         const statusLabel = filmed
           ? "Filmed"
-          : freeLocked
-            ? "Written and waiting - opens with the full season"
-            : seasonFull
-              ? `Season full (${seasonCap}/${seasonCap} episodes) - delete an episode first`
-              : takesFull
-                ? `This episode is full (${takesCap}/${takesCap} takes) - delete a take first`
-                : "Ready to film";
-        const statusColor = filmed ? C.green : freeLocked ? C.textMute : blocked ? C.red : C.gold;
+          : pending
+            ? "In the editing room - your captions are waiting for approval"
+            : freeLocked
+              ? "Written and waiting - opens with the full season"
+              : seasonFull && !freePlan
+                ? `Season full (${seasonCap}/${seasonCap} episodes) - delete an episode first`
+                : takesFull
+                  ? `This episode is full (${takesCap}/${takesCap} takes) - delete a take first`
+                  : "Ready to film";
+        const statusColor = filmed ? C.green : pending ? C.gold : freeLocked ? C.textMute : blocked ? C.red : C.gold;
 
         return (
           <details
@@ -1587,7 +1645,7 @@ function EpisodesList({
                         }),
                   }}
                 >
-                  {filmed ? "Another take" : "Film this episode →"}
+                  {filmed ? "Another take" : pending ? "Continue →" : "Film this episode →"}
                 </a>
               )}
             </summary>
