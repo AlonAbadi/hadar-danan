@@ -42,6 +42,10 @@ interface CapiPayload {
     contentIds?: string[];
   };
   isTest?: boolean;  // v2 isolation: test traffic never reaches the Graph API
+  // "en" routes the event to the dedicated US/English pixel
+  // (NEXT_PUBLIC_META_PIXEL_ID_EN + META_CAPI_TOKEN_EN). Until those env
+  // vars are set, EN events fall back to the main pixel so no signal is lost.
+  pixel?: "default" | "en";
 }
 
 export async function sendCapiEvent(payload: CapiPayload): Promise<void> {
@@ -49,8 +53,10 @@ export async function sendCapiEvent(payload: CapiPayload): Promise<void> {
   // test events — account safety rule, no exceptions.
   if (payload.isTest === true) return;
 
-  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
-  const token   = process.env.META_CAPI_TOKEN;
+  const useEn = payload.pixel === "en" &&
+    !!process.env.NEXT_PUBLIC_META_PIXEL_ID_EN && !!process.env.META_CAPI_TOKEN_EN;
+  const pixelId = useEn ? process.env.NEXT_PUBLIC_META_PIXEL_ID_EN : process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const token   = useEn ? process.env.META_CAPI_TOKEN_EN : process.env.META_CAPI_TOKEN;
   if (!pixelId || !token) return;
 
   const ud: Record<string, string | string[]> = {};

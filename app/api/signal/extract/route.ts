@@ -383,7 +383,8 @@ export async function POST(req: NextRequest) {
       // /api/signup entirely). eventId mirrors signup's scheme (user.id /
       // reg_<id>) so if the same user ever flows through signup too, Meta
       // dedups instead of double-counting.
-      if (instrumentVersion === "v2_funnel") {
+      if (instrumentVersion === "v2_funnel" || instrumentVersion === "v2_funnel_en") {
+        const enRun = instrumentVersion === "v2_funnel_en";
         const capiUser = {
           email:            emailStr,
           phone:            phoneStr || undefined,
@@ -393,11 +394,13 @@ export async function POST(req: NextRequest) {
         };
         // event_source_url lets a URL-filtered Custom Conversion isolate /kriah
         // completions from ordinary site registrations. Prefer the real page
-        // (Referer) and fall back to the canonical kriah URL.
+        // (Referer) and fall back to the canonical funnel URL. English leads
+        // report to the dedicated US pixel (pixel: "en").
         const sourceUrl = req.headers.get("referer")
-          || `${process.env.NEXT_PUBLIC_APP_URL ?? "https://www.beegood.online"}/kriah`;
-        void sendCapiEvent({ eventName: "Lead", eventId: userId, sourceUrl, userData: capiUser, isTest: isTestRun });
-        void sendCapiEvent({ eventName: "CompleteRegistration", eventId: `reg_${userId}`, sourceUrl, userData: capiUser, isTest: isTestRun });
+          || `${process.env.NEXT_PUBLIC_APP_URL ?? "https://www.beegood.online"}${enRun ? "/en/reading" : "/kriah"}`;
+        const pixel = enRun ? ("en" as const) : undefined;
+        void sendCapiEvent({ eventName: "Lead", eventId: userId, sourceUrl, userData: capiUser, isTest: isTestRun, pixel });
+        void sendCapiEvent({ eventName: "CompleteRegistration", eventId: `reg_${userId}`, sourceUrl, userData: capiUser, isTest: isTestRun, pixel });
       }
       // Note: we intentionally do NOT fire USER_SIGNED_UP here. The generic
       // welcome pitches the full ladder, which doesn't fit a lead who just

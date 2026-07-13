@@ -134,12 +134,21 @@ export default async function RootLayout({
           <link rel="preload" as="image" href="/_next/image?url=%2Fhadar1.jpg&w=1080&q=80" media="(min-width: 768px)" fetchPriority="high" />
         </>
       )}
-      {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
-        <>
-          <Script id="meta-pixel" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${process.env.NEXT_PUBLIC_META_PIXEL_ID}',${JSON.stringify(aamData)});fbq('track','PageView');`}</Script>
-          <noscript><img height="1" width="1" style={{display:"none"}} src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_META_PIXEL_ID}&ev=PageView&noscript=1`} alt="" /></noscript>
-        </>
-      )}
+      {(() => {
+        // /en pages report to the dedicated US pixel when configured — the
+        // English funnel optimizes on its own audience, the Israeli pixel
+        // stays clean. Falls back to the main pixel until the EN one is set.
+        const activePixelId = isEn
+          ? (process.env.NEXT_PUBLIC_META_PIXEL_ID_EN || process.env.NEXT_PUBLIC_META_PIXEL_ID)
+          : process.env.NEXT_PUBLIC_META_PIXEL_ID;
+        if (!activePixelId) return null;
+        return (
+          <>
+            <Script id="meta-pixel" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${activePixelId}',${JSON.stringify(aamData)});fbq('track','PageView');`}</Script>
+            <noscript><img height="1" width="1" style={{display:"none"}} src={`https://www.facebook.com/tr?id=${activePixelId}&ev=PageView&noscript=1`} alt="" /></noscript>
+          </>
+        );
+      })()}
       <body
         className={`min-h-full flex flex-col antialiased ${isEn ? "" : "font-assistant"}`}
         style={{ background: isEn ? "#FBFBF9" : "#101520", color: isEn ? "#0F1011" : "#EDE9E1" }}

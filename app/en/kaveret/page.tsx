@@ -13,6 +13,7 @@
  * be a Hebrew one (edge case), we still render whatever text is there.
  */
 import { redirect } from "next/navigation";
+import { SEASON_CAP_EN_FREE } from "@/lib/broadcast/season-cap";
 import { cookies } from "next/headers";
 import type { Metadata, Viewport } from "next";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
@@ -136,7 +137,7 @@ export default async function EnKaveretPage() {
     filmedNumbers,
     takesPerScript,
     seasonUsed,
-    seasonCap: 7,
+    seasonCap: SEASON_CAP_EN_FREE,
     takesCap: 3,
   };
 

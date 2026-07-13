@@ -231,7 +231,7 @@ export const BROADCAST_COPY_EN: Record<BroadcastCopyKey, string> = {
     "This take runs past 3 minutes. The director edits up to 3 minutes, a tighter take will serve you better",
   "takes.version_limit": "This script already has three edited versions. Time to choose one and publish",
   "takes.season_full":
-    "The season is full: seven episodes are live. To film a new one, delete an episode from your series in the Hive",
+    "Your free plan includes one filmed episode, and it is live. More episodes are coming soon - or delete your episode in the Hive to film it again",
 
   // Processing — the director is editing
   "processing.title": "The director is editing",

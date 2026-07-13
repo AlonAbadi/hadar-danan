@@ -2,7 +2,7 @@
 // English reading, and the central sales surface for The Signal Hive. Mirrors
 // the Hebrew visitor page zone for zone (minus the Hebrew-only challenge
 // videos); the conversion layer swaps by routing:
-//   hive      — open The Signal Hive, $149 one-time
+//   hive      — open The Signal Hive, FREE first episode (launch model)
 //   concierge — a working session with Hadar's team, quiet Hive exit
 //   sensitive — no sale layer at all; warm "a human will reach out" + WhatsApp
 // Open on the page: the signal board, the public card, the full reading with
@@ -13,7 +13,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { EN_HIVE_PRICE_USD, EN_HIVE_ANCHOR_USD } from "@/lib/products";
 import sty from "./kaveret-en.module.css";
 
 export interface VisitorDataEn {
@@ -39,7 +38,6 @@ const LOCK = (
   </svg>
 );
 
-const PRICE = { now: EN_HIVE_PRICE_USD, was: EN_HIVE_ANCHOR_USD, pct: 40 };
 
 function LockBand({ text }: { text: string }) {
   return (
@@ -82,9 +80,32 @@ export function KaveretVisitorClientEn({ data }: { data: VisitorDataEn }) {
   // the Hebrew page — they render the signal fields, which are English here.
   const assetUrl = `/api/signal/${data.extractionId}/asset?type=quote-signal&style=editorial&bg=image&v=10`;
   const shareCardUrl = `/api/signal/${data.extractionId}/share-card?style=editorial&bg=color&v=10`;
-  const hiveHref = "/en/hive";
-  const strategyHref = "/en/strategy";
   const waHref = `https://wa.me/${data.waPhone}`;
+
+  // FREE launch model (2026-07-13): nothing is sold in English. The CTA
+  // activates the hive on the spot — the kaveret token in the URL is the
+  // credential — and signs the lead straight into their member home.
+  const [activating, setActivating] = useState(false);
+  const [activateErr, setActivateErr] = useState<string | null>(null);
+  const activateFree = async () => {
+    if (activating) return;
+    setActivating(true);
+    setActivateErr(null);
+    try {
+      const token = new URLSearchParams(window.location.search).get("t");
+      const res = await fetch("/api/en/hive/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const { url } = await res.json();
+      window.location.assign(url || "/en/login?next=/en/kaveret");
+    } catch {
+      setActivateErr("Something did not connect. Try again in a moment.");
+      setActivating(false);
+    }
+  };
 
   return (
     <div className={sty.page} dir="ltr" lang="en">
@@ -326,17 +347,11 @@ export function KaveretVisitorClientEn({ data }: { data: VisitorDataEn }) {
               burned in. Your social texts - bio, about, manifesto. Your designed visual assets. All of it personal,
               drawn from your answers.
             </p>
-            <div className={sty.vPrice}>
-              <span className={sty.vWas}>${PRICE.was}</span>
-              <b>${PRICE.now}</b>
-            </div>
-            <div>
-              <span className={sty.vPct}>{PRICE.pct}% off</span>
-            </div>
-            <div className={sty.vPnote}>One payment, no subscription</div>
-            <a className={sty.vGo} href={hiveHref}>
-              Open the Hive
-            </a>
+            <div className={sty.vPnote}>Your first episode is free. No card, no subscription.</div>
+            <button className={sty.vGo} onClick={activateFree} disabled={activating} style={{ border: "none", cursor: "pointer" }}>
+              {activating ? "Opening your hive..." : "Open the Hive - film your first episode free"}
+            </button>
+            {activateErr ? <div className={sty.vPnote} style={{ marginTop: 8 }}>{activateErr}</div> : null}
           </div>
         ) : null}
 
@@ -353,11 +368,12 @@ export function KaveretVisitorClientEn({ data }: { data: VisitorDataEn }) {
               of it: the message, the offer, and the way to say it to the world. Everything you saw on this page is
               part of that work.
             </p>
-            <a className={sty.vGo} href={strategyHref}>
-              Book the working session
-            </a>
+            <button className={sty.vGo} onClick={activateFree} disabled={activating} style={{ border: "none", cursor: "pointer" }}>
+              {activating ? "Opening your hive..." : "Open the Hive - film your first episode free"}
+            </button>
+            {activateErr ? <div className={sty.vPnote} style={{ marginTop: 8 }}>{activateErr}</div> : null}
             <div className={sty.vSec}>
-              Prefer to start on your own? <a href={hiveHref}>The Signal Hive · ${PRICE.now}</a>
+              Prefer to talk it through first? <a href={waHref} target="_blank" rel="noopener">Message us on WhatsApp</a>
             </div>
           </div>
         ) : null}
@@ -395,36 +411,16 @@ export function KaveretVisitorClientEn({ data }: { data: VisitorDataEn }) {
       </main>
 
       {/* sticky conversion bar */}
-      {data.offer === "hive" ? (
+      {data.offer === "hive" || data.offer === "concierge" ? (
         <div className={sty.vSticky}>
           <div className={sty.vStickyIn}>
             <span className={sty.vStickyT}>
-              <span className={sty.vStickyA}>
-                The Signal Hive · ${PRICE.now}{" "}
-                <span
-                  style={{ textDecoration: "line-through", color: "rgba(242,237,228,0.45)", fontWeight: 400, fontSize: 12.5 }}
-                >
-                  ${PRICE.was}
-                </span>
-              </span>
-              <span className={sty.vStickyB}>{PRICE.pct}% off · one payment, no subscription</span>
+              <span className={sty.vStickyA}>The Signal Hive · your first episode is free</span>
+              <span className={sty.vStickyB}>No card, no subscription</span>
             </span>
-            <a className={sty.vStickyGo} href={hiveHref}>
-              Open
-            </a>
-          </div>
-        </div>
-      ) : null}
-      {data.offer === "concierge" ? (
-        <div className={sty.vSticky}>
-          <div className={sty.vStickyIn}>
-            <span className={sty.vStickyT}>
-              <span className={sty.vStickyA}>A working session with Hadar&apos;s team</span>
-              <span className={sty.vStickyB}>Built directly from your signal</span>
-            </span>
-            <a className={sty.vStickyGo} href={strategyHref}>
-              Book
-            </a>
+            <button className={sty.vStickyGo} onClick={activateFree} disabled={activating} style={{ border: "none", cursor: "pointer" }}>
+              {activating ? "Opening..." : "Open"}
+            </button>
           </div>
         </div>
       ) : null}

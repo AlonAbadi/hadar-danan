@@ -398,7 +398,7 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
           ref={(el) => { zonesRef.current[1] = el; }}
           style={{ paddingTop: "clamp(52px, 8vh, 84px)" }}
         >
-          <ZoneHead no="01" title="Your series" hint="Every season, seven episodes. A body of work that keeps growing" />
+          <ZoneHead no="01" title="Your series" hint="Your first episode is free. A body of work that keeps growing" />
 
           <div
             style={{
@@ -560,7 +560,7 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
           </div>
 
           <p style={{ margin: "14px 0 0", fontSize: 13, lineHeight: 1.6, color: C.textFaint }}>
-            Seven new episodes every month, as part of your Hive membership - coming soon.
+            More episodes are coming - we will invite you first when they open.
           </p>
         </section>
 

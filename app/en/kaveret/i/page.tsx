@@ -7,7 +7,7 @@
  * offer routing is the English one:
  *   sensitive — distress_money or crisis/crisis_soft ending → warm path, no sale
  *   concierge — routed_ending "concierge" → working-session framing
- *   hive      — everyone else → The Signal Hive at $149
+ *   hive      — everyone else → The Signal Hive, first episode free
  */
 import { redirect } from "next/navigation";
 import type { Metadata, Viewport } from "next";

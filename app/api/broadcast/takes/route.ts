@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 import { createServerClient } from "@/lib/supabase/server";
 import { logBroadcastError, resolveBroadcastSession } from "@/lib/broadcast/auth";
 import { rateLimit } from "@/lib/rate-limit";
+import { seasonCapFor } from "@/lib/broadcast/season-cap";
 
 export const dynamic = "force-dynamic";
 
@@ -61,15 +62,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "script_not_found" }, { status: 404 });
     }
 
-    // Season cap: the package grants 7 episodes. At 7 non-failed edits the
-    // member must delete an episode (frees the slot) before filming again.
+    // Season cap: the Hebrew package grants 7 episodes; the English free
+    // launch grants 1. At the cap the member must delete an episode (frees
+    // the slot) before filming again.
+    const seasonCap = await seasonCapFor(db as any, extractionId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { count: seasonCount } = await (db as any)
       .from("broadcast_edits")
       .select("id", { count: "exact", head: true })
       .eq("user_id", session.userId)
       .neq("status", "failed");
-    if ((seasonCount ?? 0) >= 7) {
+    if ((seasonCount ?? 0) >= seasonCap) {
       return NextResponse.json({ error: "season_full" }, { status: 409 });
     }
 

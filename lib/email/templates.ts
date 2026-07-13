@@ -1775,8 +1775,9 @@ function signalDay12En(ctx: EmailTemplateContext): RenderedEmail {
 }
 
 // /en/kriah day-2 offer (KRIAH_CORE_LEAD_EN · ~40h): mirrors the Hebrew
-// kriahHiveOffer — the $149 offer stays OFF the ending screen, the sentence
-// gets a day to prove itself, then this email carries The Signal Hive.
+// kriahHiveOffer (EN) — FREE launch model: the sentence gets a day to prove
+// itself, then this email invites the lead to open their hive and film the
+// first episode free. Nothing is sold in English yet.
 // Suppressed at send time if the lead already purchased (send-email.ts guard).
 function kriahHiveOfferEn(ctx: EmailTemplateContext): RenderedEmail {
   const firstName = (ctx.name ?? "").split(" ")[0] || "friend";
@@ -1798,11 +1799,11 @@ function kriahHiveOfferEn(ctx: EmailTemplateContext): RenderedEmail {
         <p>Your signal is the base, and everything else is drawn from it - the message, the content, the way the right people find you. Without it, every new post starts from zero and sounds like everyone else.</p>
         <p>That is what we built <strong>The Signal Hive</strong> for. Inside:</p>
         <p>Your signal system - the message and the map, built from your reading.<br>
-        Seven scripted episodes you film with a teleprompter in the broadcast room.<br>
+        Scripted episodes you film with a teleprompter in the broadcast room.<br>
         Captions burned in, ready to publish.<br>
         Your bio, about page, and manifesto - written.<br>
         Designed visual assets that make you unmistakable.</p>
-        <p>One payment of $149 (was $249). Immediate access. No pressure - you enter when it feels like the time.</p>
+        <p>Your first episode is free. No card, no subscription - you open the hive and film.</p>
         <a class="en-cta" href="${hiveUrl}">Enter your hive &rarr;</a>
         <div class="en-rule"></div>
         <p>Be good,</p>
@@ -1835,8 +1836,8 @@ function signalStrategyFallbackEn(ctx: EmailTemplateContext): RenderedEmail {
         <a class="en-cta" href="${SIGNAL_WA_EN}">Set up the call on WhatsApp &rarr;</a>
         <div class="en-rule"></div>
         <p>And if you are the kind of person who prefers to start alone, at your own pace:</p>
-        <p><strong>The Signal Hive.</strong> Your signal system, seven scripted episodes you film in the broadcast room, captions burned in, your bio and manifesto written, designed visual assets.</p>
-        <p>$149, immediate access.</p>
+        <p><strong>The Signal Hive.</strong> Your signal system, scripted episodes you film in the broadcast room, captions burned in, your bio and manifesto written, designed visual assets.</p>
+        <p>Your first episode is free.</p>
         <a class="en-cta" href="${hiveUrl}">Enter your hive &rarr;</a>
         <p>Both paths start from the same place: the signal you already have.</p>
         <div class="en-signoff">Hadar &amp; Alon</div>

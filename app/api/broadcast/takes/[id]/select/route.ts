@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { waitUntil } from "@vercel/functions";
 import { createServerClient } from "@/lib/supabase/server";
 import { logBroadcastError, resolveBroadcastSession } from "@/lib/broadcast/auth";
+import { seasonCapFor } from "@/lib/broadcast/season-cap";
 import { runTranscribeStage } from "@/lib/broadcast/transcribe";
 
 export const dynamic = "force-dynamic";
@@ -48,15 +49,17 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const version = [1, 2, 3].find((v) => !taken.has(v));
     if (!version) return NextResponse.json({ error: "version_limit" }, { status: 409 });
 
-    // Season cap (second gate — takes may predate the cap): 7 non-failed
-    // edits per member; deleting an episode frees a slot.
+    // Season cap (second gate — takes may predate the cap): 7 for the
+    // Hebrew package, 1 for the English free launch; deleting an episode
+    // frees a slot.
+    const seasonCap = await seasonCapFor(db as any, take.extraction_id);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { count: seasonCount } = await (db as any)
       .from("broadcast_edits")
       .select("id", { count: "exact", head: true })
       .eq("user_id", session.userId)
       .neq("status", "failed");
-    if ((seasonCount ?? 0) >= 7) {
+    if ((seasonCount ?? 0) >= seasonCap) {
       return NextResponse.json({ error: "season_full" }, { status: 409 });
     }
 

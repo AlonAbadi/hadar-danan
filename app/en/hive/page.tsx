@@ -1,17 +1,17 @@
-// /en/hive — the English activation page for The Signal Hive ($149 one-time,
-// product signal_hive_en_149). The English counterpart of /signal-hive: a
-// short sales summary a lead reaches from the locked kaveret (/en/kaveret/i)
-// or from the nurture emails. Replaced the old redirect-to-strategy stub.
+// /en/hive — the English Signal Hive page. FREE launch model (2026-07-13):
+// nothing is sold in English yet — the first filmed episode is free, and the
+// door in is the reading. This page explains the hive and routes visitors to
+// /en/reading; activation itself happens on the locked page (the kaveret
+// token is the credential). The dormant USD checkout stays in the API for
+// the future paid tier, unreferenced from any UI.
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { EN_HIVE_PRICE_USD, EN_HIVE_ANCHOR_USD } from "@/lib/products";
-import { HiveCTAEn } from "./HiveCTAEn";
 
 export const metadata: Metadata = {
   title: "The Signal Hive · your signal, put to work",
   description:
-    "You found your signal. The Signal Hive is the activation layer: your signal system, seven scripted episodes filmed in the broadcast room, your social texts and designed visual assets - all drawn from your answers. One payment.",
+    "You found your signal. The Signal Hive is the activation layer: your signal system, scripted episodes filmed in the broadcast room, your social texts and designed visual assets - all drawn from your answers. Your first episode is free.",
   alternates: { canonical: "/en/hive" },
 };
 
@@ -131,36 +131,37 @@ export default function EnHivePage() {
           ))}
         </div>
 
-        {/* price + CTA */}
+        {/* free CTA */}
         <div style={{ background: C.soft, border: `1px solid ${C.line}`, borderRadius: 18, padding: "26px 24px", marginTop: 36 }}>
           <div style={{ textAlign: "center", marginBottom: 18 }}>
             <div
               style={{ display: "inline-block", fontSize: 12, fontWeight: 800, color: C.green, background: "rgba(127,212,155,0.08)", border: "1px solid rgba(127,212,155,0.35)", borderRadius: 999, padding: "4px 14px", marginBottom: 10, letterSpacing: "0.04em" }}
             >
-              40% off
+              Free to start
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 10 }}>
-              <span style={{ fontSize: 18, color: C.mut, textDecoration: "line-through" }}>${EN_HIVE_ANCHOR_USD}</span>
-              <span style={{ fontSize: 38, fontWeight: 800, color: C.goldHi }}>${EN_HIVE_PRICE_USD}</span>
+            <div style={{ fontSize: 26, fontWeight: 800, color: C.goldHi, letterSpacing: "-0.01em" }}>
+              Your first episode is free
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", fontSize: 13.5, color: C.fg, lineHeight: 1.9 }}>
               <li>
-                <span style={{ color: C.green, marginRight: 6 }}>✔</span>Immediate access
+                <span style={{ color: C.green, marginRight: 6 }}>✔</span>No card, no subscription
               </li>
               <li>
-                <span style={{ color: C.green, marginRight: 6 }}>✔</span>One payment, no subscription
+                <span style={{ color: C.green, marginRight: 6 }}>✔</span>A real filmed episode, captions burned in
               </li>
               <li>
                 <span style={{ color: C.green, marginRight: 6 }}>✔</span>Yours for good
               </li>
             </ul>
           </div>
-          <HiveCTAEn whatsappPhone={wa} />
+          <Link
+            href="/en/reading"
+            style={{ display: "block", textAlign: "center", background: `linear-gradient(135deg, ${C.goldHi}, ${C.gold}, ${C.goldDeep})`, color: "#15130F", borderRadius: 12, padding: "15px 18px", fontSize: 16, fontWeight: 800, textDecoration: "none" }}
+          >
+            Start with your reading - free
+          </Link>
           <div style={{ textAlign: "center", fontSize: 12.5, color: C.mut, marginTop: 18, lineHeight: 1.6, borderTop: `1px solid ${C.line}`, paddingTop: 14 }}>
-            Have not taken the diagnostic yet?{" "}
-            <Link href="/en/signal" style={{ color: C.gold, textDecoration: "underline", textUnderlineOffset: 3 }}>
-              Start there, free
-            </Link>
+            The reading finds your signal. Everything in the hive is built from it - including your free first episode.
           </div>
         </div>
 
