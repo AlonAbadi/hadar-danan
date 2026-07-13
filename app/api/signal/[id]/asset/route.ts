@@ -687,7 +687,9 @@ export async function GET(
   // we force a regen at the new aspect. Banner/story aspects didn't change but
   // they read the same v3 key so existing v2 URLs orphan harmlessly.
   const cacheKey = `asset_bg_url_v9_${typeParam}_${style}`;
-  let bgUrl: string | null = isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
+  // Image backgrounds retired: with wantImage forced off, CACHED AI
+  // backgrounds must not resurface either — every card is flat color.
+  let bgUrl: string | null = wantImage && isPersistedUrl(row.signal[cacheKey]) ? row.signal[cacheKey] : null;
 
   if (wantImage && !bgUrl && isReplicateConfigured()) {
     // Which of the 7 cards this is — drives the per-card color value + concept

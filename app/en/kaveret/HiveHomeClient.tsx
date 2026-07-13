@@ -98,7 +98,7 @@ const VISUAL_ASSETS = [
 ] as const;
 
 function assetUrl(extractionId: string, type: string, bg: "color" | "image" = "color"): string {
-  const q = `style=editorial&bg=${bg}&v=11&clean=1`;
+  const q = `style=editorial&bg=${bg}&v=12&clean=1`;
   return type === "share-card-default"
     ? `/api/signal/${extractionId}/share-card?${q}`
     : `/api/signal/${extractionId}/asset?type=${type}&${q}`;
