@@ -391,8 +391,13 @@ export async function POST(req: NextRequest) {
           fbc:              req.cookies.get("_fbc")?.value,
           clientUserAgent:  req.headers.get("user-agent") ?? undefined,
         };
-        void sendCapiEvent({ eventName: "Lead", eventId: userId, userData: capiUser, isTest: isTestRun });
-        void sendCapiEvent({ eventName: "CompleteRegistration", eventId: `reg_${userId}`, userData: capiUser, isTest: isTestRun });
+        // event_source_url lets a URL-filtered Custom Conversion isolate /kriah
+        // completions from ordinary site registrations. Prefer the real page
+        // (Referer) and fall back to the canonical kriah URL.
+        const sourceUrl = req.headers.get("referer")
+          || `${process.env.NEXT_PUBLIC_APP_URL ?? "https://www.beegood.online"}/kriah`;
+        void sendCapiEvent({ eventName: "Lead", eventId: userId, sourceUrl, userData: capiUser, isTest: isTestRun });
+        void sendCapiEvent({ eventName: "CompleteRegistration", eventId: `reg_${userId}`, sourceUrl, userData: capiUser, isTest: isTestRun });
       }
       // Note: we intentionally do NOT fire USER_SIGNED_UP here. The generic
       // welcome pitches the full ladder, which doesn't fit a lead who just
@@ -1025,6 +1030,9 @@ export async function POST(req: NextRequest) {
     id:            extractionId,
     signal:        parsed,
     ...(v2Route ? { v2_ending: v2Route.ending } : {}),
+    // Mirror the CAPI CompleteRegistration event_id so the browser pixel can
+    // fire the same standard event with the same id → Meta dedups the pair.
+    ...(v2Route ? { reg_event_id: `reg_${userId}` } : {}),
     generated_at:  generatedAt,
     gender:        genderForPrompt,
     bucket:        bucketDecision.bucket,

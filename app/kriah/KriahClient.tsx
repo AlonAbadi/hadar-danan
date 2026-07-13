@@ -567,10 +567,15 @@ export function KriahClient({ previewKey, isTest }: Props) {
   // Meta campaigns optimize on QuizComplete (carried over from the old /quiz).
   // Fired once, on successful extraction — the moment the diagnosis is done.
   const quizCompleteFired = useRef(false);
-  const fireQuizComplete = (ending: string | undefined) => {
+  const fireQuizComplete = (ending: string | undefined, regEventId?: string) => {
     if (quizCompleteFired.current || isTest) return;
     quizCompleteFired.current = true;
-    if (typeof window !== "undefined") window.fbq?.("trackCustom", "QuizComplete", { funnel: "kriah_v2", ending: ending ?? "unknown" });
+    if (typeof window === "undefined") return;
+    // Standard CompleteRegistration, deduped against the server CAPI event via a
+    // shared event_id → the clean conversion the completion campaign optimizes on.
+    if (regEventId) window.fbq?.("track", "CompleteRegistration", {}, { eventID: regEventId });
+    // Custom event kept for funnel-specific reporting/breakdowns.
+    window.fbq?.("trackCustom", "QuizComplete", { funnel: "kriah_v2", ending: ending ?? "unknown" });
   };
   const runExtract = async (dest: "sendgate" | "finalize" = "finalize") => {
     lastExtractDest.current = dest;
@@ -622,7 +627,10 @@ export function KriahClient({ previewKey, isTest }: Props) {
       const inferredOcc = (data.signal as SignalOutput)?.occupation;
       if (inferredOcc && !occupation.trim()) setOccupation(inferredOcc);
 
-      fireQuizComplete(typeof data.v2_ending === "string" ? data.v2_ending : undefined);
+      fireQuizComplete(
+        typeof data.v2_ending === "string" ? data.v2_ending : undefined,
+        typeof data.reg_event_id === "string" ? data.reg_event_id : undefined,
+      );
 
       if (dest === "sendgate") {
         goTo("sendgate", "sendgate");

@@ -33,6 +33,7 @@ interface UserData {
 interface CapiPayload {
   eventName: string;
   eventId?: string;  // must match browser pixel eventID for deduplication
+  sourceUrl?: string;  // event_source_url — enables URL-filtered Custom Conversions
   userData: UserData;
   customData?: {
     value?: number;
@@ -68,7 +69,8 @@ export async function sendCapiEvent(payload: CapiPayload): Promise<void> {
     action_source: "website",
     user_data:     ud,
   };
-  if (payload.eventId)   event.event_id   = payload.eventId;
+  if (payload.eventId)   event.event_id          = payload.eventId;
+  if (payload.sourceUrl) event.event_source_url  = payload.sourceUrl;
   if (payload.customData) {
     event.custom_data = {
       ...(payload.customData.value       != null && { value:        payload.customData.value }),
