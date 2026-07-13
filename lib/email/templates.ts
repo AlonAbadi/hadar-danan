@@ -844,6 +844,39 @@ function signalHiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
   };
 }
 
+// English twin of signalHiveWelcome — fired by SIGNAL_HIVE_PURCHASED_EN for
+// USD buyers (currency is the EN marker on the purchase row). The access
+// link defaults to the ENGLISH member home.
+function signalHiveWelcomeEn(ctx: EmailTemplateContext): RenderedEmail {
+  const firstName  = ctx.name.split(" ")[0] || "there";
+  const accessLink = (ctx.access_link as string | undefined) ?? `${APP_URL}/en/kaveret`;
+  const isMagic    = accessLink.includes("token=") || accessLink.includes("supabase");
+  return {
+    subject: `${firstName} - you're in The Signal Hive`,
+    html: enBase(`
+      <div class="header">
+        <div class="header-logo">beegood · The Signal Hive</div>
+        <h1>Welcome in, <span class="header-accent">${firstName}</span></h1>
+      </div>
+      <div class="body">
+        <p>${firstName},</p>
+        <p>You found your signal.</p>
+        <p>Now we start putting it into the world.</p>
+        <p>Everything is waiting in one place:</p>
+        <p>· Your signal board - the signal, the ground, the promise, your people.</p>
+        <p>· Your episodes - seven scripts, directed around your signal.</p>
+        <p>· The broadcast room - film with a teleprompter, captions burned in.</p>
+        <p>· Your texts - bio, about, manifesto, written and ready.</p>
+        <p>· Your visuals - designed cards that carry your signal.</p>
+        <a class="cta" href="${accessLink}">Enter your Hive</a>
+        ${isMagic ? `<p style="font-size:13px;color:#6b7280;margin-top:8px;">This link signs you in directly - no password needed. Valid for 24 hours.</p>` : ""}
+        <p>Take it one day at a time. There is no rush.</p>
+        <p class="ssig">Be good,<br/>the beegood team</p>
+      </div>
+    `),
+  };
+}
+
 // Day-3 fallback for a boiling (strategy-bucket) lead who hasn't booked a
 // meeting yet. Re-opens the conversation and carries the self-serve fallback
 // (כוורת האות) so the concierge promise never leaves the lead with nothing
@@ -1853,6 +1886,7 @@ const TEMPLATES: Record<string, TemplateFn> = {
   // Sequence 2 - challenge buyers
   challenge_access:            challengeAccess,
   signal_hive_welcome:         signalHiveWelcome,
+  signal_hive_welcome_en:      signalHiveWelcomeEn,
   signal_strategy_fallback:    signalStrategyFallback,
   kriah_hive_offer:            kriahHiveOffer,
   challenge_upsell_workshop:   challengeUpsellWorkshop,

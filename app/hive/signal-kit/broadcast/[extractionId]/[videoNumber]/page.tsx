@@ -80,7 +80,9 @@ export default async function BroadcastRoomPage({
   // without it (Alon 2026-07-11), tapping לצלם עכשיו on any generated
   // video 2-7 redirected here → back to /hive/signal-kit → back to /kaveret.
   const video = findShootDayVideo(ext.signal, videoNumber);
-  if (!video?.script?.hook) redirect("/kaveret");
+  if (!video?.script?.hook) {
+    redirect(ext.signal?.language === "en" ? "/en/kaveret" : "/kaveret");
+  }
 
   const script: ScriptShape = {
     hook: String(video.script.hook),

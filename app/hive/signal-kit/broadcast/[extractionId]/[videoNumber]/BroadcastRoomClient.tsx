@@ -23,7 +23,7 @@ import { ActionButton, RoomStyles, TopBar } from "./ui";
 // Alon 2026-07-11: direct to /kaveret instead of the /hive/signal-kit
 // redirect double-bounce that was making the whole broadcast flow feel like
 // it "restarted the page" when the customer wanted to go back.
-const KIT_HREF = "/kaveret";
+const kitHref = () => (getBroadcastLanguage() === "en" ? "/en/kaveret" : "/kaveret");
 
 const MIN_TAKE_MS = 10_000;
 const MAX_TAKE_MS = 180_000;
@@ -419,7 +419,7 @@ export function BroadcastRoomClient({
     return (
       <div dir={dir} style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
-        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
+        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
         <CenteredCard title={getBroadcastCopy("error.unsupported")} />
       </div>
     );
@@ -429,7 +429,7 @@ export function BroadcastRoomClient({
     return (
       <div dir={dir} style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
-        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
+        <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
         <PermissionDenied onRetry={rec.requestCamera} />
       </div>
     );
@@ -507,7 +507,7 @@ export function BroadcastRoomClient({
           onClick={() => {
             rec.releaseCamera();
             if (takes.length > 0) setPhase("review");
-            else window.location.href = KIT_HREF;
+            else window.location.href = kitHref();
           }}
           style={{
             position: "absolute",
@@ -827,7 +827,7 @@ function PrepScreen({
 }) {
   return (
     <>
-    <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
+    <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "16px 20px 120px" }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "16px 0 4px" }}>
         {videoTitle || getBroadcastCopy("prep.title")}
@@ -929,7 +929,7 @@ function TakeGallery({
         title={getBroadcastCopy("takes.title")}
         onBack={onBackToCamera}
         backLabel={getBroadcastCopy("nav.back_to_camera")}
-        extraHref={KIT_HREF}
+        extraHref={kitHref()}
         extraLabel={getBroadcastCopy("nav.to_episodes")}
       />
       {directorLine ? (

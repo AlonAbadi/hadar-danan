@@ -299,10 +299,12 @@ async function fulfillPurchase(
     } catch {}
   }
 
-  // Determine product-specific trigger event
+  // Determine product-specific trigger event. The Signal Hive splits by
+  // currency: USD marks the English edition — its buyer gets the English
+  // welcome chain, never the Hebrew one.
   const productEvent =
     purchase.product === "challenge_197"   ? "CHALLENGE_PURCHASED"   :
-    purchase.product === "signal_hive_590" ? "SIGNAL_HIVE_PURCHASED" :
+    purchase.product === "signal_hive_590" ? (purchase.currency === "USD" ? "SIGNAL_HIVE_PURCHASED_EN" : "SIGNAL_HIVE_PURCHASED") :
     purchase.product === "workshop_1080"   ? "WORKSHOP_PURCHASED"    :
     purchase.product === "course_1800"     ? "COURSE_PURCHASED"      : null;
 

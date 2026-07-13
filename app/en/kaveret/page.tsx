@@ -45,7 +45,7 @@ export default async function EnKaveretPage() {
     { cookies: { getAll() { return cookieStore.getAll(); }, setAll() {} } }
   );
   const { data: { user: authUser } } = await supabaseAuth.auth.getUser();
-  if (!authUser) redirect("/login?next=/en/kaveret");
+  if (!authUser) redirect("/en/login?next=/en/kaveret");
 
   const db = createServerClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

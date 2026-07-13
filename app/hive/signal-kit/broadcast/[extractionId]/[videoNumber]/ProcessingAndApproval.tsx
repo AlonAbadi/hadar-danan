@@ -19,7 +19,7 @@ const POLL_MS = 5000;
 const HANDOFF_MS = 90_000;
 // Direct to /kaveret to kill the /hive/signal-kit → /kaveret redirect bounce
 // (Alon 2026-07-11).
-const KIT_HREF = "/kaveret";
+const kitHref = () => (getBroadcastLanguage() === "en" ? "/en/kaveret" : "/kaveret");
 
 interface EditSnapshot {
   status: "queued" | "transcribing" | "awaiting_captions" | "burning" | "ready" | "failed";
@@ -133,7 +133,7 @@ export function ProcessingAndApproval({
   // failed — never a dead end: retry path + way home
   return (
     <>
-      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
+      <TopBar title={getBroadcastCopy("processing.title")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
         <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8 }}>
           {getBroadcastCopy("error.processing_failed")}
@@ -169,7 +169,7 @@ function StageScreen({
   const activeIdx = stage === "transcribing" ? 0 : 2;
   return (
     <>
-      <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
+      <TopBar title={getBroadcastCopy("processing.title")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
         <p style={{ color: "#9E9990", fontSize: 14, textAlign: "center" }}>
           {getBroadcastCopy("director.breathing")}
@@ -233,7 +233,7 @@ function BurningScreen({ editId, onAnotherTake }: { editId: string; onAnotherTak
     // the way back. The moment the burn finishes this flows into the output.
     return (
       <>
-        <TopBar title={getBroadcastCopy("processing.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
+        <TopBar title={getBroadcastCopy("processing.title")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "64px 24px", textAlign: "center" }}>
           <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, lineHeight: 1.7 }}>
             {getBroadcastCopy("processing.handoff")}
@@ -254,7 +254,7 @@ function BurningScreen({ editId, onAnotherTake }: { editId: string; onAnotherTak
             {getBroadcastCopy("processing.handoff_note")}
           </p>
           <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 10 }}>
-            <ActionButton variant="secondary" href={KIT_HREF}>
+            <ActionButton variant="secondary" href={kitHref()}>
               {getBroadcastCopy("nav.to_kit")}
             </ActionButton>
           </div>
@@ -327,7 +327,7 @@ function CaptionApproval({
   if (transcriptFailed && mode === null) {
     return (
       <>
-        <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
+        <TopBar title={getBroadcastCopy("captions.title")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px" }}>
           <h2 style={{ color: "#EDE9E1", fontSize: 20, fontWeight: 700, textAlign: "center" }}>
             {getBroadcastCopy("captions.failed.title")}
@@ -450,7 +450,7 @@ function CaptionApproval({
   const visible = lines.filter((l) => !l.deleted);
   return (
     <>
-      <TopBar title={getBroadcastCopy("captions.title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
+      <TopBar title={getBroadcastCopy("captions.title")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 140px" }}>
         <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.hint")}</p>
         {previewSrc ? (
@@ -903,7 +903,7 @@ function OutputScreen({
 
   return (
     <>
-      <TopBar title={getBroadcastCopy("output.ready_title")} backHref={KIT_HREF} backLabel={getBroadcastCopy("nav.to_episodes")} />
+      <TopBar title={getBroadcastCopy("output.ready_title")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 20px 220px" }}>
         {snap.output_url ? (
           <div style={{ position: "relative" }}>
@@ -957,7 +957,7 @@ function OutputScreen({
               "→ לפרקים שלי" is easy to miss on a phone once the customer
               scrolls to the share/download sticky bar; this ghost link
               gives them the same escape from inside the action rail. */}
-          <ActionButton variant="ghost" href={KIT_HREF}>
+          <ActionButton variant="ghost" href={kitHref()}>
             {getBroadcastCopy("output.done_link")}
           </ActionButton>
         </div>
