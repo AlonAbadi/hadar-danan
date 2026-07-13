@@ -130,7 +130,22 @@ const ASSET_SPECS: Record<AssetType, AssetSpec> = {
   },
   "quote-signal": {
     width: 1080, height: 1350, aspect: "4:5",
-    fieldFor: (s) => String(s.signal ?? ""),
+    // The card is PUBLISHED by the member to their audience — it must never
+    // carry the inward reading voice ("you now have..."). Priority: the
+    // audience-facing teaser sentence, then the engine's public card
+    // statement; the raw signal is a last-resort fallback only.
+    fieldFor: (s) => {
+      let teasers = (s as Record<string, unknown>).result_teasers;
+      if (typeof teasers === "string") {
+        try { teasers = JSON.parse(teasers); } catch { teasers = null; }
+      }
+      const publicSentence = teasers && typeof teasers === "object"
+        ? String((teasers as Record<string, unknown>).public_sentence ?? "")
+        : "";
+      return publicSentence.trim()
+        || String(s.public_card_statement ?? "").trim()
+        || String(s.signal ?? "");
+    },
   },
   "quote-promise": {
     width: 1080, height: 1350, aspect: "4:5",
@@ -184,7 +199,9 @@ function buildQuoteHtml(args: {
   bgUrl: string | null;
   clean: boolean;
   style: VisualStyle;
+  lang?: "he" | "en";
 }): { html: string; css: string } {
+  const en = args.lang === "en";
   // On an image (now light + luminous) flip to DARK text over a light scrim;
   // keep the gold-on-dark treatment for the image-less color mode.
   const onImage      = args.bgUrl != null;
@@ -213,11 +230,15 @@ function buildQuoteHtml(args: {
     <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
   </div>`;
 
-  const footerBlock = args.clean ? "" : `
+  const footerBlock = args.clean ? "" : (en ? `
+  <div class="footer-zone">
+    <div class="method-line">Discovered through the TrueSignal© method</div>
+    <div class="url-line">beegood.online/en</div>
+  </div>` : `
   <div class="footer-zone">
     <div class="method-line">התגלה באמצעות שיטת <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
     <div class="url-line">beegood.online</div>
-  </div>`;
+  </div>`);
 
   const html = `
 <div class="card">
@@ -246,7 +267,7 @@ body { margin: 0; padding: 0; }
   background: #080C14;
   position: relative;
   overflow: hidden;
-  direction: rtl;
+  direction: ${en ? "ltr" : "rtl"};
 }
 
 .bg {
@@ -300,7 +321,7 @@ body { margin: 0; padding: 0; }
   transform: translate(-50%, -50%);
   width: 780px;
   text-align: center;
-  direction: rtl;
+  direction: ${en ? "ltr" : "rtl"};
   z-index: 3;
 }
 
@@ -321,7 +342,7 @@ body { margin: 0; padding: 0; }
   font-weight: 500;
   line-height: 1.42;
   color: ${supportColor};
-  direction: rtl;
+  direction: ${en ? "ltr" : "rtl"};
   unicode-bidi: plaintext;
   text-wrap: balance;
   margin-bottom: 22px;
@@ -334,7 +355,7 @@ body { margin: 0; padding: 0; }
   font-weight: 700;
   line-height: ${leadFs.lh};
   color: ${quoteColor};
-  direction: rtl;
+  direction: ${en ? "ltr" : "rtl"};
   unicode-bidi: plaintext;
   text-wrap: balance;
   letter-spacing: -0.005em;
@@ -391,7 +412,9 @@ function buildHtml(args: {
   height:  number;
   type:    AssetType;
   style:   VisualStyle;
+  lang?:   "he" | "en";
 }): { html: string; css: string } {
+  const en = args.lang === "en";
   const isBanner = args.type === "linkedin-banner";
   const isStory  = args.type === "instagram-story";
   // quote-promise / quote-people / quote-content-N — all 4:5 portrait cards
@@ -410,8 +433,12 @@ function buildHtml(args: {
     : "";
 
   const brandingBlock = args.clean ? "" : (isBanner ? `
-  <div class="footer-banner">beegood.online · <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
-` : `
+  <div class="footer-banner">${en ? "beegood.online/en · TrueSignal©" : `beegood.online · <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span>`}</div>
+` : en ? `
+  <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
+  <div class="divider"></div>
+  <div class="attribution">Discovered through the TrueSignal© method</div>
+  <div class="footer">beegood.online/en</div>` : `
   <img class="bee" src="https://www.beegood.online/beegood_logo.png" alt="" />
   <div class="divider"></div>
   <div class="attribution">התגלה באמצעות שיטת <span dir="ltr" style="unicode-bidi:embed">TrueSignal©</span></div>
@@ -450,7 +477,7 @@ body { margin: 0; padding: 0; }
   position: relative;
   font-family: 'Assistant', 'Heebo', system-ui, sans-serif;
   overflow: hidden;
-  direction: rtl;
+  direction: ${en ? "ltr" : "rtl"};
 }
 
 .bg {
@@ -486,8 +513,8 @@ body { margin: 0; padding: 0; }
   position: absolute; top: 50%;
   left: ${signalLeft}px; right: ${signalRight}px;
   transform: translateY(-50%);
-  text-align: ${isBanner ? "right" : "center"};
-  direction: rtl;
+  text-align: ${isBanner ? (en ? "left" : "right") : "center"};
+  direction: ${en ? "ltr" : "rtl"};
   z-index: 3;
 }
 
@@ -620,7 +647,7 @@ export async function GET(
   // already public_card_statement (audience-facing) so we use it directly.
   let text: string;
   if (needsCardWriter(typeParam)) {
-    const textCacheKey = `card_text_v1_${typeParam}`;
+    const textCacheKey = `card_text_v2_${typeParam}`;
     const cachedText = typeof row.signal[textCacheKey] === "string" && row.signal[textCacheKey].length > 0
       ? (row.signal[textCacheKey] as string)
       : null;
@@ -634,6 +661,7 @@ export async function GET(
         sourceText,
         signal:     String(row.signal.signal ?? ""),
         occupation,
+        language:   row.signal?.language === "en" ? "en" : "he",
       });
 
       if (writeResult.ok) {
@@ -708,6 +736,7 @@ export async function GET(
     width: spec.width, height: spec.height,
     type: typeParam,
     style,
+    lang: row.signal?.language === "en" ? "en" : "he",
   });
 
   const result = await createHctiImage({

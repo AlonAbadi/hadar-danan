@@ -79,17 +79,73 @@ const SYSTEM_PROMPT_BASE = `אתה copywriter ישראלי שכותב טקסט �
 
 `;
 
+// English edition of the card writer — same discipline, English output, the
+// reader is ALWAYS the brand owner's audience (never the owner).
+const PURPOSE_EN: Record<CardType, string> = {
+  "quote-promise":
+    "The brand owner's offer statement in first person: 'I help ___ ___' or 'I work with ___'. " +
+    "It tells the audience what they get from this person - like a brand tagline. " +
+    "Max 18 words. Never 'your signal', never 'the direction opening'.",
+  "quote-people":
+    "A sentence that identifies the reader directly in second person: 'If you are ___', 'When you ___', 'There is a place where ___'. " +
+    "The reader must feel spoken TO, not described to the brand owner. " +
+    "Max 18 words. No third person about 'them'.",
+  "quote-content-1":
+    "An opening hook of a social post in the brand owner's first person, exactly as they would open a real post. " +
+    "A short story, a specific moment, or a sharp insight - something that stops the scroll. " +
+    "Max 24 words. Never 'a post about', never 'content about'.",
+  "quote-content-2":
+    "An opening hook of a social post in the brand owner's first person. " +
+    "A story, a moment, or a sharp insight. Different in voice and angle from content-1 and content-3. " +
+    "Max 24 words. Never 'a post about'.",
+  "quote-content-3":
+    "An opening hook of a social post in the brand owner's first person. " +
+    "A story, a moment, or a sharp insight. Different in voice and angle from content-1 and content-2. " +
+    "Max 24 words. Never 'a post about'.",
+};
+
+const SYSTEM_PROMPT_BASE_EN = `You are a copywriter writing English text for premium personal-brand social cards.
+
+The goal: take a meta-description (how the brand owner thinks about their signal) and turn it into text ready to publish on a 1080x1080 card.
+
+Hard rules:
+
+1. Short. A card that is not absorbed in one read is a dead card. Aim for 8-22 words total.
+2. Every word speaks to the AUDIENCE, not to the brand owner. If the source says "your signal points to..." the card says "I help..." or addresses the reader.
+3. Forbidden: "a post about", "content about", "your signal points", "the direction opening", "a process of". Those are descriptions, not content.
+4. A natural human voice, as if the person posted it themselves. No marketing whitewash like "your journey", "your transformation awaits", "your time is now".
+5. No emoji, no quotation marks around the text (the card itself is the quote), no horizontal rules, no hashtags, no em dashes (plain hyphen only), no exclamation marks.
+6. Output in English only.
+
+`;
+
 export async function writeCardText(args: {
   type:        CardType;
   sourceText:  string;
   signal:      string;
   occupation:  string | null;
+  language?:   "he" | "en";
 }): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
   try {
-    const system = SYSTEM_PROMPT_BASE +
-      `תפקיד הכרטיס שאתה כותב עכשיו:\n${PURPOSE[args.type]}`;
+    const en = args.language === "en";
+    const system = en
+      ? SYSTEM_PROMPT_BASE_EN + `The job of the card you are writing now:\n${PURPOSE_EN[args.type]}`
+      : SYSTEM_PROMPT_BASE + `תפקיד הכרטיס שאתה כותב עכשיו:\n${PURPOSE[args.type]}`;
 
-    const user = [
+    const user = en
+      ? [
+          "Context about the person:",
+          `- Their signal: "${args.signal}"`,
+          args.occupation && args.occupation.trim().length > 0
+            ? `- Occupation: ${args.occupation.trim()}`
+            : "- Occupation: not provided",
+          "",
+          "The source you are converting into the card text:",
+          `"${args.sourceText}"`,
+          "",
+          "Write ONLY the text that appears on the card. No preamble, no explanation, no surrounding quotes.",
+        ].join("\n")
+      : [
       "הקשר על האדם:",
       `- האות שלו: "${args.signal}"`,
       args.occupation && args.occupation.trim().length > 0

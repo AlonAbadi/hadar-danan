@@ -43,23 +43,35 @@ export default function EnHomePage() {
               beegood
             </span>
           </Link>
-          <Link
-            href="/en/reading"
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#0D0C0A",
-              background: "#C2973F",
-              border: "none",
-              borderRadius: 999,
-              padding: "9px 20px",
-              cursor: "pointer",
-              textDecoration: "none",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Start free &rarr;
-          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            {/* Escape hatch for Hebrew speakers geo-routed here — sets the
+                language cookie so the redirect never bounces them back. */}
+            <a
+              href="/?lang=he"
+              lang="he"
+              dir="rtl"
+              style={{ fontSize: 13, fontWeight: 600, color: "rgba(242,237,228,0.6)", textDecoration: "none", whiteSpace: "nowrap" }}
+            >
+              עברית
+            </a>
+            <Link
+              href="/en/reading"
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#0D0C0A",
+                background: "#C2973F",
+                border: "none",
+                borderRadius: 999,
+                padding: "9px 20px",
+                cursor: "pointer",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Start free &rarr;
+            </Link>
+          </div>
         </div>
       </nav>
 

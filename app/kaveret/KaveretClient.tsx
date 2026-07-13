@@ -97,7 +97,7 @@ const VISUAL_ASSETS = [
 // Members always get logo-free assets — they paid; the beegood-branded look
 // exists only on the free card of the locked (pre-purchase) page.
 function assetUrl(extractionId: string, type: string, bg: "color" | "image" = "color", clean = true): string {
-  const q = `style=editorial&bg=${bg}&v=10${clean ? "&clean=1" : ""}`;
+  const q = `style=editorial&bg=${bg}&v=11${clean ? "&clean=1" : ""}`;
   return type === "share-card-default"
     ? `/api/signal/${extractionId}/share-card?${q}`
     : `/api/signal/${extractionId}/asset?type=${type}&${q}`;
