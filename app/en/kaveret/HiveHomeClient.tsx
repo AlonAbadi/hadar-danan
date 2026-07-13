@@ -6,6 +6,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { KAVERET_SEASONS_EN, KAVERET_SEASONS_INTRO_EN, type KaveretSeason } from "@/lib/kaveret-seasons";
 import Image from "next/image";
 
 const BEE = "/beegood_logo.png";
@@ -395,10 +396,47 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
         {/* ── Zone 1 · Your series ──────────────────────────────────── */}
         <section
           data-tab-index={1}
-          ref={(el) => { zonesRef.current[1] = el; }}
-          style={{ paddingTop: "clamp(52px, 8vh, 84px)" }}
+          ref={(el) => { zonesRef.current[1] = el; scriptsZoneRef.current = el; }}
+          style={{ paddingTop: "clamp(44px, 7vh, 72px)" }}
         >
-          <ZoneHead no="01" title="Your series" hint="Your first episode is free. A body of work that keeps growing" />
+          <ZoneHead no="01" title="Your episodes" hint="Read before the camera. Each script is yours alone" />
+
+          {data.scripts.length === 0 ? (
+            <div
+              style={{
+                marginTop: 18,
+                background: C.card,
+                border: `1px solid ${C.border}`,
+                borderRadius: 16,
+                padding: "22px 22px",
+              }}
+            >
+              <BuildShootDay extractionId={data.extractionId} />
+            </div>
+          ) : (
+            <>
+              <SeasonProgress filmed={data.filmedNumbers.length} total={seasonTotal} />
+              <EpisodesList
+                extractionId={data.extractionId}
+                scripts={data.scripts}
+                filmedNumbers={data.filmedNumbers}
+                identity={data.identity}
+                takesPerScript={data.takesPerScript}
+                takesCap={data.takesCap}
+                seasonUsed={data.seasonUsed}
+                seasonCap={data.seasonCap}
+                email={data.email}
+              />
+            </>
+          )}
+        </section>
+
+        {/* ── Zone 2 · Your texts ───────────────────────────────────── */}
+        <section
+          data-tab-index={1}
+                    style={{ paddingTop: "clamp(52px, 8vh, 84px)" }}
+        >
+          <ZoneHead no="02" title="Your series" hint="Your first episode is free. A body of work that keeps growing" />
 
           <div
             style={{
@@ -562,47 +600,10 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
           <p style={{ margin: "14px 0 0", fontSize: 13, lineHeight: 1.6, color: C.textFaint }}>
             More episodes are coming - we will invite you first when they open.
           </p>
+
+          <SeasonsRoadmapEn />
         </section>
 
-        {/* ── Zone 1b · Your episodes (scripts) ─────────────────────── */}
-        <section
-          data-tab-index={1}
-          ref={(el) => { scriptsZoneRef.current = el; }}
-          style={{ paddingTop: "clamp(44px, 7vh, 72px)" }}
-        >
-          <ZoneHead no="02" title="Your episodes" hint="Read before the camera. Each script is yours alone" />
-
-          {data.scripts.length === 0 ? (
-            <div
-              style={{
-                marginTop: 18,
-                background: C.card,
-                border: `1px solid ${C.border}`,
-                borderRadius: 16,
-                padding: "22px 22px",
-              }}
-            >
-              <BuildShootDay extractionId={data.extractionId} />
-            </div>
-          ) : (
-            <>
-              <SeasonProgress filmed={data.filmedNumbers.length} total={seasonTotal} />
-              <EpisodesList
-                extractionId={data.extractionId}
-                scripts={data.scripts}
-                filmedNumbers={data.filmedNumbers}
-                identity={data.identity}
-                takesPerScript={data.takesPerScript}
-                takesCap={data.takesCap}
-                seasonUsed={data.seasonUsed}
-                seasonCap={data.seasonCap}
-                email={data.email}
-              />
-            </>
-          )}
-        </section>
-
-        {/* ── Zone 2 · Your texts ───────────────────────────────────── */}
         <section
           data-tab-index={2}
           ref={(el) => { zonesRef.current[2] = el; }}
@@ -1434,30 +1435,55 @@ function EpisodesList({
                   </div>
                 ) : err ? (
                   <div style={{ fontSize: 12.5, color: C.red, marginTop: 2 }}>{err}</div>
-                ) : (
+                ) : n === 1 || !freePlan ? (
                   <div style={{ fontSize: 12.5, color: C.textFaint, marginTop: 2 }}>Not written yet</div>
+                ) : (
+                  <div style={{ fontSize: 12.5, color: C.textFaint, marginTop: 2 }}>
+                    Part of your full season - the script is written when the season opens
+                  </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => requestBuild(n)}
-                disabled={inFlight || !extractionId}
-                style={{
-                  flex: "0 0 auto",
-                  padding: "0 16px",
-                  minHeight: 38,
-                  background: "transparent",
-                  color: inFlight ? C.textFaint : err ? C.red : C.gold,
-                  border: `1px solid ${inFlight ? C.goldFaint : err ? "rgba(224,138,138,0.5)" : "rgba(194,151,63,0.55)"}`,
-                  borderRadius: 999,
-                  fontFamily: "inherit",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: inFlight ? "wait" : "pointer",
-                }}
-              >
-                {inFlight ? "Writing..." : err ? "Try again" : "Write this episode"}
-              </button>
+              {n === 1 || !freePlan ? (
+                <button
+                  type="button"
+                  onClick={() => requestBuild(n)}
+                  disabled={inFlight || !extractionId}
+                  style={{
+                    flex: "0 0 auto",
+                    padding: "0 16px",
+                    minHeight: 38,
+                    background: "transparent",
+                    color: inFlight ? C.textFaint : err ? C.red : C.gold,
+                    border: `1px solid ${inFlight ? C.goldFaint : err ? "rgba(224,138,138,0.5)" : "rgba(194,151,63,0.55)"}`,
+                    borderRadius: 999,
+                    fontFamily: "inherit",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: inFlight ? "wait" : "pointer",
+                  }}
+                >
+                  {inFlight ? "Writing..." : err ? "Try again" : "Write this episode"}
+                </button>
+              ) : (
+                <span
+                  style={{
+                    flex: "0 0 auto",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "0 14px",
+                    minHeight: 38,
+                    background: "rgba(194,151,63,0.07)",
+                    color: C.gold,
+                    border: "1px dashed rgba(194,151,63,0.4)",
+                    borderRadius: 999,
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    cursor: "default",
+                  }}
+                >
+                  Opening soon
+                </span>
+              )}
             </div>
           );
         }
@@ -1922,5 +1948,116 @@ function ViewerPill({
       {children}
       <span>{label}</span>
     </button>
+  );
+}
+
+
+// ── SeasonsRoadmapEn — the subscription pipeline, like the Hebrew home ────
+// Same taxonomy (lib/kaveret-seasons KAVERET_SEASONS_EN): season one live,
+// the rest as teasers. Tap a card to expand what/why.
+function SeasonsRoadmapEn() {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const seasons = KAVERET_SEASONS_EN;
+  const visible = showAll ? seasons : seasons.slice(0, 5);
+  const open = openIdx !== null ? seasons.find((x) => x.number === openIdx) ?? null : null;
+
+  const statusLabel = (st: KaveretSeason["status"]): string =>
+    st === "live" ? "Your season" : st === "next" ? "Next season" : st === "coming" ? "Coming soon" : "Later";
+
+  return (
+    <div style={{ marginTop: 34, borderTop: `1px solid ${C.border}`, paddingTop: 26 }}>
+      <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: C.gold }}>
+        The season map
+      </div>
+      <p style={{ margin: "10px 0 0", fontSize: 13.5, lineHeight: 1.6, color: C.textMute, maxWidth: "52ch" }}>
+        {KAVERET_SEASONS_INTRO_EN}
+      </p>
+      <div style={{ display: "flex", gap: 10, overflowX: "auto", padding: "18px 2px 6px", scrollbarWidth: "none" }}>
+        {visible.map((sn) => {
+          const isOpen = openIdx === sn.number;
+          const live = sn.status === "live";
+          return (
+            <button
+              key={sn.number}
+              type="button"
+              onClick={() => setOpenIdx(isOpen ? null : sn.number)}
+              style={{
+                flex: "0 0 205px",
+                textAlign: "left",
+                fontFamily: "inherit",
+                cursor: "pointer",
+                background: live ? "linear-gradient(135deg, rgba(194,151,63,0.14), rgba(194,151,63,0.04))" : C.card,
+                border: live ? "1px solid rgba(194,151,63,0.5)" : isOpen ? `1px solid rgba(194,151,63,0.4)` : `1px solid ${C.border}`,
+                borderRadius: 14,
+                padding: "16px 16px 14px",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: C.textFaint }}>
+                  SEASON {String(sn.number).padStart(2, "0")}
+                </span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    letterSpacing: "0.06em",
+                    color: live ? "#15130F" : C.gold,
+                    background: live ? C.gold : "rgba(194,151,63,0.1)",
+                    border: live ? "none" : "1px solid rgba(194,151,63,0.3)",
+                    borderRadius: 999,
+                    padding: "3px 9px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {statusLabel(sn.status)}
+                </span>
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginTop: 10, lineHeight: 1.25 }}>{sn.title}</div>
+              <p style={{ margin: "6px 0 0", fontSize: 12, lineHeight: 1.5, color: C.textMute }}>{sn.tagline}</p>
+              <div style={{ marginTop: 10, fontSize: 11.5, color: C.textFaint }}>{sn.episodes} episodes</div>
+            </button>
+          );
+        })}
+        {!showAll && seasons.length > visible.length ? (
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            style={{
+              flex: "0 0 auto",
+              alignSelf: "center",
+              fontFamily: "inherit",
+              background: "transparent",
+              border: "none",
+              color: C.gold,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              padding: "0 10px",
+            }}
+          >
+            {seasons.length - visible.length} more seasons &rarr;
+          </button>
+        ) : null}
+      </div>
+      {open ? (
+        <div
+          style={{
+            marginTop: 8,
+            background: C.card,
+            border: "1px solid rgba(194,151,63,0.3)",
+            borderRadius: 14,
+            padding: "18px 20px",
+          }}
+        >
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: C.text }}>
+            Season {String(open.number).padStart(2, "0")} · {open.title}
+          </div>
+          <p style={{ margin: "10px 0 0", fontSize: 13.5, lineHeight: 1.65, color: C.textSoft }}>{open.what}</p>
+          <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.6, color: C.textMute }}>{open.why}</p>
+        </div>
+      ) : null}
+    </div>
   );
 }

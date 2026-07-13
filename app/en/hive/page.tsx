@@ -158,10 +158,10 @@ export default function EnHivePage() {
             href="/en/reading"
             style={{ display: "block", textAlign: "center", background: `linear-gradient(135deg, ${C.goldHi}, ${C.gold}, ${C.goldDeep})`, color: "#15130F", borderRadius: 12, padding: "15px 18px", fontSize: 16, fontWeight: 800, textDecoration: "none" }}
           >
-            Start with your reading - free
+            Reveal my signal - free
           </Link>
           <div style={{ textAlign: "center", fontSize: 12.5, color: C.mut, marginTop: 18, lineHeight: 1.6, borderTop: `1px solid ${C.line}`, paddingTop: 14 }}>
-            The reading finds your signal. Everything in the hive is built from it - including your free first episode.
+            Everything starts from evidence: the reading names your signal, and everything in the hive - including your free first episode - is built from it.
           </div>
         </div>
 

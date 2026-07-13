@@ -709,10 +709,10 @@ export function ReadingClient({ previewKey, isTest }: Props) {
                   color: C.fg,
                 }}
               >
-                Everyone makes content.<br />Why would they choose you?
+                Your business keeps revealing<br />the same pattern.
               </h1>
               <p style={{ fontSize: 16, lineHeight: 1.7, color: C.muted, margin: 0 }}>
-                Most businesses cannot answer that, so they make more and more content. And it does not hold. In the next few minutes we get to the root: <b style={{ color: C.gold }}>the reason clients choose you specifically.</b> Three questions. Free.
+                Most founders never learn to name it - so they keep producing, and it keeps sounding like everyone else. In the next few minutes we read the evidence and name it: <b style={{ color: C.gold }}>your signal - the reason clients choose you specifically.</b> Free, in your own words.
               </p>
               <div style={{ borderTop: `1px solid ${C.line}`, margin: "26px auto 0", width: 56 }} />
             </div>
