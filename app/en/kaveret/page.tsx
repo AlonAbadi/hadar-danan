@@ -117,7 +117,16 @@ export default async function EnKaveretPage() {
       ? v.client_interview_questions.filter((q: unknown) => typeof q === "string" && q.length > 0)
       : undefined,
   });
-  const scripts = collectShootDayVideos(signal).map(toScript);
+  // Free plan: the full text of episodes 2-7 never leaves the server - the
+  // client gets titles only (the UI is title-only anyway, and the script
+  // must not be readable through the page payload).
+  const scripts = collectShootDayVideos(signal)
+    .map(toScript)
+    .map((sc) =>
+      sc.number === 1
+        ? sc
+        : { ...sc, hook: "", body: "", cta: "", interviewQuestions: undefined }
+    );
 
   const data: HiveHomeData = {
     firstName: userData.name?.split(" ")[0] ?? "",
