@@ -160,7 +160,6 @@ export function KaveretClient({
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [viewerEditId, setViewerEditId] = useState<string | null>(null);
-  const [assetBg, setAssetBg] = useState<"color" | "image">("color");
   // Reels hydrate after first paint (server no longer signs storage URLs on
   // the critical path). Shape mirrors the old server assembly.
   const [reels, setReels] = useState<KaveretData["reels"]>(data.reels);
@@ -708,8 +707,6 @@ export function KaveretClient({
               <div style={{ display: "flex", flexWrap: "wrap", gap: "10px 14px", margin: "14px 0 2px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, background: "#141820", border: "1px solid #2C323E", borderRadius: 999, padding: 5 }}>
                   <span style={{ color: "#9E9990", fontSize: 12, fontWeight: 300, marginInlineStart: 12, marginInlineEnd: 4 }}>עיצוב</span>
-                  <AssetPill on={assetBg === "color"} onClick={() => setAssetBg("color")}>צבע נקי</AssetPill>
-                  <AssetPill on={assetBg === "image"} onClick={() => setAssetBg("image")}>תמונה ברמה גבוהה</AssetPill>
                 </div>
               </div>
               <div className={sty.carousel}>
@@ -718,7 +715,7 @@ export function KaveretClient({
                     <div className={sty.frame} style={{ padding: 0, aspectRatio: "4 / 5" }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={assetUrl(data.extractionId!, a.type, assetBg)}
+                        src={assetUrl(data.extractionId!, a.type, "color")}
                         alt={a.label}
                         loading="lazy"
                         style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 18 }}
@@ -729,7 +726,7 @@ export function KaveretClient({
                       <a
                         className={`${sty.btnCopy} ${sty.btnCard}`}
                         style={{ textDecoration: "none" }}
-                        href={assetUrl(data.extractionId!, a.type, assetBg)}
+                        href={assetUrl(data.extractionId!, a.type, "color")}
                         download
                       >
                         <span>הורדת הנכס</span>

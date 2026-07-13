@@ -131,7 +131,6 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
   const [published, setPublished] = useState<Record<string, boolean>>({});
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
   const [viewerEditId, setViewerEditId] = useState<string | null>(null);
-  const [assetBg, setAssetBg] = useState<"color" | "image">("color");
   const [reels, setReels] = useState<Reel[]>([]);
 
   // Reels hydrate after first paint — same API the Hebrew home uses.
@@ -674,8 +673,6 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
                   }}
                 >
                   <span style={{ color: C.textFaint, fontSize: 12, margin: "0 6px 0 10px" }}>Backdrop</span>
-                  <BgPill on={assetBg === "color"} onClick={() => setAssetBg("color")}>Clean color</BgPill>
-                  <BgPill on={assetBg === "image"} onClick={() => setAssetBg("image")}>Photo</BgPill>
                 </span>
               </div>
               <div
@@ -702,7 +699,7 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={assetUrl(data.extractionId!, a.type, assetBg)}
+                        src={assetUrl(data.extractionId!, a.type, "color")}
                         alt={a.label}
                         loading="lazy"
                         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
@@ -712,7 +709,7 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
                       {a.label}
                     </div>
                     <a
-                      href={assetUrl(data.extractionId!, a.type, assetBg)}
+                      href={assetUrl(data.extractionId!, a.type, "color")}
                       download
                       style={{
                         display: "inline-block",
@@ -1065,7 +1062,9 @@ function SeasonProgress({ filmed, total }: { filmed: number; total: number }) {
         }}
       >
         {filmed}/{total}
-        <span style={{ color: C.textFaint, fontWeight: 500, marginLeft: 5 }}>filmed</span>
+        <span style={{ color: C.textFaint, fontWeight: 500, marginLeft: 5 }}>
+          {total <= 1 ? "free episode filmed" : "filmed"}
+        </span>
       </span>
       <div style={{ display: "flex", gap: 4, flex: 1 }}>
         {cells.map((done, i) => (
@@ -1320,6 +1319,26 @@ function EpisodesList({
             The core of the season
           </span>
           <span style={{ fontSize: 15, lineHeight: 1.55, color: C.text }}>{identity}</span>
+        </div>
+      )}
+
+      {freePlan && !seasonFull && (
+        <div
+          style={{
+            padding: "16px 20px",
+            background: "rgba(194,151,63,0.06)",
+            border: "1px dashed rgba(194,151,63,0.4)",
+            borderRadius: 14,
+            marginBottom: 6,
+          }}
+        >
+          <div style={{ fontSize: 14.5, fontWeight: 800, color: C.gold, lineHeight: 1.4 }}>
+            One episode is on us
+          </div>
+          <div style={{ fontSize: 13.5, color: C.textMute, lineHeight: 1.65, marginTop: 5 }}>
+            All seven scripts below are yours to read. Filming is open for one free episode - pick
+            the script that feels most like you, and film that one. The rest of the season opens later.
+          </div>
         </div>
       )}
 

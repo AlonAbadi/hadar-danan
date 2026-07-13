@@ -572,10 +572,13 @@ export async function GET(
   const styleParam = req.nextUrl.searchParams.get("style") ?? "";
   const style: VisualStyle = isValidStyle(styleParam) ? styleParam : DEFAULT_STYLE;
   const cleanParam = req.nextUrl.searchParams.get("clean") === "1";
-  // bg=image → high-quality AI background. Anything else (default) → flat color
-  // from the palette (no AI generation = free, and the new default).
-  const wantImage  = req.nextUrl.searchParams.get("bg") === "image";
-  const forceAi    = req.nextUrl.searchParams.get("force_ai") === "1";
+  // Image backgrounds RETIRED (Alon 2026-07-13: "לא יפה וגם גוזל משאבים") —
+  // every card renders on a flat palette color. bg=image is coerced to color
+  // so no caller (old links, cached emails, manual URLs) can trigger the
+  // Replicate generation spend. The rendering code below stays for a
+  // possible future revival.
+  const wantImage  = false;
+  const forceAi    = false;
 
   const supabase = createServerClient();
 
