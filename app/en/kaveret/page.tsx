@@ -52,7 +52,7 @@ export default async function EnKaveretPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: userData } = await (db as any)
     .from("users")
-    .select("id, name, hive_status")
+    .select("id, name, email, hive_status")
     .eq("auth_id", authUser.id)
     .maybeSingle();
   if (!userData) redirect("/account");
@@ -138,6 +138,7 @@ export default async function EnKaveretPage() {
     takesPerScript,
     seasonUsed,
     seasonCap: SEASON_CAP_EN_FREE,
+    email: userData.email ?? "",
     takesCap: 3,
   };
 

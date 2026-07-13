@@ -58,6 +58,7 @@ export interface HiveHomeData {
   takesPerScript: Record<number, number>;
   seasonUsed: number;
   seasonCap: number;
+  email: string;
   takesCap: number;
 }
 
@@ -596,6 +597,7 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
                 takesCap={data.takesCap}
                 seasonUsed={data.seasonUsed}
                 seasonCap={data.seasonCap}
+                email={data.email}
               />
             </>
           )}
@@ -1199,6 +1201,7 @@ function EpisodesList({
   takesCap,
   seasonUsed,
   seasonCap,
+  email,
 }: {
   extractionId: string | null;
   scripts: EpisodeScript[];
@@ -1208,8 +1211,29 @@ function EpisodesList({
   takesCap: number;
   seasonUsed: number;
   seasonCap: number;
+  email: string;
 }) {
   const seasonFull = seasonUsed >= seasonCap;
+  // Free launch plan (one episode): a full season is an ACHIEVEMENT, not an
+  // error. Locked rows read as the upcoming season, and the CTA is a
+  // first-in-line waitlist — never "delete an episode".
+  const freePlan = seasonCap <= 1;
+  const [notifyState, setNotifyState] = useState<"idle" | "busy" | "done" | "err">("idle");
+  const requestNotify = useCallback(async () => {
+    if (notifyState === "busy" || notifyState === "done") return;
+    setNotifyState("busy");
+    try {
+      const r = await fetch("/api/en/hive/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!r.ok) throw new Error(String(r.status));
+      setNotifyState("done");
+    } catch {
+      setNotifyState("err");
+    }
+  }, [email, notifyState]);
   const [localScripts, setLocalScripts] = useState<EpisodeScript[]>(scripts);
   const [generating, setGenerating] = useState<Set<number>>(new Set());
   const [errByNumber, setErrByNumber] = useState<Record<number, string>>({});
@@ -1299,6 +1323,55 @@ function EpisodesList({
         </div>
       )}
 
+      {freePlan && seasonFull && (
+        <div
+          style={{
+            padding: "18px 20px",
+            background: "linear-gradient(135deg, rgba(194,151,63,0.12), rgba(194,151,63,0.04))",
+            border: "1px solid rgba(194,151,63,0.35)",
+            borderRadius: 14,
+            marginBottom: 6,
+          }}
+        >
+          <div style={{ fontSize: 15.5, fontWeight: 800, color: C.text, lineHeight: 1.4 }}>
+            Your first episode is on air.
+          </div>
+          <div style={{ fontSize: 13.5, color: C.textMute, lineHeight: 1.65, marginTop: 6 }}>
+            The rest of your season is already written - six more episodes, each one drawn from your
+            signal. We open the doors gradually, and people on the list go first.
+          </div>
+          {notifyState === "done" ? (
+            <div style={{ marginTop: 12, fontSize: 13.5, fontWeight: 700, color: C.green }}>
+              You are on the list. We will write to you the moment episodes open.
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={requestNotify}
+              disabled={notifyState === "busy"}
+              style={{
+                marginTop: 12,
+                background: `linear-gradient(135deg, ${C.gold}, ${C.goldDeep})`,
+                color: "#15130F",
+                border: "none",
+                borderRadius: 999,
+                padding: "10px 18px",
+                fontFamily: "inherit",
+                fontSize: 13.5,
+                fontWeight: 800,
+                cursor: notifyState === "busy" ? "wait" : "pointer",
+              }}
+            >
+              {notifyState === "busy"
+                ? "One moment..."
+                : notifyState === "err"
+                ? "Try again"
+                : "Tell me when episodes open"}
+            </button>
+          )}
+        </div>
+      )}
+
       {Array.from({ length: 7 }, (_, i) => i + 1).map((n) => {
         const s = scriptByNumber.get(n);
         const filmed = s ? filmedNumbers.includes(n) : false;
@@ -1374,14 +1447,17 @@ function EpisodesList({
         const takes = takesPerScript[n] ?? 0;
         const takesFull = takes >= takesCap;
         const blocked = seasonFull || takesFull;
+        const freeLocked = freePlan && seasonFull && !filmed;
         const statusLabel = filmed
           ? "Filmed"
-          : seasonFull
-            ? `Season full (${seasonCap}/${seasonCap} episodes) - delete an episode first`
-            : takesFull
-              ? `This episode is full (${takesCap}/${takesCap} takes) - delete a take first`
-              : "Ready to film";
-        const statusColor = filmed ? C.green : blocked ? C.red : C.gold;
+          : freeLocked
+            ? "Written and waiting - opens with the full season"
+            : seasonFull
+              ? `Season full (${seasonCap}/${seasonCap} episodes) - delete an episode first`
+              : takesFull
+                ? `This episode is full (${takesCap}/${takesCap} takes) - delete a take first`
+                : "Ready to film";
+        const statusColor = filmed ? C.green : freeLocked ? C.textMute : blocked ? C.red : C.gold;
 
         return (
           <details
@@ -1420,16 +1496,16 @@ function EpisodesList({
                     alignItems: "center",
                     padding: "0 14px",
                     minHeight: 38,
-                    background: "rgba(224,138,138,0.08)",
-                    color: C.textFaint,
-                    border: "1px dashed rgba(224,138,138,0.35)",
+                    background: freePlan ? "rgba(194,151,63,0.07)" : "rgba(224,138,138,0.08)",
+                    color: freePlan ? C.gold : C.textFaint,
+                    border: freePlan ? "1px dashed rgba(194,151,63,0.4)" : "1px dashed rgba(224,138,138,0.35)",
                     borderRadius: 999,
                     fontSize: 12.5,
                     fontWeight: 700,
-                    cursor: "not-allowed",
+                    cursor: "default",
                   }}
                 >
-                  Filming closed
+                  {freePlan ? "Opening soon" : "Filming closed"}
                 </span>
               ) : blocked && filmed ? null : (
                 <a

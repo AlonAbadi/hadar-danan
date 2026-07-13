@@ -51,6 +51,16 @@ export async function POST(req: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (db as any).from("users").update({ utm_source: "en_hive_waitlist" }).eq("id", existing.id);
     }
+    // Existing user (e.g. a free member who used their episode and wants
+    // more) — record the demand signal; this is the free-launch metric.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (db as any).from("events").insert({
+        user_id: existing.id,
+        type: "EN_MORE_EPISODES_INTEREST",
+        metadata: { source: "hive_home_waitlist" },
+      });
+    } catch { /* best effort */ }
   } else {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: insErr } = await (db as any).from("users").insert({
