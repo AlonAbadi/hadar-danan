@@ -5,7 +5,6 @@
  * carrying a signed token (?t=<extractionId.hmac>) — no auth account needed.
  * Mirrors the Hebrew /kaveret/i data build (same tables, same fields); the
  * offer routing is the English one:
- *   sensitive — distress_money or crisis/crisis_soft ending → warm path, no sale
  *   concierge — routed_ending "concierge" → working-session framing
  *   hive      — everyone else → The Signal Hive, first episode free
  */
@@ -30,8 +29,6 @@ export const viewport: Viewport = {
   themeColor: "#0D0C0A",
 };
 
-// Sensitive routings (crisis endings / money distress) get the warm path
-// with no sale layer at all.
 async function buildVisitorData(extractionId: string, token: string): Promise<VisitorDataEn | null> {
   const db = createServerClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,15 +46,12 @@ async function buildVisitorData(extractionId: string, token: string): Promise<Vi
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sig = ext.signal as any;
-  const sensitive =
-    ext.distress_money === true ||
-    ext.routed_ending === "crisis" ||
-    ext.routed_ending === "crisis_soft";
-  const offer: VisitorDataEn["offer"] = sensitive
-    ? "sensitive"
-    : ext.routed_ending === "concierge"
-      ? "concierge"
-      : "hive";
+  // No sensitive gate in English (Alon 2026-07-13): the hive is FREE, so
+  // nothing is "sold to fresh pain" — every lead gets their signal and the
+  // door to the broadcast room. Legacy crisis_soft rows (the retired keyword
+  // floor) get the standard free path too.
+  const offer: VisitorDataEn["offer"] =
+    ext.routed_ending === "concierge" ? "concierge" : "hive";
 
   return {
     firstName: leadUser?.name?.split(" ")[0] ?? "",

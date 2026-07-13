@@ -623,21 +623,21 @@ export async function POST(req: NextRequest) {
       v2Route = { ending: "hive", cell: "route_error" };
     }
   } else if (isV2En) {
-    // English routing: no Hebrew evidence LLM. Deterministic crisis floor +
-    // the routing_signal read. Signal Hive is THE English product — hive is
-    // the default ending; only a clearly established/high-fit founder routes
-    // to the concierge (strategy) lane, and fresh pain routes out of sale.
+    // English routing: no Hebrew evidence LLM — the routing_signal read only.
+    // The Signal Hive is THE English product and it is FREE (launch model),
+    // so there is no crisis gate here: nothing is sold, and the questionnaire
+    // explicitly invites hard chapters — a heavy word in an answer must not
+    // hide the product (field case 2026-07-13: "abusive" in a past-chapter
+    // answer routed a healthy lead to the WhatsApp-only screen). The keyword
+    // floor is kept as a metadata flag for admin eyes only.
     try {
       const ansRec = answers as Record<string, string | undefined>;
-      if (crisisFloorEn(ansRec)) {
-        v2Route = { ending: "crisis_soft", cell: "en_crisis" };
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const enBucket = bucketFromRoutingEn(parsed.routing_signal as any);
-        v2Route = enBucket === "premium"
-          ? { ending: "concierge", cell: "en_premium" }
-          : { ending: "hive", cell: "en_hive" };
-      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const enBucket = bucketFromRoutingEn(parsed.routing_signal as any);
+      const crisisFlag = crisisFloorEn(ansRec);
+      v2Route = enBucket === "premium"
+        ? { ending: "concierge", cell: crisisFlag ? "en_premium_flagged" : "en_premium" }
+        : { ending: "hive", cell: crisisFlag ? "en_hive_flagged" : "en_hive" };
     } catch {
       v2Route = { ending: "hive", cell: "en_route_error" };
     }
