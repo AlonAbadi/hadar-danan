@@ -190,7 +190,7 @@ export async function getImmediateLeads(
         .order("generated_at", { ascending: false })
         .limit(300),
       safeFrom(supabase, "purchases")
-        .select("user_id")
+        .select("user_id, product")
         .neq("is_test", true)
         .eq("status", "completed"),
       safeFrom(supabase, "purchases")
@@ -201,6 +201,17 @@ export async function getImmediateLeads(
 
     const paidUsers = new Set<string>(
       ((paidRes.data ?? []) as { user_id: string | null }[])
+        .map((p) => p.user_id)
+        .filter((v): v is string => !!v),
+    );
+
+    // Existing high-ticket customers — already closed the top tier, so they are
+    // NOT "book a meeting" leads. Drop them from Hadar's WhatsApp list.
+    // (Only catches RECORDED purchases; offline/premium sales that were never
+    // entered still leak through — see the CRM data-integrity note.)
+    const highTicketCustomers = new Set<string>(
+      ((paidRes.data ?? []) as { user_id: string | null; product: string | null }[])
+        .filter((p) => p.product === "strategy_4000" || p.product === "premium_14000")
         .map((p) => p.user_id)
         .filter((v): v is string => !!v),
     );
@@ -283,6 +294,9 @@ export async function getImmediateLeads(
       const uid = (u?.id ?? row.user_id) as string | null;
       if (!uid || seen.has(uid)) continue;
       seen.add(uid);
+      // Existing high-ticket customer (booked a meeting, or bought strategy/
+      // premium) → not a lead to close. Skip.
+      if (u?.status === "booked" || highTicketCustomers.has(uid)) continue;
       const name = u?.name?.trim() || "—";
       const rawStage = stageOf(u);
       const ctx = contextOf(u, {
