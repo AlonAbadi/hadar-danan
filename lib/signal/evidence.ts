@@ -132,11 +132,17 @@ export type V2Ending = "concierge" | "hive" | "pre_revenue" | "crisis_soft";
  * The truth table (AUDIT §ג). Decision order is mandatory:
  * crisis → key-1 presence → table → phone gate.
  *
- *  A) HIGH + evidence≥0.72 + phone → concierge (the only premium lane)
- *  B) LOW  + weak                  → hive (₪590 by day-2 email)
- *  C) HIGH + weak                  → hive-warm (review queue tag, hive ending)
- *  D) LOW  + strong (or years≥7)   → hive + flag (weekly re-scan)
- *  Pre-revenue: declared A + evidence<0.3 (both keys agree) → gift-only.
+ *  A) ESTABLISHED (key1 C/D) + phone → concierge (worth a personal WhatsApp)
+ *  B) ESTABLISHED + no phone         → hive (unreachable, can't promise contact)
+ *  C) EARLY (key1 A/B)               → hive (₪590 by day-2 email)
+ *  D) veteran tenure ≥7y (A/B)       → hive + flag (weekly re-scan)
+ *  Pre-revenue: declared A + evidence<0.3 → gift-only.
+ *
+ * NOTE (2026-07-14): concierge routes on the SELF-DECLARED business stage
+ * (key1) + reachability, NOT on evidence_score. The identity-first
+ * questionnaire asks about gift/story, not revenue, so the LLM evidence read is
+ * ~0 for nearly everyone and concierge never fired (0/148). key1 is a reliable
+ * self-report; an established business that left a phone is meeting-worthy.
  */
 export function routeV2Ending(opts: {
   crisis:        boolean;
@@ -156,18 +162,18 @@ export function routeV2Ending(opts: {
 
   if (key1 === "A" && evidence < 0.3) return { ending: "pre_revenue", cell: "pre_revenue" };
 
-  if (high && evidence >= 0.72) {
-    // Phone is a hard gate for the concierge PROMISE — an unreachable
-    // boiling lead is a broken promise. Without phone: warm queue.
+  // Established business (C/D) is the premium-fit stage. Phone is a hard gate
+  // for the concierge PROMISE — an unreachable lead is a broken promise, so
+  // without a phone they go to the warm (hive) queue instead.
+  if (high) {
     return phoneGiven
-      ? { ending: "concierge", cell: "A_boiling" }
-      : { ending: "hive", cell: "C_high_no_phone" };
+      ? { ending: "concierge", cell: "established_reachable" }
+      : { ending: "hive", cell: "established_no_phone" };
   }
 
   // Veteran override: extracted tenure ≥7y beats a modest self-declaration —
   // a self-deprecating veteran must not fall into the ₪590 anchor unseen.
-  if (!high && years >= 7) return { ending: "hive", cell: "D_veteran_flag" };
+  if (years >= 7) return { ending: "hive", cell: "veteran_flag" };
 
-  if (high) return { ending: "hive", cell: "C_high_weak" };
-  return { ending: "hive", cell: "B_low_weak" };
+  return { ending: "hive", cell: "early_stage" };
 }
