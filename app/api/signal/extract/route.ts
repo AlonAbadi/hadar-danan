@@ -780,6 +780,7 @@ export async function POST(req: NextRequest) {
     // "אסור למכור לכאב טרי": a crisis-floor lead gets no commercial chain at
     // all — the reading stays a gift, the human door handles the rest.
     const suppressChain = v2Route?.ending === "crisis_soft";
+    const isConcierge  = v2Route?.ending === "concierge";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: rawSeqs } = suppressChain ? { data: [] } : await (db as any)
@@ -787,11 +788,13 @@ export async function POST(req: NextRequest) {
       .select("id, subject, template_key, delay_hours")
       .eq("trigger_event", isV2En ? "SIGNAL_EXTRACTED_EN" : "SIGNAL_EXTRACTED")
       .eq("active", true);
-    // v2 leads get ONLY the welcome from the legacy chain — the day1-12
-    // nurture pitches by the OLD bucket and would collide with the kriah
-    // day-2 offer (double, contradictory selling).
+    // Concierge (meeting-worthy) leads get the FULL nurture chain — every email
+    // points at the ₪4,000 meeting (bucket forced to "strategy" below). They get
+    // no ₪590 kriah offer, so there's no collision. Other v2 leads (hive /
+    // pre-revenue) still get ONLY the welcome: their day1-12 would pitch the old
+    // bucket and collide with the day-2 kriah ₪590 offer.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const seqs = isV2Run
+    const seqs = (isV2Run && !isConcierge)
       ? (rawSeqs ?? []).filter((q: any) =>
           q.template_key === (isV2En ? "signal_welcome_en" : "signal_welcome"))
       : rawSeqs;
@@ -817,7 +820,8 @@ export async function POST(req: NextRequest) {
             sequence_id:  seq.id,
             subject:      seq.subject,
             template_key: seq.template_key,
-            bucket:       bucketDecision.bucket,
+            // Concierge → the meeting track (signalOffer branches on bucket).
+            bucket:       isConcierge ? "strategy" : bucketDecision.bucket,
             is_test:      isTestRun,
           },
           run_at: new Date(now + (seq.delay_hours ?? 0) * 60 * 60 * 1000).toISOString(),
@@ -878,7 +882,7 @@ export async function POST(req: NextRequest) {
                 sequence_id:  seq.id,
                 subject:      seq.subject,
                 template_key: seq.template_key,
-                bucket:       bucketDecision.bucket,
+                bucket:       isConcierge ? "strategy" : bucketDecision.bucket,
                 is_test:      isTestRun,
               },
               run_at: new Date(now + (seq.delay_hours ?? 72) * 60 * 60 * 1000).toISOString(),

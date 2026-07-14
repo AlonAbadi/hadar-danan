@@ -44,37 +44,26 @@ export async function handleSendEmail(
 
   if (existing) return; // already sent - idempotent
 
-  // ── Suppress signal offer emails once the lead has converted ──
-  // The value/story emails (day1/day3) are harmless, but stop pitching the
-  // product (day5/8/12) to someone who already bought.
-  const SUPPRESS_IF_PURCHASED = new Set(["signal_day5", "signal_day8", "signal_day12", "kriah_hive_offer", "kriah_hive_offer_en"]);
-  if (SUPPRESS_IF_PURCHASED.has(template_key)) {
-    const { data: purchased } = await supabase
-      .from("purchases")
-      .select("id")
-      .eq("user_id", user_id)
-      .eq("status", "completed")
-      .limit(1)
-      .maybeSingle();
-    if (purchased) return; // already a customer — don't keep selling
-  }
-
-  // ── Suppress the boiling-lead fallback once it's no longer needed ──
-  // signal_strategy_fallback exists ONLY for a strategy lead who, 3 days in,
-  // still hasn't moved: skip it if a meeting was booked, the lead was
-  // dismissed, the status advanced past "lead machine" territory, or they
-  // already bought something (any purchase means the funnel worked).
-  if (template_key === "signal_strategy_fallback" || template_key === "signal_strategy_fallback_en") {
+  // ── Stop pitching once the lead is handled ──
+  // Any offer/pitch email (the concierge meeting chain day5/8/12, the ₪590
+  // kriah offer, the strategy fallback) backs off the moment Hadar owns the
+  // lead — she opened a personal WhatsApp thread, booked a meeting, or dismissed
+  // it — or the status advanced, or they already bought. An automated pitch
+  // landing mid-conversation reads robotic; her thread owns the lead now.
+  // (day1/day3 stay: they're value/story, and fire before Hadar can act.)
+  const SUPPRESS_IF_HANDLED = new Set([
+    "signal_day5", "signal_day8", "signal_day12",
+    "kriah_hive_offer", "kriah_hive_offer_en",
+    "signal_strategy_fallback", "signal_strategy_fallback_en",
+  ]);
+  if (SUPPRESS_IF_HANDLED.has(template_key)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: u } = await (supabase as any)
       .from("users")
       .select("status, handoff_stage")
       .eq("id", user_id)
       .maybeSingle();
-    if (u?.handoff_stage === "meeting_booked" || u?.handoff_stage === "dismissed") return;
-    // Hadar already opened a personal WhatsApp thread — an automated email
-    // landing mid-conversation reads robotic. Her thread owns the lead now.
-    if (u?.handoff_stage === "whatsapp_sent") return;
+    if (u?.handoff_stage === "meeting_booked" || u?.handoff_stage === "dismissed" || u?.handoff_stage === "whatsapp_sent") return;
     if (["booked", "buyer", "handled", "not_relevant"].includes(u?.status ?? "")) return;
     const { data: purchased } = await supabase
       .from("purchases")
@@ -83,7 +72,7 @@ export async function handleSendEmail(
       .eq("status", "completed")
       .limit(1)
       .maybeSingle();
-    if (purchased) return;
+    if (purchased) return; // already a customer — don't keep selling
   }
 
   // ── Magic link (passwordless login) ───────────────────────
