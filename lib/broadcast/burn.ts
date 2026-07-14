@@ -67,14 +67,17 @@ function transformCrop(
 export function buildVideoFilter(
   dims: VideoDims | null,
   assPath: string,
-  transform?: CaptionTransform | null
+  transform?: CaptionTransform | null,
+  phoneCapture = false
 ): VideoFilterPlan {
   const landscape = dims !== null && dims.effWidth > dims.effHeight;
   const appRotatedFromPortrait =
     landscape &&
     Math.abs(dims.rotation) % 180 === 90 &&
     dims.width < dims.height;
-  if (!landscape || appRotatedFromPortrait) {
+  // Phone captures are portrait-intent even as landscape buffers with no
+  // rotation tag (Android Chrome) — they belong in the 9:16 crop chain.
+  if (!landscape || appRotatedFromPortrait || phoneCapture) {
     // Base window: the 9:16 cover crop. Needs probed dims; without them (or
     // without a transform) the legacy cover chain runs.
     let cropChain = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920`;
@@ -183,7 +186,8 @@ export async function runBurnStage(edit: EditRow): Promise<void> {
     // Framing decision from the EFFECTIVE source dims (autorotation-aware).
     const dims = await probeVideoDims(inputPath);
     const assPath = path.join(dir, "captions.ass");
-    const plan = buildVideoFilter(dims, assPath, edit.captions?.transform ?? null);
+    const phoneCapture = /\.p\.(mp4|webm|mov)$/.test(take.storage_path ?? "");
+    const plan = buildVideoFilter(dims, assPath, edit.captions?.transform ?? null, phoneCapture);
 
     // ASS with approved lines only (mode 'none' approved an empty set —
     // the stamp still burns). Margins depend on the framing strategy.

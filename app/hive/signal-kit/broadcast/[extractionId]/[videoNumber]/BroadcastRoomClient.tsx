@@ -166,6 +166,7 @@ export function BroadcastRoomClient({
           extraction_id: extractionId,
           video_number: videoNumber,
           mime_type: mime === "video/quicktime" ? "video/quicktime" : "video/mp4",
+          capture_hint: isDesktopUA ? "desktop" : "phone",
         }),
       });
       if (res.status === 409) {
@@ -215,6 +216,7 @@ export function BroadcastRoomClient({
           extraction_id: extractionId,
           video_number: videoNumber,
           mime_type: take.mimeType,
+          capture_hint: isDesktopUA ? "desktop" : "phone",
         }),
       });
       if (res.status === 409) {

@@ -43,6 +43,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     };
 
     let takePreviewUrl: string | null = null;
+    let takeCapture: "phone" | "other" = "other";
     if (edit.status === "awaiting_captions") {
       const { data: take } = await db
         .from("broadcast_takes")
@@ -50,6 +51,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         .eq("id", edit.take_id)
         .maybeSingle();
       takePreviewUrl = await sign(take?.storage_path ?? null);
+      // ".p." in the object name = phone capture (portrait intent) — the
+      // approval editor must frame it 9:16 like the burn will.
+      if (/\.p\.(mp4|webm|mov)$/.test(take?.storage_path ?? "")) takeCapture = "phone";
     }
 
     let coverFrames: string[] | null = null;
@@ -74,6 +78,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       trim_start_ms: edit.trim_start_ms,
       trim_end_ms: edit.trim_end_ms,
       take_preview_url: takePreviewUrl,
+      take_capture: takeCapture,
       // Same-origin streaming proxy — the ONLY <video> source that streams
       // on non-Safari iOS browsers (cross-origin signed URLs don't).
       take_media_url:

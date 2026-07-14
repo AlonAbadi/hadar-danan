@@ -53,6 +53,12 @@ export async function POST(req: NextRequest) {
     const videoNumber = Number(body.video_number);
     const mime = typeof body.mime_type === "string" ? body.mime_type.split(";")[0] : "";
     const ext = EXT_BY_MIME[mime];
+    // Phone captures carry a portrait INTENT even when the sensor delivers a
+    // landscape buffer with no rotation tag (Android Chrome). The intent is
+    // encoded in the object name (".p.") — zero schema change — and the burn
+    // routes such takes into the 9:16 portrait chain (field case 2026-07-14:
+    // Android shipped a 4:3 "square" reel through the full-frame branch).
+    const phoneCapture = body.capture_hint === "phone";
     if (!extractionId || !Number.isInteger(videoNumber) || videoNumber < 1 || videoNumber > 12 || !ext) {
       return NextResponse.json({ error: "invalid_request" }, { status: 400 });
     }
@@ -92,7 +98,7 @@ export async function POST(req: NextRequest) {
     }
 
     const takeId = randomUUID();
-    const storagePath = `${session.authUserId}/takes/${takeId}.${ext}`;
+    const storagePath = `${session.authUserId}/takes/${takeId}.${phoneCapture ? "p." : ""}${ext}`;
     const { error } = await (db as any).from("broadcast_takes").insert({
       id: takeId,
       user_id: session.userId,

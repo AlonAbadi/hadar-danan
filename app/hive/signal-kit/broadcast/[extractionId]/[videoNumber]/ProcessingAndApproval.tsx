@@ -29,6 +29,7 @@ interface EditSnapshot {
   trim_end_ms: number | null;
   take_preview_url: string | null;
   take_media_url: string | null;
+  take_capture?: "phone" | "other";
   output_url: string | null;
   output_download_url: string | null;
   cover_frames: string[] | null;
@@ -459,6 +460,7 @@ function CaptionApproval({
             videoRef={previewRef}
             transform={transform}
             onChange={setTransform}
+            forcePortrait={snap.take_capture === "phone"}
           />
         ) : null}
         {/* WhatsApp-style trim: frame strip + draggable start/end handles */}
@@ -976,11 +978,15 @@ function ZoomPanPreview({
   videoRef,
   transform,
   onChange,
+  forcePortrait = false,
 }: {
   src: string;
   videoRef: React.MutableRefObject<HTMLVideoElement | null>;
   transform: CaptionTransform;
   onChange: (t: CaptionTransform) => void;
+  // Phone captures burn through the 9:16 chain even when the buffer is
+  // landscape (Android, no rotation tag) — the editor must frame the same.
+  forcePortrait?: boolean;
 }) {
   const boxRef = useRef<HTMLDivElement | null>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
@@ -1002,7 +1008,7 @@ function ZoomPanPreview({
     return () => ro.disconnect();
   }, []);
 
-  const portrait = vid.w > 0 && vid.h > vid.w;
+  const portrait = forcePortrait || (vid.w > 0 && vid.h > vid.w);
   const s0 = vid.w && box.w ? Math.max(box.w / vid.w, box.h / vid.h) : 0;
 
   const clampT = useCallback(
