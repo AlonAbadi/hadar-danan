@@ -38,9 +38,10 @@ export interface BuildAssOptions {
   stamp: boolean;
   // Captions anchor TOP-CENTER (Alignment 8): MarginV is the distance from
   // the TOP of the canvas to the first caption line, so two-line captions
-  // grow downward — matching Hadar's published-reel style (block slightly
-  // below vertical center).
-  captionMarginV?: number; // default ≈52.5% of canvas height
+  // grow downward. 70% of canvas height (customer feedback 2026-07-14:
+  // the 52.5% mid-frame block sat on the face in selfie framing — reels
+  // are shot much tighter than the studio references).
+  captionMarginV?: number; // default ≈70% of canvas height
   stampMarginV?: number; // default 96
   // Output canvas — landscape full-frame outputs pass their own dims; type
   // scales off the canvas height so captions read the same at any aspect.
@@ -76,7 +77,7 @@ export function buildAss(lines: CaptionLine[], opts: BuildAssOptions): string {
 
   const prX = opts.playResX ?? 1080;
   const prY = opts.playResY ?? 1920;
-  const capMv = opts.captionMarginV ?? Math.round(prY * 0.525);
+  const capMv = opts.captionMarginV ?? Math.round(prY * 0.70);
   const stampMv = opts.stampMarginV ?? 96;
   // Matched to Hadar's published reels (2026-07-12 examples, measured against
   // the reference posts pixel-for-pixel — the IG post frame shows the video

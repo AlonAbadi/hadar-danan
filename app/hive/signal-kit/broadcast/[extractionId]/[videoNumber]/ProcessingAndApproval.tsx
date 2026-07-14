@@ -461,6 +461,8 @@ function CaptionApproval({
             transform={transform}
             onChange={setTransform}
             forcePortrait={snap.take_capture === "phone"}
+            trimStartMs={trimStart}
+            trimEndMs={trimEnd}
           />
         ) : null}
         {/* WhatsApp-style trim: frame strip + draggable start/end handles */}
@@ -979,6 +981,8 @@ function ZoomPanPreview({
   transform,
   onChange,
   forcePortrait = false,
+  trimStartMs = 0,
+  trimEndMs = 0,
 }: {
   src: string;
   videoRef: React.MutableRefObject<HTMLVideoElement | null>;
@@ -987,7 +991,27 @@ function ZoomPanPreview({
   // Phone captures burn through the 9:16 chain even when the buffer is
   // landscape (Android, no rotation tag) — the editor must frame the same.
   forcePortrait?: boolean;
+  // The live trim window: playback stops AT the end handle (customer
+  // feedback 2026-07-14: "plays to the end of the video no matter where I
+  // mark") and starts from the start handle when outside the window.
+  trimStartMs?: number;
+  trimEndMs?: number;
 }) {
+  const trimRef = useRef({ start: trimStartMs, end: trimEndMs });
+  trimRef.current = { start: trimStartMs, end: trimEndMs };
+
+  const playWithinTrim = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const { start, end } = trimRef.current;
+    const t = v.currentTime * 1000;
+    // Outside the selection (or parked at its end) — start from the cut-in.
+    if (t < start - 120 || (end > 0 && t >= end - 120)) {
+      v.currentTime = start / 1000;
+    }
+    v.play().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const boxRef = useRef<HTMLDivElement | null>(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [vid, setVid] = useState({ w: 0, h: 0 });
@@ -1068,7 +1092,7 @@ function ZoomPanPreview({
     if (pointersRef.current.size === 0 && !movedRef.current) {
       const v = videoRef.current;
       if (v) {
-        if (v.paused) v.play().catch(() => {});
+        if (v.paused) playWithinTrim();
         else v.pause();
       }
     }
@@ -1119,6 +1143,14 @@ function ZoomPanPreview({
           }}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
+          onTimeUpdate={(e) => {
+            const v = e.currentTarget;
+            const { end } = trimRef.current;
+            if (end > 0 && !v.paused && v.currentTime * 1000 >= end) {
+              v.pause();
+              v.currentTime = end / 1000; // park on the exact cut-out frame
+            }
+          }}
           style={
             vid.w && s0
               ? {
@@ -1182,7 +1214,7 @@ function ZoomPanPreview({
           onClick={() => {
             const v = videoRef.current;
             if (!v) return;
-            if (v.paused) v.play().catch(() => {});
+            if (v.paused) playWithinTrim();
             else v.pause();
           }}
           style={{
