@@ -7,6 +7,16 @@
 export const SEASON_CAP_HE = 7;
 export const SEASON_CAP_EN_FREE = 1;
 
+// Per-extraction grant (signal.season_cap_override, a number): opens a full
+// season for a specific member — team filming, gifts, early access — without
+// touching the plan defaults. Set via the merge_signal RPC.
+export function overrideCap(signal: unknown): number | null {
+  const o = (signal as { season_cap_override?: unknown } | null)?.season_cap_override;
+  // signal_merge_field stores values as text — accept "7" as well as 7.
+  const n = typeof o === "number" ? o : typeof o === "string" ? Number(o) : NaN;
+  return Number.isFinite(n) && n > 0 ? Math.min(n, SEASON_CAP_HE) : null;
+}
+
 export async function seasonCapFor(db: any, extractionId: string): Promise<number> {
   try {
     const { data: ext } = await db
@@ -14,6 +24,8 @@ export async function seasonCapFor(db: any, extractionId: string): Promise<numbe
       .select("signal")
       .eq("id", extractionId)
       .maybeSingle();
+    const granted = overrideCap(ext?.signal);
+    if (granted !== null) return granted;
     return ext?.signal?.language === "en" ? SEASON_CAP_EN_FREE : SEASON_CAP_HE;
   } catch {
     return SEASON_CAP_HE;

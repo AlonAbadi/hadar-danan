@@ -13,7 +13,7 @@
  * be a Hebrew one (edge case), we still render whatever text is there.
  */
 import { redirect } from "next/navigation";
-import { SEASON_CAP_EN_FREE } from "@/lib/broadcast/season-cap";
+import { SEASON_CAP_EN_FREE, overrideCap } from "@/lib/broadcast/season-cap";
 import { cookies } from "next/headers";
 import type { Metadata, Viewport } from "next";
 import { createServerClient as createSSRClient } from "@supabase/ssr";
@@ -119,11 +119,14 @@ export default async function EnKaveretPage() {
   });
   // Free plan: the full text of episodes 2-7 never leaves the server - the
   // client gets titles only (the UI is title-only anyway, and the script
-  // must not be readable through the page payload).
+  // must not be readable through the page payload). A per-member grant
+  // (signal.season_cap_override — same source seasonCapFor reads) lifts both
+  // the cap and the stripping.
+  const seasonCap = overrideCap(signal) ?? SEASON_CAP_EN_FREE;
   const scripts = collectShootDayVideos(signal)
     .map(toScript)
     .map((sc) =>
-      sc.number === 1
+      sc.number === 1 || seasonCap > 1
         ? sc
         : { ...sc, hook: "", body: "", cta: "", interviewQuestions: undefined }
     );
@@ -152,7 +155,7 @@ export default async function EnKaveretPage() {
     pendingNumbers,
     takesPerScript,
     seasonUsed,
-    seasonCap: SEASON_CAP_EN_FREE,
+    seasonCap,
     email: userData.email ?? "",
     takesCap: 3,
   };
