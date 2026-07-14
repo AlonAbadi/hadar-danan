@@ -92,9 +92,9 @@ export function buildVideoFilter(
       kind: "vf",
       value: `${cropChain},fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
       strategy: "portrait_crop",
-      // Top-anchored (Alignment 8): block sits at 62% — below the chin in
+      // Top-anchored (Alignment 8): block sits at 65% — below the chin in
       // selfie framing (customer feedback 2026-07-14), above the Reels UI.
-      captionMarginV: Math.round(1920 * 0.70),
+      captionMarginV: Math.round(1920 * 0.65),
       stampMarginV: 96,
       playResX: 1080,
       playResY: 1920,
@@ -109,7 +109,7 @@ export function buildVideoFilter(
     kind: "vf",
     value: `${crop ? `${crop},` : ""}scale=${outW}:${outH},fps=30,ass=${assPath}:fontsdir=${FONTS_DIR}`,
     strategy: "landscape_fullframe",
-    captionMarginV: Math.round(outH * 0.70),
+    captionMarginV: Math.round(outH * 0.65),
     stampMarginV: 96,
     playResX: outW,
     playResY: outH,
