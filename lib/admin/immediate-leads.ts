@@ -1,13 +1,13 @@
 /**
  * לידים לטיפול מיידי — Hadar's daily worklist.
  *
- * Merges the two sources of "worth a personal WhatsApp from Hadar" leads into a
- * single, per-person, deduped list with one shared handoff state machine
- * (stored on users, migration 057):
+ * The per-person, deduped list of "worth a personal WhatsApp from Hadar" leads,
+ * with one shared handoff state machine (stored on users, migration 057).
  *
- *   1. Signal engine — latest extraction with bucket = 'strategy'.
- *   2. Quiz — latest result recommending a high-value product
- *      (strategy / premium / partnership).
+ * Source: v2 signal extractions routed to 'concierge' — an established business
+ * (self-declared key1 C/D) that left a phone. The legacy bucket=strategy and the
+ * retired quiz feeders were removed 2026-07-14: they flooded the list with stale,
+ * often-unreachable leads. concierge is the single meeting-worthy definition.
  *
  * Read-time filtering removes:
  *   - Leads Hadar dismissed via "לא רלבנטי" (handoff_stage = 'dismissed', migration 058).
@@ -25,7 +25,6 @@
 import type { createServerClient } from "@/lib/supabase/server";
 import {
   buildHandoffMessage,
-  buildQuizHandoffMessage,
   waPhoneOf,
 } from "@/lib/signal/handoff-message";
 
@@ -125,14 +124,6 @@ function computeDecision(ctx: LeadContext): LeadDecision {
   return { tone, label, points: points.slice(0, 4) };
 }
 
-const HIGH_VALUE_QUIZ = ["strategy", "premium", "partnership"];
-
-const QUIZ_REASON: Record<string, string> = {
-  strategy:    "הקוויז המליץ: פגישת אסטרטגיה",
-  premium:     "הקוויז המליץ: יום צילום פרמיום",
-  partnership: "הקוויז המליץ: שותפות אסטרטגית",
-};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeFrom(supabase: ReturnType<typeof createServerClient>, table: string): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,19 +180,14 @@ export async function getImmediateLeads(
   supabase: ReturnType<typeof createServerClient>,
 ): Promise<ImmediateLead[]> {
   try {
-    const [sigRes, quizRes, paidRes, purchasesRes] = await Promise.all([
+    const [sigRes, paidRes, purchasesRes] = await Promise.all([
       safeFrom(supabase, "signal_extractions")
         .select(`id, user_id, signal, answers, bucket, generated_at, users(${USER_COLS})`)
         .neq("is_test", true)   // v2 isolation: test runs never reach Hadar's queue
-        // legacy boiling (bucket=strategy) OR v2 concierge — both are the hot lane
-        .or("bucket.eq.strategy,routed_ending.eq.concierge")
+        // Meeting-worthy = v2 concierge only (established business + phone).
+        // Legacy bucket=strategy and the retired quiz feeder dropped 2026-07-14.
+        .eq("routed_ending", "concierge")
         .order("generated_at", { ascending: false })
-        .limit(300),
-      safeFrom(supabase, "quiz_results")
-        .select(`user_id, recommended_product, match_percent, created_at, users(${USER_COLS})`)
-        .neq("is_test", true)
-        .in("recommended_product", HIGH_VALUE_QUIZ)
-        .order("created_at", { ascending: false })
         .limit(300),
       safeFrom(supabase, "purchases")
         .select("user_id")
@@ -331,44 +317,7 @@ export async function getImmediateLeads(
       );
     }
 
-    // Then quiz high-value leads (only if not already surfaced via signal).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const row of (quizRes.data ?? []) as any[]) {
-      const u = row.users as UserJoin;
-      const uid = (u?.id ?? row.user_id) as string | null;
-      if (!uid || seen.has(uid)) continue;
-      seen.add(uid);
-      const name = u?.name?.trim() || "—";
-      const product = row.recommended_product as string;
-      const pct = typeof row.match_percent === "number" ? ` · ${row.match_percent}% התאמה` : "";
-      const rawStage = stageOf(u);
-      const ctx = contextOf(u, {
-        quizMatch: typeof row.match_percent === "number" ? row.match_percent : null,
-      }); // quiz path: no routing_signal/answers, but carries the match %
-      push(
-        {
-          userId:     uid,
-          name,
-          occupation: u?.occupation?.trim() || null,
-          source:     "quiz",
-          reason:     (QUIZ_REASON[product] ?? "הקוויז המליץ על מוצר פרימיום") + pct,
-          at:         row.created_at as string,
-          stage:      rawStage,
-          waPhone:    waPhoneOf(u?.phone),
-          waText:     buildQuizHandoffMessage({
-            name,
-            gender:             u?.gender ?? null,
-            recommendedProduct: product,
-          }),
-          userHref:   `/admin/users/${uid}`,
-          context:    ctx,
-          decision:   computeDecision(ctx),
-        },
-        rawStage,
-      );
-    }
-
-    // Newest first across both sources.
+    // Newest first.
     leads.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
     return leads;
   } catch {
