@@ -819,6 +819,10 @@ function signalHiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
   const accessLink = (ctx.access_link as string | undefined) ?? `${APP_URL}/kaveret`;
   const isMagic    = accessLink.includes("token=") || accessLink.includes("supabase");
   const m          = ctx.gender === "m";   // default stays feminine
+  // Manual grants to members who haven't done the diagnosis yet: the kit
+  // routes them to signal discovery on entry — the email must not claim
+  // "גילית את האות שלך" before it happened.
+  const preSignal  = ctx.needs_signal === true;
   return {
     subject: `${firstName} — נכנסת לכוורת האות`,
     html: base(`
@@ -828,9 +832,13 @@ function signalHiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
       </div>
       <div class="body">
         <p>${firstName},</p>
-        <p>גילית את האות שלך.</p>
+        ${preSignal
+          ? `<p>הכוורת שלך פתוחה.</p>
+        <p>הצעד הראשון בפנים: גילוי האות שלך — כמה דקות של שאלות, ומהתשובות נבנה הכל.</p>
+        <p>מה מחכה לך אחרי הגילוי:</p>`
+          : `<p>גילית את האות שלך.</p>
         <p>עכשיו מתחילים להוציא אותו לעולם.</p>
-        <p>הכל מחכה לך במקום אחד:</p>
+        <p>הכל מחכה לך במקום אחד:</p>`}
         <p>· לוח האות — האות, הכאב, ההבטחה והקהל שלך.</p>
         <p>· אתגר האות — 7 ימים, ממוסגרים סביב האות שלך.</p>
         <p>· ערכת תוכן — כיווני-תוכן ופתיחות שנגזרים מהאות.</p>
