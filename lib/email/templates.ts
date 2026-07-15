@@ -818,12 +818,13 @@ function signalHiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
   const firstName  = ctx.name.split(" ")[0];
   const accessLink = (ctx.access_link as string | undefined) ?? `${APP_URL}/kaveret`;
   const isMagic    = accessLink.includes("token=") || accessLink.includes("supabase");
+  const m          = ctx.gender === "m";   // default stays feminine
   return {
     subject: `${firstName} — נכנסת לכוורת האות`,
     html: base(`
       <div class="header">
         <div class="header-logo">beegood · כוורת האות</div>
-        <h1>ברוכה הבאה, <span class="header-accent">${firstName}</span></h1>
+        <h1>${m ? "ברוך הבא" : "ברוכה הבאה"}, <span class="header-accent">${firstName}</span></h1>
       </div>
       <div class="body">
         <p>${firstName},</p>
@@ -837,7 +838,7 @@ function signalHiveWelcome(ctx: EmailTemplateContext): RenderedEmail {
         <p>· הבמאית — 7 בימויים אישיים מול המצלמה.</p>
         <a class="cta" href="${accessLink}">כניסה לכוורת האות ←</a>
         ${isMagic ? `<p style="font-size:13px;color:#6b7280;margin-top:8px;">הלינק מחבר אותך ישירות — ללא צורך בסיסמה. תקף ל-24 שעות.</p>` : ""}
-        <p>קחי את זה יום-יום. אין למהר.</p>
+        <p>${m ? "קח" : "קחי"} את זה יום-יום. אין למהר.</p>
         <p class="ssig">הדר</p>
       </div>
     `),
