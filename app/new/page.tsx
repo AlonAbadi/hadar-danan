@@ -28,8 +28,8 @@ const TESTIMONIALS = [
   { text: "אחרי אכזבות מחברות אחרות, סוף סוף מצאתי צוות מקצועי וקשוב. הם לקחו את העסק שלי כמה צעדים קדימה עם תוכן מדויק שהביא לי הרבה פניות.", name: "גל מסס" },
 ];
 
-const HEADLINE = "לא צריך עוד תוכן.\nצריך לדעת למה שיבחרו דווקא בכם.";
-const LEDE = "גלו את האות שלכם בקריאה אישית ללא עלות, או עבדו ישירות עם הדר כדי להפוך אותו למסר ולנכסים שעובדים.";
+const HEADLINE = "אם כולם יכולים להגיד את מה שאתה אומר,\nלמה שיבחרו דווקא בך?";
+const LEDE = "מצא את המסר שאי אפשר להעתיק, והפוך אותו לתוכן, למותג וללקוחות.";
 
 export default function NewHome() {
   return (
@@ -52,10 +52,10 @@ export default function NewHome() {
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(13,16,24,0.4) 0%, transparent 30%)" }} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #080C14 0%, rgba(8,12,20,0.6) 25%, transparent 55%)" }} />
             <div style={{ position: "absolute", bottom: "40px", left: 0, right: 0, padding: "0 24px", direction: "rtl", textAlign: "right" }}>
-              <div className="nh-eyebrow"><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · השיטה</div>
+              <div className="nh-eyebrow"><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · הדרך</div>
               <h1 style={{ color: "#EDE9E1", fontWeight: 900, fontSize: "clamp(2.1rem, 8vw, 3rem)", lineHeight: 1.08, letterSpacing: "-0.02em", marginBottom: 12, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
               <p style={{ color: "#AAB0BD", fontSize: "clamp(0.95rem, 2.2vw, 1.05rem)", lineHeight: 1.65, marginBottom: 16 }}>{LEDE}</p>
-              <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero" style={{ width: "100%", marginBottom: 10 }}>לגלות את האות שלי — חינם</TrackedCta>
+              <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero" style={{ width: "100%", marginBottom: 10 }}>לגלות את ה־TrueSignal שלי — בחינם</TrackedCta>
               <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero" style={{ width: "100%" }}>לעבוד ישירות עם הדר</TrackedCta>
               <div className="nh-priceline" style={{ textAlign: "center", marginTop: 7 }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
               <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
@@ -74,12 +74,12 @@ export default function NewHome() {
             <div style={{ position: "absolute", top: "50%", right: 0, transform: "translateY(-50%)", width: "46%", padding: "0 72px 0 0", direction: "rtl", textAlign: "right" }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.32)", borderRadius: 9999, padding: "5px 14px", marginBottom: 22 }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C9964A", flexShrink: 0 }} />
-                <span style={{ color: "#E8B94A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>שיטת <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
+                <span style={{ color: "#E8B94A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>הדרך של <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
               </div>
               <h1 style={{ color: "#EDE9E1", fontWeight: 800, fontSize: "clamp(2rem, 2.6vw, 3rem)", lineHeight: 1.2, marginBottom: 18, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
               <p style={{ color: "#AAB0BD", fontSize: "1rem", lineHeight: 1.78, marginBottom: 30, maxWidth: "42ch" }}>{LEDE}</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 420 }}>
-                <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero">לגלות את האות שלי — חינם</TrackedCta>
+                <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero">לגלות את ה־TrueSignal שלי — בחינם</TrackedCta>
                 <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero">לעבוד ישירות עם הדר</TrackedCta>
                 <div className="nh-priceline" style={{ textAlign: "center" }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
               </div>
