@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -76,12 +76,38 @@ export default async function LandingPage() {
   const userCount = await getUserCount();
   const displayCount = Math.max(userCount + 250, 3500);
 
+  // Quiet English-site hint for visitors outside Israel — an offer, never a
+  // redirect (the geo redirect was removed 2026-07-17: everyone lands on the
+  // exact link they clicked).
+  const country = (await headers()).get("x-vercel-ip-country") ?? "";
+  const showEnBanner = country !== "" && country !== "IL";
+
   return (
     <>
       <PageTracker abVariant={variant} />
       <HomeHeroCtaTracker abVariant={variant} />
 
       <div dir="rtl" className="min-h-screen flex flex-col" style={{ background: "#080C14" }}>
+
+        {showEnBanner && (
+          <a
+            href="/en"
+            dir="ltr"
+            style={{
+              display: "block",
+              textAlign: "center",
+              padding: "9px 16px",
+              background: "rgba(201,150,74,0.10)",
+              borderBottom: "1px solid rgba(201,150,74,0.25)",
+              color: "#E8B94A",
+              fontSize: 13.5,
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            Prefer English? Visit our English site →
+          </a>
+        )}
 
 
 
