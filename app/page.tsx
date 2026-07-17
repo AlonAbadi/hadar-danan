@@ -78,9 +78,13 @@ export default async function LandingPage() {
 
   // Quiet English-site hint for visitors outside Israel — an offer, never a
   // redirect (the geo redirect was removed 2026-07-17: everyone lands on the
-  // exact link they clicked).
-  const country = (await headers()).get("x-vercel-ip-country") ?? "";
-  const showEnBanner = country !== "" && country !== "IL";
+  // exact link they clicked). Geo alone is unreliable — Starlink users in
+  // Israel geolocate abroad (Alon's own line resolves to Greece) — so a
+  // Hebrew browser always suppresses the banner.
+  const h = await headers();
+  const country = h.get("x-vercel-ip-country") ?? "";
+  const browserHebrew = (h.get("accept-language") ?? "").toLowerCase().includes("he");
+  const showEnBanner = country !== "" && country !== "IL" && !browserHebrew;
 
   return (
     <>
