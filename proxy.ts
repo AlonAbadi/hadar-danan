@@ -84,34 +84,10 @@ function checkBasicAuth(request: NextRequest): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
-  // ── Geo language routing (Alon 2026-07-13) ────────────────────────────
-  // Visitors from outside Israel land on the English site. Homepage only —
-  // deep Hebrew links (emails, shared kaveret links, WhatsApp) always work.
-  // Explicit choice wins: ?lang=he/en sets a cookie that overrides geo, and
-  // clicking into the Hebrew site from /en never bounces back. Known bots
-  // are excluded so Google keeps indexing both language trees cleanly.
-  if (pathname === "/") {
-    const langParam = searchParams.get("lang");
-    const langCookie = request.cookies.get("site_lang")?.value;
-    const country = request.headers.get("x-vercel-ip-country") ?? "";
-    const ua = request.headers.get("user-agent") ?? "";
-    const isBot = /bot|crawler|spider|crawling|facebookexternalhit|whatsapp|telegram|preview/i.test(ua);
-    const choice = langParam === "he" || langParam === "en" ? langParam : null;
-    const effective = choice ?? langCookie;
-    if (choice) {
-      const res = effective === "en"
-        ? NextResponse.redirect(new URL("/en", request.url))
-        : NextResponse.next();
-      res.cookies.set("site_lang", choice, { maxAge: 60 * 60 * 24 * 180, path: "/" });
-      if (choice === "en") return res;
-    } else if (!isBot && !effective && country && country !== "IL") {
-      const res = NextResponse.redirect(new URL("/en", request.url), 302);
-      res.cookies.set("site_lang", "en", { maxAge: 60 * 60 * 24 * 180, path: "/" });
-      return res;
-    } else if (effective === "en" && !isBot) {
-      return NextResponse.redirect(new URL("/en", request.url), 302);
-    }
-  }
+  // Geo language routing REMOVED (Alon 2026-07-17): no automatic he↔en
+  // redirects — every visitor lands exactly on the link they clicked.
+  // The /en tree is reached only by explicit links. Stale site_lang
+  // cookies from the removed mechanism are simply ignored.
 
   const isAdminPage = pathname.startsWith("/admin");
   const isAdminApi =
