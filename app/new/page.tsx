@@ -1,19 +1,26 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { TrackedCta } from "./TrackedCta";
+import { PhilosophySection } from "@/components/landing/PhilosophySection";
+
+// Reused ORIGINAL homepage elements (rendered as-is; their behavior is not
+// changed for any other page). This restores the exact existing design.
+const StatsSection     = dynamic(() => import("@/components/landing/StatsSection").then(m => ({ default: m.StatsSection })));
+const SocialProofStrip = dynamic(() => import("@/components/SocialProofStrip"));
 
 /**
- * /new — ISOLATED experimental homepage. Two-doors concept.
- * Does not touch the existing homepage, /kriah, /strategy, or any shared page.
- * Reuses assets (the hero photo) and copies of styles only; introduces no shared
- * behavior change. Nav is hidden for /new via LayoutShell (same mechanism as
- * /en and /kaveret) so this page carries its own local header.
- * Experiment only — noindex,nofollow.
+ * /new — ISOLATED experimental homepage (two-doors concept).
+ * Restores the ORIGINAL homepage design for every reused element: the hero
+ * treatment of Hadar's photo (full-bleed + mask fade, mobile + desktop), the
+ * gold button style, and the real StatsSection / SocialProofStrip / Philosophy
+ * components. Only the layout intent (two doors) is new. Does not touch the
+ * existing homepage, /kriah, /strategy, or any shared behavior. noindex.
  */
 export const metadata: Metadata = {
   title: "הדר דנן",
   robots: { index: false, follow: false },
-  alternates: {}, // no canonical override
+  alternates: {},
 };
 
 const NAV = [
@@ -25,21 +32,12 @@ const NAV = [
 ];
 
 const TESTIMONIALS = [
-  {
-    text: "הצלחתם להפוך את הנקודה שהכי קשה לי בעסק לנקודת חוזקה, ואני אפילו נהנה מזה עכשיו. אין עליכם, תודה ענקית.",
-    name: "רועי מנדלמן",
-  },
-  {
-    text: "אחרי אכזבות מחברות אחרות, סוף סוף מצאתי צוות מקצועי וקשוב. הם לקחו את העסק שלי כמה צעדים קדימה עם תוכן מדויק שהביא לי הרבה פניות.",
-    name: "גל מסס",
-  },
+  { text: "הצלחתם להפוך את הנקודה שהכי קשה לי בעסק לנקודת חוזקה, ואני אפילו נהנה מזה עכשיו. אין עליכם, תודה ענקית.", name: "רועי מנדלמן" },
+  { text: "אחרי אכזבות מחברות אחרות, סוף סוף מצאתי צוות מקצועי וקשוב. הם לקחו את העסק שלי כמה צעדים קדימה עם תוכן מדויק שהביא לי הרבה פניות.", name: "גל מסס" },
 ];
 
-const PRINCIPLES = [
-  { t: "אסטרטגיה קודם",            d: "לפני סרטון אחד, מבינים מי אתם, מה אתם מוכרים ולמה הקהל צריך דווקא אתכם." },
-  { t: "תוכן שמגיע מבפנים",        d: "לא תסריטים גנריים ולא מרדף אחרי טרנדים. תוכן שנובע מהדרך שבה אתם באמת רואים את העולם." },
-  { t: "מכירות שלא מתחילות בשכנוע", d: "כשהאות ברור, הלקוחות הנכונים מזהים את עצמם במסר." },
-];
+const HEADLINE = "לא צריך עוד תוכן.\nצריך לדעת למה שיבחרו דווקא בכם.";
+const LEDE = "גלו את האות שלכם בקריאה אישית ללא עלות, או עבדו ישירות עם הדר כדי להפוך אותו למסר ולנכסים שעובדים.";
 
 export default function NewHome() {
   return (
@@ -51,56 +49,68 @@ export default function NewHome() {
         <div className="nh-hwrap">
           <a href="/new" className="nh-logo">הדר דנן</a>
           <nav className="nh-nav">
-            {NAV.map((n) => (
-              <a key={n.href} href={n.href} className="nh-navlink">{n.label}</a>
-            ))}
+            {NAV.map((n) => <a key={n.href} href={n.href} className="nh-navlink">{n.label}</a>)}
           </nav>
           <div className="nh-hcta">
             <a href="/login" className="nh-quiet">התחבר</a>
-            <TrackedCta dest="strategy" placement="header" className="nh-goldbtn nh-goldbtn-sm">
-              לעבוד עם הדר
-            </TrackedCta>
+            <TrackedCta dest="strategy" placement="header" className="nh-gold nh-gold-sm">לעבוד עם הדר</TrackedCta>
           </div>
         </div>
       </header>
 
       <main>
-        {/* ── 2. HERO ── */}
-        <section className="nh-hero">
-          <div className="nh-hero-media">
-            <Image src="/hadar1.jpg" alt="הדר דנן" fill priority sizes="(max-width:768px) 100vw, 50vw"
-              style={{ objectFit: "cover", objectPosition: "center 12%" }} />
-            <div className="nh-hero-scrim" />
-          </div>
-          <div className="nh-hero-body">
-            <div className="nh-eyebrow"><span dir="ltr">TrueSignal©</span> · השיטה</div>
-            <h1 className="nh-h1">לא צריך עוד תוכן.<br />צריך לדעת למה שיבחרו דווקא בכם.</h1>
-            <p className="nh-lede">גלו את האות שלכם בקריאה אישית ללא עלות, או עבדו ישירות עם הדר כדי להפוך אותו למסר ולנכסים שעובדים.</p>
-            <div className="nh-hero-ctas">
-              <TrackedCta dest="kriah" placement="hero" className="nh-goldbtn nh-goldbtn-lg">
-                לגלות את האות שלי — חינם
-              </TrackedCta>
-              <div className="nh-sec-wrap">
-                <TrackedCta dest="strategy" placement="hero" className="nh-outbtn nh-outbtn-lg">
-                  לעבוד ישירות עם הדר
-                </TrackedCta>
-                <div className="nh-priceline">פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
-              </div>
+        {/* ══ HERO — original treatment restored ══ */}
+        <section style={{ overflow: "hidden", background: "#0B1220" }}>
+
+          {/* MOBILE: full-bleed photo, bottom-anchored content (original design) */}
+          <div className="md:hidden" style={{ position: "relative", height: "88svh" }}>
+            <Image src="/hadar1.jpg" alt="הדר דנן" fill priority sizes="100vw"
+              style={{ objectFit: "cover", objectPosition: "center 10%" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #080C14 0%, rgba(8,12,20,0.95) 22%, rgba(8,12,20,0.85) 38%, rgba(8,12,20,0.6) 56%, rgba(8,12,20,0.3) 70%, transparent 85%)" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(13,16,24,0.4) 0%, transparent 30%)" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #080C14 0%, rgba(8,12,20,0.6) 25%, transparent 55%)" }} />
+            <div style={{ position: "absolute", bottom: "40px", left: 0, right: 0, padding: "0 24px", direction: "rtl", textAlign: "right" }}>
+              <div className="nh-eyebrow"><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · השיטה</div>
+              <h1 style={{ color: "#EDE9E1", fontWeight: 900, fontSize: "clamp(2.1rem, 8vw, 3rem)", lineHeight: 1.08, letterSpacing: "-0.02em", marginBottom: 12, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
+              <p style={{ color: "#AAB0BD", fontSize: "clamp(0.95rem, 2.2vw, 1.05rem)", lineHeight: 1.65, marginBottom: 16 }}>{LEDE}</p>
+              <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero" style={{ width: "100%", marginBottom: 10 }}>לגלות את האות שלי — חינם</TrackedCta>
+              <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero" style={{ width: "100%" }}>לעבוד ישירות עם הדר</TrackedCta>
+              <div className="nh-priceline" style={{ textAlign: "center", marginTop: 7 }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
+              <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
             </div>
-            <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
+          </div>
+
+          {/* DESKTOP: full-bleed photo left with mask fade, text panel right (original design) */}
+          <div className="hidden md:block" style={{ position: "relative", minHeight: "100vh" }}>
+            <div style={{ position: "absolute", top: 0, left: "-5%", height: "163%", width: "auto", display: "inline-block" }}>
+              <Image src="/hadar1.jpg" alt="הדר דנן" width={842} height={1264} priority sizes="50vw" quality={80}
+                style={{ height: "100%", width: "auto", maxWidth: "none", display: "block",
+                  WebkitMaskImage: "linear-gradient(to right, black 0%, black 55%, transparent 100%)",
+                  maskImage: "linear-gradient(to right, black 0%, black 55%, transparent 100%)" }} />
+            </div>
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(13,16,24,0.4) 0%, transparent 30%)" }} />
+            <div style={{ position: "absolute", top: "50%", right: 0, transform: "translateY(-50%)", width: "46%", padding: "0 72px 0 0", direction: "rtl", textAlign: "right" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.32)", borderRadius: 9999, padding: "5px 14px", marginBottom: 22 }}>
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C9964A", flexShrink: 0 }} />
+                <span style={{ color: "#E8B94A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>שיטת <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
+              </div>
+              <h1 style={{ color: "#EDE9E1", fontWeight: 800, fontSize: "clamp(2rem, 2.6vw, 3rem)", lineHeight: 1.2, marginBottom: 18, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
+              <p style={{ color: "#AAB0BD", fontSize: "1rem", lineHeight: 1.78, marginBottom: 30, maxWidth: "42ch" }}>{LEDE}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 420 }}>
+                <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero">לגלות את האות שלי — חינם</TrackedCta>
+                <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero">לעבוד ישירות עם הדר</TrackedCta>
+                <div className="nh-priceline" style={{ textAlign: "center" }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
+              </div>
+              <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
+            </div>
           </div>
         </section>
 
-        {/* ── 3. Proof strip (existing numbers only) ── */}
-        <section className="nh-proof">
-          <div className="nh-proof-item"><b>5.0</b><span>בגוגל</span></div>
-          <div className="nh-proof-dot" />
-          <div className="nh-proof-item"><b>55</b><span>ביקורות</span></div>
-          <div className="nh-proof-dot" />
-          <div className="nh-proof-item"><b>3,500+</b><span>עסקים</span></div>
-        </section>
+        {/* ══ Proof — reused original components ══ */}
+        <StatsSection />
+        <SocialProofStrip />
 
-        {/* ── 4. Two paths ── */}
+        {/* ══ Two paths ══ */}
         <section className="nh-section">
           <h2 className="nh-h2">שתי דרכים. אותה מטרה: מסר שאנשים מזהים וזוכרים.</h2>
           <div className="nh-cards">
@@ -108,37 +118,28 @@ export default function NewHome() {
               <h3 className="nh-card-t">אני צריך להבין מה האות שלי</h3>
               <p className="nh-card-d">מתחילים בכמה שאלות קצרות על העסק, ממשיכים לקריאה האישית ומגלים מה אנשים מקבלים דווקא מכם.</p>
               <p className="nh-card-note">האבחון הקיים נשאר בדיוק כפי שהוא.</p>
-              <TrackedCta dest="kriah" placement="path_card" className="nh-outbtn nh-card-cta">
-                לקריאת האות — ללא עלות
-              </TrackedCta>
+              <TrackedCta dest="kriah" placement="path_card" className="nh-out nh-card-cta">לקריאת האות — ללא עלות</TrackedCta>
             </article>
             <article className="nh-card nh-card-gold">
               <h3 className="nh-card-t">אני כבר רוצה לעבוד עם הדר</h3>
               <p className="nh-card-d">למי שכבר רוצה להפוך ניסיון, מסר ורעיונות לאסטרטגיה ולנכסים שאפשר לצאת איתם החוצה.</p>
               <p className="nh-card-note nh-gold-note">פגישת אסטרטגיה אישית: 4,000 ₪</p>
-              <TrackedCta dest="strategy" placement="path_card" className="nh-goldbtn nh-card-cta">
-                לראות איך עובדים עם הדר
-              </TrackedCta>
+              <TrackedCta dest="strategy" placement="path_card" className="nh-gold nh-card-cta">לראות איך עובדים עם הדר</TrackedCta>
             </article>
           </div>
         </section>
 
-        {/* ── 5. TrueSignal approach ── */}
-        <section className="nh-section nh-approach">
-          <h2 className="nh-h2">הגישה שלנו</h2>
-          <p className="nh-approach-lede">כי אפשר למכור רק את מה שאתם באמת — זה הבסיס של <span dir="ltr">TrueSignal©</span>.</p>
-          <div className="nh-principles">
-            {PRINCIPLES.map((p) => (
-              <div key={p.t} className="nh-principle">
-                <h4 className="nh-principle-t">{p.t}</h4>
-                <p className="nh-principle-d">{p.d}</p>
-              </div>
-            ))}
+        {/* ══ Approach — reused original PhilosophySection ══ */}
+        <section className="nh-approach-sec">
+          <div className="nh-approach-head">
+            <h2 className="nh-h2" style={{ marginBottom: 8 }}>הגישה שלנו</h2>
+            <p className="nh-approach-lede">כי אפשר למכור רק את מה שאתם באמת — זה הבסיס של <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>.</p>
           </div>
+          <PhilosophySection />
           <p className="nh-approach-punch">אנחנו לא מוכרים סרטונים.<br />אנחנו בונים את הבהירות שגורמת לתוכן לעבוד.</p>
         </section>
 
-        {/* ── 6. Testimonials ── */}
+        {/* ══ Testimonials ══ */}
         <section className="nh-section">
           <div className="nh-tgrid">
             {TESTIMONIALS.map((t) => (
@@ -151,53 +152,45 @@ export default function NewHome() {
           </div>
         </section>
 
-        {/* ── 7. Final CTA ── */}
+        {/* ══ Final CTA ══ */}
         <section className="nh-section nh-final">
           <h2 className="nh-h2">איך נכון לכם להתקדם עכשיו?</h2>
           <div className="nh-final-grid">
             <div className="nh-final-opt">
               <div className="nh-final-lbl">אני רוצה לגלות את האות שלי</div>
-              <TrackedCta dest="kriah" placement="final_cta" className="nh-goldbtn nh-final-cta">
-                להתחיל את הקריאה — חינם
-              </TrackedCta>
+              <TrackedCta dest="kriah" placement="final_cta" className="nh-gold nh-final-cta">להתחיל את הקריאה — חינם</TrackedCta>
             </div>
             <div className="nh-final-opt">
               <div className="nh-final-lbl">אני רוצה לעבוד ישירות עם הדר</div>
-              <TrackedCta dest="strategy" placement="final_cta" className="nh-outbtn nh-final-cta">
-                לראות את פגישת האסטרטגיה
-              </TrackedCta>
-              <div className="nh-priceline nh-priceline-center">4,000 ₪</div>
+              <TrackedCta dest="strategy" placement="final_cta" className="nh-out nh-final-cta">לראות את פגישת האסטרטגיה</TrackedCta>
+              <div className="nh-priceline" style={{ textAlign: "center" }}>4,000 ₪</div>
             </div>
           </div>
         </section>
       </main>
 
-      {/* ── 8. Local minimal footer ── */}
+      {/* ══ Local minimal footer ══ */}
       <footer className="nh-footer">
         <div className="nh-footer-brand">הדר דנן</div>
-        <div className="nh-footer-micro">אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr">TrueSignal©</span></div>
+        <div className="nh-footer-micro">אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></div>
         <div className="nh-footer-links">
-          <a href="/about">אודות</a><span>·</span>
-          <a href="/kriah">האות שלך</a><span>·</span>
-          <a href="/strategy">עבודה עם הדר</a><span>·</span>
-          <a href="/privacy">פרטיות</a>
+          <a href="/about">אודות</a><span>·</span><a href="/kriah">האות שלך</a><span>·</span><a href="/strategy">עבודה עם הדר</a><span>·</span><a href="/privacy">פרטיות</a>
         </div>
       </footer>
     </div>
   );
 }
 
-// All styles scoped under `.nh-*` classes — used ONLY on /new, no global bleed.
+// Scoped under .nh-* — used ONLY on /new. Gold button matches the original homepage exactly.
 const NH_CSS = `
-.nh-root{--bg:#080C14;--bg2:#0D1018;--card:#141820;--soft:#1D2430;--border:#2C323E;--line:#232936;--gold:#C9964A;--gold-l:#E8B94A;--fg:#EDE9E1;--muted:#9E9990;--grad:linear-gradient(180deg,#f4d27a 0%,#e8b942 52%,#d59b1f 100%);background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+.nh-root{--bg:#080C14;--bg2:#0D1018;--card:#141820;--soft:#1D2430;--border:#2C323E;--line:#232936;--gold:#C9964A;--gold-l:#E8B94A;--fg:#EDE9E1;--muted:#AAB0BD;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
 .nh-root *{box-sizing:border-box}
-.nh-goldbtn{display:inline-flex;align-items:center;justify-content:center;background:var(--grad);color:#2a1d05;font-weight:800;text-decoration:none;border-radius:999px;line-height:1.2}
-.nh-goldbtn-sm{padding:9px 18px;font-size:14px}
-.nh-goldbtn-lg{padding:15px 28px;font-size:16.5px;width:100%}
-.nh-outbtn{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--gold-l);font-weight:700;text-decoration:none;border:1px solid var(--gold);border-radius:999px;line-height:1.2}
-.nh-outbtn-lg{padding:14px 26px;font-size:15.5px;width:100%}
+.nh-gold{background:linear-gradient(180deg,#f4d27a 0%,#e8b942 52%,#d59b1f 100%);color:#2a1d05;font-weight:800;text-decoration:none;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;line-height:1.2;box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 -10px 22px rgba(157,110,12,.35) inset,0 18px 34px -12px rgba(214,155,31,.55),0 6px 14px -6px rgba(0,0,0,.55)}
+.nh-gold-sm{padding:9px 18px;font-size:14px}
+.nh-gold-hero{padding:16px 40px;font-size:1.05rem}
+.nh-out{background:transparent;color:var(--gold-l);font-weight:700;text-decoration:none;border:1px solid rgba(201,150,74,.55);border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;line-height:1.2}
+.nh-out-hero{padding:15px 40px;font-size:1rem}
 
-/* header */
 .nh-header{position:sticky;top:0;z-index:50;background:rgba(8,12,20,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .nh-hwrap{max-width:1200px;margin:0 auto;height:64px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .nh-logo{font-size:19px;font-weight:800;color:var(--fg);text-decoration:none;letter-spacing:-.3px;white-space:nowrap}
@@ -208,90 +201,53 @@ const NH_CSS = `
 .nh-quiet{color:var(--muted);font-size:14px;text-decoration:none}
 .nh-quiet:hover{color:var(--fg)}
 
-/* hero */
-.nh-hero{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.05fr .95fr;gap:28px;align-items:center;padding:46px 22px 40px;min-height:520px}
-.nh-hero-media{position:relative;height:460px;border-radius:18px;overflow:hidden;border:1px solid var(--border)}
-.nh-hero-scrim{position:absolute;inset:0;background:linear-gradient(to left,rgba(8,12,20,.55),transparent 55%)}
-.nh-hero-body{padding:6px 0}
-.nh-eyebrow{font-size:12px;letter-spacing:2px;font-weight:800;color:var(--gold);text-transform:uppercase;margin-bottom:16px}
-.nh-h1{font-size:clamp(30px,4.4vw,48px);font-weight:800;line-height:1.14;letter-spacing:-.6px;margin:0 0 18px;text-wrap:balance}
-.nh-lede{font-size:clamp(15px,2vw,18px);line-height:1.7;color:var(--muted);margin:0 0 26px;max-width:52ch}
-.nh-lede,.nh-h1{max-width:56ch}
-.nh-hero-ctas{display:flex;flex-direction:column;gap:14px;max-width:400px}
-.nh-sec-wrap{display:flex;flex-direction:column;gap:7px}
-.nh-priceline{font-size:12.5px;color:var(--muted);text-align:center}
-.nh-priceline-center{text-align:center}
-.nh-trust{margin-top:20px;font-size:12.5px;color:var(--muted);opacity:.85}
+.nh-eyebrow{font-size:11px;letter-spacing:2px;font-weight:800;color:var(--gold);text-transform:uppercase;margin-bottom:12px}
+.nh-priceline{font-size:12.5px;color:var(--muted)}
+.nh-trust{margin-top:16px;font-size:12px;color:var(--muted);opacity:.85;text-align:center}
 
-/* proof */
-.nh-proof{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;padding:16px 22px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2)}
-.nh-proof-item{display:flex;align-items:baseline;gap:7px}
-.nh-proof-item b{font-size:19px;font-weight:800;color:var(--gold-l)}
-.nh-proof-item span{font-size:13px;color:var(--muted)}
-.nh-proof-dot{width:4px;height:4px;border-radius:50%;background:var(--border)}
+.nh-section{max-width:1080px;margin:0 auto;padding:64px 22px}
+.nh-h2{font-size:clamp(22px,3.2vw,30px);font-weight:800;line-height:1.3;letter-spacing:-.3px;text-align:center;margin:0 0 30px;text-wrap:balance;color:var(--fg)}
 
-/* generic section */
-.nh-section{max-width:1080px;margin:0 auto;padding:56px 22px}
-.nh-h2{font-size:clamp(22px,3.2vw,30px);font-weight:800;line-height:1.3;letter-spacing:-.3px;text-align:center;margin:0 0 30px;text-wrap:balance}
-
-/* two cards */
 .nh-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .nh-card{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:26px 24px;display:flex;flex-direction:column}
 .nh-card-gold{border-color:rgba(201,150,74,.55);background:linear-gradient(160deg,rgba(201,150,74,.08),var(--card) 55%)}
-.nh-card-t{font-size:20px;font-weight:800;margin:0 0 10px}
+.nh-card-t{font-size:20px;font-weight:800;margin:0 0 10px;color:var(--fg)}
 .nh-card-d{font-size:14.5px;line-height:1.7;color:var(--muted);margin:0 0 14px;flex:1}
 .nh-card-note{font-size:13px;color:var(--fg);margin:0 0 18px;opacity:.9}
 .nh-gold-note{color:var(--gold-l);font-weight:700;opacity:1}
 .nh-card-cta{width:100%;padding:13px;font-size:15px}
 
-/* approach */
-.nh-approach{text-align:center}
-.nh-approach-lede{font-size:16px;color:var(--muted);max-width:60ch;margin:0 auto 30px;line-height:1.7}
-.nh-principles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:right;margin-bottom:32px}
-.nh-principle{border:1px solid var(--border);background:var(--card);border-radius:14px;padding:22px 20px}
-.nh-principle-t{font-size:16.5px;font-weight:800;color:var(--gold-l);margin:0 0 8px}
-.nh-principle-d{font-size:14px;line-height:1.65;color:var(--muted);margin:0}
-.nh-approach-punch{font-size:clamp(18px,2.6vw,24px);font-weight:800;line-height:1.5;margin:0;color:var(--fg)}
+.nh-approach-sec{background:#101520;padding:72px 22px}
+.nh-approach-head{max-width:900px;margin:0 auto 8px;text-align:center}
+.nh-approach-lede{font-size:16px;color:var(--gold-l);font-weight:600;max-width:60ch;margin:0 auto 8px;line-height:1.7}
+.nh-approach-punch{font-size:clamp(18px,2.6vw,24px);font-weight:800;line-height:1.5;margin:34px auto 0;color:var(--fg);text-align:center;max-width:40ch}
 
-/* testimonials */
 .nh-tgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .nh-testi{border:1px solid var(--border);background:var(--card);border-radius:14px;padding:24px;margin:0}
 .nh-stars{color:var(--gold-l);font-size:15px;letter-spacing:2px;margin-bottom:12px}
 .nh-testi-q{font-size:15.5px;line-height:1.75;margin:0 0 14px;color:var(--fg)}
 .nh-testi-n{font-size:13.5px;font-weight:700;color:var(--muted)}
 
-/* final */
 .nh-final-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:760px;margin:0 auto}
 .nh-final-opt{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:24px;text-align:center;display:flex;flex-direction:column;gap:14px}
-.nh-final-lbl{font-size:16px;font-weight:700}
+.nh-final-lbl{font-size:16px;font-weight:700;color:var(--fg)}
 .nh-final-cta{width:100%;padding:13px;font-size:15px}
 
-/* footer */
 .nh-footer{border-top:1px solid var(--line);background:var(--bg2);padding:34px 22px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
-.nh-footer-brand{font-size:17px;font-weight:800}
+.nh-footer-brand{font-size:17px;font-weight:800;color:var(--fg)}
 .nh-footer-micro{font-size:12.5px;color:var(--muted)}
 .nh-footer-links{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;font-size:12.5px}
 .nh-footer-links a{color:var(--gold-l);text-decoration:none}
 .nh-footer-links span{color:var(--border)}
 
-/* ── TABLET ≤900 ── */
 @media(max-width:900px){
   .nh-nav{display:none}
-  .nh-hero{grid-template-columns:1fr;gap:0;min-height:0;padding:0 0 34px}
-  .nh-hero-media{order:-1;height:44svh;min-height:280px;border-radius:0;border:none;border-bottom:1px solid var(--border)}
-  .nh-hero-scrim{background:linear-gradient(to top,rgba(8,12,20,.9),transparent 55%)}
-  .nh-hero-body{padding:26px 22px 0}
-  .nh-hero-ctas{max-width:none}
-  .nh-principles{grid-template-columns:1fr}
   .nh-cards,.nh-tgrid,.nh-final-grid{grid-template-columns:1fr}
 }
-/* ── MOBILE ≤430 ── */
 @media(max-width:430px){
   .nh-hwrap{padding:0 16px;gap:10px}
   .nh-logo{font-size:17px}
-  .nh-section{padding:44px 18px}
-  .nh-hero-media{height:38svh;min-height:240px}
-  .nh-hero-body{padding:24px 18px 0}
-  .nh-h1{font-size:27px}
+  .nh-section{padding:48px 18px}
+  .nh-approach-sec{padding:56px 18px}
 }
 `;
