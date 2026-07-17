@@ -14,6 +14,10 @@ export function LayoutShell({
   const pathname = usePathname();
   const hideNav =
     FULL_SCREEN_ROUTES.includes(pathname) ||
+    // /new is an isolated experimental homepage with its own local header.
+    // Additive, affects only /new — no other route changes.
+    pathname === "/new" ||
+    pathname.startsWith("/new/") ||
     pathname.startsWith("/en") ||
     // חדר השידור is a full-viewport camera experience — no nav.
     pathname.startsWith("/hive/signal-kit/broadcast") ||
