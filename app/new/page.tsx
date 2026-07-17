@@ -23,14 +23,6 @@ export const metadata: Metadata = {
   alternates: {},
 };
 
-const NAV = [
-  { label: "אודות",           href: "/about" },
-  { label: "בינג׳",           href: "/binge" },
-  { label: "האות שלך",        href: "/kriah" },
-  { label: "כל המסלולים",     href: "/" },
-  { label: "האזור האישי שלי", href: "/account" },
-];
-
 const TESTIMONIALS = [
   { text: "הצלחתם להפוך את הנקודה שהכי קשה לי בעסק לנקודת חוזקה, ואני אפילו נהנה מזה עכשיו. אין עליכם, תודה ענקית.", name: "רועי מנדלמן" },
   { text: "אחרי אכזבות מחברות אחרות, סוף סוף מצאתי צוות מקצועי וקשוב. הם לקחו את העסק שלי כמה צעדים קדימה עם תוכן מדויק שהביא לי הרבה פניות.", name: "גל מסס" },
@@ -44,19 +36,9 @@ export default function NewHome() {
     <div dir="rtl" className="nh-root">
       <style>{NH_CSS}</style>
 
-      {/* ── Local header (isolated to /new) ── */}
-      <header className="nh-header">
-        <div className="nh-hwrap">
-          <a href="/new" className="nh-logo">הדר דנן</a>
-          <nav className="nh-nav">
-            {NAV.map((n) => <a key={n.href} href={n.href} className="nh-navlink">{n.label}</a>)}
-          </nav>
-          <div className="nh-hcta">
-            <a href="/login" className="nh-quiet">התחבר</a>
-            <TrackedCta dest="strategy" placement="header" className="nh-gold nh-gold-sm">לעבוד עם הדר</TrackedCta>
-          </div>
-        </div>
-      </header>
+      {/* Top banner (global nav) + footer are the site's originals — restored
+          per Alon. Nav comes from the global layout (LayoutShell no longer hides
+          /new); the footer below mirrors the existing homepage footer. */}
 
       <main>
         {/* ══ HERO — original treatment restored ══ */}
@@ -169,12 +151,35 @@ export default function NewHome() {
         </section>
       </main>
 
-      {/* ══ Local minimal footer ══ */}
-      <footer className="nh-footer">
-        <div className="nh-footer-brand">הדר דנן</div>
-        <div className="nh-footer-micro">אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></div>
-        <div className="nh-footer-links">
-          <a href="/about">אודות</a><span>·</span><a href="/kriah">האות שלך</a><span>·</span><a href="/strategy">עבודה עם הדר</a><span>·</span><a href="/privacy">פרטיות</a>
+      {/* ══ Footer — mirrors the existing homepage footer ══ */}
+      <footer className="px-6 py-12" style={{ background: "#101520", paddingBottom: "48px" }}>
+        <div className="max-w-5xl mx-auto flex flex-col gap-8">
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm" style={{ color: "#AAB0BD" }}>
+            {[
+              { label: "בית",        href: "/" },
+              { label: "הדרכה",      href: "/training" },
+              { label: "אתגר",       href: "/challenge" },
+              { label: "כוורת האות", href: "/signal-hive" },
+              { label: "סדנה",       href: "/workshop" },
+              { label: "אסטרטגיה",   href: "/strategy" },
+              { label: "פרימיום",    href: "/premium" },
+              { label: "שותפות",     href: "/partnership" },
+              { label: "אזור אישי",  href: "/my" },
+            ].map((link) => (
+              <a key={link.href} href={link.href} className="hover:text-white transition" style={{ color: "#E8B94A" }}>{link.label}</a>
+            ))}
+          </nav>
+          <div className="flex flex-col items-center gap-2 text-xs" style={{ color: "#AAB0BD" }}>
+            <div className="flex gap-4">
+              <a href="/privacy" className="hover:text-white transition">מדיניות פרטיות</a>
+              <a href="/terms" className="hover:text-white transition">תנאי שימוש</a>
+              <a href="/accessibility" className="hover:text-white transition">הצהרת נגישות</a>
+            </div>
+            <p className="font-medium">אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></p>
+            <p>© 2026 הדר דנן בע״מ | ח.פ. 516791555 · כל הזכויות שמורות</p>
+            <p>החילזון 5, רמת גן | 053-9566961</p>
+            <p className="mt-1"><a href="/unsubscribe" className="hover:text-white transition">לביטול הסכמה לדיוור</a></p>
+          </div>
         </div>
       </footer>
     </div>
