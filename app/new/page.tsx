@@ -99,7 +99,7 @@ export default function NewHome() {
             <article className="nh-card">
               <h3 className="nh-card-t">אני צריך להבין מה האות שלי</h3>
               <p className="nh-card-d">מתחילים בכמה שאלות קצרות על העסק, ממשיכים לקריאה האישית ומגלים מה אנשים מקבלים דווקא מכם.</p>
-              <p className="nh-card-note">האבחון הקיים נשאר בדיוק כפי שהוא.</p>
+              <p className="nh-card-note">בסוף תקבלו קריאה אישית שמנסחת את האות שלכם במילים.</p>
               <TrackedCta dest="kriah" placement="path_card" className="nh-out nh-card-cta">לקריאת האות — ללא עלות</TrackedCta>
             </article>
             <article className="nh-card nh-card-gold">
