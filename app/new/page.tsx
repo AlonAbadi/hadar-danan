@@ -46,13 +46,15 @@ export default function NewHome() {
         <section style={{ overflow: "hidden", background: "#0B1220" }}>
 
           {/* MOBILE: full-bleed photo, bottom-anchored content (original design) */}
-          <div className="md:hidden" style={{ position: "relative", height: "88svh" }}>
+          <div className="md:hidden" style={{ position: "relative", height: "80svh" }}>
             <Image src="/hadar1.jpg" alt="הדר דנן" fill priority sizes="100vw"
-              style={{ objectFit: "cover", objectPosition: "center 10%" }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #080C14 0%, rgba(8,12,20,0.95) 22%, rgba(8,12,20,0.85) 38%, rgba(8,12,20,0.6) 56%, rgba(8,12,20,0.3) 70%, transparent 85%)" }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(13,16,24,0.4) 0%, transparent 30%)" }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #080C14 0%, rgba(8,12,20,0.6) 25%, transparent 55%)" }} />
-            <div style={{ position: "absolute", bottom: "40px", left: 0, right: 0, padding: "0 24px", direction: "rtl", textAlign: "right" }}>
+              style={{ objectFit: "cover", objectPosition: "center 8%" }} />
+            {/* Softer scrim — the photo stays visible behind the copy so the hero
+                reads as ONE layer (text over image), not image + a dark block. */}
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(8,12,20,0.88) 0%, rgba(8,12,20,0.72) 34%, rgba(8,12,20,0.42) 56%, rgba(8,12,20,0.12) 76%, transparent 92%)" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(13,16,24,0.45) 0%, transparent 26%)" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(8,12,20,0.5) 0%, rgba(8,12,20,0.2) 28%, transparent 55%)" }} />
+            <div style={{ position: "absolute", bottom: "34px", left: 0, right: 0, padding: "0 24px", direction: "rtl", textAlign: "right" }}>
               <div className="nh-eyebrow"><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · הדרך</div>
               <h1 style={{ color: "#EDE9E1", fontWeight: 900, fontSize: "clamp(1.8rem, 7vw, 2.7rem)", lineHeight: 1.14, letterSpacing: "-0.02em", marginBottom: 12, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
               <p style={{ color: "#AAB0BD", fontSize: "clamp(0.95rem, 2.2vw, 1.05rem)", lineHeight: 1.65, marginBottom: 16 }}>{LEDE}</p>
