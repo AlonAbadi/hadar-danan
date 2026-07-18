@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { TrackedCta } from "./TrackedCta";
-import { PhilosophySection } from "@/components/landing/PhilosophySection";
+import { Wrench, PlayCircle, Sparkles, LayoutGrid, Share2, Activity, TrendingUp, Target, PenLine, BarChart3, Heart, Leaf, Flower2, ChevronDown } from "lucide-react";
 
 // Reused ORIGINAL homepage elements (rendered as-is; their behavior is not
 // changed for any other page). This restores the exact existing design.
@@ -111,13 +112,69 @@ export default function NewHome() {
           </div>
         </section>
 
-        {/* ══ Approach — reused original PhilosophySection ══ */}
-        <section className="nh-approach-sec">
-          <div className="nh-approach-head">
-            <h2 className="nh-h2" style={{ marginBottom: 8 }}>הגישה שלנו</h2>
-            <p className="nh-approach-lede">כי אפשר למכור רק את מה שאתם באמת — זה הבסיס של <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>.</p>
+        {/* ══ Recognition — you tried everything ══ */}
+        <section className="nh-recog">
+          <div className="nh-eyebrow2">הכרה</div>
+          <h2 className="nh-h2">עדיין לא בטוח <span className="nh-gd">מה הצעד הבא?</span></h2>
+          <p className="nh-recog-sub">ניסית כבר הרבה. אולי מה שחסר הוא בסיס אחד ברור.</p>
+          <div className="nh-recog-items">
+            <div className="nh-recog-item"><span className="nh-ric"><Sparkles size={20} strokeWidth={1.6} /></span><span>שאלת את ה-AI.</span></div>
+            <div className="nh-recog-item"><span className="nh-ric"><PlayCircle size={20} strokeWidth={1.6} /></span><span>צפית בקורסים.</span></div>
+            <div className="nh-recog-item"><span className="nh-ric"><Wrench size={20} strokeWidth={1.6} /></span><span>קנית את הכלים.</span></div>
           </div>
-          <PhilosophySection />
+        </section>
+
+        {/* ══ Noise → Signal journey (vertical timeline on mobile) ══ */}
+        <section className="nh-journey">
+          <div className="nh-jhead">
+            <div className="nh-eyebrow2">מרעש לסיגנל</div>
+            <h2 className="nh-h2">מתחת לרעש, יש משהו עקבי.<br /><span className="nh-gd">משהו שרק אתה יכול להביא.</span></h2>
+          </div>
+          <div className="nh-flow">
+            {[
+              { Icon: LayoutGrid, t: "רעש",    d: "הכל. בכל מקום." },
+              { Icon: Share2,     t: "דפוסים", d: "מזהים את מה שחוזר." },
+              { Icon: Activity,   t: "סיגנל",  d: "בהירות על מה שרק אתה." },
+              { Icon: TrendingUp, t: "צמיחה",  d: "אתה צומח. אתה מוביל." },
+            ].map((s, i) => (
+              <Fragment key={s.t}>
+                <div className="nh-flow-step">
+                  <div className="nh-flow-ic"><s.Icon size={26} strokeWidth={1.5} /></div>
+                  <div className="nh-flow-txt"><div className="nh-flow-t">{s.t}</div><div className="nh-flow-d">{s.d}</div></div>
+                </div>
+                {i < 3 && <div className="nh-flow-arrow" aria-hidden>←</div>}
+              </Fragment>
+            ))}
+          </div>
+        </section>
+
+        {/* ══ System — the signal drives everything ══ */}
+        <section className="nh-sys-sec">
+          <div className="nh-sys-grid">
+            <div className="nh-sys-copy">
+              <div className="nh-eyebrow2">בהירות הופכת למערכת</div>
+              <h2 className="nh-h2">הסיגנל שלך <span className="nh-gd">מניע הכל.</span></h2>
+              <p>כשהסיגנל שלך ברור, כל מה שאתה בונה מיושר לאותו כיוון. לא עוד רעיונות מפוזרים, אלא מערכת אחת שמושכת לאותו מקום.</p>
+            </div>
+            <div className="nh-sys-diagram">
+              <div className="nh-sys-node"><Activity size={18} strokeWidth={1.6} /><b>הסיגנל שלך</b><span>מי אתה, ומה רק אתה יכול להציע</span></div>
+              <div className="nh-sys-down"><ChevronDown size={22} /></div>
+              <div className="nh-sys-kids">
+                <div className="nh-sys-kid"><span className="nh-kic"><Target size={18} strokeWidth={1.6} /></span><b>אסטרטגיה</b><span>על מה להתמקד. מה חשוב עכשיו.</span></div>
+                <div className="nh-sys-kid"><span className="nh-kic"><PenLine size={18} strokeWidth={1.6} /></span><b>תוכן</b><span>איך הסיגנל הופך לתקשורת.</span></div>
+                <div className="nh-sys-kid"><span className="nh-kic"><BarChart3 size={18} strokeWidth={1.6} /></span><b>דאטה</b><span>מה עובד. מה מצטבר.</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ══ Principles + punch ══ */}
+        <section className="nh-princ-sec">
+          <div className="nh-princ">
+            <div className="nh-princ-item"><div className="nh-pic"><Heart size={22} strokeWidth={1.5} /></div><h4>האדם במרכז</h4><p>אנחנו מאמינים באנשים. הטכנולוגיה כאן כדי לשרת אותם, לא להפך.</p></div>
+            <div className="nh-princ-item"><div className="nh-pic"><Leaf size={22} strokeWidth={1.5} /></div><h4>נבנה להחזיק</h4><p>בהירות היום, צמיחה מחר. השפעה שנשארת, לא טרנד שחולף.</p></div>
+            <div className="nh-princ-item"><div className="nh-pic"><Flower2 size={22} strokeWidth={1.5} /></div><h4>מדע ונשמה</h4><p>דאטה ופסיכולוגיה. אסטרטגיה ואינטואיציה. ביחד, לא בנפרד.</p></div>
+          </div>
           <p className="nh-approach-punch">אנחנו לא מוכרים סרטונים.<br />אנחנו בונים את הבהירות שגורמת לתוכן לעבוד.</p>
         </section>
 
@@ -222,10 +279,69 @@ const NH_CSS = `
 .nh-gold-note{color:var(--gold-l);font-weight:700;opacity:1}
 .nh-card-cta{width:100%;padding:13px;font-size:15px}
 
-.nh-approach-sec{background:#101520;padding:72px 22px}
-.nh-approach-head{max-width:900px;margin:0 auto 8px;text-align:center}
-.nh-approach-lede{font-size:16px;color:var(--gold-l);font-weight:600;max-width:60ch;margin:0 auto 8px;line-height:1.7}
-.nh-approach-punch{font-size:clamp(18px,2.6vw,24px);font-weight:800;line-height:1.5;margin:34px auto 0;color:var(--fg);text-align:center;max-width:40ch}
+.nh-gd{color:var(--gold-l)}
+.nh-eyebrow2{font-size:11px;letter-spacing:3px;font-weight:800;color:var(--gold);text-transform:uppercase;margin-bottom:14px;text-align:center}
+
+/* recognition */
+.nh-recog{max-width:1000px;margin:0 auto;padding:64px 22px;text-align:center}
+.nh-recog-sub{color:var(--muted);font-size:15.5px;margin:0 auto 30px;max-width:50ch;line-height:1.7}
+.nh-recog-items{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:760px;margin:0 auto}
+.nh-recog-item{display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 16px;border:1px solid var(--border);background:var(--card);border-radius:14px;font-size:15px;color:var(--fg);font-weight:600}
+.nh-ric{width:46px;height:46px;border-radius:13px;background:rgba(201,150,74,.1);border:1px solid rgba(201,150,74,.25);display:flex;align-items:center;justify-content:center;color:var(--gold-l);flex:none}
+
+/* journey — horizontal desktop, vertical timeline mobile */
+.nh-journey{background:#0B0F17;padding:70px 22px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.nh-jhead{max-width:760px;margin:0 auto 42px;text-align:center}
+.nh-flow{max-width:940px;margin:0 auto;display:flex;align-items:flex-start;justify-content:center;gap:4px}
+.nh-flow-step{flex:1;max-width:190px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px}
+.nh-flow-ic{width:64px;height:64px;border-radius:50%;border:1px solid rgba(201,150,74,.3);background:rgba(201,150,74,.06);display:flex;align-items:center;justify-content:center;color:var(--gold-l);flex:none}
+.nh-flow-txt{display:flex;flex-direction:column;align-items:center;gap:3px}
+.nh-flow-t{font-size:16.5px;font-weight:800;color:var(--fg)}
+.nh-flow-d{font-size:13px;color:var(--muted);line-height:1.5}
+.nh-flow-arrow{color:var(--gold);font-size:24px;align-self:flex-start;margin-top:20px;flex:none}
+
+/* system — text + tree */
+.nh-sys-sec{max-width:1080px;margin:0 auto;padding:72px 22px}
+.nh-sys-grid{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center}
+.nh-sys-copy{text-align:right}
+.nh-sys-copy .nh-eyebrow2,.nh-sys-copy .nh-h2{text-align:right;margin-right:0}
+.nh-sys-copy .nh-h2{text-align:right;margin-bottom:14px}
+.nh-sys-copy p{color:var(--muted);font-size:15.5px;line-height:1.75;max-width:46ch;margin:0}
+.nh-sys-diagram{display:flex;flex-direction:column;align-items:center}
+.nh-sys-node{width:100%;max-width:360px;border:1px solid rgba(201,150,74,.5);background:linear-gradient(160deg,rgba(201,150,74,.1),var(--card));border-radius:14px;padding:16px 18px;text-align:center;color:var(--gold-l)}
+.nh-sys-node b{color:var(--gold-l);display:block;font-size:15.5px;margin:6px 0 3px}
+.nh-sys-node span{font-size:12.5px;color:var(--muted)}
+.nh-sys-down{color:var(--gold);margin:8px 0}
+.nh-sys-kids{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:520px}
+.nh-sys-kid{border:1px solid var(--border);background:var(--card);border-radius:12px;padding:16px 12px;text-align:center}
+.nh-kic{color:var(--gold-l);margin-bottom:8px;display:flex;justify-content:center}
+.nh-sys-kid b{display:block;font-size:14.5px;color:var(--fg);margin-bottom:4px}
+.nh-sys-kid span{font-size:11.5px;color:var(--muted);line-height:1.5}
+
+/* principles + punch */
+.nh-princ-sec{background:#101520;padding:70px 22px;border-top:1px solid var(--line)}
+.nh-princ{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.nh-princ-item{text-align:center;padding:8px}
+.nh-pic{width:50px;height:50px;border-radius:14px;background:rgba(201,150,74,.1);border:1px solid rgba(201,150,74,.25);display:flex;align-items:center;justify-content:center;color:var(--gold-l);margin:0 auto 14px}
+.nh-princ-item h4{font-size:17px;font-weight:800;color:var(--fg);margin:0 0 8px}
+.nh-princ-item p{font-size:13.5px;color:var(--muted);line-height:1.65;margin:0}
+.nh-approach-punch{font-size:clamp(18px,2.6vw,24px);font-weight:800;line-height:1.5;margin:44px auto 0;color:var(--fg);text-align:center;max-width:40ch}
+
+/* ── new-section mobile ── */
+@media(max-width:760px){
+  .nh-recog-items{grid-template-columns:1fr;gap:12px}
+  .nh-recog-item{flex-direction:row;justify-content:flex-start;text-align:right;padding:16px 18px;gap:16px}
+  .nh-flow{flex-direction:column;align-items:stretch;gap:0;max-width:400px}
+  .nh-flow-step{max-width:none;flex-direction:row;align-items:center;text-align:right;gap:18px;padding:4px 0}
+  .nh-flow-ic{width:56px;height:56px}
+  .nh-flow-txt{align-items:flex-start}
+  .nh-flow-arrow{align-self:flex-start;margin:2px 28px;transform:rotate(-90deg)}
+  .nh-sys-grid{grid-template-columns:1fr;gap:28px}
+  .nh-sys-copy,.nh-sys-copy .nh-eyebrow2,.nh-sys-copy .nh-h2{text-align:center}
+  .nh-sys-copy p{margin:0 auto}
+  .nh-sys-kids{grid-template-columns:1fr;max-width:360px}
+  .nh-princ{grid-template-columns:1fr;gap:28px}
+}
 
 .nh-tgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .nh-testi{border:1px solid var(--border);background:var(--card);border-radius:14px;padding:24px;margin:0}
