@@ -11,6 +11,7 @@ import { kriahPreviewAllowed } from "@/lib/isolation";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { rateLimit } from "@/lib/rate-limit";
+import { getUtmFromRequestCookies } from "@/lib/utm/server";
 import {
   SIGNAL_ENGINE_MODEL,
   SIGNAL_ENGINE_MAX_TOKENS,
@@ -307,11 +308,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // First-touch attribution for the users row itself. The extraction row
+    // already stores source_utm, but the CRM/acquisition dashboards read
+    // users.utm_* — without this, every signal-created lead is "ישיר / לא ידוע".
+    const utmFields = await getUtmFromRequestCookies();
+
     // Upsert the lead. Match by email; create with status=lead if new.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existing } = await (db as any)
       .from("users")
-      .select("id, name, phone, occupation, status, hive_status, gender, is_test")
+      .select("id, name, phone, occupation, status, hive_status, gender, is_test, utm_source")
       .eq("email", emailStr)
       .maybeSingle();
 
@@ -337,6 +343,8 @@ export async function POST(req: NextRequest) {
         patch.marketing_consent = true;
         patch.consent_at        = new Date().toISOString();
       }
+      // fill attribution only when the row has none (first touch wins)
+      if (!existing.utm_source && utmFields.utm_source) Object.assign(patch, utmFields);
       if (Object.keys(patch).length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (db as any).from("users").update(patch).eq("id", userId);
@@ -361,6 +369,7 @@ export async function POST(req: NextRequest) {
       const detectedAtCreate = detectGender(nameStr.split(" ")[0]);
       insertPayload.gender = detectedAtCreate;
       if (isTestRun) insertPayload.is_test = true;
+      Object.assign(insertPayload, utmFields);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: created, error: insErr } = await (db as any)
         .from("users")

@@ -7,9 +7,15 @@
  * 3. Email not found                                  → create a new lead row
  */
 import { createServerClient } from "@/lib/supabase/server";
+import { getUtmFromRequestCookies } from "@/lib/utm/server";
 
 export async function linkAuthUser(authId: string, email: string) {
   const supabase = createServerClient();
+
+  // First-touch attribution: OAuth/password signups never pass through
+  // POST /api/signup, so without this every Google signup lands with
+  // utm_source = null ("ישיר / לא ידוע" in the admin).
+  const utm = await getUtmFromRequestCookies();
 
   // Lookup must be case-insensitive: Cardcom guests + signup forms preserve
   // the typed casing ("Foo@Gmail.com"), while OAuth providers (Google) hand
@@ -28,7 +34,13 @@ export async function linkAuthUser(authId: string, email: string) {
     if (!existing.auth_id) {
       const { data: updated } = await supabase
         .from("users")
-        .update({ auth_id: authId, email: normalized, email_verified: true })
+        .update({
+          auth_id: authId,
+          email: normalized,
+          email_verified: true,
+          // fill attribution only when the row has none (first touch wins)
+          ...(existing.utm_source ? {} : utm),
+        })
         .eq("id", existing.id)
         .select()
         .single();
@@ -44,6 +56,7 @@ export async function linkAuthUser(authId: string, email: string) {
       email:   normalized,
       status:  "lead",
       email_verified: true,
+      ...utm,
     })
     .select()
     .single();

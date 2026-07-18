@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { getUtmFromRequestCookies } from "@/lib/utm/server";
 import {
   SIGNAL_ENGINE_EN_MODEL,
   SIGNAL_ENGINE_EN_MAX_TOKENS,
@@ -90,13 +91,15 @@ export async function POST(req: NextRequest) {
   const db = createServerClient();
   const fullName = [firstStr, lastStr].filter(Boolean).join(" ");
 
-  // Upsert lead by email. status=lead, locale tracked via utm_source=en for now
-  // (until a dedicated locale column ships).
+  // Upsert lead by email. status=lead. First-touch UTM attribution rides the
+  // insert (same capture as the Hebrew funnel) so EN leads don't land as
+  // "direct/unknown" in the acquisition dashboards.
+  const utmFields = await getUtmFromRequestCookies();
   let userId: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: existing } = await (db as any)
     .from("users")
-    .select("id, name, occupation")
+    .select("id, name, occupation, utm_source")
     .eq("email", emailStr)
     .maybeSingle();
 
@@ -105,6 +108,8 @@ export async function POST(req: NextRequest) {
     const patch: Record<string, string> = {};
     if (!existing.name && fullName) patch.name = fullName;
     if (!existing.occupation && occupationStr) patch.occupation = occupationStr;
+    // fill attribution only when the row has none (first touch wins)
+    if (!existing.utm_source && utmFields.utm_source) Object.assign(patch, utmFields);
     if (Object.keys(patch).length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (db as any).from("users").update(patch).eq("id", userId);
@@ -114,6 +119,7 @@ export async function POST(req: NextRequest) {
       email:  emailStr,
       name:   fullName,
       status: "lead",
+      ...utmFields,
     };
     if (occupationStr) insertPayload.occupation = occupationStr;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
