@@ -29,8 +29,8 @@ const TESTIMONIALS = [
   { text: "אחרי אכזבות מחברות אחרות, סוף סוף מצאתי צוות מקצועי וקשוב. הם לקחו את העסק שלי כמה צעדים קדימה עם תוכן מדויק שהביא לי הרבה פניות.", name: "גל מסס" },
 ];
 
-const HEADLINE = "אם כולם יכולים להגיד את מה שאתה אומר,\nלמה שיבחרו דווקא בך?";
-const LEDE = "מצא את המסר שאי אפשר להעתיק, והפוך אותו לתוכן, למותג וללקוחות.";
+const HEADLINE = "אם כולם אומרים את מה שאתה אומר,\nלמה שיבחרו בך?";
+const LEDE = "מצא את המסר שאי אפשר להעתיק, והפוך אותו לעסק שגדל, ללקוחות הנכונים ולתחושה טובה בעשייה.";
 
 export default function NewHome() {
   return (
@@ -54,7 +54,7 @@ export default function NewHome() {
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #080C14 0%, rgba(8,12,20,0.6) 25%, transparent 55%)" }} />
             <div style={{ position: "absolute", bottom: "40px", left: 0, right: 0, padding: "0 24px", direction: "rtl", textAlign: "right" }}>
               <div className="nh-eyebrow"><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · הדרך</div>
-              <h1 style={{ color: "#EDE9E1", fontWeight: 900, fontSize: "clamp(2.1rem, 8vw, 3rem)", lineHeight: 1.08, letterSpacing: "-0.02em", marginBottom: 12, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
+              <h1 style={{ color: "#EDE9E1", fontWeight: 900, fontSize: "clamp(1.8rem, 7vw, 2.7rem)", lineHeight: 1.14, letterSpacing: "-0.02em", marginBottom: 12, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
               <p style={{ color: "#AAB0BD", fontSize: "clamp(0.95rem, 2.2vw, 1.05rem)", lineHeight: 1.65, marginBottom: 16 }}>{LEDE}</p>
               <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero" style={{ width: "100%", marginBottom: 10 }}>לגלות את ה־TrueSignal שלי — בחינם</TrackedCta>
               <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero" style={{ width: "100%" }}>לעבוד ישירות עם הדר</TrackedCta>
