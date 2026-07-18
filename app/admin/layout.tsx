@@ -19,6 +19,7 @@ const PAGE_NAMES: Record<string, string> = {
   '/admin/movement':    'מנוע התנועה',
   '/admin/email':       'אימיילים',
   '/admin/acquisition': 'רכישת לקוחות',
+  '/admin/activity':    'פעילות משתמשים רשומים',
   '/admin/conversions': 'אירועי CAPI',
   '/admin/abtesting':   'A/B Testing',
   '/admin/training':    'שיעור במתנה',

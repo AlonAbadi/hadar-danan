@@ -83,6 +83,7 @@ const NAV_CARDS = [
   { title: 'הכוורת',          desc: 'חברי קהילה, MRR, שימור מנויים',          href: '/admin/community',   group: 'קהילה',    icon: '🐝' },
   { title: 'חדר השידור',      desc: 'מי מצלמת, טייקים, רילסים ופרסומים',      href: '/admin/broadcast',   group: 'קהילה',    icon: '🎬' },
   { title: 'מנוע האות',       desc: 'אבחוני TrueSignal© של לידים — האות שלהם',  href: '/admin/signal',      group: 'קהילה',    icon: '✨' },
+  { title: 'פעילות משתמשים',  desc: 'משתמשים רשומים: ביקורים, זמן באתר, מקורות', href: '/admin/activity', group: 'אנליטיקה', icon: '📈' },
   { title: 'מודל MMM',        desc: 'הקצאת תקציב, רגרסיה, תחזיות',           href: '/admin/mmm',         group: 'אנליטיקה', icon: '🔬' },
   { title: 'לוגים ומערכת',    desc: 'שגיאות, אירועים, מעקב מערכת',           href: '/admin/system',      group: 'מערכת',    icon: '⚙️' },
 ];
