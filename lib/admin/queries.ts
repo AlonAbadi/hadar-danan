@@ -130,17 +130,35 @@ function getLeadScore(status: string): number {
 }
 
 // ─── Email Performance ────────────────────────────────
+// Measurement model: emails are text-only (no tracking pixel — Apple Mail
+// pre-fetches pixels and fakes opens), so the ONLY engagement signal is a
+// CTA click, recorded by /api/email/click as status='opened'. We surface it
+// honestly as "clicked" — true open counts don't exist in this system.
 export async function getEmailStats() {
   const supabase = createServerClient();
 
-  const [logsRes, seqsRes] = await Promise.all([
-    supabase.from('email_logs').select('sequence_id, status'),
-    supabase.from('email_sequences').select('id, template_key, trigger_event, delay_hours'),
-  ]);
+  const { data: seqData } = await supabase
+    .from('email_sequences')
+    .select('id, template_key, trigger_event, delay_hours');
+
+  // email_logs is past 1,000 rows — PostgREST silently caps un-ranged
+  // selects at 1,000, which dropped every recent send from this report.
+  // Page through the full table.
+  const logs: { sequence_id: string | null; status: string }[] = [];
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('email_logs')
+      .select('sequence_id, status')
+      .range(from, from + PAGE - 1);
+    if (error || !data) break;
+    logs.push(...data);
+    if (data.length < PAGE) break;
+  }
 
   // Build lookup: sequence UUID → { template_key, trigger_event, delay_hours }
   const seqMeta: Record<string, { templateKey: string; trigger: string; delayHours: number }> = {};
-  for (const s of seqsRes.data ?? []) {
+  for (const s of seqData ?? []) {
     seqMeta[s.id] = { templateKey: s.template_key, trigger: s.trigger_event, delayHours: s.delay_hours };
   }
 
@@ -149,25 +167,25 @@ export async function getEmailStats() {
     trigger: string;
     delayHours: number;
     sent: number;
-    opened: number;
     clicked: number;
-    bounced: number;
   }> = {};
 
-  for (const log of logsRes.data ?? []) {
-    const id = log.sequence_id || 'unknown';
+  for (const log of logs) {
+    // sequence_id null = direct send (the full signal reading emailed from
+    // the result page or the kriah gate) — grouped under one row.
+    const id = log.sequence_id || 'direct';
     if (!sequences[id]) {
       const meta = seqMeta[id];
       sequences[id] = {
-        templateKey: meta?.templateKey ?? id,
-        trigger:     meta?.trigger     ?? '',
+        templateKey: meta?.templateKey ?? (id === 'direct' ? 'direct_send' : id),
+        trigger:     meta?.trigger     ?? (id === 'direct' ? 'DIRECT' : ''),
         delayHours:  meta?.delayHours  ?? 0,
-        sent: 0, opened: 0, clicked: 0, bounced: 0,
+        sent: 0, clicked: 0,
       };
     }
     sequences[id].sent += 1;
-    if (log.status === 'opened')  sequences[id].opened  += 1;
-    if (log.status === 'clicked') sequences[id].clicked += 1;
+    // 'opened' is set on first CTA click (click implies open — no pixel).
+    if (log.status === 'opened' || log.status === 'clicked') sequences[id].clicked += 1;
   }
 
   return Object.entries(sequences).map(([id, s]) => ({
@@ -176,11 +194,8 @@ export async function getEmailStats() {
     trigger:     s.trigger,
     delayHours:  s.delayHours,
     sent:        s.sent,
-    opened:      s.opened,
     clicked:     s.clicked,
-    bounced:     s.bounced,
-    openRate: s.sent > 0 ? Math.round((s.opened / s.sent) * 100) : 0,
-    ctr:      s.opened > 0 ? Math.round((s.clicked / s.opened) * 100) : 0,
+    clickRate:   s.sent > 0 ? Math.round((s.clicked / s.sent) * 100) : 0,
   }));
 }
 

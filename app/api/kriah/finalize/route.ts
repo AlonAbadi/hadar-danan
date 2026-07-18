@@ -128,6 +128,22 @@ export async function POST(req: NextRequest) {
       // The letter still shows on screen — email failure is non-fatal.
       return NextResponse.json({ ok: true, emailed: false });
     }
+
+    // Log to email_logs so the reading delivery shows up in /admin/email —
+    // no sequence_id since this isn't a sequence send. Soft-fail.
+    const { error: logErr } = await db.from("email_logs").insert({
+      user_id:     user.id,
+      sequence_id: null,
+      status:      "sent",
+      sent_at:     new Date().toISOString(),
+    });
+    if (logErr) {
+      await db.from("error_logs").insert({
+        context: "api/kriah/finalize — email_logs insert",
+        error:   String(logErr.message ?? logErr),
+        payload: { extractionId },
+      });
+    }
   } catch (e) {
     await db.from("error_logs").insert({
       context: "api/kriah/finalize — send threw",

@@ -115,15 +115,20 @@ export async function POST(
 
     // Log to email_logs so it shows up in /admin/email — no sequence_id since
     // this isn't a sequence send. Soft-fail; doesn't block the response.
-    try {
-      await safeFrom(supabase, "email_logs").insert({
-        user_id:     row.user_id,
-        sequence_id: null,
-        status:      "sent",
-        subject:     rendered.subject,
-        sent_at:     new Date().toISOString(),
+    // email_logs has no `subject` column — inserting one fails the whole row.
+    const { error: logErr } = await safeFrom(supabase, "email_logs").insert({
+      user_id:     row.user_id,
+      sequence_id: null,
+      status:      "sent",
+      sent_at:     new Date().toISOString(),
+    });
+    if (logErr) {
+      await supabase.from("error_logs").insert({
+        context: "api/signal/[id]/email-result — email_logs insert",
+        error:   String(logErr.message ?? logErr),
+        payload: { extractionId: id, userId: row.user_id },
       });
-    } catch {}
+    }
 
     return NextResponse.json({ ok: true });
   } catch (e) {
