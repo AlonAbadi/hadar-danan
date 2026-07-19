@@ -1,720 +1,547 @@
 import type { Metadata } from "next";
-import { cookies, headers } from "next/headers";
 import Image from "next/image";
-import Link from "next/link";
 import dynamic from "next/dynamic";
-import { parseVariant, AB_CONTENT } from "@/lib/ab";
-import { createServerClient } from "@/lib/supabase/server";
-import { PageTracker } from "@/components/landing/PageTracker";
-import { HomeHeroCtaTracker } from "@/components/landing/HomeHeroCtaTracker";
-const ProductsSection = dynamic(() => import("@/components/ProductsSection").then(m => ({ default: m.ProductsSection })));
-import { BookOpen, Zap, Target, GraduationCap, Compass, Video, Users, Sparkles } from "lucide-react";
+import { TrackedCta } from "./TrackedCta";
+import { ChevronDown } from "lucide-react";
+import { SignalCanvas } from "./SignalCanvas";
+import { HexDefs, HoneyHex, IcAI, IcCopy, IcLost, IcSignal, IcStrategy, IcContent, IcData, IcHuman, IcLasting, IcSoul } from "./glyphs";
 
-const StatsSection       = dynamic(() => import("@/components/landing/StatsSection").then(m => ({ default: m.StatsSection })));
-const SocialProofStrip   = dynamic(() => import("@/components/SocialProofStrip"));
-const PhilosophySection  = dynamic(() => import("@/components/landing/PhilosophySection").then(m => ({ default: m.PhilosophySection })));
+// Reused ORIGINAL homepage elements (rendered as-is; their behavior is not
+// changed for any other page). This restores the exact existing design.
+const StatsSection     = dynamic(() => import("@/components/landing/StatsSection").then(m => ({ default: m.StatsSection })));
+const SocialProofStrip = dynamic(() => import("@/components/SocialProofStrip"));
 const WorkshopTestimonials = dynamic(() => import("@/app/workshop/WorkshopTestimonials").then(m => ({ default: m.WorkshopTestimonials })));
-const HomeStickyBar      = dynamic(() => import("@/components/home/HomeStickyBar"));
-const HomeBingeSection   = dynamic(() => import("@/components/home/HomeBingeSection"));
+const QuizProofWall = dynamic(() => import("@/components/landing/QuizProofWall"));
 
+/**
+ * /new — ISOLATED experimental homepage (two-doors concept).
+ * Restores the ORIGINAL homepage design for every reused element: the hero
+ * treatment of Hadar's photo (full-bleed + mask fade, mobile + desktop), the
+ * gold button style, and the real StatsSection / SocialProofStrip / Philosophy
+ * components. Only the layout intent (two doors) is new. Does not touch the
+ * existing homepage, /kriah, /strategy, or any shared behavior. noindex.
+ */
 export const metadata: Metadata = {
-  title: "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
-  description: "אנחנו עוזרים לעסקים לאתר איפה הם חזקים באמת - ולבנות שיווק שמרגיש טבעי ומביא תוצאות",
-  alternates: { canonical: "/" },
+  title: "הדר דנן",
+  robots: { index: false, follow: false },
+  alternates: {},
 };
 
-async function getUserCount(): Promise<number> {
-  try {
-    const supabase = createServerClient();
-    const { count } = await supabase.from("users").select("*", { count: "exact", head: true });
-    return count ?? 0;
-  } catch {
-    return 0;
-  }
-}
+const HEADLINE = "אם כולם אומרים את מה שאתה אומר, למה שיבחרו בך?";
+const LEDE = "מצא את המסר שאי אפשר להעתיק, והפוך אותו לעסק שגדל, ללקוחות הנכונים ולתחושה טובה בעשייה.";
 
-
-const ROW1_PRODUCTS = [
-  { title: "הדרכה חינמית",    who: "לכל מי שרוצה להבין למה השיווק שלו לא עובד",                      price: "חינם",          cta: "התחל כאן ←",         href: "/training",    icon: BookOpen },
-  { title: "אתגר 7 ימים",     who: "לכל מי שרוצה לצאת לדרך ולייצר תוכן שמביא לקוחות",              price: "₪197",  priceOriginal: "₪297",  cta: "להתחיל ←", href: "/challenge",   icon: Zap },
-  { title: "כוורת האות",      who: "לכל מי שגילה את האות ורוצה להתחיל לשדר אותו לעולם",           price: "₪590", priceOriginal: "₪880", cta: "לכוורת האות ←", href: "/signal-hive", icon: GraduationCap },
-  { title: "סדנה יום אחד",    who: "לכל מי שמייצר תוכן אבל לא רואה תוצאות",                        price: "₪1,080", priceOriginal: "₪1,800", cta: "קבע יום ←",  href: "/workshop",    icon: Target },
-  { title: "פגישת אסטרטגיה",  who: "לכל מי שרוצה לשבת עם הדר ולבנות אסטרטגיה מדויקת",            price: "₪4,000",        cta: "קבע פגישה ←",        href: "/strategy",    icon: Compass },
-];
-
-const ROW2_PRODUCTS = [
-  { title: "יום צילום פרמיום",  who: "לעסקים שרוצים תוצאה מלאה: אסטרטגיה + הפקה + עריכה",           price: "₪14,000",        priceNote: "+ מע״מ",  cta: "לפרטים ←",         href: "/premium",     icon: Video,     tag: "יום הפקה" },
-  { title: "שותפות אסטרטגית",   who: "לעסקים וחברות שרוצות שותף לדרך - לא ספק שירות",           price: "₪10,000-30,000", priceNote: "/ חודש",  cta: "בדוק התאמה ←",     href: "/partnership", icon: Users,     tag: "על בסיס מקום פנוי" },
-  { title: "beegood atelier",   who: "למשפיעניות שרוצות להפוך למנהיגות תרבותיות - עולם שלם תחת הדומיין שלך", price: "בהתאמה אישית", priceNote: "", cta: "לבדיקת התאמה ←", href: "/atelier",     icon: Sparkles,  tag: "בוטיק · מספר מקומות מוגבל" },
-];
-
-const TESTIMONIALS = [
+type LadderItem = { title: string; price: string; original?: string; save?: string; tag?: string; href: string; img: string; pos: string; desc: string };
+const LADDER: LadderItem[] = [
   {
-    text: "מרוצה במקסימום הצלחתם להפוך את הנקודה שהכי קשה לי בעסק לנקודת חוזקה ואני אפילו נהנה מזה עכשיו :) אין עליכם תודה ענקית!!",
-    name: "רועי מנדלמן",
-    date: "לפני 8 חודשים",
-    initial: "ר",
+    title: "כוורת האות", price: "590 ₪", original: "980 ₪", save: "40% הנחה", tag: "כולל את אתגר 7 הימים",
+    href: "/signal-hive", img: "/hive.jpg", pos: "center 26%",
+    desc: "שכבת ההפעלה: אתגר 7 הימים, ערכת תוכן וערכת ויזואל, ו-7 בימויים אישיים. הכל נגזר מהאות שלכם.",
   },
   {
-    text: "שירות ברמה אחרת! אחרי אכזבות מחברות אחרות, סוף סוף מצאתי צוות מקצועי, אדיב וקשוב לצרכים שלי. מהרגע הראשון הרגשתי שאני בידיים טובות. הם הצליחו לקחת את העסק שלי כמה צעדים קדימה עם תוכן מדוייק שהביא לי הרבה פניות. מומלץ בחום.",
-    name: "gal masas",
-    date: "לפני שנה",
-    initial: "G",
+    title: "הסדנה", price: "1,080 ₪", original: "1,800 ₪", save: "40% הנחה",
+    href: "/workshop", img: "/sadna.jpg", pos: "center 20%",
+    desc: "יום אחד בקבוצה קטנה. הופכים את האות לתוכן שמייצר תוצאות. סכום הכוורת מתקזז מהסדנה.",
   },
   {
-    text: "מקצוענות נטו!! נהנתי מהדרך ומהשירות. זה הכי כיף לעבוד עם אנשים שגם סופר מקצועיים וגם סופר שירותיים ואדיבים בנוסף, הקפיץ לי את העסק והעלה לי את רמת החשיפה וכמות הלקוחות! ממליץ בחום!",
-    name: "ת. ב.",
-    date: "לפני שנה",
-    initial: "T",
+    title: "יום צילום פרימיום", price: "14,000 ₪",
+    href: "/premium", img: "/shooting.jpg", pos: "center 28%",
+    desc: "יום צילום מלא, אחד על אחד. 14 סרטונים מוכנים לפרסום, בנויים כולם סביב האות שלכם.",
   },
 ];
 
-export default async function LandingPage() {
-  const cookieStore = await cookies();
-  const variant = parseVariant(cookieStore.get("ab_variant")?.value);
-  const content = AB_CONTENT[variant];
-  const userCount = await getUserCount();
-  const displayCount = Math.max(userCount + 250, 3500);
-
-  // Quiet English-site hint for visitors outside Israel — an offer, never a
-  // redirect (the geo redirect was removed 2026-07-17: everyone lands on the
-  // exact link they clicked). Geo alone is unreliable — Starlink users in
-  // Israel geolocate abroad (Alon's own line resolves to Greece) — so a
-  // Hebrew browser always suppresses the banner.
-  const h = await headers();
-  const country = h.get("x-vercel-ip-country") ?? "";
-  const browserHebrew = (h.get("accept-language") ?? "").toLowerCase().includes("he");
-  const showEnBanner = country !== "" && country !== "IL" && !browserHebrew;
-
+function Chk() {
   return (
-    <>
-      <PageTracker abVariant={variant} />
-      <HomeHeroCtaTracker abVariant={variant} />
-
-      <div dir="rtl" className="min-h-screen flex flex-col" style={{ background: "#080C14" }}>
-
-        {showEnBanner && (
-          <a
-            href="/en"
-            dir="ltr"
-            style={{
-              display: "block",
-              textAlign: "center",
-              padding: "9px 16px",
-              background: "rgba(201,150,74,0.10)",
-              borderBottom: "1px solid rgba(201,150,74,0.25)",
-              color: "#E8B94A",
-              fontSize: 13.5,
-              fontWeight: 700,
-              textDecoration: "none",
-            }}
-          >
-            Prefer English? Visit our English site →
-          </a>
-        )}
-
-
-
-        <main className="flex-1">
-
-          {/* ══════════════════════════════════════════════════════
-              1. HERO
-          ══════════════════════════════════════════════════════ */}
-          <section style={{ overflow: "hidden", background: "#0B1220" }}>
-
-            {/* ── MOBILE: full-bleed overlay, thumb-zone optimized ──
-                 Sized for short punch headlines ("תפסיקו לנחש."). Container
-                 height + bottom anchor pull the gold CTA into the first-fold
-                 viewport on iPhone 14/15-class devices. Headline is poster-
-                 sized (clamp 2.6→3.4rem) so a 2-3 word punch reads as
-                 intentional, not as cropped. TrueSignal© chip lives on
-                 desktop only — on mobile the navbar already carries the
-                 brand and a 4th competing element would dilute the CTA. */}
-            <div className="md:hidden" style={{ position: "relative", height: "88svh" }}>
-              <Image
-                src="/hadar1.jpg"
-                alt="הדר דנן"
-                fill
-                priority
-                sizes="100vw"
-                style={{ objectFit: "cover", objectPosition: "center 10%" }}
-              />
-              {/* Bottom-to-top overlay */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to top, #080C14 0%, rgba(8,12,20,0.95) 20%, rgba(8,12,20,0.85) 35%, rgba(8,12,20,0.6) 55%, rgba(8,12,20,0.3) 70%, transparent 85%)",
-              }} />
-              {/* Top fade - navbar blend */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to bottom, rgba(13,16,24,0.4) 0%, transparent 30%)",
-              }} />
-              {/* Left side fade */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to right, #080C14 0%, rgba(8,12,20,0.6) 25%, transparent 55%)",
-              }} />
-              {/* Content anchored from bottom */}
-              <div style={{
-                position: "absolute", bottom: "56px", left: 0, right: 0,
-                padding: "0 24px", direction: "rtl", textAlign: "right",
-              }}>
-                <h1 style={{
-                  color: "#EDE9E1",
-                  fontWeight: 900,
-                  fontSize: "clamp(2.6rem, 9vw, 3.4rem)",
-                  lineHeight: 1.05,
-                  letterSpacing: "-0.02em",
-                  marginBottom: 14,
-                  whiteSpace: "pre-line",
-                }}>
-                  {content.headline}
-                </h1>
-                <p style={{ color: "#AAB0BD", fontSize: "clamp(0.95rem, 2.2vw, 1.05rem)", lineHeight: 1.72, marginBottom: 18 }}>
-                  {content.description}
-                </p>
-                <a href="/kriah" data-home-hero-cta="" style={{
-                  display: "block", textAlign: "center",
-                  background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-                  color: "#2a1d05", fontWeight: 800, fontSize: "clamp(0.95rem, 2vw, 1.05rem)",
-                  borderRadius: 9999, padding: "14px", textDecoration: "none",
-                  width: "100%",
-                  boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
-                }}>
-                  {content.cta}
-                </a>
-              </div>
-            </div>
-
-            {/* ── DESKTOP: full-bleed overlay, seamless fade ─────── */}
-            <div className="hidden md:block" style={{ position: "relative", minHeight: "100vh" }}>
-              <div style={{
-                position: "absolute",
-                top: 0,
-                left: "-5%",
-                height: "163%",
-                width: "auto",
-                display: "inline-block",
-              }}>
-                <Image
-                  src="/hadar1.jpg"
-                  alt="הדר דנן"
-                  width={842}
-                  height={1264}
-                  priority
-                  sizes="50vw"
-                  quality={80}
-                  style={{
-                    height: "100%",
-                    width: "auto",
-                    maxWidth: "none",
-                    display: "block",
-                    WebkitMaskImage: "linear-gradient(to right, black 0%, black 55%, transparent 100%)",
-                    maskImage: "linear-gradient(to right, black 0%, black 55%, transparent 100%)",
-                  }}
-                />
-              </div>
-              {/* Top fade - navbar blend */}
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to bottom, rgba(13,16,24,0.4) 0%, transparent 30%)",
-              }} />
-              {/* Text floats over right side */}
-              <div style={{
-                position: "absolute", top: "50%", right: 0,
-                transform: "translateY(-50%)",
-                width: "45%", padding: "0 72px 0 0",
-                direction: "rtl", textAlign: "right",
-              }}>
-
-                {/* Tag pill */}
-                <div style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.32)",
-                  borderRadius: 9999, padding: "5px 14px", marginBottom: 22,
-                }}>
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C9964A", flexShrink: 0 }} />
-                  <span style={{ color: "#E8B94A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>
-                    <span style={{ direction: "rtl" }}>שיטת <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
-                  </span>
-                </div>
-
-                {/* Headline */}
-                <h1 style={{
-                  color: "#EDE9E1", fontWeight: 800,
-                  fontSize: "clamp(2rem, 2.6vw, 3rem)",
-                  lineHeight: 1.2, marginBottom: 18, whiteSpace: "pre-line",
-                }}>
-                  {content.headline}
-                </h1>
-
-                {/* Body */}
-                <p style={{
-                  color: "#AAB0BD", fontSize: "1rem",
-                  lineHeight: 1.78, marginBottom: 36,
-                }}>
-                  {content.description}
-                </p>
-
-                {/* CTA */}
-                <a href="/kriah" data-home-hero-cta="" style={{
-                  display: "inline-block",
-                  background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-                  color: "#2a1d05", fontWeight: 800, fontSize: "1.05rem",
-                  borderRadius: 9999, padding: "16px 52px",
-                  textDecoration: "none", marginBottom: 22,
-                  boxShadow: "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
-                }}>
-                  {content.cta}
-                </a>
-                <p style={{
-                  color: "#AAB0BD",
-                  fontSize: 12,
-                  textAlign: "center",
-                  marginTop: 8,
-                  direction: "rtl",
-                }}>
-                  חמש שאלות · אבחון אישי · ללא כרטיס אשראי
-                </p>
-
-
-              </div>
-            </div>
-
-          </section>
-
-          {/* ══════════════════════════════════════════════════════
-              2. STATS
-          ══════════════════════════════════════════════════════ */}
-          <StatsSection />
-
-          <SocialProofStrip />
-
-          {/* ══════════════════════════════════════════════════════
-              3. PHILOSOPHY
-          ══════════════════════════════════════════════════════ */}
-          <section
-            className="px-6 py-20 md:py-28"
-            style={{ background: "#101520" }}
-          >
-            <div className="max-w-5xl mx-auto flex flex-col gap-14">
-              <div className="text-center flex flex-col gap-3">
-                <h2 className="text-3xl md:text-4xl font-black" style={{ color: "#EDE9E1" }}>
-                  הגישה שלנו
-                </h2>
-                <p className="text-base font-semibold" style={{ color: "#E8B94A" }}>
-                  כי אפשר למכור רק את מה שאתה באמת - זה הבסיס של <span dir="ltr" style={{unicodeBidi:"embed"}}>TrueSignal©</span>
-                </p>
-              </div>
-
-              <PhilosophySection />
-
-              {/* Variant C — dramatic full-bleed quote: closing climax before the Signal Engine */}
-              <div
-                style={{
-                  position:     "relative",
-                  borderRadius: 24,
-                  padding:      "clamp(40px, 7vw, 72px) clamp(24px, 5vw, 56px)",
-                  background:   "linear-gradient(180deg, #0E1119 0%, #0A0D14 100%)",
-                  border:       "1px solid rgba(201,150,74,0.14)",
-                  textAlign:    "center",
-                  overflow:     "hidden",
-                }}
-              >
-                {/* Ambient gold glow */}
-                <div
-                  aria-hidden
-                  style={{
-                    position:      "absolute",
-                    top:           "-40%",
-                    left:          "50%",
-                    transform:     "translateX(-50%)",
-                    width:         "100%",
-                    height:        "80%",
-                    background:    "radial-gradient(ellipse at center, rgba(232,185,74,0.06), transparent 70%)",
-                    pointerEvents: "none",
-                  }}
-                />
-
-                {/* Opening quotation mark */}
-                <div
-                  aria-hidden
-                  style={{
-                    fontFamily:    "Georgia, serif",
-                    fontSize:      "clamp(56px, 9vw, 96px)",
-                    lineHeight:    0.6,
-                    color:         "rgba(201,150,74,0.55)",
-                    marginBottom:  "clamp(16px, 3vw, 28px)",
-                    fontWeight:    700,
-                    position:      "relative",
-                    zIndex:        1,
-                  }}
-                >
-                  ״
-                </div>
-
-                {/* The quote */}
-                <p
-                  style={{
-                    position:   "relative",
-                    zIndex:     1,
-                    margin:     "0 auto",
-                    maxWidth:   720,
-                    fontSize:   "clamp(1.5rem, 4vw, 2.2rem)",
-                    fontWeight: 800,
-                    lineHeight: 1.35,
-                    color:      "#EDE9E1",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  אנחנו לא מוכרים סרטונים.<br />
-                  אנחנו מוכרים את{" "}
-                  <span style={{
-                    background:           "linear-gradient(160deg, #E8B94A 0%, #C9964A 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor:  "transparent",
-                    backgroundClip:       "text",
-                  }}>
-                    הבהירות
-                  </span>{" "}
-                  שגורמת לתוכן לעבוד.
-                </p>
-
-                {/* Bottom: ── ©TRUESIGNAL ── */}
-                <div
-                  style={{
-                    position:       "relative",
-                    zIndex:         1,
-                    display:        "flex",
-                    alignItems:     "center",
-                    justifyContent: "center",
-                    gap:            14,
-                    marginTop:      "clamp(28px, 5vw, 44px)",
-                  }}
-                  aria-hidden
-                >
-                  <div style={{ width: 42, height: 1, background: "rgba(201,150,74,0.45)" }} />
-                  <span
-                    dir="ltr"
-                    style={{
-                      unicodeBidi:    "embed",
-                      color:          "#E8B94A",
-                      fontSize:       12,
-                      fontWeight:     700,
-                      letterSpacing:  "0.22em",
-                    }}
-                  >
-                    ©TRUESIGNAL
-                  </span>
-                  <div style={{ width: 42, height: 1, background: "rgba(201,150,74,0.45)" }} />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════
-              3.5  SIGNAL ENGINE — free taste of TrueSignal©
-          ══════════════════════════════════════════════════════ */}
-          <section
-            style={{
-              background: "#080C14",
-              padding:    "56px 20px 40px",
-            }}
-            dir="rtl"
-          >
-            <div
-              style={{
-                maxWidth:     720,
-                margin:       "0 auto",
-                position:     "relative",
-                background:   "linear-gradient(145deg, #1D2430, #111620)",
-                border:       "1px solid rgba(232,185,74,0.30)",
-                borderRadius: 24,
-                padding:      "44px 28px",
-                textAlign:    "center",
-                boxShadow:    "0 12px 36px rgba(232,185,74,0.10)",
-                overflow:     "hidden",
-              }}
-            >
-              <div
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  top:      "-40%",
-                  left:     "50%",
-                  transform: "translateX(-50%)",
-                  width:    "120%",
-                  height:   "80%",
-                  background:   "radial-gradient(ellipse at center, rgba(232,185,74,0.08), transparent 70%)",
-                  pointerEvents: "none",
-                }}
-              />
-              <div style={{ position: "relative", zIndex: 1 }}>
-                <div
-                  style={{
-                    display:       "inline-block",
-                    fontSize:      11,
-                    letterSpacing: 1.6,
-                    color:         "#E8B94A",
-                    marginBottom:  14,
-                    textTransform: "uppercase",
-                    fontWeight:    700,
-                  }}
-                >
-                  <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · אבחון אישי בחינם
-                </div>
-                <h2
-                  style={{
-                    fontSize:   "clamp(1.8rem, 4.5vw, 2.4rem)",
-                    fontWeight: 800,
-                    margin:     "0 0 14px",
-                    lineHeight: 1.25,
-                    color:      "#EDE9E1",
-                  }}
-                >
-                  מנוע האות
-                </h2>
-                <p
-                  style={{
-                    fontSize:   16,
-                    lineHeight: 1.7,
-                    color:      "#EDE9E1",
-                    opacity:    0.92,
-                    margin:     "0 auto 28px",
-                    maxWidth:   480,
-                  }}
-                >
-                  חמש שאלות. אות מותגי אחד שמחזיר לכם את הבידול האמיתי שלכם.
-                  <br />
-                  לא מה שאתם מוכרים, אלא מה שרק אתם יכולים לתת.
-                </p>
-                <Link
-                  href="/kriah"
-                  style={{
-                    display:        "inline-block",
-                    background:     "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-                    color:          "#2a1d05",
-                    fontWeight:     800,
-                    fontSize:       16,
-                    borderRadius:   999,
-                    padding:        "14px 34px",
-                    textDecoration: "none",
-                    boxShadow:      "0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 -10px 22px rgba(157, 110, 12, 0.35) inset, 0 18px 34px -12px rgba(214, 155, 31, 0.55), 0 6px 14px -6px rgba(0, 0, 0, 0.55)",
-                  }}
-                >
-                  להתחיל את האבחון ←
-                </Link>
-                <p style={{ fontSize: 12, color: "#AAB0BD", margin: "14px 0 0" }}>
-                  בלי כרטיס אשראי. בלי הצטרפות מחויבת.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════
-              4. PRODUCTS - LADDER + NETFLIX
-          ══════════════════════════════════════════════════════ */}
-          <ProductsSection />
-
-          {/* ══════════════════════════════════════════════════════
-              5. המסלול האחר — standalone selective application track
-          ══════════════════════════════════════════════════════ */}
-          <section style={{ background: "#080C14", padding: "0 20px 64px" }}>
-            <style>{`
-              .other-path-wrap { max-width: 560px; margin: 0 auto; }
-              .other-path-card { position: relative; display: flex; flex-direction: column; background: linear-gradient(145deg, #141820, #0F131B); border-radius: 18px; padding: 36px 32px; text-decoration: none; color: #EDE9E1; transition: transform 0.2s, border-color 0.2s; border: 1px solid rgba(232,185,74,0.45); box-shadow: 0 0 0 1px rgba(232,185,74,0.08), 0 20px 60px -20px rgba(232,185,74,0.18); }
-              .other-path-card:hover { border-color: rgba(232,185,74,0.75); transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(232,185,74,0.18), 0 24px 70px -20px rgba(232,185,74,0.28); }
-              .other-path-flag { position: absolute; top: 16px; left: 16px; font-size: 10px; letter-spacing: 3px; font-weight: 700; padding: 4px 10px; border-radius: 999px; color: #080C14; background: linear-gradient(90deg, #9E7C3A, #E8B94A); }
-              .other-path-kicker { color: #E8B94A; font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
-              .other-path-head { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; color: #EDE9E1; }
-              .other-path-lede { color: #AAB0BD; font-size: 15px; line-height: 1.65; margin: 0 0 24px; }
-              .other-path-points { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 12px; }
-              .other-path-point { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.55; color: #EDE9E1; }
-              .other-path-dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; background: #E8B94A; box-shadow: 0 0 8px rgba(232,185,74,0.45); }
-              .other-path-cta { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; transition: filter 0.15s; background: linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%); color: #2a1d05; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 4px 10px -4px rgba(0, 0, 0, 0.45); }
-              .other-path-card:hover .other-path-cta { filter: brightness(1.08); }
-              @media (max-width: 760px) {
-                .other-path-card { padding: 28px 22px; }
-                .other-path-head { font-size: 22px; }
-              }
-            `}</style>
-
-            <div className="other-path-wrap">
-              <Link href="/apply" className="other-path-card">
-                <span className="other-path-flag">במועמדות</span>
-                <div className="other-path-kicker">המסלול האחר</div>
-                <div className="other-path-head">אנחנו על אותו צד</div>
-                <p className="other-path-lede">
-                  שלושה ימי עבודה אינטנסיביים, בליווי אסטרטגי אישי. אנחנו לא לוקחים
-                  מחיר מסחרי מראש — אנחנו שותפים להצלחה שלכם.
-                </p>
-                <ul className="other-path-points">
-                  <li className="other-path-point"><span className="other-path-dot" />תשלום בסיסי סמלי בלבד בהתחלה</li>
-                  <li className="other-path-point"><span className="other-path-dot" />אחוז מההכנסות שייצרנו יחד</li>
-                  <li className="other-path-point"><span className="other-path-dot" />3-5 עסקים בלבד בכל מחזור, בסינון ידני</li>
-                </ul>
-                <span className="other-path-cta">הגשת מועמדות ←</span>
-              </Link>
-            </div>
-          </section>
-
-          {/* ══════════════════════════════════════════════════════
-              5.5 BINGE — trailer-style preview (homepage only)
-          ══════════════════════════════════════════════════════ */}
-          <HomeBingeSection />
-
-          {/* ══════════════════════════════════════════════════════
-              6. SOCIAL PROOF
-          ══════════════════════════════════════════════════════ */}
-          <section className="px-6 py-24 md:py-36" style={{ background: "#080C14" }}>
-            <div className="max-w-5xl mx-auto flex flex-col gap-16">
-
-              {/* Header */}
-              <div className="text-center flex flex-col items-center gap-5">
-                {/* Google badge */}
-                <div
-                  className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-label="Google">
-                    <path fill="#4285F4" d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.3 5.5-4.8 7.2v6h7.8c4.5-4.2 7.3-10.4 7.3-17.3z" />
-                    <path fill="#34A853" d="M24 48c6.5 0 12-2.1 16-5.8l-7.8-6c-2.2 1.5-5 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-9.9H2.4v6.2C6.4 42.6 14.6 48 24 48z" />
-                    <path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.2.8-4.6v-6.2H2.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.4 10.8l8.1-6.2z" />
-                    <path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.8-6.8C35.9 2.1 30.4 0 24 0 14.6 0 6.4 5.4 2.4 13.2l8.1 6.2C12.4 13.7 17.7 9.5 24 9.5z" />
-                  </svg>
-                  <span className="text-sm font-semibold" style={{ color: "#AAB0BD" }}>ביקורות Google</span>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <svg key={i} className="w-4 h-4" fill="#E8B94A" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <span className="text-sm font-bold" style={{ color: "#EDE9E1" }}>5.0</span>
-                </div>
-
-                <h2 className="text-3xl md:text-5xl font-black leading-tight" style={{ color: "#EDE9E1" }}>
-                  מעל {displayCount.toLocaleString("he-IL")} עסקים כבר מצאו<br className="hidden md:block" /> את הבהירות שלהם עם הדר
-                </h2>
-              </div>
-
-              {/* Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {TESTIMONIALS.map((t) => (
-                  <div
-                    key={t.name}
-                    className="rounded-3xl p-8 flex flex-col gap-6"
-                    style={{
-                      background: "linear-gradient(145deg,#131c2e,#0d1520)",
-                      border: "1px solid rgba(201,150,74,0.15)",
-                      boxShadow: "0 4px 32px rgba(0,0,0,0.4)",
-                    }}
-                  >
-                    {/* Stars + Google logo */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <svg key={i} className="w-4 h-4" fill="#E8B94A" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                      <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-label="Google" style={{ opacity: 0.7 }}>
-                        <path fill="#4285F4" d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.3 5.5-4.8 7.2v6h7.8c4.5-4.2 7.3-10.4 7.3-17.3z" />
-                        <path fill="#34A853" d="M24 48c6.5 0 12-2.1 16-5.8l-7.8-6c-2.2 1.5-5 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-9.9H2.4v6.2C6.4 42.6 14.6 48 24 48z" />
-                        <path fill="#FBBC05" d="M10.5 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.2.8-4.6v-6.2H2.4A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.4 10.8l8.1-6.2z" />
-                        <path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.2 3.6l6.8-6.8C35.9 2.1 30.4 0 24 0 14.6 0 6.4 5.4 2.4 13.2l8.1 6.2C12.4 13.7 17.7 9.5 24 9.5z" />
-                      </svg>
-                    </div>
-
-                    {/* Quote */}
-                    <p className="text-base md:text-lg leading-relaxed flex-1" style={{ color: "#D8D4CC" }}>
-                      &ldquo;{t.text}&rdquo;
-                    </p>
-
-                    {/* Author */}
-                    <div className="flex items-center gap-3 pt-5" style={{ borderTop: "1px solid rgba(201,150,74,0.12)" }}>
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
-                        style={{
-                          background: "linear-gradient(135deg, rgba(232,185,74,0.2), rgba(158,124,58,0.2))",
-                          color: "#E8B94A",
-                          border: "1px solid rgba(201,150,74,0.3)",
-                        }}
-                      >
-                        {t.initial}
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm" style={{ color: "#EDE9E1" }}>{t.name}</p>
-                        <p className="text-xs mt-0.5" style={{ color: "#AAB0BD" }}>{t.date}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Video testimonials carousel */}
-              <div>
-                <p style={{
-                  fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em",
-                  color: "#E8B94A", textTransform: "uppercase", textAlign: "center",
-                  marginBottom: 16,
-                }}>
-                  מה אומרים עליה בוידאו
-                </p>
-                <WorkshopTestimonials />
-              </div>
-
-            </div>
-          </section>
-
-        </main>
-
-        {/* ══════════════════════════════════════════════════════
-            7. FOOTER
-        ══════════════════════════════════════════════════════ */}
-        <footer className="px-6 py-12" style={{ background: "#101520", paddingBottom: "100px" }}>
-          <div className="max-w-5xl mx-auto flex flex-col gap-8">
-
-            {/* Links */}
-            <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm" style={{ color: "#AAB0BD" }}>
-              {[
-                { label: "בית",       href: "/" },
-                { label: "הדרכה",     href: "/training" },
-                { label: "אתגר",      href: "/challenge" },
-                { label: "כוורת האות", href: "/signal-hive" },
-                { label: "סדנה",      href: "/workshop" },
-                { label: "אסטרטגיה",  href: "/strategy" },
-                { label: "פרימיום",   href: "/premium" },
-                { label: "שותפות",    href: "/partnership" },
-                { label: "אזור אישי", href: "/my" },
-              ].map((link) => (
-                <a key={link.href} href={link.href} className="hover:text-white transition" style={{ color: "#E8B94A" }}>
-                  {link.label}
-                </a>
-              ))}
-            </nav>
-
-            {/* Legal */}
-            <div className="flex flex-col items-center gap-2 text-xs" style={{ color: "#AAB0BD" }}>
-              <div className="flex gap-4">
-                <a href="/privacy" className="hover:text-white transition">מדיניות פרטיות</a>
-                <a href="/terms" className="hover:text-white transition">תנאי שימוש</a>
-                <a href="/accessibility" className="hover:text-white transition">הצהרת נגישות</a>
-              </div>
-              <p className="font-medium">אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{unicodeBidi:"embed"}}>TrueSignal©</span></p>
-              <p>© 2026 הדר דנן בע״מ | ח.פ. 516791555 · כל הזכויות שמורות</p>
-              <p>החילזון 5, רמת גן | 053-9566961</p>
-              <p className="mt-1">
-                <a href="/unsubscribe" className="hover:text-white transition">לביטול הסכמה לדיוור</a>
-              </p>
-            </div>
-
-          </div>
-        </footer>
-
-      </div>
-      <HomeStickyBar ctaText="לקוויז ←" />
-    </>
+    <svg viewBox="0 0 20 20" className="nh-chk" aria-hidden>
+      <path d="M4 10.6l3.6 3.6L16 5.4" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
+
+export default function NewHome() {
+  return (
+    <div dir="rtl" className="nh-root">
+      <style>{NH_CSS}</style>
+      <HexDefs />
+
+      {/* Top banner (global nav) + footer are the site's originals — restored
+          per Alon. Nav comes from the global layout (LayoutShell no longer hides
+          /new); the footer below mirrors the existing homepage footer. */}
+
+      <main>
+        {/* ══ HERO — original treatment restored ══ */}
+        <section style={{ overflow: "hidden", background: "#0B1220" }}>
+
+          {/* MOBILE: full-bleed photo, bottom-anchored content (original design) */}
+          <div className="md:hidden" style={{ position: "relative", height: "88svh" }}>
+            <Image src="/hadar1.jpg" alt="הדר דנן" fill priority sizes="100vw"
+              style={{ objectFit: "cover", objectPosition: "center 10%" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #080C14 0%, rgba(8,12,20,0.95) 22%, rgba(8,12,20,0.85) 38%, rgba(8,12,20,0.6) 56%, rgba(8,12,20,0.3) 70%, transparent 85%)" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(13,16,24,0.4) 0%, transparent 30%)" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #080C14 0%, rgba(8,12,20,0.6) 25%, transparent 55%)" }} />
+            <div style={{ position: "absolute", bottom: "40px", left: 0, right: 0, padding: "0 24px", direction: "rtl", textAlign: "right" }}>
+              <div className="nh-eyebrow"><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · הדרך</div>
+              <h1 style={{ color: "#EDE9E1", fontWeight: 900, fontSize: "clamp(1.8rem, 7vw, 2.7rem)", lineHeight: 1.14, letterSpacing: "-0.02em", marginBottom: 12, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
+              <p style={{ color: "#AAB0BD", fontSize: "clamp(0.95rem, 2.2vw, 1.05rem)", lineHeight: 1.65, marginBottom: 16 }}>{LEDE}</p>
+              <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero" style={{ width: "100%", marginBottom: 10 }}>לגלות את ה־TrueSignal שלי — בחינם</TrackedCta>
+              <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero" style={{ width: "100%" }}>לעבוד ישירות עם הדר</TrackedCta>
+              <div className="nh-priceline" style={{ textAlign: "center", marginTop: 7 }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
+              <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
+            </div>
+          </div>
+
+          {/* DESKTOP: full-bleed photo left with mask fade, text panel right (original design) */}
+          <div className="hidden md:block" style={{ position: "relative", minHeight: "100vh" }}>
+            <div style={{ position: "absolute", top: 0, left: "-5%", height: "163%", width: "auto", display: "inline-block" }}>
+              <Image src="/hadar1.jpg" alt="הדר דנן" width={842} height={1264} priority sizes="50vw" quality={80}
+                style={{ height: "100%", width: "auto", maxWidth: "none", display: "block",
+                  WebkitMaskImage: "linear-gradient(to right, black 0%, black 55%, transparent 100%)",
+                  maskImage: "linear-gradient(to right, black 0%, black 55%, transparent 100%)" }} />
+            </div>
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(13,16,24,0.4) 0%, transparent 30%)" }} />
+            <div style={{ position: "absolute", top: "50%", right: 0, transform: "translateY(-50%)", width: "46%", padding: "0 72px 0 0", direction: "rtl", textAlign: "right" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(201,150,74,0.12)", border: "1px solid rgba(201,150,74,0.32)", borderRadius: 9999, padding: "5px 14px", marginBottom: 22 }}>
+                <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#C9964A", flexShrink: 0 }} />
+                <span style={{ color: "#E8B94A", fontSize: 10, letterSpacing: "0.12em", fontWeight: 700 }}>הדרך של <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
+              </div>
+              <h1 style={{ color: "#EDE9E1", fontWeight: 800, fontSize: "clamp(2rem, 2.6vw, 3rem)", lineHeight: 1.2, marginBottom: 18, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
+              <p style={{ color: "#AAB0BD", fontSize: "1rem", lineHeight: 1.78, marginBottom: 30, maxWidth: "42ch" }}>{LEDE}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 420 }}>
+                <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero">לגלות את ה־TrueSignal שלי — בחינם</TrackedCta>
+                <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero">לעבוד ישירות עם הדר</TrackedCta>
+                <div className="nh-priceline" style={{ textAlign: "center" }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
+              </div>
+              <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
+            </div>
+          </div>
+        </section>
+
+        {/* ══ Proof — reused original components ══ */}
+        <StatsSection />
+        <SocialProofStrip />
+
+        {/* ══ Two paths ══ */}
+        <section className="nh-section">
+          <h2 className="nh-h2 nh-h2-tight">שתי דרכים. אותה מטרה: הלקוחות הנכונים, ומכירה שנעשית כמעט לבד.</h2>
+          <p className="nh-section-sub">כשברור מי אתם, אתם מפסיקים לרדוף אחרי כל עצה. הלקוחות הנכונים מגיעים דווקא אליכם, והמכירה כבר קלה.</p>
+          <div className="nh-cards">
+            <article className="nh-pc nh-pc-free">
+              <div className="nh-pc-top">
+                <HoneyHex size="md"><IcSignal /></HoneyHex>
+                <span className="nh-pc-tag nh-pc-tag-free">חינם</span>
+              </div>
+              <h3 className="nh-pc-title">גלו את האות שלכם</h3>
+              <p className="nh-pc-desc">כמה שאלות קצרות על העסק, ואז קריאה אישית שמנסחת במילים מה אנשים מקבלים דווקא מכם.</p>
+              <ul className="nh-pc-list">
+                {["כמה שאלות קצרות על העסק", "קריאה אישית שמנסחת את האות במילים", "מה שרק אתם יכולים להביא"].map((b) => (
+                  <li key={b}><span className="nh-pc-chk nh-pc-green"><Chk /></span>{b}</li>
+                ))}
+              </ul>
+              <TrackedCta dest="kriah" placement="path_card" className="nh-out nh-pc-cta">להתחיל את הקריאה</TrackedCta>
+            </article>
+            <article className="nh-pc nh-pc-paid">
+              <div className="nh-pc-top">
+                <HoneyHex gold size="md"><IcStrategy /></HoneyHex>
+                <span className="nh-pc-tag nh-pc-tag-paid">מ־4,000 ₪</span>
+              </div>
+              <h3 className="nh-pc-title">אחד על אחד עם הדר</h3>
+              <p className="nh-pc-desc">חשיבה יצירתית בלייב שהופכת ניסיון ומסר לאסטרטגיה ולנכסים שאפשר לצאת איתם החוצה.</p>
+              <ul className="nh-pc-list">
+                {["חשיבה יצירתית בלייב, אחד על אחד", "אסטרטגיה עסקית לפני שיווקית", "מפת דרכים ונכסים לצאת איתם"].map((b) => (
+                  <li key={b}><span className="nh-pc-chk nh-pc-gold-c"><Chk /></span>{b}</li>
+                ))}
+              </ul>
+              <TrackedCta dest="strategy" placement="path_card" className="nh-gold nh-pc-cta">לראות איך עובדים עם הדר</TrackedCta>
+            </article>
+          </div>
+        </section>
+
+        {/* ══ Recognition — you tried everything ══ */}
+        <section className="nh-recog">
+          <span className="nh-bee-wm nh-bee-wm-r" aria-hidden>
+            <Image src="/beegood_logo.png" alt="" width={266} height={210} />
+          </span>
+          <div className="nh-recog-inner">
+            <div className="nh-eyebrow2">הכרה</div>
+            <h2 className="nh-h2">עדיין לא בטוח <span className="nh-gd">מה הצעד הבא?</span></h2>
+            <p className="nh-recog-sub">ניסית כבר הרבה. אולי מה שחסר הוא בסיס אחד ברור.</p>
+            <div className="nh-recog-items">
+              <div className="nh-recog-item"><HoneyHex size="md"><IcAI /></HoneyHex><span className="nh-recog-txt">שאלת את ה-AI.</span></div>
+              <div className="nh-recog-item"><HoneyHex size="md"><IcCopy /></HoneyHex><span className="nh-recog-txt">חשבת להעתיק מהמתחרים.</span></div>
+              <div className="nh-recog-item"><HoneyHex size="md"><IcLost /></HoneyHex><span className="nh-recog-txt">כבר לא יודע איזה תוכן להעלות.</span></div>
+            </div>
+          </div>
+        </section>
+
+        {/* ══ Noise → Signal — the living signal (from /new/live) ══ */}
+        <section className="nh-journey">
+          <div className="nh-journey-in">
+            <div className="nh-eyebrow2">מרעש לסיגנל</div>
+            <div className="nh-beats">
+              {[
+                { t: "רעש", on: false }, { t: "דפוסים", on: false },
+                { t: "סיגנל", on: true }, { t: "צמיחה", on: true },
+              ].map((b, i, arr) => (
+                <span className="nh-beat-wrap" key={b.t}>
+                  <span className={`nh-beat${b.on ? " on" : ""}`}>{b.t}</span>
+                  {i < arr.length - 1 && <span className="nh-beat-sep" aria-hidden />}
+                </span>
+              ))}
+            </div>
+            <SignalCanvas trigger="inview" className="nh-journey-band" />
+            <p className="nh-journey-line">הרעש הוא של כולם. <span className="nh-gd">האות הוא רק שלך.</span></p>
+          </div>
+        </section>
+
+        {/* ══ System — the signal drives everything ══ */}
+        <section className="nh-sys-sec">
+          <div className="nh-sys-grid">
+            <div className="nh-sys-copy">
+              <div className="nh-eyebrow2">בהירות הופכת למערכת</div>
+              <h2 className="nh-h2">הסיגנל שלך <span className="nh-gd">מניע הכל.</span></h2>
+              <p>כשהסיגנל שלך ברור, כל מה שאתה בונה מיושר לאותו כיוון. לא עוד רעיונות מפוזרים, אלא מערכת אחת שמושכת לאותו מקום.</p>
+            </div>
+            <div className="nh-sys-diagram">
+              <div className="nh-sys-node">
+                <span className="nh-sys-glow" aria-hidden />
+                <HoneyHex gold size="lg"><IcSignal /></HoneyHex>
+                <b>הסיגנל שלך</b>
+                <span className="nh-sys-node-sub">מי אתה, ומה רק אתה יכול להציע</span>
+              </div>
+              <div className="nh-sys-down" aria-hidden><ChevronDown size={22} /></div>
+              <div className="nh-sys-kids">
+                <div className="nh-sys-kid"><HoneyHex size="md"><IcStrategy /></HoneyHex><span className="nh-kid-txt"><b>אסטרטגיה</b><span>על מה להתמקד. מה חשוב עכשיו.</span></span></div>
+                <div className="nh-sys-kid"><HoneyHex size="md"><IcContent /></HoneyHex><span className="nh-kid-txt"><b>תוכן</b><span>איך הסיגנל הופך לתקשורת.</span></span></div>
+                <div className="nh-sys-kid"><HoneyHex size="md"><IcData /></HoneyHex><span className="nh-kid-txt"><b>דאטה</b><span>מה עובד. מה מצטבר.</span></span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ══ Principles + punch ══ */}
+        <section className="nh-princ-sec">
+          <span className="nh-bee-wm nh-bee-wm-c" aria-hidden>
+            <Image src="/beegood_logo.png" alt="" width={456} height={360} />
+          </span>
+          <div className="nh-princ">
+            <div className="nh-princ-item"><HoneyHex size="lg"><IcHuman /></HoneyHex><div className="nh-princ-txt"><h4>האדם במרכז</h4><p>אנחנו מאמינים באנשים. הטכנולוגיה כאן כדי לשרת אותם, לא להפך.</p></div></div>
+            <div className="nh-princ-item"><HoneyHex size="lg"><IcLasting /></HoneyHex><div className="nh-princ-txt"><h4>נבנה להחזיק</h4><p>בהירות היום, צמיחה מחר. השפעה שנשארת, לא טרנד שחולף.</p></div></div>
+            <div className="nh-princ-item"><HoneyHex size="lg"><IcSoul /></HoneyHex><div className="nh-princ-txt"><h4>מדע ונשמה</h4><p>דאטה ופסיכולוגיה. אסטרטגיה ואינטואיציה. ביחד, לא בנפרד.</p></div></div>
+          </div>
+          <figure className="nh-quote">
+            <div className="nh-quote-mark" aria-hidden>”</div>
+            <blockquote className="nh-quote-text">אנחנו לא מוכרים סרטונים.<br />אנחנו בונים את <span className="nh-gd">הבהירות</span> שגורמת לתוכן לעבוד.</blockquote>
+            <div className="nh-quote-sig">
+              <span className="nh-quote-line" aria-hidden />
+              <span className="nh-quote-brand"><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
+              <span className="nh-quote-line" aria-hidden />
+            </div>
+          </figure>
+        </section>
+
+        {/* ══ Google reviews ══ */}
+        <section className="nh-section nh-testi-sec">
+          <div className="nh-eyebrow2">ביקורות גוגל</div>
+          <h2 className="nh-h2">עסקים שכבר מצאו את האות שלהם</h2>
+          <QuizProofWall showWall={false} showFooter={false} start={9} end={12} />
+        </section>
+
+        {/* ══ Final CTA ══ */}
+        <section className="nh-section nh-final">
+          <div className="nh-eyebrow2">הצעד הבא</div>
+          <h2 className="nh-h2">איך נכון לכם להתקדם עכשיו?</h2>
+          <div className="nh-final-grid">
+            <div className="nh-final-opt nh-final-free">
+              <span className="nh-pc-tag nh-pc-tag-free">חינם</span>
+              <div className="nh-final-lbl">לגלות את האות שלי</div>
+              <TrackedCta dest="kriah" placement="final_cta" className="nh-out nh-final-cta">להתחיל את הקריאה</TrackedCta>
+            </div>
+            <div className="nh-final-opt nh-final-paid">
+              <span className="nh-pc-tag nh-pc-tag-paid">מ־4,000 ₪</span>
+              <div className="nh-final-lbl">לעבוד ישירות עם הדר</div>
+              <TrackedCta dest="strategy" placement="final_cta" className="nh-gold nh-final-cta">לראות את פגישת האסטרטגיה</TrackedCta>
+            </div>
+          </div>
+          <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
+        </section>
+
+        {/* ══ Value ladder — deeper offerings ══ */}
+        <section className="nh-ladder-sec">
+          <div className="nh-eyebrow2">המשך הדרך</div>
+          <h2 className="nh-h2">אחרי שהאות ברור, ממשיכים לבנות</h2>
+          <p className="nh-section-sub">כל שלב נגזר מאותו אות אחד. אתם בוחרים עד לאן.</p>
+          <div className="nh-ladder">
+            {LADDER.map((p) => (
+              <a key={p.href} href={p.href} className="nh-lcard">
+                <div className="nh-lcard-media">
+                  <img src={p.img} alt={p.title} loading="lazy" style={{ objectPosition: p.pos }} />
+                  <div className="nh-lcard-pricewrap">
+                    <span className="nh-lcard-price">{p.price}</span>
+                    {p.original && <span className="nh-lcard-was">{p.original}</span>}
+                  </div>
+                  {p.tag ? <span className="nh-lcard-tag">{p.tag}</span> : p.save ? <span className="nh-lcard-save">{p.save}</span> : null}
+                </div>
+                <div className="nh-lcard-body">
+                  <h3>{p.title}</h3>
+                  <p>{p.desc}</p>
+                  <span className="nh-lcard-cta">לפרטים ←</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* ══ Video testimonials carousel ══ */}
+        <section className="nh-videos-sec">
+          <div className="nh-eyebrow2">מה אומרים עליה בוידאו</div>
+          <WorkshopTestimonials />
+        </section>
+      </main>
+
+      {/* ══ Footer — mirrors the existing homepage footer ══ */}
+      <footer className="px-6 py-12" style={{ background: "#101520", paddingBottom: "48px" }}>
+        <div className="max-w-5xl mx-auto flex flex-col gap-8">
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm" style={{ color: "#AAB0BD" }}>
+            {[
+              { label: "בית",        href: "/" },
+              { label: "הדרכה",      href: "/training" },
+              { label: "אתגר",       href: "/challenge" },
+              { label: "כוורת האות", href: "/signal-hive" },
+              { label: "סדנה",       href: "/workshop" },
+              { label: "אסטרטגיה",   href: "/strategy" },
+              { label: "פרימיום",    href: "/premium" },
+              { label: "שותפות",     href: "/partnership" },
+              { label: "אזור אישי",  href: "/my" },
+            ].map((link) => (
+              <a key={link.href} href={link.href} className="hover:text-white transition" style={{ color: "#E8B94A" }}>{link.label}</a>
+            ))}
+          </nav>
+          <div className="flex flex-col items-center gap-2 text-xs" style={{ color: "#AAB0BD" }}>
+            <div className="flex gap-4">
+              <a href="/privacy" className="hover:text-white transition">מדיניות פרטיות</a>
+              <a href="/terms" className="hover:text-white transition">תנאי שימוש</a>
+              <a href="/accessibility" className="hover:text-white transition">הצהרת נגישות</a>
+            </div>
+            <p className="font-medium">אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></p>
+            <p>© 2026 הדר דנן בע״מ | ח.פ. 516791555 · כל הזכויות שמורות</p>
+            <p>החילזון 5, רמת גן | 053-9566961</p>
+            <p className="mt-1"><a href="/unsubscribe" className="hover:text-white transition">לביטול הסכמה לדיוור</a></p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+// Scoped under .nh-* — used ONLY on /new. Gold button matches the original homepage exactly.
+const NH_CSS = `
+.nh-root{--bg:#080C14;--bg2:#0D1018;--card:#141820;--soft:#1D2430;--border:#2C323E;--line:#232936;--gold:#C9964A;--gold-l:#E8B94A;--green:#7FD49B;--fg:#EDE9E1;--muted:#AAB0BD;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+.nh-root *{box-sizing:border-box}
+.nh-gold{background:linear-gradient(180deg,#f4d27a 0%,#e8b942 52%,#d59b1f 100%);color:#2a1d05;font-weight:800;text-decoration:none;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;line-height:1.2;box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 -10px 22px rgba(157,110,12,.35) inset,0 18px 34px -12px rgba(214,155,31,.55),0 6px 14px -6px rgba(0,0,0,.55)}
+.nh-gold-sm{padding:9px 18px;font-size:14px}
+.nh-gold-hero{padding:16px 40px;font-size:1.05rem}
+.nh-out{background:transparent;color:var(--gold-l);font-weight:700;text-decoration:none;border:1px solid rgba(201,150,74,.55);border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;line-height:1.2}
+.nh-out-hero{padding:15px 40px;font-size:1rem}
+
+.nh-header{position:sticky;top:0;z-index:50;background:rgba(8,12,20,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nh-hwrap{max-width:1200px;margin:0 auto;height:64px;padding:0 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nh-logo{font-size:19px;font-weight:800;color:var(--fg);text-decoration:none;letter-spacing:-.3px;white-space:nowrap}
+.nh-nav{display:flex;gap:22px}
+.nh-navlink{color:var(--muted);font-size:14.5px;text-decoration:none}
+.nh-navlink:hover{color:var(--fg)}
+.nh-hcta{display:flex;align-items:center;gap:16px}
+.nh-quiet{color:var(--muted);font-size:14px;text-decoration:none}
+.nh-quiet:hover{color:var(--fg)}
+
+.nh-eyebrow{font-size:11px;letter-spacing:2px;font-weight:800;color:var(--gold);text-transform:uppercase;margin-bottom:12px}
+.nh-priceline{font-size:12.5px;color:var(--muted)}
+.nh-trust{margin-top:16px;font-size:12px;color:var(--muted);opacity:.85;text-align:center}
+
+.nh-section{max-width:1080px;margin:0 auto;padding:64px 22px}
+.nh-h2{font-size:clamp(25px,5.4vw,33px);font-weight:800;line-height:1.28;letter-spacing:-.3px;text-align:center;margin:0 0 26px;text-wrap:balance;color:var(--fg)}
+
+.nh-h2-tight{margin-bottom:14px}
+.nh-section-sub{color:var(--muted);font-size:clamp(15.5px,2.4vw,17px);line-height:1.72;text-align:center;max-width:48ch;margin:0 auto 30px}
+.nh-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+/* two path cards (Option 1 — tiered honey badges) */
+.nh-pc{position:relative;display:flex;flex-direction:column;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),#0F131C);border-radius:22px;padding:26px 24px}
+.nh-pc-paid{border-color:rgba(201,150,74,.55);background:linear-gradient(170deg,rgba(201,150,74,.13),var(--card) 60%);box-shadow:0 24px 60px -34px rgba(201,150,74,.5)}
+.nh-pc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.nh-pc-tag{font-size:14px;font-weight:800;border-radius:9999px;padding:6px 14px}
+.nh-pc-tag-free{color:var(--green);background:rgba(127,212,155,.12);border:1px solid rgba(127,212,155,.35)}
+.nh-pc-tag-paid{color:var(--gold-l);background:rgba(201,150,74,.12);border:1px solid rgba(201,150,74,.4)}
+.nh-pc-title{font-size:23px;font-weight:800;margin:0 0 10px;color:var(--fg)}
+.nh-pc-desc{font-size:15px;line-height:1.68;color:var(--muted);margin:0 0 18px}
+.nh-pc-list{list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:11px}
+.nh-pc-list li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;color:var(--fg);line-height:1.4}
+.nh-pc-chk{flex:none;display:grid;place-items:center;width:20px;height:20px;margin-top:1px}
+.nh-chk{width:18px;height:18px}
+.nh-pc-green{color:var(--green)}
+.nh-pc-gold-c{color:var(--gold-l)}
+.nh-pc-cta{width:100%;padding:14px;font-size:15.5px;margin-top:auto}
+.nh-card{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:26px 24px;display:flex;flex-direction:column}
+.nh-card-gold{border-color:rgba(201,150,74,.55);background:linear-gradient(160deg,rgba(201,150,74,.08),var(--card) 55%)}
+.nh-card-t{font-size:20px;font-weight:800;margin:0 0 10px;color:var(--fg)}
+.nh-card-d{font-size:14.5px;line-height:1.7;color:var(--muted);margin:0 0 14px;flex:1}
+.nh-card-note{font-size:13px;color:var(--fg);margin:0 0 18px;opacity:.9}
+.nh-gold-note{color:var(--gold-l);font-weight:700;opacity:1}
+.nh-card-cta{width:100%;padding:13px;font-size:15px}
+
+.nh-gd{color:var(--gold-l)}
+.nh-eyebrow2{font-size:11px;letter-spacing:3px;font-weight:800;color:var(--gold);text-transform:uppercase;margin-bottom:14px;text-align:center}
+
+/* ── soft rounded "honey cell" holders (rounded corners = bee's soft language) ── */
+.nh-hx{position:relative;flex:none;display:inline-grid;place-items:center;filter:drop-shadow(0 8px 18px rgba(201,150,74,.32))}
+.nh-hx-bg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.nh-hx-ico{position:relative;z-index:1;display:grid;place-items:center;color:var(--gold-l)}
+.nh-hx-gold .nh-hx-ico{color:#221704}
+.nh-ic{width:62%;height:62%;display:block}
+.nh-hx-sm{width:54px;height:58px}
+.nh-hx-md{width:66px;height:71px}
+.nh-hx-lg{width:92px;height:99px}
+
+/* ── faint bee watermark (brand texture behind sections) ── */
+.nh-bee-wm{position:absolute;pointer-events:none;z-index:0;opacity:.05}
+.nh-bee-wm img{display:block;width:100%;height:auto}
+.nh-bee-wm-r{top:20px;right:-44px;width:230px}
+.nh-bee-wm-c{top:6px;left:50%;transform:translateX(-50%);width:440px;opacity:.04}
+
+/* recognition */
+.nh-recog{position:relative;overflow:hidden;max-width:1000px;margin:0 auto;padding:62px 20px;text-align:center}
+.nh-recog-inner{position:relative;z-index:1}
+.nh-recog-sub{color:var(--muted);font-size:17px;margin:0 auto 32px;max-width:46ch;line-height:1.75}
+.nh-recog-items{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:860px;margin:0 auto}
+.nh-recog-item{display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 18px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),#0F131C);border-radius:20px;font-size:18px;color:var(--fg);font-weight:700}
+.nh-recog-txt{line-height:1.4}
+
+/* journey — branded timeline with a flowing gold signal line */
+.nh-journey{position:relative;overflow:hidden;background:#0B0F17;padding:72px 22px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.nh-journey-in{position:relative;z-index:1;max-width:1060px;margin:0 auto;text-align:center}
+.nh-beats{display:flex;align-items:center;justify-content:center;gap:0;margin:0 0 22px;flex-wrap:wrap}
+.nh-beat-wrap{display:inline-flex;align-items:center}
+.nh-beat{font-size:clamp(12px,3.2vw,15px);letter-spacing:2px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.nh-beat.on{color:var(--gold-l)}
+.nh-beat-sep{width:clamp(16px,6vw,44px);height:1px;background:linear-gradient(90deg,rgba(201,150,74,.15),rgba(201,150,74,.6),rgba(201,150,74,.15));margin:0 10px}
+.nh-journey-band{height:clamp(200px,34svh,340px)}
+.nh-journey-line{font-size:clamp(19px,3.4vw,28px);font-weight:600;line-height:1.4;margin:26px auto 0;max-width:34ch;color:var(--fg)}
+.sig-band{position:relative;width:100%;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:#080C14}
+.sig-canvas{display:block;width:100%}
+
+/* system — text + signal tree */
+.nh-sys-sec{max-width:1080px;margin:0 auto;padding:76px 22px}
+.nh-sys-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.nh-sys-copy{text-align:right}
+.nh-sys-copy .nh-eyebrow2,.nh-sys-copy .nh-h2{text-align:right;margin-right:0}
+.nh-sys-copy .nh-h2{text-align:right;margin-bottom:14px}
+.nh-sys-copy p{color:var(--muted);font-size:16.5px;line-height:1.75;max-width:46ch;margin:0}
+.nh-sys-diagram{display:flex;flex-direction:column;align-items:center}
+.nh-sys-node{position:relative;width:100%;max-width:340px;border:1px solid rgba(201,150,74,.5);background:linear-gradient(160deg,rgba(201,150,74,.14),var(--card));border-radius:20px;padding:24px 18px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.nh-sys-glow{position:absolute;inset:-34% 6%;background:radial-gradient(circle,rgba(201,150,74,.3),transparent 68%);z-index:0;pointer-events:none}
+.nh-sys-node .nh-hex{margin-bottom:8px}
+.nh-sys-node b{position:relative;z-index:1;color:var(--gold-l);font-size:18px}
+.nh-sys-node-sub{position:relative;z-index:1;font-size:13.5px;color:var(--muted)}
+.nh-sys-down{color:var(--gold);margin:12px 0}
+.nh-sys-kids{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:540px}
+.nh-sys-kid{display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid var(--border);background:var(--card);border-radius:16px;padding:22px 12px 18px;text-align:center}
+.nh-kid-txt{display:flex;flex-direction:column;gap:4px;align-items:center}
+.nh-sys-kid b{font-size:16px;color:var(--fg)}
+.nh-sys-kid span{font-size:13px;color:var(--muted);line-height:1.55}
+
+/* principles + punch */
+.nh-princ-sec{position:relative;overflow:hidden;background:#101520;padding:72px 22px;border-top:1px solid var(--line)}
+.nh-princ{position:relative;z-index:1;max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.nh-princ-item{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px}
+.nh-princ-item .nh-hex{margin-bottom:18px}
+.nh-princ-txt{display:flex;flex-direction:column;align-items:center}
+.nh-princ-item h4{font-size:19.5px;font-weight:800;color:var(--fg);margin:0 0 8px}
+.nh-princ-item p{font-size:15px;color:var(--muted);line-height:1.66;margin:0}
+.nh-approach-punch{position:relative;z-index:1;font-size:clamp(18px,2.6vw,24px);font-weight:800;line-height:1.5;margin:48px auto 0;color:var(--fg);text-align:center;max-width:40ch}
+.nh-quote{position:relative;z-index:1;max-width:640px;margin:48px auto 0;border:1px solid var(--border);background:linear-gradient(160deg,#161b25,#0F131C);border-radius:26px;padding:14px 30px 34px;text-align:center;box-shadow:0 26px 60px -32px rgba(0,0,0,.75)}
+.nh-quote-mark{font-family:Georgia,'Times New Roman',serif;font-size:74px;line-height:.9;color:var(--gold-l);height:42px;font-weight:700}
+.nh-quote-text{font-size:clamp(21px,4.8vw,29px);font-weight:700;line-height:1.46;color:var(--fg);margin:0 0 28px;text-wrap:balance}
+.nh-quote-sig{display:flex;align-items:center;justify-content:center;gap:16px}
+.nh-quote-line{height:1px;width:clamp(28px,12vw,64px);background:linear-gradient(90deg,transparent,rgba(201,150,74,.7))}
+.nh-quote-line:last-child{background:linear-gradient(90deg,rgba(201,150,74,.7),transparent)}
+.nh-quote-brand{font-size:12.5px;letter-spacing:3px;color:var(--gold-l);font-weight:700}
+
+/* ── new-section mobile ── */
+@media(max-width:760px){
+  .nh-recog{padding:52px 18px}
+  .nh-recog-items{grid-template-columns:1fr;gap:12px}
+  .nh-recog-item{flex-direction:row;justify-content:flex-start;text-align:right;padding:18px 18px;gap:16px}
+  .nh-journey{padding:54px 18px}
+  .nh-jhead{margin-bottom:36px}
+  .nh-flow{flex-direction:column;align-items:stretch;gap:24px;max-width:430px}
+  .nh-flow-line{top:30px;bottom:30px;left:auto;right:29px;width:2px;height:auto;background:linear-gradient(180deg,transparent,var(--gold) 10%,var(--gold-l) 50%,var(--gold) 90%,transparent)}
+  .nh-flow-step{max-width:none;flex-direction:row;align-items:center;text-align:right;gap:20px}
+  .nh-flow-txt{align-items:flex-start}
+  .nh-sys-sec{padding:56px 18px}
+  .nh-sys-grid{grid-template-columns:1fr;gap:32px}
+  .nh-sys-copy,.nh-sys-copy .nh-eyebrow2,.nh-sys-copy .nh-h2{text-align:center}
+  .nh-sys-copy p{margin:0 auto}
+  .nh-sys-kids{grid-template-columns:1fr;max-width:390px;gap:12px}
+  .nh-sys-kid{flex-direction:row;text-align:right;align-items:center;gap:16px;padding:16px 18px}
+  .nh-princ-sec{padding:56px 18px}
+  .nh-princ{grid-template-columns:1fr;gap:32px}
+  .nh-princ-item{flex-direction:row;text-align:right;align-items:center;gap:20px}
+  .nh-princ-item .nh-hex{margin-bottom:0}
+  .nh-kid-txt,.nh-princ-txt{align-items:flex-start;text-align:right}
+  .nh-bee-wm-c{width:340px}
+}
+
+.nh-testi-sec .nh-h2{margin-bottom:34px}
+.nh-tgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;margin:0 auto}
+.nh-testi{position:relative;display:flex;flex-direction:column;border:1px solid var(--border);background:linear-gradient(160deg,var(--card),#0F131C);border-radius:20px;padding:30px 26px 26px;margin:0}
+.nh-testi-mark{font-family:Georgia,'Times New Roman',serif;font-size:54px;line-height:.7;color:var(--gold-l);height:26px}
+.nh-stars{color:var(--gold-l);font-size:15px;letter-spacing:3px;margin:8px 0 14px}
+.nh-testi-q{font-size:16.5px;line-height:1.75;margin:0 0 18px;color:var(--fg);flex:1}
+.nh-testi-n{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:800;color:var(--fg)}
+.nh-testi-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px 1px rgba(232,185,74,.55)}
+
+.nh-final .nh-h2{margin-bottom:30px}
+.nh-final-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:720px;margin:0 auto 20px}
+.nh-final-opt{display:flex;flex-direction:column;align-items:center;gap:16px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),#0F131C);border-radius:20px;padding:28px 22px;text-align:center}
+.nh-final-paid{border-color:rgba(201,150,74,.5);background:linear-gradient(170deg,rgba(201,150,74,.12),var(--card) 60%);box-shadow:0 24px 60px -34px rgba(201,150,74,.45)}
+.nh-final-lbl{font-size:18px;font-weight:800;color:var(--fg)}
+.nh-final-cta{width:100%;padding:14px;font-size:15.5px;margin-top:auto}
+
+/* value ladder */
+.nh-ladder-sec{max-width:1080px;margin:0 auto;padding:66px 22px}
+.nh-ladder-sec .nh-h2{margin-bottom:12px}
+.nh-ladder{display:grid;grid-template-columns:1fr;gap:18px;margin-top:32px}
+.nh-lcard{display:flex;flex-direction:column;border:1px solid var(--border);background:var(--card);border-radius:20px;overflow:hidden;text-decoration:none;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.nh-lcard:hover{border-color:rgba(201,150,74,.5);transform:translateY(-3px);box-shadow:0 26px 50px -30px rgba(201,150,74,.4)}
+.nh-lcard-media{position:relative;aspect-ratio:4/3;overflow:hidden}
+.nh-lcard-media img{width:100%;height:100%;object-fit:cover;object-position:center 26%;display:block}
+.nh-lcard-media::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(8,12,20,.92),rgba(8,12,20,.12) 50%,transparent 74%)}
+.nh-lcard-pricewrap{position:absolute;bottom:13px;inset-inline-start:14px;z-index:1;display:flex;align-items:center;gap:9px}
+.nh-lcard-price{font-size:15.5px;font-weight:800;color:#2a1d05;background:linear-gradient(180deg,#f4d27a,#d59b1f);border-radius:9999px;padding:5px 14px;box-shadow:0 8px 20px -8px rgba(0,0,0,.6)}
+.nh-lcard-was{font-size:13.5px;font-weight:700;color:#EDE9E1;text-decoration:line-through;text-decoration-color:rgba(232,185,74,.9);opacity:.72}
+.nh-lcard-save{position:absolute;top:12px;inset-inline-end:14px;z-index:1;font-size:12px;font-weight:800;color:var(--green);background:rgba(127,212,155,.16);border:1px solid rgba(127,212,155,.42);border-radius:9999px;padding:4px 11px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.nh-lcard-tag{position:absolute;top:12px;inset-inline-end:14px;z-index:1;font-size:11.5px;font-weight:800;color:var(--green);background:rgba(127,212,155,.16);border:1px solid rgba(127,212,155,.42);border-radius:9999px;padding:4px 11px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.nh-lcard-body{display:flex;flex-direction:column;flex:1;padding:20px 22px 22px}
+.nh-lcard-body h3{font-size:19.5px;font-weight:800;color:var(--fg);margin:0 0 8px}
+.nh-lcard-body p{font-size:14px;line-height:1.62;color:var(--muted);margin:0 0 16px;flex:1}
+.nh-lcard-cta{font-size:14.5px;font-weight:800;color:var(--gold-l)}
+@media(min-width:760px){.nh-ladder{grid-template-columns:repeat(3,1fr)}}
+.nh-videos-sec{padding:62px 0 20px}
+.nh-videos-sec .nh-eyebrow2{margin-bottom:26px}
+
+.nh-footer{border-top:1px solid var(--line);background:var(--bg2);padding:34px 22px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.nh-footer-brand{font-size:17px;font-weight:800;color:var(--fg)}
+.nh-footer-micro{font-size:12.5px;color:var(--muted)}
+.nh-footer-links{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;font-size:12.5px}
+.nh-footer-links a{color:var(--gold-l);text-decoration:none}
+.nh-footer-links span{color:var(--border)}
+
+@media(max-width:900px){
+  .nh-nav{display:none}
+  .nh-cards,.nh-tgrid,.nh-final-grid{grid-template-columns:1fr}
+}
+@media(max-width:430px){
+  .nh-hwrap{padding:0 16px;gap:10px}
+  .nh-logo{font-size:17px}
+  .nh-section{padding:48px 18px}
+  .nh-approach-sec{padding:56px 18px}
+}
+`;
