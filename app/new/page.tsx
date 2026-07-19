@@ -10,6 +10,7 @@ import { HexDefs, HoneyHex, IcAI, IcCopy, IcLost, IcSignal, IcStrategy, IcConten
 // changed for any other page). This restores the exact existing design.
 const StatsSection     = dynamic(() => import("@/components/landing/StatsSection").then(m => ({ default: m.StatsSection })));
 const SocialProofStrip = dynamic(() => import("@/components/SocialProofStrip"));
+const WorkshopTestimonials = dynamic(() => import("@/app/workshop/WorkshopTestimonials").then(m => ({ default: m.WorkshopTestimonials })));
 
 /**
  * /new — ISOLATED experimental homepage (two-doors concept).
@@ -301,6 +302,12 @@ export default function NewHome() {
             ))}
           </div>
         </section>
+
+        {/* ══ Video testimonials carousel ══ */}
+        <section className="nh-videos-sec">
+          <div className="nh-eyebrow2">מה אומרים עליה בוידאו</div>
+          <WorkshopTestimonials />
+        </section>
       </main>
 
       {/* ══ Footer — mirrors the existing homepage footer ══ */}
@@ -530,6 +537,8 @@ const NH_CSS = `
 .nh-lcard-body p{font-size:14px;line-height:1.62;color:var(--muted);margin:0 0 16px;flex:1}
 .nh-lcard-cta{font-size:14.5px;font-weight:800;color:var(--gold-l)}
 @media(min-width:760px){.nh-ladder{grid-template-columns:repeat(3,1fr)}}
+.nh-videos-sec{padding:62px 0 20px}
+.nh-videos-sec .nh-eyebrow2{margin-bottom:26px}
 
 .nh-footer{border-top:1px solid var(--line);background:var(--bg2);padding:34px 22px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
 .nh-footer-brand{font-size:17px;font-weight:800;color:var(--fg)}
