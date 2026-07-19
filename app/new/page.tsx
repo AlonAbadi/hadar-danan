@@ -97,7 +97,8 @@ export default function NewHome() {
 
         {/* ══ Two paths ══ */}
         <section className="nh-section">
-          <h2 className="nh-h2">שתי דרכים. אותה מטרה: מסר שאנשים מזהים וזוכרים.</h2>
+          <h2 className="nh-h2 nh-h2-tight">שתי דרכים. אותה מטרה: הלקוחות הנכונים, ומכירה שנעשית כמעט לבד.</h2>
+          <p className="nh-section-sub">כשברור מי אתם, אתם מפסיקים לרדוף אחרי כל עצה. הלקוחות הנכונים מגיעים דווקא אליכם, והמכירה כבר קלה.</p>
           <div className="nh-cards">
             <article className="nh-card">
               <h3 className="nh-card-t">אני צריך להבין מה האות שלי</h3>
@@ -289,6 +290,8 @@ const NH_CSS = `
 .nh-section{max-width:1080px;margin:0 auto;padding:64px 22px}
 .nh-h2{font-size:clamp(25px,5.4vw,33px);font-weight:800;line-height:1.28;letter-spacing:-.3px;text-align:center;margin:0 0 26px;text-wrap:balance;color:var(--fg)}
 
+.nh-h2-tight{margin-bottom:14px}
+.nh-section-sub{color:var(--muted);font-size:clamp(15.5px,2.4vw,17px);line-height:1.72;text-align:center;max-width:48ch;margin:0 auto 30px}
 .nh-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .nh-card{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:26px 24px;display:flex;flex-direction:column}
 .nh-card-gold{border-color:rgba(201,150,74,.55);background:linear-gradient(160deg,rgba(201,150,74,.08),var(--card) 55%)}
