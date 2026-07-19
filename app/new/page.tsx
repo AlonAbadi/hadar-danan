@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { TrackedCta } from "./TrackedCta";
-import { Copy, HelpCircle, Sparkles, LayoutGrid, Share2, Activity, TrendingUp, Target, PenLine, BarChart3, Heart, Leaf, Flower2, ChevronDown } from "lucide-react";
+import { Copy, HelpCircle, Sparkles, Activity, Target, PenLine, BarChart3, Heart, Leaf, Flower2, ChevronDown } from "lucide-react";
+import { SignalCanvas } from "./live/SignalCanvas";
 
 // Reused ORIGINAL homepage elements (rendered as-is; their behavior is not
 // changed for any other page). This restores the exact existing design.
@@ -128,28 +129,23 @@ export default function NewHome() {
           </div>
         </section>
 
-        {/* ══ Noise → Signal journey — branded timeline w/ signal line ══ */}
+        {/* ══ Noise → Signal — the living signal (from /new/live) ══ */}
         <section className="nh-journey">
-          <span className="nh-bee-wm nh-bee-wm-c" aria-hidden>
-            <Image src="/beegood_logo.png" alt="" width={456} height={360} />
-          </span>
-          <div className="nh-jhead">
+          <div className="nh-journey-in">
             <div className="nh-eyebrow2">מרעש לסיגנל</div>
-            <h2 className="nh-h2">מתחת לרעש, יש משהו עקבי.<br /><span className="nh-gd">משהו שרק אתה יכול להביא.</span></h2>
-          </div>
-          <div className="nh-flow">
-            <span className="nh-flow-line" aria-hidden />
-            {[
-              { Icon: LayoutGrid, t: "רעש",    d: "הכל. בכל מקום." },
-              { Icon: Share2,     t: "דפוסים", d: "מזהים את מה שחוזר." },
-              { Icon: Activity,   t: "סיגנל",  d: "בהירות על מה שרק אתה." },
-              { Icon: TrendingUp, t: "צמיחה",  d: "אתה צומח. אתה מוביל.", gold: true },
-            ].map((s) => (
-              <div className="nh-flow-step" key={s.t}>
-                <span className={`nh-hex nh-hex-md${s.gold ? " nh-hex-gold" : ""}`}><s.Icon size={24} strokeWidth={1.6} /></span>
-                <div className="nh-flow-txt"><div className="nh-flow-t">{s.t}</div><div className="nh-flow-d">{s.d}</div></div>
-              </div>
-            ))}
+            <div className="nh-beats">
+              {[
+                { t: "רעש", on: false }, { t: "דפוסים", on: false },
+                { t: "סיגנל", on: true }, { t: "צמיחה", on: true },
+              ].map((b, i, arr) => (
+                <span className="nh-beat-wrap" key={b.t}>
+                  <span className={`nh-beat${b.on ? " on" : ""}`}>{b.t}</span>
+                  {i < arr.length - 1 && <span className="nh-beat-sep" aria-hidden />}
+                </span>
+              ))}
+            </div>
+            <SignalCanvas trigger="inview" className="nh-journey-band" />
+            <p className="nh-journey-line">הרעש הוא של כולם. <span className="nh-gd">האות הוא רק שלך.</span></p>
           </div>
         </section>
 
@@ -322,13 +318,16 @@ const NH_CSS = `
 
 /* journey — branded timeline with a flowing gold signal line */
 .nh-journey{position:relative;overflow:hidden;background:#0B0F17;padding:72px 22px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.nh-jhead{position:relative;z-index:1;max-width:760px;margin:0 auto 48px;text-align:center}
-.nh-flow{position:relative;z-index:1;max-width:940px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.nh-flow-line{position:absolute;top:33px;left:11%;right:11%;height:2px;z-index:0;background:linear-gradient(90deg,transparent,var(--gold) 12%,var(--gold-l) 50%,var(--gold) 88%,transparent);opacity:.55}
-.nh-flow-step{position:relative;z-index:1;flex:1;max-width:200px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
-.nh-flow-txt{display:flex;flex-direction:column;align-items:center;gap:4px}
-.nh-flow-t{font-size:17px;font-weight:800;color:var(--fg)}
-.nh-flow-d{font-size:13px;color:var(--muted);line-height:1.5}
+.nh-journey-in{position:relative;z-index:1;max-width:1060px;margin:0 auto;text-align:center}
+.nh-beats{display:flex;align-items:center;justify-content:center;gap:0;margin:0 0 22px;flex-wrap:wrap}
+.nh-beat-wrap{display:inline-flex;align-items:center}
+.nh-beat{font-size:clamp(12px,3.2vw,15px);letter-spacing:2px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.nh-beat.on{color:var(--gold-l)}
+.nh-beat-sep{width:clamp(16px,6vw,44px);height:1px;background:linear-gradient(90deg,rgba(201,150,74,.15),rgba(201,150,74,.6),rgba(201,150,74,.15));margin:0 10px}
+.nh-journey-band{height:clamp(200px,34svh,340px)}
+.nh-journey-line{font-size:clamp(19px,3.4vw,28px);font-weight:600;line-height:1.4;margin:26px auto 0;max-width:34ch;color:var(--fg)}
+.sig-band{position:relative;width:100%;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:#080C14}
+.sig-canvas{display:block;width:100%}
 
 /* system — text + signal tree */
 .nh-sys-sec{max-width:1080px;margin:0 auto;padding:76px 22px}
