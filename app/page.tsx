@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { TrackedCta } from "./TrackedCta";
+import { parseVariant } from "@/lib/ab";
+import { TrackedCta } from "./new/TrackedCta";
 import { ChevronDown } from "lucide-react";
-import { SignalCanvas } from "./SignalCanvas";
-import { HexDefs, HoneyHex, IcAI, IcCopy, IcLost, IcSignal, IcStrategy, IcContent, IcData, IcHuman, IcLasting, IcSoul } from "./glyphs";
+import { SignalCanvas } from "./new/SignalCanvas";
+import { HexDefs, HoneyHex, IcAI, IcCopy, IcLost, IcSignal, IcStrategy, IcContent, IcData, IcHuman, IcLasting, IcSoul } from "./new/glyphs";
+import { PageTracker } from "@/components/landing/PageTracker";
 
 // Reused ORIGINAL homepage elements (rendered as-is; their behavior is not
 // changed for any other page). This restores the exact existing design.
@@ -14,21 +17,18 @@ const WorkshopTestimonials = dynamic(() => import("@/app/workshop/WorkshopTestim
 const QuizProofWall = dynamic(() => import("@/components/landing/QuizProofWall"));
 
 /**
- * /new — ISOLATED experimental homepage (two-doors concept).
- * Restores the ORIGINAL homepage design for every reused element: the hero
- * treatment of Hadar's photo (full-bleed + mask fade, mobile + desktop), the
- * gold button style, and the real StatsSection / SocialProofStrip / Philosophy
- * components. Only the layout intent (two doors) is new. Does not touch the
- * existing homepage, /kriah, /strategy, or any shared behavior. noindex.
+ * Homepage (/) — the "two doors" signal-first home. Promoted from the former
+ * /new experiment. Indexable; the previous homepage is backed up at /home-classic.
+ * OG metadata is inherited from app/layout.tsx (site-wide).
  */
 export const metadata: Metadata = {
-  title: "הדר דנן",
-  robots: { index: false, follow: false },
-  alternates: {},
+  title: "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
+  description: "אנחנו עוזרים לעסקים לאתר איפה הם חזקים באמת, ולבנות שיווק שמרגיש טבעי ומביא תוצאות.",
+  alternates: { canonical: "/" },
 };
 
-const HEADLINE = "אם כולם אומרים את מה שאתה אומר, למה שיבחרו בך?";
-const LEDE = "מצא את המסר שאי אפשר להעתיק, והפוך אותו לעסק שגדל, ללקוחות הנכונים ולתחושה טובה בעשייה.";
+const HEADLINE = "אם כולם אומרים את מה שאתם אומרים, למה שיבחרו דווקא בכם?";
+const LEDE = "מצאו את המסר שאי אפשר להעתיק, והפכו אותו לעסק שגדל, ללקוחות הנכונים ולתחושה טובה בעשייה.";
 
 type LadderItem = { title: string; price: string; original?: string; save?: string; tag?: string; href: string; img: string; pos: string; desc: string };
 const LADDER: LadderItem[] = [
@@ -57,10 +57,12 @@ function Chk() {
   );
 }
 
-export default function NewHome() {
+export default async function NewHome() {
+  const abVariant = parseVariant((await cookies()).get("ab_variant")?.value);
   return (
     <div dir="rtl" className="nh-root">
       <style>{NH_CSS}</style>
+      <PageTracker abVariant={abVariant} />
       <HexDefs />
 
       {/* Top banner (global nav) + footer are the site's originals — restored
@@ -82,7 +84,7 @@ export default function NewHome() {
               <div className="nh-eyebrow"><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span> · הדרך</div>
               <h1 style={{ color: "#EDE9E1", fontWeight: 900, fontSize: "clamp(1.8rem, 7vw, 2.7rem)", lineHeight: 1.14, letterSpacing: "-0.02em", marginBottom: 12, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
               <p style={{ color: "#AAB0BD", fontSize: "clamp(0.95rem, 2.2vw, 1.05rem)", lineHeight: 1.65, marginBottom: 16 }}>{LEDE}</p>
-              <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero" style={{ width: "100%", marginBottom: 10 }}>לגלות את ה־TrueSignal שלי — בחינם</TrackedCta>
+              <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero" style={{ width: "100%", marginBottom: 10 }}>לגלות את האות שלי בחינם</TrackedCta>
               <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero" style={{ width: "100%" }}>לעבוד ישירות עם הדר</TrackedCta>
               <div className="nh-priceline" style={{ textAlign: "center", marginTop: 7 }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
               <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
@@ -106,7 +108,7 @@ export default function NewHome() {
               <h1 style={{ color: "#EDE9E1", fontWeight: 800, fontSize: "clamp(2rem, 2.6vw, 3rem)", lineHeight: 1.2, marginBottom: 18, whiteSpace: "pre-line" }}>{HEADLINE}</h1>
               <p style={{ color: "#AAB0BD", fontSize: "1rem", lineHeight: 1.78, marginBottom: 30, maxWidth: "42ch" }}>{LEDE}</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 420 }}>
-                <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero">לגלות את ה־TrueSignal שלי — בחינם</TrackedCta>
+                <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero">לגלות את האות שלי בחינם</TrackedCta>
                 <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero">לעבוד ישירות עם הדר</TrackedCta>
                 <div className="nh-priceline" style={{ textAlign: "center" }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
               </div>

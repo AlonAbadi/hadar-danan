@@ -18,9 +18,9 @@ const HomeStickyBar      = dynamic(() => import("@/components/home/HomeStickyBar
 const HomeBingeSection   = dynamic(() => import("@/components/home/HomeBingeSection"));
 
 export const metadata: Metadata = {
-  title: "הדר דנן | אסטרטגיה שיווקית שמביאה תוצאות",
-  description: "אנחנו עוזרים לעסקים לאתר איפה הם חזקים באמת - ולבנות שיווק שמרגיש טבעי ומביא תוצאות",
-  alternates: { canonical: "/" },
+  title: "הדר דנן — עמוד בית קלאסי",
+  description: "גיבוי עמוד הבית הקודם.",
+  robots: { index: false, follow: false },
 };
 
 async function getUserCount(): Promise<number> {
