@@ -93,9 +93,10 @@ export function SignalCanvas({
       return y;
     };
 
-    // animation state
-    let raf = 0, started = false, startArmed = false, startTime = 0, lockFired = false, lockT = -1;
-    let visible = false, frozen = false, lastRender = 0;
+    // animation state — resolves noise->signal, holds ~1s, then loops forever
+    const RESOLVE = 2400, HOLD = 1100, CYCLE = RESOLVE + HOLD;
+    let raf = 0, started = false, startArmed = false, cycleStart = 0, mountT = 0, lockFired = false, lockT = -1;
+    let visible = false, lastRender = 0;
 
     const render = (coh: number, t: number, showGhost: boolean) => {
       const mid = H / 2;
@@ -151,22 +152,22 @@ export function SignalCanvas({
     };
 
     const loop = () => { if (!raf) raf = requestAnimationFrame(frame); };
-    const beginClock = () => { if (!started) { started = true; startTime = performance.now(); } };
+    const beginClock = () => { if (!started) { started = true; mountT = performance.now(); cycleStart = mountT; } };
 
     const frame = (now: number) => {
       raf = 0;
       if (!started) { render(0, now / 1000, true); if (visible) loop(); return; }
-      const elapsed = now - startTime;
-      const ph = elapsed / 1000;
-      const coh = elapsed < 2400 ? eio(elapsed / 2400) : 1;
+      const ph = (now - mountT) / 1000; // continuous wave phase (never resets → smooth)
+      let elapsed = now - cycleStart;
+      if (elapsed >= CYCLE) { cycleStart = now; lockFired = false; lockT = -1; elapsed = 0; } // restart cycle
+      const coh = elapsed < RESOLVE ? eio(elapsed / RESOLVE) : 1;
       if (!lockFired && coh >= 0.8) { lockFired = true; lockT = 0; }
       if (lockT >= 0 && lockT < 1) lockT = Math.min(1, lockT + 0.035);
-      const active = elapsed < 2600 || (lockT >= 0 && lockT < 1);
-      if (!active && now - lastRender < 33) { if (visible && !frozen) loop(); return; } // ~30fps breathe
+      const active = elapsed < RESOLVE + 200 || (lockT >= 0 && lockT < 1);
+      if (!active && now - lastRender < 33) { if (visible) loop(); return; } // throttle the hold to ~30fps
       lastRender = now;
-      render(coh, ph, elapsed < 2600);
-      if (elapsed > 6000) { frozen = true; render(1, ph, false); return; } // settle, stop painting
-      if (visible && !frozen) loop();
+      render(coh, ph, elapsed < RESOLVE + 200);
+      if (visible) loop();
     };
 
     measure();
@@ -188,22 +189,20 @@ export function SignalCanvas({
           if (trigger === "load") { if (!startArmed) { startArmed = true; window.setTimeout(() => { beginClock(); loop(); }, 250); } }
           else beginClock();
         }
-        if (!frozen) loop();
+        loop();
       } else if (raf) { cancelAnimationFrame(raf); raf = 0; }
     }, { threshold: 0.15 });
     io.observe(wrap);
 
-    const onVis = () => { if (document.hidden) { if (raf) { cancelAnimationFrame(raf); raf = 0; } } else if (visible && !frozen) loop(); };
+    const onVis = () => { if (document.hidden) { if (raf) { cancelAnimationFrame(raf); raf = 0; } } else if (visible) loop(); };
     document.addEventListener("visibilitychange", onVis);
 
     let lastW = window.innerWidth;
     const onResize = () => {
       if (Math.abs(window.innerWidth - lastW) < 1) return; // ignore mobile URL-bar height changes
       lastW = window.innerWidth;
-      const wasStarted = started, savedStart = startTime;
       measure();
-      if (frozen) render(1, (performance.now() - savedStart) / 1000, false);
-      else if (!wasStarted) render(0, 0, true);
+      if (!started) render(0, 0, true);
     };
     window.addEventListener("resize", onResize);
 

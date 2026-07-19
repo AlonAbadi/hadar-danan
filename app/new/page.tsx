@@ -186,7 +186,15 @@ export default function NewHome() {
             <div className="nh-princ-item"><HoneyHex size="lg"><IcLasting /></HoneyHex><div className="nh-princ-txt"><h4>נבנה להחזיק</h4><p>בהירות היום, צמיחה מחר. השפעה שנשארת, לא טרנד שחולף.</p></div></div>
             <div className="nh-princ-item"><HoneyHex size="lg"><IcSoul /></HoneyHex><div className="nh-princ-txt"><h4>מדע ונשמה</h4><p>דאטה ופסיכולוגיה. אסטרטגיה ואינטואיציה. ביחד, לא בנפרד.</p></div></div>
           </div>
-          <p className="nh-approach-punch">אנחנו לא מוכרים סרטונים.<br />אנחנו בונים את הבהירות שגורמת לתוכן לעבוד.</p>
+          <figure className="nh-quote">
+            <div className="nh-quote-mark" aria-hidden>”</div>
+            <blockquote className="nh-quote-text">אנחנו לא מוכרים סרטונים.<br />אנחנו בונים את <span className="nh-gd">הבהירות</span> שגורמת לתוכן לעבוד.</blockquote>
+            <div className="nh-quote-sig">
+              <span className="nh-quote-line" aria-hidden />
+              <span className="nh-quote-brand"><span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span></span>
+              <span className="nh-quote-line" aria-hidden />
+            </div>
+          </figure>
         </section>
 
         {/* ══ Testimonials ══ */}
@@ -359,6 +367,13 @@ const NH_CSS = `
 .nh-princ-item h4{font-size:19.5px;font-weight:800;color:var(--fg);margin:0 0 8px}
 .nh-princ-item p{font-size:15px;color:var(--muted);line-height:1.66;margin:0}
 .nh-approach-punch{position:relative;z-index:1;font-size:clamp(18px,2.6vw,24px);font-weight:800;line-height:1.5;margin:48px auto 0;color:var(--fg);text-align:center;max-width:40ch}
+.nh-quote{position:relative;z-index:1;max-width:640px;margin:48px auto 0;border:1px solid var(--border);background:linear-gradient(160deg,#161b25,#0F131C);border-radius:26px;padding:14px 30px 34px;text-align:center;box-shadow:0 26px 60px -32px rgba(0,0,0,.75)}
+.nh-quote-mark{font-family:Georgia,'Times New Roman',serif;font-size:74px;line-height:.9;color:var(--gold-l);height:42px;font-weight:700}
+.nh-quote-text{font-size:clamp(21px,4.8vw,29px);font-weight:700;line-height:1.46;color:var(--fg);margin:0 0 28px;text-wrap:balance}
+.nh-quote-sig{display:flex;align-items:center;justify-content:center;gap:16px}
+.nh-quote-line{height:1px;width:clamp(28px,12vw,64px);background:linear-gradient(90deg,transparent,rgba(201,150,74,.7))}
+.nh-quote-line:last-child{background:linear-gradient(90deg,rgba(201,150,74,.7),transparent)}
+.nh-quote-brand{font-size:12.5px;letter-spacing:3px;color:var(--gold-l);font-weight:700}
 
 /* ── new-section mobile ── */
 @media(max-width:760px){
