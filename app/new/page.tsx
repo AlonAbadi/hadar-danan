@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { TrackedCta } from "./TrackedCta";
-import { Copy, HelpCircle, Sparkles, Activity, Target, PenLine, BarChart3, Heart, Leaf, Flower2, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { SignalCanvas } from "./live/SignalCanvas";
+import { HexDefs, HoneyHex, IcAI, IcCopy, IcLost, IcSignal, IcStrategy, IcContent, IcData, IcHuman, IcLasting, IcSoul } from "./glyphs";
 
 // Reused ORIGINAL homepage elements (rendered as-is; their behavior is not
 // changed for any other page). This restores the exact existing design.
@@ -36,6 +37,7 @@ export default function NewHome() {
   return (
     <div dir="rtl" className="nh-root">
       <style>{NH_CSS}</style>
+      <HexDefs />
 
       {/* Top banner (global nav) + footer are the site's originals — restored
           per Alon. Nav comes from the global layout (LayoutShell no longer hides
@@ -122,9 +124,9 @@ export default function NewHome() {
             <h2 className="nh-h2">עדיין לא בטוח <span className="nh-gd">מה הצעד הבא?</span></h2>
             <p className="nh-recog-sub">ניסית כבר הרבה. אולי מה שחסר הוא בסיס אחד ברור.</p>
             <div className="nh-recog-items">
-              <div className="nh-recog-item"><span className="nh-hex nh-hex-sm"><Sparkles size={20} strokeWidth={1.7} /></span><span className="nh-recog-txt">שאלת את ה-AI.</span></div>
-              <div className="nh-recog-item"><span className="nh-hex nh-hex-sm"><Copy size={20} strokeWidth={1.7} /></span><span className="nh-recog-txt">חשבת להעתיק מהמתחרים.</span></div>
-              <div className="nh-recog-item"><span className="nh-hex nh-hex-sm"><HelpCircle size={20} strokeWidth={1.7} /></span><span className="nh-recog-txt">כבר לא יודע איזה תוכן להעלות.</span></div>
+              <div className="nh-recog-item"><HoneyHex size="md"><IcAI /></HoneyHex><span className="nh-recog-txt">שאלת את ה-AI.</span></div>
+              <div className="nh-recog-item"><HoneyHex size="md"><IcCopy /></HoneyHex><span className="nh-recog-txt">חשבת להעתיק מהמתחרים.</span></div>
+              <div className="nh-recog-item"><HoneyHex size="md"><IcLost /></HoneyHex><span className="nh-recog-txt">כבר לא יודע איזה תוכן להעלות.</span></div>
             </div>
           </div>
         </section>
@@ -160,15 +162,15 @@ export default function NewHome() {
             <div className="nh-sys-diagram">
               <div className="nh-sys-node">
                 <span className="nh-sys-glow" aria-hidden />
-                <span className="nh-hex nh-hex-gold nh-hex-lg"><Activity size={26} strokeWidth={1.7} /></span>
+                <HoneyHex gold size="lg"><IcSignal /></HoneyHex>
                 <b>הסיגנל שלך</b>
                 <span className="nh-sys-node-sub">מי אתה, ומה רק אתה יכול להציע</span>
               </div>
               <div className="nh-sys-down" aria-hidden><ChevronDown size={22} /></div>
               <div className="nh-sys-kids">
-                <div className="nh-sys-kid"><span className="nh-hex nh-hex-sm"><Target size={18} strokeWidth={1.7} /></span><span className="nh-kid-txt"><b>אסטרטגיה</b><span>על מה להתמקד. מה חשוב עכשיו.</span></span></div>
-                <div className="nh-sys-kid"><span className="nh-hex nh-hex-sm"><PenLine size={18} strokeWidth={1.7} /></span><span className="nh-kid-txt"><b>תוכן</b><span>איך הסיגנל הופך לתקשורת.</span></span></div>
-                <div className="nh-sys-kid"><span className="nh-hex nh-hex-sm"><BarChart3 size={18} strokeWidth={1.7} /></span><span className="nh-kid-txt"><b>דאטה</b><span>מה עובד. מה מצטבר.</span></span></div>
+                <div className="nh-sys-kid"><HoneyHex size="md"><IcStrategy /></HoneyHex><span className="nh-kid-txt"><b>אסטרטגיה</b><span>על מה להתמקד. מה חשוב עכשיו.</span></span></div>
+                <div className="nh-sys-kid"><HoneyHex size="md"><IcContent /></HoneyHex><span className="nh-kid-txt"><b>תוכן</b><span>איך הסיגנל הופך לתקשורת.</span></span></div>
+                <div className="nh-sys-kid"><HoneyHex size="md"><IcData /></HoneyHex><span className="nh-kid-txt"><b>דאטה</b><span>מה עובד. מה מצטבר.</span></span></div>
               </div>
             </div>
           </div>
@@ -180,9 +182,9 @@ export default function NewHome() {
             <Image src="/beegood_logo.png" alt="" width={456} height={360} />
           </span>
           <div className="nh-princ">
-            <div className="nh-princ-item"><span className="nh-hex nh-hex-md"><Heart size={22} strokeWidth={1.6} /></span><div className="nh-princ-txt"><h4>האדם במרכז</h4><p>אנחנו מאמינים באנשים. הטכנולוגיה כאן כדי לשרת אותם, לא להפך.</p></div></div>
-            <div className="nh-princ-item"><span className="nh-hex nh-hex-md"><Leaf size={22} strokeWidth={1.6} /></span><div className="nh-princ-txt"><h4>נבנה להחזיק</h4><p>בהירות היום, צמיחה מחר. השפעה שנשארת, לא טרנד שחולף.</p></div></div>
-            <div className="nh-princ-item"><span className="nh-hex nh-hex-md"><Flower2 size={22} strokeWidth={1.6} /></span><div className="nh-princ-txt"><h4>מדע ונשמה</h4><p>דאטה ופסיכולוגיה. אסטרטגיה ואינטואיציה. ביחד, לא בנפרד.</p></div></div>
+            <div className="nh-princ-item"><HoneyHex size="lg"><IcHuman /></HoneyHex><div className="nh-princ-txt"><h4>האדם במרכז</h4><p>אנחנו מאמינים באנשים. הטכנולוגיה כאן כדי לשרת אותם, לא להפך.</p></div></div>
+            <div className="nh-princ-item"><HoneyHex size="lg"><IcLasting /></HoneyHex><div className="nh-princ-txt"><h4>נבנה להחזיק</h4><p>בהירות היום, צמיחה מחר. השפעה שנשארת, לא טרנד שחולף.</p></div></div>
+            <div className="nh-princ-item"><HoneyHex size="lg"><IcSoul /></HoneyHex><div className="nh-princ-txt"><h4>מדע ונשמה</h4><p>דאטה ופסיכולוגיה. אסטרטגיה ואינטואיציה. ביחד, לא בנפרד.</p></div></div>
           </div>
           <p className="nh-approach-punch">אנחנו לא מוכרים סרטונים.<br />אנחנו בונים את הבהירות שגורמת לתוכן לעבוד.</p>
         </section>
@@ -277,7 +279,7 @@ const NH_CSS = `
 .nh-trust{margin-top:16px;font-size:12px;color:var(--muted);opacity:.85;text-align:center}
 
 .nh-section{max-width:1080px;margin:0 auto;padding:64px 22px}
-.nh-h2{font-size:clamp(22px,3.2vw,30px);font-weight:800;line-height:1.3;letter-spacing:-.3px;text-align:center;margin:0 0 30px;text-wrap:balance;color:var(--fg)}
+.nh-h2{font-size:clamp(25px,5.4vw,33px);font-weight:800;line-height:1.28;letter-spacing:-.3px;text-align:center;margin:0 0 26px;text-wrap:balance;color:var(--fg)}
 
 .nh-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .nh-card{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:26px 24px;display:flex;flex-direction:column}
@@ -291,16 +293,15 @@ const NH_CSS = `
 .nh-gd{color:var(--gold-l)}
 .nh-eyebrow2{font-size:11px;letter-spacing:3px;font-weight:800;color:var(--gold);text-transform:uppercase;margin-bottom:14px;text-align:center}
 
-/* ── honeycomb hexagon icon holders (the bee / brand motif) ── */
-.nh-hex{position:relative;flex:none;display:grid;place-items:center;width:56px;height:62px;filter:drop-shadow(0 10px 22px rgba(201,150,74,.26))}
-.nh-hex::before{content:"";position:absolute;inset:0;background:linear-gradient(155deg,var(--gold-l),#9E7C3A);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
-.nh-hex::after{content:"";position:absolute;inset:2px;background:#10151F;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
-.nh-hex>svg{position:relative;z-index:1;color:var(--gold-l)}
-.nh-hex-sm{width:48px;height:53px}
-.nh-hex-md{width:60px;height:66px}
-.nh-hex-lg{width:82px;height:90px}
-.nh-hex-gold::after{background:linear-gradient(155deg,#f4d27a,#d59b1f)}
-.nh-hex-gold>svg{color:#2a1d05}
+/* ── soft rounded "honey cell" holders (rounded corners = bee's soft language) ── */
+.nh-hx{position:relative;flex:none;display:inline-grid;place-items:center;filter:drop-shadow(0 8px 18px rgba(201,150,74,.32))}
+.nh-hx-bg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.nh-hx-ico{position:relative;z-index:1;display:grid;place-items:center;color:var(--gold-l)}
+.nh-hx-gold .nh-hx-ico{color:#221704}
+.nh-ic{width:62%;height:62%;display:block}
+.nh-hx-sm{width:54px;height:58px}
+.nh-hx-md{width:66px;height:71px}
+.nh-hx-lg{width:92px;height:99px}
 
 /* ── faint bee watermark (brand texture behind sections) ── */
 .nh-bee-wm{position:absolute;pointer-events:none;z-index:0;opacity:.05}
@@ -309,11 +310,11 @@ const NH_CSS = `
 .nh-bee-wm-c{top:6px;left:50%;transform:translateX(-50%);width:440px;opacity:.04}
 
 /* recognition */
-.nh-recog{position:relative;overflow:hidden;max-width:1000px;margin:0 auto;padding:66px 22px;text-align:center}
+.nh-recog{position:relative;overflow:hidden;max-width:1000px;margin:0 auto;padding:62px 20px;text-align:center}
 .nh-recog-inner{position:relative;z-index:1}
-.nh-recog-sub{color:var(--muted);font-size:15.5px;margin:0 auto 34px;max-width:50ch;line-height:1.7}
-.nh-recog-items{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:840px;margin:0 auto}
-.nh-recog-item{display:flex;flex-direction:column;align-items:center;gap:18px;padding:32px 18px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),#0F131C);border-radius:18px;font-size:15.5px;color:var(--fg);font-weight:600}
+.nh-recog-sub{color:var(--muted);font-size:17px;margin:0 auto 32px;max-width:46ch;line-height:1.75}
+.nh-recog-items{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:860px;margin:0 auto}
+.nh-recog-item{display:flex;flex-direction:column;align-items:center;gap:18px;padding:30px 18px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),#0F131C);border-radius:20px;font-size:18px;color:var(--fg);font-weight:700}
 .nh-recog-txt{line-height:1.4}
 
 /* journey — branded timeline with a flowing gold signal line */
@@ -335,19 +336,19 @@ const NH_CSS = `
 .nh-sys-copy{text-align:right}
 .nh-sys-copy .nh-eyebrow2,.nh-sys-copy .nh-h2{text-align:right;margin-right:0}
 .nh-sys-copy .nh-h2{text-align:right;margin-bottom:14px}
-.nh-sys-copy p{color:var(--muted);font-size:15.5px;line-height:1.75;max-width:46ch;margin:0}
+.nh-sys-copy p{color:var(--muted);font-size:16.5px;line-height:1.75;max-width:46ch;margin:0}
 .nh-sys-diagram{display:flex;flex-direction:column;align-items:center}
 .nh-sys-node{position:relative;width:100%;max-width:340px;border:1px solid rgba(201,150,74,.5);background:linear-gradient(160deg,rgba(201,150,74,.14),var(--card));border-radius:20px;padding:24px 18px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
 .nh-sys-glow{position:absolute;inset:-34% 6%;background:radial-gradient(circle,rgba(201,150,74,.3),transparent 68%);z-index:0;pointer-events:none}
 .nh-sys-node .nh-hex{margin-bottom:8px}
-.nh-sys-node b{position:relative;z-index:1;color:var(--gold-l);font-size:16.5px}
-.nh-sys-node-sub{position:relative;z-index:1;font-size:12.5px;color:var(--muted)}
+.nh-sys-node b{position:relative;z-index:1;color:var(--gold-l);font-size:18px}
+.nh-sys-node-sub{position:relative;z-index:1;font-size:13.5px;color:var(--muted)}
 .nh-sys-down{color:var(--gold);margin:12px 0}
 .nh-sys-kids{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:540px}
 .nh-sys-kid{display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid var(--border);background:var(--card);border-radius:16px;padding:22px 12px 18px;text-align:center}
 .nh-kid-txt{display:flex;flex-direction:column;gap:4px;align-items:center}
-.nh-sys-kid b{font-size:14.5px;color:var(--fg)}
-.nh-sys-kid span{font-size:11.5px;color:var(--muted);line-height:1.5}
+.nh-sys-kid b{font-size:16px;color:var(--fg)}
+.nh-sys-kid span{font-size:13px;color:var(--muted);line-height:1.55}
 
 /* principles + punch */
 .nh-princ-sec{position:relative;overflow:hidden;background:#101520;padding:72px 22px;border-top:1px solid var(--line)}
@@ -355,8 +356,8 @@ const NH_CSS = `
 .nh-princ-item{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px}
 .nh-princ-item .nh-hex{margin-bottom:18px}
 .nh-princ-txt{display:flex;flex-direction:column;align-items:center}
-.nh-princ-item h4{font-size:17.5px;font-weight:800;color:var(--fg);margin:0 0 8px}
-.nh-princ-item p{font-size:13.5px;color:var(--muted);line-height:1.65;margin:0}
+.nh-princ-item h4{font-size:19.5px;font-weight:800;color:var(--fg);margin:0 0 8px}
+.nh-princ-item p{font-size:15px;color:var(--muted);line-height:1.66;margin:0}
 .nh-approach-punch{position:relative;z-index:1;font-size:clamp(18px,2.6vw,24px);font-weight:800;line-height:1.5;margin:48px auto 0;color:var(--fg);text-align:center;max-width:40ch}
 
 /* ── new-section mobile ── */
