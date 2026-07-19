@@ -3,7 +3,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { TrackedCta } from "./TrackedCta";
 import { ChevronDown } from "lucide-react";
-import { SignalCanvas } from "./live/SignalCanvas";
+import { SignalCanvas } from "./SignalCanvas";
 import { HexDefs, HoneyHex, IcAI, IcCopy, IcLost, IcSignal, IcStrategy, IcContent, IcData, IcHuman, IcLasting, IcSoul } from "./glyphs";
 
 // Reused ORIGINAL homepage elements (rendered as-is; their behavior is not
@@ -32,6 +32,14 @@ const TESTIMONIALS = [
 
 const HEADLINE = "אם כולם אומרים את מה שאתה אומר, למה שיבחרו בך?";
 const LEDE = "מצא את המסר שאי אפשר להעתיק, והפוך אותו לעסק שגדל, ללקוחות הנכונים ולתחושה טובה בעשייה.";
+
+function Chk() {
+  return (
+    <svg viewBox="0 0 20 20" className="nh-chk" aria-hidden>
+      <path d="M4 10.6l3.6 3.6L16 5.4" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export default function NewHome() {
   return (
@@ -100,17 +108,33 @@ export default function NewHome() {
           <h2 className="nh-h2 nh-h2-tight">שתי דרכים. אותה מטרה: הלקוחות הנכונים, ומכירה שנעשית כמעט לבד.</h2>
           <p className="nh-section-sub">כשברור מי אתם, אתם מפסיקים לרדוף אחרי כל עצה. הלקוחות הנכונים מגיעים דווקא אליכם, והמכירה כבר קלה.</p>
           <div className="nh-cards">
-            <article className="nh-card">
-              <h3 className="nh-card-t">אני צריך להבין מה האות שלי</h3>
-              <p className="nh-card-d">מתחילים בכמה שאלות קצרות על העסק, ממשיכים לקריאה האישית ומגלים מה אנשים מקבלים דווקא מכם.</p>
-              <p className="nh-card-note">בסוף תקבלו קריאה אישית שמנסחת את האות שלכם במילים.</p>
-              <TrackedCta dest="kriah" placement="path_card" className="nh-out nh-card-cta">לקריאת האות — ללא עלות</TrackedCta>
+            <article className="nh-pc nh-pc-free">
+              <div className="nh-pc-top">
+                <HoneyHex size="md"><IcSignal /></HoneyHex>
+                <span className="nh-pc-tag nh-pc-tag-free">חינם</span>
+              </div>
+              <h3 className="nh-pc-title">גלו את האות שלכם</h3>
+              <p className="nh-pc-desc">כמה שאלות קצרות על העסק, ואז קריאה אישית שמנסחת במילים מה אנשים מקבלים דווקא מכם.</p>
+              <ul className="nh-pc-list">
+                {["כמה שאלות קצרות על העסק", "קריאה אישית שמנסחת את האות במילים", "מה שרק אתם יכולים להביא"].map((b) => (
+                  <li key={b}><span className="nh-pc-chk nh-pc-green"><Chk /></span>{b}</li>
+                ))}
+              </ul>
+              <TrackedCta dest="kriah" placement="path_card" className="nh-out nh-pc-cta">להתחיל את הקריאה</TrackedCta>
             </article>
-            <article className="nh-card nh-card-gold">
-              <h3 className="nh-card-t">אני כבר רוצה לעבוד עם הדר</h3>
-              <p className="nh-card-d">למי שכבר רוצה להפוך ניסיון, מסר ורעיונות לאסטרטגיה ולנכסים שאפשר לצאת איתם החוצה.</p>
-              <p className="nh-card-note nh-gold-note">פגישת אסטרטגיה אישית: 4,000 ₪</p>
-              <TrackedCta dest="strategy" placement="path_card" className="nh-gold nh-card-cta">לראות איך עובדים עם הדר</TrackedCta>
+            <article className="nh-pc nh-pc-paid">
+              <div className="nh-pc-top">
+                <HoneyHex gold size="md"><IcStrategy /></HoneyHex>
+                <span className="nh-pc-tag nh-pc-tag-paid">מ־4,000 ₪</span>
+              </div>
+              <h3 className="nh-pc-title">אחד על אחד עם הדר</h3>
+              <p className="nh-pc-desc">חשיבה יצירתית בלייב שהופכת ניסיון ומסר לאסטרטגיה ולנכסים שאפשר לצאת איתם החוצה.</p>
+              <ul className="nh-pc-list">
+                {["חשיבה יצירתית בלייב, אחד על אחד", "אסטרטגיה עסקית לפני שיווקית", "מפת דרכים ונכסים לצאת איתם"].map((b) => (
+                  <li key={b}><span className="nh-pc-chk nh-pc-gold-c"><Chk /></span>{b}</li>
+                ))}
+              </ul>
+              <TrackedCta dest="strategy" placement="path_card" className="nh-gold nh-pc-cta">לראות איך עובדים עם הדר</TrackedCta>
             </article>
           </div>
         </section>
@@ -265,7 +289,7 @@ export default function NewHome() {
 
 // Scoped under .nh-* — used ONLY on /new. Gold button matches the original homepage exactly.
 const NH_CSS = `
-.nh-root{--bg:#080C14;--bg2:#0D1018;--card:#141820;--soft:#1D2430;--border:#2C323E;--line:#232936;--gold:#C9964A;--gold-l:#E8B94A;--fg:#EDE9E1;--muted:#AAB0BD;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+.nh-root{--bg:#080C14;--bg2:#0D1018;--card:#141820;--soft:#1D2430;--border:#2C323E;--line:#232936;--gold:#C9964A;--gold-l:#E8B94A;--green:#7FD49B;--fg:#EDE9E1;--muted:#AAB0BD;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
 .nh-root *{box-sizing:border-box}
 .nh-gold{background:linear-gradient(180deg,#f4d27a 0%,#e8b942 52%,#d59b1f 100%);color:#2a1d05;font-weight:800;text-decoration:none;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;line-height:1.2;box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 -10px 22px rgba(157,110,12,.35) inset,0 18px 34px -12px rgba(214,155,31,.55),0 6px 14px -6px rgba(0,0,0,.55)}
 .nh-gold-sm{padding:9px 18px;font-size:14px}
@@ -293,6 +317,23 @@ const NH_CSS = `
 .nh-h2-tight{margin-bottom:14px}
 .nh-section-sub{color:var(--muted);font-size:clamp(15.5px,2.4vw,17px);line-height:1.72;text-align:center;max-width:48ch;margin:0 auto 30px}
 .nh-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+/* two path cards (Option 1 — tiered honey badges) */
+.nh-pc{position:relative;display:flex;flex-direction:column;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),#0F131C);border-radius:22px;padding:26px 24px}
+.nh-pc-paid{border-color:rgba(201,150,74,.55);background:linear-gradient(170deg,rgba(201,150,74,.13),var(--card) 60%);box-shadow:0 24px 60px -34px rgba(201,150,74,.5)}
+.nh-pc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.nh-pc-tag{font-size:14px;font-weight:800;border-radius:9999px;padding:6px 14px}
+.nh-pc-tag-free{color:var(--green);background:rgba(127,212,155,.12);border:1px solid rgba(127,212,155,.35)}
+.nh-pc-tag-paid{color:var(--gold-l);background:rgba(201,150,74,.12);border:1px solid rgba(201,150,74,.4)}
+.nh-pc-title{font-size:23px;font-weight:800;margin:0 0 10px;color:var(--fg)}
+.nh-pc-desc{font-size:15px;line-height:1.68;color:var(--muted);margin:0 0 18px}
+.nh-pc-list{list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:11px}
+.nh-pc-list li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;color:var(--fg);line-height:1.4}
+.nh-pc-chk{flex:none;display:grid;place-items:center;width:20px;height:20px;margin-top:1px}
+.nh-chk{width:18px;height:18px}
+.nh-pc-green{color:var(--green)}
+.nh-pc-gold-c{color:var(--gold-l)}
+.nh-pc-cta{width:100%;padding:14px;font-size:15.5px;margin-top:auto}
 .nh-card{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:26px 24px;display:flex;flex-direction:column}
 .nh-card-gold{border-color:rgba(201,150,74,.55);background:linear-gradient(160deg,rgba(201,150,74,.08),var(--card) 55%)}
 .nh-card-t{font-size:20px;font-weight:800;margin:0 0 10px;color:var(--fg)}
