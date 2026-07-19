@@ -33,6 +33,21 @@ const TESTIMONIALS = [
 const HEADLINE = "אם כולם אומרים את מה שאתה אומר, למה שיבחרו בך?";
 const LEDE = "מצא את המסר שאי אפשר להעתיק, והפוך אותו לעסק שגדל, ללקוחות הנכונים ולתחושה טובה בעשייה.";
 
+const LADDER = [
+  {
+    title: "כוורת האות", price: "590 ₪", tag: "כולל את אתגר 7 הימים", href: "/signal-hive", img: "/hive.jpg",
+    desc: "שכבת ההפעלה: אתגר 7 הימים, ערכת תוכן וערכת ויזואל, ו-7 בימויים אישיים. הכל נגזר מהאות שלכם.",
+  },
+  {
+    title: "הסדנה", price: "1,080 ₪", href: "/workshop", img: "/sadna.jpg",
+    desc: "יום אחד בקבוצה קטנה. הופכים את האות לתוכן שמייצר תוצאות. סכום הכוורת מתקזז מהסדנה.",
+  },
+  {
+    title: "יום צילום פרימיום", price: "14,000 ₪", href: "/premium", img: "/shooting.jpg",
+    desc: "יום צילום מלא, אחד על אחד. 14 סרטונים מוכנים לפרסום, בנויים כולם סביב האות שלכם.",
+  },
+];
+
 function Chk() {
   return (
     <svg viewBox="0 0 20 20" className="nh-chk" aria-hidden>
@@ -256,6 +271,29 @@ export default function NewHome() {
           </div>
           <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
         </section>
+
+        {/* ══ Value ladder — deeper offerings ══ */}
+        <section className="nh-ladder-sec">
+          <div className="nh-eyebrow2">המשך הדרך</div>
+          <h2 className="nh-h2">אחרי שהאות ברור, ממשיכים לבנות</h2>
+          <p className="nh-section-sub">כל שלב נגזר מאותו אות אחד. אתם בוחרים עד לאן.</p>
+          <div className="nh-ladder">
+            {LADDER.map((p) => (
+              <a key={p.href} href={p.href} className="nh-lcard">
+                <div className="nh-lcard-media">
+                  <img src={p.img} alt={p.title} loading="lazy" />
+                  <span className="nh-lcard-price">{p.price}</span>
+                  {p.tag && <span className="nh-lcard-tag">{p.tag}</span>}
+                </div>
+                <div className="nh-lcard-body">
+                  <h3>{p.title}</h3>
+                  <p>{p.desc}</p>
+                  <span className="nh-lcard-cta">לפרטים ←</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
       </main>
 
       {/* ══ Footer — mirrors the existing homepage footer ══ */}
@@ -465,6 +503,23 @@ const NH_CSS = `
 .nh-final-paid{border-color:rgba(201,150,74,.5);background:linear-gradient(170deg,rgba(201,150,74,.12),var(--card) 60%);box-shadow:0 24px 60px -34px rgba(201,150,74,.45)}
 .nh-final-lbl{font-size:18px;font-weight:800;color:var(--fg)}
 .nh-final-cta{width:100%;padding:14px;font-size:15.5px;margin-top:auto}
+
+/* value ladder */
+.nh-ladder-sec{max-width:1080px;margin:0 auto;padding:66px 22px}
+.nh-ladder-sec .nh-h2{margin-bottom:12px}
+.nh-ladder{display:grid;grid-template-columns:1fr;gap:18px;margin-top:32px}
+.nh-lcard{display:flex;flex-direction:column;border:1px solid var(--border);background:var(--card);border-radius:20px;overflow:hidden;text-decoration:none;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.nh-lcard:hover{border-color:rgba(201,150,74,.5);transform:translateY(-3px);box-shadow:0 26px 50px -30px rgba(201,150,74,.4)}
+.nh-lcard-media{position:relative;aspect-ratio:16/11;overflow:hidden}
+.nh-lcard-media img{width:100%;height:100%;object-fit:cover;display:block}
+.nh-lcard-media::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(8,12,20,.88),rgba(8,12,20,.15) 55%,transparent 78%)}
+.nh-lcard-price{position:absolute;bottom:12px;inset-inline-start:14px;z-index:1;font-size:15px;font-weight:800;color:#2a1d05;background:linear-gradient(180deg,#f4d27a,#d59b1f);border-radius:9999px;padding:5px 14px;box-shadow:0 8px 20px -8px rgba(0,0,0,.6)}
+.nh-lcard-tag{position:absolute;top:12px;inset-inline-end:14px;z-index:1;font-size:11.5px;font-weight:800;color:var(--green);background:rgba(127,212,155,.16);border:1px solid rgba(127,212,155,.42);border-radius:9999px;padding:4px 11px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.nh-lcard-body{display:flex;flex-direction:column;flex:1;padding:20px 22px 22px}
+.nh-lcard-body h3{font-size:19.5px;font-weight:800;color:var(--fg);margin:0 0 8px}
+.nh-lcard-body p{font-size:14px;line-height:1.62;color:var(--muted);margin:0 0 16px;flex:1}
+.nh-lcard-cta{font-size:14.5px;font-weight:800;color:var(--gold-l)}
+@media(min-width:760px){.nh-ladder{grid-template-columns:repeat(3,1fr)}}
 
 .nh-footer{border-top:1px solid var(--line);background:var(--bg2);padding:34px 22px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
 .nh-footer-brand{font-size:17px;font-weight:800;color:var(--fg)}
