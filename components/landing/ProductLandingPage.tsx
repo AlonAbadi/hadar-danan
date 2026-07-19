@@ -55,6 +55,8 @@ export interface ProductLandingPageProps {
   whoRole:     string;
   whoText:     React.ReactNode;
   whoPhotoSrc?: string;
+  /** Optional — when provided, replaces the single-person "who" block entirely. */
+  whoSlot?:    React.ReactNode;
 
   proofStats?:  { val: string; label: string }[];
   testimonials: { text: React.ReactNode; author: string; role: string; photoSrc?: string }[];
@@ -543,7 +545,7 @@ export default function ProductLandingPage({
   problemItems, agitationText,
   solutionTitle, solutionDesc, solutionItems,
   notForItems, forItems,
-  whoName, whoRole, whoText, whoPhotoSrc,
+  whoName, whoRole, whoText, whoPhotoSrc, whoSlot,
   proofStats, testimonials, proofSlot, logoSrcs,
   postHeroSlot, postProblemSlot,
   anchorItems, anchorTotal,
@@ -794,6 +796,7 @@ export default function ProductLandingPage({
 
       {/* ── Who ─────────────────────────────────────────────────── */}
       <div className="lp-divider" />
+      {whoSlot ? whoSlot : (
       <div className="lp-section">
         <div className="lp-eyebrow">מי מלמד/ת</div>
         <div className="hadar-box">
@@ -810,6 +813,7 @@ export default function ProductLandingPage({
           </div>
         </div>
       </div>
+      )}
 
       {/* ── Proof / Testimonials ────────────────────────────────── */}
       {(testimonials.length > 0 || proofSlot) && (

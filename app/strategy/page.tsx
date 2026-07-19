@@ -2,6 +2,7 @@ import { ViewContentTracker } from "@/components/analytics/ViewContentTracker";
 import Link from "next/link";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { CallForm } from "@/app/call/CallForm";
+import { FoundersSection } from "./FoundersSection";
 import { PRODUCT_MAP } from "@/lib/products";
 import { validateCoupon } from "@/lib/coupons";
 import { ProductSchema } from "@/components/ProductSchema";
@@ -102,6 +103,7 @@ export default async function StrategyPage({ searchParams }: { searchParams: Pro
         whoName="הדר דנן"
         whoRole="אסטרטגיסטית שיווק ותוכן"
         whoText="אחרי 500+ עסקים, אני יודעת שאנחנו יודעים מה אנחנו רוצים — אבל לא תמיד מה אנחנו צריכים. הפגישה שלנו היא לא ייעוץ מן המוכן — זו חשיבה יצירתית בלייב, מותאמת בדיוק לעסק שלך. ואם לא פיצחנו בפגישה הראשונה — פגישה שנייה עלי, ללא עלות נוספת."
+        whoSlot={<FoundersSection />}
 
         proofStats={[
           { val: "500+",   label: "עסקים" },
