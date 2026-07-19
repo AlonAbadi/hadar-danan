@@ -3,6 +3,8 @@ import Link from "next/link";
 import ProductLandingPage from "@/components/landing/ProductLandingPage";
 import { CallForm } from "@/app/call/CallForm";
 import { FoundersSection } from "./FoundersSection";
+import { WorkshopTestimonials } from "@/app/workshop/WorkshopTestimonials";
+import QuizProofWall from "@/components/landing/QuizProofWall";
 import { PRODUCT_MAP } from "@/lib/products";
 import { validateCoupon } from "@/lib/coupons";
 import { ProductSchema } from "@/components/ProductSchema";
@@ -104,6 +106,18 @@ export default async function StrategyPage({ searchParams }: { searchParams: Pro
         whoRole="אסטרטגיסטית שיווק ותוכן"
         whoText="אחרי 500+ עסקים, אני יודעת שאנחנו יודעים מה אנחנו רוצים — אבל לא תמיד מה אנחנו צריכים. הפגישה שלנו היא לא ייעוץ מן המוכן — זו חשיבה יצירתית בלייב, מותאמת בדיוק לעסק שלך. ואם לא פיצחנו בפגישה הראשונה — פגישה שנייה עלי, ללא עלות נוספת."
         whoSlot={<FoundersSection />}
+        proofExtraSlot={
+          <div style={{ background: "#080C14" }}>
+            <section style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 20px 8px" }}>
+              <p style={{ fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.14em", color: "#E8B94A", textTransform: "uppercase", textAlign: "center", marginBottom: 22 }}>מה אומרים עליה בוידאו</p>
+              <WorkshopTestimonials />
+            </section>
+            <section style={{ maxWidth: 1180, margin: "0 auto", padding: "36px 20px 48px" }}>
+              <p style={{ fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.14em", color: "#E8B94A", textTransform: "uppercase", textAlign: "center", marginBottom: 22 }}>ביקורות גוגל</p>
+              <QuizProofWall showWall={false} showFooter={false} start={9} end={12} />
+            </section>
+          </div>
+        }
 
         proofStats={[
           { val: "500+",   label: "עסקים" },

@@ -11,6 +11,7 @@ import { HexDefs, HoneyHex, IcAI, IcCopy, IcLost, IcSignal, IcStrategy, IcConten
 const StatsSection     = dynamic(() => import("@/components/landing/StatsSection").then(m => ({ default: m.StatsSection })));
 const SocialProofStrip = dynamic(() => import("@/components/SocialProofStrip"));
 const WorkshopTestimonials = dynamic(() => import("@/app/workshop/WorkshopTestimonials").then(m => ({ default: m.WorkshopTestimonials })));
+const QuizProofWall = dynamic(() => import("@/components/landing/QuizProofWall"));
 
 /**
  * /new — ISOLATED experimental homepage (two-doors concept).
@@ -25,11 +26,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   alternates: {},
 };
-
-const TESTIMONIALS = [
-  { text: "הצלחתם להפוך את הנקודה שהכי קשה לי בעסק לנקודת חוזקה, ואני אפילו נהנה מזה עכשיו. אין עליכם, תודה ענקית.", name: "רועי מנדלמן" },
-  { text: "אחרי אכזבות מחברות אחרות, סוף סוף מצאתי צוות מקצועי וקשוב. הם לקחו את העסק שלי כמה צעדים קדימה עם תוכן מדויק שהביא לי הרבה פניות.", name: "גל מסס" },
-];
 
 const HEADLINE = "אם כולם אומרים את מה שאתה אומר, למה שיבחרו בך?";
 const LEDE = "מצא את המסר שאי אפשר להעתיק, והפוך אותו לעסק שגדל, ללקוחות הנכונים ולתחושה טובה בעשייה.";
@@ -242,20 +238,11 @@ export default function NewHome() {
           </figure>
         </section>
 
-        {/* ══ Testimonials ══ */}
+        {/* ══ Google reviews ══ */}
         <section className="nh-section nh-testi-sec">
-          <div className="nh-eyebrow2">מה אומרים</div>
+          <div className="nh-eyebrow2">ביקורות גוגל</div>
           <h2 className="nh-h2">עסקים שכבר מצאו את האות שלהם</h2>
-          <div className="nh-tgrid">
-            {TESTIMONIALS.map((t) => (
-              <figure key={t.name} className="nh-testi">
-                <div className="nh-testi-mark" aria-hidden>”</div>
-                <div className="nh-stars" aria-hidden>★★★★★</div>
-                <blockquote className="nh-testi-q">{t.text}</blockquote>
-                <figcaption className="nh-testi-n"><span className="nh-testi-dot" aria-hidden />{t.name}</figcaption>
-              </figure>
-            ))}
-          </div>
+          <QuizProofWall showWall={false} showFooter={false} start={9} end={12} />
         </section>
 
         {/* ══ Final CTA ══ */}

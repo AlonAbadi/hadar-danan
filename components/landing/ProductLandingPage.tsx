@@ -61,6 +61,8 @@ export interface ProductLandingPageProps {
   proofStats?:  { val: string; label: string }[];
   testimonials: { text: React.ReactNode; author: string; role: string; photoSrc?: string }[];
   proofSlot?:   React.ReactNode;
+  /** Optional — extra proof (e.g. Google reviews / video wall) rendered after the testimonials. */
+  proofExtraSlot?: React.ReactNode;
   logoSrcs?:    string[];
 
   /** Optional content rendered immediately after the hero block, before
@@ -546,7 +548,7 @@ export default function ProductLandingPage({
   solutionTitle, solutionDesc, solutionItems,
   notForItems, forItems,
   whoName, whoRole, whoText, whoPhotoSrc, whoSlot,
-  proofStats, testimonials, proofSlot, logoSrcs,
+  proofStats, testimonials, proofSlot, proofExtraSlot, logoSrcs,
   postHeroSlot, postProblemSlot,
   anchorItems, anchorTotal,
   questions = [], resultMessages = {}, hideMicroCommitment,
@@ -869,6 +871,8 @@ export default function ProductLandingPage({
           </div>
         </>
       )}
+
+      {proofExtraSlot}
 
       {/* ── Anchor block ────────────────────────────────────────── */}
       {anchorItems && anchorItems.length > 0 && (
