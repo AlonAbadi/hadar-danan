@@ -223,13 +223,16 @@ export default function NewHome() {
         </section>
 
         {/* ══ Testimonials ══ */}
-        <section className="nh-section">
+        <section className="nh-section nh-testi-sec">
+          <div className="nh-eyebrow2">מה אומרים</div>
+          <h2 className="nh-h2">עסקים שכבר מצאו את האות שלהם</h2>
           <div className="nh-tgrid">
             {TESTIMONIALS.map((t) => (
               <figure key={t.name} className="nh-testi">
-                <div className="nh-stars">★★★★★</div>
+                <div className="nh-testi-mark" aria-hidden>”</div>
+                <div className="nh-stars" aria-hidden>★★★★★</div>
                 <blockquote className="nh-testi-q">{t.text}</blockquote>
-                <figcaption className="nh-testi-n">{t.name}</figcaption>
+                <figcaption className="nh-testi-n"><span className="nh-testi-dot" aria-hidden />{t.name}</figcaption>
               </figure>
             ))}
           </div>
@@ -237,18 +240,21 @@ export default function NewHome() {
 
         {/* ══ Final CTA ══ */}
         <section className="nh-section nh-final">
+          <div className="nh-eyebrow2">הצעד הבא</div>
           <h2 className="nh-h2">איך נכון לכם להתקדם עכשיו?</h2>
           <div className="nh-final-grid">
-            <div className="nh-final-opt">
-              <div className="nh-final-lbl">אני רוצה לגלות את האות שלי</div>
-              <TrackedCta dest="kriah" placement="final_cta" className="nh-gold nh-final-cta">להתחיל את הקריאה — חינם</TrackedCta>
+            <div className="nh-final-opt nh-final-free">
+              <span className="nh-pc-tag nh-pc-tag-free">חינם</span>
+              <div className="nh-final-lbl">לגלות את האות שלי</div>
+              <TrackedCta dest="kriah" placement="final_cta" className="nh-out nh-final-cta">להתחיל את הקריאה</TrackedCta>
             </div>
-            <div className="nh-final-opt">
-              <div className="nh-final-lbl">אני רוצה לעבוד ישירות עם הדר</div>
-              <TrackedCta dest="strategy" placement="final_cta" className="nh-out nh-final-cta">לראות את פגישת האסטרטגיה</TrackedCta>
-              <div className="nh-priceline" style={{ textAlign: "center" }}>4,000 ₪</div>
+            <div className="nh-final-opt nh-final-paid">
+              <span className="nh-pc-tag nh-pc-tag-paid">מ־4,000 ₪</span>
+              <div className="nh-final-lbl">לעבוד ישירות עם הדר</div>
+              <TrackedCta dest="strategy" placement="final_cta" className="nh-gold nh-final-cta">לראות את פגישת האסטרטגיה</TrackedCta>
             </div>
           </div>
+          <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
         </section>
       </main>
 
@@ -444,16 +450,21 @@ const NH_CSS = `
   .nh-bee-wm-c{width:340px}
 }
 
-.nh-tgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.nh-testi{border:1px solid var(--border);background:var(--card);border-radius:14px;padding:24px;margin:0}
-.nh-stars{color:var(--gold-l);font-size:15px;letter-spacing:2px;margin-bottom:12px}
-.nh-testi-q{font-size:15.5px;line-height:1.75;margin:0 0 14px;color:var(--fg)}
-.nh-testi-n{font-size:13.5px;font-weight:700;color:var(--muted)}
+.nh-testi-sec .nh-h2{margin-bottom:34px}
+.nh-tgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;margin:0 auto}
+.nh-testi{position:relative;display:flex;flex-direction:column;border:1px solid var(--border);background:linear-gradient(160deg,var(--card),#0F131C);border-radius:20px;padding:30px 26px 26px;margin:0}
+.nh-testi-mark{font-family:Georgia,'Times New Roman',serif;font-size:54px;line-height:.7;color:var(--gold-l);height:26px}
+.nh-stars{color:var(--gold-l);font-size:15px;letter-spacing:3px;margin:8px 0 14px}
+.nh-testi-q{font-size:16.5px;line-height:1.75;margin:0 0 18px;color:var(--fg);flex:1}
+.nh-testi-n{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:800;color:var(--fg)}
+.nh-testi-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px 1px rgba(232,185,74,.55)}
 
-.nh-final-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:760px;margin:0 auto}
-.nh-final-opt{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:24px;text-align:center;display:flex;flex-direction:column;gap:14px}
-.nh-final-lbl{font-size:16px;font-weight:700;color:var(--fg)}
-.nh-final-cta{width:100%;padding:13px;font-size:15px}
+.nh-final .nh-h2{margin-bottom:30px}
+.nh-final-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:720px;margin:0 auto 20px}
+.nh-final-opt{display:flex;flex-direction:column;align-items:center;gap:16px;border:1px solid var(--border);background:linear-gradient(180deg,var(--card),#0F131C);border-radius:20px;padding:28px 22px;text-align:center}
+.nh-final-paid{border-color:rgba(201,150,74,.5);background:linear-gradient(170deg,rgba(201,150,74,.12),var(--card) 60%);box-shadow:0 24px 60px -34px rgba(201,150,74,.45)}
+.nh-final-lbl{font-size:18px;font-weight:800;color:var(--fg)}
+.nh-final-cta{width:100%;padding:14px;font-size:15.5px;margin-top:auto}
 
 .nh-footer{border-top:1px solid var(--line);background:var(--bg2);padding:34px 22px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
 .nh-footer-brand{font-size:17px;font-weight:800;color:var(--fg)}
