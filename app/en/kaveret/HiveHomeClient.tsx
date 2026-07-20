@@ -1678,7 +1678,7 @@ function EpisodesList({
                         }),
                   }}
                 >
-                  {filmed ? "Another take" : pending ? "Continue →" : "Film this episode →"}
+                  {filmed ? "Another take" : pending ? "Continue →" : "Film this episode · beta →"}
                 </a>
               )}
             </summary>

@@ -296,7 +296,8 @@ export function KaveretClient({
   // a tap-scroll is in flight — exactly the mockup behavior).
   const goTab = useCallback((i: number) => {
     spyLockRef.current = Date.now() + 900;
-    zonesRef.current[i]?.scrollIntoView({ behavior: "smooth" });
+    if (i === 0) window.scrollTo({ top: 0, behavior: "smooth" });
+    else zonesRef.current[i]?.scrollIntoView({ behavior: "smooth" });
     setActiveTab(i);
     if (navigator.vibrate) navigator.vibrate(6);
   }, []);
@@ -494,18 +495,17 @@ export function KaveretClient({
               : "שבעה ימים, צעד ביום. הפתיחה מחכה לך";
             act = () => goTab(1);
           } else if (firstUnfilmed && data.extractionId) {
-            label = "לצלם עכשיו";
+            label = "לקרוא את התסריט הבא";
             sub = `התסריט הבא שלך: ${firstUnfilmed.title}`;
-            const href = `/hive/signal-kit/broadcast/${data.extractionId}/${firstUnfilmed.number}`;
-            act = () => { window.location.href = href; };
+            act = () => goTab(2);
           } else if (pendingReel) {
             label = "לפרסם את הרילס";
             sub = "יש לך רילס מוכן שממתין לפרסום";
-            act = () => goTab(4);
-          } else {
-            label = "לצלם טייק נוסף";
-            sub = "כל התסריטים צולמו. אפשר תמיד לחדד";
             act = () => goTab(3);
+          } else {
+            label = "לחזור לתסריטים";
+            sub = "כל התסריטים צולמו. אפשר תמיד לחדד";
+            act = () => goTab(2);
           }
           return (
             <div className={sty.trow} style={{ borderColor: "rgba(232,185,74,0.4)" }}>
@@ -521,37 +521,6 @@ export function KaveretClient({
             </div>
           );
         })() : null}
-
-        <section className={sty.zone} id="z-strategy" data-tab-index={0} ref={(el) => { strategyRef.current = el; }}>
-          <div className={sty.zhead}>
-            <span className={sty.zt}><h2>אסטרטגיה</h2><span className={sty.hint}>לעיניך בלבד, לא לפרסום</span></span>
-          </div>
-          <div className={sty.zrule} />
-
-          <details className={sty.disc} open>
-            <summary>
-              <span className={sty.st}>
-                <span className={sty.ic}><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M14.6 9.4l-1.8 4-4 1.8 1.8-4z" /></svg></span>
-                <span><span className={sty.t}>הצהרת המיקום שלך</span><br /><span className={sty.p}>המשפט שמכוון כל החלטה</span></span>
-              </span>
-              <span className={sty.chev}><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg></span>
-            </summary>
-            <div className={sty.body}>{data.positioning}</div>
-            <div className={sty.dfoot}>{copyBtn("pos", data.positioning)}</div>
-          </details>
-
-          <details className={sty.disc}>
-            <summary>
-              <span className={sty.st}>
-                <span className={sty.ic}><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4" /><path d="M5 19.5c1.3-3.2 3.9-4.8 7-4.8s5.7 1.6 7 4.8" /></svg></span>
-                <span><span className={sty.t}>הלקוח האידיאלי שלך</span><br /><span className={sty.p}>פרסונה מלאה</span></span>
-              </span>
-              <span className={sty.chev}><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg></span>
-            </summary>
-            <div className={sty.body}>{data.persona}</div>
-            <div className={sty.dfoot}>{copyBtn("persona", data.persona)}</div>
-          </details>
-        </section>
 
         <section className={sty.zone} id="z-challenge" data-tab-index={1} ref={(el) => { zonesRef.current[1] = el; }}>
           <div className={sty.zhead}>
@@ -695,85 +664,10 @@ export function KaveretClient({
           ) : null}
         </section>
 
-        <section className={sty.zone} id="z-visual" data-tab-index={2} ref={(el) => { zonesRef.current[2] = el; }}>
+        <section className={sty.zone} id="z-filming" data-tab-index={2} ref={(el) => { zonesRef.current[2] = el; }}>
           <div className={sty.zhead}>
             <span className={sty.zn}>02</span>
-            <span className={sty.zt}><h2>ויזואל</h2><span className={sty.hint}>החליקו בין הכרטיסים</span></span>
-          </div>
-          <div className={sty.zrule} />
-
-          <div className={sty.carousel} ref={carRef} onScroll={syncDots}>
-            {data.cards.map((c, i) => (
-              <div className={sty.vc} key={c.name}>
-                <div className={sty.frame}>
-                  <span className={`${sty.corner} ${sty.c1}`} /><span className={`${sty.corner} ${sty.c2}`} /><span className={`${sty.corner} ${sty.c3}`} /><span className={`${sty.corner} ${sty.c4}`} />
-                  <div className={sty.q}>&quot;</div>
-                  {cardsSplit[i].lead ? <div className={sty.lead}>{cardsSplit[i].lead}</div> : null}
-                  <div className={sty.main}>{cardsSplit[i].main}</div>
-                </div>
-                <div className={sty.meta}><span className={sty.name}>{c.name}</span><span className={sty.use}>{c.use}</span></div>
-                <div className={sty.vfoot}>
-                  <button type="button" className={`${sty.btnCopy} ${sty.btnCard}`} aria-label={`שמירת כרטיס ${c.name}`} onClick={() => makePNG(i)}>
-                    {SaveIcon}
-                    <span>שמירת הכרטיס</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className={sty.dots} aria-hidden="true">
-            {data.cards.map((_, i) => (
-              <span key={i} className={i === dot ? sty.on : undefined} />
-            ))}
-          </div>
-
-          {!data.demo && data.extractionId ? (
-            <div>
-              <div className={sty.zhead} style={{ marginTop: 34 }}>
-                <span className={sty.zt}>
-                  <h2 style={{ fontSize: 19 }}>הנכסים המעוצבים</h2>
-                  <span className={sty.hint}>מוכנים לפיד, בהתאמה אישית</span>
-                </span>
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px 14px", margin: "14px 0 2px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, background: "#141820", border: "1px solid #2C323E", borderRadius: 999, padding: 5 }}>
-                  <span style={{ color: "#9E9990", fontSize: 12, fontWeight: 300, marginInlineStart: 12, marginInlineEnd: 4 }}>עיצוב</span>
-                </div>
-              </div>
-              <div className={sty.carousel}>
-                {VISUAL_ASSETS.map((a) => (
-                  <div className={sty.vc} key={a.type}>
-                    <div className={sty.frame} style={{ padding: 0, aspectRatio: "4 / 5" }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={assetUrl(data.extractionId!, a.type, "color")}
-                        alt={a.label}
-                        loading="lazy"
-                        style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 18 }}
-                      />
-                    </div>
-                    <div className={sty.meta}><span className={sty.name}>{a.label}</span></div>
-                    <div className={sty.vfoot}>
-                      <a
-                        className={`${sty.btnCopy} ${sty.btnCard}`}
-                        style={{ textDecoration: "none" }}
-                        href={assetUrl(data.extractionId!, a.type, "color")}
-                        download
-                      >
-                        <span>הורדת הנכס</span>
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </section>
-
-        <section className={sty.zone} id="z-filming" data-tab-index={3} ref={(el) => { zonesRef.current[3] = el; }}>
-          <div className={sty.zhead}>
-            <span className={sty.zn}>03</span>
-            <span className={sty.zt}><h2>יום הצילום</h2><span className={sty.hint}>לקרוא לפני המצלמה</span></span>
+            <span className={sty.zt}><h2>התסריטים שלך</h2><span className={sty.hint}>הנכס המרכזי: סרטונים בשיטת הדר, כתובים בקול שלך</span></span>
           </div>
           <div className={sty.zrule} />
 
@@ -825,9 +719,9 @@ export function KaveretClient({
           </div>
         </section>
 
-        <section className={sty.zone} id="z-mine" data-tab-index={4} ref={(el) => { zonesRef.current[4] = el; }}>
+        <section className={sty.zone} id="z-mine" data-tab-index={3} ref={(el) => { zonesRef.current[3] = el; }}>
           <div className={sty.zhead}>
-            <span className={sty.zn}>04</span>
+            <span className={sty.zn}>03</span>
             <span className={sty.zt}><h2>התכנים שלי</h2><span className={sty.hint}>הפרקים שכבר צילמת</span></span>
           </div>
           <div className={sty.zrule} />
@@ -883,7 +777,7 @@ export function KaveretClient({
                 })}
                 {reels.filter((r) => !deletedReels[r.editId]).length < (data.scriptsTotal || 7) ? (
                   <div className={sty.seNextCard}>
-                    <button type="button" className={sty.seThumb} onClick={() => goTab(3)} aria-label="לצלם את הפרק הבא">
+                    <button type="button" className={sty.seThumb} onClick={() => goTab(2)} aria-label="לצלם את הפרק הבא">
                       <span className={sty.seNum}>
                         {String(reels.filter((r) => !deletedReels[r.editId]).length + 1).padStart(2, "0")}
                       </span>
@@ -955,11 +849,42 @@ export function KaveretClient({
               </div>
               <div className={sty.trow}>
                 <div className={sty.head}><span className={sty.plat}>חבילת כוורת האות</span><span className={sty.check}>{data.filmedCount} מתוך {data.scriptsTotal} הופקו</span></div>
-                <p className={sty.txt}>שבעת התסריטים שלך, כל אחד עם כפתור לצלם עכשיו.</p>
+                <p className={sty.txt}>שבעת התסריטים שלך. אפשר לצלם כל אחד מהם בחדר השידור (בטא), או לקחת אותם לכל מצלמה.</p>
               </div>
             </>
           ) : null}
         </section>
+        <section className={sty.zone} id="z-strategy" data-tab-index={3}>
+          <div className={sty.zhead}>
+            <span className={sty.zt}><h2>אסטרטגיה</h2><span className={sty.hint}>לעיניך בלבד, לא לפרסום</span></span>
+          </div>
+          <div className={sty.zrule} />
+
+          <details className={sty.disc} open>
+            <summary>
+              <span className={sty.st}>
+                <span className={sty.ic}><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M14.6 9.4l-1.8 4-4 1.8 1.8-4z" /></svg></span>
+                <span><span className={sty.t}>הצהרת המיקום שלך</span><br /><span className={sty.p}>המשפט שמכוון כל החלטה</span></span>
+              </span>
+              <span className={sty.chev}><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg></span>
+            </summary>
+            <div className={sty.body}>{data.positioning}</div>
+            <div className={sty.dfoot}>{copyBtn("pos", data.positioning)}</div>
+          </details>
+
+          <details className={sty.disc}>
+            <summary>
+              <span className={sty.st}>
+                <span className={sty.ic}><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4" /><path d="M5 19.5c1.3-3.2 3.9-4.8 7-4.8s5.7 1.6 7 4.8" /></svg></span>
+                <span><span className={sty.t}>הלקוח האידיאלי שלך</span><br /><span className={sty.p}>פרסונה מלאה</span></span>
+              </span>
+              <span className={sty.chev}><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></svg></span>
+            </summary>
+            <div className={sty.body}>{data.persona}</div>
+            <div className={sty.dfoot}>{copyBtn("persona", data.persona)}</div>
+          </details>
+        </section>
+
 
         <KaveretChatLauncher />
         <a
@@ -982,8 +907,7 @@ export function KaveretClient({
         {([
           ["האות", <svg key="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4" /><path d="M12 4v3M12 17v3M4 12h3M17 12h3" /></svg>],
           ["אתגר", <svg key="i" viewBox="0 0 24 24"><path d="M8 4h8M12 4v5" /><circle cx="12" cy="14" r="6" /><path d="M12 12v2.5l1.8 1.2" /></svg>],
-          ["ויזואל", <svg key="i" viewBox="0 0 24 24"><rect x="4.5" y="4.5" width="15" height="15" rx="2" /><circle cx="9.5" cy="9.5" r="1.6" /><path d="M5 17l4.5-4.5 3 3 2.5-2.5L19 17" /></svg>],
-          ["צילום", <svg key="i" viewBox="0 0 24 24"><rect x="3.5" y="7" width="12" height="10" rx="2" /><path d="M15.5 10.5l4.5-2.5v8l-4.5-2.5z" /></svg>],
+          ["תסריטים", <svg key="i" viewBox="0 0 24 24"><path d="M8 4h8a2 2 0 0 1 2 2v14l-2-1.5L14 20l-2-1.5L10 20l-2-1.5L6 20V6a2 2 0 0 1 2-2z" /><path d="M9.5 9h5M9.5 12.5h5" /></svg>],
           ["התכנים", <svg key="i" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /></svg>],
         ] as const).map(([label, icon], i) => (
           <button
@@ -1870,7 +1794,7 @@ function EpisodesList({
                           fontFamily: "inherit",
                         }}
                       >
-                        {filmed ? "טייק נוסף" : "לצלם עכשיו ←"}
+                        {filmed ? "טייק נוסף" : "לצלם בחדר השידור · בטא ←"}
                       </a>
                     )}
                   </>

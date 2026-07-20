@@ -23,7 +23,7 @@ export const BROADCAST_COPY = {
   "entry.cta": "לצלם עכשיו",
 
   // Screen 2 — preparation
-  "prep.eyebrow": "חדר השידור",
+  "prep.eyebrow": "חדר השידור · בטא",
   "prep.title": "התסריט שלך, פעם אחת ברצף",
   "prep.tip.eyeline": "מצלמה בגובה העיניים, פנים אל האור",
   "prep.tip.one_friend": {
@@ -178,7 +178,7 @@ export const BROADCAST_COPY_EN: Record<BroadcastCopyKey, string> = {
   "entry.cta": "Film now",
 
   // Screen 2 — preparation
-  "prep.eyebrow": "The Broadcast Room",
+  "prep.eyebrow": "The Broadcast Room · beta",
   "prep.title": "Your script, once, straight through",
   "prep.tip.eyeline": "Camera at eye level, face toward the light",
   "prep.tip.one_friend": "You're talking to one friend, not a crowd",
