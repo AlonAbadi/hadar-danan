@@ -151,7 +151,9 @@ const unsubToken = (email) =>
 function renderEmail(tpl, contact, emailNum, wave) {
   const firstName = (contact.name ?? "").trim().split(/\s+/)[0];
   const unsub = `${SITE}/api/legacy/unsubscribe?e=${encodeURIComponent(contact.email)}&t=${unsubToken(contact.email)}`;
-  const signal = `${SITE}/signal?utm_source=legacy&utm_medium=email&utm_campaign=reactivation-w${wave}&utm_content=email${emailNum}`;
+  // first-party click tracker: records the exact contact, then 302s to /signal with the UTM chain
+  const e64 = Buffer.from(contact.email.toLowerCase()).toString("base64url");
+  const signal = `${SITE}/api/legacy/c?e=${e64}&t=${unsubToken(contact.email)}&w=${wave}&n=${emailNum}`;
   const html = tpl.html
     .replaceAll("{{name}}", firstName || "שלום")
     .replaceAll("{{signal_url}}", signal)
