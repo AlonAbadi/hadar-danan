@@ -60,6 +60,14 @@ function loadCsv() {
   return out;
 }
 
+async function sbInsertEvent(type, metadata) {
+  await fetch(`${SB}/rest/v1/events`, {
+    method: "POST",
+    headers: { ...SBH, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ type, metadata }),
+  });
+}
+
 async function sbAll(p) {
   const rows = [];
   for (let off = 0; ; off += 1000) {
@@ -232,6 +240,8 @@ async function cmdSend(size, dry) {
     });
     state.waves.push({ n: wave, size: eligible.length, at: now });
     saveState(state);
+    // surface the wave in /admin/legacy (server has no access to the local ledger)
+    await sbInsertEvent("LEGACY_WAVE_SENT", { wave, size: eligible.length, email: `wave-${wave}`, at: now });
   }
   console.log(dry ? "dry run complete, nothing sent" : `sent ${results.length}. Run --sync in ~1h, then --status before the next wave.`);
 }
@@ -284,6 +294,8 @@ async function cmdSync() {
   }
   saveState(state);
   const st = stats(state);
+  // authoritative ledger snapshot for /admin/legacy (webhook data is best-effort)
+  await sbInsertEvent("LEGACY_SYNC_SNAPSHOT", { ...st, email: "snapshot", at: new Date().toISOString() });
   console.log("sync done.");
   for (const l of gates(st).lines) console.log(" ", l);
 }
