@@ -133,6 +133,27 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
   const [published, setPublished] = useState<Record<string, boolean>>({});
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
   const [viewerEditId, setViewerEditId] = useState<string | null>(null);
+  // Breathing tab bar: scroll down → compact, scroll up → full (IG behavior).
+  const [barMini, setBarMini] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const dy = y - lastY;
+        if (y < 90) setBarMini(false);
+        else if (dy > 10) setBarMini(true);
+        else if (dy < -10) setBarMini(false);
+        if (Math.abs(dy) > 10) lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const [reels, setReels] = useState<Reel[]>([]);
 
   // Reels hydrate after first paint — same API the Hebrew home uses.
@@ -762,7 +783,10 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
           background: "rgba(13,12,10,0.94)",
           backdropFilter: "blur(12px)",
           borderTop: `1px solid ${C.border}`,
-          padding: "6px 8px calc(6px + env(safe-area-inset-bottom))",
+          padding: barMini
+            ? "3px 8px calc(3px + env(safe-area-inset-bottom))"
+            : "6px 8px calc(6px + env(safe-area-inset-bottom))",
+          transition: "padding .32s cubic-bezier(.3,.9,.3,1)",
         }}
       >
         {([
@@ -789,8 +813,8 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 3,
-              padding: "6px 0 4px",
+              gap: barMini ? 0 : 3,
+              padding: barMini ? "4px 0 3px" : "6px 0 4px",
               background: "transparent",
               border: "none",
               color: activeTab === i ? C.gold : C.textFaint,
@@ -799,10 +823,20 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
               fontWeight: activeTab === i ? 700 : 500,
               letterSpacing: "0.04em",
               cursor: "pointer",
+              transition: "gap .32s, padding .32s",
             }}
           >
             {icon}
-            <span>{label}</span>
+            <span
+              style={{
+                fontSize: barMini ? 0 : 10.5,
+                opacity: barMini ? 0 : 1,
+                height: barMini ? 0 : "auto",
+                transition: "font-size .32s, opacity .25s",
+              }}
+            >
+              {label}
+            </span>
           </button>
         ))}
       </nav>

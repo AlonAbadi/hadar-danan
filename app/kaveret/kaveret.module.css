@@ -256,6 +256,20 @@
   -webkit-backdrop-filter: blur(24px) saturate(140%);
   border: 1px solid rgba(255,255,255,0.07);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 32px rgba(0,0,0,0.5);
+  transition: padding .32s cubic-bezier(.3,.9,.3,1), max-width .32s cubic-bezier(.3,.9,.3,1);
+}
+/* Breathing bar (IG behavior, Alon 2026-07-20): scrolling DOWN compacts the
+   pill — labels collapse, icons shrink; any scroll UP grows it back. */
+.tabbar.mini {
+  padding: 4px 6px;
+  max-width: 480px;
+}
+.tabbar.mini .tb { height: 38px; gap: 0; }
+.tabbar.mini .tb svg { width: 21px; height: 21px; }
+.tabbar.mini .tb span {
+  font-size: 0px;
+  opacity: 0;
+  height: 0;
 }
 .tb {
   flex: 1;
@@ -266,10 +280,10 @@
   font-family: inherit;
   cursor: pointer;
   padding: 2px 0;
-  transition: color .25s;
+  transition: color .25s, height .32s cubic-bezier(.3,.9,.3,1), gap .32s;
 }
 .tb svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s cubic-bezier(.34,1.4,.4,1); }
-.tb span { font-size: 10px; font-weight: 500; letter-spacing: 0.02em; }
+.tb span { font-size: 10px; font-weight: 500; letter-spacing: 0.02em; transition: font-size .32s, opacity .25s, height .32s; opacity: 1; }
 .tb.on { color: var(--gold); }
 .tb.on svg { transform: translateY(-1px) scale(1.06); }
 .tb.on span { font-weight: 700; }

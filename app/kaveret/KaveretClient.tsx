@@ -160,6 +160,27 @@ export function KaveretClient({
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [viewerEditId, setViewerEditId] = useState<string | null>(null);
+  // Breathing tab bar: scroll down → compact, scroll up → full (IG behavior).
+  const [barMini, setBarMini] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const dy = y - lastY;
+        if (y < 90) setBarMini(false);
+        else if (dy > 10) setBarMini(true);
+        else if (dy < -10) setBarMini(false);
+        if (Math.abs(dy) > 10) lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   // Reels hydrate after first paint (server no longer signs storage URLs on
   // the critical path). Shape mirrors the old server assembly.
   const [reels, setReels] = useState<KaveretData["reels"]>(data.reels);
@@ -947,7 +968,7 @@ export function KaveretClient({
         <footer className={sty.note}>כוורת האות · beegood · שיטת TrueSignal</footer>
       </main>
 
-      <nav className={sty.tabbar} aria-label="ניווט">
+      <nav className={`${sty.tabbar} ${barMini ? sty.mini : ""}`} aria-label="ניווט">
         {([
           ["האות", <svg key="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4" /><path d="M12 4v3M12 17v3M4 12h3M17 12h3" /></svg>],
           ["אתגר", <svg key="i" viewBox="0 0 24 24"><path d="M8 4h8M12 4v5" /><circle cx="12" cy="14" r="6" /><path d="M12 12v2.5l1.8 1.2" /></svg>],
