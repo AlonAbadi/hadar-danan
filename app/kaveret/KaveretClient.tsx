@@ -182,8 +182,8 @@ export function KaveretClient({
         } else if (dy !== 0) {
           if ((dy > 0) !== (acc > 0)) acc = 0;
           acc += dy;
-          if (acc > 24) setBarMini(true);
-          else if (acc < -24) setBarMini(false);
+          if (acc > 24) setBarMini(false);
+          else if (acc < -24) setBarMini(true);
         }
         ticking = false;
       });
@@ -301,6 +301,16 @@ export function KaveretClient({
     setActiveTab(i);
     if (navigator.vibrate) navigator.vibrate(6);
   }, []);
+
+  // Deep link from the site-wide hive bar: /kaveret#tab-N lands on the zone.
+  useEffect(() => {
+    const m = /^#tab-([0-3])$/.exec(window.location.hash);
+    if (!m) return;
+    const i = Number(m[1]);
+    const t = setTimeout(() => goTab(i), 350);
+    history.replaceState(null, "", window.location.pathname);
+    return () => clearTimeout(t);
+  }, [goTab]);
 
   useEffect(() => {
     const onScrollEnd = () => { spyLockRef.current = 0; };

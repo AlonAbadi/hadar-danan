@@ -153,8 +153,8 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
         } else if (dy !== 0) {
           if ((dy > 0) !== (acc > 0)) acc = 0;
           acc += dy;
-          if (acc > 24) setBarMini(true);
-          else if (acc < -24) setBarMini(false);
+          if (acc > 24) setBarMini(false);
+          else if (acc < -24) setBarMini(true);
         }
         ticking = false;
       });

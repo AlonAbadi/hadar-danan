@@ -581,8 +581,8 @@
       else if (dy !== 0) {
         if ((dy > 0) !== (acc > 0)) acc = 0;
         acc += dy;
-        if (acc > 24) bar.classList.add("mini");
-        else if (acc < -24) bar.classList.remove("mini");
+        if (acc > 24) bar.classList.remove("mini");
+        else if (acc < -24) bar.classList.add("mini");
       }
       ticking = false;
     });

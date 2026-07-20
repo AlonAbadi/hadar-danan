@@ -10,6 +10,7 @@ import { Pixels }              from "@/components/analytics/Pixels";
 import { AccessibilityWidget } from "@/components/AccessibilityWidget";
 import { MobileNavServer }     from "@/components/MobileNavServer";
 import { DesktopNavServer }    from "@/components/DesktopNavServer";
+import { HiveFloatBarServer }  from "@/components/HiveFloatBarServer";
 import { LayoutShell }         from "@/components/LayoutShell";
 import { SchemaMarkup }        from "@/components/SchemaMarkup";
 
@@ -157,6 +158,7 @@ export default async function RootLayout({
         {!isEn && <a href="#main-content" className="skip-link">דלג לתוכן הראשי</a>}
         <Pixels />
         {!isEn && <AccessibilityWidget />}
+        {!isEn && <HiveFloatBarServer />}
         <LayoutShell nav={<><MobileNavServer /><DesktopNavServer /></>}>
           <div id="main-content" tabIndex={-1} style={{ outline: "none" }} />
           {children}
