@@ -160,10 +160,14 @@ export function KaveretClient({
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [viewerEditId, setViewerEditId] = useState<string | null>(null);
-  // Breathing tab bar: scroll down → compact, scroll up → full (IG behavior).
+  // Breathing tab bar (IG behavior): advancing down the feed compacts the
+  // pill, any deliberate scroll back up grows it, near the top it is always
+  // full. Direction needs ~24px of ACCUMULATED consistent travel so momentum
+  // jitter and rubber-banding never flip it.
   const [barMini, setBarMini] = useState(false);
   useEffect(() => {
     let lastY = window.scrollY;
+    let acc = 0;
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
@@ -171,10 +175,16 @@ export function KaveretClient({
       requestAnimationFrame(() => {
         const y = window.scrollY;
         const dy = y - lastY;
-        if (y < 90) setBarMini(false);
-        else if (dy > 10) setBarMini(true);
-        else if (dy < -10) setBarMini(false);
-        if (Math.abs(dy) > 10) lastY = y;
+        lastY = y;
+        if (y < 90) {
+          acc = 0;
+          setBarMini(false);
+        } else if (dy !== 0) {
+          if ((dy > 0) !== (acc > 0)) acc = 0;
+          acc += dy;
+          if (acc > 24) setBarMini(true);
+          else if (acc < -24) setBarMini(false);
+        }
         ticking = false;
       });
     };

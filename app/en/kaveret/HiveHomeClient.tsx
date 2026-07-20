@@ -133,10 +133,12 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
   const [published, setPublished] = useState<Record<string, boolean>>({});
   const [deletedReels, setDeletedReels] = useState<Record<string, boolean>>({});
   const [viewerEditId, setViewerEditId] = useState<string | null>(null);
-  // Breathing tab bar: scroll down → compact, scroll up → full (IG behavior).
+  // Breathing tab bar (IG behavior): advancing down compacts, scrolling back
+  // up grows, near the top always full. ~24px accumulated travel to flip.
   const [barMini, setBarMini] = useState(false);
   useEffect(() => {
     let lastY = window.scrollY;
+    let acc = 0;
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
@@ -144,10 +146,16 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
       requestAnimationFrame(() => {
         const y = window.scrollY;
         const dy = y - lastY;
-        if (y < 90) setBarMini(false);
-        else if (dy > 10) setBarMini(true);
-        else if (dy < -10) setBarMini(false);
-        if (Math.abs(dy) > 10) lastY = y;
+        lastY = y;
+        if (y < 90) {
+          acc = 0;
+          setBarMini(false);
+        } else if (dy !== 0) {
+          if ((dy > 0) !== (acc > 0)) acc = 0;
+          acc += dy;
+          if (acc > 24) setBarMini(true);
+          else if (acc < -24) setBarMini(false);
+        }
         ticking = false;
       });
     };
@@ -783,10 +791,11 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
           background: "rgba(13,12,10,0.94)",
           backdropFilter: "blur(12px)",
           borderTop: `1px solid ${C.border}`,
-          padding: barMini
-            ? "3px 8px calc(3px + env(safe-area-inset-bottom))"
-            : "6px 8px calc(6px + env(safe-area-inset-bottom))",
-          transition: "padding .32s cubic-bezier(.3,.9,.3,1)",
+          padding: "6px 8px calc(6px + env(safe-area-inset-bottom))",
+          transform: barMini ? "scale(0.8)" : "scale(1)",
+          transformOrigin: "50% 100%",
+          borderRadius: barMini ? 18 : 0,
+          transition: "transform .32s cubic-bezier(.3,.9,.3,1), border-radius .32s",
         }}
       >
         {([
@@ -813,8 +822,8 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: barMini ? 0 : 3,
-              padding: barMini ? "4px 0 3px" : "6px 0 4px",
+              gap: 3,
+              padding: "6px 0 4px",
               background: "transparent",
               border: "none",
               color: activeTab === i ? C.gold : C.textFaint,
@@ -823,20 +832,10 @@ export function HiveHomeClient({ data }: { data: HiveHomeData }) {
               fontWeight: activeTab === i ? 700 : 500,
               letterSpacing: "0.04em",
               cursor: "pointer",
-              transition: "gap .32s, padding .32s",
             }}
           >
             {icon}
-            <span
-              style={{
-                fontSize: barMini ? 0 : 10.5,
-                opacity: barMini ? 0 : 1,
-                height: barMini ? 0 : "auto",
-                transition: "font-size .32s, opacity .25s",
-              }}
-            >
-              {label}
-            </span>
+            <span>{label}</span>
           </button>
         ))}
       </nav>
