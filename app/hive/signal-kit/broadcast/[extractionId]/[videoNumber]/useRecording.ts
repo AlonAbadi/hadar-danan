@@ -90,12 +90,17 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     setCameraState("requesting");
     let stream: MediaStream;
     try {
+      // Widest FoV recipe (WebKit-source research, 2026-07-20): request the
+      // full 4:3 LANDSCAPE format and never mention portrait. Portrait
+      // constraints made WebKit center-crop the sensor (~44% of horizontal
+      // FoV gone) and sometimes land on a 16:9 preset with less vertical
+      // FoV — the "camera too close" complaint. The burn crops its 9:16
+      // from the widest buffer instead, which is the FoV ceiling on iOS.
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "user",
-          width: { ideal: 1440 },
-          height: { ideal: 1920 },
-          aspectRatio: { ideal: 0.75 },
+          width: { ideal: 1920 },
+          height: { ideal: 1440 },
           frameRate: { ideal: 30 },
         },
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
@@ -119,16 +124,8 @@ export function useRecording(onTakeFinished: (take: FinishedTake) => void) {
     probe.srcObject = stream;
     await probe.play().catch(() => {});
     await new Promise((r) => setTimeout(r, 700));
-    let w = probe.videoWidth;
-    let h = probe.videoHeight;
-    if (w > h) {
-      try {
-        await stream.getVideoTracks()[0].applyConstraints({ width: 1440, height: 1920, aspectRatio: 0.75 });
-        await new Promise((r) => setTimeout(r, 400));
-        w = probe.videoWidth;
-        h = probe.videoHeight;
-      } catch { /* keep what we have */ }
-    }
+    const w = probe.videoWidth;
+    const h = probe.videoHeight;
     probe.srcObject = null;
     setEffAspect(h >= w ? "portrait" : "landscape");
 

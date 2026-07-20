@@ -15,6 +15,7 @@ import {
   type BroadcastLanguage,
 } from "@/lib/broadcast-copy";
 import { Teleprompter, type TeleprompterHandle } from "./Teleprompter";
+import { NativeCaptureWizard, PIP_TUTORIAL_KEY } from "./NativeCaptureWizard";
 import { useRecording, type FinishedTake } from "./useRecording";
 import { uploadManager, type TakeUpload } from "./uploadManager";
 import { ProcessingAndApproval } from "./ProcessingAndApproval";
@@ -86,8 +87,7 @@ export function BroadcastRoomClient({
   const prompterRef = useRef<TeleprompterHandle | null>(null);
   const takeCountRef = useRef(0);
   const nativeInputRef = useRef<HTMLInputElement | null>(null);
-  const [nativeSheet, setNativeSheet] = useState<"closed" | "loading" | "ready" | "pip">("closed");
-  const [floatUrl, setFloatUrl] = useState<string | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
   // Desktop is a first-class filming surface (landscape webcam ships
   // full-frame like any landscape take); detected post-mount to keep
   // hydration clean. Governs the phone-only affordances below.
@@ -95,52 +95,15 @@ export function BroadcastRoomClient({
   useEffect(() => {
     setIsDesktopUA(!/iPhone|iPad|Android/i.test(navigator.userAgent));
   }, []);
-  const floatVideoRef = useRef<HTMLVideoElement | null>(null);
-
-  // Floating PiP prompter: a real MP4 of the scrolling script — iOS keeps
-  // PiP windows alive over other apps, including the native camera.
-  const openNativeSheet = useCallback(async () => {
-    // CRITICAL: release our camera+mic FIRST. A live getUserMedia session
-    // makes iOS treat the page as an active call, and the native camera then
-    // refuses to record video ("not available while on a call") and pauses
-    // the PiP window.
+  // Native-camera path opens the guided wizard (NativeCaptureWizard).
+  // CRITICAL: release our camera+mic FIRST. A live getUserMedia session
+  // makes iOS treat the page as an active call, and the native camera then
+  // refuses to record video ("not available while on a call") and pauses
+  // the PiP window.
+  const openNativeWizard = useCallback(() => {
     rec.releaseCamera();
-    setNativeSheet("loading");
-    try {
-      const wpm = Number(localStorage.getItem("broadcast_wpm")) || 130;
-      const res = await fetch("/api/broadcast/prompter-video", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ extraction_id: extractionId, video_number: videoNumber, wpm }),
-      });
-      if (!res.ok) throw new Error(String(res.status));
-      const { url } = await res.json();
-      setFloatUrl(url);
-      setNativeSheet("ready");
-    } catch {
-      setFloatUrl(null);
-      setNativeSheet("ready"); // still allow filming without the prompter
-    }
+    setWizardOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [extractionId, videoNumber]);
-
-  const startPiP = useCallback(async () => {
-    const v = floatVideoRef.current;
-    if (!v) return;
-    try {
-      await v.play();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const wk = v as any;
-      if (typeof wk.webkitSetPresentationMode === "function") {
-        wk.webkitSetPresentationMode("picture-in-picture");
-      } else if (v.requestPictureInPicture) {
-        await v.requestPictureInPicture();
-      }
-      setNativeSheet("pip");
-    } catch {
-      // PiP refused — she can still read from the inline player
-      setNativeSheet("pip");
-    }
   }, []);
 
   // Native-camera path: iOS 26 WebKit hands browsers the LANDSCAPE sensor no
@@ -172,10 +135,12 @@ export function BroadcastRoomClient({
       if (res.status === 409) {
         const code = (await res.json().catch(() => ({})))?.error;
         if (code === "season_full") {
+          setWizardOpen(false);
           setBanner(getBroadcastCopy("takes.season_full"));
           return;
         }
         if (code === "version_limit") {
+          setWizardOpen(false);
           setBanner(getBroadcastCopy("takes.version_limit"));
           return;
         }
@@ -196,10 +161,15 @@ export function BroadcastRoomClient({
         ...prev,
         { takeId: take_id, blobUrl, durationMs, interrupted: false, outOfRange },
       ]);
+      // Finishing once is the real proof she understood the flow — future
+      // visits skip the tutorial screen.
+      try { localStorage.setItem(PIP_TUTORIAL_KEY, "1"); } catch { /* private mode */ }
       rec.releaseCamera();
+      setWizardOpen(false);
       setPhase("review");
       setBanner(null);
     } catch {
+      setWizardOpen(false);
       setBanner(getBroadcastCopy("error.upload_retry"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -664,7 +634,7 @@ export function BroadcastRoomClient({
               <button
                 type="button"
                 className="br-btn"
-                onClick={openNativeSheet}
+                onClick={openNativeWizard}
                 style={{
                   background: "transparent",
                   border: "1px solid rgba(237,233,225,0.3)",
@@ -695,110 +665,16 @@ export function BroadcastRoomClient({
             ) : null}
           </div>
         ) : null}
-        {nativeSheet !== "closed" ? (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 40,
-              background: "rgba(8,12,20,0.82)",
-              display: "flex",
-              alignItems: "flex-end",
-            }}
-            onClick={() => {
-              setNativeSheet("closed");
+        {wizardOpen ? (
+          <NativeCaptureWizard
+            extractionId={extractionId}
+            videoNumber={videoNumber}
+            onOpenCamera={() => nativeInputRef.current?.click()}
+            onClose={() => {
+              setWizardOpen(false);
               if (phase === "room") rec.requestCamera();
             }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: "100%",
-                background: "#141820",
-                borderRadius: "18px 18px 0 0",
-                padding: "20px 20px calc(env(safe-area-inset-bottom) + 20px)",
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
-              }}
-            >
-              <p style={{ color: "#EDE9E1", fontSize: 16, fontWeight: 700, textAlign: "center" }}>
-                {getBroadcastCopy("room.native_capture")}
-              </p>
-              {nativeSheet === "loading" ? (
-                <p style={{ color: "#9E9990", fontSize: 14, textAlign: "center" }}>
-                  <span className="br-spinner br-spinner-gold" /> {getBroadcastCopy("room.float_loading")}
-                </p>
-              ) : null}
-              {floatUrl ? (
-                <video
-                  ref={floatVideoRef}
-                  src={floatUrl}
-                  playsInline
-                  muted
-                  controls={nativeSheet === "pip"}
-                  style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 10, alignSelf: "center", background: "#000" }}
-                />
-              ) : null}
-              {nativeSheet === "ready" && floatUrl ? (
-                <button
-                  type="button"
-                  className="br-btn"
-                  onClick={startPiP}
-                  style={{
-                    minHeight: 50,
-                    borderRadius: 12,
-                    border: "none",
-                    background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-                    color: "#2a1d05",
-                    fontSize: 16,
-                    fontWeight: 700,
-                  }}
-                >
-                  {getBroadcastCopy("room.float_ready")}
-                </button>
-              ) : null}
-              {nativeSheet === "pip" || (nativeSheet === "ready" && !floatUrl) ? (
-                <button
-                  type="button"
-                  className="br-btn"
-                  onClick={() => nativeInputRef.current?.click()}
-                  style={{
-                    minHeight: 50,
-                    borderRadius: 12,
-                    border: "none",
-                    background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
-                    color: "#2a1d05",
-                    fontSize: 16,
-                    fontWeight: 700,
-                  }}
-                >
-                  {getBroadcastCopy("room.float_open_camera")}
-                </button>
-              ) : null}
-              {nativeSheet === "ready" && floatUrl ? (
-                <button
-                  type="button"
-                  className="br-btn"
-                  onClick={() => nativeInputRef.current?.click()}
-                  style={{
-                    minHeight: 46,
-                    borderRadius: 12,
-                    border: "1px solid rgba(232,185,74,0.4)",
-                    background: "transparent",
-                    color: "#E8B94A",
-                    fontSize: 15,
-                    fontWeight: 600,
-                  }}
-                >
-                  {getBroadcastCopy("room.float_skip")}
-                </button>
-              ) : null}
-              <p style={{ color: "#9E9990", fontSize: 12.5, textAlign: "center", lineHeight: 1.6 }}>
-                {getBroadcastCopy("room.float_hint")}
-              </p>
-            </div>
-          </div>
+          />
         ) : null}
         <input
           ref={nativeInputRef}
