@@ -109,6 +109,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
   const [language, setLanguage] = useState<"he" | "en">("he");
+  const [processingElapsed, setProcessingElapsed] = useState(0);
 
   const prompterRef = useRef<TeleprompterHandle | null>(null);
   const isDesktopUA =
@@ -250,6 +251,10 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
       if (!proc.ok) throw new Error("process failed");
       setPhase("processing");
       track("FIRST_REEL_SUBMITTED", extractionId);
+      const startedAt = Date.now();
+      const tick = setInterval(() => setProcessingElapsed(Date.now() - startedAt), 1000);
+      // eslint-disable-next-line no-inner-declarations
+      var clearTick = () => clearInterval(tick);
 
       const deadline = Date.now() + POLL_MAX_MS;
       while (Date.now() < deadline) {
@@ -257,14 +262,16 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         const st = await fetch(`/api/signal/${extractionId}/first-reel/status?t=${encodeURIComponent(token)}`);
         const data = await st.json();
         if (data.status === "ready" && data.url) {
+          clearTick();
           setFinalUrl(data.url);
           setDownloadUrl(data.downloadUrl ?? data.url);
           setPhase("result");
           track("FIRST_REEL_READY", extractionId);
           return;
         }
-        if (data.status === "failed") { setPhase("failed"); return; }
+        if (data.status === "failed") { clearTick(); setPhase("failed"); return; }
       }
+      clearTick();
       setPhase("failed");
     } catch {
       setPhase("failed");
@@ -294,9 +301,12 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     background: "none", border: "1px solid #2C323E", color: "#9E9990",
     borderRadius: 10, padding: "10px 20px", fontSize: 13, cursor: "pointer", textDecoration: "none", display: "inline-block",
   };
+  // A true 9:16 reels box, always: the width is capped by the height budget
+  // too (58dvh * 9/16) so aspect-ratio and max-height can never fight - the
+  // fight is what made iOS render the raw landscape sensor "square".
   const frame: React.CSSProperties = {
-    position: "relative", width: "min(400px, 92vw)", aspectRatio: "9/16",
-    maxHeight: "58dvh", borderRadius: 20, overflow: "hidden", background: "#000", border: "1px solid #2C323E",
+    position: "relative", width: "min(400px, 92vw, calc(58dvh * 0.5625))", aspectRatio: "9/16",
+    borderRadius: 20, overflow: "hidden", background: "#000", border: "1px solid #2C323E",
   };
   const offerHref = `/kaveret/i?t=${encodeURIComponent(token)}#kaveret-offer`;
   const scriptShape = toScriptShape(script);
@@ -412,30 +422,46 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     </div>
   );
 
-  if (phase === "uploading" || phase === "processing") return (
-    <Centered>
-      <div style={{ fontSize: 38, marginBottom: 14 }}>🎬</div>
-      <h1 style={{ fontSize: 21, fontWeight: 800, marginBottom: 8 }}>
-        {phase === "uploading" ? "הטייק עולה לבמאית..." : "הבמאית עובדת על הסרטון שלך"}
-      </h1>
-      <p style={{ color: "#9E9990", fontSize: 14, maxWidth: 340, lineHeight: 1.8 }}>
-        תמלול, סנכרון כתוביות וחיתוך. בדיוק כמו בכוורת.
-        <br />
-        זה לוקח בערך דקה, שווה לחכות.
-      </p>
-      <div style={{ marginTop: 18, width: 200, height: 4, background: "#1D2430", borderRadius: 2, overflow: "hidden" }}>
-        <div style={{ width: "40%", height: "100%", background: "linear-gradient(90deg, #E8B94A, #C9964A)", borderRadius: 2, animation: "frslide 1.4s ease-in-out infinite" }} />
-      </div>
-      <style>{`@keyframes frslide { 0% { margin-right: -40%; } 100% { margin-right: 100%; } }`}</style>
-    </Centered>
-  );
+  if (phase === "uploading" || phase === "processing") {
+    const EST_MS = 150_000; // honest budget: transcription + burn on a real take
+    const remaining = Math.max(0, Math.ceil((EST_MS - processingElapsed) / 1000));
+    const pct = Math.min(95, Math.round((processingElapsed / EST_MS) * 100));
+    return (
+      <Centered>
+        <div style={{ fontSize: 38, marginBottom: 14 }}>🎬</div>
+        <h1 style={{ fontSize: 21, fontWeight: 800, marginBottom: 8 }}>
+          {phase === "uploading" ? "הטייק עולה לבמאית..." : "הבמאית עובדת על הסרטון שלך"}
+        </h1>
+        <p style={{ color: "#9E9990", fontSize: 14, maxWidth: 340, lineHeight: 1.8 }}>
+          תמלול, סנכרון כתוביות וחיתוך. בדיוק כמו בכוורת.
+        </p>
+        {phase === "processing" ? (
+          <>
+            <div style={{ marginTop: 18, width: 240, height: 6, background: "#1D2430", borderRadius: 3, overflow: "hidden" }}>
+              <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg, #E8B94A, #C9964A)", borderRadius: 3, transition: "width 1s linear" }} />
+            </div>
+            <p style={{ color: "#E8B94A", fontSize: 14, fontWeight: 700, marginTop: 10 }}>
+              {remaining > 0
+                ? `נשארו בערך ${remaining >= 60 ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")} דקות` : `${remaining} שניות`}`
+                : "עוד רגעים אחדים, הבמאית מסיימת..."}
+            </p>
+          </>
+        ) : (
+          <div style={{ marginTop: 18, width: 200, height: 4, background: "#1D2430", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ width: "40%", height: "100%", background: "linear-gradient(90deg, #E8B94A, #C9964A)", borderRadius: 2, animation: "frslide 1.4s ease-in-out infinite" }} />
+          </div>
+        )}
+        <style>{`@keyframes frslide { 0% { margin-right: -40%; } 100% { margin-right: 100%; } }`}</style>
+      </Centered>
+    );
+  }
 
   if (phase === "failed") return (
     <Centered>
       <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>הכתוביות לא הסתדרו הפעם</h1>
       <p style={{ color: "#9E9990", fontSize: 14, marginBottom: 16 }}>הטייק שלך שמור, אפשר לנסות שוב</p>
       {blobUrl && (
-        <div style={{ ...frame, maxHeight: "40dvh", marginBottom: 16 }}>
+        <div style={{ ...frame, width: "min(400px, 92vw, calc(40dvh * 0.5625))", marginBottom: 16 }}>
           <video src={blobUrl} controls playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
       )}
@@ -452,7 +478,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
       <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>הרילס הראשון שלך מוכן 🎉</h1>
       <p style={{ ...gold, fontSize: 14, marginBottom: 14 }}>{title} · עם כתוביות מסונכרנות</p>
       {finalUrl && (
-        <div style={{ ...frame, maxHeight: "48dvh", marginBottom: 16 }}>
+        <div style={{ ...frame, width: "min(400px, 92vw, calc(48dvh * 0.5625))", marginBottom: 16 }}>
           <video src={finalUrl} controls playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
       )}
