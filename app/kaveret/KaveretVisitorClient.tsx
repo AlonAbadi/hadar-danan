@@ -28,6 +28,7 @@ export interface VisitorData {
   day0VideoId: string;
   waPhone: string;
   token: string;
+  firstReelEnabled: boolean;
 }
 
 const LOCK = (
@@ -313,6 +314,24 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               <div className={sty.vPrec} />
             </div>
             <p className={sty.vPcap}>הטלפרומפטר עם התסריט שלך, על המצלמה הקדמית</p>
+            {data.firstReelEnabled ? (
+              <div style={{ textAlign: "center", margin: "14px 0 4px" }}>
+                <a
+                  href={`/kaveret/first-reel?t=${encodeURIComponent(data.token)}`}
+                  style={{
+                    display: "inline-block",
+                    background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+                    color: "#0D1018", fontWeight: 800, fontSize: 15,
+                    borderRadius: 12, padding: "13px 30px", textDecoration: "none",
+                  }}
+                >
+                  לצלם את הסרטון הראשון עכשיו, חינם 🎬
+                </a>
+                <p style={{ color: "#9E9990", fontSize: 12.5, marginTop: 8 }}>
+                  15 שניות, התסריט שלך על המסך, הסרטון נשאר אצלך
+                </p>
+              </div>
+            ) : null}
             <p className={sty.txt} style={{ fontSize: 13.5, textAlign: "center" }}>
               {f
                 ? "שבעה תסריטים בקול שלך. הטקסט רץ בקצב שלך, הבמאית חותכת, מוסיפה כתוביות ומחזירה רילס. מצולם, לא מיוצר."
@@ -323,7 +342,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
 
         {/* ── conversion layer ── */}
         {data.offer === "hive" ? (
-          <div className={sty.vUnlock}>
+          <div className={sty.vUnlock} id="kaveret-offer">
             <div className={sty.vUnlockK}>כוורת האות</div>
             <h2>
               הכול כבר נוצר מהאות שלך.
@@ -348,7 +367,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
         ) : null}
 
         {data.offer === "strategy" ? (
-          <div className={sty.vUnlock}>
+          <div className={sty.vUnlock} id="kaveret-offer">
             <div className={sty.vUnlockK}>ליווי אסטרטגי</div>
             <h2>
               האות שלך מצביע על עסק שמוכן לזוז.

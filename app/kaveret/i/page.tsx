@@ -72,6 +72,7 @@ async function buildVisitorData(extractionId: string, token: string): Promise<Vi
     day0VideoId: day0?.videoId ?? "1185862328",
     waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
     token,
+    firstReelEnabled: Boolean(process.env.FIRST_REEL_CAMERA_ENABLED),
   };
 }
 
