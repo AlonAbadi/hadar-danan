@@ -182,8 +182,9 @@ export function KaveretClient({
         } else if (dy !== 0) {
           if ((dy > 0) !== (acc > 0)) acc = 0;
           acc += dy;
-          if (acc > 24) setBarMini(false);
-          else if (acc < -24) setBarMini(true);
+          // Canon (Alon 2026-07-22): scroll down shrinks, scroll up expands
+          if (acc > 24) setBarMini(true);
+          else if (acc < -24) setBarMini(false);
         }
         ticking = false;
       });
