@@ -26,6 +26,12 @@ import { ActionButton, RoomStyles, TopBar } from "./ui";
 // it "restarted the page" when the customer wanted to go back.
 const kitHref = () => (getBroadcastLanguage() === "en" ? "/en/kaveret" : "/kaveret");
 
+// Alon 2026-07-21: the browser path films well since the FoV fix, and the
+// native-camera path still has field issues — button hidden until needed
+// again. All the machinery (wizard, prompter MP4, capture_hint pipeline)
+// stays live behind this flag.
+const NATIVE_CAPTURE_ENABLED = false;
+
 const MIN_TAKE_MS = 10_000;
 const MAX_TAKE_MS = 180_000;
 const HARD_STOP_MS = 240_000;
@@ -630,7 +636,7 @@ export function BroadcastRoomClient({
             <p style={{ color: "#CDD1DA", fontSize: 12.5, textAlign: "center", margin: 0, textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
               {getBroadcastCopy(isDesktopUA ? "room.placement_hint_desktop" : "room.placement_hint")}
             </p>
-            {!isDesktopUA ? (
+            {NATIVE_CAPTURE_ENABLED && !isDesktopUA ? (
               <button
                 type="button"
                 className="br-btn"
