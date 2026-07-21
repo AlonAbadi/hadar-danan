@@ -126,6 +126,8 @@ export default function ActivityClient({ report }: { report: ActivityReport }) {
       emailShare: totalReturnSessions ? Math.round((emailReturnSessions / totalReturnSessions) * 100) : 0,
       watchedTraining: external.filter((u) => u.trainingPct > 0).length,
       finishedTraining: external.filter((u) => u.trainingPct >= 80).length,
+      watchedOpening: external.filter((u) => u.openingPct > 0).length,
+      finishedOpening: external.filter((u) => u.openingPct >= 80).length,
       challengeActive: external.filter((u) => u.challenge).length,
       challengeCompleted: external.filter((u) => u.challenge?.completed).length,
       signalUsers: external.filter((u) => u.signalCount > 0).length,
@@ -213,13 +215,15 @@ export default function ActivityClient({ report }: { report: ActivityReport }) {
         <KpiCard label="חזרות דרך אימייל" value={`${kpis.emailShare}%`} icon="📧" variant="gold" />
       </KpiGrid>
 
-      <KpiGrid cols={6}>
+      <KpiGrid cols={4}>
         <KpiCard label="צפו בשיעור החינמי" value={kpis.watchedTraining} icon="🎓" variant="info" />
         <KpiCard label="סיימו את השיעור (80%+)" value={kpis.finishedTraining} icon="✅" variant="success" />
+        <KpiCard label="צפו בפתיחת האתגר" value={kpis.watchedOpening} icon="🎬" variant="info" />
+        <KpiCard label="סיימו את הפתיחה (80%+)" value={kpis.finishedOpening} icon="✅" variant="success" />
         <KpiCard label="נרשמו לאתגר" value={kpis.challengeActive} icon="💪" variant="gold" />
         <KpiCard label="סיימו את האתגר" value={kpis.challengeCompleted} icon="🏁" variant="success" />
         <KpiCard label="עשו אבחון אות" value={kpis.signalUsers} icon="✨" variant="gold" />
-        <KpiCard label="פעילים בחדר השידור" value={kpis.broadcastUsers} icon="🎬" />
+        <KpiCard label="פעילים בחדר השידור" value={kpis.broadcastUsers} icon="🎥" />
       </KpiGrid>
 
       <SectionCard

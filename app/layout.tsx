@@ -12,6 +12,7 @@ import { MobileNavServer }     from "@/components/MobileNavServer";
 import { DesktopNavServer }    from "@/components/DesktopNavServer";
 import { HiveFloatBarServer }  from "@/components/HiveFloatBarServer";
 import { LayoutShell }         from "@/components/LayoutShell";
+import { SignalReturnBannerServer } from "@/components/SignalReturnBannerServer";
 import { SchemaMarkup }        from "@/components/SchemaMarkup";
 
 function buildAamData(u: {
@@ -159,6 +160,7 @@ export default async function RootLayout({
         <Pixels />
         {!isEn && <AccessibilityWidget />}
         {!isEn && <HiveFloatBarServer />}
+        {!isEn && <SignalReturnBannerServer />}
         <LayoutShell nav={<><MobileNavServer /><DesktopNavServer /></>}>
           <div id="main-content" tabIndex={-1} style={{ outline: "none" }} />
           {children}

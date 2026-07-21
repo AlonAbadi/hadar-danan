@@ -22,6 +22,8 @@ const MAX_VIDEO_ROWS = 15_000;
 
 // Vimeo ids of the free training lesson (השיעור החינמי)
 const TRAINING_VIDEO_IDS = new Set(['1178865564']);
+// The challenge opening lesson (day 0) — embedded openly on the kaveret result page
+const CHALLENGE_OPENING_VIDEO_ID = '1185862328';
 
 // Internal / QA accounts — hidden by default in the report
 export const INTERNAL_EMAILS = [
@@ -49,6 +51,7 @@ export interface UserActivity {
   hasPurchase: boolean;
   // ── product usage ──
   trainingPct: number;         // max % watched of the free training lesson
+  openingPct: number;          // max % watched of the challenge opening lesson (day 0)
   videoViews: number;          // attributed video events (all videos)
   challenge: { currentDay: number; daysCompleted: number; completed: boolean } | null;
   signalCount: number;         // Signal Engine extractions (מנוע האות)
@@ -187,16 +190,19 @@ export async function getUserActivityReport(daysBack = 180): Promise<ActivityRep
   const userIdByEmail = new Map(users.map((u) => [u.email.toLowerCase(), u.id]));
   const userIdByAnon = new Map(identities.rows.map((i) => [i.anonymous_id, i.user_id]));
 
-  const video = new Map<string, { trainingPct: number; views: number }>();
+  const video = new Map<string, { trainingPct: number; openingPct: number; views: number }>();
   for (const v of videoEvents.rows) {
     const uid =
       (v.user_email && userIdByEmail.get(v.user_email.toLowerCase())) ||
       (v.anon_id && userIdByAnon.get(v.anon_id)) || null;
     if (!uid) continue;
-    const entry = video.get(uid) ?? { trainingPct: 0, views: 0 };
+    const entry = video.get(uid) ?? { trainingPct: 0, openingPct: 0, views: 0 };
     entry.views++;
     if (TRAINING_VIDEO_IDS.has(v.video_id)) {
       entry.trainingPct = Math.max(entry.trainingPct, v.percent_watched ?? 0);
+    }
+    if (v.video_id === CHALLENGE_OPENING_VIDEO_ID) {
+      entry.openingPct = Math.max(entry.openingPct, v.percent_watched ?? 0);
     }
     video.set(uid, entry);
   }
@@ -273,7 +279,7 @@ export async function getUserActivityReport(daysBack = 180): Promise<ActivityRep
       INTERNAL_EMAILS.includes(emailLower) ||
       INTERNAL_DOMAINS.some((d) => emailLower.endsWith(`@${d}`));
 
-    const videoUsage = video.get(u.id) ?? { trainingPct: 0, views: 0 };
+    const videoUsage = video.get(u.id) ?? { trainingPct: 0, openingPct: 0, views: 0 };
     const challenge = challengeByUser.get(u.id) ?? null;
     const signal = signalByUser.get(u.id) ?? { count: 0, bucket: null };
     const broadcastTakes = takesByUser.get(u.id) ?? 0;
@@ -308,6 +314,7 @@ export async function getUserActivityReport(daysBack = 180): Promise<ActivityRep
       hasCheckout,
       hasPurchase,
       trainingPct: videoUsage.trainingPct,
+      openingPct: videoUsage.openingPct,
       videoViews: videoUsage.views,
       challenge,
       signalCount: signal.count,
@@ -349,6 +356,8 @@ export function summarizeForInsights(report: ActivityReport) {
     product_usage: {
       watched_training_any: ext.filter((u) => u.trainingPct > 0).length,
       watched_training_80pct: ext.filter((u) => u.trainingPct >= 80).length,
+      watched_challenge_opening: ext.filter((u) => u.openingPct > 0).length,
+      finished_challenge_opening_80pct: ext.filter((u) => u.openingPct >= 80).length,
       challenge_enrolled: ext.filter((u) => u.challenge).length,
       challenge_completed: ext.filter((u) => u.challenge?.completed).length,
       challenge_days_hist: dist((u) => u.challenge ? `day_${Math.min(u.challenge.daysCompleted, 8)}` : 'not_enrolled'),
