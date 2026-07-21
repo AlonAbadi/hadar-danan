@@ -80,6 +80,19 @@ export function Teleprompter({
     return localStorage.getItem("broadcast_vad") !== "off";
   });
   const [paused, setPaused] = useState(false);
+  // Controls live collapsed in a corner pill (Alon 2026-07-21: the full-width
+  // row sat mid-frame, across the face). Tap opens the row; it auto-closes
+  // after a few idle seconds and the moment recording starts.
+  const [ctrlOpen, setCtrlOpen] = useState(false);
+  const ctrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchCtrl = useCallback(() => {
+    if (ctrlTimerRef.current) clearTimeout(ctrlTimerRef.current);
+    ctrlTimerRef.current = setTimeout(() => setCtrlOpen(false), 4500);
+  }, []);
+  useEffect(() => {
+    if (running) setCtrlOpen(false);
+  }, [running]);
+  useEffect(() => () => { if (ctrlTimerRef.current) clearTimeout(ctrlTimerRef.current); }, []);
   // Post-mount so SSR markup stays the mobile baseline (no hydration drift).
   const [isDesktop, setIsDesktop] = useState(false);
   useEffect(() => {
@@ -365,71 +378,111 @@ export function Teleprompter({
         ) : null}
       </div>
 
-      {/* control row — a SIBLING of the strip: taps here can never pause */}
-      <div
-        dir={dir}
-        style={{
-          position: "absolute",
-          top: `calc(env(safe-area-inset-top) + ${stripH} + 6px)`,
-          insetInlineStart: 12,
-          insetInlineEnd: 12,
-          zIndex: 21,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "6px 10px",
-          borderRadius: 14,
-          background: "rgba(8,12,20,0.72)",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-        }}
-      >
-        <span dir="ltr" style={{ color: "#E8B94A", fontSize: 12.5, fontWeight: 700, minWidth: 30, textAlign: "center" }}>
-          {wpm}
-        </span>
-        <input
-          type="range"
-          min={WPM_MIN}
-          max={WPM_MAX}
-          step={5}
-          value={wpm}
-          onChange={(e) => setWpm(Number(e.target.value))}
+      {/* controls — a SIBLING of the strip: taps here can never pause.
+          Collapsed: a small corner pill hugging the strip's bottom edge.
+          Open: the full row, auto-closing after idle / on record start. */}
+      {!ctrlOpen ? (
+        <button
+          type="button"
+          dir="ltr"
           aria-label={getBroadcastCopy("room.speed")}
-          style={{ flex: 1, accentColor: "#E8B94A", height: 36 }}
-        />
-        <button
-          type="button"
-          onClick={() => setVadOn((v) => !v)}
+          onClick={() => { setCtrlOpen(true); touchCtrl(); }}
+          className="br-btn"
           style={{
-            height: 36,
-            padding: "0 10px",
-            borderRadius: 10,
-            border: `1px solid ${vadOn ? "rgba(232,185,74,0.6)" : "rgba(237,233,225,0.2)"}`,
-            background: vadOn ? "rgba(232,185,74,0.15)" : "transparent",
-            color: vadOn ? "#E8B94A" : "#9E9990",
-            fontSize: 12,
-            fontWeight: 700,
-          }}
-        >
-          {getBroadcastCopy("room.vad_toggle")}
-        </button>
-        <button
-          type="button"
-          onClick={() => setSizeIdx((i) => (i + 1) % SIZE_STEPS.length)}
-          style={{
-            width: 44,
-            height: 36,
-            borderRadius: 10,
+            position: "absolute",
+            top: `calc(env(safe-area-inset-top) + ${stripH} + 6px)`,
+            insetInlineEnd: 12,
+            zIndex: 21,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            height: 32,
+            padding: "0 12px",
+            borderRadius: 999,
             border: "1px solid rgba(232,185,74,0.35)",
-            background: "transparent",
+            background: "rgba(8,12,20,0.72)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
             color: "#E8B94A",
-            fontSize: 14,
+            fontSize: 12.5,
             fontWeight: 700,
+            cursor: "pointer",
           }}
         >
-          {language === "en" ? "A" : "א"}{fontSize === SIZE_STEPS[2] ? "-" : "+"}
+          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+            <circle cx="9" cy="7" r="2.4" fill="#080C14" />
+            <circle cx="15" cy="12" r="2.4" fill="#080C14" />
+            <circle cx="7" cy="17" r="2.4" fill="#080C14" />
+          </svg>
+          {wpm}
         </button>
-      </div>
+      ) : (
+        <div
+          dir={dir}
+          style={{
+            position: "absolute",
+            top: `calc(env(safe-area-inset-top) + ${stripH} + 6px)`,
+            insetInlineStart: 12,
+            insetInlineEnd: 12,
+            zIndex: 21,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "6px 10px",
+            borderRadius: 14,
+            background: "rgba(8,12,20,0.72)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+          }}
+        >
+          <span dir="ltr" style={{ color: "#E8B94A", fontSize: 12.5, fontWeight: 700, minWidth: 30, textAlign: "center" }}>
+            {wpm}
+          </span>
+          <input
+            type="range"
+            min={WPM_MIN}
+            max={WPM_MAX}
+            step={5}
+            value={wpm}
+            onChange={(e) => { setWpm(Number(e.target.value)); touchCtrl(); }}
+            aria-label={getBroadcastCopy("room.speed")}
+            style={{ flex: 1, accentColor: "#E8B94A", height: 36 }}
+          />
+          <button
+            type="button"
+            onClick={() => { setVadOn((v) => !v); touchCtrl(); }}
+            style={{
+              height: 36,
+              padding: "0 10px",
+              borderRadius: 10,
+              border: `1px solid ${vadOn ? "rgba(232,185,74,0.6)" : "rgba(237,233,225,0.2)"}`,
+              background: vadOn ? "rgba(232,185,74,0.15)" : "transparent",
+              color: vadOn ? "#E8B94A" : "#9E9990",
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            {getBroadcastCopy("room.vad_toggle")}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSizeIdx((i) => (i + 1) % SIZE_STEPS.length); touchCtrl(); }}
+            style={{
+              width: 44,
+              height: 36,
+              borderRadius: 10,
+              border: "1px solid rgba(232,185,74,0.35)",
+              background: "transparent",
+              color: "#E8B94A",
+              fontSize: 14,
+              fontWeight: 700,
+            }}
+          >
+            {language === "en" ? "A" : "א"}{fontSize === SIZE_STEPS[2] ? "-" : "+"}
+          </button>
+        </div>
+      )}
     </>
   );
 }
