@@ -5,6 +5,7 @@ import { createBrowserClient } from "@/lib/supabase/browser";
 import { BeeWait } from "@/components/BeeWait";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { ShareButtons } from "@/components/signal/ShareButtons";
+import { detectGender, type Gender } from "@/lib/gender/detect";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /kriah — unified funnel v2, wave 1.
@@ -266,6 +267,12 @@ export function KriahClient({ previewKey, isTest }: Props) {
 
   // Lead fields
   const [name, setName]           = useState("");
+  // Gender of address — restores the original /signal solution: auto-detected
+  // from the first name, with an explicit radio the user can override. Passed to
+  // the engine so the whole אות reads in one consistent gender (no mixed forms).
+  // leadGenderTouched=true stops the auto-sync once the user picks manually.
+  const [leadGender, setLeadGender] = useState<Gender>(() => detectGender(""));
+  const [leadGenderTouched, setLeadGenderTouched] = useState(false);
   const [email, setEmail]         = useState("");
   const [phone, setPhone]         = useState("");
   const [consent, setConsent]     = useState(false);
@@ -372,6 +379,12 @@ export function KriahClient({ previewKey, isTest }: Props) {
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     } catch {}
   }, [screen, qIdx, stateKey, blocker, changeWish, answers, q4Skipped, probeShown, name, email, phone, signal]);
+
+  // Re-detect gender from the first name as the user types, until they pick.
+  useEffect(() => {
+    if (leadGenderTouched) return;
+    setLeadGender(detectGender(name.trim().split(" ")[0] ?? ""));
+  }, [name, leadGenderTouched]);
 
   // ── S5 email gate → POST /api/signup (non-blocking) ────────────────────────
   // ── S8 soft capture (change 2): one light email field, never blocking ──────
@@ -590,6 +603,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
         email: email.trim().toLowerCase(),
         name: nm,
         first_name: nm.split(" ")[0],
+        gender: leadGender,
         marketing_consent: true,
         is_test: isTest,
         instrument_version: "v2_funnel",
@@ -845,6 +859,40 @@ export function KriahClient({ previewKey, isTest }: Props) {
                   style={inputStyle()}
                 />
               </div>
+              {/* Gender of address — auto-detected from the name, overridable.
+                  Drives the gendered אות so it never mixes forms. */}
+              <fieldset style={{ border: "none", padding: 0, margin: 0 }}>
+                <legend style={{ fontSize: 14, color: C.muted, marginBottom: 6, padding: 0 }}>איך נכון לפנות אליכם?</legend>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {([
+                    { value: "f" as Gender, label: "את" },
+                    { value: "m" as Gender, label: "אתה" },
+                  ]).map((opt) => {
+                    const selected = leadGender === opt.value;
+                    return (
+                      <label
+                        key={opt.value}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                          padding: "12px 14px",
+                          background: selected ? "rgba(232,185,74,0.10)" : C.cardSoft,
+                          border: `1px solid ${selected ? C.goldMid : C.line}`,
+                          borderRadius: 12, cursor: "pointer", fontSize: 15,
+                          fontWeight: selected ? 700 : 500, color: selected ? C.fg : C.muted,
+                          transition: "background .15s, border-color .15s, color .15s",
+                        }}
+                      >
+                        <input
+                          type="radio" name="kriah-gender" value={opt.value} checked={selected}
+                          onChange={() => { setLeadGender(opt.value); setLeadGenderTouched(true); }}
+                          style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
+                        />
+                        {opt.label}
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
               <div>
                 <label htmlFor="kriah-email" style={{ display: "block", fontSize: 14, color: C.muted, marginBottom: 6 }}>
                   אימייל
