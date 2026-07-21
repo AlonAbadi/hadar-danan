@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
       "./node_modules/ffmpeg-static/ffmpeg",
       "./assets/broadcast/fonts/**",
     ],
+    // The first-reel free taste runs the same ffmpeg burn engine
+    "/api/signal/[id]/first-reel/**": [
+      "./node_modules/ffmpeg-static/ffmpeg",
+      "./assets/broadcast/fonts/**",
+    ],
   },
   images: {
     formats: ["image/avif", "image/webp"],

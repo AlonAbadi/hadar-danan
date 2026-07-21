@@ -116,6 +116,21 @@ export function buildVideoFilter(
   };
 }
 
+// The exact deliverable encode — shared with the first-reel pipeline so the
+// free taste and the member output are byte-for-byte the same settings.
+// Reels-sufficient quality: IG recompresses everything to ~2-4 Mbps, so
+// CRF 23 capped at 5 Mbps loses nothing visible for talking-head footage.
+export function buildEncodeArgs(outPath: string): string[] {
+  return [
+    "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high", "-crf", "23",
+    "-maxrate", "5M", "-bufsize", "10M",
+    "-pix_fmt", "yuv420p",
+    "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
+    "-movflags", "+faststart",
+    outPath,
+  ];
+}
+
 interface EditRow {
   id: string;
   take_id: string;
@@ -209,16 +224,7 @@ export async function runBurnStage(edit: EditRow): Promise<void> {
     );
 
     const outPath = path.join(dir, "out.mp4");
-    const encodeArgs = [
-      // Reels-sufficient quality: IG recompresses everything to ~2-4 Mbps, so
-      // CRF 23 capped at 5 Mbps loses nothing visible for talking-head footage.
-      "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high", "-crf", "23",
-      "-maxrate", "5M", "-bufsize", "10M",
-      "-pix_fmt", "yuv420p",
-      "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
-      "-movflags", "+faststart",
-      outPath,
-    ];
+    const encodeArgs = buildEncodeArgs(outPath);
     await runFfmpeg([
       "-ss", (trimStart / 1000).toFixed(3),
       ...(trimEnd > trimStart ? ["-to", (trimEnd / 1000).toFixed(3)] : []),

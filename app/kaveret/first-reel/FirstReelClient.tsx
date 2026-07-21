@@ -3,14 +3,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
- * Teleprompter-lite: script → countdown → 15s front-camera recording with
- * scrolling prompter → local preview + download. No uploads, no server
- * pipeline — the raw result is the "before" of the כוורת האות "after".
+ * The first-reel experience: script → countdown → 15s front-camera recording
+ * with a scrolling prompter → the take goes to the REAL broadcast engine
+ * (Whisper transcription + synced captions burned with the exact member
+ * settings) → the finished reel comes back for playback + download.
+ *
+ * Download/playback use server signed URLs (iOS Safari ignores the download
+ * attribute on blob links - the reason v1 "didn't work" on iPhone).
  */
 
-type Phase = "loading" | "ready" | "countdown" | "recording" | "preview" | "fallback" | "error";
+type Phase =
+  | "loading" | "ready" | "countdown" | "recording"
+  | "review" | "uploading" | "processing" | "result" | "failed"
+  | "fallback" | "error";
 
 const MAX_SECONDS = 16;
+const POLL_MS = 3500;
+const POLL_MAX_MS = 5 * 60_000;
 
 function getCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -38,12 +47,15 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   const [count, setCount] = useState(3);
   const [elapsed, setElapsed] = useState(0);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [ext, setExt] = useState("webm");
+  const [finalUrl, setFinalUrl] = useState<string | null>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const blobRef = useRef<Blob | null>(null);
+  const mimeRef = useRef("video/webm");
   const prompterRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
 
@@ -85,7 +97,6 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     }
   }, []);
 
-  // attach stream whenever the <video> is on screen
   useEffect(() => {
     if ((phase === "countdown" || phase === "recording") && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
@@ -111,15 +122,16 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
       : MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
         ? "video/webm;codecs=vp9,opus"
         : "video/webm";
-    setExt(mime.startsWith("video/mp4") ? "mp4" : "webm");
+    mimeRef.current = mime.startsWith("video/mp4") ? "video/mp4" : "video/webm";
     chunksRef.current = [];
     const rec = new MediaRecorder(stream, { mimeType: mime });
     rec.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
     rec.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: mime });
+      const blob = new Blob(chunksRef.current, { type: mimeRef.current });
+      blobRef.current = blob;
       setBlobUrl(URL.createObjectURL(blob));
       stopStream();
-      setPhase("preview");
+      setPhase("review");
       track("FIRST_REEL_RECORDED", extractionId);
     };
     recorderRef.current = rec;
@@ -127,7 +139,6 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     setElapsed(0);
     setPhase("recording");
 
-    // prompter scroll: 1.5s hold, then linear to the end over ~13s
     const el = prompterRef.current;
     const start = performance.now();
     const tick = (now: number) => {
@@ -152,8 +163,46 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   const retake = useCallback(() => {
     if (blobUrl) URL.revokeObjectURL(blobUrl);
     setBlobUrl(null);
+    blobRef.current = null;
+    setFinalUrl(null);
+    setDownloadUrl(null);
     startCamera();
   }, [blobUrl, startCamera]);
+
+  // ── send to the engine + poll ──
+  const submitTake = useCallback(async () => {
+    const blob = blobRef.current;
+    if (!blob) return;
+    setPhase("uploading");
+    try {
+      const up = await fetch(`/api/signal/${extractionId}/first-reel/upload?t=${encodeURIComponent(token)}`, {
+        method: "POST",
+        headers: { "Content-Type": mimeRef.current },
+        body: blob,
+      });
+      if (!up.ok) throw new Error("upload failed");
+      setPhase("processing");
+      track("FIRST_REEL_SUBMITTED", extractionId);
+
+      const deadline = Date.now() + POLL_MAX_MS;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, POLL_MS));
+        const st = await fetch(`/api/signal/${extractionId}/first-reel/status?t=${encodeURIComponent(token)}`);
+        const data = await st.json();
+        if (data.status === "ready" && data.url) {
+          setFinalUrl(data.url);
+          setDownloadUrl(data.downloadUrl ?? data.url);
+          setPhase("result");
+          track("FIRST_REEL_READY", extractionId);
+          return;
+        }
+        if (data.status === "failed") { setPhase("failed"); return; }
+      }
+      setPhase("failed");
+    } catch {
+      setPhase("failed");
+    }
+  }, [extractionId, token]);
 
   // ── styles ──
   const S = {
@@ -165,6 +214,20 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   };
 
   const offerHref = `/kaveret/i?t=${encodeURIComponent(token)}#kaveret-offer`;
+
+  const Upsell = () => (
+    <div style={{ maxWidth: 440, background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid #C9964A55", borderRadius: 16, padding: "22px 24px" }}>
+      <div style={{ fontSize: 12, letterSpacing: 2, color: "#9E7C3A", marginBottom: 8 }}>כוורת האות</div>
+      <p style={{ fontSize: 15, lineHeight: 1.8, margin: "0 0 14px" }}>
+        ככה עובדת הבמאית, על כל סרטון שלך.
+        <br />
+        <strong style={S.gold}>בחבילה: כל 7 הסרטונים של העונה הראשונה, כתובים מהאות שלך, ב-590₪.</strong>
+        <br />
+        רוצים שנמשיך לייצר לכם תוכן, פוסטים וסרטונים? 99₪ לחודש, לבחירתכם.
+      </p>
+      <a href={offerHref} style={S.btn}>לפתוח את הכוורת ←</a>
+    </div>
+  );
 
   if (phase === "loading") return (
     <div style={S.page} dir="rtl">
@@ -202,7 +265,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         ) : (
           <>
             <p style={{ color: "#9E9990", fontSize: 14, marginBottom: 18 }}>
-              הטקסט ירוץ על המסך בקצב דיבור. מצלמה קדמית, 15 שניות, והסרטון נשאר אצלך במכשיר.
+              הטקסט ירוץ על המסך בקצב דיבור. אחרי הצילום הבמאית מוסיפה כתוביות מסונכרנות ומחזירה רילס מוכן.
             </p>
             <button style={S.btn} onClick={startCamera}>לצלם עכשיו 🎬</button>
           </>
@@ -240,31 +303,79 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     </div>
   );
 
-  // preview
-  return (
+  if (phase === "review") return (
     <div style={S.page} dir="rtl">
-      <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>הסרטון הראשון שלך מוכן 🎉</h1>
-      <p style={{ ...S.gold, fontSize: 14, marginBottom: 14 }}>{title}</p>
+      <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 12 }}>איך יצא?</h1>
       {blobUrl && (
-        <div style={{ ...S.frame, maxHeight: "52dvh", marginBottom: 16 }}>
+        <div style={{ ...S.frame, maxHeight: "58dvh", marginBottom: 16 }}>
+          <video src={blobUrl} controls playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+        <button style={S.btn} onClick={submitTake}>שלחו לבמאית לכתוביות ←</button>
+        <button onClick={retake} style={S.ghost}>לצלם שוב</button>
+      </div>
+    </div>
+  );
+
+  if (phase === "uploading" || phase === "processing") return (
+    <div style={S.page} dir="rtl">
+      <div style={{ fontSize: 38, marginBottom: 14 }}>🎬</div>
+      <h1 style={{ fontSize: 21, fontWeight: 800, marginBottom: 8 }}>
+        {phase === "uploading" ? "הטייק עולה לבמאית..." : "הבמאית עובדת על הסרטון שלך"}
+      </h1>
+      <p style={{ color: "#9E9990", fontSize: 14, maxWidth: 340, lineHeight: 1.8 }}>
+        תמלול, סנכרון כתוביות וחיתוך. בדיוק כמו בכוורת.
+        <br />
+        זה לוקח בערך דקה, שווה לחכות.
+      </p>
+      <div style={{ marginTop: 18, width: 200, height: 4, background: "#1D2430", borderRadius: 2, overflow: "hidden" }}>
+        <div style={{ width: "40%", height: "100%", background: "linear-gradient(90deg, #E8B94A, #C9964A)", borderRadius: 2, animation: "frslide 1.4s ease-in-out infinite" }} />
+      </div>
+      <style>{`@keyframes frslide { 0% { margin-right: -40%; } 100% { margin-right: 100%; } }`}</style>
+    </div>
+  );
+
+  if (phase === "failed") return (
+    <div style={S.page} dir="rtl">
+      <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>הכתוביות לא הסתדרו הפעם</h1>
+      <p style={{ color: "#9E9990", fontSize: 14, marginBottom: 16 }}>הטייק הגולמי שלך שמור כאן בינתיים</p>
+      {blobUrl && (
+        <div style={{ ...S.frame, maxHeight: "44dvh", marginBottom: 16 }}>
           <video src={blobUrl} controls playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
       )}
       <div style={{ display: "flex", gap: 10, marginBottom: 26, flexWrap: "wrap", justifyContent: "center" }}>
-        {blobUrl && <a href={blobUrl} download={`first-reel.${ext}`} style={S.btn}>להוריד את הסרטון ⬇</a>}
+        <button style={S.btn} onClick={submitTake}>לנסות שוב ←</button>
+        <button onClick={retake} style={S.ghost}>לצלם מחדש</button>
+      </div>
+      <Upsell />
+    </div>
+  );
+
+  // result — the finished reel with burned captions
+  return (
+    <div style={S.page} dir="rtl">
+      <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>הרילס הראשון שלך מוכן 🎉</h1>
+      <p style={{ ...S.gold, fontSize: 14, marginBottom: 14 }}>{title} · עם כתוביות מסונכרנות</p>
+      {finalUrl && (
+        <div style={{ ...S.frame, maxHeight: "52dvh", marginBottom: 16 }}>
+          <video src={finalUrl} controls playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, marginBottom: 26, flexWrap: "wrap", justifyContent: "center" }}>
+        {downloadUrl && <a href={downloadUrl} style={S.btn}>להוריד את הרילס ⬇</a>}
+        {typeof navigator !== "undefined" && "share" in navigator && finalUrl && (
+          <button
+            style={S.ghost}
+            onClick={() => navigator.share({ url: finalUrl, title }).catch(() => {})}
+          >
+            לשתף
+          </button>
+        )}
         <button onClick={retake} style={S.ghost}>לצלם שוב</button>
       </div>
-      <div style={{ maxWidth: 440, background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid #C9964A55", borderRadius: 16, padding: "22px 24px" }}>
-        <div style={{ fontSize: 12, letterSpacing: 2, color: "#9E7C3A", marginBottom: 8 }}>כוורת האות</div>
-        <p style={{ fontSize: 15, lineHeight: 1.8, margin: "0 0 14px" }}>
-          זה הגולמי. בכוורת, הבמאית חותכת, מוסיפה כתוביות מסונכרנות וחותמת מצולם, לא מיוצר.
-          <br />
-          <strong style={S.gold}>כל 7 הסרטונים של העונה הראשונה כבר כתובים מהאות שלך.</strong>
-          <br />
-          ומשם, עונה חדשה בכל חודש במנוי.
-        </p>
-        <a href={offerHref} style={S.btn}>לפתוח את הכוורת ←</a>
-      </div>
+      <Upsell />
     </div>
   );
 }

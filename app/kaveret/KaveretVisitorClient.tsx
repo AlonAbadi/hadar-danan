@@ -359,7 +359,9 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
             <div>
               <span className={sty.vPct}>{HIVE_PRICE.pct}% הנחה</span>
             </div>
-            <div className={sty.vPnote}>תשלום אחד, בלי מנוי</div>
+            <div className={sty.vPnote}>
+              590₪ לחבילה המלאה · ובהמשך, אם תרצו שנמשיך לייצר לכם תוכן, פוסטים וסרטונים: 99₪ לחודש
+            </div>
             <a className={sty.vGo} href={hiveHref}>
               פותחים את הכוורת
             </a>
@@ -435,7 +437,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                   ₪{HIVE_PRICE.was}
                 </span>
               </span>
-              <span className={sty.vStickyB}>{HIVE_PRICE.pct}% הנחה · תשלום אחד, בלי מנוי</span>
+              <span className={sty.vStickyB}>{HIVE_PRICE.pct}% הנחה · ובהמשך 99₪ לחודש לעוד תוכן, לבחירתכם</span>
             </span>
             <a className={sty.vStickyGo} href={hiveHref}>
               לפתוח
