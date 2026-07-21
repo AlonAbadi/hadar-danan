@@ -48,12 +48,70 @@ const STEP_ROWS: { label: string; keys: string[] }[] = [
   { label: "האות (סיום)",      keys: ["s16_full_reading"] },
 ];
 
+// New question order — live from 2026-07-19. New events carry metadata.q_order===2.
+// Opens with gratitude ("על מה מודים לך"); the abstract flow-state question moved to #2.
+const REORDER_DATE = "2026-07-19";
+const STEP_ROWS_NEW: { label: string; keys: string[] }[] = [
+  { label: "כניסה (מצב עסק)",   keys: ["s1"] },
+  { label: "ענו על מצב עסק",    keys: ["s3_blocker"] },
+  { label: "ענו על החסם",       keys: ["s4_change"] },
+  { label: "ענו מה ישתנה",      keys: ["s6_reading"] },
+  { label: "המזלג",             keys: ["s7_fork"] },
+  { label: "גשר + מייל",        keys: ["s8_bridge"] },
+  { label: "שאלה 1 — הוצגה",    keys: ["q1_gratitude_mirror_shown"] },
+  { label: "ש1 · על מה מודים",  keys: ["q1_gratitude_mirror"] },
+  { label: "ש2 · שכחת מהזמן",   keys: ["q2_flow_zone"] },
+  { label: "ש3 · מאיפה היכולת", keys: ["q3_effortless_mastery"] },
+  { label: "ש4 · תקופה קשה",    keys: ["q4_hard_period", "q4_hard_period_skipped"] },
+  { label: "ש5 · מה עזר",       keys: ["q5_what_helped"] },
+  { label: "ש6 · משפט לעבר",    keys: ["q6_message_to_past"] },
+  { label: "שער טלפון",         keys: ["s15_phone_gate"] },
+  { label: "מסך המשלוח",        keys: ["sendgate"] },
+  { label: "האות (סיום)",       keys: ["s16_full_reading"] },
+];
+
 const ENDING_LABELS: Record<string, { label: string; color: string }> = {
   concierge:   { label: "קונסיירז' (רותח)", color: C.red },
   hive:        { label: "כוורת (מייל יום-2)", color: C.gold },
   pre_revenue: { label: "טרום-הכנסה", color: "#8FBFFF" },
   crisis_soft: { label: "סוף רך (משבר)", color: C.muted },
 };
+
+function FunnelTable({ title, sub, rows }: { title: string; sub?: string; rows: { label: string; n: number }[] }) {
+  const maxN = Math.max(...rows.map((r) => r.n), 1);
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20, marginBottom: 26 }}>
+      <h2 style={{ fontSize: 16, fontWeight: 800, color: C.goldMid, margin: "0 0 4px" }}>{title}</h2>
+      {sub && <p style={{ fontSize: 12, color: C.muted, margin: "0 0 16px" }}>{sub}</p>}
+      {rows.every((r) => r.n === 0) ? (
+        <p style={{ color: C.muted, fontSize: 14 }}>אין תנועה עדיין.</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {rows.map((r, i) => {
+            const prev = i > 0 ? rows[i - 1].n : r.n;
+            const stepRate  = i > 0 && prev > 0 ? Math.round((r.n / prev) * 100) : null;
+            const totalRate = rows[0].n > 0 ? Math.round((r.n / rows[0].n) * 100) : null;
+            return (
+              <div key={r.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ width: 132, fontSize: 12.5, color: C.muted, flexShrink: 0 }}>{r.label}</span>
+                <div style={{ flex: 1, background: "#0A0E16", borderRadius: 6, height: 18, overflow: "hidden" }}>
+                  <div style={{ width: `${(r.n / maxN) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${C.goldMid}, ${C.gold})`, opacity: 0.85 }} />
+                </div>
+                <span style={{ width: 34, fontSize: 13, fontWeight: 700, textAlign: "left", flexShrink: 0 }}>{r.n}</span>
+                <span style={{ width: 44, fontSize: 11.5, textAlign: "left", flexShrink: 0, color: stepRate !== null && stepRate < 60 ? C.red : C.green }}>
+                  {stepRate !== null ? `${stepRate}%` : ""}
+                </span>
+                <span style={{ width: 40, fontSize: 11, textAlign: "left", flexShrink: 0, color: C.muted }}>
+                  {totalRate !== null && i > 0 ? `${totalRate}%` : ""}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default async function AdminKriahPage() {
   const supabase = createServerClient();
@@ -94,10 +152,14 @@ export default async function AdminKriahPage() {
     routed_ending: string | null; evidence_score: number | null; phone_given: boolean | null;
     source_utm: Record<string, string> | null; generated_at: string; truth_cell: string | null;
   };
-  type Ev = { metadata: { step?: string; is_test?: boolean } | null; created_at: string };
+  type Ev = { metadata: { step?: string; is_test?: boolean; q_order?: number } | null; created_at: string };
 
   const exts  = (extRes.data ?? []) as Ext[];
   const steps = ((stepRes.data ?? []) as Ev[]).filter((e) => e.metadata?.is_test !== true);
+  // Split by question-order version so the two funnels never cross-count on the
+  // steps whose names are shared (q4-q6). New order tags q_order===2.
+  const stepsNew = steps.filter((e) => e.metadata?.q_order === 2);
+  const stepsOld = steps.filter((e) => e.metadata?.q_order !== 2);
 
   // ── windows ──
   const inWindow = <T extends { [k: string]: unknown }>(rows: T[], field: string, since: string) =>
@@ -105,6 +167,8 @@ export default async function AdminKriahPage() {
 
   const stepCount = (keys: string[], since?: string) =>
     steps.filter((e) => keys.includes(e.metadata?.step ?? "") && (!since || e.created_at >= since)).length;
+  const countIn = (arr: Ev[], keys: string[]) =>
+    arr.filter((e) => keys.includes(e.metadata?.step ?? "")).length;
 
   const entries14 = stepCount(["s1"]);
   const entries7  = stepCount(["s1"], weekAgo);
@@ -138,9 +202,9 @@ export default async function AdminKriahPage() {
   const emailsSent14  = welcomeLogsRes.count ?? 0;
   const testCount     = testCountRes.count ?? 0;
 
-  // ── funnel rows with rates ──
-  const rows = STEP_ROWS.map((r) => ({ label: r.label, n: stepCount(r.keys) }));
-  const maxN = Math.max(...rows.map((r) => r.n), 1);
+  // ── funnel rows with rates (two orders, split by q_order) ──
+  const rowsNew = STEP_ROWS_NEW.map((r) => ({ label: r.label, n: countIn(stepsNew, r.keys) }));
+  const rowsOld = STEP_ROWS.map((r) => ({ label: r.label, n: countIn(stepsOld, r.keys) }));
 
   const { today: todayReport, history: reportHistory } = await reportPromise;
 
@@ -247,39 +311,28 @@ export default async function AdminKriahPage() {
           ))}
         </div>
 
-        {/* funnel with drop rates */}
-        <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20, marginBottom: 26 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 800, color: C.goldMid, margin: "0 0 4px" }}>המשפך, שלב אחרי שלב · 14 יום</h2>
-          <p style={{ fontSize: 12, color: C.muted, margin: "0 0 16px" }}>
-            אחוז ירוק = כמה מהשלב הקודם המשיכו. אחוז אפור = כמה מסך הכניסות הגיעו לכאן.
-          </p>
-          {rows.every((r) => r.n === 0) ? (
-            <p style={{ color: C.muted, fontSize: 14 }}>אין תנועה עדיין.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {rows.map((r, i) => {
-                const prev = i > 0 ? rows[i - 1].n : r.n;
-                const stepRate  = i > 0 && prev > 0 ? Math.round((r.n / prev) * 100) : null;
-                const totalRate = rows[0].n > 0 ? Math.round((r.n / rows[0].n) * 100) : null;
-                return (
-                  <div key={r.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 118, fontSize: 12.5, color: C.muted, flexShrink: 0 }}>{r.label}</span>
-                    <div style={{ flex: 1, background: "#0A0E16", borderRadius: 6, height: 18, overflow: "hidden" }}>
-                      <div style={{ width: `${(r.n / maxN) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${C.goldMid}, ${C.gold})`, opacity: 0.85 }} />
-                    </div>
-                    <span style={{ width: 34, fontSize: 13, fontWeight: 700, textAlign: "left", flexShrink: 0 }}>{r.n}</span>
-                    <span style={{ width: 44, fontSize: 11.5, textAlign: "left", flexShrink: 0, color: stepRate !== null && stepRate < 60 ? C.red : C.green }}>
-                      {stepRate !== null ? `${stepRate}%` : ""}
-                    </span>
-                    <span style={{ width: 40, fontSize: 11, textAlign: "left", flexShrink: 0, color: C.muted }}>
-                      {totalRate !== null && i > 0 ? `${totalRate}%` : ""}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        {/* NEW order funnel — live tracking from the reorder date */}
+        <FunnelTable
+          title={`המשפך — סדר חדש · מעקב (מ-${REORDER_DATE.split("-").reverse().join(".")}) · 14 יום`}
+          sub="פותח ב'על מה מודים לך'. השווה 'ש1 · על מה מודים' מול 'שאלה 1 — הוצגה' — זו הנשירה שאנחנו מנסים להוריד. אחוז ירוק = המשיכו מהשלב הקודם."
+          rows={rowsNew}
+        />
+
+        {/* Baseline — old order, measured before the reorder (permanent reference) */}
+        <div style={{ background: "rgba(232,185,74,0.05)", border: `1px dashed ${C.line}`, borderRadius: 12, padding: "14px 16px", marginBottom: 26 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.goldMid, marginBottom: 4 }}>בייסליין — הסדר הישן (נמדד 60 יום עד 19.7)</div>
+          <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.7 }}>
+            השאלה הראשונה הישנה (&rdquo;רגע שבו שכחת מהזמן&ldquo;) נשרה <b style={{ color: C.red }}>25%</b> (הוצגה→ענו) — פי 3-12 מכל שאר השאלות (2-8%).
+            היעד של הסדר החדש: להוריד משמעותית את הנשירה בשאלה הראשונה.
+          </div>
         </div>
+
+        {/* OLD order funnel — pre-reorder events (phases out past the 14-day window) */}
+        <FunnelTable
+          title="המשפך — סדר ישן (עד 19.7) · 14 יום"
+          sub="נתוני הסדר הקודם. מתרוקן ככל שהאירועים יוצאים מחלון 14 הימים — הבייסליין למעלה נשמר קבוע."
+          rows={rowsOld}
+        />
 
         {/* daily trend */}
         <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20, marginBottom: 26 }}>

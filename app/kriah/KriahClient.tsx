@@ -122,7 +122,18 @@ interface Question {
   extraHint?: string;   // Q3 width line for people without clients yet
 }
 
+// Order (2026-07-19): open with the easiest, most concrete, external question
+// (gratitude) instead of the abstract flow-state one — the old opener lost ~25%
+// (shown->answered) vs 2-8% for every later question. Only the first three are
+// permuted; hard_period/what_helped/message_to_past stay at positions 4/5/6 so
+// the breath line, skip, Q5-conditional and probe logic (all keyed) are untouched.
 const QUESTIONS: Question[] = [
+  {
+    key:   "gratitude_mirror",
+    label: "על מה אנשים מודים לך הכי הרבה?",
+    hint:  "לא מה שכתוב באתר. תודה אחת אמיתית: מי אמר, מה בדיוק נאמר, ומה השתנה אצלו.",
+    extraHint: "תודה אמיתית נחשבת גם מחבר, קולגה, או אדם שעזרת לו בדרך.",
+  },
   {
     key:   "flow_zone",
     label: "רגע שבו שכחת מהזמן",
@@ -132,12 +143,6 @@ const QUESTIONS: Question[] = [
     key:   "effortless_mastery",
     label: "מה הדבר שאנשים עוצרים לידו ואומרים לך \"רגע, מאיפה היכולת הזאת?\"",
     hint:  "מתי לאחרונה מישהו שאל אותך את זה, ומה עשית שם? ואם אין לך תשובה מסודרת, זה בדיוק הסימן.",
-  },
-  {
-    key:   "gratitude_mirror",
-    label: "על מה אנשים מודים לך הכי הרבה?",
-    hint:  "לא מה שכתוב באתר. תודה אחת אמיתית: מי אמר, מה בדיוק נאמר, ומה השתנה אצלו.",
-    extraHint: "תודה אמיתית נחשבת גם מחבר, קולגה, או אדם שעזרת לו בדרך.",
   },
   {
     key:   "hard_period",
@@ -310,7 +315,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
       const body = JSON.stringify({
         type: "FUNNEL_STEP",
         ...(anonymousId ? { anonymous_id: anonymousId } : {}),
-        metadata: { step, instrument: "v2_funnel", is_test: isTest },
+        metadata: { step, instrument: "v2_funnel", is_test: isTest, q_order: 2 },
       });
       const blob = new Blob([body], { type: "application/json" });
       if (!navigator.sendBeacon("/api/events", blob)) {
@@ -468,7 +473,7 @@ export function KriahClient({ previewKey, isTest }: Props) {
   }, []);
 
   const startQuestions = () => {
-    track("q1_flow_zone_shown");
+    track(`q1_${QUESTIONS[0].key}_shown`); // reflects the actual first question
     setScreen("q");
     setQIdx(0);
     window.scrollTo({ top: 0, behavior: "smooth" });
