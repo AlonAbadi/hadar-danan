@@ -29,6 +29,7 @@ export interface VisitorData {
   waPhone: string;
   token: string;
   firstReelEnabled: boolean;
+  firstReelReady: boolean;
 }
 
 const LOCK = (
@@ -370,10 +371,12 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                     borderRadius: 12, padding: "13px 30px", textDecoration: "none",
                   }}
                 >
-                  לצלם את הסרטון הראשון עכשיו, חינם 🎬
+                  {data.firstReelReady ? "הרילס הראשון שלך מוכן, לצפייה 🎉" : "לצלם את הסרטון הראשון עכשיו, חינם 🎬"}
                 </a>
                 <p style={{ color: "#9E9990", fontSize: 12.5, marginTop: 8 }}>
-                  15 שניות, התסריט שלך על המסך, הסרטון נשאר אצלך
+                  {data.firstReelReady
+                    ? "עם כתוביות מסונכרנות. שמור לך כאן, אפשר גם לצלם מחדש"
+                    : "15 שניות, התסריט שלך על המסך, הסרטון נשאר אצלך"}
                 </p>
               </div>
             ) : null}

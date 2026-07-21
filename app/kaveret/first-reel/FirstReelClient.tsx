@@ -137,18 +137,28 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     if (rec.isRecording && rec.elapsedMs > HARD_STOP_MS) rec.stopRecording();
   }, [rec, rec.isRecording, rec.elapsedMs]);
 
-  // ── script ──
+  // ── script + existing render (the reel must never disappear on return) ──
   useEffect(() => {
     track("FIRST_REEL_VIEW", extractionId);
     (async () => {
       try {
-        const res = await fetch(`/api/signal/${extractionId}/first-reel?t=${encodeURIComponent(token)}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
+        const [scriptRes, statusRes] = await Promise.all([
+          fetch(`/api/signal/${extractionId}/first-reel?t=${encodeURIComponent(token)}`),
+          fetch(`/api/signal/${extractionId}/first-reel/status?t=${encodeURIComponent(token)}`),
+        ]);
+        const data = await scriptRes.json();
+        if (!scriptRes.ok) throw new Error(data.error);
         setTitle(data.title);
         setScript(data.script);
         if (data.language === "en") setLanguage("en");
-        setPhase("prep");
+        const st = await statusRes.json().catch(() => ({}));
+        if (st.status === "ready" && st.url) {
+          setFinalUrl(st.url);
+          setDownloadUrl(st.downloadUrl ?? st.url);
+          setPhase("result");
+        } else {
+          setPhase("prep");
+        }
       } catch {
         setPhase("error");
       }
@@ -311,17 +321,42 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   const offerHref = `/kaveret/i?t=${encodeURIComponent(token)}#kaveret-offer`;
   const scriptShape = toScriptShape(script);
 
+  // The complete package, mirrored from /signal-hive (keep in sync with
+  // app/signal-hive/page.tsx FOLDERS) + the challenge live session.
+  const FOLDERS: [string, string, string][] = [
+    ["0", "לוח האות", "האות שלך, הכאב שהוא פותר, ההבטחה והקהל, במקום אחד"],
+    ["1", "אתגר האות · 7 ימים", "שבעה שיעורי עומק עם הדר, ממוסגרים סביב האות שלך + מפגש חי בזום"],
+    ["2", "ערכת תוכן", "7 כיווני-תוכן וספריית פתיחות, כולם נגזרים מהאות שלך"],
+    ["3", "ערכת ויזואל", "כרטיסי האות מוכנים לשיתוף + 7 כיווני-צילום"],
+    ["4", "הבמאית", "7 בימויים אישיים, בדיוק כמו הסרטון שרק עשית, עם הכתוביות"],
+  ];
+
   const Upsell = () => (
-    <div style={{ maxWidth: 440, background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid #C9964A55", borderRadius: 16, padding: "22px 24px" }}>
-      <div style={{ fontSize: 12, letterSpacing: 2, color: "#9E7C3A", marginBottom: 8 }}>כוורת האות</div>
-      <p style={{ fontSize: 15, lineHeight: 1.85, margin: "0 0 10px", textAlign: "right" }}>
+    <div style={{ maxWidth: 460, width: "100%", background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid #C9964A55", borderRadius: 16, padding: "24px 22px", textAlign: "right" }}>
+      <div style={{ fontSize: 12, letterSpacing: 2, color: "#9E7C3A", marginBottom: 6, textAlign: "center" }}>כוורת האות</div>
+      <p style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.7, margin: "0 0 14px", textAlign: "center" }}>
         ככה עובדת הבמאית, על כל סרטון שלך.
+        <br />
+        <span style={gold}>וזה רק חלק אחד מחמישה.</span>
       </p>
-      <div style={{ textAlign: "right", fontSize: 14, lineHeight: 1.85, margin: "0 0 14px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+        {FOLDERS.map(([n, t, d]) => (
+          <div key={n} style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "#14182066", borderRadius: 10, padding: "10px 12px" }}>
+            <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 13, border: "1px solid #C9964A66", color: "#E8B94A", fontSize: 12.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
+            <span style={{ minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 700, color: "#EDE9E1" }}>{t}</span>
+              <span style={{ display: "block", fontSize: 12.5, color: "#9E9990", lineHeight: 1.6 }}>{d}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+      <div style={{ borderTop: "1px solid #2C323E", paddingTop: 14, fontSize: 14, lineHeight: 1.85 }}>
         <p style={{ margin: "0 0 10px" }}>
           <strong style={gold}>מה מקבלים עכשיו, בתשלום אחד של 590₪:</strong>
           <br />
-          כל 7 הסרטונים של העונה הראשונה, כתובים מהאות שלך, עם הבמאית והכתוביות. בלי התחייבות נוספת.
+          את כל חמש התיקיות, כולן נגזרות מהאות שלך. בלי התחייבות נוספת.
+          <br />
+          <span style={{ color: "#7FD49B", fontSize: 13 }}>ואם ממשיכים לסדנה, כל ה-590₪ מתקזזים ממחירה.</span>
         </p>
         <p style={{ margin: 0, color: "#9E9990" }}>
           <strong style={{ color: "#EDE9E1" }}>ומה בהמשך, רק אם תרצו:</strong>
@@ -329,7 +364,9 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
           אנחנו ממשיכים לייצר לכם תוכן, פוסטים וסרטונים, ב-99₪ לחודש. מפסיקים מתי שרוצים.
         </p>
       </div>
-      <a href={offerHref} style={goldBtn}>לפתוח את הכוורת ←</a>
+      <div style={{ textAlign: "center", marginTop: 16 }}>
+        <a href="/signal-hive" style={goldBtn}>לפתוח את הכוורת ←</a>
+      </div>
     </div>
   );
 

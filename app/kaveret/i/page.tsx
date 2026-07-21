@@ -13,6 +13,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { CHALLENGE_DAYS } from "@/lib/challenge-config";
 import { verifyKaveretToken } from "@/lib/signal/kaveret-token";
 import { readResultTeasers } from "@/lib/signal/result-teasers";
+import { readFirstReelRender } from "@/lib/signal/first-reel-pipeline";
 import { KaveretVisitorClient, type VisitorData } from "../KaveretVisitorClient";
 
 export const dynamic = "force-dynamic";
@@ -73,6 +74,7 @@ async function buildVisitorData(extractionId: string, token: string): Promise<Vi
     waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
     token,
     firstReelEnabled: Boolean(process.env.FIRST_REEL_CAMERA_ENABLED),
+    firstReelReady: readFirstReelRender(sig).status === "ready",
   };
 }
 
