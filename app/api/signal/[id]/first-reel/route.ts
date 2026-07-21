@@ -25,5 +25,9 @@ export async function GET(
   if (!reel) {
     return NextResponse.json({ error: "התסריט עוד לא מוכן, נסו שוב עוד רגע" }, { status: 503 });
   }
-  return NextResponse.json({ title: reel.title, script: reel.script });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = (await import("@/lib/supabase/server")).createServerClient() as any;
+  const { data: ext } = await db.from("signal_extractions").select("signal").eq("id", id).maybeSingle();
+  const language = ext?.signal?.language === "en" ? "en" : "he";
+  return NextResponse.json({ title: reel.title, script: reel.script, language });
 }

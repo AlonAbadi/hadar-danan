@@ -52,7 +52,17 @@ export async function setFirstReelRender(extractionId: string, render: FirstReel
   });
 }
 
-export async function runFirstReelPipeline(extractionId: string, takePath: string): Promise<void> {
+export interface FirstReelTrims {
+  durationMs?: number | null;   // client-measured take duration
+  trimStartMs?: number | null;  // client RMS voice-analysis suggestion (wins, like the member flow)
+  trimEndMs?: number | null;
+}
+
+export async function runFirstReelPipeline(
+  extractionId: string,
+  takePath: string,
+  clientTrims: FirstReelTrims = {},
+): Promise<void> {
   const db = createServerClient() as any;
   const jobId = `first-reel-${extractionId}-${Date.now()}`;
   const dir = scratchDir(jobId);
@@ -111,14 +121,21 @@ export async function runFirstReelPipeline(extractionId: string, takePath: strin
     const broken = transcriptLooksBroken(words, lines, language);
     if (broken) throw new Error(`broken_transcript:${broken}`);
 
-    // ── trim from Whisper word bounds (the member pipeline's fallback path) ──
-    const whisperStart = words.length ? Math.max(0, words[0].s - 250) : 0;
-    const whisperEnd = words.length ? words[words.length - 1].e + 350 : 0;
-    const trimStart = whisperStart;
-    const trimEnd = whisperEnd > trimStart + 1000
-      ? (durationMs > 0 ? Math.min(whisperEnd, durationMs) : whisperEnd)
-      : durationMs || 0;
-    const trimmedMs = trimEnd > trimStart ? trimEnd - trimStart : durationMs;
+    // ── trims: client RMS analysis wins, Whisper word bounds are the
+    // fallback and the sanity clamp (identical to the member transcribe stage) ──
+    const takeDurationMs = clientTrims.durationMs && clientTrims.durationMs > 0
+      ? clientTrims.durationMs
+      : durationMs;
+    const whisperStart = Math.max(0, words[0].s - 250);
+    const whisperEnd = words[words.length - 1].e + 350;
+    const rawStart = clientTrims.trimStartMs ?? whisperStart;
+    const rawEnd = Math.min(
+      clientTrims.trimEndMs ?? whisperEnd,
+      takeDurationMs > 0 ? takeDurationMs : whisperEnd,
+    );
+    const trimStart = Math.max(0, Math.min(rawStart, whisperStart + 2000));
+    const trimEnd = Math.max(rawEnd, whisperEnd - 2000);
+    const trimmedMs = trimEnd > trimStart ? trimEnd - trimStart : takeDurationMs;
 
     // ── stage B: burn (identical framing + ASS + encode) ──
     const dims = await probeVideoDims(inputPath);

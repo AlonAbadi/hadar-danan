@@ -25,7 +25,12 @@ export async function POST(
 
   const db = createServerClient();
   try {
-    const { path } = (await req.json().catch(() => ({}))) as { path?: string };
+    const { path, duration_ms, trim_start_ms, trim_end_ms } = (await req.json().catch(() => ({}))) as {
+      path?: string;
+      duration_ms?: number | null;
+      trim_start_ms?: number | null;
+      trim_end_ms?: number | null;
+    };
     // The token only authorizes takes inside this extraction's own prefix.
     if (!path || !path.startsWith(`first-reel/${id}/`) || path.includes("..")) {
       return NextResponse.json({ error: "נתיב לא תקין" }, { status: 400 });
@@ -38,7 +43,11 @@ export async function POST(
     }
 
     await setFirstReelRender(id, { status: "processing", take_path: path, at: new Date().toISOString() });
-    waitUntil(runFirstReelPipeline(id, path));
+    waitUntil(runFirstReelPipeline(id, path, {
+      durationMs: typeof duration_ms === "number" ? duration_ms : null,
+      trimStartMs: typeof trim_start_ms === "number" ? trim_start_ms : null,
+      trimEndMs: typeof trim_end_ms === "number" ? trim_end_ms : null,
+    }));
     return NextResponse.json({ ok: true }, { status: 202 });
   } catch (err) {
     await db.from("error_logs").insert({
