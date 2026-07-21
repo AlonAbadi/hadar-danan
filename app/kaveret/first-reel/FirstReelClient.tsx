@@ -170,17 +170,35 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   }, [blobUrl, startCamera]);
 
   // ── send to the engine + poll ──
+  // The take uploads DIRECTLY to storage via a signed URL (Vercel's 4.5MB
+  // request limit rejects real takes; the member product solved this the
+  // same way with TUS). Then a tiny process call kicks the render.
   const submitTake = useCallback(async () => {
     const blob = blobRef.current;
     if (!blob) return;
     setPhase("uploading");
     try {
-      const up = await fetch(`/api/signal/${extractionId}/first-reel/upload?t=${encodeURIComponent(token)}`, {
+      const urlRes = await fetch(`/api/signal/${extractionId}/first-reel/upload?t=${encodeURIComponent(token)}`, {
         method: "POST",
-        headers: { "Content-Type": mimeRef.current },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mime: mimeRef.current }),
+      });
+      const { uploadUrl, path } = await urlRes.json();
+      if (!urlRes.ok || !uploadUrl) throw new Error("upload url failed");
+
+      const put = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": mimeRef.current, "x-upsert": "true" },
         body: blob,
       });
-      if (!up.ok) throw new Error("upload failed");
+      if (!put.ok) throw new Error("storage upload failed");
+
+      const proc = await fetch(`/api/signal/${extractionId}/first-reel/process?t=${encodeURIComponent(token)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path }),
+      });
+      if (!proc.ok) throw new Error("process failed");
       setPhase("processing");
       track("FIRST_REEL_SUBMITTED", extractionId);
 
@@ -218,13 +236,21 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   const Upsell = () => (
     <div style={{ maxWidth: 440, background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid #C9964A55", borderRadius: 16, padding: "22px 24px" }}>
       <div style={{ fontSize: 12, letterSpacing: 2, color: "#9E7C3A", marginBottom: 8 }}>כוורת האות</div>
-      <p style={{ fontSize: 15, lineHeight: 1.8, margin: "0 0 14px" }}>
+      <p style={{ fontSize: 15, lineHeight: 1.85, margin: "0 0 14px", textAlign: "right" }}>
         ככה עובדת הבמאית, על כל סרטון שלך.
-        <br />
-        <strong style={S.gold}>בחבילה: כל 7 הסרטונים של העונה הראשונה, כתובים מהאות שלך, ב-590₪.</strong>
-        <br />
-        רוצים שנמשיך לייצר לכם תוכן, פוסטים וסרטונים? 99₪ לחודש, לבחירתכם.
       </p>
+      <div style={{ textAlign: "right", fontSize: 14, lineHeight: 1.85, margin: "0 0 14px" }}>
+        <p style={{ margin: "0 0 10px" }}>
+          <strong style={S.gold}>מה מקבלים עכשיו, בתשלום אחד של 590₪:</strong>
+          <br />
+          כל 7 הסרטונים של העונה הראשונה, כתובים מהאות שלך, עם הבמאית והכתוביות. בלי התחייבות נוספת.
+        </p>
+        <p style={{ margin: 0, color: "#9E9990" }}>
+          <strong style={{ color: "#EDE9E1" }}>ומה בהמשך, רק אם תרצו:</strong>
+          <br />
+          אנחנו ממשיכים לייצר לכם תוכן, פוסטים וסרטונים, ב-99₪ לחודש. מפסיקים מתי שרוצים.
+        </p>
+      </div>
       <a href={offerHref} style={S.btn}>לפתוח את הכוורת ←</a>
     </div>
   );

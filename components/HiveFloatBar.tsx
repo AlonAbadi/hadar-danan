@@ -36,8 +36,11 @@ export function HiveFloatBar() {
       if (y < 90) { setMini(false); acc.current = 0; return; }
       if ((dy > 0 && acc.current < 0) || (dy < 0 && acc.current > 0)) acc.current = 0;
       acc.current += dy;
-      if (acc.current > 24) setMini(false);
-      else if (acc.current < -24) setMini(true);
+      // Scroll down → shrink to mini, scroll up → expand (per Alon 2026-07-21:
+      // the earlier direction swap was a mistake; this is the canonical
+      // behavior for all our floating bars)
+      if (acc.current > 24) setMini(true);
+      else if (acc.current < -24) setMini(false);
     };
     addEventListener("scroll", onScroll, { passive: true });
     return () => removeEventListener("scroll", onScroll);

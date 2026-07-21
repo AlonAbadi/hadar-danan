@@ -9,7 +9,7 @@
 // teleprompter demo with the lead's actual first script hook.
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import sty from "./kaveret.module.css";
 
 export interface VisitorData {
@@ -57,6 +57,26 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
   const f = data.gender === "f";
   const sale = data.offer !== "sensitive";
   const [assetOk, setAssetOk] = useState(true);
+  // The offer bar breathes like every floating bar on the site (scroll down
+  // shrinks it, scroll up expands it) and never disappears.
+  const [mini, setMini] = useState(false);
+  const lastY = useRef(0);
+  const acc = useRef(0);
+  useEffect(() => {
+    lastY.current = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const dy = y - lastY.current;
+      lastY.current = y;
+      if (y < 90) { setMini(false); acc.current = 0; return; }
+      if ((dy > 0 && acc.current < 0) || (dy < 0 && acc.current > 0)) acc.current = 0;
+      acc.current += dy;
+      if (acc.current > 24) setMini(true);
+      else if (acc.current < -24) setMini(false);
+    };
+    addEventListener("scroll", onScroll, { passive: true });
+    return () => removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     // presence beacon — one row per view, the unification's success metric
@@ -359,8 +379,10 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
             <div>
               <span className={sty.vPct}>{HIVE_PRICE.pct}% הנחה</span>
             </div>
-            <div className={sty.vPnote}>
-              590₪ לחבילה המלאה · ובהמשך, אם תרצו שנמשיך לייצר לכם תוכן, פוסטים וסרטונים: 99₪ לחודש
+            <div className={sty.vPnote} style={{ lineHeight: 1.8 }}>
+              <strong style={{ color: "#EDE9E1" }}>מה מקבלים עכשיו, בתשלום אחד:</strong> כל העונה הראשונה. בלי התחייבות נוספת.
+              <br />
+              <strong style={{ color: "#EDE9E1" }}>ומה בהמשך, רק אם תרצו:</strong> 99₪ לחודש להמשך ייצור תוכן, פוסטים וסרטונים. מפסיקים מתי שרוצים.
             </div>
             <a className={sty.vGo} href={hiveHref}>
               פותחים את הכוורת
@@ -428,35 +450,53 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
 
       {/* sticky conversion bar */}
       {data.offer === "hive" ? (
-        <div className={sty.vSticky}>
-          <div className={sty.vStickyIn}>
-            <span className={sty.vStickyT}>
-              <span className={sty.vStickyA}>
+        <nav className={`${sty.tabbar} ${mini ? sty.mini : ""}`} aria-label="ההצעה שלך" dir="rtl">
+          <a
+            href={hiveHref}
+            style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+              textDecoration: "none", color: "#EDE9E1", padding: "8px 10px", minHeight: 52,
+            }}
+          >
+            <span style={{ textAlign: "right", minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 800, lineHeight: 1.25 }}>
                 כוורת האות · ₪{HIVE_PRICE.now}{" "}
-                <span style={{ textDecoration: "line-through", color: "#9E9990", fontWeight: 400, fontSize: 12.5 }}>
-                  ₪{HIVE_PRICE.was}
-                </span>
+                <span style={{ textDecoration: "line-through", color: "#9E9990", fontWeight: 400, fontSize: 12 }}>₪{HIVE_PRICE.was}</span>
               </span>
-              <span className={sty.vStickyB}>{HIVE_PRICE.pct}% הנחה · ובהמשך 99₪ לחודש לעוד תוכן, לבחירתכם</span>
+              <span style={{ display: "block", fontSize: 11.5, color: "#A9A49B", lineHeight: 1.3 }}>
+                תשלום אחד, כל העונה הראשונה · בלי התחייבות
+              </span>
             </span>
-            <a className={sty.vStickyGo} href={hiveHref}>
-              לפתוח
-            </a>
-          </div>
-        </div>
+            <span style={{
+              flexShrink: 0, background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+              color: "#0D1018", fontWeight: 800, fontSize: 12.5, borderRadius: 999, padding: "8px 16px", whiteSpace: "nowrap",
+            }}>
+              לפתוח ←
+            </span>
+          </a>
+        </nav>
       ) : null}
       {data.offer === "strategy" ? (
-        <div className={sty.vSticky}>
-          <div className={sty.vStickyIn}>
-            <span className={sty.vStickyT}>
-              <span className={sty.vStickyA}>פגישת אסטרטגיה עם הדר</span>
-              <span className={sty.vStickyB}>הכוורת כולה כלולה בליווי</span>
+        <nav className={`${sty.tabbar} ${mini ? sty.mini : ""}`} aria-label="ההצעה שלך" dir="rtl">
+          <a
+            href={strategyHref}
+            style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+              textDecoration: "none", color: "#EDE9E1", padding: "8px 10px", minHeight: 52,
+            }}
+          >
+            <span style={{ textAlign: "right", minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 800, lineHeight: 1.25 }}>פגישת אסטרטגיה עם הדר</span>
+              <span style={{ display: "block", fontSize: 11.5, color: "#A9A49B", lineHeight: 1.3 }}>הכוורת כולה כלולה בליווי</span>
             </span>
-            <a className={sty.vStickyGo} href={strategyHref}>
-              לקבוע פגישה
-            </a>
-          </div>
-        </div>
+            <span style={{
+              flexShrink: 0, background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+              color: "#0D1018", fontWeight: 800, fontSize: 12.5, borderRadius: 999, padding: "8px 16px", whiteSpace: "nowrap",
+            }}>
+              לקבוע ←
+            </span>
+          </a>
+        </nav>
       ) : null}
     </div>
   );
