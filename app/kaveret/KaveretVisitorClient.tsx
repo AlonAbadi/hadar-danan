@@ -57,6 +57,8 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
   const f = data.gender === "f";
   const sale = data.offer !== "sensitive";
   const [assetOk, setAssetOk] = useState(true);
+  // הקריאה המלאה renders as an accordion - headers only, tap to read
+  const [openReading, setOpenReading] = useState<string | null>(null);
   // The offer bar breathes like every floating bar on the site (scroll down
   // shrinks it, scroll up expands it) and never disappears.
   const [mini, setMini] = useState(false);
@@ -163,15 +165,38 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
             ["הקהל שלך", "למי האות הזה מדבר", data.people],
           ]
             .filter(([, , v]) => v)
-            .map(([t, p, v]) => (
-              <div className={sty.trow} key={t as string}>
-                <div className={sty.head}>
-                  <span className={sty.plat}>{t}</span>
-                  <span className={sty.check}>{p}</span>
+            .map(([t, p, v]) => {
+              const open = openReading === t;
+              return (
+                <div className={sty.trow} key={t as string}>
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() => setOpenReading(open ? null : (t as string))}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      width: "100%", background: "none", border: "none", padding: 0,
+                      cursor: "pointer", fontFamily: "inherit", textAlign: "right", gap: 10,
+                    }}
+                  >
+                    <span className={sty.head} style={{ flex: 1 }}>
+                      <span className={sty.plat}>{t}</span>
+                      <span className={sty.check}>{p}</span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        color: "#C9964A", fontSize: 15, flexShrink: 0,
+                        transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s",
+                      }}
+                    >
+                      ▾
+                    </span>
+                  </button>
+                  {open ? <p className={sty.txt}>{v}</p> : null}
                 </div>
-                <p className={sty.txt}>{v}</p>
-              </div>
-            ))}
+              );
+            })}
           {data.directions.length ? (
             <div className={sty.trow}>
               <div className={sty.head}>
