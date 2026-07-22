@@ -40,9 +40,10 @@ export async function GET(req: NextRequest) {
     const got = Buffer.from(token);
     if (email && expected.length === got.length && timingSafeEqual(expected, got)) {
       const supabase = createServerClient();
+      const sv = (p.get("sv") ?? "").replace(/[^a-z]/g, "").slice(0, 2) || null;
       await supabase.from("events").insert({
         type: "LEGACY_EMAIL_CLICKED",
-        metadata: { email, wave: Number(wave), email_num: Number(emailNum), src: "first-party", at: new Date().toISOString() },
+        metadata: { email, wave: Number(wave), email_num: Number(emailNum), subject_variant: sv, src: "first-party", at: new Date().toISOString() },
       });
     }
   } catch {

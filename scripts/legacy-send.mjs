@@ -38,6 +38,14 @@ const FROM = "הדר דנן <hadar@news.beegood.online>";
 const SITE = "https://www.beegood.online";
 const GATE_BOUNCE = 0.08, GATE_COMPLAINT = 0.001;
 
+// Wave-3 subject test: 3-way split, measured by unique first-party clicks
+// (sv param on the tracked link). null = the template subject (control).
+const SUBJECT_VARIANTS = [
+  { key: "a", subject: null },
+  { key: "b", subject: "השיווק שלך לא נכשל בגלל הסרטונים" },
+  { key: "c", subject: "{{name}}, מה באמת מייחד אותך?" },
+];
+
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
 const opt = (name, dflt) => { const i = args.indexOf(`--${name}`); return i >= 0 ? args[i + 1] : dflt; };
@@ -153,15 +161,20 @@ function renderEmail(tpl, contact, emailNum, wave) {
   const unsub = `${SITE}/api/legacy/unsubscribe?e=${encodeURIComponent(contact.email)}&t=${unsubToken(contact.email)}`;
   // first-party click tracker: records the exact contact, then 302s to /signal with the UTM chain
   const e64 = Buffer.from(contact.email.toLowerCase()).toString("base64url");
-  const signal = `${SITE}/api/legacy/c?e=${e64}&t=${unsubToken(contact.email)}&w=${wave}&n=${emailNum}`;
+  const sv = contact.subjectVariant ? `&sv=${contact.subjectVariant}` : "";
+  const signal = `${SITE}/api/legacy/c?e=${e64}&t=${unsubToken(contact.email)}&w=${wave}&n=${emailNum}${sv}`;
   const html = tpl.html
     .replaceAll("{{name}}", firstName || "שלום")
     .replaceAll("{{signal_url}}", signal)
     .replaceAll("{{unsub_url}}", unsub);
+  let subject = tpl.subject;
+  if (contact.subjectOverride) {
+    subject = contact.subjectOverride.replaceAll("{{name}}", firstName || "רגע");
+  }
   return {
     from: FROM,
     to: [contact.email],
-    subject: tpl.subject,
+    subject,
     html,
     headers: {
       "List-Unsubscribe": `<${unsub}>`,
@@ -202,6 +215,25 @@ async function cmdStatus() {
   console.log(`\ngates:`);
   for (const l of gates(st).lines) console.log(`  ${l}`);
   for (const w of state.waves) console.log(`wave ${w.n}: ${w.size} sent at ${w.at}`);
+  // subject A/B: sent per variant (ledger) vs unique clickers per variant (server events)
+  const variantSent = {};
+  for (const c of Object.values(state.contacts)) {
+    if (c.subject_variant) variantSent[c.subject_variant] = (variantSent[c.subject_variant] ?? 0) + 1;
+  }
+  if (Object.keys(variantSent).length) {
+    const clickRows = await sbAll("events?select=metadata&type=eq.LEGACY_EMAIL_CLICKED");
+    const variantClicks = {};
+    const seen = new Set();
+    for (const r of clickRows) {
+      const v = r.metadata?.subject_variant, e = r.metadata?.email;
+      if (v && e && !seen.has(v + e)) { seen.add(v + e); variantClicks[v] = (variantClicks[v] ?? 0) + 1; }
+    }
+    console.log("\nsubject test:");
+    for (const [v, n] of Object.entries(variantSent).sort()) {
+      const clicks = variantClicks[v] ?? 0;
+      console.log(`  ${v}: sent ${n} | clicks ${clicks} (${((clicks / n) * 100).toFixed(2)}%)`);
+    }
+  }
 }
 
 async function cmdTest(to) {
@@ -233,12 +265,17 @@ async function cmdSend(size, dry) {
 
   const wave = (state.waves.at(-1)?.n ?? 0) + 1;
   const tpl = loadTemplate(1);
-  console.log(`wave ${wave}: sending email1 to ${eligible.length} contacts${dry ? " (DRY RUN)" : ""}`);
-  const results = await sendBatch(eligible.map((c) => renderEmail(tpl, c, 1, wave)), dry);
+  // round-robin subject variants across the wave
+  const withVariants = eligible.map((c, i) => {
+    const v = SUBJECT_VARIANTS[i % SUBJECT_VARIANTS.length];
+    return { ...c, subjectVariant: v.key, subjectOverride: v.subject };
+  });
+  console.log(`wave ${wave}: sending email1 to ${eligible.length} contacts${dry ? " (DRY RUN)" : ""} (subjects: ${SUBJECT_VARIANTS.map(v=>v.key).join("/")})`);
+  const results = await sendBatch(withVariants.map((c) => renderEmail(tpl, c, 1, wave)), dry);
   if (!dry) {
     const now = new Date().toISOString();
-    eligible.forEach((c, i) => {
-      state.contacts[c.email] = { ...(state.contacts[c.email] ?? {}), name: c.name, wave, sent1_at: now, sent1_id: results[i]?.id };
+    withVariants.forEach((c, i) => {
+      state.contacts[c.email] = { ...(state.contacts[c.email] ?? {}), name: c.name, wave, sent1_at: now, sent1_id: results[i]?.id, subject_variant: c.subjectVariant };
     });
     state.waves.push({ n: wave, size: eligible.length, at: now });
     saveState(state);
