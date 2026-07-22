@@ -75,7 +75,7 @@ export function BroadcastShowcase() {
           </li>
           <li>
             <span className="nh-br-n">2</span>
-            <span className="nh-br-txt"><b>שבעה תסריטים נכתבים מהאות</b><span>בקול שלכם. לא תבנית, לא השראה מפינטרסט.</span></span>
+            <span className="nh-br-txt"><b>שבעה תסריטים נכתבים מהאות</b><span>בקול שלכם. לא תבנית, לא השראה מאינסטגרם.</span></span>
           </li>
           <li>
             <span className="nh-br-n">3</span>
