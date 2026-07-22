@@ -50,7 +50,13 @@ export default function SocialProofStrip() {
           <div className="flex items-center gap-3 shrink-0 md:order-3 order-1">
             <GoogleG />
             <div className="flex items-center gap-1.5">
-              <span className="text-[#E8B94A] text-base leading-none tracking-wider">★★★★★</span>
+              <span className="flex items-center gap-0.5 leading-none" aria-label="5 כוכבים">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <svg key={i} width="15" height="15" viewBox="0 0 24 24" fill="#E8B94A" aria-hidden>
+                    <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8L12 2z" />
+                  </svg>
+                ))}
+              </span>
               <span className="text-[#EDE9E1] font-bold text-base">{AGGREGATE.rating.toFixed(1)}</span>
               <span className="text-[#AAB0BD] text-base">· {REVIEWS.length} ביקורות</span>
             </div>

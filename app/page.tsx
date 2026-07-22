@@ -88,7 +88,6 @@ export default async function NewHome() {
               <TrackedCta dest="kriah" placement="hero" className="nh-gold nh-gold-hero" style={{ width: "100%", marginBottom: 10 }}>לגלות את האות שלי בחינם</TrackedCta>
               <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero" style={{ width: "100%" }}>לעבוד ישירות עם הדר</TrackedCta>
               <div className="nh-priceline" style={{ textAlign: "center", marginTop: 7 }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
-              <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
             </div>
           </div>
 
@@ -113,7 +112,6 @@ export default async function NewHome() {
                 <TrackedCta dest="strategy" placement="hero" className="nh-out nh-out-hero">לעבוד ישירות עם הדר</TrackedCta>
                 <div className="nh-priceline" style={{ textAlign: "center" }}>פגישת אסטרטגיה אישית החל מ־4,000 ₪</div>
               </div>
-              <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
             </div>
           </div>
         </section>
@@ -267,7 +265,6 @@ export default async function NewHome() {
               <TrackedCta dest="strategy" placement="final_cta" className="nh-gold nh-final-cta">לראות את פגישת האסטרטגיה</TrackedCta>
             </div>
           </div>
-          <div className="nh-trust">קריאה אישית · ללא עלות · ללא כרטיס אשראי</div>
         </section>
 
         {/* ══ Value ladder — deeper offerings ══ */}
