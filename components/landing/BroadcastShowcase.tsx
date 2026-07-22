@@ -28,13 +28,13 @@ const SCRIPT_LINES = [
   "לזה אנחנו קוראים האות שלכם.",
 ];
 
-export function BroadcastShowcase() {
+export function BroadcastShowcase({ showCta = true }: { showCta?: boolean } = {}) {
   const teased = KAVERET_SEASONS.slice(0, 4);
   const rest = KAVERET_SEASONS.length - teased.length;
   const totalEpisodes = KAVERET_SEASONS.reduce((n, s) => n + s.episodes, 0);
 
   return (
-    <section className="nh-section nh-br-sec">
+    <section className="nh-br-sec">
       <div className="nh-eyebrow2">המוצר הדיגיטלי · כוורת האות</div>
       <h2 className="nh-h2">
         חדר השידור שלכם. <span className="nh-gd">יום צילום, בטלפון.</span>
@@ -109,12 +109,14 @@ export function BroadcastShowcase() {
         </div>
       </div>
 
-      <div className="nh-br-ctawrap">
-        <TrackedCta dest="kriah" placement="broadcast" className="nh-gold nh-gold-hero">
-          לגלות את האות שלי בחינם
-        </TrackedCta>
-        <p className="nh-br-ctasub">מתחילים באבחון חינם. חדר השידור נבנה מהאות שלכם.</p>
-      </div>
+      {showCta ? (
+        <div className="nh-br-ctawrap">
+          <TrackedCta dest="kriah" placement="broadcast" className="nh-gold nh-gold-hero">
+            לגלות את האות שלי בחינם
+          </TrackedCta>
+          <p className="nh-br-ctasub">מתחילים באבחון חינם. חדר השידור נבנה מהאות שלכם.</p>
+        </div>
+      ) : null}
 
       <style>{BR_CSS}</style>
     </section>
@@ -122,7 +124,13 @@ export function BroadcastShowcase() {
 }
 
 const BR_CSS = `
-.nh-br-sec{text-align:center}
+.nh-br-sec{max-width:1080px;margin:0 auto;padding:64px 22px;text-align:center}
+.nh-br-sec .nh-eyebrow2{font-size:11px;letter-spacing:3px;font-weight:800;color:#C9964A;text-transform:uppercase;margin-bottom:14px;text-align:center}
+.nh-br-sec .nh-h2{font-size:clamp(25px,5.4vw,33px);font-weight:800;line-height:1.28;letter-spacing:-.3px;text-align:center;margin:0 0 26px;text-wrap:balance;color:#EDE9E1}
+.nh-br-sec .nh-gd{color:#E8B94A}
+.nh-br-sec .nh-gold{background:linear-gradient(180deg,#f4d27a 0%,#e8b942 52%,#d59b1f 100%);color:#2a1d05;font-weight:800;text-decoration:none;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;line-height:1.2;box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 -10px 22px rgba(157,110,12,.35) inset,0 18px 34px -12px rgba(214,155,31,.55),0 6px 14px -6px rgba(0,0,0,.55)}
+.nh-br-sec .nh-gold-hero{padding:16px 40px;font-size:1.05rem}
+@media(max-width:430px){.nh-br-sec{padding:48px 18px}}
 .nh-br-lead{max-width:640px;margin:14px auto 0;color:var(--muted,#9E9990);font-size:16px;line-height:1.8}
 .nh-br-grid{display:grid;grid-template-columns:auto 1fr;gap:40px;align-items:center;max-width:760px;margin:36px auto 0;text-align:right}
 .nh-br-phonewrap{justify-self:center;margin-inline:auto;text-align:center}

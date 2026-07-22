@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SignalHiveCTA } from "./SignalHiveCTA";
+import { BroadcastShowcase } from "@/components/landing/BroadcastShowcase";
 
 export const metadata: Metadata = {
   title: "כוורת האות — עכשיו מוציאים את האות לעולם | beegood",
@@ -91,6 +92,11 @@ export default function SignalHivePage() {
             </div>
           ))}
         </div>
+
+        {/* The digital product, shown running — same showcase as the homepage
+            (teleprompter phone mock + pipeline + seasons tease). No CTA here:
+            the price card below is this page's single call to action. */}
+        <BroadcastShowcase showCta={false} />
 
         {/* What comes after — links to the monthly subscription roadmap */}
         <div style={{ background: C.card, border: `1px solid ${C.line}`, borderRadius: 14, padding: "18px 20px", marginTop: 22, textAlign: "start" }}>

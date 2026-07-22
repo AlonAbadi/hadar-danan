@@ -31,21 +31,21 @@ export const metadata: Metadata = {
 const HEADLINE = "אם כולם אומרים את מה שאתם אומרים, למה שיבחרו דווקא בכם?";
 const LEDE = "מצאו את המסר שאי אפשר להעתיק, והפכו אותו לעסק שגדל, ללקוחות הנכונים ולתחושה טובה בעשייה.";
 
-type LadderItem = { title: string; price: string; original?: string; save?: string; tag?: string; href: string; img: string; pos: string; desc: string };
+type LadderItem = { title: string; price: string; original?: string; save?: string; tag?: string; href: string; desc: string };
 const LADDER: LadderItem[] = [
   {
     title: "כוורת האות", price: "590 ₪", original: "980 ₪", save: "40% הנחה", tag: "כולל את אתגר 7 הימים",
-    href: "/signal-hive", img: "/hive.jpg", pos: "center 26%",
+    href: "/signal-hive",
     desc: "שכבת ההפעלה: אתגר 7 הימים, ערכת תוכן וערכת ויזואל, ו-7 בימויים אישיים. הכל נגזר מהאות שלכם.",
   },
   {
     title: "הסדנה", price: "1,080 ₪", original: "1,800 ₪", save: "40% הנחה",
-    href: "/workshop", img: "/sadna.jpg", pos: "center 20%",
+    href: "/workshop",
     desc: "יום אחד בקבוצה קטנה. הופכים את האות לתוכן שמייצר תוצאות. סכום הכוורת מתקזז מהסדנה.",
   },
   {
     title: "יום צילום פרימיום", price: "14,000 ₪",
-    href: "/premium", img: "/shooting.jpg", pos: "center 28%",
+    href: "/premium",
     desc: "יום צילום מלא, אחד על אחד. 14 סרטונים מוכנים לפרסום, בנויים כולם סביב האות שלכם.",
   },
 ];
@@ -278,19 +278,16 @@ export default async function NewHome() {
           <div className="nh-ladder">
             {LADDER.map((p) => (
               <a key={p.href} href={p.href} className="nh-lcard">
-                <div className="nh-lcard-media">
-                  <img src={p.img} alt={p.title} loading="lazy" style={{ objectPosition: p.pos }} />
-                  <div className="nh-lcard-pricewrap">
-                    <span className="nh-lcard-price">{p.price}</span>
-                    {p.original && <span className="nh-lcard-was">{p.original}</span>}
-                  </div>
+                <div className="nh-lcard-top">
+                  <h3>{p.title}</h3>
                   {p.tag ? <span className="nh-lcard-tag">{p.tag}</span> : p.save ? <span className="nh-lcard-save">{p.save}</span> : null}
                 </div>
-                <div className="nh-lcard-body">
-                  <h3>{p.title}</h3>
-                  <p>{p.desc}</p>
-                  <span className="nh-lcard-cta">לפרטים ←</span>
+                <div className="nh-lcard-pricewrap">
+                  <span className="nh-lcard-price">{p.price}</span>
+                  {p.original && <span className="nh-lcard-was">{p.original}</span>}
                 </div>
+                <p className="nh-lcard-desc">{p.desc}</p>
+                <span className="nh-lcard-cta">לפרטים ←</span>
               </a>
             ))}
           </div>
@@ -546,19 +543,16 @@ const NH_CSS = `
 .nh-ladder-sec{max-width:1080px;margin:0 auto;padding:66px 22px}
 .nh-ladder-sec .nh-h2{margin-bottom:12px}
 .nh-ladder{display:grid;grid-template-columns:1fr;gap:18px;margin-top:32px}
-.nh-lcard{display:flex;flex-direction:column;border:1px solid var(--border);background:var(--card);border-radius:20px;overflow:hidden;text-decoration:none;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.nh-lcard{display:flex;flex-direction:column;border:1px solid var(--border);background:linear-gradient(165deg,rgba(232,185,74,.06),transparent 40%),var(--card);border-radius:20px;padding:22px 22px 20px;text-decoration:none;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
 .nh-lcard:hover{border-color:rgba(201,150,74,.5);transform:translateY(-3px);box-shadow:0 26px 50px -30px rgba(201,150,74,.4)}
-.nh-lcard-media{position:relative;aspect-ratio:4/3;overflow:hidden}
-.nh-lcard-media img{width:100%;height:100%;object-fit:cover;object-position:center 26%;display:block}
-.nh-lcard-media::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(8,12,20,.92),rgba(8,12,20,.12) 50%,transparent 74%)}
-.nh-lcard-pricewrap{position:absolute;bottom:13px;inset-inline-start:14px;z-index:1;display:flex;align-items:center;gap:9px}
+.nh-lcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.nh-lcard-top h3{font-size:19.5px;font-weight:800;color:var(--fg);margin:0}
+.nh-lcard-pricewrap{display:flex;align-items:center;gap:9px;margin-bottom:14px}
 .nh-lcard-price{font-size:15.5px;font-weight:800;color:#2a1d05;background:linear-gradient(180deg,#f4d27a,#d59b1f);border-radius:9999px;padding:5px 14px;box-shadow:0 8px 20px -8px rgba(0,0,0,.6)}
 .nh-lcard-was{font-size:13.5px;font-weight:700;color:#EDE9E1;text-decoration:line-through;text-decoration-color:rgba(232,185,74,.9);opacity:.72}
-.nh-lcard-save{position:absolute;top:12px;inset-inline-end:14px;z-index:1;font-size:12px;font-weight:800;color:var(--green);background:rgba(127,212,155,.16);border:1px solid rgba(127,212,155,.42);border-radius:9999px;padding:4px 11px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-.nh-lcard-tag{position:absolute;top:12px;inset-inline-end:14px;z-index:1;font-size:11.5px;font-weight:800;color:var(--green);background:rgba(127,212,155,.16);border:1px solid rgba(127,212,155,.42);border-radius:9999px;padding:4px 11px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-.nh-lcard-body{display:flex;flex-direction:column;flex:1;padding:20px 22px 22px}
-.nh-lcard-body h3{font-size:19.5px;font-weight:800;color:var(--fg);margin:0 0 8px}
-.nh-lcard-body p{font-size:14px;line-height:1.62;color:var(--muted);margin:0 0 16px;flex:1}
+.nh-lcard-save{font-size:12px;font-weight:800;color:var(--green);background:rgba(127,212,155,.16);border:1px solid rgba(127,212,155,.42);border-radius:9999px;padding:4px 11px}
+.nh-lcard-tag{font-size:11.5px;font-weight:800;color:var(--green);background:rgba(127,212,155,.16);border:1px solid rgba(127,212,155,.42);border-radius:9999px;padding:4px 11px}
+.nh-lcard-desc{font-size:14px;line-height:1.62;color:var(--muted);margin:0 0 16px;flex:1}
 .nh-lcard-cta{font-size:14.5px;font-weight:800;color:var(--gold-l)}
 @media(min-width:760px){.nh-ladder{grid-template-columns:repeat(3,1fr)}}
 .nh-videos-sec{padding:62px 0 20px}
