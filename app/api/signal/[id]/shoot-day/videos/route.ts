@@ -88,10 +88,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // pick a single sampling seed, so we key off the first requested number —
   // the small client (kaveret) already ships them one-by-one.
   const primaryVideo = numbers[0];
+  // Anthropic accepts temperature 0.0..1.0 (inclusive). 1.0 is the top;
+  // going higher throws 400 invalid_request. Opinion / story videos get
+  // the max; CTA gets low; the rest keep the model default.
   const temperature =
-    primaryVideo === 4 || primaryVideo === 6 ? 1.1 :
+    primaryVideo === 4 || primaryVideo === 6 ? 1.0 :
     primaryVideo === 7 ? 0.85 :
-    undefined; // V1/V2/V3/V5 keep the default
+    undefined;
   let text = "";
   try {
     text = await runPack(
