@@ -24,6 +24,14 @@ import { MobileNavServer } from "@/components/MobileNavServer";
 import { DesktopNavServer } from "@/components/DesktopNavServer";
 import { KaveretClient, type KaveretData } from "./KaveretClient";
 
+// 2026-07-22 Alon: emails that see the roadmap as if they had the infinite
+// (lifetime) subscription. Lowercased comparison. Move to a DB column once
+// the lifetime tier ships.
+const LIFETIME_EMAILS = new Set<string>([
+  "alonabadi9@gmail.com",
+  "hadard1113@gmail.com",
+]);
+
 export const dynamic = "force-dynamic";
 
 export const viewport: Viewport = {
@@ -68,6 +76,8 @@ const DEMO: KaveretData = {
   manifesto: "",
   letterFromHadar: null,
   pillars: null,
+  audienceQuotes: [],
+  unlockAllSeasons: false,
   takesPerScript: { 1: 1 },
   seasonUsed: 1,
   seasonCap: 7,
@@ -126,7 +136,7 @@ export default async function KaveretPage({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: userData } = await (db as any)
     .from("users")
-    .select("id, name, gender, hive_status")
+    .select("id, name, email, gender, hive_status")
     .eq("auth_id", authUser.id)
     .maybeSingle();
   if (!userData) redirect("/account");
@@ -323,6 +333,17 @@ export default async function KaveretPage({
       ? { body: String(letterFromHadar.body ?? ""), close: String(letterFromHadar.close ?? "") }
       : null,
     pillars: Array.isArray(shootDayPillars) ? shootDayPillars : null,
+    // 2026-07-22 Alon (Phase B): the customer's actual audience quotes,
+    // saved via POST /api/signal/[id]/audience-quotes. Empty array → we
+    // show the ask card on top of the episodes zone.
+    audienceQuotes: Array.isArray(signal.audience_quotes)
+      ? signal.audience_quotes.filter((q: unknown): q is string => typeof q === "string" && q.trim().length > 0)
+      : [],
+    // 2026-07-22 Alon: infinite-subscription preview allowlist. Members on
+    // this list see every future season in the roadmap as if it were
+    // active. Will move to a users.infinite_subscription column when the
+    // lifetime tier ships as a product.
+    unlockAllSeasons: LIFETIME_EMAILS.has((userData.email ?? "").toLowerCase()),
     reels: [],
     waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
     demo: false,

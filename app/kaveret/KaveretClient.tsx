@@ -48,6 +48,18 @@ export interface KaveretData {
   // an extra round-trip. null → per-row build button is hidden (customer
   // needs to run BuildShootDay first to seed phase 1).
   pillars: unknown[] | null;
+  // 2026-07-22 Alon (Phase B — Content Torah 17): quotes the customer's own
+  // audience has said, saved on signal.audience_quotes. When empty, we show
+  // an ask card at the top of zone 03; when populated the engine grounds
+  // hooks / anti-category in these on the next regen. Editable via
+  // POST /api/signal/[id]/audience-quotes.
+  audienceQuotes: string[];
+  // 2026-07-22 Alon: infinite-subscription preview. Flips every future season
+  // in the roadmap from "coming"/"future" to "live" so the customer can
+  // preview the full pipeline as if they were a lifetime member. Wired
+  // through by page.tsx by email allowlist for now; will move to a user
+  // column when the subscription product ships.
+  unlockAllSeasons: boolean;
   // Filming caps (Alon 2026-07-11). takesPerScript = live count of non-failed
   // edits per video_number; takesCap = the ceiling (3). seasonUsed = live
   // count across the entire season; seasonCap = the ceiling (7). Both bounds
@@ -708,6 +720,12 @@ export function KaveretClient({
                 7 פרקים בהתאמה אישית
               </span>
             </div>
+            {data.scripts.length > 0 && data.audienceQuotes.length === 0 && data.extractionId ? (
+              <AudienceQuotesCard
+                extractionId={data.extractionId}
+                onSaved={() => { window.location.reload(); }}
+              />
+            ) : null}
             {data.scripts.length === 0 ? (
               <div className={sty.trow}>
                 <BuildShootDay extractionId={data.extractionId} />
@@ -798,7 +816,7 @@ export function KaveretClient({
                 ) : null}
               </div>
 
-              <SeasonsRoadmap />
+              <SeasonsRoadmap unlockAll={data.unlockAllSeasons} />
             </div>
           ) : null}
 
@@ -1853,23 +1871,41 @@ function EpisodesList({
 // in lib/kaveret-seasons.ts. First season = live (current). One click on
 // any card opens a Netflix-style detail row with "what" + "why" copy.
 // ─────────────────────────────────────────────────────────────────────
-function SeasonsRoadmap() {
+function SeasonsRoadmap({ unlockAll = false }: { unlockAll?: boolean }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(unlockAll);
 
-  const seasons = KAVERET_SEASONS;
+  // 2026-07-22 Alon (infinite-subscription preview): when unlockAll is true,
+  // every season past #1 is presented as "unlocked" — visually treated like
+  // the current season, with a "פתוחה" pill. Season 1 stays "העונה שלכם"
+  // so the customer's active work is still the visual anchor.
+  const seasons: KaveretSeason[] = unlockAll
+    ? KAVERET_SEASONS.map((s) => (s.number === 1 ? s : { ...s, status: "live" as const }))
+    : KAVERET_SEASONS;
   const visible = showAll ? seasons : seasons.slice(0, 5);
   const openSeason = openIdx !== null ? seasons.find((s) => s.number === openIdx) ?? null : null;
 
-  const statusLabel = (s: KaveretSeason["status"]): string =>
-    s === "live" ? "העונה שלכם" : s === "next" ? "העונה הבאה" : s === "coming" ? "בקרוב" : "בהמשך";
+  const statusLabel = (s: KaveretSeason): string => {
+    if (s.number === 1) return "העונה שלכם";
+    if (unlockAll) return "פתוחה";
+    return s.status === "next" ? "העונה הבאה" : s.status === "coming" ? "בקרוב" : "בהמשך";
+  };
 
   return (
     <div className={sty.roadWrap}>
       <div className={sty.roadHead}>
         <span className={sty.roadTitle}>מפת העונות של המנוי</span>
+        {unlockAll ? (
+          <span style={{ fontSize: 11, letterSpacing: 2, color: "#7FD49B", fontWeight: 700, textTransform: "uppercase" }}>
+            מנוי לכל החיים · הכל פתוח
+          </span>
+        ) : null}
       </div>
-      <p className={sty.roadIntro}>{KAVERET_SEASONS_INTRO}</p>
+      <p className={sty.roadIntro}>
+        {unlockAll
+          ? "כל 10 העונות פתוחות לכם. בונים לפי הקצב שלכם, בלי לחכות לחודש הבא."
+          : KAVERET_SEASONS_INTRO}
+      </p>
       <div className={sty.roadStrip}>
         {visible.map((s) => (
           <button
@@ -1881,7 +1917,7 @@ function SeasonsRoadmap() {
           >
             <div className={sty.roadTop}>
               <span className={sty.roadNo}>עונה {String(s.number).padStart(2, "0")}</span>
-              <span className={sty.roadPill}>{statusLabel(s.status)}</span>
+              <span className={sty.roadPill}>{statusLabel(s)}</span>
             </div>
             <div className={sty.roadCardTitle}>{s.title}</div>
             <p className={sty.roadTag}>{s.tagline}</p>
@@ -1906,6 +1942,131 @@ function SeasonsRoadmap() {
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────
+// AudienceQuotesCard — the Content Torah stage-17 collection card. When
+// audience_quotes is empty on the customer's signal we show this at the
+// top of zone 03 asking for three real sentences their audience has said
+// (Hadar's own rule: content must be grounded in real audience data).
+// Save posts to /api/signal/[id]/audience-quotes, which persists on the
+// signal blob and drops the cached shoot-day so the next regen picks them
+// up. Skip button hides the card for this session only.
+// Alon 2026-07-22.
+// ─────────────────────────────────────────────────────────────────────
+function AudienceQuotesCard({ extractionId, onSaved }: { extractionId: string; onSaved: () => void }) {
+  const [quotes, setQuotes]   = useState<[string, string, string]>(["", "", ""]);
+  const [busy, setBusy]       = useState(false);
+  const [err, setErr]         = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+
+  const validCount = quotes.filter((q) => q.trim().length >= 3).length;
+
+  async function handleSave() {
+    if (validCount === 0) return;
+    setBusy(true); setErr(null);
+    try {
+      const r = await fetch(`/api/signal/${extractionId}/audience-quotes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quotes: quotes.filter((q) => q.trim().length >= 3) }),
+      });
+      if (!r.ok) throw new Error(`שמירה נכשלה (${r.status})`);
+      onSaved();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (dismissed) return null;
+
+  return (
+    <div style={{
+      marginBottom: 20,
+      padding: "22px 24px",
+      background: "linear-gradient(150deg, rgba(232,185,74,0.10), rgba(232,185,74,0.02) 65%, transparent)",
+      border: "1px solid rgba(232,185,74,0.4)",
+      borderRadius: 14,
+      color: "#EDE9E1",
+    }}>
+      <div style={{ color: "#E8B94A", fontSize: 11.5, letterSpacing: 2.5, fontWeight: 800, marginBottom: 10 }}>
+        לפני שנעשה עונה חדשה
+      </div>
+      <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.32, marginBottom: 8 }}>
+        כתוב 3 משפטים שלקוחות שלך אמרו לך שנצרבו אצלך בזיכרון.
+      </div>
+      <p style={{ fontSize: 13.5, color: "#9E9990", margin: "0 0 16px", lineHeight: 1.6 }}>
+        המנוע יבנה את הסרטונים סביב מה שהקהל שלך אומר בפועל — לא סביב מה שאני מנחש שהוא אומר. משפט אחד מספיק, שלושה יותר חזק.
+      </p>
+      {[0, 1, 2].map((i) => (
+        <textarea
+          key={i}
+          value={quotes[i]}
+          onChange={(e) => setQuotes((q) => { const c = [...q] as [string, string, string]; c[i] = e.target.value.slice(0, 240); return c; })}
+          placeholder={i === 0 ? "משפט 1 — משהו שלקוח אמר וקצת עצר אותך" : i === 1 ? "משפט 2 — משהו שקהל אמר שגילה לך משהו על עצמך" : "משפט 3 — התנגדות אמיתית שאתה שומע חוזרת"}
+          rows={2}
+          maxLength={240}
+          disabled={busy}
+          style={{
+            width: "100%",
+            marginBottom: 8,
+            padding: "10px 12px",
+            background: "#0D1018",
+            border: "1px solid #2C323E",
+            borderRadius: 8,
+            color: "#EDE9E1",
+            fontSize: 14.5,
+            fontFamily: "inherit",
+            lineHeight: 1.55,
+            resize: "vertical",
+            direction: "rtl",
+          }}
+        />
+      ))}
+      {err ? <p style={{ color: "#E88", fontSize: 12.5, margin: "4px 0 8px" }}>{err}</p> : null}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 6 }}>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={busy || validCount === 0}
+          style={{
+            background: validCount === 0 || busy ? "#2C323E" : "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+            color: validCount === 0 || busy ? "#9E9990" : "#2a1d05",
+            border: "none",
+            borderRadius: 999,
+            padding: "10px 20px",
+            fontSize: 14,
+            fontWeight: 800,
+            cursor: validCount === 0 || busy ? "default" : "pointer",
+            fontFamily: "inherit",
+          }}
+        >
+          {busy ? "שומר..." : `שמור ${validCount} משפטים`}
+        </button>
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "#9E9990",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            fontFamily: "inherit",
+            padding: "10px 12px",
+          }}
+        >
+          אעדכן בהמשך
+        </button>
+      </div>
+      <p style={{ fontSize: 11.5, color: "#706A5F", marginTop: 12, lineHeight: 1.55 }}>
+        טיפ: אחרי שתשמור, ה־7 פרקים הקיימים יימחקו והמנוע ייצור אותם מחדש עם החומר הזה בפנים.
+      </p>
+    </div>
+  );
+}
+
 // InterviewQuestionsCard — Hadar's canonical rule (HADAR_FUNNEL_FRAMEWORK
 // 2026-07-11): a testimonial video's value doesn't come from the testimonial
 // itself. It comes from the questions the customer asks their own clients —
