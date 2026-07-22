@@ -8,6 +8,7 @@ import { ChevronDown } from "lucide-react";
 import { SignalCanvas } from "./new/SignalCanvas";
 import { HexDefs, HoneyHex, IcAI, IcCopy, IcLost, IcSignal, IcStrategy, IcContent, IcData, IcHuman, IcLasting, IcSoul } from "./new/glyphs";
 import { PageTracker } from "@/components/landing/PageTracker";
+import { BroadcastShowcase } from "@/components/landing/BroadcastShowcase";
 
 // Reused ORIGINAL homepage elements (rendered as-is; their behavior is not
 // changed for any other page). This restores the exact existing design.
@@ -218,6 +219,9 @@ export default async function NewHome() {
             </div>
           </div>
         </section>
+
+        {/* ══ Broadcast room — the digital product, shown running ══ */}
+        <BroadcastShowcase />
 
         {/* ══ Principles + punch ══ */}
         <section className="nh-princ-sec">

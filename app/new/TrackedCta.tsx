@@ -9,7 +9,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
 type Dest = "kriah" | "strategy";
-type Placement = "header" | "hero" | "path_card" | "final_cta";
+type Placement = "header" | "hero" | "path_card" | "final_cta" | "broadcast";
 
 const EVENT: Record<Dest, string> = {
   kriah:    "NEW_HOME_KRIAH_CLICK",

@@ -594,7 +594,7 @@ function SeasonsTease({ offer, sale }: { offer: VisitorData["offer"]; sale: bool
             </div>
             <div className={sty.roadCardTitle}>{sn.title}</div>
             <p className={sty.roadTag}>{sn.tagline}</p>
-            <div className={sty.roadMeta}>{sn.episodes} פרקים {LOCK}</div>
+            <div className={sty.roadMeta}>{sn.episodes} פרקים</div>
           </button>
         ))}
       </div>
