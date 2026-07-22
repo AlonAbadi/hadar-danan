@@ -199,136 +199,12 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 </div>
               );
             })}
-          {data.directions.length ? (
-            <div className={sty.trow}>
-              <div className={sty.head}>
-                <span className={sty.plat}>3 כיווני תוכן מהאות שלך</span>
-                <span className={sty.check} style={{ color: "#7FD49B" }}>הראשון חשוף במלואו</span>
-              </div>
-              <div className={sty.vScriptRow}>
-                <span className={sty.vScriptN}>1</span>
-                <span className={sty.vScriptT}>{data.directions[0]}</span>
-              </div>
-              {data.directions.length > 1 ? (
-                <div className={sty.vLock}>
-                  <div className={sty.vLockContent}>
-                    {data.directions.slice(1, 3).map((d, i) => (
-                      <div className={sty.vScriptRow} key={i}>
-                        <span className={sty.vScriptN}>{i + 2}</span>
-                        <span className={sty.vScriptT}>{d}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <LockBand
-                    text={
-                      data.offer === "strategy"
-                        ? "עוד שני כיוונים, כלולים בליווי"
-                        : sale
-                          ? "עוד שני כיוונים נפתחים בכוורת"
-                          : "עוד שני כיוונים שמורים לך כאן"
-                    }
-                  />
-                </div>
-              ) : null}
-              {sale ? (
-                <p className={sty.txt} style={{ fontSize: 13, marginTop: 12, color: "#ACA79E" }}>
-                  {data.offer === "strategy"
-                    ? "בליווי שלושת הכיוונים האלה הופכים לתסריטים מוכנים ולתוכנית שלמה."
-                    : "בכוורת שלושת הכיוונים האלה הופכים לתסריטים מוכנים, טעונים בטלפרומפטר."}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
-
-        {/* ── challenge: opening session open ── */}
-        <section className={sty.zone}>
-          <div className={sty.zhead}>
-            <span className={sty.zn}>01</span>
-            <span className={sty.zt}>
-              <h2>אתגר האות</h2>
-              <span className={sty.hint}>שבעה ימים, צעד ביום, עם הדר</span>
-            </span>
-            <span className={sty.vChipOk}>מפגש הפתיחה פתוח</span>
-          </div>
-          <div className={sty.zrule} />
-          <div className={sty.trow}>
-            <div className={sty.head}>
-              <span className={sty.plat}>מפגש הפתיחה עם הדר</span>
-              <span className={sty.check} style={{ color: "#7FD49B" }}>
-                {f ? "פתוח לך עכשיו, בלי תשלום" : "פתוח לך עכשיו, בלי תשלום"}
-              </span>
-            </div>
-            <div className={sty.vVidrow}>
-              <iframe
-                src={`https://player.vimeo.com/video/${data.day0VideoId}?loop=0&title=0&byline=0&portrait=0`}
-                allow="autoplay; fullscreen; picture-in-picture"
-                title="מפגש הפתיחה עם הדר"
-              />
-            </div>
-            <div className={sty.vDays}>
-              <span className={`${sty.vDay} ${sty.vDayOn}`}>0</span>
-              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                <span className={sty.vDay} key={n}>
-                  {n}
-                  {LOCK}
-                </span>
-              ))}
-            </div>
-            <p className={sty.txt} style={{ fontSize: 13, marginTop: 12, color: "#ACA79E" }}>
-              {sale
-                ? data.offer === "strategy"
-                  ? "שבעת הימים המלאים, סרטון ומשימה ביום, כלולים בליווי."
-                  : "שבעת הימים המלאים, סרטון ומשימה ביום, נפתחים בכוורת."
-                : "שבעת הימים המלאים שמורים לך כאן."}
-            </p>
-          </div>
-        </section>
-
-        {/* ── visual: one real designed asset ── */}
-        <section className={sty.zone}>
-          <div className={sty.zhead}>
-            <span className={sty.zn}>02</span>
-            <span className={sty.zt}>
-              <h2>ויזואל</h2>
-              <span className={sty.hint}>כרטיסים מעוצבים מהאות שלך</span>
-            </span>
-            {sale ? <ChipLock /> : null}
-          </div>
-          <div className={sty.zrule} />
-          <div className={sty.trow}>
-            {assetOk ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                className={sty.vAssetImg}
-                src={assetUrl}
-                alt="כרטיס האות המעוצב שלך"
-                onError={() => setAssetOk(false)}
-              />
-            ) : null}
-            {sale ? (
-              <div className={sty.vLock} style={{ marginTop: 14 }}>
-                <div className={sty.vLockContent}>
-                  <div className={sty.vMini}>
-                    {[0, 1, 2].map((i) => (
-                      <div className={sty.vMiniCard} key={i}>
-                        <div className={sty.vMiniQ}>"</div>
-                        <div className={sty.vMiniB1} />
-                        <div className={sty.vMiniB2} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <LockBand text={data.offer === "strategy" ? "כל פורמט, מהאות שלך. כלול בליווי" : "כל פורמט, מהאות שלך. נפתח בכוורת"} />
-              </div>
-            ) : null}
-          </div>
         </section>
 
         {/* ── broadcast room: teleprompter demo with the real hook ── */}
         <section className={sty.zone}>
           <div className={sty.zhead}>
-            <span className={sty.zn}>03</span>
+            <span className={sty.zn}>01</span>
             <span className={sty.zt}>
               <h2>יום הצילום</h2>
               <span className={sty.hint}>חדר השידור, עם התסריטים שלך בפנים</span>
@@ -398,6 +274,135 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 ? "שבעה תסריטים בקול שלך. הטקסט רץ בקצב שלך, הבמאית חותכת, מוסיפה כתוביות ומחזירה רילס. מצולם, לא מיוצר."
                 : "שבעה תסריטים בקול שלך. הטקסט רץ בקצב שלך, הבמאית חותכת, מוסיפה כתוביות ומחזירה רילס. מצולם, לא מיוצר."}
             </p>
+          </div>
+        </section>
+
+        {/* ── challenge: opening session open ── */}
+        <section className={sty.zone}>
+          <div className={sty.zhead}>
+            <span className={sty.zn}>02</span>
+            <span className={sty.zt}>
+              <h2>אתגר האות</h2>
+              <span className={sty.hint}>שבעה ימים, צעד ביום, עם הדר</span>
+            </span>
+            <span className={sty.vChipOk}>מפגש הפתיחה פתוח</span>
+          </div>
+          <div className={sty.zrule} />
+          <div className={sty.trow}>
+            <div className={sty.head}>
+              <span className={sty.plat}>מפגש הפתיחה עם הדר</span>
+              <span className={sty.check} style={{ color: "#7FD49B" }}>
+                {f ? "פתוח לך עכשיו, בלי תשלום" : "פתוח לך עכשיו, בלי תשלום"}
+              </span>
+            </div>
+            <div className={sty.vVidrow}>
+              <iframe
+                src={`https://player.vimeo.com/video/${data.day0VideoId}?loop=0&title=0&byline=0&portrait=0`}
+                allow="autoplay; fullscreen; picture-in-picture"
+                title="מפגש הפתיחה עם הדר"
+              />
+            </div>
+            <div className={sty.vDays}>
+              <span className={`${sty.vDay} ${sty.vDayOn}`}>0</span>
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                <span className={sty.vDay} key={n}>
+                  {n}
+                  {LOCK}
+                </span>
+              ))}
+            </div>
+            <p className={sty.txt} style={{ fontSize: 13, marginTop: 12, color: "#ACA79E" }}>
+              {sale
+                ? data.offer === "strategy"
+                  ? "שבעת הימים המלאים, סרטון ומשימה ביום, כלולים בליווי."
+                  : "שבעת הימים המלאים, סרטון ומשימה ביום, נפתחים בכוורת."
+                : "שבעת הימים המלאים שמורים לך כאן."}
+            </p>
+          </div>
+        </section>
+
+        {/* ── content directions + visual: what to say, how it looks — merged
+            per Alon 2026-07-22 (both are raw material derived from the signal) ── */}
+        <section className={sty.zone}>
+          <div className={sty.zhead}>
+            <span className={sty.zn}>03</span>
+            <span className={sty.zt}>
+              <h2>כיווני תוכן וויזואל</h2>
+              <span className={sty.hint}>מה אומרים, ואיך זה נראה. הכול מהאות שלך</span>
+            </span>
+            {sale ? <ChipLock /> : null}
+          </div>
+          <div className={sty.zrule} />
+          {data.directions.length ? (
+            <div className={sty.trow}>
+              <div className={sty.head}>
+                <span className={sty.plat}>3 כיווני תוכן מהאות שלך</span>
+                <span className={sty.check} style={{ color: "#7FD49B" }}>הראשון חשוף במלואו</span>
+              </div>
+              <div className={sty.vScriptRow}>
+                <span className={sty.vScriptN}>1</span>
+                <span className={sty.vScriptT}>{data.directions[0]}</span>
+              </div>
+              {data.directions.length > 1 ? (
+                <div className={sty.vLock}>
+                  <div className={sty.vLockContent}>
+                    {data.directions.slice(1, 3).map((d, i) => (
+                      <div className={sty.vScriptRow} key={i}>
+                        <span className={sty.vScriptN}>{i + 2}</span>
+                        <span className={sty.vScriptT}>{d}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <LockBand
+                    text={
+                      data.offer === "strategy"
+                        ? "עוד שני כיוונים, כלולים בליווי"
+                        : sale
+                          ? "עוד שני כיוונים נפתחים בכוורת"
+                          : "עוד שני כיוונים שמורים לך כאן"
+                    }
+                  />
+                </div>
+              ) : null}
+              {sale ? (
+                <p className={sty.txt} style={{ fontSize: 13, marginTop: 12, color: "#ACA79E" }}>
+                  {data.offer === "strategy"
+                    ? "בליווי שלושת הכיוונים האלה הופכים לתסריטים מוכנים ולתוכנית שלמה."
+                    : "בכוורת שלושת הכיוונים האלה הופכים לתסריטים מוכנים, טעונים בטלפרומפטר."}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          <div className={sty.trow}>
+            <div className={sty.head}>
+              <span className={sty.plat}>הכרטיס המעוצב שלך</span>
+              <span className={sty.check}>מוכן לשמירה ולפרסום</span>
+            </div>
+            {assetOk ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className={sty.vAssetImg}
+                src={assetUrl}
+                alt="כרטיס האות המעוצב שלך"
+                onError={() => setAssetOk(false)}
+              />
+            ) : null}
+            {sale ? (
+              <div className={sty.vLock} style={{ marginTop: 14 }}>
+                <div className={sty.vLockContent}>
+                  <div className={sty.vMini}>
+                    {[0, 1, 2].map((i) => (
+                      <div className={sty.vMiniCard} key={i}>
+                        <div className={sty.vMiniQ}>"</div>
+                        <div className={sty.vMiniB1} />
+                        <div className={sty.vMiniB2} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <LockBand text={data.offer === "strategy" ? "כל פורמט, מהאות שלך. כלול בליווי" : "כל פורמט, מהאות שלך. נפתח בכוורת"} />
+              </div>
+            ) : null}
           </div>
         </section>
 
