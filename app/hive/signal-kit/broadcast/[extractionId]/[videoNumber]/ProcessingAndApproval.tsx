@@ -555,11 +555,20 @@ function CaptionApproval({
   );
 }
 
-// WhatsApp-style trimmer: a strip of frames from the take with two draggable
-// gold handles. Dragging a handle seeks the preview player to that exact
-// moment so the cut point is chosen by eye, not by numbers. The video time
-// axis always runs left-to-right (dir="ltr") even on this RTL page.
-const THUMB_COUNT = 8;
+// WhatsApp-style trimmer (v2, rebuilt per Alon 2026-07-22 after the strip
+// rendered empty on desktop and had no way to navigate):
+// - Robust thumbnails: crossOrigin only when actually cross-origin (setting
+//   it on blob/same-origin sources broke decoding in some engines), a
+//   play()/pause() nudge to force the first frame decode, and
+//   requestVideoFrameCallback (when present) so a seeked frame is actually
+//   PAINTED before drawImage. On total failure the strip shows timecode
+//   ticks instead of a black void.
+// - Live playhead: a white marker tracks the preview player in real time.
+// - Strip scrubbing: dragging anywhere on the strip (not just handles)
+//   seeks the preview - WhatsApp's "move around the video" affordance.
+// - A floating time bubble above the active pointer while dragging.
+// Dragging a handle still seeks the preview to that exact cut point.
+const THUMB_COUNT = 10;
 const MIN_SELECTION_MS = 1000;
 const HANDLE_W = 22;
 
@@ -580,13 +589,16 @@ function FilmstripTrimmer({
 }) {
   const [durationMs, setDurationMs] = useState(0);
   const [thumbs, setThumbs] = useState<string[]>([]);
+  const [thumbsFailed, setThumbsFailed] = useState(false);
+  const [playheadMs, setPlayheadMs] = useState(0);
+  const [bubble, setBubble] = useState<{ pct: number; ms: number } | null>(null);
   const stripRef = useRef<HTMLDivElement | null>(null);
   const boundsRef = useRef({ start: trimStart, end: trimEnd, duration: 0 });
   boundsRef.current = { start: trimStart, end: trimEnd, duration: durationMs };
 
   // Duration truth ladder: the hidden thumbnail video when it loads, else
   // the MAIN preview player. iOS Safari does not load detached <video>
-  // elements reliably — the element must live in the DOM (offscreen) and be
+  // elements reliably - the element must live in the DOM (offscreen) and be
   // load()ed explicitly, every seek needs a timeout, and even then the main
   // player is the fallback that keeps the handles alive with no thumbnails.
   const reportDuration = useCallback(
@@ -611,10 +623,26 @@ function FilmstripTrimmer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src]);
 
+  // Live playhead: follow the preview player (plays, seeks, everything).
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const v = previewRef.current;
+      if (v && !Number.isNaN(v.currentTime)) setPlayheadMs(v.currentTime * 1000);
+    }, 100);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const video = document.createElement("video");
-    video.crossOrigin = "anonymous";
+    // crossOrigin="anonymous" is required ONLY for genuinely cross-origin
+    // sources (signed storage URLs) so the canvas stays untainted. Setting
+    // it on blob:/same-origin sources switches the fetch to CORS mode for
+    // no reason and broke decoding in the field (empty strip on desktop).
+    const crossOrigin =
+      /^https?:/i.test(src) && new URL(src, location.href).origin !== location.origin;
+    if (crossOrigin) video.crossOrigin = "anonymous";
     video.muted = true;
     video.playsInline = true;
     video.preload = "auto";
@@ -626,13 +654,22 @@ function FilmstripTrimmer({
     const withTimeout = <T,>(p: Promise<T>, ms: number) =>
       Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
+    // Seek AND wait for the frame to be painted: "seeked" alone does not
+    // guarantee a decoded frame everywhere - requestVideoFrameCallback is
+    // the paint signal where supported (Safari 15.4+, Chrome 83+).
     const seekTo = (t: number) =>
       withTimeout(
         new Promise<void>((resolve) => {
-          video.onseeked = () => resolve();
+          const rvfc = (video as unknown as {
+            requestVideoFrameCallback?: (cb: () => void) => void;
+          }).requestVideoFrameCallback?.bind(video);
+          video.onseeked = () => {
+            if (rvfc) rvfc(() => resolve());
+            else resolve();
+          };
           video.currentTime = t;
         }),
-        2000
+        2500
       );
 
     (async () => {
@@ -657,6 +694,13 @@ function FilmstripTrimmer({
       if (cancelled || !isFinite(dur) || dur <= 0) return;
       reportDuration(Math.round(dur * 1000));
 
+      // Nudge the decoder awake: some engines paint nothing until the
+      // element has actually played once.
+      try {
+        await withTimeout(video.play(), 1500);
+        video.pause();
+      } catch { /* autoplay refused - seeks usually still paint */ }
+
       const canvas = document.createElement("canvas");
       canvas.width = 72;
       canvas.height = 128;
@@ -664,22 +708,30 @@ function FilmstripTrimmer({
       if (!ctx) return;
       const collected: string[] = [];
       for (let i = 0; i < THUMB_COUNT; i++) {
-        await seekTo(((i + 0.5) / THUMB_COUNT) * dur);
+        try {
+          await seekTo(((i + 0.5) / THUMB_COUNT) * dur);
+        } catch { continue; /* one stuck seek must not kill the whole strip */ }
         if (cancelled) return;
         try {
           const vw = video.videoWidth;
           const vh = video.videoHeight;
+          if (!vw || !vh) continue;
           const scale = Math.max(canvas.width / vw, canvas.height / vh);
           const dw = vw * scale;
           const dh = vh * scale;
+          ctx.fillStyle = "#1D2430";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(video, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
-          collected.push(canvas.toDataURL("image/jpeg", 0.55));
+          collected[i] = canvas.toDataURL("image/jpeg", 0.55);
         } catch {
-          return; // CORS-tainted canvas — strip stays as dark placeholders
+          setThumbsFailed(true);
+          return; // CORS-tainted canvas - fall back to timecode ticks
         }
         setThumbs([...collected]);
       }
+      if (collected.filter(Boolean).length === 0) setThumbsFailed(true);
     })().catch(() => {
+      if (!cancelled) setThumbsFailed(true);
       /* thumbnails are decorative; the preview-player fallback owns duration */
     });
     return () => {
@@ -704,26 +756,60 @@ function FilmstripTrimmer({
       v.pause();
       v.currentTime = ms / 1000;
     }
+    setPlayheadMs(ms);
+  };
+
+  const showBubble = (ms: number) => {
+    const { duration } = boundsRef.current;
+    if (duration) setBubble({ pct: (ms / duration) * 100, ms });
   };
 
   const startDrag = (which: "start" | "end") => (down: React.PointerEvent<HTMLDivElement>) => {
     down.preventDefault();
+    down.stopPropagation();
     const el = down.currentTarget;
     el.setPointerCapture(down.pointerId);
     const onMove = (e: PointerEvent) => {
       const ms = msFromClientX(e.clientX);
       const { start, end, duration } = boundsRef.current;
       if (which === "start") {
-        const next = Math.min(ms, end - MIN_SELECTION_MS);
-        onChange(Math.max(0, next), end);
-        seekPreview(Math.max(0, next));
+        const next = Math.max(0, Math.min(ms, end - MIN_SELECTION_MS));
+        onChange(next, end);
+        seekPreview(next);
+        showBubble(next);
       } else {
-        const next = Math.max(ms, start + MIN_SELECTION_MS);
-        onChange(start, Math.min(duration, next));
-        seekPreview(Math.min(duration, next));
+        const next = Math.min(duration, Math.max(ms, start + MIN_SELECTION_MS));
+        onChange(start, next);
+        seekPreview(next);
+        showBubble(next);
       }
     };
     const onUp = () => {
+      setBubble(null);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+    };
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
+  };
+
+  // WhatsApp affordance: drag anywhere on the strip itself to move through
+  // the video - the preview follows the finger.
+  const startScrub = (down: React.PointerEvent<HTMLDivElement>) => {
+    down.preventDefault();
+    const el = down.currentTarget;
+    el.setPointerCapture(down.pointerId);
+    const apply = (clientX: number) => {
+      const ms = msFromClientX(clientX);
+      seekPreview(ms);
+      showBubble(ms);
+    };
+    apply(down.clientX);
+    const onMove = (e: PointerEvent) => apply(e.clientX);
+    const onUp = () => {
+      setBubble(null);
       el.removeEventListener("pointermove", onMove);
       el.removeEventListener("pointerup", onUp);
       el.removeEventListener("pointercancel", onUp);
@@ -736,6 +822,7 @@ function FilmstripTrimmer({
   const pct = (ms: number) => (durationMs ? (ms / durationMs) * 100 : 0);
   const startPct = pct(trimStart);
   const endPct = pct(durationMs ? trimEnd || durationMs : 0);
+  const playheadPct = Math.min(100, pct(playheadMs));
   const fmt = (ms: number) => {
     const s = Math.round(ms / 1000);
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -751,20 +838,23 @@ function FilmstripTrimmer({
     justifyContent: "center",
     cursor: "ew-resize",
     touchAction: "none",
-    zIndex: 3,
+    zIndex: 4,
   };
 
   return (
     <div style={{ marginTop: 16 }}>
       <p style={{ color: "#9E9990", fontSize: 13 }}>{getBroadcastCopy("captions.trim.strip_hint")}</p>
-      <div dir="ltr" style={{ padding: `4px ${HANDLE_W}px`, marginTop: 8 }}>
+      <div dir="ltr" style={{ padding: `18px ${HANDLE_W}px 4px`, marginTop: 4, position: "relative" }}>
         <div
           ref={stripRef}
+          onPointerDown={startScrub}
           style={{
             position: "relative",
-            height: 56,
+            height: 64,
             borderRadius: 8,
             background: "#141820",
+            touchAction: "none",
+            cursor: "pointer",
           }}
         >
           <div style={{ position: "absolute", inset: 0, display: "flex", borderRadius: 8, overflow: "hidden" }}>
@@ -777,13 +867,23 @@ function FilmstripTrimmer({
                   backgroundColor: "#1D2430",
                   backgroundSize: "cover",
                   backgroundPosition: "center",
+                  borderInlineEnd: thumbsFailed ? "1px solid #2C323E" : undefined,
+                  display: "flex",
+                  alignItems: "flex-end",
+                  justifyContent: "center",
                 }}
-              />
+              >
+                {thumbsFailed && durationMs ? (
+                  <span style={{ color: "#5A5F6A", fontSize: 10, paddingBottom: 3, fontVariantNumeric: "tabular-nums" }}>
+                    {fmt((i / THUMB_COUNT) * durationMs)}
+                  </span>
+                ) : null}
+              </div>
             ))}
           </div>
           {/* dimmed cut-away zones */}
-          <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: `${startPct}%`, background: "rgba(8,12,20,0.72)", borderRadius: "8px 0 0 8px", zIndex: 1 }} />
-          <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: `${100 - endPct}%`, background: "rgba(8,12,20,0.72)", borderRadius: "0 8px 8px 0", zIndex: 1 }} />
+          <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: `${startPct}%`, background: "rgba(8,12,20,0.72)", borderRadius: "8px 0 0 8px", zIndex: 1, pointerEvents: "none" }} />
+          <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: `${100 - endPct}%`, background: "rgba(8,12,20,0.72)", borderRadius: "0 8px 8px 0", zIndex: 1, pointerEvents: "none" }} />
           {/* selection frame */}
           <div
             style={{
@@ -799,6 +899,23 @@ function FilmstripTrimmer({
               pointerEvents: "none",
             }}
           />
+          {/* live playhead - tracks the preview player like WhatsApp */}
+          {durationMs ? (
+            <div
+              style={{
+                position: "absolute",
+                top: -8,
+                bottom: -8,
+                left: `calc(${playheadPct}% - 1.5px)`,
+                width: 3,
+                borderRadius: 2,
+                background: "#FFFFFF",
+                boxShadow: "0 0 6px rgba(0,0,0,0.8)",
+                zIndex: 3,
+                pointerEvents: "none",
+              }}
+            />
+          ) : null}
           <div
             role="slider"
             aria-label={getBroadcastCopy("captions.trim_start.title")}
@@ -806,7 +923,7 @@ function FilmstripTrimmer({
             onPointerDown={startDrag("start")}
             style={{ ...handleStyle, left: `calc(${startPct}% - ${HANDLE_W}px)`, borderRadius: "8px 0 0 8px" }}
           >
-            <span style={{ color: "#0D1018", fontSize: 15, fontWeight: 800 }}>‹</span>
+            <span style={{ color: "#0D1018", fontSize: 15, fontWeight: 800 }}>&#8249;</span>
           </div>
           <div
             role="slider"
@@ -815,8 +932,31 @@ function FilmstripTrimmer({
             onPointerDown={startDrag("end")}
             style={{ ...handleStyle, left: `${endPct}%`, borderRadius: "0 8px 8px 0" }}
           >
-            <span style={{ color: "#0D1018", fontSize: 15, fontWeight: 800 }}>›</span>
+            <span style={{ color: "#0D1018", fontSize: 15, fontWeight: 800 }}>&#8250;</span>
           </div>
+          {/* floating time bubble while dragging */}
+          {bubble ? (
+            <div
+              style={{
+                position: "absolute",
+                top: -34,
+                left: `${bubble.pct}%`,
+                transform: "translateX(-50%)",
+                background: "#EDE9E1",
+                color: "#0D1018",
+                borderRadius: 8,
+                padding: "2px 8px",
+                fontSize: 12.5,
+                fontWeight: 700,
+                fontVariantNumeric: "tabular-nums",
+                zIndex: 5,
+                pointerEvents: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {fmt(bubble.ms)}
+            </div>
+          ) : null}
         </div>
       </div>
       <p
