@@ -275,14 +275,20 @@ const HADAR_SIGNATURE_MOVES = `15 המהלכים של הדר (8 גרעיניים
 
 18. Full-Disclosure Reveal (חדש, HADAR_FUNNEL_FRAMEWORK 2026-07-11, "גילוי נאות" — הדר מגדירה זאת כאחד הנכסים הכי חזקים של מותג מבוסס־אות). פתיחה קנונית קבועה: "**אני רוצה לעשות איתכם/ן גילוי נאות.**" ואחריה — אמת שאנשים לא אוהבים לשמוע, שנגזרת ישירות מהאות של הלקוח. דוגמאות של הדר: "רוב בעלי העסקים לא צריכים עוד אסטרטגיה." / "הבעיה שלך היא לא שאין לך בידול." / "אם אני אכתוב לך מסרים, זה לא יעזור לך." / "אנשים לא זוכרים את התוכן שלך כי אתה עדיין לא זוכר מי אתה." / "רוב היועצים מלמדים שיווק לפני שהם גילו את האדם." המבנה: (1) הצהרת הגילוי, (2) האמת הלא־נוחה בגוף שני על הצופה, (3) הסיבה למה זה נכון (משפט אחד קצר). זה הופך להיות **חתימת המותג**. שימוש: מומלץ ב-CRITIQUE (V4) כאלטרנטיבה למבנה "אין דבר כזה X" הרגיל.
 
-עקרון על: 8 המהלכים הראשונים יציבים בכל תחום. **17 המהלכים כולם ב-active pool.** 9-17 נבחרים לפי ארכיטיפ המותג:
+19. Sacred-Path Protection (חדש, deep-read Rotem Peled + Tamar Zeribts 2026-07-21). ההגנה על ה־"למה" הפנימי של העסק בפני לחצים חיצוניים שנראים כמו הצלחה. שונה מ־Sold-Inversion (#5): במקום להראות שמה שהובטח היה שקר, המהלך הזה מראה **שהתשלום עצמו יבטל את מה שהתחיל את המסע**. המבנה: "אם אנחנו נלך אחרי X, אנחנו נאבד את Y — ו־Y זה הסיבה שהתחלנו." ציטוטים קנוניים: "אם אנחנו ניתן דין וחשבון למשקיעים ולמספרים, אנחנו נוריד מלב-ליבה של המהות של למה יצרנו את הדבר הזה." (Rotem, C4765) / "אם אני צריכה לעשות כסף לפני שאני נותנת ערך, אני לא יכולה לעשות כסף." (Rotem, C4765) / "בסוף הטיפול המהיר הזה, לא רק שהוא לא יותר טוב, הוא גם הרבה יותר הרסני." (Tamar, C4787). מתאים ל: מייסדים/מייסדות עם משימה, אמנים, מותגי תרפיה עמוקה, מותגי־יד־עבודה שמנסים לגדול "מהר". שימוש: פותח CRITIQUE (V4) או מופיע כ־landing beat ב־V6 STORY_OPINION.
+
+20. Proxy Embodiment (חדש, deep-read Ben Shalom + Tamar Zeribts 2026-07-21). Layer שלישי מעל Receptive Embodiment (#11). במקום להראות את הלקוח שלך בפעולה, מראים את **הלקוח־של־הלקוח** — את מי שיושב בסוף השרשרת ומקבל את הערך. הראייה עוברת דרך הגוף / הפחד / החוויה של הצד הלא־נראה. ציטוטים קנוניים: "בסוף אנחנו בונים לאנשים אמיתיים, לא לרובוטים שגרים בבית." (Ben Shalom, C4903) / "כי אני רואה את הילדים האלה. הם התיקון שלי." (Tamar, C4794). מתאים ל: אדריכלים, מעצבי פנים, מעצבי חוויית משתמש, מטפלים בילדים/הורים, מאמני מנהיגות, כל מותג־שירות שהערך שלו נמדד אצל אדם שלישי שלא נמצא בחדר. שימוש: מומלץ ב־V3 GENIUS (רואה את הלקוח־הסופי לפני שהוא רואה את עצמו) או ב־landing beat של V2 STORY.
+
+עקרון על: 8 המהלכים הראשונים יציבים בכל תחום. **20 המהלכים כולם ב-active pool.** 9-20 נבחרים לפי ארכיטיפ המותג:
 - מותג קוגניטיבי-עסקי (יועץ, מאמן, אסטרטג, מנטור): השתמש ב-1-8, מהלך #7 (Projective Embodiment), + #17 (Chain-Collapse) לpitching, + #15 רק אם באמת יש framework של 3 פרמטרים.
 - מותג חושי (ריח, אוכל, יין, ספא, אומנות): השתמש ב-1-6, 8, ו-9-11 + 13 (Silent Authority). Receptive Embodiment, לא Projective.
-- מותג טיפולי / טרנספורמציה עמוקה (תרפיסט, מטפל זוגי, מאמן רוחני): השתמש ב-1-8 + 12 + **#16 (Moral-Obligation Activation)**.
-- מותג יד-עבודה / ייצור (קונדיטוריה, נגרות, פרפיומריה, יצירת אומנות): השתמש ב-1-8 + 10.
+- מותג טיפולי / טרנספורמציה עמוקה (תרפיסט, מטפל זוגי, מאמן רוחני): השתמש ב-1-8 + 12 + **#16 (Moral-Obligation Activation)** + **#19 (Sacred-Path Protection)** + **#20 (Proxy Embodiment)**.
+- מותג יד-עבודה / ייצור (קונדיטוריה, נגרות, פרפיומריה, יצירת אומנות): השתמש ב-1-8 + 10 + **#19 (Sacred-Path Protection)** למייסדים עם משימה.
 - מותג B2B-טכני עם ידע אסימטרי (נוירומרקטינג, ביו-פיליה, פרפיומריה תעשייתית): השתמש ב-1-8 + 9-10 + 13.
 - מותג פיננסי / משכנתאות / יעוץ עסקי: השתמש ב-1-8 + 15 + **loss-framing חובה**: לא "תוכלו לחסוך X" אלא "אתם כבר מפסידים X."
-- מותג חינוכי / הורי (חינוך ילדים, פסיכולוגיה התפתחותית): השתמש ב-1-8 + **#16 (Moral-Obligation Activation)** — מפעיל את המחויבות של ההורה כלפי הילד/ה.
+- מותג חינוכי / הורי (חינוך ילדים, פסיכולוגיה התפתחותית): השתמש ב-1-8 + **#16 (Moral-Obligation Activation)** + **#20 (Proxy Embodiment)** — מפעיל את המחויבות של ההורה כלפי הילד/ה.
+- **מותג־שירות עם צד שלישי** (אדריכל, מעצב פנים, מעצב UX, מנהל־קהילה, מאמן־מנהיגות): השתמש ב-1-8 + 12 + **#20 (Proxy Embodiment) חובה** — הערך שלכם נמדד אצל אדם שלא נמצא בחדר, וזה חייב להיות מרכז הסרטונים.
+- **מייסד/ת עם משימה** (חברה עם הון־זרים או לחץ־סקייל): השתמש ב-1-8 + **#19 (Sacred-Path Protection) חובה** ב־CRITIQUE — הגנה על ה־"למה" של המותג נגד המרוץ למספרים.
 
 ניתוב כשיש חפיפה (lapping): לקוח/ה יכול/ה ליפול ביותר מארכיטיפ אחד (למשל פרפיומריה = חושי גם יד-עבודה גם B2B). במקרה כזה קבע ארכיטיפ-על לפי הציר השיווקי המרכזי באות (signal), לא לפי התחום: אם החוש עצמו הוא המוצר שנמכר ללקוח-הקצה -> חושי. אם הידע האסימטרי הוא המוצר ("אנשים לא יודעים שהם מושפעים מ-X") -> B2B-טכני. אם השיטה/החומר הם הסיפור -> יד-עבודה. בכל מקרה מהלכים 1-8 תמיד פעילים, והוסף לכל היותר שני מהלכי-ארכיטיפ, לא את כולם. אסור להפעיל גם Projective (#7) וגם Receptive (#11) באותו יום צילום.
 
@@ -818,8 +824,8 @@ ${HADAR_QUOTE_RULE}
 
 4. **signature_move**:
    - name: **חובה לבחור מדויק מרשימת 15 השמות המאושרים** — הרשימה סגורה, אסור להמציא שמות חדשים. וגם — **אסור לתייג מהלך אחד בשם של מהלך אחר** (למשל: "seeing beneath what the client said" = Receptive Embodiment, לא Diagnostic-Framework Reveal; "מוכנות היא לא לפני, היא בתוך" = Category-Rename / Reclaim, לא Service Reframe). קרא את הסרטון שכתבת ואמת את התיוג נגד ההגדרה של המהלך.
-   - **הרשימה הסגורה של 18 השמות** (העתק מדויק, כולל אנגלית):
-     "External→Internal Translation" · "Service Reframe" · "אני אקביל לך Parable Building" · "Tangible Metaphor Anchor" · "Sold-Inversion" · "Self-as-example" · "Embodiment direction (Projective)" · "Anti-flattery" · "Sensory-to-Business Translation" · "Process-as-Proof" · "Receptive Embodiment" · "Specificity-as-Service" · "Silent Authority Positioning" · "Category-Rename / Reclaim" · "Diagnostic-Framework Reveal" · "Moral-Obligation Activation" · "Chain-Collapse Rhetoric" · "Full-Disclosure Reveal"
+   - **הרשימה הסגורה של 20 השמות** (העתק מדויק, כולל אנגלית):
+     "External→Internal Translation" · "Service Reframe" · "אני אקביל לך Parable Building" · "Tangible Metaphor Anchor" · "Sold-Inversion" · "Self-as-example" · "Embodiment direction (Projective)" · "Anti-flattery" · "Sensory-to-Business Translation" · "Process-as-Proof" · "Receptive Embodiment" · "Specificity-as-Service" · "Silent Authority Positioning" · "Category-Rename / Reclaim" · "Diagnostic-Framework Reveal" · "Moral-Obligation Activation" · "Chain-Collapse Rhetoric" · "Full-Disclosure Reveal" · "Sacred-Path Protection" · "Proxy Embodiment"
    - **מיפוי מומלץ לפי סוג סרטון** (הימנע מהמלצה זו רק אם יש סיבה חזקה):
      · PROBLEM → External→Internal Translation / Service Reframe / Chain-Collapse Rhetoric (למותגים עסקיים) / Moral-Obligation Activation (למותגים טיפוליים/הוריים)
      · STORY → Sensory-to-Business Translation / Specificity-as-Service
