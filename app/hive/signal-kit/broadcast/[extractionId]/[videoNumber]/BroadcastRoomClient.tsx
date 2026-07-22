@@ -82,6 +82,9 @@ export function BroadcastRoomClient({
   // An in-flight edit (approval pending, burn running) resumes straight into
   // the pipeline — entering through prep would strand it unreachable.
   const [phase, setPhase] = useState<Phase>(initialEditId ? "pipeline" : "prep");
+  // The member owns the script: prep-screen edits land here and flow to the
+  // teleprompter, the pipeline and (server-side) the video's slice.
+  const [scriptState, setScriptState] = useState<ScriptShape>(script);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [takes, setTakes] = useState<LocalTake[]>([]);
   const [selectedTakeId, setSelectedTakeId] = useState<string | null>(null);
@@ -363,7 +366,10 @@ export function BroadcastRoomClient({
       <div dir={dir} style={{ ...shell, overflowY: "auto" }} className="font-assistant">
         <RoomStyles />
         <PrepScreen
-          script={script}
+          script={scriptState}
+          extractionId={extractionId}
+          videoNumber={videoNumber}
+          onScriptSaved={setScriptState}
           videoTitle={videoTitle}
           onReady={() => {
             setPhase("room");
@@ -381,7 +387,7 @@ export function BroadcastRoomClient({
         <ProcessingAndApproval
           editId={editId}
           localTakeUrl={pipelineBlobUrl}
-          script={script}
+          script={scriptState}
           firstName={firstName}
           language={language}
           onAnotherTake={() => {
@@ -506,9 +512,9 @@ export function BroadcastRoomClient({
         </button>
       ) : null}
       <Teleprompter
-        hook={script.hook}
-        body={script.body}
-        cta={script.cta}
+        hook={scriptState.hook}
+        body={scriptState.body}
+        cta={scriptState.cta}
         language={language}
         voiceSamplesRef={rec.rmsSamplesRef}
         // Desktop starts the recorder during the countdown (capture warm-up),
@@ -702,13 +708,70 @@ export function BroadcastRoomClient({
 
 function PrepScreen({
   script,
+  extractionId,
+  videoNumber,
+  onScriptSaved,
   videoTitle,
   onReady,
 }: {
   script: ScriptShape;
+  extractionId: string;
+  videoNumber: number;
+  onScriptSaved: (s: ScriptShape) => void;
   videoTitle: string;
   onReady: () => void;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<ScriptShape>(script);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error" | "empty">("idle");
+
+  const startEdit = () => {
+    setDraft(script);
+    setSaveState("idle");
+    setEditing(true);
+  };
+
+  const save = async () => {
+    const hook = draft.hook.trim();
+    const body = draft.body.trim();
+    const cta = (draft.cta ?? "").trim();
+    if (!hook || !body) { setSaveState("empty"); return; }
+    setSaveState("saving");
+    try {
+      const res = await fetch("/api/broadcast/script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          extraction_id: extractionId,
+          video_number: videoNumber,
+          hook,
+          body,
+          cta,
+        }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      onScriptSaved({ hook, body, cta: cta || undefined });
+      setSaveState("saved");
+      setEditing(false);
+    } catch {
+      setSaveState("error");
+    }
+  };
+
+  const taStyle: React.CSSProperties = {
+    width: "100%",
+    background: "#1D2430",
+    border: "1px solid #2C323E",
+    borderRadius: 10,
+    padding: "10px 12px",
+    color: "#EDE9E1",
+    fontSize: 16,
+    lineHeight: 1.7,
+    fontFamily: "inherit",
+    resize: "vertical",
+  };
+  const fieldLabel: React.CSSProperties = { color: "#9E9990", fontSize: 13, fontWeight: 600, marginBottom: 4 };
+
   return (
     <>
     <TopBar title={getBroadcastCopy("prep.eyebrow")} backHref={kitHref()} backLabel={getBroadcastCopy("nav.to_episodes")} />
@@ -716,26 +779,143 @@ function PrepScreen({
       <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "16px 0 4px" }}>
         {videoTitle || getBroadcastCopy("prep.title")}
       </h1>
+      {/* Read-first + ownership (Alon 2026-07-22): the member reads aloud
+          and fixes any word that doesn't sit right BEFORE the camera. */}
+      <div
+        style={{
+          background: "#141820",
+          borderInlineStart: "3px solid #E8B94A",
+          borderRadius: 12,
+          padding: "14px 16px",
+          marginTop: 16,
+        }}
+      >
+        <p style={{ color: "#EDE9E1", fontWeight: 700, fontSize: 15.5, margin: 0 }}>
+          {getBroadcastCopy("prep.own_title")}
+        </p>
+        <p style={{ color: "#B9BCC4", fontSize: 14.5, lineHeight: 1.7, margin: "6px 0 0" }}>
+          {getBroadcastCopy("prep.own_body")}
+        </p>
+      </div>
       <div
         style={{
           background: "#141820",
           border: "1px solid rgba(232,185,74,0.14)",
           borderRadius: 16,
           padding: 24,
-          marginTop: 20,
+          marginTop: 14,
         }}
       >
-        <p style={{ color: "#E8B94A", fontWeight: 700, fontSize: 20, lineHeight: 1.6 }}>
-          {script.hook}
-        </p>
-        <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8, marginTop: 12 }}>
-          {script.body}
-        </p>
-        {script.cta ? (
-          <p style={{ color: "#E8B94A", fontWeight: 700, fontSize: 18, marginTop: 12 }}>
-            {script.cta}
-          </p>
-        ) : null}
+        {!editing ? (
+          <>
+            <p style={{ color: "#E8B94A", fontWeight: 700, fontSize: 20, lineHeight: 1.6 }}>
+              {script.hook}
+            </p>
+            <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8, marginTop: 12 }}>
+              {script.body}
+            </p>
+            {script.cta ? (
+              <p style={{ color: "#E8B94A", fontWeight: 700, fontSize: 18, marginTop: 12 }}>
+                {script.cta}
+              </p>
+            ) : null}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16 }}>
+              <button
+                type="button"
+                className="br-btn"
+                onClick={startEdit}
+                style={{
+                  border: "1px solid rgba(232,185,74,0.4)",
+                  background: "transparent",
+                  color: "#E8B94A",
+                  borderRadius: 999,
+                  padding: "8px 16px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                {getBroadcastCopy("prep.edit_cta")}
+              </button>
+              {saveState === "saved" ? (
+                <span style={{ color: "#7FD49B", fontSize: 13.5 }}>{getBroadcastCopy("prep.edit_saved")}</span>
+              ) : null}
+            </div>
+          </>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <p style={fieldLabel}>{getBroadcastCopy("prep.edit_hook")}</p>
+              <textarea
+                rows={2}
+                value={draft.hook}
+                onChange={(e) => setDraft((d) => ({ ...d, hook: e.target.value }))}
+                style={{ ...taStyle, color: "#E8B94A", fontWeight: 700 }}
+              />
+            </div>
+            <div>
+              <p style={fieldLabel}>{getBroadcastCopy("prep.edit_body")}</p>
+              <textarea
+                rows={6}
+                value={draft.body}
+                onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))}
+                style={taStyle}
+              />
+            </div>
+            <div>
+              <p style={fieldLabel}>{getBroadcastCopy("prep.edit_cta_field")}</p>
+              <textarea
+                rows={2}
+                value={draft.cta ?? ""}
+                onChange={(e) => setDraft((d) => ({ ...d, cta: e.target.value }))}
+                style={{ ...taStyle, color: "#E8B94A", fontWeight: 700 }}
+              />
+            </div>
+            {saveState === "error" || saveState === "empty" ? (
+              <p style={{ color: "#E8B94A", fontSize: 13.5, margin: 0 }}>
+                {getBroadcastCopy(saveState === "empty" ? "prep.edit_empty" : "prep.edit_error")}
+              </p>
+            ) : null}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                className="br-btn"
+                disabled={saveState === "saving"}
+                onClick={save}
+                style={{
+                  border: "none",
+                  background: "linear-gradient(180deg, #f4d27a 0%, #e8b942 52%, #d59b1f 100%)",
+                  color: "#2a1d05",
+                  borderRadius: 999,
+                  padding: "9px 20px",
+                  fontSize: 14.5,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  opacity: saveState === "saving" ? 0.7 : 1,
+                }}
+              >
+                {getBroadcastCopy(saveState === "saving" ? "prep.edit_saving" : "prep.edit_save")}
+              </button>
+              <button
+                type="button"
+                className="br-btn"
+                disabled={saveState === "saving"}
+                onClick={() => { setEditing(false); setSaveState("idle"); }}
+                style={{
+                  border: "1px solid rgba(237,233,225,0.25)",
+                  background: "transparent",
+                  color: "#CDD1DA",
+                  borderRadius: 999,
+                  padding: "9px 16px",
+                  fontSize: 14,
+                  cursor: "pointer",
+                }}
+              >
+                {getBroadcastCopy("prep.edit_cancel")}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
         {(["prep.tip.eyeline", "prep.tip.one_friend", "prep.tip.no_fixing"] as const).map((k) => (

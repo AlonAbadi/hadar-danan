@@ -59,8 +59,13 @@ export interface PrompterSpec {
 
 export function prompterStoragePath(spec: PrompterSpec): string {
   // r4: no-audio, 720p60, giant type, baked title/countdown/end cards.
+  // The content hash busts the cache when the member edits their script
+  // (scripts are editable on the prep screen since 2026-07-22).
   const langSuffix = spec.language === "en" ? "-en" : "";
-  return `${spec.authPrefix}/prompter/v${spec.videoNumber}-w${spec.wpm}-r4${langSuffix}.mp4`;
+  let h = 0;
+  const text = `${spec.hook}|${spec.body}|${spec.cta ?? ""}`;
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) >>> 0;
+  return `${spec.authPrefix}/prompter/v${spec.videoNumber}-w${spec.wpm}-r4-h${h.toString(36)}${langSuffix}.mp4`;
 }
 
 // Renders the scroll and uploads it; returns the storage path.

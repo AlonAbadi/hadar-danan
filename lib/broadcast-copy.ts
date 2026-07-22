@@ -33,6 +33,24 @@ export const BROADCAST_COPY = {
   "prep.tip.no_fixing": "לא מתקנים טייק באמצע. עוצרים ומתחילים טייק נוסף",
   "prep.cta": { f: "אני מוכנה", m: "אני מוכן" },
 
+  // Prep — read-first + script ownership (Alon 2026-07-22: the member must
+  // never meet the script for the first time at the camera)
+  "prep.own_title": "התסריט הזה שלך",
+  "prep.own_body": {
+    f: "קראי אותו בקול, פעם או פעמיים, לפני שעוברים למצלמה. מילה שלא יושבת לך בפה? מילת חיבור, ה' הידיעה, ניסוח - תקני אותה כאן. תסריט שעבר דרך הפה שלך נשמע כמוך, והצילום יוצא בטבעיות אחרת לגמרי.",
+    m: "קרא אותו בקול, פעם או פעמיים, לפני שעוברים למצלמה. מילה שלא יושבת לך בפה? מילת חיבור, ה' הידיעה, ניסוח - תקן אותה כאן. תסריט שעבר דרך הפה שלך נשמע כמוך, והצילום יוצא בטבעיות אחרת לגמרי.",
+  },
+  "prep.edit_cta": { f: "עריכת התסריט", m: "עריכת התסריט" },
+  "prep.edit_hook": "פתיחה",
+  "prep.edit_body": "גוף",
+  "prep.edit_cta_field": "סגירה",
+  "prep.edit_save": "שמירה",
+  "prep.edit_cancel": "ביטול",
+  "prep.edit_saving": "שומרים...",
+  "prep.edit_saved": "נשמר. הטלפרומפטר יציג את הנוסח שלך",
+  "prep.edit_error": "השמירה לא הצליחה. נסו שוב",
+  "prep.edit_empty": "פתיחה וגוף לא יכולים להישאר ריקים",
+
   // Screen 3 — broadcast room
   "room.pause": "השהיה",
   "room.restart": "מהתחלה",
@@ -232,6 +250,20 @@ export const BROADCAST_COPY_EN: Record<BroadcastCopyKey, string> = {
   "room.speed": "Speed",
   "room.size": "Size",
   "room.rotate_back": "Rotate back to portrait",
+  "prep.own_title": "This script is yours",
+  "prep.own_body":
+    "Read it out loud, once or twice, before moving to the camera. A word that doesn't sit right in your mouth? A connector, a phrasing - fix it here. A script that has passed through your own mouth sounds like you, and the filming comes out naturally.",
+  "prep.edit_cta": "Edit the script",
+  "prep.edit_hook": "Opening",
+  "prep.edit_body": "Body",
+  "prep.edit_cta_field": "Closing",
+  "prep.edit_save": "Save",
+  "prep.edit_cancel": "Cancel",
+  "prep.edit_saving": "Saving...",
+  "prep.edit_saved": "Saved. The teleprompter will show your wording",
+  "prep.edit_error": "Saving failed. Try again",
+  "prep.edit_empty": "Opening and body can't stay empty",
+
   "room.native_capture": "Film with the phone camera",
   "room.float_loading": "Preparing the floating teleprompter",
   "room.float_ready": "Open the floating window",
