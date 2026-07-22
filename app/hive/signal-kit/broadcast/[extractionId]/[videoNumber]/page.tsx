@@ -62,7 +62,14 @@ export default async function BroadcastRoomPage({
 
   if (!userData) redirect("/account");
   if (userData.hive_status !== "active") redirect("/hive");
-  if (!Number.isInteger(videoNumber) || videoNumber < 1 || videoNumber > 12) {
+  // Season 1 uses 1..12 (7-episode challenge + 5 legacy slots). Season 2 ·
+  // "אני בפעולה" uses 21..26. Alon 2026-07-22: the S2 build shipped the
+  // engine + API + kaveret UI + broadcast POST route, but this page still
+  // had the S1-only cap. Anyone tapping לצלם עכשיו on a S2 script bounced
+  // back through /hive/signal-kit → /kaveret and got the signal page.
+  const isS1Number = videoNumber >= 1 && videoNumber <= 12;
+  const isS2Number = videoNumber >= 21 && videoNumber <= 26;
+  if (!Number.isInteger(videoNumber) || (!isS1Number && !isS2Number)) {
     redirect("/hive/signal-kit");
   }
 

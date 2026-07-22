@@ -56,6 +56,14 @@ export function collectShootDayVideos(signal: any): any[] {
  * way out. Prefers the per-slice value; falls back to shoot_day.videos.
  */
 export function findShootDayVideo(signal: any, videoNumber: number): any | null {
+  // Season 2 slices land under shoot_day_s2_v{n} (n ∈ 21..26). Look there
+  // first when the number is in the S2 range so the broadcast room can
+  // pick up S2 scripts; fall through to Season 1's shoot_day_v{n} and the
+  // legacy shoot_day.videos plan otherwise.
+  if (videoNumber >= 21 && videoNumber <= 26) {
+    const s2 = parseSlice<any>(signal?.[`shoot_day_s2_v${videoNumber}`]);
+    if (s2) return s2;
+  }
   const slice = parseSlice<any>(signal?.[`shoot_day_v${videoNumber}`]);
   if (slice) return slice;
   const planVideos = Array.isArray(signal?.shoot_day?.videos) ? signal.shoot_day.videos : [];

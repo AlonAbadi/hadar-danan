@@ -21,7 +21,11 @@ export async function POST(req: NextRequest) {
     const extractionId = typeof body.extraction_id === "string" ? body.extraction_id : "";
     const videoNumber = Number(body.video_number);
     const wpm = Math.min(Math.max(Math.round(Number(body.wpm) / 5) * 5 || 130, 80), 220);
-    if (!extractionId || !Number.isInteger(videoNumber) || videoNumber < 1 || videoNumber > 12) {
+    // Accept Season 1 (1..12) or Season 2 · "אני בפעולה" (21..26). Alon
+    // 2026-07-22 — matches the broadcast /takes and page-level gates.
+    const isS1Number = videoNumber >= 1 && videoNumber <= 12;
+    const isS2Number = videoNumber >= 21 && videoNumber <= 26;
+    if (!extractionId || !Number.isInteger(videoNumber) || (!isS1Number && !isS2Number)) {
       return NextResponse.json({ error: "invalid_request" }, { status: 400 });
     }
 
