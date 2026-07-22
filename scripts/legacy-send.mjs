@@ -252,14 +252,21 @@ async function cmdStatus() {
     if (c.subject_variant) variantSent[c.subject_variant] = (variantSent[c.subject_variant] ?? 0) + 1;
   }
   if (Object.keys(variantSent).length) {
-    const clickRows = await sbAll("events?select=metadata&type=eq.LEGACY_EMAIL_CLICKED");
+    const clickRows = await sbAll("events?select=metadata,created_at&type=eq.LEGACY_EMAIL_CLICKED");
+    // security scanners "click" within seconds of delivery - exclude clicks
+    // that landed under 2 minutes after that contact was sent
     const variantClicks = {};
     const seen = new Set();
+    let scanners = 0;
     for (const r of clickRows) {
       const v = r.metadata?.subject_variant, e = r.metadata?.email;
-      if (v && e && !seen.has(v + e)) { seen.add(v + e); variantClicks[v] = (variantClicks[v] ?? 0) + 1; }
+      if (!v || !e || seen.has(v + e)) continue;
+      const sentAt = state.contacts[e]?.sent1_at;
+      if (sentAt && new Date(r.created_at) - new Date(sentAt) < 120_000) { scanners++; continue; }
+      seen.add(v + e);
+      variantClicks[v] = (variantClicks[v] ?? 0) + 1;
     }
-    console.log("\nsubject test:");
+    console.log("\nsubject test (scanner clicks excluded: " + scanners + "):");
     for (const [v, n] of Object.entries(variantSent).sort()) {
       const clicks = variantClicks[v] ?? 0;
       console.log(`  ${v}: sent ${n} | clicks ${clicks} (${((clicks / n) * 100).toFixed(2)}%)`);
