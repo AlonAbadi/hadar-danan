@@ -110,7 +110,7 @@ export function BroadcastShowcase() {
       </div>
 
       <div className="nh-br-ctawrap">
-        <TrackedCta dest="kriah" placement="broadcast" className="nh-gold">
+        <TrackedCta dest="kriah" placement="broadcast" className="nh-gold nh-gold-hero">
           לגלות את האות שלי בחינם
         </TrackedCta>
         <p className="nh-br-ctasub">מתחילים באבחון חינם. חדר השידור נבנה מהאות שלכם.</p>
