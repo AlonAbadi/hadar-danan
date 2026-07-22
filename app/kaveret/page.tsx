@@ -27,10 +27,20 @@ import { KaveretClient, type KaveretData } from "./KaveretClient";
 // 2026-07-22 Alon: emails that see the roadmap as if they had the infinite
 // (lifetime) subscription. Lowercased comparison. Move to a DB column once
 // the lifetime tier ships.
+// Lifetime members also bypass the season / takes caps so they can film
+// through the whole roadmap, not just Season 1 (see LIFETIME_SEASON_CAP
+// and LIFETIME_TAKES_CAP below).
 const LIFETIME_EMAILS = new Set<string>([
   "alonabadi9@gmail.com",
   "hadard1113@gmail.com",
+  "yonatansheflan@gmail.com",
 ]);
+
+// Effectively-infinite ceilings for lifetime members. Kept as large finite
+// numbers so the existing integer type + comparisons in the client stay
+// valid without a schema change.
+const LIFETIME_SEASON_CAP = 999;
+const LIFETIME_TAKES_CAP  = 99;
 
 export const dynamic = "force-dynamic";
 
@@ -325,8 +335,11 @@ export default async function KaveretPage({
     ) as number[],
     takesPerScript,
     seasonUsed,
-    seasonCap: 7,
-    takesCap: 3,
+    // Lifetime members get effectively-unlimited filming — one Season 1 cap
+    // (7 non-failed edits total) was fine for the ₪99/mo tier; for someone
+    // who paid once for everything, we don't want them hitting a wall.
+    seasonCap: LIFETIME_EMAILS.has((userData.email ?? "").toLowerCase()) ? LIFETIME_SEASON_CAP : 7,
+    takesCap:  LIFETIME_EMAILS.has((userData.email ?? "").toLowerCase()) ? LIFETIME_TAKES_CAP  : 3,
     aboutSite: String(kit.bio_long ?? ""),
     manifesto: String(kit.manifesto ?? ""),
     letterFromHadar: letterFromHadar
