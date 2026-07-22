@@ -122,6 +122,12 @@ function shuffleByHash<T>(items: T[], seed: string): T[] {
 export interface CustomerCorpusCtx {
   extractionId: string;
   occupation:   string | null | undefined;
+  // 2026-07-22 Alon: rotate the quote sample per video too, not just per
+  // customer. Different videos in the same season see different subsets, so
+  // the model has genuinely different raw material — a mechanical way to
+  // reduce cross-video similarity in output. When absent (Phase 1/2 packs)
+  // the shuffle falls back to per-customer behavior.
+  videoNumber?: number | null;
 }
 
 /**
@@ -161,7 +167,11 @@ export function buildInjectedQuotesForCustomer(ctx: CustomerCorpusCtx): string {
     const pool = crossDomain.length > 0 ? crossDomain : all;
 
     // 2) Per-customer shuffle — deterministic by extractionId + move number.
-    const shuffled = shuffleByHash(pool, `${ctx.extractionId}:${n}`);
+    // If videoNumber is present, folds it in so each video sees a different
+    // subset while the sampling stays deterministic per (customer, move,
+    // video).
+    const seedTail = ctx.videoNumber != null ? `:v${ctx.videoNumber}` : "";
+    const shuffled = shuffleByHash(pool, `${ctx.extractionId}:${n}${seedTail}`);
     const picks    = shuffled.slice(0, MAX_QUOTES_PER_MOVE);
     if (picks.length === 0) continue;
 

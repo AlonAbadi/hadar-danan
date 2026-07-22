@@ -72,13 +72,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const lang = shootDayLanguage(gate.signal);
 
   // ── Generate the requested videos ────────────────────────────────────
+  // 2026-07-22 Alon (diversity phase A): tune sampling + temperature per
+  // requested video so the same customer's season stops rhyming with itself.
+  //
+  //  - videoNumber in the corpus context rotates which quotes the model
+  //    sees; V1 and V4 get different subsets of the corpus even for the
+  //    same customer.
+  //
+  //  - temperature is per video type. Opinion / story shapes (V4 CRITIQUE,
+  //    V6 STORY_OPINION) can push higher so the model doesn't collapse to
+  //    the safest phrasing. The CTA-carrying V7 stays lower to keep the
+  //    invitation crisp.
+  //
+  // When the client requests multiple videos in one batch the model has to
+  // pick a single sampling seed, so we key off the first requested number —
+  // the small client (kaveret) already ships them one-by-one.
+  const primaryVideo = numbers[0];
+  const temperature =
+    primaryVideo === 4 || primaryVideo === 6 ? 1.1 :
+    primaryVideo === 7 ? 0.85 :
+    undefined; // V1/V2/V3/V5 keep the default
   let text = "";
   try {
     text = await runPack(
       withLanguage(VIDEOS_PACK_SYSTEM, lang),
       buildVideosContextMessage(gate.ctx, identity_statement, pillars, numbers),
       Math.min(numbers.length * TOKENS_PER_VIDEO, VIDEOS_PACK_MAX_TOKENS),
-      { extractionId: id, occupation: gate.ctx.occupation },
+      { extractionId: id, occupation: gate.ctx.occupation, videoNumber: primaryVideo },
+      temperature,
     );
   } catch (e) {
     return NextResponse.json({ error: "Videos generation failed", details: String(e) }, { status: 500 });

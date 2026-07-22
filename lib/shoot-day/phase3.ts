@@ -88,6 +88,10 @@ export async function runPack(
   user: string,
   maxTokens: number,
   customerCtx?: CustomerCorpusCtx,
+  // 2026-07-22 Alon: per-call temperature so opinion / story videos can run
+  // hotter than the CTA pack. When omitted, Anthropic's default (~1.0) is
+  // used, matching pre-change behavior for phase-1/2 calls.
+  temperature?: number,
 ): Promise<string> {
   const finalSystem = customerCtx ? personalizeSystemPrompt(system, customerCtx) : system;
   const client = new Anthropic();
@@ -96,6 +100,7 @@ export async function runPack(
     max_tokens: maxTokens,
     system:     finalSystem,
     messages:   [{ role: "user", content: user }],
+    ...(temperature != null ? { temperature } : {}),
   });
   return resp.content
     .filter((b) => b.type === "text")
