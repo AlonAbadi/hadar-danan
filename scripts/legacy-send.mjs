@@ -57,14 +57,22 @@ function loadState() {
 }
 function saveState(s) { writeFileSync(STATE_PATH, JSON.stringify(s)); }
 
+const STRICT_EMAIL = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
 function loadCsv() {
   const lines = readFileSync(CSV_PATH, "utf8").split("\n").slice(1);
   const out = [];
+  let skipped = 0;
   for (const line of lines) {
     const m = line.match(/^"(.*)",(\d*),(.+)$/);
     if (!m) continue;
-    out.push({ name: m[1], phone: m[2], email: m[3].trim().toLowerCase() });
+    const email = m[3].trim().toLowerCase();
+    // Resend-grade validation: one malformed address 422s a whole batch of 100
+    // (learned in wave 3: "keren.moda@gmail.xn--com-ena" killed chunk 6)
+    if (!STRICT_EMAIL.test(email)) { skipped++; continue; }
+    out.push({ name: m[1], phone: m[2], email });
   }
+  if (skipped) console.log(`loadCsv: skipped ${skipped} malformed addresses`);
   return out;
 }
 
@@ -183,7 +191,7 @@ function renderEmail(tpl, contact, emailNum, wave) {
   };
 }
 
-async function sendBatch(payloads, dry) {
+async function sendBatch(payloads, dry, onChunkSent) {
   if (dry) return payloads.map(() => ({ id: "dry-run" }));
   const out = [];
   for (let i = 0; i < payloads.length; i += 100) {
@@ -192,8 +200,31 @@ async function sendBatch(payloads, dry) {
       method: "POST", headers: RESEND_H, body: JSON.stringify(chunk),
     });
     const body = await res.json();
-    if (!res.ok) throw new Error(`batch send failed: ${res.status} ${JSON.stringify(body)}`);
+    if (!res.ok) {
+      // One malformed address 422s the whole chunk and Resend does not say
+      // which. Fall back to sending this chunk one-by-one: bad addresses are
+      // skipped (id:null -> marked invalid upstream), good ones still go out.
+      console.log(`chunk ${i / 100} rejected (${res.status}) - falling back to per-email sends`);
+      const singles = [];
+      for (const payload of chunk) {
+        const r1 = await fetch("https://api.resend.com/emails", {
+          method: "POST", headers: RESEND_H, body: JSON.stringify(payload),
+        });
+        const b1 = await r1.json().catch(() => ({}));
+        if (r1.ok) singles.push({ id: b1.id });
+        else {
+          console.log(`  skipped invalid: ${payload.to[0]}`);
+          singles.push({ id: null, invalid: true });
+        }
+        await new Promise((r) => setTimeout(r, 150));
+      }
+      out.push(...singles);
+      onChunkSent?.(i, singles);
+      continue;
+    }
     out.push(...body.data);
+    // persist THIS chunk immediately - a later failure must not orphan sent mail
+    onChunkSent?.(i, body.data);
     await new Promise((r) => setTimeout(r, 600)); // stay well under 10 rps
   }
   return out;
@@ -258,6 +289,7 @@ async function cmdSend(size, dry) {
 
   const eligible = loadCsv().filter((c) =>
     !state.contacts[c.email]?.sent1_at &&
+    !state.contacts[c.email]?.invalid &&
     !sig.inCrm.has(c.email) &&
     !sig.unsubscribed.has(c.email) && !sig.bounced.has(c.email) && !sig.complained.has(c.email)
   ).slice(0, size);
@@ -271,16 +303,25 @@ async function cmdSend(size, dry) {
     return { ...c, subjectVariant: v.key, subjectOverride: v.subject };
   });
   console.log(`wave ${wave}: sending email1 to ${eligible.length} contacts${dry ? " (DRY RUN)" : ""} (subjects: ${SUBJECT_VARIANTS.map(v=>v.key).join("/")})`);
-  const results = await sendBatch(withVariants.map((c) => renderEmail(tpl, c, 1, wave)), dry);
-  if (!dry) {
-    const now = new Date().toISOString();
-    withVariants.forEach((c, i) => {
-      state.contacts[c.email] = { ...(state.contacts[c.email] ?? {}), name: c.name, wave, sent1_at: now, sent1_id: results[i]?.id, subject_variant: c.subjectVariant };
+  const now = new Date().toISOString();
+  let sentCount = 0;
+  const results = await sendBatch(withVariants.map((c) => renderEmail(tpl, c, 1, wave)), dry, (offset, ids) => {
+    ids.forEach((r, j) => {
+      const c = withVariants[offset + j];
+      if (r?.invalid) {
+        state.contacts[c.email] = { ...(state.contacts[c.email] ?? {}), name: c.name, invalid: true };
+      } else {
+        state.contacts[c.email] = { ...(state.contacts[c.email] ?? {}), name: c.name, wave, sent1_at: now, sent1_id: r?.id, subject_variant: c.subjectVariant };
+      }
     });
-    state.waves.push({ n: wave, size: eligible.length, at: now });
+    sentCount = offset + ids.length;
+    saveState(state);
+  });
+  if (!dry) {
+    state.waves.push({ n: wave, size: sentCount, at: now });
     saveState(state);
     // surface the wave in /admin/legacy (server has no access to the local ledger)
-    await sbInsertEvent("LEGACY_WAVE_SENT", { wave, size: eligible.length, email: `wave-${wave}`, at: now });
+    await sbInsertEvent("LEGACY_WAVE_SENT", { wave, size: sentCount, email: `wave-${wave}`, at: now });
   }
   console.log(dry ? "dry run complete, nothing sent" : `sent ${results.length}. Run --sync in ~1h, then --status before the next wave.`);
 }

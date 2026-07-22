@@ -57,6 +57,18 @@ async function buildVisitorData(extractionId: string, token: string): Promise<Vi
   const day0 = CHALLENGE_DAYS.find((d) => d.day === 0);
   const g = ext.gender ?? leadUser?.gender;
 
+  // The finished first reel plays inline in section 03 (per Alon 2026-07-22).
+  // Signed per page load; the page is force-dynamic so links stay fresh.
+  const render = readFirstReelRender(sig);
+  let firstReelUrl: string | null = null;
+  if (render.status === "ready" && render.output_path) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: signed } = await (db as any).storage
+      .from("broadcast-takes")
+      .createSignedUrl(render.output_path, 60 * 60);
+    firstReelUrl = signed?.signedUrl ?? null;
+  }
+
   return {
     firstName: leadUser?.name?.split(" ")[0] ?? "",
     gender: g === "m" ? "m" : g === "f" ? "f" : null,
@@ -74,7 +86,8 @@ async function buildVisitorData(extractionId: string, token: string): Promise<Vi
     waPhone: process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "972539566961",
     token,
     firstReelEnabled: Boolean(process.env.FIRST_REEL_CAMERA_ENABLED),
-    firstReelReady: readFirstReelRender(sig).status === "ready",
+    firstReelReady: render.status === "ready",
+    firstReelUrl,
   };
 }
 

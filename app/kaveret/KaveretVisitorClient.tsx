@@ -30,6 +30,7 @@ export interface VisitorData {
   token: string;
   firstReelEnabled: boolean;
   firstReelReady: boolean;
+  firstReelUrl: string | null;
 }
 
 const LOCK = (
@@ -360,6 +361,16 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               <div className={sty.vPrec} />
             </div>
             <p className={sty.vPcap}>הטלפרומפטר עם התסריט שלך, על המצלמה הקדמית</p>
+            {data.firstReelUrl ? (
+              <div style={{ display: "flex", justifyContent: "center", margin: "16px 0 4px" }}>
+                <div style={{ position: "relative", width: "min(280px, 78vw)", aspectRatio: "9/16", borderRadius: 16, overflow: "hidden", background: "#000", border: "1px solid rgba(232,185,74,0.35)" }}>
+                  <video src={data.firstReelUrl} controls playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <span style={{ position: "absolute", top: 10, insetInlineStart: 10, background: "rgba(8,12,20,0.75)", border: "1px solid rgba(232,185,74,0.4)", borderRadius: 8, padding: "3px 9px", fontSize: 11, color: "#E8B94A", fontWeight: 700, pointerEvents: "none" }}>
+                    הרילס הראשון שלך · עם כתוביות
+                  </span>
+                </div>
+              </div>
+            ) : null}
             {data.firstReelEnabled ? (
               <div style={{ textAlign: "center", margin: "14px 0 4px" }}>
                 <a
