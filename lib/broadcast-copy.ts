@@ -35,6 +35,9 @@ export const BROADCAST_COPY = {
 
   // Prep — read-first + script ownership (Alon 2026-07-22: the member must
   // never meet the script for the first time at the camera)
+  "captions.video_loading": "הסרטון נטען...",
+  "captions.trim.thumbs_loading": "הפריימים נטענים...",
+
   "prep.own_title": "התסריט הזה שלך",
   "prep.own_body": {
     f: "קראי אותו בקול, פעם או פעמיים, לפני שעוברים למצלמה. מילה שלא יושבת לך בפה? מילת חיבור, ה' הידיעה, ניסוח - תקני אותה כאן. תסריט שעבר דרך הפה שלך נשמע כמוך, והצילום יוצא בטבעיות אחרת לגמרי.",
@@ -250,6 +253,9 @@ export const BROADCAST_COPY_EN: Record<BroadcastCopyKey, string> = {
   "room.speed": "Speed",
   "room.size": "Size",
   "room.rotate_back": "Rotate back to portrait",
+  "captions.video_loading": "Loading the video...",
+  "captions.trim.thumbs_loading": "Loading frames...",
+
   "prep.own_title": "This script is yours",
   "prep.own_body":
     "Read it out loud, once or twice, before moving to the camera. A word that doesn't sit right in your mouth? A connector, a phrasing - fix it here. A script that has passed through your own mouth sounds like you, and the filming comes out naturally.",

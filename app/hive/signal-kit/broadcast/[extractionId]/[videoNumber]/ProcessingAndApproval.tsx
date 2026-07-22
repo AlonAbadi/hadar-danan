@@ -646,7 +646,7 @@ function FilmstripTrimmer({
     video.muted = true;
     video.playsInline = true;
     video.preload = "auto";
-    video.style.cssText = "position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none;";
+    video.style.cssText = "position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;";
     document.body.appendChild(video);
     video.src = src;
     video.load();
@@ -657,6 +657,11 @@ function FilmstripTrimmer({
     // Seek AND wait for the frame to be painted: "seeked" alone does not
     // guarantee a decoded frame everywhere - requestVideoFrameCallback is
     // the paint signal where supported (Safari 15.4+, Chrome 83+).
+    // After "seeked", give requestVideoFrameCallback up to 200ms to signal a
+    // painted frame, then draw regardless. rVFC is tied to COMPOSITING — on
+    // a hidden offscreen video Chrome may never fire it (field: the whole
+    // strip fell to timecode ticks because every seek "timed out"), while
+    // the decoder does hold the frame right after seeked.
     const seekTo = (t: number) =>
       withTimeout(
         new Promise<void>((resolve) => {
@@ -664,8 +669,12 @@ function FilmstripTrimmer({
             requestVideoFrameCallback?: (cb: () => void) => void;
           }).requestVideoFrameCallback?.bind(video);
           video.onseeked = () => {
-            if (rvfc) rvfc(() => resolve());
-            else resolve();
+            if (rvfc) {
+              let done = false;
+              const finish = () => { if (!done) { done = true; resolve(); } };
+              rvfc(finish);
+              setTimeout(finish, 200);
+            } else resolve();
           };
           video.currentTime = t;
         }),
@@ -1156,6 +1165,9 @@ function ZoomPanPreview({
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [vid, setVid] = useState({ w: 0, h: 0 });
   const [playing, setPlaying] = useState(false);
+  // Loading truth: a 60s+ take streams for a while — without a spinner the
+  // screen reads as dead and the member gives up (Alon field report).
+  const [videoReady, setVideoReady] = useState(false);
   const tRef = useRef(transform);
   tRef.current = transform;
   const pointersRef = useRef(new Map<number, { x: number; y: number }>());
@@ -1281,6 +1293,8 @@ function ZoomPanPreview({
             // frame onto the screen so the editor never opens black.
             try { v.currentTime = Math.max(v.currentTime, 0.05); } catch { /* not seekable yet */ }
           }}
+          onLoadedData={() => setVideoReady(true)}
+          onCanPlay={() => setVideoReady(true)}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onTimeUpdate={(e) => {
@@ -1313,7 +1327,24 @@ function ZoomPanPreview({
           onPointerCancel={onPointerUp}
           style={{ position: "absolute", inset: 0, touchAction: "none", cursor: "grab" }}
         />
-        {!playing ? (
+        {!videoReady ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              pointerEvents: "none",
+              background: "rgba(8,12,20,0.4)",
+            }}
+          >
+            <span className="br-spinner br-spinner-gold" style={{ width: 26, height: 26 }} />
+            <span style={{ color: "#CDD1DA", fontSize: 13.5 }}>{getBroadcastCopy("captions.video_loading")}</span>
+          </div>
+        ) : !playing ? (
           <div
             style={{
               position: "absolute",
