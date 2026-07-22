@@ -1122,6 +1122,12 @@ export interface ShootDayContext {
   gender?:        "m" | "f" | null;  // לכוונון מין המשתמש בפלט (אני מתחיל / אני מתחילה)
   bio_long?:      string;       // אבאוט ארוך מה-ContentKit (אם יש)
   positioning_statement?: string;  // מה-ContentKit (אם יש)
+  // 2026-07-22 Alon (Content Torah 17 · Phase B): real quotes from the
+  // customer's OWN clients. When present, the engine grounds hooks / body
+  // detail / anti-category in language the actual audience has spoken,
+  // instead of the model's guess of what "your audience says." Optional —
+  // engine reads the signal alone when absent.
+  audience_quotes?: string[];
 }
 
 export function buildContextMessage(ctx: ShootDayContext): string {
@@ -1161,6 +1167,8 @@ ${ctx.warm_note}
 ${ctx.bio_long ? `אבאוט ארוך:\n${ctx.bio_long}\n` : ""}
 
 ${ctx.positioning_statement ? `הצהרת מיקום:\n${ctx.positioning_statement}\n` : ""}
+
+${ctx.audience_quotes && ctx.audience_quotes.length > 0 ? `**ציטוטים אמיתיים מהקהל של הלקוח/ה (Content Torah 17)** — משפטים שלקוחות של הלקוח/ה **אמרו לו/ה במציאות**. אלה השורות שהקהל שלו/ה משתמש בהן בפועל, לא ניחוש המודל. חובה לעגן hooks / body / anti-category / client-quotes בשפה שלמטה, לא בשפה שאתה מייצר. אם ציטוט אחד מהם מתאים לפרק — השתמש בו verbatim בסצנה או פרפרזה קרובה:\n${ctx.audience_quotes.map((q, i) => `${i + 1}. "${q}"`).join("\n")}\n` : ""}
 
 עכשיו ייצר את הפלט לפי ההוראות במערכת.`;
 }

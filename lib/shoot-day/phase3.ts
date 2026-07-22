@@ -70,6 +70,14 @@ export async function gateAndBuildContext(req: NextRequest, id: string): Promise
     gender:         (userRow.gender === "m" || userRow.gender === "f") ? userRow.gender : null,
     bio_long:       row.signal.content_kit?.bio_long ?? undefined,
     positioning_statement: row.signal.content_kit?.positioning_statement ?? undefined,
+    // 2026-07-22 Alon (Phase B): audience_quotes are collected on the
+    // /kaveret shell (or the signal-hive post-purchase step) and stored on
+    // signal_extractions.signal.audience_quotes as string[]. Pass them
+    // through to the engine when present; the videos prompt uses them as
+    // grounding language for hooks and body detail.
+    audience_quotes: Array.isArray(row.signal.audience_quotes)
+      ? row.signal.audience_quotes.filter((q: unknown): q is string => typeof q === "string" && q.trim().length > 0)
+      : undefined,
   };
 
   return { ok: true, ctx, supabase, signal: row.signal };
