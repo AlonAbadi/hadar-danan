@@ -11,6 +11,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import sty from "./kaveret.module.css";
+import { KAVERET_SEASONS, type KaveretSeason } from "@/lib/kaveret-seasons";
 
 export interface VisitorData {
   firstName: string;
@@ -275,6 +276,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 : "שבעה תסריטים בקול שלך. הטקסט רץ בקצב שלך, הבמאית חותכת, מוסיפה כתוביות ומחזירה רילס. מצולם, לא מיוצר."}
             </p>
           </div>
+          <SeasonsTease offer={data.offer} sale={sale} />
         </section>
 
         {/* ── challenge: opening session open ── */}
@@ -544,6 +546,77 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
           </a>
         </nav>
       ) : null}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SeasonsTease — the locked continuation under the broadcast room. Same
+// canonical season data + card design as the member SeasonsRoadmap
+// (KaveretClient) so the tease IS the product, only the status labels
+// change: nothing here is open yet — the strip exists so a lead sees
+// that the kaveret keeps going past season one. Click = the same
+// Netflix-style detail row (the רמיזה).
+// ─────────────────────────────────────────────────────────────────────
+function SeasonsTease({ offer, sale }: { offer: VisitorData["offer"]; sale: boolean }) {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  const seasons = KAVERET_SEASONS;
+  const visible = showAll ? seasons : seasons.slice(0, 5);
+  const openSeason = openIdx !== null ? seasons.find((s) => s.number === openIdx) ?? null : null;
+
+  const statusLabel = (st: KaveretSeason["status"]): string =>
+    st === "live"
+      ? offer === "strategy" ? "כלולה בליווי" : sale ? "נפתחת בכוורת" : "שמורה לך כאן"
+      : st === "next" ? "העונה הבאה" : st === "coming" ? "בקרוב" : "בהמשך";
+
+  return (
+    <div className={sty.roadWrap}>
+      <div className={sty.roadHead}>
+        <span className={sty.roadTitle}>עוד פרקים ועונות מחכים</span>
+      </div>
+      <p className={sty.roadIntro}>
+        הכוורת לא נגמרת בעונה הראשונה. כל חודש עונה חדשה, אותו אות, זווית אחרת. הצצה למה שמחכה.
+      </p>
+      <div className={sty.roadStrip}>
+        {visible.map((sn) => (
+          <button
+            key={sn.number}
+            type="button"
+            onClick={() => setOpenIdx(openIdx === sn.number ? null : sn.number)}
+            className={`${sty.roadCard} ${sty[sn.status]}`}
+            style={{ textAlign: "start", fontFamily: "inherit", cursor: "pointer" }}
+          >
+            <div className={sty.roadTop}>
+              <span className={sty.roadNo}>עונה {String(sn.number).padStart(2, "0")}</span>
+              <span className={sty.roadPill}>{statusLabel(sn.status)}</span>
+            </div>
+            <div className={sty.roadCardTitle}>{sn.title}</div>
+            <p className={sty.roadTag}>{sn.tagline}</p>
+            <div className={sty.roadMeta}>{sn.episodes} פרקים {LOCK}</div>
+          </button>
+        ))}
+      </div>
+      {!showAll && seasons.length > visible.length ? (
+        <button type="button" className={sty.roadExpand} onClick={() => setShowAll(true)}>
+          עוד {seasons.length - visible.length} עונות ←
+        </button>
+      ) : null}
+      {openSeason ? (
+        <div className={sty.roadDetail}>
+          <h4>עונה {openSeason.number} · {openSeason.title}</h4>
+          <p>{openSeason.what}</p>
+          <p className="why">{openSeason.why}</p>
+        </div>
+      ) : null}
+      <p className={sty.txt} style={{ fontSize: 13, marginTop: 12, color: "#ACA79E", textAlign: "center" }}>
+        {offer === "strategy"
+          ? "העונה הראשונה, שבעת הפרקים, כלולה בליווי. משם כל חודש עונה חדשה מהאות שלך."
+          : sale
+            ? "העונה הראשונה, שבעת הפרקים, נפתחת בכוורת. ההמשך, רק אם תרצו."
+            : "העונות האלה שמורות לך כאן."}
+      </p>
     </div>
   );
 }

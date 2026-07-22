@@ -126,7 +126,7 @@ export const KAVERET_SEASONS: KaveretSeason[] = [
   },
 ];
 
-export const KAVERET_SEASONS_INTRO = "המנוי החודשי לא נגמר בעונה הראשונה. כל חודש עונה חדשה, אותה אות, זווית אחרת. כאן הצצה למה שמחכה.";
+export const KAVERET_SEASONS_INTRO = "המנוי החודשי לא נגמר בעונה הראשונה. כל חודש עונה חדשה, אותו אות, זווית אחרת. כאן הצצה למה שמחכה.";
 
 // ── English edition ─────────────────────────────────────────────────────
 // Same season taxonomy, written for the English hive (The Signal Hive).
