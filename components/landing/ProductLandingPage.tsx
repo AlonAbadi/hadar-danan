@@ -4,6 +4,18 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Script from 'next/script';
 
+function SvgStars({ size = 14 }: { size?: number }) {
+  return (
+    <span style={{ display: "inline-flex", gap: 2, lineHeight: 0 }} aria-label="5 כוכבים">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill="#E8B94A" aria-hidden>
+          <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8L12 2z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
 // ── Design tokens ──────────────────────────────────────────────
 const BG         = '#080C14';
 const CARD       = '#141820';
@@ -102,7 +114,7 @@ export interface ProductLandingPageProps {
 
 // ── Helpers ────────────────────────────────────────────────────
 function Stars() {
-  return <span style={{ color: GOLD_L, letterSpacing: '2px', fontSize: 15 }}>★★★★★</span>;
+  return <SvgStars size={15} />;
 }
 
 function PhotoPlaceholder({ size = 80 }: { size?: number }) {

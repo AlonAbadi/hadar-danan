@@ -2,6 +2,18 @@
 
 import { useState, useEffect } from "react";
 
+function SvgStars({ size = 14 }: { size?: number }) {
+  return (
+    <span style={{ display: "inline-flex", gap: 2, lineHeight: 0 }} aria-label="5 כוכבים">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill="#E8B94A" aria-hidden>
+          <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8L12 2z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
 type TestimonialBase = {
   highlight: string;
   body: string;
@@ -207,7 +219,7 @@ export default function QuizProofWall({ start = 0, end, showWall = true, showFoo
       <div className="qpw-grid">
         {items.map((t, i) => (
           <article key={i} className="qpw-card">
-            <div className="qpw-stars">★★★★★</div>
+            <div className="qpw-stars"><SvgStars /></div>
             <blockquote className="qpw-quote">
               <span className="qpw-highlight">&ldquo;{t.highlight}&rdquo;</span>
               {t.body && <span className="qpw-body"> {t.body}</span>}
@@ -306,7 +318,7 @@ export default function QuizProofWall({ start = 0, end, showWall = true, showFoo
                 <div>
                   <div className="qpw-google-name">{lightbox.testimonial.author}</div>
                   <div className="qpw-google-meta">
-                    <span className="qpw-google-stars">★★★★★</span>
+                    <span className="qpw-google-stars"><SvgStars size={13} /></span>
                     <span>{lightbox.testimonial.date}</span>
                   </div>
                 </div>

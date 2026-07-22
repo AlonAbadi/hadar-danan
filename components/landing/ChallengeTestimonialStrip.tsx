@@ -2,6 +2,18 @@
 
 import { useEffect, useState } from "react";
 
+function SvgStars({ size = 14 }: { size?: number }) {
+  return (
+    <span style={{ display: "inline-flex", gap: 2, lineHeight: 0 }} aria-label="5 כוכבים">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill="#E8B94A" aria-hidden>
+          <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8L12 2z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
 /**
  * Horizontal-scrolling testimonial strip rendered immediately after the
  * /challenge hero in variant B of the challenge_proof_position A/B test.
@@ -70,7 +82,7 @@ export function ChallengeTestimonialStrip() {
       <div className="cts-scroller">
         {STRIP_ITEMS.map((t, i) => (
           <article key={i} className="cts-card">
-            <div className="cts-stars">★★★★★</div>
+            <div className="cts-stars"><SvgStars /></div>
             <blockquote className="cts-quote">
               <span className="cts-highlight">&ldquo;{t.highlight}&rdquo;</span>
               {t.body && <span className="cts-body"> {t.body}</span>}
