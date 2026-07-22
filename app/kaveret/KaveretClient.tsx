@@ -897,57 +897,97 @@ export function KaveretClient({
                 </span>
               </div>
 
-              <div className={sty.seShelfHead}>
-                <span className={sty.seT}>עונה ראשונה</span>
-                <span className={sty.seS}>
-                  {reels.filter((r) => !deletedReels[r.editId]).length} מתוך {data.scriptsTotal || 7} פרקים
-                </span>
-                {reels.filter((r) => !deletedReels[r.editId]).length >= (data.scriptsTotal || 7) ? (
-                  <span className={sty.seSeal}>העונה הושלמה</span>
-                ) : null}
-              </div>
+              {(() => {
+                // Split filmed reels into their season by video_number.
+                // Season 1 = 1..12, Season 2 = 21..26 (see engine + broadcast
+                // route). Anything outside those bands falls to Season 1
+                // (safest default for legacy takes).
+                const activeReels = reels.filter((r) => !deletedReels[r.editId]);
+                const s1Reels = activeReels.filter((r) => (r.videoNumber ?? 0) >= 21 && (r.videoNumber ?? 0) <= 26 ? false : true);
+                const s2Reels = activeReels.filter((r) => (r.videoNumber ?? 0) >= 21 && (r.videoNumber ?? 0) <= 26);
 
-              <div className={sty.seCar}>
-                {reels.filter((r) => !deletedReels[r.editId]).map((r, idx) => {
-                  const isPub = r.published || published[r.editId];
-                  const script = data.scripts.find((s) => s.number === r.videoNumber);
-                  const epName = script?.title || `הפרק שצולם ב-${new Date(r.createdAt).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}`;
-                  return (
-                    <div className={sty.seCard} key={r.editId}>
-                      <button
-                        type="button"
-                        className={sty.seThumb}
-                        aria-label={`פתח פרק ${idx + 1}`}
-                        onClick={() => setViewerEditId(r.editId)}
-                      >
-                        {r.thumbUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={r.thumbUrl} alt="" loading="lazy" />
-                        ) : null}
-                        <span className={sty.seGrad} />
-                        <span className={sty.sePlay} />
-                      </button>
-                      <span className={`${sty.seTag} ${isPub ? sty.seTagAir : sty.seTagWait}`}>
-                        {isPub ? "באוויר" : "מוכן לפרסום"}
+                type ShelfProps = {
+                  title: string;
+                  total: number;
+                  reelSet: typeof activeReels;
+                  scripts: typeof data.scripts;
+                };
+                const Shelf = ({ title, total, reelSet, scripts }: ShelfProps) => (
+                  <>
+                    <div className={sty.seShelfHead}>
+                      <span className={sty.seT}>{title}</span>
+                      <span className={sty.seS}>
+                        {reelSet.length} מתוך {total} פרקים
                       </span>
-                      <div className={sty.seName}>
-                        <span className={sty.seNo}>{String(idx + 1).padStart(2, "0")}</span>
-                        {epName}
-                      </div>
+                      {reelSet.length >= total ? (
+                        <span className={sty.seSeal}>העונה הושלמה</span>
+                      ) : null}
                     </div>
-                  );
-                })}
-                {reels.filter((r) => !deletedReels[r.editId]).length < (data.scriptsTotal || 7) ? (
-                  <div className={sty.seNextCard}>
-                    <button type="button" className={sty.seThumb} onClick={() => goTab(2)} aria-label="לצלם את הפרק הבא">
-                      <span className={sty.seNum}>
-                        {String(reels.filter((r) => !deletedReels[r.editId]).length + 1).padStart(2, "0")}
-                      </span>
-                    </button>
-                    <div className={sty.seName} style={{ color: "#9E9990" }}>הפרק הבא מחכה בחדר השידור</div>
-                  </div>
-                ) : null}
-              </div>
+                    <div className={sty.seCar}>
+                      {reelSet.map((r, idx) => {
+                        const isPub = r.published || published[r.editId];
+                        const script = scripts.find((s) => s.number === r.videoNumber);
+                        const epName = script?.title || `הפרק שצולם ב-${new Date(r.createdAt).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" })}`;
+                        return (
+                          <div className={sty.seCard} key={r.editId}>
+                            <button
+                              type="button"
+                              className={sty.seThumb}
+                              aria-label={`פתח פרק ${idx + 1}`}
+                              onClick={() => setViewerEditId(r.editId)}
+                            >
+                              {r.thumbUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={r.thumbUrl} alt="" loading="lazy" />
+                              ) : null}
+                              <span className={sty.seGrad} />
+                              <span className={sty.sePlay} />
+                            </button>
+                            <span className={`${sty.seTag} ${isPub ? sty.seTagAir : sty.seTagWait}`}>
+                              {isPub ? "באוויר" : "מוכן לפרסום"}
+                            </span>
+                            <div className={sty.seName}>
+                              <span className={sty.seNo}>{String(idx + 1).padStart(2, "0")}</span>
+                              {epName}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {reelSet.length < total ? (
+                        <div className={sty.seNextCard}>
+                          <button type="button" className={sty.seThumb} onClick={() => goTab(2)} aria-label="לצלם את הפרק הבא">
+                            <span className={sty.seNum}>
+                              {String(reelSet.length + 1).padStart(2, "0")}
+                            </span>
+                          </button>
+                          <div className={sty.seName} style={{ color: "#9E9990" }}>הפרק הבא מחכה בחדר השידור</div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </>
+                );
+
+                return (
+                  <>
+                    <Shelf
+                      title="עונה ראשונה"
+                      total={data.scriptsTotal || 7}
+                      reelSet={s1Reels}
+                      scripts={data.scripts}
+                    />
+                    {data.unlockAllSeasons || s2Reels.length > 0 ? (
+                      <div style={{ marginTop: 26 }}>
+                        <Shelf
+                          title="עונה 2 · אני בפעולה"
+                          total={6}
+                          reelSet={s2Reels}
+                          scripts={data.scriptsS2}
+                        />
+                      </div>
+                    ) : null}
+                  </>
+                );
+              })()}
 
               <SeasonsRoadmap unlockAll={data.unlockAllSeasons} />
             </div>
