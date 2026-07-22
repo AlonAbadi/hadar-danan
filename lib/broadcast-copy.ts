@@ -37,6 +37,7 @@ export const BROADCAST_COPY = {
   // never meet the script for the first time at the camera)
   "captions.video_loading": "הסרטון נטען...",
   "captions.trim.thumbs_loading": "הפריימים נטענים...",
+  "captions.none_cta": "צריבה בלי כתוביות",
 
   "prep.own_title": "התסריט הזה שלך",
   "prep.own_body": {
@@ -255,6 +256,7 @@ export const BROADCAST_COPY_EN: Record<BroadcastCopyKey, string> = {
   "room.rotate_back": "Rotate back to portrait",
   "captions.video_loading": "Loading the video...",
   "captions.trim.thumbs_loading": "Loading frames...",
+  "captions.none_cta": "Burn without captions",
 
   "prep.own_title": "This script is yours",
   "prep.own_body":

@@ -85,6 +85,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         edit.status === "awaiting_captions" && edit.take_id
           ? `/api/broadcast/takes/${edit.take_id}/media`
           : null,
+      // Server-rendered 10-frame strip for the trimmer (phone fMP4s can't
+      // be frame-grabbed client-side — no sidx, seeks stall).
+      take_filmstrip_url:
+        edit.status === "awaiting_captions" && edit.take_id
+          ? `/api/broadcast/takes/${edit.take_id}/filmstrip`
+          : null,
       output_url: outputUrl,
       output_download_url: outputDownloadUrl,
       cover_frames: coverFrames,

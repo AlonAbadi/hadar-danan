@@ -29,6 +29,7 @@ interface EditSnapshot {
   trim_end_ms: number | null;
   take_preview_url: string | null;
   take_media_url: string | null;
+  take_filmstrip_url?: string | null;
   take_capture?: "phone" | "other";
   output_url: string | null;
   output_download_url: string | null;
@@ -303,15 +304,16 @@ function CaptionApproval({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const previewRef = useRef<HTMLVideoElement | null>(null);
 
-  const submit = useCallback(async () => {
+  const submit = useCallback(async (forceMode?: "none") => {
+    const effMode = forceMode ?? mode ?? "none";
     setSubmitting(true);
     try {
       const res = await fetch(`/api/broadcast/edits/${editId}/captions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: mode ?? "none",
-          lines: mode === "none" ? [] : lines,
+          mode: effMode,
+          lines: effMode === "none" ? [] : lines,
           trim_start_ms: trimStart,
           trim_end_ms: trimEnd,
           transform,
@@ -415,7 +417,7 @@ function CaptionApproval({
                 {getBroadcastCopy("captions.sync.next_line")} ({syncIdx + 1}/{lines.length})
               </ActionButton>
             ) : (
-              <ActionButton variant="primary" busy={submitting} onClick={submit}>
+              <ActionButton variant="primary" busy={submitting} onClick={() => submit()}>
                 {getBroadcastCopy("captions.approve_cta")}
               </ActionButton>
             )}
@@ -439,7 +441,7 @@ function CaptionApproval({
             {getBroadcastCopy("captions.failed.option_none")}
           </p>
           <div style={{ marginTop: 20 }}>
-            <ActionButton variant="primary" busy={submitting} onClick={submit}>
+            <ActionButton variant="primary" busy={submitting} onClick={() => submit()}>
               {getBroadcastCopy("captions.approve_cta")}
             </ActionButton>
           </div>
@@ -469,6 +471,7 @@ function CaptionApproval({
         {previewSrc ? (
           <FilmstripTrimmer
             src={previewSrc}
+            filmstripUrl={snap.take_filmstrip_url ?? null}
             trimStart={trimStart}
             trimEnd={trimEnd}
             previewRef={previewRef}
@@ -545,9 +548,12 @@ function CaptionApproval({
             variant="primary"
             busy={submitting}
             disabled={visible.length === 0}
-            onClick={submit}
+            onClick={() => submit()}
           >
             {getBroadcastCopy("captions.approve_cta")}
+          </ActionButton>
+          <ActionButton variant="secondary" busy={submitting} onClick={() => submit("none")}>
+            {getBroadcastCopy("captions.none_cta")}
           </ActionButton>
         </div>
       </div>
@@ -574,6 +580,7 @@ const HANDLE_W = 22;
 
 function FilmstripTrimmer({
   src,
+  filmstripUrl,
   trimStart,
   trimEnd,
   previewRef,
@@ -581,6 +588,7 @@ function FilmstripTrimmer({
   onChange,
 }: {
   src: string;
+  filmstripUrl: string | null;
   trimStart: number;
   trimEnd: number;
   previewRef: React.RefObject<HTMLVideoElement | null>;
@@ -588,7 +596,7 @@ function FilmstripTrimmer({
   onChange: (startMs: number, endMs: number) => void;
 }) {
   const [durationMs, setDurationMs] = useState(0);
-  const [thumbs, setThumbs] = useState<string[]>([]);
+  const [stripImg, setStripImg] = useState<string | null>(null);
   const [thumbsFailed, setThumbsFailed] = useState(false);
   const [playheadMs, setPlayheadMs] = useState(0);
   const [bubble, setBubble] = useState<{ pct: number; ms: number } | null>(null);
@@ -633,123 +641,32 @@ function FilmstripTrimmer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Server-rendered strip: one small JPEG (10 tiles), sliced by CSS.
+  // Client-side frame grabbing is IMPOSSIBLE on phone fMP4 takes — they
+  // carry no sidx index, so every seek stalls on a linear download (the
+  // 2026-07-22 empty-strip saga). The server (ffmpeg, local file) owns
+  // thumbnails now; duration keeps coming from the preview-player ladder.
   useEffect(() => {
-    let cancelled = false;
-    const video = document.createElement("video");
-    // crossOrigin="anonymous" is required ONLY for genuinely cross-origin
-    // sources (signed storage URLs) so the canvas stays untainted. Setting
-    // it on blob:/same-origin sources switches the fetch to CORS mode for
-    // no reason and broke decoding in the field (empty strip on desktop).
-    const crossOrigin =
-      /^https?:/i.test(src) && new URL(src, location.href).origin !== location.origin;
-    if (crossOrigin) video.crossOrigin = "anonymous";
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = "auto";
-    video.style.cssText = "position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;";
-    document.body.appendChild(video);
-    video.src = src;
-    video.load();
-
-    const withTimeout = <T,>(p: Promise<T>, ms: number) =>
-      Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
-
-    // Seek AND wait for the frame to be painted: "seeked" alone does not
-    // guarantee a decoded frame everywhere - requestVideoFrameCallback is
-    // the paint signal where supported (Safari 15.4+, Chrome 83+).
-    // After "seeked", give requestVideoFrameCallback up to 200ms to signal a
-    // painted frame, then draw regardless. rVFC is tied to COMPOSITING — on
-    // a hidden offscreen video Chrome may never fire it (field: the whole
-    // strip fell to timecode ticks because every seek "timed out"), while
-    // the decoder does hold the frame right after seeked.
-    const seekTo = (t: number) =>
-      withTimeout(
-        new Promise<void>((resolve) => {
-          const rvfc = (video as unknown as {
-            requestVideoFrameCallback?: (cb: () => void) => void;
-          }).requestVideoFrameCallback?.bind(video);
-          video.onseeked = () => {
-            if (rvfc) {
-              let done = false;
-              const finish = () => { if (!done) { done = true; resolve(); } };
-              rvfc(finish);
-              setTimeout(finish, 200);
-            } else resolve();
-          };
-          video.currentTime = t;
-        }),
-        2500
-      );
-
+    if (!filmstripUrl) { setThumbsFailed(true); return; }
+    let alive = true;
+    let objUrl: string | null = null;
     (async () => {
-      await withTimeout(
-        new Promise<void>((resolve, reject) => {
-          video.onloadedmetadata = () => resolve();
-          video.onerror = () => reject(new Error("thumb_load"));
-        }),
-        8000
-      );
-      // Chrome MediaRecorder webm reports Infinity until forced to the end.
-      if (!isFinite(video.duration)) {
-        await withTimeout(
-          new Promise<void>((resolve) => {
-            video.ondurationchange = () => isFinite(video.duration) && resolve();
-            video.currentTime = 1e7;
-          }),
-          4000
-        );
-      }
-      const dur = video.duration;
-      if (cancelled || !isFinite(dur) || dur <= 0) return;
-      reportDuration(Math.round(dur * 1000));
-
-      // Nudge the decoder awake: some engines paint nothing until the
-      // element has actually played once.
       try {
-        await withTimeout(video.play(), 1500);
-        video.pause();
-      } catch { /* autoplay refused - seeks usually still paint */ }
-
-      const canvas = document.createElement("canvas");
-      canvas.width = 72;
-      canvas.height = 128;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      const collected: string[] = [];
-      for (let i = 0; i < THUMB_COUNT; i++) {
-        try {
-          await seekTo(((i + 0.5) / THUMB_COUNT) * dur);
-        } catch { continue; /* one stuck seek must not kill the whole strip */ }
-        if (cancelled) return;
-        try {
-          const vw = video.videoWidth;
-          const vh = video.videoHeight;
-          if (!vw || !vh) continue;
-          const scale = Math.max(canvas.width / vw, canvas.height / vh);
-          const dw = vw * scale;
-          const dh = vh * scale;
-          ctx.fillStyle = "#1D2430";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(video, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
-          collected[i] = canvas.toDataURL("image/jpeg", 0.55);
-        } catch {
-          setThumbsFailed(true);
-          return; // CORS-tainted canvas - fall back to timecode ticks
-        }
-        setThumbs([...collected]);
+        const res = await fetch(filmstripUrl);
+        if (!res.ok) throw new Error(String(res.status));
+        const blob = await res.blob();
+        if (!alive) return;
+        objUrl = URL.createObjectURL(blob);
+        setStripImg(objUrl);
+      } catch {
+        if (alive) setThumbsFailed(true);
       }
-      if (collected.filter(Boolean).length === 0) setThumbsFailed(true);
-    })().catch(() => {
-      if (!cancelled) setThumbsFailed(true);
-      /* thumbnails are decorative; the preview-player fallback owns duration */
-    });
+    })();
     return () => {
-      cancelled = true;
-      video.removeAttribute("src");
-      video.remove();
+      alive = false;
+      if (objUrl) URL.revokeObjectURL(objUrl);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src]);
+  }, [filmstripUrl]);
 
   const msFromClientX = (clientX: number) => {
     const rect = stripRef.current?.getBoundingClientRect();
@@ -867,28 +784,35 @@ function FilmstripTrimmer({
           }}
         >
           <div style={{ position: "absolute", inset: 0, display: "flex", borderRadius: 8, overflow: "hidden" }}>
-            {Array.from({ length: THUMB_COUNT }, (_, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: 1,
-                  backgroundImage: thumbs[i] ? `url(${thumbs[i]})` : undefined,
-                  backgroundColor: "#1D2430",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  borderInlineEnd: thumbsFailed ? "1px solid #2C323E" : undefined,
-                  display: "flex",
-                  alignItems: "flex-end",
-                  justifyContent: "center",
-                }}
-              >
-                {thumbsFailed && durationMs ? (
-                  <span style={{ color: "#5A5F6A", fontSize: 10, paddingBottom: 3, fontVariantNumeric: "tabular-nums" }}>
-                    {fmt((i / THUMB_COUNT) * durationMs)}
-                  </span>
-                ) : null}
+            {stripImg ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={stripImg} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "fill", display: "block", userSelect: "none" }} />
+            ) : !thumbsFailed ? (
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <span className="br-spinner br-spinner-gold" />
+                <span style={{ color: "#9E9990", fontSize: 12.5 }}>{getBroadcastCopy("captions.trim.thumbs_loading")}</span>
               </div>
-            ))}
+            ) : (
+              Array.from({ length: THUMB_COUNT }, (_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#1D2430",
+                    borderInlineEnd: "1px solid #2C323E",
+                    display: "flex",
+                    alignItems: "flex-end",
+                    justifyContent: "center",
+                  }}
+                >
+                  {durationMs ? (
+                    <span style={{ color: "#5A5F6A", fontSize: 10, paddingBottom: 3, fontVariantNumeric: "tabular-nums" }}>
+                      {fmt((i / THUMB_COUNT) * durationMs)}
+                    </span>
+                  ) : null}
+                </div>
+              ))
+            )}
           </div>
           {/* dimmed cut-away zones */}
           <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: `${startPct}%`, background: "rgba(8,12,20,0.72)", borderRadius: "8px 0 0 8px", zIndex: 1, pointerEvents: "none" }} />
