@@ -301,6 +301,37 @@ export default async function NewHome() {
           <div className="nh-eyebrow2">מה אומרים עליה בוידאו</div>
           <WorkshopTestimonials />
         </section>
+
+        {/* ══ Podcast — same Spotify show embedded on /press ══ */}
+        <section className="nh-section" style={{ paddingTop: 24, textAlign: "center" }}>
+          <div className="nh-eyebrow2">הפודקאסט של הדר דנן</div>
+          <h2 className="nh-h2">הכל <span className="nh-gd">על במה אחת.</span></h2>
+          <p style={{ color: "#9E9990", fontSize: 15, margin: "10px auto 26px", maxWidth: 560, lineHeight: 1.7 }}>
+            שיווק, השפעה ועסקים נפגשים על במה אחת
+          </p>
+          <div style={{ maxWidth: 660, margin: "0 auto" }}>
+            <iframe
+              title="הפודקאסט של הדר דנן בספוטיפיי"
+              style={{ borderRadius: 12 }}
+              src="https://open.spotify.com/embed/show/12EPZoAiHLq63tiq6GjreC"
+              width="100%"
+              height="352"
+              frameBorder={0}
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+            />
+            <p style={{ marginTop: 14 }}>
+              <a
+                href="https://open.spotify.com/show/12EPZoAiHLq63tiq6GjreC"
+                target="_blank"
+                rel="noopener"
+                style={{ color: "#E8B94A", fontSize: 13.5, fontWeight: 700, textDecoration: "none" }}
+              >
+                להאזנה בספוטיפיי ←
+              </a>
+            </p>
+          </div>
+        </section>
       </main>
 
       {/* ══ Footer — mirrors the existing homepage footer ══ */}
