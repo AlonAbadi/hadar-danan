@@ -40,10 +40,10 @@ const GATE_BOUNCE = 0.08, GATE_COMPLAINT = 0.001;
 
 // Wave-3 subject test: 3-way split, measured by unique first-party clicks
 // (sv param on the tracked link). null = the template subject (control).
+// Subject test verdict (waves 3-4, 2026-07-22): no variant beat the control
+// on 11 human clickers — consolidated back to the control subject only.
 const SUBJECT_VARIANTS = [
   { key: "a", subject: null },
-  { key: "b", subject: "השיווק שלך לא נכשל בגלל הסרטונים" },
-  { key: "c", subject: "{{name}}, מה באמת מייחד אותך?" },
 ];
 
 const args = process.argv.slice(2);
