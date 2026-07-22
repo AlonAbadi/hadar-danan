@@ -61,3 +61,20 @@ export function findShootDayVideo(signal: any, videoNumber: number): any | null 
   const planVideos = Array.isArray(signal?.shoot_day?.videos) ? signal.shoot_day.videos : [];
   return planVideos.find((v: any) => v?.number === videoNumber) ?? null;
 }
+
+/**
+ * Season 2 · "אני בפעולה" — slices land on signal.shoot_day_s2_v21..v26
+ * (see /api/signal/[id]/shoot-day-s2/videos). Same parsing dance as the
+ * Season 1 collector, but scoped to that number range and independent
+ * of shoot_day.videos (Season 2 doesn't compose a `plan` — it's slices
+ * only, per Alon 2026-07-22).
+ */
+export function collectShootDayS2Videos(signal: any): any[] {
+  const byNumber = new Map<number, any>();
+  for (let n = 21; n <= 26; n++) {
+    const slice = parseSlice<any>(signal?.[`shoot_day_s2_v${n}`]);
+    if (slice && typeof slice.number === "number") byNumber.set(slice.number, slice);
+    else if (slice) byNumber.set(n, { ...slice, number: n });
+  }
+  return [...byNumber.values()].sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
+}

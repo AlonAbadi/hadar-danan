@@ -19,7 +19,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { CHALLENGE_DAYS, computeNextLiveMeetingDate } from "@/lib/challenge-config";
 import { pickPrimaryExtractionId } from "@/lib/signal/primary-extraction";
-import { collectShootDayVideos } from "@/lib/signal/shoot-day-slices";
+import { collectShootDayVideos, collectShootDayS2Videos } from "@/lib/signal/shoot-day-slices";
 import { MobileNavServer } from "@/components/MobileNavServer";
 import { DesktopNavServer } from "@/components/DesktopNavServer";
 import { KaveretClient, type KaveretData } from "./KaveretClient";
@@ -88,6 +88,7 @@ const DEMO: KaveretData = {
   pillars: null,
   audienceQuotes: [],
   unlockAllSeasons: false,
+  scriptsS2: [],
   takesPerScript: { 1: 1 },
   seasonUsed: 1,
   seasonCap: 7,
@@ -267,6 +268,8 @@ export default async function KaveretPage({
   // still held only video 1 from /finish while the JSON-stringified slice
   // rows sat unclaimed.
   const planVideos = collectShootDayVideos(signal).map(toScript);
+  // Season 2 · "אני בפעולה" — same toScript shape, numbers 21..26.
+  const planVideosS2 = collectShootDayS2Videos(signal).map(toScript);
 
   const monthLabel = new Intl.DateTimeFormat("he-IL", {
     month: "long",
@@ -315,6 +318,10 @@ export default async function KaveretPage({
     // generated but two edits landed under different numbers.
     scriptsTotal: 7,
     scripts: planVideos,
+    // Season 2 payload. Empty array until the customer taps "צור את הפרק"
+    // on a Season 2 row (lifetime members only, at least for now — the
+    // switcher hides for regular members via unlockAllSeasons=false).
+    scriptsS2: planVideosS2,
     extractionId: ext.id,
     challengeDays,
     completedDays,

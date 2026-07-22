@@ -36,7 +36,12 @@ async function scriptExists(
   const inPlan = Array.isArray(signal.shoot_day?.videos)
     ? signal.shoot_day.videos.some((v: { number?: number }) => v?.number === videoNumber)
     : false;
-  return inPlan || Boolean(signal[`shoot_day_v${videoNumber}`]);
+  // Season 1: shoot_day_v{1..12}. Season 2: shoot_day_s2_v{21..26}. Both
+  // land under signal.* keys named by video_number; a filmed script is
+  // any script whose slice exists on either season.
+  const s1SliceKey = `shoot_day_v${videoNumber}`;
+  const s2SliceKey = `shoot_day_s2_v${videoNumber}`;
+  return inPlan || Boolean(signal[s1SliceKey]) || Boolean(signal[s2SliceKey]);
 }
 
 export async function POST(req: NextRequest) {
@@ -59,7 +64,11 @@ export async function POST(req: NextRequest) {
     // routes such takes into the 9:16 portrait chain (field case 2026-07-14:
     // Android shipped a 4:3 "square" reel through the full-frame branch).
     const phoneCapture = body.capture_hint === "phone";
-    if (!extractionId || !Number.isInteger(videoNumber) || videoNumber < 1 || videoNumber > 12 || !ext) {
+    // Video-number range accepts Season 1 (1..12) and Season 2 (21..26).
+    // Everything else is rejected as an invalid request.
+    const isS1Number = videoNumber >= 1 && videoNumber <= 12;
+    const isS2Number = videoNumber >= 21 && videoNumber <= 26;
+    if (!extractionId || !Number.isInteger(videoNumber) || (!isS1Number && !isS2Number) || !ext) {
       return NextResponse.json({ error: "invalid_request" }, { status: 400 });
     }
 

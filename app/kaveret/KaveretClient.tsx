@@ -32,6 +32,10 @@ export interface KaveretData {
   filmedCount: number;
   scriptsTotal: number;
   scripts: { number: number; title: string; hook: string; body: string; cta: string; interviewQuestions?: string[] }[];
+  // Season 2 · "אני בפעולה" (Alon 2026-07-22). Same script shape,
+  // numbers 21..26. Empty until the customer generates a S2 row from the
+  // Season 2 tab. Rendered only when unlockAllSeasons is true.
+  scriptsS2: { number: number; title: string; hook: string; body: string; cta: string; interviewQuestions?: string[] }[];
   extractionId: string | null;
   challengeDays: { day: number; title: string; videoId: string; portrait: boolean }[];
   completedDays: number[];
@@ -243,6 +247,10 @@ export function KaveretClient({
   const [viewDay, setViewDay] = useState<number | null>(null);
   const [liveMeetingOpen, setLiveMeetingOpen] = useState(false);
   const [dayBusy, setDayBusy] = useState(false);
+  // 2026-07-22 Alon: which season the customer is currently viewing in
+  // zone 03. Only lifetime members ever see the switcher (regular members
+  // only have Season 1 unlocked). Defaults to 1.
+  const [activeSeason, setActiveSeason] = useState<1 | 2>(1);
 
   // Word reveal only on first visit per session (spec: kaveret_reveal_seen).
   useEffect(() => {
@@ -778,32 +786,96 @@ export function KaveretClient({
                 הסדרה שלך
               </h3>
               <span className={sty.hint} style={{ flex: "0 0 auto" }}>
-                7 פרקים בהתאמה אישית
+                {activeSeason === 1 ? "7 פרקים בהתאמה אישית" : "6 פרקים · אני בפעולה"}
               </span>
             </div>
-            {data.scripts.length > 0 && data.audienceQuotes.length === 0 && data.extractionId ? (
-              <AudienceQuotesCard
-                extractionId={data.extractionId}
-                onSaved={() => { window.location.reload(); }}
-              />
-            ) : null}
-            {data.scripts.length === 0 ? (
-              <div className={sty.trow}>
-                <BuildShootDay extractionId={data.extractionId} />
+
+            {/* Season switcher — lifetime members only. Regular members
+                only have Season 1 unlocked, so we don't clutter their UI
+                with a switcher that offers a season they can't use. */}
+            {data.unlockAllSeasons ? (
+              <div style={{ display: "flex", gap: 8, margin: "6px 0 14px" }}>
+                {([1, 2] as const).map((s) => {
+                  const active = activeSeason === s;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setActiveSeason(s)}
+                      style={{
+                        padding: "8px 18px",
+                        borderRadius: 999,
+                        border: active ? "none" : "1px solid rgba(232,185,74,0.32)",
+                        background: active
+                          ? "linear-gradient(180deg,#F6DFA0,#E8B94A 52%,#C9964A)"
+                          : "transparent",
+                        color: active ? "#171204" : "#E8B94A",
+                        fontSize: 13.5,
+                        fontWeight: 700,
+                        fontFamily: "inherit",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {s === 1 ? "עונה 1 · היסודות" : "עונה 2 · אני בפעולה"}
+                    </button>
+                  );
+                })}
               </div>
+            ) : null}
+
+            {activeSeason === 1 ? (
+              <>
+                {data.scripts.length > 0 && data.audienceQuotes.length === 0 && data.extractionId ? (
+                  <AudienceQuotesCard
+                    extractionId={data.extractionId}
+                    onSaved={() => { window.location.reload(); }}
+                  />
+                ) : null}
+                {data.scripts.length === 0 ? (
+                  <div className={sty.trow}>
+                    <BuildShootDay extractionId={data.extractionId} />
+                  </div>
+                ) : (
+                  <>
+                    <ShootDayProgress filmed={data.filmedCount} total={data.scriptsTotal} />
+                    <EpisodesList
+                      extractionId={data.extractionId}
+                      scripts={data.scripts}
+                      filmedNumbers={data.filmedNumbers}
+                      identity={data.identity}
+                      takesPerScript={data.takesPerScript}
+                      takesCap={data.takesCap}
+                      seasonUsed={data.seasonUsed}
+                      seasonCap={data.seasonCap}
+                      season={1}
+                    />
+                  </>
+                )}
+              </>
             ) : (
               <>
-                <ShootDayProgress filmed={data.filmedCount} total={data.scriptsTotal} />
-                <EpisodesList
-                  extractionId={data.extractionId}
-                  scripts={data.scripts}
-                  filmedNumbers={data.filmedNumbers}
-                  identity={data.identity}
-                  takesPerScript={data.takesPerScript}
-                  takesCap={data.takesCap}
-                  seasonUsed={data.seasonUsed}
-                  seasonCap={data.seasonCap}
-                />
+                <p className={sty.txt} style={{ color: "#9E9990", fontSize: 13.5, margin: "0 0 12px" }}>
+                  {data.scripts.length === 0
+                    ? "עונה 2 מבוססת על משפט הזהות ועמודי המסר של עונה 1. בנה אותה קודם, ואז תוכל לייצר פרקים לעונה 2."
+                    : "שישה פרקים שמראים אתכם בפעולה — LIVE. הראיה של הצופה: איך זה נראה כשאתה עובד."}
+                </p>
+                {data.scripts.length === 0 ? (
+                  <div className={sty.trow}>
+                    <BuildShootDay extractionId={data.extractionId} />
+                  </div>
+                ) : (
+                  <EpisodesList
+                    extractionId={data.extractionId}
+                    scripts={data.scriptsS2}
+                    filmedNumbers={data.filmedNumbers}
+                    identity={data.identity}
+                    takesPerScript={data.takesPerScript}
+                    takesCap={data.takesCap}
+                    seasonUsed={data.seasonUsed}
+                    seasonCap={data.seasonCap}
+                    season={2}
+                  />
+                )}
               </>
             )}
           </div>
@@ -1501,6 +1573,22 @@ const CANONICAL_TITLES: Record<number, string> = {
   5: "פירוק התנגדויות",
   6: "סיפור + דעה",
   7: "עדות + הזמנה",
+  // Season 2 · "אני בפעולה" — LIVE demo of the service. Alon 2026-07-22.
+  21: "קבלת לקוח חדש",
+  22: "פירוק בעיה בזמן אמת",
+  23: "הרגע שאני עוצר ומקשיב",
+  24: "תיקון טעות אמצע",
+  25: "סגירת שיחה",
+  26: "נטיה קטנה של השירות",
+};
+
+// Canonical numbering per season. EpisodesList iterates over these to
+// render one row per canonical episode (built or unbuilt), and passes it
+// to the /shoot-day{,-s2}/videos endpoint when the customer taps
+// "צור את הפרק".
+const SEASON_NUMBERS: Record<1 | 2, number[]> = {
+  1: [1, 2, 3, 4, 5, 6, 7],
+  2: [21, 22, 23, 24, 25, 26],
 };
 
 function ShootDayProgress({ filmed, total }: { filmed: number; total: number }) {
@@ -1561,6 +1649,7 @@ function EpisodesList({
   takesCap,
   seasonUsed,
   seasonCap,
+  season = 1,
 }: {
   extractionId: string | null;
   scripts: BuiltScript[];
@@ -1570,6 +1659,11 @@ function EpisodesList({
   takesCap: number;
   seasonUsed: number;
   seasonCap: number;
+  // 2026-07-22 Alon: same component renders either the 7-episode Season 1
+  // (default) or the 6-episode Season 2 ("אני בפעולה"). Season only
+  // changes: iteration range (SEASON_NUMBERS[season]) and generation
+  // endpoint (/shoot-day/videos vs /shoot-day-s2/videos).
+  season?: 1 | 2;
 }) {
   const seasonFull = seasonUsed >= seasonCap;
   const [localScripts, setLocalScripts] = useState<BuiltScript[]>(scripts);
@@ -1592,7 +1686,8 @@ function EpisodesList({
         throw new Error("לא ניתן להשיג את משפט הזהות + 4 עמודי המסר");
       }
 
-      const r = await fetch(`/api/signal/${extractionId}/shoot-day/videos`, {
+      const genPath = season === 2 ? "shoot-day-s2" : "shoot-day";
+      const r = await fetch(`/api/signal/${extractionId}/${genPath}/videos`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
@@ -1661,7 +1756,7 @@ function EpisodesList({
           </span>
         </div>
       )}
-      {Array.from({ length: 7 }, (_, i) => i + 1).map((n) => {
+      {SEASON_NUMBERS[season].map((n) => {
         const s      = scriptByNumber.get(n);
         const filmed = s ? filmedNumbers.includes(n) : false;
         const inFlight = generating.has(n);
