@@ -343,6 +343,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 {data.firstScriptHook ? "7 סרטונים שלך · הראשון כבר טעון" : "7 סרטונים שלך"}
               </span>
             </div>
+            {!data.firstReelUrl ? (<>
             <div className={sty.vPhone}>
               <div className={sty.vPcam} />
               <div className={sty.vPstrip}>
@@ -361,6 +362,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               <div className={sty.vPrec} />
             </div>
             <p className={sty.vPcap}>הטלפרומפטר עם התסריט שלך, על המצלמה הקדמית</p>
+            </>) : null}
             {data.firstReelUrl ? (
               <div style={{ display: "flex", justifyContent: "center", margin: "16px 0 4px" }}>
                 <div style={{ position: "relative", width: "min(280px, 78vw)", aspectRatio: "9/16", borderRadius: 16, overflow: "hidden", background: "#000", border: "1px solid rgba(232,185,74,0.35)" }}>
