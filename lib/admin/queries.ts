@@ -353,30 +353,61 @@ export async function getEvents(limit = 30) {
 }
 
 // ─── UTM / Source Analytics ───────────────────────────
+// Supabase caps unranged selects at 1,000 rows — always page through.
+const PAGE_SIZE = 1000;
+async function fetchAllRows<T>(
+  buildQuery: (from: number, to: number) => PromiseLike<{ data: T[] | null }>
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let page = 0; ; page++) {
+    const { data } = await buildQuery(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+    if (!data?.length) break;
+    rows.push(...data);
+    if (data.length < PAGE_SIZE) break;
+  }
+  return rows;
+}
+
 export async function getSourceAnalytics(dateRange?: string) {
   const supabase = createServerClient();
   const dateFilter = getDateFilter(dateRange);
 
-  const { data: users } = await supabase
+  const users = await fetchAllRows<{
+    id: string; utm_source: string | null; utm_medium: string | null; utm_campaign: string | null;
+    utm_content: string | null; utm_term: string | null; utm_adset: string | null; utm_ad: string | null;
+    created_at: string; status: string | null;
+  }>((from, to) => supabase
     .from('users')
     .select('id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, utm_adset, utm_ad, created_at, status')
-    .gte('created_at', dateFilter);
+    .gte('created_at', dateFilter)
+    .order('id')
+    .range(from, to));
 
-  const { data: purchases } = await supabase
+  const purchases = await fetchAllRows<{
+    user_id: string; product: string | null; amount: number | null; amount_paid: number | null;
+  }>((from, to) => supabase
     .from('purchases')
-    .select('user_id, amount')
+    .select('user_id, product, amount, amount_paid')
     .eq('status', 'completed')
-    .gte('created_at', dateFilter);
+    .gte('created_at', dateFilter)
+    .order('id')
+    .range(from, to));
 
-  // Get UTM data for buyers
-  const buyerIds = new Set(purchases?.map((p) => p.user_id) || []);
-  const { data: buyerUsers } = await supabase
-    .from('users')
-    .select('id, utm_source, utm_medium, utm_campaign, utm_content')
-    .in('id', Array.from(buyerIds).slice(0, 400));
+  const paid = (p: { amount: number | null; amount_paid: number | null }) => p.amount_paid ?? p.amount ?? 0;
+
+  // Get UTM data for buyers (buyer may predate the range — fetch separately, chunked)
+  const buyerIds = [...new Set(purchases.map((p) => p.user_id))];
+  const buyerUsers: { id: string; utm_source: string | null; utm_medium: string | null; utm_campaign: string | null }[] = [];
+  for (let i = 0; i < buyerIds.length; i += 200) {
+    const { data } = await supabase
+      .from('users')
+      .select('id, utm_source, utm_medium, utm_campaign')
+      .in('id', buyerIds.slice(i, i + 200));
+    if (data) buyerUsers.push(...data);
+  }
 
   const buyerMap: Record<string, { source: string; medium: string; campaign: string }> = {};
-  buyerUsers?.forEach((u) => {
+  buyerUsers.forEach((u) => {
     buyerMap[u.id] = {
       source:   u.utm_source   || 'direct',
       medium:   u.utm_medium   || '',
@@ -386,28 +417,56 @@ export async function getSourceAnalytics(dateRange?: string) {
 
   // Group by source
   const sources: Record<string, { leads: number; buyers: number; revenue: number }> = {};
-  users?.forEach((u) => {
+  users.forEach((u) => {
     const src = u.utm_source || 'direct';
     if (!sources[src]) sources[src] = { leads: 0, buyers: 0, revenue: 0 };
     sources[src].leads += 1;
   });
 
   const uniqueBuyersPerSource: Record<string, Set<string>> = {};
-  purchases?.forEach((p) => {
+  purchases.forEach((p) => {
     const src = buyerMap[p.user_id]?.source || 'direct';
     if (!sources[src]) sources[src] = { leads: 0, buyers: 0, revenue: 0 };
     if (!uniqueBuyersPerSource[src]) uniqueBuyersPerSource[src] = new Set();
     uniqueBuyersPerSource[src].add(p.user_id);
-    sources[src].revenue += p.amount || 0;
+    sources[src].revenue += paid(p);
   });
   Object.entries(uniqueBuyersPerSource).forEach(([src, s]) => { sources[src].buyers = s.size; });
+
+  // Campaign summary: source → campaign level, with revenue + product breakdown.
+  // Leads come from in-range users; purchases attribute by the buyer's own UTM.
+  const summaryMap: Record<string, {
+    source: string; campaign: string;
+    leads: number; buyerSet: Set<string>; revenue: number; products: Record<string, number>;
+  }> = {};
+  const summaryRow = (source: string, campaign: string) => {
+    const key = `${source}||${campaign}`;
+    if (!summaryMap[key]) summaryMap[key] = { source, campaign, leads: 0, buyerSet: new Set(), revenue: 0, products: {} };
+    return summaryMap[key];
+  };
+  users.forEach((u) => {
+    summaryRow(u.utm_source || 'direct', u.utm_campaign || '').leads += 1;
+  });
+  purchases.forEach((p) => {
+    const b = buyerMap[p.user_id];
+    const row = summaryRow(b?.source || 'direct', b?.campaign || '');
+    row.buyerSet.add(p.user_id);
+    row.revenue += paid(p);
+    const product = p.product || 'unknown';
+    row.products[product] = (row.products[product] || 0) + 1;
+  });
+  const campaignSummary = Object.values(summaryMap)
+    .map(({ buyerSet, ...row }) => ({ ...row, buyers: buyerSet.size }))
+    .filter((r) => r.revenue > 0 || r.leads >= 3)
+    .sort((a, b) => b.revenue - a.revenue || b.leads - a.leads)
+    .slice(0, 25);
 
   // Campaign breakdown: group by source → medium → campaign → adset → ad → content → term
   const campaignMap: Record<string, {
     leads: number; source: string; medium: string;
     campaign: string; adset: string; ad: string; content: string; term: string;
   }> = {};
-  users?.forEach((u) => {
+  users.forEach((u) => {
     if (!u.utm_campaign && !u.utm_source) return;
     const key = [
       u.utm_source   || 'direct',
@@ -443,6 +502,7 @@ export async function getSourceAnalytics(dateRange?: string) {
       conversionRate: stats.leads > 0 ? Math.round((stats.buyers / stats.leads) * 100) : 0,
     })),
     campaigns,
+    campaignSummary,
   };
 }
 

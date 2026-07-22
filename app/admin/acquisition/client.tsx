@@ -155,6 +155,42 @@ const PRODUCT_LABELS: Record<string, { label: string; color: string }> = {
   premium:   { label: 'יום צילום פרמיום', color: C.goldL },
 };
 
+// purchases.product enum → short display label
+const PURCHASE_LABELS: Record<string, { label: string; color: string }> = {
+  challenge_197:      { label: 'אתגר',         color: C.blue },
+  workshop_1080:      { label: 'סדנה',         color: C.purple },
+  sadna_500:          { label: 'סדנה 500',     color: C.purple },
+  course_1800:        { label: 'קורס',         color: C.green },
+  strategy_4000:      { label: 'אסטרטגיה',     color: C.gold },
+  premium_14000:      { label: 'יום צילום',    color: C.goldL },
+  signal_hive_590:    { label: 'כוורת האות',   color: C.goldL },
+  signal_hive_en_149: { label: 'Signal Hive',  color: C.goldL },
+  hive_basic_59:      { label: 'כוורת',        color: C.muted },
+  hive_full_149:      { label: 'כוורת',        color: C.muted },
+  test_1:             { label: 'טסט ₪1',       color: C.muted },
+};
+
+// Normalize campaign names so Meta's campaign_name matches utm_campaign values
+// (URL-encoding, spaces vs dashes vs underscores, case).
+function normName(s: string): string {
+  let d = s || '';
+  try { d = decodeURIComponent(d); } catch { /* keep raw */ }
+  return d.toLowerCase().replace(/[\s\-_]+/g, '');
+}
+
+function prettyName(s: string): string {
+  try { return decodeURIComponent(s); } catch { return s; }
+}
+
+function RoasBadge({ value }: { value: number }) {
+  const color = value >= 2 ? C.green : value >= 1 ? C.gold : C.red;
+  return (
+    <span dir="ltr" style={{ background: `${color}22`, color, padding: '3px 10px', borderRadius: 6, fontSize: 12, fontWeight: 700, fontFamily: 'system-ui', whiteSpace: 'nowrap' }}>
+      ×{value.toFixed(1)}
+    </span>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────
 type TrainingVideoStats = {
   totalPlays: number;
@@ -176,9 +212,19 @@ type CampaignRow = {
   leads: number;
 };
 
+type CampaignSummaryRow = {
+  source: string;
+  campaign: string;
+  leads: number;
+  buyers: number;
+  revenue: number;
+  products: Record<string, number>;
+};
+
 export default function AcquisitionClient({
   sources,
   campaigns,
+  campaignSummary,
   metaAds,
   googleAds,
   ga4,
@@ -188,6 +234,7 @@ export default function AcquisitionClient({
 }: {
   sources: any[];
   campaigns: CampaignRow[];
+  campaignSummary: CampaignSummaryRow[];
   metaAds: any;
   googleAds: any;
   ga4: any;
@@ -230,6 +277,42 @@ export default function AcquisitionClient({
     .sort((a, b) => b.leads - a.leads)
     .slice(0, 6)
     .map(s => ({ name: s.source, לידים: s.leads, רוכשים: s.buyers }));
+
+  // ── ROAS: match Meta campaign spend to utm_campaign revenue ────────────
+  const metaCampaigns: { name: string; spend: number }[] =
+    (metaAds.data ?? []).map((c: any) => ({ name: c.name ?? '', spend: c.spend ?? 0 }));
+  const rowKey = (r: CampaignSummaryRow) => `${r.source}||${r.campaign}`;
+  const spendByRow: Record<string, number> = {};
+  const unmatchedMeta: { name: string; spend: number }[] = [];
+
+  metaCampaigns.forEach(mc => {
+    const n = normName(mc.name);
+    if (!n || mc.spend <= 0) return;
+    // exact campaign match → containment → source-name fallback; each Meta
+    // campaign is assigned to exactly one row so spend is never double-counted
+    let candidates = campaignSummary.filter(r => normName(r.campaign) === n && n.length >= 3);
+    if (!candidates.length) candidates = campaignSummary.filter(r => {
+      const c = normName(r.campaign);
+      return c.length >= 3 && (n.includes(c) || c.includes(n));
+    });
+    if (!candidates.length) candidates = campaignSummary.filter(r => {
+      const s = normName(r.source);
+      return s.length >= 3 && (n.includes(s) || s.includes(n));
+    });
+    if (!candidates.length) { unmatchedMeta.push(mc); return; }
+    const best = [...candidates].sort((a, b) => b.revenue - a.revenue || b.leads - a.leads)[0];
+    spendByRow[rowKey(best)] = (spendByRow[rowKey(best)] || 0) + mc.spend;
+  });
+
+  const unmatchedSpend = unmatchedMeta.reduce((s, m) => s + m.spend, 0);
+  const totalMetaSpend = metaCampaigns.reduce((s, m) => s + m.spend, 0);
+  const blendedRoas = totalMetaSpend > 0 ? totalRevenue / totalMetaSpend : null;
+
+  const spendBySource: Record<string, number> = {};
+  campaignSummary.forEach(r => {
+    const sp = spendByRow[rowKey(r)];
+    if (sp) spendBySource[r.source] = (spendBySource[r.source] || 0) + sp;
+  });
 
   const RANGE_OPTS = [
     { v: 'today', l: 'היום' },
@@ -652,7 +735,11 @@ export default function AcquisitionClient({
                     <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>
                       {s.revenue > 0 ? `₪${s.revenue.toLocaleString()}` : '—'}
                     </td>
-                    <td style={{ padding: '12px 16px', color: C.muted, textAlign: 'right' }}>—</td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                      {(spendBySource[s.source] ?? 0) > 0
+                        ? <RoasBadge value={s.revenue / spendBySource[s.source]} />
+                        : <span style={{ color: C.muted }}>—</span>}
+                    </td>
                     <td style={{ padding: '12px 20px' }}>
                       <div style={{ height: 4, background: C.soft, borderRadius: 2, overflow: 'hidden' }}>
                         <div style={{ width: `${barPct}%`, height: '100%', background: `linear-gradient(90deg, ${C.goldL}, ${C.gold})`, borderRadius: 2 }} />
@@ -665,6 +752,93 @@ export default function AcquisitionClient({
           </table>
         </div>
       </Card>
+
+      {/* ── Campaign Revenue + Products + ROAS ──────────────────────── */}
+      {campaignSummary.length > 0 && (
+        <Card style={{ marginBottom: 24 }}>
+          <CardHeader
+            title="הכנסות ומוצרים לפי קמפיין"
+            sub="Campaign Revenue, Products & ROAS"
+            action={blendedRoas !== null ? (
+              <span style={{ fontSize: 11, color: C.muted, background: C.soft, padding: '4px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                ROAS כולל (Meta):
+                <RoasBadge value={blendedRoas} />
+              </span>
+            ) : undefined}
+          />
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: C.soft }}>
+                  {[
+                    { l: 'קמפיין', w: '20%' }, { l: 'מקור', w: '10%' },
+                    { l: 'לידים' }, { l: 'רוכשים' }, { l: 'הכנסה' },
+                    { l: 'מוצרים שנרכשו', w: '26%' }, { l: 'הוצאה (Meta)' }, { l: 'ROAS' },
+                  ].map((h, i) => (
+                    <th key={i} style={{ padding: '10px 16px', textAlign: 'right', fontSize: 11, fontWeight: 500, color: C.muted, letterSpacing: '0.04em', textTransform: 'uppercase', borderBottom: `1px solid ${C.border}`, width: h.w }}>
+                      {h.l}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {campaignSummary.map((r, i) => {
+                  const spend = spendByRow[rowKey(r)] ?? 0;
+                  const productEntries = Object.entries(r.products).sort(([, a], [, b]) => b - a);
+                  return (
+                    <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 600, color: r.campaign ? C.fg : C.muted }}>
+                        {r.campaign ? prettyName(r.campaign) : 'ללא קמפיין'}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: C.gold, fontWeight: 600 }}>{prettyName(r.source)}</td>
+                      <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{r.leads.toLocaleString()}</td>
+                      <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui' }}>{r.buyers.toLocaleString()}</td>
+                      <td style={{ padding: '12px 16px', color: C.fg, textAlign: 'right', fontFamily: 'system-ui', fontWeight: 600 }}>
+                        {r.revenue > 0 ? `₪${r.revenue.toLocaleString()}` : '—'}
+                      </td>
+                      <td style={{ padding: '10px 16px' }}>
+                        {productEntries.length === 0 ? (
+                          <span style={{ color: C.muted }}>—</span>
+                        ) : (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {productEntries.map(([product, count]) => {
+                              const meta = PURCHASE_LABELS[product] ?? { label: product, color: C.muted };
+                              return (
+                                <span key={product} style={{ background: `${meta.color}1E`, color: meta.color, padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                  {meta.label} ×{count}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: spend > 0 ? C.fg : C.muted, textAlign: 'right', fontFamily: 'system-ui' }}>
+                        {spend > 0 ? `₪${Math.round(spend).toLocaleString()}` : '—'}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                        {spend > 0
+                          ? <RoasBadge value={r.revenue / spend} />
+                          : <span style={{ color: C.muted }}>—</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {unmatchedSpend > 0 && (
+            <div style={{ padding: '10px 20px', borderTop: `1px solid ${C.border}`, fontSize: 11, color: C.muted }}>
+              ⚠️ הוצאה של ₪{Math.round(unmatchedSpend).toLocaleString()} מ-Meta לא שויכה לאף קמפיין (אין utm_campaign תואם):{' '}
+              {unmatchedMeta.map(m => m.name).join(', ')}
+            </div>
+          )}
+          {metaAds.configured && metaCampaigns.length === 0 && (
+            <div style={{ padding: '10px 20px', borderTop: `1px solid ${C.border}`, fontSize: 11, color: C.muted }}>
+              אין נתוני הוצאה מ-Meta בטווח הזה, לכן ROAS לא מחושב. ההכנסות והמוצרים מוצגים בכל מקרה.
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* ── Campaign Breakdown ──────────────────────────────────────── */}
       {campaigns.length > 0 && (

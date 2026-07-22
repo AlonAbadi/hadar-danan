@@ -27,6 +27,7 @@ export default async function AcquisitionPage({
       <AcquisitionClient
         sources={sourceData.sources}
         campaigns={sourceData.campaigns}
+        campaignSummary={sourceData.campaignSummary}
         metaAds={metaAds}
         googleAds={googleAds}
         ga4={ga4}
