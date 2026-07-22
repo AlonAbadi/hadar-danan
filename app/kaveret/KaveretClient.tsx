@@ -235,7 +235,13 @@ export function KaveretClient({
   }, [data.demo]);
   const [curDay, setCurDay] = useState(data.challengeDay);
   const [doneDays, setDoneDays] = useState<number[]>(data.completedDays);
-  const [viewDay, setViewDay] = useState(data.challengeDay);
+  // 2026-07-22 Alon: the challenge zone used to auto-expand the current
+  // day, which meant the Vimeo iframe pushed everything below it off the
+  // fold. Now the day panel starts collapsed. Clicking a day chip opens
+  // that day's content; clicking the same chip again closes it. null =
+  // no day expanded (compact chip row only).
+  const [viewDay, setViewDay] = useState<number | null>(null);
+  const [liveMeetingOpen, setLiveMeetingOpen] = useState(false);
   const [dayBusy, setDayBusy] = useState(false);
 
   // Word reveal only on first visit per session (spec: kaveret_reveal_seen).
@@ -571,23 +577,26 @@ export function KaveretClient({
                 </div>
               </>
             ) : (() => {
-              const shown = data.challengeDays.find((d) => d.day === Math.min(viewDay, 7)) ?? data.challengeDays[0];
-              const isDone = doneDays.includes(shown.day);
+              const shown = viewDay != null
+                ? data.challengeDays.find((d) => d.day === Math.min(viewDay, 7)) ?? null
+                : null;
               const allDone = data.challengeDone || doneDays.includes(7);
               return (
                 <div>
-                  {/* day chips: done / current / locked */}
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", margin: "4px 0 12px" }}>
+                  {/* Compact chip row — the entire challenge zone stays this small
+                      until the customer clicks a day. Clicking again on the same
+                      chip collapses the panel back. */}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", margin: "4px 0 0" }}>
                     {data.challengeDays.map((d) => {
                       const done = doneDays.includes(d.day);
                       const locked = d.day > curDay;
-                      const active = d.day === shown.day;
+                      const active = shown?.day === d.day;
                       return (
                         <button
                           key={d.day}
                           type="button"
                           disabled={locked}
-                          onClick={() => setViewDay(d.day)}
+                          onClick={() => setViewDay((v) => (v === d.day ? null : d.day))}
                           style={{
                             minWidth: 40,
                             height: 32,
@@ -601,88 +610,140 @@ export function KaveretClient({
                             fontSize: 12.5,
                             fontWeight: 700,
                             cursor: locked ? "default" : "pointer",
+                            transition: "background 150ms, color 150ms",
                           }}
+                          aria-expanded={active}
+                          aria-label={`${d.day === 0 ? "פתיחה" : `יום ${d.day}`}${active ? " — סגור" : " — פתח"}`}
                         >
                           {done ? "✓ " : ""}{d.day === 0 ? "פתיחה" : d.day}
                         </button>
                       );
                     })}
-                  </div>
-                  {DAY_FRAMES[shown.day] ? (
-                    <p className={sty.txt} style={{ color: "#E8B94A", fontWeight: 600 }}>
-                      {DAY_FRAMES[shown.day]}
-                    </p>
-                  ) : null}
-                  <p className={sty.txt} style={{ marginTop: 8 }}>
-                    {shown.day === 0 ? "פתיחה" : `יום ${shown.day}`} · {shown.title}
-                  </p>
-                  <div
-                    style={{
-                      maxWidth: shown.portrait ? 300 : "100%",
-                      margin: "14px auto 0",
-                      aspectRatio: shown.portrait ? "9 / 16" : "16 / 9",
-                      background: "#000",
-                      borderRadius: 12,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <iframe
-                      loading="lazy"
-                      src={`https://player.vimeo.com/video/${shown.videoId}`}
-                      allow="autoplay; fullscreen; picture-in-picture"
-                      style={{ width: "100%", height: "100%", border: 0 }}
-                      title={`יום ${shown.day}`}
-                    />
-                  </div>
-                  <div className={sty.tfoot}>
-                    {allDone ? (
-                      <span className={sty.txt} style={{ flex: 1, color: "#7FBF8E" }}>
-                        סיימת את האתגר, כל הכבוד
+                    {!shown && !allDone ? (
+                      <span style={{
+                        alignSelf: "center",
+                        color: "#9E9990",
+                        fontSize: 12.5,
+                        marginInlineStart: 8,
+                      }}>
+                        לחצו על יום לפתיחה
                       </span>
-                    ) : isDone ? (
-                      <span className={sty.txt} style={{ flex: 1, color: "#7FBF8E" }}>
-                        היום הזה הושלם
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        className={`${sty.btnCopy} ${sty.btnCard}`}
-                        disabled={dayBusy || shown.day > curDay}
-                        onClick={() => completeDay(shown.day)}
-                      >
-                        <span>{dayBusy ? "רגע..." : "סיימתי את היום"}</span>
-                      </button>
-                    )}
+                    ) : null}
                   </div>
+
+                  {/* Expanded day panel — only rendered on click. */}
+                  {shown ? (() => {
+                    const isDone = doneDays.includes(shown.day);
+                    return (
+                      <div style={{ marginTop: 14 }}>
+                        {DAY_FRAMES[shown.day] ? (
+                          <p className={sty.txt} style={{ color: "#E8B94A", fontWeight: 600, marginTop: 0 }}>
+                            {DAY_FRAMES[shown.day]}
+                          </p>
+                        ) : null}
+                        <p className={sty.txt} style={{ marginTop: 6 }}>
+                          {shown.day === 0 ? "פתיחה" : `יום ${shown.day}`} · {shown.title}
+                        </p>
+                        <div
+                          style={{
+                            maxWidth: shown.portrait ? 300 : "100%",
+                            margin: "14px auto 0",
+                            aspectRatio: shown.portrait ? "9 / 16" : "16 / 9",
+                            background: "#000",
+                            borderRadius: 12,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <iframe
+                            loading="lazy"
+                            src={`https://player.vimeo.com/video/${shown.videoId}`}
+                            allow="autoplay; fullscreen; picture-in-picture"
+                            style={{ width: "100%", height: "100%", border: 0 }}
+                            title={`יום ${shown.day}`}
+                          />
+                        </div>
+                        <div className={sty.tfoot}>
+                          {allDone ? (
+                            <span className={sty.txt} style={{ flex: 1, color: "#7FBF8E" }}>
+                              סיימת את האתגר, כל הכבוד
+                            </span>
+                          ) : isDone ? (
+                            <span className={sty.txt} style={{ flex: 1, color: "#7FBF8E" }}>
+                              היום הזה הושלם
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className={`${sty.btnCopy} ${sty.btnCard}`}
+                              disabled={dayBusy || shown.day > curDay}
+                              onClick={() => completeDay(shown.day)}
+                            >
+                              <span>{dayBusy ? "רגע..." : "סיימתי את היום"}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })() : null}
                 </div>
               );
             })()}
           </div>
 
           {data.liveMeeting ? (
-            <div className={sty.trow} style={{ marginTop: 16 }}>
-              <div className={sty.head}>
-                <span className={sty.plat}>מפגש הסיום החי עם הדר</span>
-                <span className={sty.check} style={{ color: "#7FD49B" }}>בזום, אחרי שבעת הימים</span>
-              </div>
-              <p className={sty.txt}>{data.liveMeeting.label}</p>
-              {data.liveMeeting.zoomUrl ? (
-                <div className={sty.tfoot}>
-                  <a
-                    className={sty.btnCopy}
-                    style={{ textDecoration: "none" }}
-                    href={data.liveMeeting.zoomUrl}
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    <span>לכניסה למפגש בזום</span>
-                  </a>
+            <div className={sty.trow} style={{ marginTop: 10, cursor: "pointer" }}>
+              <button
+                type="button"
+                onClick={() => setLiveMeetingOpen((v) => !v)}
+                aria-expanded={liveMeetingOpen}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  width: "100%",
+                  background: "transparent",
+                  border: "none",
+                  padding: 0,
+                  color: "inherit",
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                  textAlign: "start",
+                }}
+              >
+                <div className={sty.head} style={{ margin: 0, flex: 1 }}>
+                  <span className={sty.plat}>מפגש הסיום החי עם הדר</span>
+                  <span className={sty.check} style={{ color: "#7FD49B" }}>בזום, אחרי שבעת הימים</span>
                 </div>
-              ) : (
-                <p className={sty.txt} style={{ fontSize: 13, color: "#ACA79E", marginTop: 8 }}>
-                  הקישור לזום יפורסם כאן סמוך למפגש.
-                </p>
-              )}
+                <span aria-hidden style={{
+                  color: "#9E9990", fontSize: 14, marginInlineStart: 4,
+                  transition: "transform 180ms",
+                  transform: liveMeetingOpen ? "rotate(-90deg)" : "rotate(90deg)",
+                  display: "inline-block",
+                }}>›</span>
+              </button>
+              {liveMeetingOpen ? (
+                <div style={{ marginTop: 10 }}>
+                  <p className={sty.txt}>{data.liveMeeting.label}</p>
+                  {data.liveMeeting.zoomUrl ? (
+                    <div className={sty.tfoot}>
+                      <a
+                        className={sty.btnCopy}
+                        style={{ textDecoration: "none" }}
+                        href={data.liveMeeting.zoomUrl}
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        <span>לכניסה למפגש בזום</span>
+                      </a>
+                    </div>
+                  ) : (
+                    <p className={sty.txt} style={{ fontSize: 13, color: "#ACA79E", marginTop: 8 }}>
+                      הקישור לזום יפורסם כאן סמוך למפגש.
+                    </p>
+                  )}
+                </div>
+              ) : null}
             </div>
           ) : null}
         </section>
