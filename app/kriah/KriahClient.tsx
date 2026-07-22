@@ -216,6 +216,9 @@ function readUtmCookies(): Record<string, string> {
 interface Props {
   previewKey: string;
   isTest:     boolean;
+  // Server-read session (registered user) — pre-satisfies the S8 soft gate so
+  // a logged-in user is never asked to sign in with Google again.
+  initialUser?: { email: string; name?: string; phone?: string } | null;
 }
 
 interface Draft {
@@ -235,7 +238,7 @@ interface Draft {
   googlePending?: boolean;   // set right before the OAuth redirect; consumed on return
 }
 
-export function KriahClient({ previewKey, isTest }: Props) {
+export function KriahClient({ previewKey, isTest, initialUser }: Props) {
   // Entry beacon — the funnel denominator (fires once per mount).
   const entryFired = useRef(false);
   useEffect(() => {
@@ -384,6 +387,21 @@ export function KriahClient({ previewKey, isTest }: Props) {
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
     } catch {}
   }, [screen, qIdx, stateKey, blocker, changeWish, answers, q4Skipped, probeShown, name, email, phone, signal]);
+
+  // ── Registered user: pre-satisfy the gates ────────────────────────────────
+  // A signed-in user must never see the S8 email/Google block again —
+  // softCaptured=true hides it (S8 keeps only the bridge text + "להמשיך"),
+  // and the send/phone gates get their values prefilled. Values the user
+  // typed into a draft themselves win over the profile.
+  useEffect(() => {
+    if (!initialUser?.email) return;
+    setSoftCaptured(true);
+    setConsent(true);
+    setEmail((prev) => prev || initialUser.email);
+    if (initialUser.name)  setName((prev)  => prev || initialUser.name!);
+    if (initialUser.phone) setPhone((prev) => prev || initialUser.phone!);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Re-detect gender from the first name as the user types, until they pick.
   useEffect(() => {
