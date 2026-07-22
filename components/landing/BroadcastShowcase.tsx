@@ -46,19 +46,23 @@ export function BroadcastShowcase() {
       </p>
 
       <div className="nh-br-grid">
-        {/* Phone: the teleprompter, running */}
+        {/* Phone: the teleprompter, running (iPhone-style frame) */}
         <div className="nh-br-phonewrap">
           <div className="nh-br-phone" aria-hidden>
-            <div className="nh-br-cam" />
-            <div className="nh-br-strip">
-              <div className="nh-br-roll">
-                {[...SCRIPT_LINES, ...SCRIPT_LINES].map((l, i) => (
-                  <p key={i}>{l}</p>
-                ))}
+            <div className="nh-br-screen">
+              <div className="nh-br-cam" />
+              <div className="nh-br-island" />
+              <div className="nh-br-strip">
+                <div className="nh-br-roll">
+                  {[...SCRIPT_LINES, ...SCRIPT_LINES].map((l, i) => (
+                    <p key={i}>{l}</p>
+                  ))}
+                </div>
               </div>
+              <div className="nh-br-line" />
+              <div className="nh-br-rec" />
+              <div className="nh-br-home" />
             </div>
-            <div className="nh-br-line" />
-            <div className="nh-br-rec" />
           </div>
           <p className="nh-br-cap">הטלפרומפטר עם התסריט שלכם, על המצלמה הקדמית</p>
         </div>
@@ -121,17 +125,23 @@ const BR_CSS = `
 .nh-br-sec{text-align:center}
 .nh-br-lead{max-width:640px;margin:14px auto 0;color:var(--muted,#9E9990);font-size:16px;line-height:1.8}
 .nh-br-grid{display:grid;grid-template-columns:auto 1fr;gap:40px;align-items:center;max-width:760px;margin:36px auto 0;text-align:right}
-.nh-br-phonewrap{justify-self:center}
-.nh-br-phone{width:190px;aspect-ratio:9/17.5;border-radius:24px;overflow:hidden;position:relative;background:#0A0E16;border:1px solid rgba(232,185,74,0.35);box-shadow:0 18px 44px -18px rgba(0,0,0,0.7)}
+.nh-br-phonewrap{justify-self:center;margin-inline:auto;text-align:center}
+.nh-br-phone{width:190px;aspect-ratio:9/18.6;border-radius:32px;position:relative;margin:0 auto;padding:6px;background:linear-gradient(160deg,#3d4149 0%,#23262d 45%,#4a4e57 100%);box-shadow:0 0 0 1px rgba(0,0,0,0.85),inset 0 0 2px rgba(255,255,255,0.25),0 22px 48px -18px rgba(0,0,0,0.75)}
+.nh-br-phone::before{content:"";position:absolute;inset-inline-start:-2.5px;top:21%;width:2.5px;height:16%;border-radius:2px;background:linear-gradient(180deg,#2b2e35 0 38%,transparent 38% 62%,#2b2e35 62% 100%)}
+.nh-br-phone::after{content:"";position:absolute;inset-inline-end:-2.5px;top:28%;width:2.5px;height:13%;border-radius:0 2px 2px 0;background:#2b2e35}
+.nh-br-screen{position:absolute;inset:6px;border-radius:26px;overflow:hidden;background:#0A0E16;border:2px solid #000}
+.nh-br-island{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:52px;height:15px;border-radius:99px;background:#000;z-index:5;box-shadow:inset 0 0 2px rgba(255,255,255,0.12)}
+.nh-br-island::after{content:"";position:absolute;top:4.5px;inset-inline-end:7px;width:6px;height:6px;border-radius:50%;background:#101823;box-shadow:inset 0 0 2px rgba(80,120,200,0.6)}
 .nh-br-cam{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 110%, rgba(232,185,74,0.10), transparent 55%),linear-gradient(180deg,#10141d 0%,#0A0E16 100%)}
-.nh-br-strip{position:absolute;top:0;left:0;right:0;height:46%;z-index:2;background:linear-gradient(180deg,rgba(8,12,20,0.94) 62%,transparent);padding:16px 14px 0;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}
+.nh-br-home{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:64px;height:4px;border-radius:99px;background:rgba(237,233,225,0.55);z-index:5}
+.nh-br-strip{position:absolute;top:0;left:0;right:0;height:46%;z-index:2;background:linear-gradient(180deg,rgba(8,12,20,0.94) 62%,transparent);padding:32px 14px 0;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}
 .nh-br-roll{animation:nh-br-scroll 16s linear infinite}
 .nh-br-roll p{margin:0 0 10px;font-size:12.5px;font-weight:700;line-height:1.6;color:#EDE9E1;text-align:right}
 .nh-br-roll p:nth-child(6n+1){color:#E8B94A}
 @keyframes nh-br-scroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
 @media (prefers-reduced-motion: reduce){.nh-br-roll{animation:none}}
 .nh-br-line{position:absolute;top:34%;left:8px;right:8px;height:2px;z-index:3;background:linear-gradient(90deg,transparent,rgba(232,185,74,0.75),transparent)}
-.nh-br-rec{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:3;width:30px;height:30px;border-radius:50%;border:2px solid rgba(237,233,225,0.8)}
+.nh-br-rec{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:3;width:30px;height:30px;border-radius:50%;border:2px solid rgba(237,233,225,0.8)}
 .nh-br-rec::after{content:"";position:absolute;inset:5px;border-radius:50%;background:#E8B94A;animation:nh-br-pulse 2.2s ease-in-out infinite}
 @keyframes nh-br-pulse{0%,100%{opacity:1}50%{opacity:0.45}}
 .nh-br-cap{text-align:center;color:var(--muted,#9E9990);font-size:12px;margin-top:10px}
