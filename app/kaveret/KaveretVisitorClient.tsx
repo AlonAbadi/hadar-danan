@@ -263,7 +263,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 >
                   {data.firstReelReady ? "הרילס הראשון שלך מוכן, לצפייה 🎉" : "לצלם את הסרטון הראשון עכשיו, חינם 🎬"}
                 </a>
-                <p style={{ color: "#9E9990", fontSize: 12.5, marginTop: 8 }}>
+                <p style={{ color: "#B9B4AA", fontSize: 13.5, marginTop: 8 }}>
                   {data.firstReelReady
                     ? "עם כתוביות מסונכרנות. שמור לך כאן, אפשר גם לצלם מחדש"
                     : "15 שניות, התסריט שלך על המסך, הסרטון נשאר אצלך"}
@@ -313,7 +313,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 </span>
               ))}
             </div>
-            <p className={sty.txt} style={{ fontSize: 13, marginTop: 12, color: "#ACA79E" }}>
+            <p className={sty.txt} style={{ fontSize: 14, marginTop: 12, color: "#C6C1B7" }}>
               {sale
                 ? data.offer === "strategy"
                   ? "שבעת הימים המלאים, סרטון ומשימה ביום, כלולים בליווי."
@@ -367,7 +367,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 </div>
               ) : null}
               {sale ? (
-                <p className={sty.txt} style={{ fontSize: 13, marginTop: 12, color: "#ACA79E" }}>
+                <p className={sty.txt} style={{ fontSize: 14, marginTop: 12, color: "#C6C1B7" }}>
                   {data.offer === "strategy"
                     ? "בליווי שלושת הכיוונים האלה הופכים לתסריטים מוכנים ולתוכנית שלמה."
                     : "בכוורת שלושת הכיוונים האלה הופכים לתסריטים מוכנים, טעונים בטלפרומפטר."}
@@ -478,12 +478,12 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
           </div>
         ) : null}
 
-        <footer style={{ marginTop: 48, padding: "28px 8px 10px", borderTop: "1px solid #2C323E", textAlign: "center", fontSize: 12, color: "#AAB0BD", lineHeight: 2 }}>
+        <footer style={{ marginTop: 48, padding: "28px 8px 10px", borderTop: "1px solid #2C323E", textAlign: "center", fontSize: 12, color: "#C3C8D2", lineHeight: 2 }}>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/privacy" style={{ color: "#AAB0BD", textDecoration: "none" }}>מדיניות פרטיות</a>
-            <a href="/terms" style={{ color: "#AAB0BD", textDecoration: "none" }}>תנאי שימוש</a>
-            <a href="/accessibility" style={{ color: "#AAB0BD", textDecoration: "none" }}>הצהרת נגישות</a>
-            <a href="/hive/terms" style={{ color: "#AAB0BD", textDecoration: "none" }}>תנאי מנוי הכוורת</a>
+            <a href="/privacy" style={{ color: "#C3C8D2", textDecoration: "none" }}>מדיניות פרטיות</a>
+            <a href="/terms" style={{ color: "#C3C8D2", textDecoration: "none" }}>תנאי שימוש</a>
+            <a href="/accessibility" style={{ color: "#C3C8D2", textDecoration: "none" }}>הצהרת נגישות</a>
+            <a href="/hive/terms" style={{ color: "#C3C8D2", textDecoration: "none" }}>תנאי מנוי הכוורת</a>
           </div>
           <p style={{ fontWeight: 600, marginTop: 6 }}>
             אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. | <span dir="ltr" style={{ unicodeBidi: "embed" }}>TrueSignal©</span>
@@ -491,7 +491,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
           <p>© 2026 הדר דנן בע״מ | ח.פ. 516791555 · כל הזכויות שמורות</p>
           <p>החילזון 5, רמת גן | 053-9566961</p>
           <p>
-            <a href="/unsubscribe" style={{ color: "#AAB0BD" }}>לביטול הסכמה לדיוור</a>
+            <a href="/unsubscribe" style={{ color: "#C3C8D2" }}>לביטול הסכמה לדיוור</a>
           </p>
         </footer>
       </main>
@@ -509,7 +509,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
             <span style={{ textAlign: "right", minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 800, lineHeight: 1.25 }}>
                 כוורת האות · ₪{HIVE_PRICE.now}{" "}
-                <span style={{ textDecoration: "line-through", color: "#9E9990", fontWeight: 400, fontSize: 12 }}>₪{HIVE_PRICE.was}</span>
+                <span style={{ textDecoration: "line-through", color: "#B9B4AA", fontWeight: 400, fontSize: 12 }}>₪{HIVE_PRICE.was}</span>
               </span>
               <span style={{ display: "block", fontSize: 11.5, color: "#A9A49B", lineHeight: 1.3 }}>
                 תשלום אחד, כל העונה הראשונה · בלי התחייבות
@@ -610,7 +610,7 @@ function SeasonsTease({ offer, sale }: { offer: VisitorData["offer"]; sale: bool
           <p className="why">{openSeason.why}</p>
         </div>
       ) : null}
-      <p className={sty.txt} style={{ fontSize: 13, marginTop: 12, color: "#ACA79E", textAlign: "center" }}>
+      <p className={sty.txt} style={{ fontSize: 14, marginTop: 12, color: "#C6C1B7", textAlign: "center" }}>
         {offer === "strategy"
           ? "העונה הראשונה, שבעת הפרקים, כלולה בליווי. משם כל חודש עונה חדשה מהאות שלך."
           : sale

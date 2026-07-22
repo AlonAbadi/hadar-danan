@@ -9,7 +9,7 @@
   --gold-hi: #F6DFA0;
   --gold-deep: #9E7C3A;
   --fg: #EDE9E1;
-  --muted: #9E9990;
+  --muted: #B9B4AA;
   --line: rgba(232,185,74,0.16);
   --ok: #7FBF8E;
   background: #080C14;
@@ -124,14 +124,14 @@
   color: transparent; -webkit-text-stroke: 1.3px var(--gold-deep);
 }
 .zhead .zt h2 { font-size: 24px; font-weight: 800; line-height: 1.15; }
-.zhead .zt .hint { color: #ACA79E; font-size: 13.5px; font-weight: 300; }
+.zhead .zt .hint { color: #C6C1B7; font-size: 13.5px; font-weight: 300; }
 .zrule { height: 1px; margin: 16px 0 6px; background: linear-gradient(90deg,var(--gold),transparent); }
 
 /* text rows: quote style */
 .trow { margin-top: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 14px; }
 .trow .head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .trow .plat { font-size: 17px; font-weight: 800; }
-.trow .check { color: #ACA79E; font-size: 12.5px; }
+.trow .check { color: #C6C1B7; font-size: 13.5px; }
 .trow .check .v { color: var(--ok); font-weight: 700; }
 .trow .txt {
   position: relative;
@@ -191,7 +191,7 @@
 .vc .main { font-size: 20px; font-weight: 800; line-height: 1.5; }
 .vc .meta { display: flex; align-items: baseline; justify-content: space-between; margin-top: 12px; }
 .vc .name { font-size: 16.5px; font-weight: 800; }
-.vc .use { color: #ACA79E; font-size: 12.5px; font-weight: 300; }
+.vc .use { color: #C6C1B7; font-size: 12.5px; font-weight: 300; }
 .vc .vfoot { margin-top: 10px; display: flex; }
 .dots { display: flex; justify-content: center; gap: 7px; margin-top: 8px; }
 .dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(158,149,144,0.35); transition: all .25s; }
@@ -207,7 +207,7 @@
   display: grid; place-items: center; }
 .disc .st .ic svg { width: 20px; height: 20px; stroke: var(--gold); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .disc .st .t { font-size: 17px; font-weight: 800; }
-.disc .st .p { color: #ACA79E; font-size: 12.5px; font-weight: 300; }
+.disc .st .p { color: #C6C1B7; font-size: 12.5px; font-weight: 300; }
 .disc .chev { color: var(--gold-deep); transition: transform .3s; flex: none; }
 .disc .chev svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
 .disc[open] .chev { transform: rotate(180deg); }
@@ -237,7 +237,7 @@
   background: linear-gradient(160deg,var(--gold),var(--gold-deep)); display: grid; place-items: center; color: #080C14; }
 .wa .ic svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .wa .t { font-size: 17px; font-weight: 800; }
-.wa .s { color: #ACA79E; font-size: 13px; font-weight: 300; }
+.wa .s { color: #C6C1B7; font-size: 13px; font-weight: 300; }
 
 /* ===== floating glass tab bar with sliding pill ===== */
 .tabbar {
@@ -420,7 +420,7 @@
 /* ══ הסדרה שלך — season shelf (option 2, series framing) ══ */
 .seShelfHead { display: flex; align-items: baseline; gap: 10px; margin: 14px 0 10px; }
 .seShelfHead .seT { font-size: 14.5px; font-weight: 800; color: var(--gold); }
-.seShelfHead .seS { font-size: 11px; color: #ACA79E; }
+.seShelfHead .seS { font-size: 12px; color: #C6C1B7; }
 .seSeal { margin-inline-start: auto; font-size: 9.5px; font-weight: 700; color: #171204;
   background: linear-gradient(180deg,#F1D07E,#CE9C38); border-radius: 999px; padding: 3px 10px; }
 .seCar { display: flex; gap: 10px; overflow-x: auto; margin: 0 -20px; padding: 2px 20px 8px;
@@ -454,15 +454,15 @@
 .seNextCard .seThumb { border-style: dashed; display: grid; place-items: center; cursor: pointer; }
 .seNextCard .seNum { font-size: 22px; color: var(--gold-deep, #9E7C3A); font-weight: 800; }
 .seNext { margin-top: 14px; border: 1px dashed rgba(158,153,144,0.3); border-radius: 14px; padding: 16px 14px; text-align: center; opacity: 0.7; }
-.seNext .seNt { font-size: 12.5px; font-weight: 700; color: #ACA79E; }
-.seNext .seNs { font-size: 10.5px; color: rgba(158,153,144,0.75); margin-top: 3px; line-height: 1.6; }
+.seNext .seNt { font-size: 12.5px; font-weight: 700; color: #C6C1B7; }
+.seNext .seNs { font-size: 10.5px; color: rgba(198,193,183,0.85); margin-top: 3px; line-height: 1.6; }
 
 /* Season roadmap — future seasons preview strip for /kaveret. Horizontal
    scroll on mobile, wraps to grid on wider viewports. */
 .roadWrap { margin-top: 26px; }
 .roadHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .roadTitle { font-size: 16px; font-weight: 800; color: var(--fg); letter-spacing: 0.1px; }
-.roadIntro { font-size: 12.5px; color: rgba(158,153,144,0.85); line-height: 1.6; margin: 0 0 12px; }
+.roadIntro { font-size: 13.5px; color: rgba(198,193,183,0.95); line-height: 1.6; margin: 0 0 12px; }
 .roadStrip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; margin-inline: -14px; padding-inline: 14px; }
 .roadStrip::-webkit-scrollbar { display: none; }
 .roadCard { flex: 0 0 240px; scroll-snap-align: start; border-radius: 12px; padding: 14px 14px; display: flex; flex-direction: column; gap: 6px; background: #141820; border: 1px solid #2C323E; }
@@ -471,16 +471,16 @@
 .roadCard.coming { background: #141820; border-color: rgba(232,185,74,0.18); }
 .roadCard.future { background: #10141c; border-color: rgba(158,153,144,0.16); opacity: 0.82; }
 .roadTop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.roadNo { font-size: 11px; font-weight: 800; letter-spacing: 1.4px; color: rgba(232,185,74,0.85); }
+.roadNo { font-size: 11.5px; font-weight: 800; letter-spacing: 1.4px; color: rgba(232,185,74,1); }
 .roadCard.future .roadNo { color: rgba(158,153,144,0.7); }
 .roadPill { font-size: 10.5px; font-weight: 700; letter-spacing: 0.8px; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(232,185,74,0.4); color: var(--gold); background: rgba(232,185,74,0.06); }
 .roadCard.live .roadPill { color: #171204; background: linear-gradient(180deg, #f4d27a, #e8b942); border-color: transparent; }
-.roadCard.future .roadPill { color: rgba(158,153,144,0.9); border-color: rgba(158,153,144,0.32); background: transparent; }
+.roadCard.future .roadPill { color: rgba(198,193,183,0.95); border-color: rgba(158,153,144,0.32); background: transparent; }
 .roadCardTitle { font-size: 17px; font-weight: 800; color: var(--fg); line-height: 1.25; margin-top: 2px; }
-.roadTag { font-size: 12.5px; color: rgba(237,233,225,0.78); line-height: 1.55; margin: 0; }
-.roadMeta { font-size: 11px; color: rgba(158,153,144,0.85); letter-spacing: 0.3px; margin-top: 4px; }
+.roadTag { font-size: 13px; color: rgba(237,233,225,0.9); line-height: 1.55; margin: 0; }
+.roadMeta { font-size: 12px; color: rgba(198,193,183,0.95); letter-spacing: 0.3px; margin-top: 4px; }
 .roadExpand { border: 1px solid rgba(232,185,74,0.35); background: transparent; color: var(--gold); font-family: inherit; font-size: 13px; font-weight: 700; padding: 10px 16px; border-radius: 999px; cursor: pointer; margin-top: 12px; align-self: flex-start; }
 .roadDetail { margin-top: 14px; border-inline-start: 2px solid rgba(232,185,74,0.5); padding: 8px 14px 6px; }
 .roadDetail h4 { margin: 0 0 4px; font-size: 15px; color: var(--fg); font-weight: 800; }
 .roadDetail p { margin: 0 0 8px; font-size: 13.5px; color: rgba(237,233,225,0.85); line-height: 1.65; }
-.roadDetail .why { color: rgba(158,153,144,0.9); font-size: 12.5px; font-style: italic; }
+.roadDetail .why { color: rgba(198,193,183,0.95); font-size: 13.5px; font-style: italic; }
