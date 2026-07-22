@@ -421,8 +421,8 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               האתגר המלא, חדר השידור עם שבעת התסריטים שלך, הכרטיסים והתכנים. הכול אישי, נגזר מהתשובות שלך.
             </p>
             <div className={sty.vPrice}>
-              <span className={sty.vWas} dir="ltr">{HIVE_PRICE.was}₪</span>
-              <b dir="ltr">{HIVE_PRICE.now}₪</b>
+              <span className={sty.vWas} dir="ltr">₪{HIVE_PRICE.was}</span>
+              <b dir="ltr">₪{HIVE_PRICE.now}</b>
             </div>
             <div>
               <span className={sty.vPct}>{HIVE_PRICE.pct}% הנחה</span>
@@ -430,7 +430,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
             <div className={sty.vPnote} style={{ lineHeight: 1.8 }}>
               <strong style={{ color: "#EDE9E1" }}>מה מקבלים עכשיו, בתשלום אחד:</strong> כל העונה הראשונה. בלי התחייבות נוספת.
               <br />
-              <strong style={{ color: "#EDE9E1" }}>ומה בהמשך, רק אם תרצו:</strong> <span dir="ltr">99₪</span> לחודש להמשך ייצור תוכן, פוסטים וסרטונים. מפסיקים מתי שרוצים.
+              <strong style={{ color: "#EDE9E1" }}>ומה בהמשך, רק אם תרצו:</strong> <span dir="ltr">₪99</span> לחודש להמשך ייצור תוכן, פוסטים וסרטונים. מפסיקים מתי שרוצים.
             </div>
             <a className={sty.vGo} href={hiveHref}>
               פותחים את הכוורת
@@ -451,7 +451,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               {f ? " שראית" : " שראית"} בעמוד הזה, הכוורת כולה, כלול בליווי.
             </p>
             <div className={sty.vPrice}>
-              <b dir="ltr">4,000₪</b>
+              <b dir="ltr">₪4,000</b>
             </div>
             <div>
               <span className={sty.vPct}>לא פיצחנו בפגישה הראשונה? פגישה נוספת עלינו</span>
@@ -460,7 +460,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               לקבוע את הפגישה עם הדר
             </a>
             <div className={sty.vSec}>
-              {f ? "רוצה להתחיל לבד?" : "רוצה להתחיל לבד?"} <a href={hiveHref}>הכוורת ב-<span dir="ltr">{HIVE_PRICE.now}₪</span></a>
+              {f ? "רוצה להתחיל לבד?" : "רוצה להתחיל לבד?"} <a href={hiveHref}>הכוורת ב-<span dir="ltr">₪{HIVE_PRICE.now}</span></a>
             </div>
           </div>
         ) : null}
@@ -508,8 +508,8 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
           >
             <span style={{ textAlign: "right", minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 800, lineHeight: 1.25 }}>
-                כוורת האות · <span dir="ltr">{HIVE_PRICE.now}₪</span>{" "}
-                <span dir="ltr" style={{ textDecoration: "line-through", color: "#D6D2C9", fontWeight: 400, fontSize: 13 }}>{HIVE_PRICE.was}₪</span>
+                כוורת האות · <span dir="ltr">₪{HIVE_PRICE.now}</span>{" "}
+                <span dir="ltr" style={{ textDecoration: "line-through", color: "#D6D2C9", fontWeight: 400, fontSize: 13 }}>₪{HIVE_PRICE.was}</span>
               </span>
               <span style={{ display: "block", fontSize: 13, color: "#D6D2C9", lineHeight: 1.35 }}>
                 תשלום אחד, כל העונה הראשונה · בלי התחייבות

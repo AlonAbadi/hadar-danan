@@ -352,16 +352,16 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
       </div>
       <div style={{ borderTop: "1px solid #2C323E", paddingTop: 14, fontSize: 14, lineHeight: 1.85 }}>
         <p style={{ margin: "0 0 10px" }}>
-          <strong style={gold}>מה מקבלים עכשיו, בתשלום אחד של <span dir="ltr">590₪</span>:</strong>
+          <strong style={gold}>מה מקבלים עכשיו, בתשלום אחד של <span dir="ltr">₪590</span>:</strong>
           <br />
           את כל חמש התיקיות, כולן נגזרות מהאות שלך. בלי התחייבות נוספת.
           <br />
-          <span style={{ color: "#7FD49B", fontSize: 14 }}>ואם ממשיכים לסדנה, כל ה-<span dir="ltr">590₪</span> מתקזזים ממחירה.</span>
+          <span style={{ color: "#7FD49B", fontSize: 14 }}>ואם ממשיכים לסדנה, כל ה-<span dir="ltr">₪590</span> מתקזזים ממחירה.</span>
         </p>
         <p style={{ margin: 0, color: "#D6D2C9" }}>
           <strong style={{ color: "#EDE9E1" }}>ומה בהמשך, רק אם תרצו:</strong>
           <br />
-          אנחנו ממשיכים לייצר לכם תוכן, פוסטים וסרטונים, ב-<span dir="ltr">99₪</span> לחודש. מפסיקים מתי שרוצים.
+          אנחנו ממשיכים לייצר לכם תוכן, פוסטים וסרטונים, ב-<span dir="ltr">₪99</span> לחודש. מפסיקים מתי שרוצים.
         </p>
       </div>
       <div style={{ textAlign: "center", marginTop: 16 }}>
