@@ -90,7 +90,7 @@ function GhostCircle({ label, onClick }: { label: string; onClick: () => void })
       onClick={onClick}
       style={{
         border: "1px solid rgba(237,233,225,0.3)", background: "rgba(8,12,20,0.6)",
-        color: "#EDE9E1", borderRadius: 999, padding: "9px 14px", fontSize: 13.5, cursor: "pointer",
+        color: "#EDE9E1", borderRadius: 999, padding: "9px 14px", fontSize: 14, cursor: "pointer",
       }}
     >
       {label}
@@ -308,8 +308,8 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     borderRadius: 12, padding: "14px 34px", cursor: "pointer", textDecoration: "none", display: "inline-block",
   };
   const ghostBtn: React.CSSProperties = {
-    background: "none", border: "1px solid #2C323E", color: "#B9B4AA",
-    borderRadius: 10, padding: "10px 20px", fontSize: 13, cursor: "pointer", textDecoration: "none", display: "inline-block",
+    background: "none", border: "1px solid #2C323E", color: "#D6D2C9",
+    borderRadius: 10, padding: "10px 20px", fontSize: 14, cursor: "pointer", textDecoration: "none", display: "inline-block",
   };
   // A true 9:16 reels box, always: the width is capped by the height budget
   // too (58dvh * 9/16) so aspect-ratio and max-height can never fight - the
@@ -333,7 +333,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
 
   const Upsell = () => (
     <div style={{ maxWidth: 460, width: "100%", background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid #C9964A55", borderRadius: 16, padding: "24px 22px", textAlign: "right" }}>
-      <div style={{ fontSize: 13, letterSpacing: 2, color: "#9E7C3A", marginBottom: 6, textAlign: "center" }}>כוורת האות</div>
+      <div style={{ fontSize: 14, letterSpacing: 1, color: "#E8B94A", fontWeight: 700, marginBottom: 6, textAlign: "center" }}>כוורת האות</div>
       <p style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.7, margin: "0 0 14px", textAlign: "center" }}>
         ככה עובדת הבמאית, על כל סרטון שלך.
         <br />
@@ -342,26 +342,26 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
         {FOLDERS.map(([n, t, d]) => (
           <div key={n} style={{ display: "flex", gap: 12, alignItems: "flex-start", background: "#14182066", borderRadius: 10, padding: "10px 12px" }}>
-            <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 13, border: "1px solid #C9964A66", color: "#E8B94A", fontSize: 13.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
+            <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 13, border: "1px solid #C9964A66", color: "#E8B94A", fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
             <span style={{ minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 700, color: "#EDE9E1" }}>{t}</span>
-              <span style={{ display: "block", fontSize: 13.5, color: "#B9B4AA", lineHeight: 1.6 }}>{d}</span>
+              <span style={{ display: "block", fontSize: 14, color: "#D6D2C9", lineHeight: 1.6 }}>{d}</span>
             </span>
           </div>
         ))}
       </div>
       <div style={{ borderTop: "1px solid #2C323E", paddingTop: 14, fontSize: 14, lineHeight: 1.85 }}>
         <p style={{ margin: "0 0 10px" }}>
-          <strong style={gold}>מה מקבלים עכשיו, בתשלום אחד של 590₪:</strong>
+          <strong style={gold}>מה מקבלים עכשיו, בתשלום אחד של <span dir="ltr">590₪</span>:</strong>
           <br />
           את כל חמש התיקיות, כולן נגזרות מהאות שלך. בלי התחייבות נוספת.
           <br />
-          <span style={{ color: "#7FD49B", fontSize: 13 }}>ואם ממשיכים לסדנה, כל ה-590₪ מתקזזים ממחירה.</span>
+          <span style={{ color: "#7FD49B", fontSize: 14 }}>ואם ממשיכים לסדנה, כל ה-<span dir="ltr">590₪</span> מתקזזים ממחירה.</span>
         </p>
-        <p style={{ margin: 0, color: "#B9B4AA" }}>
+        <p style={{ margin: 0, color: "#D6D2C9" }}>
           <strong style={{ color: "#EDE9E1" }}>ומה בהמשך, רק אם תרצו:</strong>
           <br />
-          אנחנו ממשיכים לייצר לכם תוכן, פוסטים וסרטונים, ב-99₪ לחודש. מפסיקים מתי שרוצים.
+          אנחנו ממשיכים לייצר לכם תוכן, פוסטים וסרטונים, ב-<span dir="ltr">99₪</span> לחודש. מפסיקים מתי שרוצים.
         </p>
       </div>
       <div style={{ textAlign: "center", marginTop: 16 }}>
@@ -381,14 +381,14 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     <Centered>
       <div style={{ fontSize: 34, marginBottom: 14 }}>✨</div>
       <h1 style={{ fontSize: 20, fontWeight: 800 }}>התסריט שלך נכתב מהאות</h1>
-      <p style={{ color: "#B9B4AA", fontSize: 14 }}>עוד רגע קטן...</p>
+      <p style={{ color: "#D6D2C9", fontSize: 14 }}>עוד רגע קטן...</p>
     </Centered>
   );
 
   if (phase === "error") return (
     <Centered>
       <h1 style={{ fontSize: 20, fontWeight: 800 }}>התסריט עוד לא מוכן</h1>
-      <p style={{ color: "#B9B4AA", fontSize: 14, marginBottom: 20 }}>נסו לרענן את העמוד בעוד רגע</p>
+      <p style={{ color: "#D6D2C9", fontSize: 14, marginBottom: 20 }}>נסו לרענן את העמוד בעוד רגע</p>
       <a href={`/kaveret/i?t=${encodeURIComponent(token)}`} style={ghostBtn}>חזרה לאות ←</a>
     </Centered>
   );
@@ -398,7 +398,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
       <RoomStyles />
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "26px 20px 120px" }}>
-        <div style={{ fontSize: 13, letterSpacing: 2, color: "#9E7C3A", marginBottom: 6 }}>הסרטון הראשון שלך · 15 שניות</div>
+        <div style={{ fontSize: 14, letterSpacing: 1, color: "#E8B94A", fontWeight: 700, marginBottom: 6 }}>הסרטון הראשון שלך · 15 שניות</div>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "0 0 4px" }}>{title}</h1>
         <div style={{ background: "#141820", border: "1px solid rgba(232,185,74,0.14)", borderRadius: 16, padding: 24, marginTop: 20 }}>
           <p style={{ color: "#E8B94A", fontWeight: 700, fontSize: 20, lineHeight: 1.6, margin: 0 }}>{scriptShape.hook}</p>
@@ -418,13 +418,13 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
           ))}
         </div>
         {rec.cameraState === "denied" ? (
-          <div style={{ background: "#1D2430", border: "1px solid rgba(232,185,74,0.3)", borderRadius: 12, padding: "14px 16px", marginTop: 20, fontSize: 13.5, color: "#CDD1DA", textAlign: "right", lineHeight: 1.8 }}>
+          <div style={{ background: "#1D2430", border: "1px solid rgba(232,185,74,0.3)", borderRadius: 12, padding: "14px 16px", marginTop: 20, fontSize: 14, color: "#CDD1DA", textAlign: "right", lineHeight: 1.8 }}>
             <strong style={{ color: "#E8B94A", display: "block", marginBottom: 4 }}>{getBroadcastCopy("permission.title")}</strong>
             {getBroadcastCopy("permission.step1")} · {getBroadcastCopy("permission.step2")} · {getBroadcastCopy("permission.step3")}
           </div>
         ) : null}
         {rec.cameraState === "unsupported" ? (
-          <p style={{ color: "#B9B4AA", fontSize: 14, marginTop: 20, textAlign: "center" }}>
+          <p style={{ color: "#D6D2C9", fontSize: 14, marginTop: 20, textAlign: "center" }}>
             {getBroadcastCopy("error.unsupported")}
           </p>
         ) : null}
@@ -469,7 +469,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         <h1 style={{ fontSize: 21, fontWeight: 800, marginBottom: 8 }}>
           {phase === "uploading" ? "הטייק עולה לבמאית..." : "הבמאית עובדת על הסרטון שלך"}
         </h1>
-        <p style={{ color: "#B9B4AA", fontSize: 14, maxWidth: 340, lineHeight: 1.8 }}>
+        <p style={{ color: "#D6D2C9", fontSize: 14, maxWidth: 340, lineHeight: 1.8 }}>
           תמלול, סנכרון כתוביות וחיתוך. בדיוק כמו בכוורת.
         </p>
         {phase === "processing" ? (
@@ -496,7 +496,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   if (phase === "failed") return (
     <Centered>
       <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>הכתוביות לא הסתדרו הפעם</h1>
-      <p style={{ color: "#B9B4AA", fontSize: 14, marginBottom: 16 }}>הטייק שלך שמור, אפשר לנסות שוב</p>
+      <p style={{ color: "#D6D2C9", fontSize: 14, marginBottom: 16 }}>הטייק שלך שמור, אפשר לנסות שוב</p>
       {blobUrl && (
         <div style={{ ...frame, width: "min(400px, 92vw, calc(40dvh * 0.5625))", marginBottom: 16 }}>
           <video src={blobUrl} controls playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -592,7 +592,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         }}
       >
         {banner ? (
-          <div style={{ background: "rgba(20,24,32,0.9)", border: "1px solid rgba(232,185,74,0.4)", borderRadius: 12, padding: "6px 14px", fontSize: 13, color: "#E8B94A" }}>
+          <div style={{ background: "rgba(20,24,32,0.9)", border: "1px solid rgba(232,185,74,0.4)", borderRadius: 12, padding: "6px 14px", fontSize: 14, color: "#E8B94A" }}>
             {banner}
           </div>
         ) : null}
@@ -607,7 +607,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         {rec.zoom ? (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <ZoomPill label="-" onClick={() => rec.setCameraZoom(Math.max(rec.zoom!.min, +(rec.zoom!.current - 0.25).toFixed(2)))} />
-            <span style={{ color: "#B9B4AA", fontSize: 13 }} dir="ltr">
+            <span style={{ color: "#D6D2C9", fontSize: 14 }} dir="ltr">
               {getBroadcastCopy("room.zoom")} {rec.zoom.current.toFixed(2).replace(/\.?0+$/, "")}x
             </span>
             <ZoomPill label="+" onClick={() => rec.setCameraZoom(Math.min(rec.zoom!.max, +(rec.zoom!.current + 0.25).toFixed(2)))} />
@@ -634,7 +634,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
           <GhostCircle label={getBroadcastCopy("room.pause")} onClick={() => prompterRef.current?.pause()} />
         </div>
         {!rec.isRecording ? (
-          <p style={{ color: "#CDD1DA", fontSize: 13.5, textAlign: "center", margin: 0, textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
+          <p style={{ color: "#CDD1DA", fontSize: 14, textAlign: "center", margin: 0, textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>
             {getBroadcastCopy(isDesktopUA ? "room.placement_hint_desktop" : "room.placement_hint")}
           </p>
         ) : null}

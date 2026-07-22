@@ -244,7 +244,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               <div style={{ display: "flex", justifyContent: "center", margin: "16px 0 4px" }}>
                 <div style={{ position: "relative", width: "min(280px, 78vw)", aspectRatio: "9/16", borderRadius: 16, overflow: "hidden", background: "#000", border: "1px solid rgba(232,185,74,0.35)" }}>
                   <video src={data.firstReelUrl} controls playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <span style={{ position: "absolute", top: 10, insetInlineStart: 10, background: "rgba(8,12,20,0.75)", border: "1px solid rgba(232,185,74,0.4)", borderRadius: 8, padding: "3px 9px", fontSize: 11, color: "#E8B94A", fontWeight: 700, pointerEvents: "none" }}>
+                  <span style={{ position: "absolute", top: 10, insetInlineStart: 10, background: "rgba(8,12,20,0.75)", border: "1px solid rgba(232,185,74,0.4)", borderRadius: 8, padding: "4px 10px", fontSize: 12.5, color: "#E8B94A", fontWeight: 700, pointerEvents: "none" }}>
                     הרילס הראשון שלך · עם כתוביות
                   </span>
                 </div>
@@ -263,14 +263,14 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 >
                   {data.firstReelReady ? "הרילס הראשון שלך מוכן, לצפייה 🎉" : "לצלם את הסרטון הראשון עכשיו, חינם 🎬"}
                 </a>
-                <p style={{ color: "#B9B4AA", fontSize: 13.5, marginTop: 8 }}>
+                <p style={{ color: "#D6D2C9", fontSize: 14, marginTop: 8 }}>
                   {data.firstReelReady
                     ? "עם כתוביות מסונכרנות. שמור לך כאן, אפשר גם לצלם מחדש"
                     : "15 שניות, התסריט שלך על המסך, הסרטון נשאר אצלך"}
                 </p>
               </div>
             ) : null}
-            <p className={sty.txt} style={{ fontSize: 13.5, textAlign: "center" }}>
+            <p className={sty.txt} style={{ fontSize: 14.5, textAlign: "center" }}>
               {f
                 ? "שבעה תסריטים בקול שלך. הטקסט רץ בקצב שלך, הבמאית חותכת, מוסיפה כתוביות ומחזירה רילס. מצולם, לא מיוצר."
                 : "שבעה תסריטים בקול שלך. הטקסט רץ בקצב שלך, הבמאית חותכת, מוסיפה כתוביות ומחזירה רילס. מצולם, לא מיוצר."}
@@ -313,7 +313,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 </span>
               ))}
             </div>
-            <p className={sty.txt} style={{ fontSize: 14, marginTop: 12, color: "#C6C1B7" }}>
+            <p className={sty.txt} style={{ fontSize: 14, marginTop: 12, color: "#D6D2C9" }}>
               {sale
                 ? data.offer === "strategy"
                   ? "שבעת הימים המלאים, סרטון ומשימה ביום, כלולים בליווי."
@@ -367,7 +367,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
                 </div>
               ) : null}
               {sale ? (
-                <p className={sty.txt} style={{ fontSize: 14, marginTop: 12, color: "#C6C1B7" }}>
+                <p className={sty.txt} style={{ fontSize: 14, marginTop: 12, color: "#D6D2C9" }}>
                   {data.offer === "strategy"
                     ? "בליווי שלושת הכיוונים האלה הופכים לתסריטים מוכנים ולתוכנית שלמה."
                     : "בכוורת שלושת הכיוונים האלה הופכים לתסריטים מוכנים, טעונים בטלפרומפטר."}
@@ -421,8 +421,8 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               האתגר המלא, חדר השידור עם שבעת התסריטים שלך, הכרטיסים והתכנים. הכול אישי, נגזר מהתשובות שלך.
             </p>
             <div className={sty.vPrice}>
-              <span className={sty.vWas}>₪{HIVE_PRICE.was}</span>
-              <b>₪{HIVE_PRICE.now}</b>
+              <span className={sty.vWas} dir="ltr">{HIVE_PRICE.was}₪</span>
+              <b dir="ltr">{HIVE_PRICE.now}₪</b>
             </div>
             <div>
               <span className={sty.vPct}>{HIVE_PRICE.pct}% הנחה</span>
@@ -430,7 +430,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
             <div className={sty.vPnote} style={{ lineHeight: 1.8 }}>
               <strong style={{ color: "#EDE9E1" }}>מה מקבלים עכשיו, בתשלום אחד:</strong> כל העונה הראשונה. בלי התחייבות נוספת.
               <br />
-              <strong style={{ color: "#EDE9E1" }}>ומה בהמשך, רק אם תרצו:</strong> 99₪ לחודש להמשך ייצור תוכן, פוסטים וסרטונים. מפסיקים מתי שרוצים.
+              <strong style={{ color: "#EDE9E1" }}>ומה בהמשך, רק אם תרצו:</strong> <span dir="ltr">99₪</span> לחודש להמשך ייצור תוכן, פוסטים וסרטונים. מפסיקים מתי שרוצים.
             </div>
             <a className={sty.vGo} href={hiveHref}>
               פותחים את הכוורת
@@ -451,7 +451,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               {f ? " שראית" : " שראית"} בעמוד הזה, הכוורת כולה, כלול בליווי.
             </p>
             <div className={sty.vPrice}>
-              <b>₪4,000</b>
+              <b dir="ltr">4,000₪</b>
             </div>
             <div>
               <span className={sty.vPct}>לא פיצחנו בפגישה הראשונה? פגישה נוספת עלינו</span>
@@ -460,7 +460,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
               לקבוע את הפגישה עם הדר
             </a>
             <div className={sty.vSec}>
-              {f ? "רוצה להתחיל לבד?" : "רוצה להתחיל לבד?"} <a href={hiveHref}>הכוורת ב-₪{HIVE_PRICE.now}</a>
+              {f ? "רוצה להתחיל לבד?" : "רוצה להתחיל לבד?"} <a href={hiveHref}>הכוורת ב-<span dir="ltr">{HIVE_PRICE.now}₪</span></a>
             </div>
           </div>
         ) : null}
@@ -478,7 +478,7 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
           </div>
         ) : null}
 
-        <footer style={{ marginTop: 48, padding: "28px 8px 10px", borderTop: "1px solid #2C323E", textAlign: "center", fontSize: 12, color: "#C3C8D2", lineHeight: 2 }}>
+        <footer style={{ marginTop: 48, padding: "28px 8px 10px", borderTop: "1px solid #2C323E", textAlign: "center", fontSize: 13, color: "#C9CEDA", lineHeight: 2 }}>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/privacy" style={{ color: "#C3C8D2", textDecoration: "none" }}>מדיניות פרטיות</a>
             <a href="/terms" style={{ color: "#C3C8D2", textDecoration: "none" }}>תנאי שימוש</a>
@@ -508,16 +508,16 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
           >
             <span style={{ textAlign: "right", minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 800, lineHeight: 1.25 }}>
-                כוורת האות · ₪{HIVE_PRICE.now}{" "}
-                <span style={{ textDecoration: "line-through", color: "#B9B4AA", fontWeight: 400, fontSize: 12 }}>₪{HIVE_PRICE.was}</span>
+                כוורת האות · <span dir="ltr">{HIVE_PRICE.now}₪</span>{" "}
+                <span dir="ltr" style={{ textDecoration: "line-through", color: "#D6D2C9", fontWeight: 400, fontSize: 13 }}>{HIVE_PRICE.was}₪</span>
               </span>
-              <span style={{ display: "block", fontSize: 11.5, color: "#A9A49B", lineHeight: 1.3 }}>
+              <span style={{ display: "block", fontSize: 13, color: "#D6D2C9", lineHeight: 1.35 }}>
                 תשלום אחד, כל העונה הראשונה · בלי התחייבות
               </span>
             </span>
             <span style={{
               flexShrink: 0, background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-              color: "#0D1018", fontWeight: 800, fontSize: 12.5, borderRadius: 999, padding: "8px 16px", whiteSpace: "nowrap",
+              color: "#0D1018", fontWeight: 800, fontSize: 14, borderRadius: 999, padding: "9px 17px", whiteSpace: "nowrap",
             }}>
               לפתוח ←
             </span>
@@ -535,11 +535,11 @@ export function KaveretVisitorClient({ data }: { data: VisitorData }) {
           >
             <span style={{ textAlign: "right", minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 800, lineHeight: 1.25 }}>פגישת אסטרטגיה עם הדר</span>
-              <span style={{ display: "block", fontSize: 11.5, color: "#A9A49B", lineHeight: 1.3 }}>הכוורת כולה כלולה בליווי</span>
+              <span style={{ display: "block", fontSize: 13, color: "#D6D2C9", lineHeight: 1.35 }}>הכוורת כולה כלולה בליווי</span>
             </span>
             <span style={{
               flexShrink: 0, background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
-              color: "#0D1018", fontWeight: 800, fontSize: 12.5, borderRadius: 999, padding: "8px 16px", whiteSpace: "nowrap",
+              color: "#0D1018", fontWeight: 800, fontSize: 14, borderRadius: 999, padding: "9px 17px", whiteSpace: "nowrap",
             }}>
               לקבוע ←
             </span>
@@ -610,7 +610,7 @@ function SeasonsTease({ offer, sale }: { offer: VisitorData["offer"]; sale: bool
           <p className="why">{openSeason.why}</p>
         </div>
       ) : null}
-      <p className={sty.txt} style={{ fontSize: 14, marginTop: 12, color: "#C6C1B7", textAlign: "center" }}>
+      <p className={sty.txt} style={{ fontSize: 14, marginTop: 12, color: "#D6D2C9", textAlign: "center" }}>
         {offer === "strategy"
           ? "העונה הראשונה, שבעת הפרקים, כלולה בליווי. משם כל חודש עונה חדשה מהאות שלך."
           : sale
