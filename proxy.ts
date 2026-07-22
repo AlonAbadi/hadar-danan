@@ -2,7 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareClient } from "@/lib/supabase/middleware-client";
 
 // Routes that require a valid Supabase session
-const PROTECTED_PREFIXES = ["/account", "/course/content", "/challenge/content", "/hive/members"];
+// /course/content deliberately absent — the digital course was retired
+// 2026-07-22 and the page itself redirects everyone to /account.
+const PROTECTED_PREFIXES = ["/account", "/challenge/content", "/hive/members"];
 // Auth routes that redirect away if already logged in
 const AUTH_ROUTES = ["/login", "/signup"];
 
