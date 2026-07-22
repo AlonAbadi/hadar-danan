@@ -1591,6 +1591,16 @@ const SEASON_NUMBERS: Record<1 | 2, number[]> = {
   2: [21, 22, 23, 24, 25, 26],
 };
 
+// Display helper: the DB stores integer video_number (1..7 for Season 1,
+// 21..26 for Season 2) so takes rows stay orthogonal, but customers think
+// in "Season 2, Episode 1" — not "21". This turns internal numbers into
+// the "S.E" strings the UI shows, without touching storage or API.
+// Alon 2026-07-22.
+function displayEpisodeNumber(n: number): string {
+  if (n >= 21 && n <= 26) return `2.${n - 20}`;
+  return String(n);
+}
+
 function ShootDayProgress({ filmed, total }: { filmed: number; total: number }) {
   const cells = Array.from({ length: total }, (_, i) => i < filmed);
   return (
@@ -1705,7 +1715,7 @@ function EpisodesList({
       const v = d.videos[0] as any;
       const built: BuiltScript = {
         number: v.number,
-        title:  String(v.title ?? CANONICAL_TITLES[n] ?? `פרק ${n}`),
+        title:  String(v.title ?? CANONICAL_TITLES[n] ?? `פרק ${displayEpisodeNumber(n)}`),
         hook:   String(v.script?.hook ?? ""),
         body:   String(v.script?.body ?? ""),
         cta:    v.script?.cta ? String(v.script.cta) : "",
@@ -1795,11 +1805,11 @@ function EpisodesList({
                   flex: "0 0 auto",
                 }}
               >
-                {n}
+                {displayEpisodeNumber(n)}
               </span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15.5, color: "#EDE9E1", fontWeight: 700 }}>
-                  {CANONICAL_TITLES[n] ?? `פרק ${n}`}
+                  {CANONICAL_TITLES[n] ?? `פרק ${displayEpisodeNumber(n)}`}
                 </div>
                 {inFlight ? (
                   <div style={{ fontSize: 12.5, color: "#E8B94A", fontWeight: 500, marginTop: 2 }}>
@@ -1880,7 +1890,7 @@ function EpisodesList({
                   flex: "0 0 auto",
                 }}
               >
-                {filmed ? "✓" : n}
+                {filmed ? "✓" : displayEpisodeNumber(n)}
               </span>
               {(() => {
                 const takes    = takesPerScript[n] ?? 0;
