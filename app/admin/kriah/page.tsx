@@ -50,11 +50,11 @@ const STEP_ROWS: { label: string; keys: string[] }[] = [
 
 // New question order — live from 2026-07-19. New events carry metadata.q_order===2.
 // Opens with gratitude ("על מה מודים לך"); the abstract flow-state question moved to #2.
-const REORDER_DATE = "2026-07-19";
+const SWAP_DATE = "2026-07-22"; // blocker-first swap (q_order 3, current funnel)
 const STEP_ROWS_NEW: { label: string; keys: string[] }[] = [
   { label: "כניסה (מצב עסק)",   keys: ["s1"] },
-  { label: "ענו על מצב עסק",    keys: ["s3_blocker"] },
-  { label: "ענו על החסם",       keys: ["s4_change"] },
+  { label: "רב-ברירה 1 · החסם", keys: ["s3_blocker"] },
+  { label: "רב-ברירה 2 · מצב עסק", keys: ["s4_change"] },
   { label: "ענו מה ישתנה",      keys: ["s6_reading"] },
   { label: "המזלג",             keys: ["s7_fork"] },
   { label: "גשר + מייל",        keys: ["s8_bridge"] },
@@ -158,8 +158,8 @@ export default async function AdminKriahPage() {
   const steps = ((stepRes.data ?? []) as Ev[]).filter((e) => e.metadata?.is_test !== true);
   // Split by question-order version so the two funnels never cross-count on the
   // steps whose names are shared (q4-q6). New order tags q_order===2.
-  const stepsNew = steps.filter((e) => e.metadata?.q_order === 2);
-  const stepsOld = steps.filter((e) => e.metadata?.q_order !== 2);
+  const stepsNew = steps.filter((e) => e.metadata?.q_order === 3);
+  const stepsOld = steps.filter((e) => e.metadata?.q_order !== 3);
 
   // ── windows ──
   const inWindow = <T extends { [k: string]: unknown }>(rows: T[], field: string, since: string) =>
@@ -311,26 +311,27 @@ export default async function AdminKriahPage() {
           ))}
         </div>
 
-        {/* NEW order funnel — live tracking from the reorder date */}
+        {/* CURRENT funnel — blocker-first + reordered questions, live from the swap date */}
         <FunnelTable
-          title={`המשפך — סדר חדש · מעקב (מ-${REORDER_DATE.split("-").reverse().join(".")}) · 14 יום`}
-          sub="פותח ב'על מה מודים לך'. השווה 'ש1 · על מה מודים' מול 'שאלה 1 — הוצגה' — זו הנשירה שאנחנו מנסים להוריד. אחוז ירוק = המשיכו מהשלב הקודם."
+          title={`המשפך — החסם ראשון (חי · מ-${SWAP_DATE.split("-").reverse().join(".")}) · 14 יום`}
+          sub="הניסוי הנוכחי: שאלת החסם לפני מצב-העסק. השווה 'רב-ברירה 1 · החסם' כאן מול 'ענו על מצב עסק' בטבלת הבייסליין — זה מודד אם ההחלפה שיפרה. אחוז ירוק = המשיכו מהשלב הקודם."
           rows={rowsNew}
         />
 
-        {/* Baseline — old order, measured before the reorder (permanent reference) */}
+        {/* Baseline — measured before the changes (permanent reference) */}
         <div style={{ background: "rgba(232,185,74,0.05)", border: `1px dashed ${C.line}`, borderRadius: 12, padding: "14px 16px", marginBottom: 26 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: C.goldMid, marginBottom: 4 }}>בייסליין — הסדר הישן (נמדד 60 יום עד 19.7)</div>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.goldMid, marginBottom: 4 }}>בייסליין — לפני השינויים (נמדד 60 יום עד 19.7)</div>
           <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.7 }}>
-            השאלה הראשונה הישנה (&rdquo;רגע שבו שכחת מהזמן&ldquo;) נשרה <b style={{ color: C.red }}>25%</b> (הוצגה→ענו) — פי 3-12 מכל שאר השאלות (2-8%).
-            היעד של הסדר החדש: להוריד משמעותית את הנשירה בשאלה הראשונה.
+            השאלה הראשונה (רב-ברירה, &rdquo;מצב העסק&ldquo;) נשרה <b style={{ color: C.red }}>~60%</b> (48/120 שרדו) — הנשירה הכי גדולה במשפך.<br />
+            השאלה הפתוחה הראשונה (&rdquo;שכחת מהזמן&ldquo;) נשרה <b style={{ color: C.red }}>25%</b> (הוצגה→ענו) מול 2-8% בשאר.<br />
+            היעד: החסם-ראשון יוריד את הנשירה ברב-ברירה הראשונה; והשאלה הקלה-ראשונה תוריד את נשירת השאלה הפתוחה.
           </div>
         </div>
 
-        {/* OLD order funnel — pre-reorder events (phases out past the 14-day window) */}
+        {/* OLD funnel — state-first (pre-swap) events; phases out past the 14-day window */}
         <FunnelTable
-          title="המשפך — סדר ישן (עד 19.7) · 14 יום"
-          sub="נתוני הסדר הקודם. מתרוקן ככל שהאירועים יוצאים מחלון 14 הימים — הבייסליין למעלה נשמר קבוע."
+          title="המשפך — מצב-עסק ראשון (עד 22.7) · 14 יום"
+          sub="נתוני הסדר הקודם (מצב-עסק ראשון). מתרוקן ככל שהאירועים יוצאים מחלון 14 הימים — הבייסליין למעלה נשמר קבוע."
           rows={rowsOld}
         />
 

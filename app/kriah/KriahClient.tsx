@@ -318,7 +318,7 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
       const body = JSON.stringify({
         type: "FUNNEL_STEP",
         ...(anonymousId ? { anonymous_id: anonymousId } : {}),
-        metadata: { step, instrument: "v2_funnel", is_test: isTest, q_order: 2 },
+        metadata: { step, instrument: "v2_funnel", is_test: isTest, q_order: 3 },
       });
       const blob = new Blob([body], { type: "application/json" });
       if (!navigator.sendBeacon("/api/events", blob)) {
@@ -767,15 +767,18 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
               </p>
               <div style={{ borderTop: `1px solid ${C.line}`, margin: "22px auto 0", width: 56 }} />
             </div>
+            {/* Swapped 2026-07-22: blocker asked first (was business-state).
+                Screen ids + step names unchanged so the funnel stays comparable;
+                the matrix/s7 read stateKey+blocker by value, order-independent. */}
             <h2 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 20px", lineHeight: 1.35 }}>
-              איפה העסק עומד היום?
+              מה הכי עוצר אתכם עכשיו?
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {STATE_OPTIONS.map((opt) => (
+              {BLOCKER_OPTIONS.map((opt) => (
                 <ChoiceButton
                   key={opt.key}
-                  selected={stateKey === opt.key}
-                  onClick={() => { setStateKey(opt.key); goTo("s3", "s3_blocker"); }}
+                  selected={blocker === opt.key}
+                  onClick={() => { setBlocker(opt.key); goTo("s3", "s3_blocker"); }}
                 >
                   {opt.label}
                 </ChoiceButton>
@@ -784,18 +787,18 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
           </Card>
         )}
 
-        {/* ── S3 · blocker ── */}
+        {/* ── S3 · business-state (asked second since 2026-07-22 swap) ── */}
         {screen === "s3" && (
           <Card>
             <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 22px", lineHeight: 1.35 }}>
-              מה הכי עוצר אתכם עכשיו?
+              איפה העסק עומד היום?
             </h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {BLOCKER_OPTIONS.map((opt) => (
+              {STATE_OPTIONS.map((opt) => (
                 <ChoiceButton
                   key={opt.key}
-                  selected={blocker === opt.key}
-                  onClick={() => { setBlocker(opt.key); goTo("s4", "s4_change"); }}
+                  selected={stateKey === opt.key}
+                  onClick={() => { setStateKey(opt.key); goTo("s4", "s4_change"); }}
                 >
                   {opt.label}
                 </ChoiceButton>
