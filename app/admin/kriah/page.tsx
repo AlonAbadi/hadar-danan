@@ -8,8 +8,30 @@
  */
 import { createServerClient } from "@/lib/supabase/server";
 import { getOrCreateDailyReport, ilDate, type DailyReport } from "@/lib/kriah-report";
+import { KRIAH_EXP } from "@/lib/kriah-experiment";
 
 export const dynamic = "force-dynamic";
+
+// ── A/B statistics (two-proportion z-test, no deps) ──────────────────────────
+// Only show a verdict once each arm has passed the sample gate; before that the
+// numbers are noise and a premature "winner" is the classic A/B mistake.
+const AB_SAMPLE_GATE = 80; // min entries per arm before any significance verdict
+
+function erf(x: number): number {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x));
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t) * Math.exp(-x * x);
+  return x >= 0 ? y : -y;
+}
+const normCdf = (z: number) => 0.5 * (1 + erf(z / Math.SQRT2));
+
+function twoPropTest(x1: number, n1: number, x2: number, n2: number): { z: number; pval: number } | null {
+  if (n1 === 0 || n2 === 0) return null;
+  const p1 = x1 / n1, p2 = x2 / n2, pp = (x1 + x2) / (n1 + n2);
+  const se = Math.sqrt(pp * (1 - pp) * (1 / n1 + 1 / n2));
+  if (se === 0) return null;
+  const z = (p2 - p1) / se;
+  return { z, pval: 2 * (1 - normCdf(Math.abs(z))) };
+}
 
 // Report epoch (Alon, 2026-07-05): all telemetry collected before this moment
 // was asymmetric (the entry beacon shipped days after the other steps) and was
@@ -152,7 +174,7 @@ export default async function AdminKriahPage() {
     routed_ending: string | null; evidence_score: number | null; phone_given: boolean | null;
     source_utm: Record<string, string> | null; generated_at: string; truth_cell: string | null;
   };
-  type Ev = { metadata: { step?: string; is_test?: boolean; q_order?: number } | null; created_at: string };
+  type Ev = { metadata: { step?: string; is_test?: boolean; q_order?: number; exp?: string; arm?: string } | null; created_at: string };
 
   const exts  = (extRes.data ?? []) as Ext[];
   const steps = ((stepRes.data ?? []) as Ev[]).filter((e) => e.metadata?.is_test !== true);
@@ -205,6 +227,30 @@ export default async function AdminKriahPage() {
   // ── funnel rows with rates (two orders, split by q_order) ──
   const rowsNew = STEP_ROWS_NEW.map((r) => ({ label: r.label, n: countIn(stepsNew, r.keys) }));
   const rowsOld = STEP_ROWS.map((r) => ({ label: r.label, n: countIn(stepsOld, r.keys) }));
+
+  // ── A/B experiment (kriah_flow_v1) — measured purely from tagged FUNNEL_STEP ──
+  // events. Only events fired after the arm-tagging deploy carry metadata.arm,
+  // so pre-experiment traffic is naturally excluded. Primary metric = the letter
+  // actually delivered (s16). Guardrail = early email capture rate (variant asks
+  // for the email later, so this must not crater).
+  const expSteps = (arm: string) =>
+    steps.filter((e) => e.metadata?.exp === KRIAH_EXP.id && e.metadata?.arm === arm);
+  const armMetric = (arm: string) => {
+    const s = expSteps(arm);
+    return {
+      entries: s.filter((e) => e.metadata?.step === "s1").length,
+      emails:  s.filter((e) => e.metadata?.step === "email_captured").length,
+      letters: s.filter((e) => e.metadata?.step === "s16_full_reading").length,
+    };
+  };
+  const armCtl = armMetric("control");
+  const armVnt = armMetric("variant");
+  const abGated = armCtl.entries < AB_SAMPLE_GATE || armVnt.entries < AB_SAMPLE_GATE;
+  const abTest  = twoPropTest(armCtl.letters, armCtl.entries, armVnt.letters, armVnt.entries);
+  const rate = (x: number, n: number) => (n > 0 ? (x / n) * 100 : 0);
+  const ctlRate = rate(armCtl.letters, armCtl.entries);
+  const vntRate = rate(armVnt.letters, armVnt.entries);
+  const abUplift = ctlRate > 0 ? ((vntRate - ctlRate) / ctlRate) * 100 : null;
 
   const { today: todayReport, history: reportHistory } = await reportPromise;
 
@@ -310,6 +356,97 @@ export default async function AdminKriahPage() {
             </div>
           ))}
         </div>
+
+        {/* A/B EXPERIMENT — kriah_flow_v1 (structure of the funnel) */}
+        {(() => {
+          const arms: { key: string; name: string; m: typeof armCtl; r: number; primary: boolean }[] = [
+            { key: "control", name: "מקור (Control)", m: armCtl, r: ctlRate, primary: false },
+            { key: "variant", name: "וריאנט — מייל אחרי שאלה 1", m: armVnt, r: vntRate, primary: true },
+          ];
+          const leader = vntRate > ctlRate ? "variant" : ctlRate > vntRate ? "control" : null;
+          const significant = !abGated && abTest !== null && abTest.pval < 0.05;
+          const need = Math.max(0, AB_SAMPLE_GATE - Math.min(armCtl.entries, armVnt.entries));
+          return (
+            <div style={{
+              background: KRIAH_EXP.active ? "rgba(127,212,155,0.05)" : "rgba(255,155,155,0.05)",
+              border: `1.5px solid ${KRIAH_EXP.active ? "rgba(127,212,155,0.35)" : "rgba(255,155,155,0.35)"}`,
+              borderRadius: 16, padding: "22px 24px", marginBottom: 26,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
+                <h2 style={{ fontSize: 17, fontWeight: 800, color: C.gold, margin: 0 }}>🧪 ניסוי A/B · מבנה השאלון</h2>
+                <span style={{ fontSize: 12.5, color: KRIAH_EXP.active ? C.green : C.red, fontWeight: 700 }}>
+                  {KRIAH_EXP.active ? `פעיל · ${Math.round(KRIAH_EXP.variantShare * 100)}% לוריאנט` : "כבוי — כולם רואים את המקור"}
+                </span>
+              </div>
+              <p style={{ fontSize: 12.5, color: C.muted, margin: "0 0 18px", lineHeight: 1.7 }}>
+                המקור = התזרים הקיים בדיוק. הוריאנט: מוותר על שאלת &rdquo;מה ישתנה&ldquo;, ממזג את מסך הקריאה והמזלג לאחד, ומעביר את בקשת המייל להופיע רק אחרי התשובה הפתוחה הראשונה. המדד המרכזי: <b style={{ color: C.fg }}>האות נשלח (סיום) חלקי כניסה</b>.
+              </p>
+
+              {/* per-arm metric columns */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginBottom: 16 }}>
+                {arms.map((a) => {
+                  const win = significant && leader === a.key;
+                  return (
+                    <div key={a.key} style={{
+                      background: C.card,
+                      border: `1.5px solid ${win ? C.green : C.line}`,
+                      borderRadius: 12, padding: "16px 18px",
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 800, color: win ? C.green : C.goldMid }}>{a.name}</span>
+                        {win && <span style={{ fontSize: 11.5, color: C.green, fontWeight: 700 }}>מוביל ✓</span>}
+                      </div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: win ? C.green : C.gold, lineHeight: 1 }}>
+                        {a.m.entries > 0 ? `${a.r.toFixed(1)}%` : "—"}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: C.muted, marginTop: 3 }}>
+                        האות נשלח · {a.m.letters}/{a.m.entries}
+                      </div>
+                      <div style={{ display: "flex", gap: 16, marginTop: 12, borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: C.fg }}>{a.m.entries}</div>
+                          <div style={{ fontSize: 10.5, color: C.muted }}>כניסות</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: C.fg }}>
+                            {a.m.entries > 0 ? `${Math.round(rate(a.m.emails, a.m.entries))}%` : "—"}
+                          </div>
+                          <div style={{ fontSize: 10.5, color: C.muted }}>מייל מוקדם (בקרה)</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* verdict line */}
+              <div style={{
+                background: "#0A0E16", borderRadius: 10, padding: "12px 16px",
+                fontSize: 13.5, lineHeight: 1.7, color: C.fg,
+              }}>
+                {abGated ? (
+                  <span style={{ color: C.muted }}>
+                    אוסף מדגם — צריך לפחות <b style={{ color: C.fg }}>{AB_SAMPLE_GATE}</b> כניסות בכל זרוע לפני הכרעה. חסרות עוד <b style={{ color: C.gold }}>{need}</b> בזרוע הקטנה. עד אז המספרים למעלה מוצגים אך אינם אמינים סטטיסטית.
+                  </span>
+                ) : significant ? (
+                  <span>
+                    <b style={{ color: C.green }}>תוצאה מובהקת</b> (p={abTest!.pval.toFixed(3)}).{" "}
+                    {leader === "variant"
+                      ? <>הוריאנט מנצח את המקור{abUplift !== null ? <> ב-<b style={{ color: C.green }}>{abUplift >= 0 ? "+" : ""}{abUplift.toFixed(0)}%</b> בשיעור ההשלמה</> : null}. אפשר לקבע אותו כברירת מחדל.</>
+                      : <>המקור מנצח את הוריאנט{abUplift !== null ? <> (הוריאנט <b style={{ color: C.red }}>{abUplift.toFixed(0)}%</b>)</> : null}. כדאי לכבות את הניסוי.</>}
+                  </span>
+                ) : (
+                  <span style={{ color: C.muted }}>
+                    המדגם מספיק, אך <b style={{ color: C.fg }}>אין עדיין הכרעה מובהקת</b>{abTest ? <> (p={abTest.pval.toFixed(3)})</> : null}. ממשיכים לאסוף.
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: 10.5, color: C.muted, opacity: 0.7, marginTop: 10 }}>
+                כיבוי מיידי והפיך: <code style={{ color: C.goldMid }}>active:false</code> ב-lib/kriah-experiment.ts שולח את כולם למקור. השיוך דביק (עוגייה 60 יום) — מבקר לא מחליף זרוע באמצע.
+              </p>
+            </div>
+          );
+        })()}
 
         {/* CURRENT funnel — blocker-first + reordered questions, live from the swap date */}
         <FunnelTable

@@ -6,6 +6,7 @@ import { BeeWait } from "@/components/BeeWait";
 import { ConsentCheckbox } from "@/components/landing/ConsentCheckbox";
 import { ShareButtons } from "@/components/signal/ShareButtons";
 import { detectGender, type Gender } from "@/lib/gender/detect";
+import { resolveKriahArm, KRIAH_EXP, type KriahArm } from "@/lib/kriah-experiment";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /kriah — unified funnel v2, wave 1.
@@ -18,7 +19,7 @@ type StateKey   = "A" | "B" | "C" | "D";
 type BlockerKey = "message" | "content" | "price" | "time";
 
 type Screen =
-  | "s1" | "s2" | "s3" | "s4" | "s6" | "s7" | "s8"
+  | "s1" | "s2" | "s3" | "s4" | "s6" | "s7" | "s8" | "mailgate"
   | "q" | "probe" | "s15" | "loading" | "sendgate" | "s16" | "exit" | "error";
 
 type SignalOutput = {
@@ -239,11 +240,19 @@ interface Draft {
 }
 
 export function KriahClient({ previewKey, isTest, initialUser }: Props) {
+  // A/B arm (kriah_flow_v1) — sticky per visitor. Resolved once on mount, before
+  // the entry beacon, and carried on every funnel event. control = current flow.
+  const armRef = useRef<KriahArm>("control");
+  const [arm, setArm] = useState<KriahArm>("control");
+
   // Entry beacon — the funnel denominator (fires once per mount).
   const entryFired = useRef(false);
   useEffect(() => {
     if (entryFired.current) return;
     entryFired.current = true;
+    const a = resolveKriahArm();
+    armRef.current = a;
+    setArm(a);
     track("s1");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -318,7 +327,7 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
       const body = JSON.stringify({
         type: "FUNNEL_STEP",
         ...(anonymousId ? { anonymous_id: anonymousId } : {}),
-        metadata: { step, instrument: "v2_funnel", is_test: isTest, q_order: 3 },
+        metadata: { step, instrument: "v2_funnel", is_test: isTest, q_order: 3, exp: KRIAH_EXP.id, arm: armRef.current },
       });
       const blob = new Blob([body], { type: "application/json" });
       if (!navigator.sendBeacon("/api/events", blob)) {
@@ -436,7 +445,15 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
     }).catch((err) => console.warn("[kriah] soft capture failed", err));
     setSoftCaptured(true);
     setConsent(true);
-    startQuestions();
+    track("email_captured"); // measured per-arm (control: at S8; variant: after Q1)
+    if (armRef.current === "variant") {
+      // variant captures the email AFTER the first open answer — resume at Q2.
+      setQIdx(1);
+      setScreen("q");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      startQuestions();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewKey, isTest]);
 
@@ -455,7 +472,8 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
     try {
       const raw = sessionStorage.getItem(DRAFT_KEY);
       const d = raw ? (JSON.parse(raw) as Draft) : {};
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ ...d, googlePending: true, screen: "s8" }));
+      const resumeScreen = armRef.current === "variant" ? "mailgate" : "s8";
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ ...d, googlePending: true, screen: resumeScreen }));
     } catch {}
     const supabase = createBrowserClient();
     void supabase.auth.signInWithOAuth({
@@ -583,6 +601,12 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
     track(`q${qIdx + 1}_${q.key}`);
     beaconPartialAnswer(q.key);
     if (qIdx === QUESTIONS.length - 1) { afterQ6(); return; }
+    // variant: capture the email right after the FIRST open answer (peak commitment)
+    if (arm === "variant" && qIdx === 0 && !softCaptured) {
+      setQIdx(1);
+      goTo("mailgate", "mailgate_after_q1");
+      return;
+    }
     setQIdx((i) => i + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -798,7 +822,12 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
                 <ChoiceButton
                   key={opt.key}
                   selected={stateKey === opt.key}
-                  onClick={() => { setStateKey(opt.key); goTo("s4", "s4_change"); }}
+                  onClick={() => {
+                    setStateKey(opt.key);
+                    // variant skips S4 (it feeds nothing) → straight to the reading
+                    if (arm === "variant") goTo("s6", "s6_reading");
+                    else goTo("s4", "s4_change");
+                  }}
                 >
                   {opt.label}
                 </ChoiceButton>
@@ -852,10 +881,37 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
             }}>
               {LIMITATION_LINE}
             </p>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <QuietLink onClick={() => setScreen("s4")}>← חזרה</QuietLink>
-              <GoldButton onClick={() => goTo("s7", "s7_fork")}>להמשיך לפתרון ←</GoldButton>
-            </div>
+
+            {arm === "variant" && (
+              /* variant: the S7 pitch is merged here — one screen instead of a click */
+              <div style={{ borderTop: `1px solid ${C.line}`, marginTop: 4, paddingTop: 22 }}>
+                <h3 style={{ fontSize: 19, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.4 }}>
+                  {blocker ? S7_CALLBACK[blocker] : S7_CALLBACK.message}
+                </h3>
+                <p style={{ fontSize: 16, lineHeight: 1.8, margin: "0 0 14px", color: C.fg, opacity: 0.92 }}>
+                  שלוש תשובות, וכבר יש תמונה. אבל תמונה של הבעיה היא עדיין לא פתרון. הפתרון מתחיל בשאלה שרוב בעלי העסקים לא מצליחים לענות עליה במשפט: <b>למה שלקוח יבחר דווקא בכם?</b>
+                </p>
+                <p style={{ fontSize: 16, lineHeight: 1.8, margin: "0 0 14px", color: C.fg, opacity: 0.92 }}>
+                  התשובה קיימת. הלקוחות הטובים שלכם מרגישים אותה בכל מפגש איתכם. היא פשוט אף פעם לא נוסחה במילים. <b style={{ color: C.gold }}>לתשובה הזאת אנחנו קוראים האות שלכם.</b>
+                </p>
+                <p style={{ fontSize: 16, lineHeight: 1.8, margin: "0 0 16px", color: C.fg }}>
+                  השלב הבא: <b style={{ color: C.gold }}>אבחון גילוי האות.</b> שש שאלות פתוחות עליכם, כי שם האות נמצא. <b>הן דורשות כנות, לא זמן.</b>
+                </p>
+              </div>
+            )}
+
+            {arm === "variant" ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+                <GoldButton onClick={startQuestions}>להתחיל את גילוי האות ←</GoldButton>
+                <QuietLink onClick={() => goTo("exit", "exit")}>אפשר לעצור כאן</QuietLink>
+                <QuietLink onClick={() => setScreen("s3")}>← חזרה</QuietLink>
+              </div>
+            ) : (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <QuietLink onClick={() => setScreen("s4")}>← חזרה</QuietLink>
+                <GoldButton onClick={() => goTo("s7", "s7_fork")}>להמשיך לפתרון ←</GoldButton>
+              </div>
+            )}
           </Card>
         )}
 
@@ -1059,6 +1115,77 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
                 <QuietLink onClick={startQuestions}>להמשיך בלי</QuietLink>
               )}
               <QuietLink onClick={() => setScreen("s7")}>← חזרה</QuietLink>
+            </div>
+          </Card>
+        )}
+
+        {/* ── mailgate · variant only · soft capture AFTER the first open answer ── */}
+        {screen === "mailgate" && (
+          <Card>
+            <h2 style={{ fontSize: 23, fontWeight: 800, margin: "0 0 12px", lineHeight: 1.4, textAlign: "center" }}>
+              יפה. תשובה ראשונה בפנים.
+            </h2>
+            <p style={{ fontSize: 16, lineHeight: 1.7, color: C.muted, margin: "0 0 26px", textAlign: "center" }}>
+              נשמור מכאן את ההתקדמות, וכשתסיימו נשלח אליכם את האות. עוד חמש שאלות.
+            </p>
+            {!softCaptured && (
+              <div style={{ marginBottom: 22 }}>
+                <label htmlFor="kriah-mail-email" style={{ display: "block", fontSize: 14.5, color: C.fg, marginBottom: 12, textAlign: "center" }}>
+                  לאן לשלוח את האות?
+                </label>
+                {gateErr && (
+                  <div role="alert" style={{ marginBottom: 10, color: "#FF8888", fontSize: 13, textAlign: "center" }}>{gateErr}</div>
+                )}
+                <button
+                  onClick={startGoogleCapture}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                    width: "100%", background: "#fff", color: "#1f1f1f", border: "none",
+                    borderRadius: 12, padding: "13px 20px", fontFamily: "inherit",
+                    fontSize: 15.5, fontWeight: 700, cursor: "pointer",
+                  }}
+                >
+                  <svg viewBox="0 0 48 48" style={{ width: 19, height: 19, flex: "none" }} aria-hidden>
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                  </svg>
+                  להמשיך עם Google
+                </button>
+                <p style={{ fontSize: 12, color: C.muted, margin: "8px 0 0", textAlign: "center", opacity: 0.85 }}>
+                  בלחיצה אחת, בלי סיסמה. כך האות יגיע למייל הנכון.
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0", color: C.muted, fontSize: 13 }}>
+                  <div style={{ flex: 1, height: 1, background: C.line }} />
+                  או עם מייל
+                  <div style={{ flex: 1, height: 1, background: C.line }} />
+                </div>
+                <input
+                  id="kriah-mail-email"
+                  type="email"
+                  dir="ltr"
+                  autoComplete="email"
+                  placeholder="you@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={{ ...inputStyle(), textAlign: "left" }}
+                />
+                <p style={{ fontSize: 11.5, color: C.muted, margin: "8px 0 0", textAlign: "center", opacity: 0.8 }}>
+                  בהזנת המייל או בהתחברות אתם מאשרים קבלת עדכונים. אפשר להסיר הרשמה בכל רגע.
+                </p>
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+              <GoldButton onClick={() => {
+                if (softCaptured || !email.trim()) { setQIdx(1); setScreen("q"); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+                submitSoftCapture();
+              }}>
+                להמשיך לשאלה הבאה ←
+              </GoldButton>
+              {!softCaptured && email.trim().length === 0 && (
+                <QuietLink onClick={() => { setQIdx(1); setScreen("q"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>להמשיך בלי</QuietLink>
+              )}
             </div>
           </Card>
         )}
