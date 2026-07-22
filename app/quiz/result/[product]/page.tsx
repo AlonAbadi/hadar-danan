@@ -10,7 +10,6 @@ const VALID_PRODUCTS = [
   "free_training",
   "challenge",
   "workshop",
-  "course",
   "strategy",
   "premium",
   "partnership",

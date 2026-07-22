@@ -30,7 +30,6 @@ export default function TermsPage() {
           <ul style={{ paddingRight: 20, display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
             <li><B>אתגר 7 ימים</B> - תוכן וידאו ל-7 ימים, פורמט Reels</li>
             <li><B>סדנה יום אחד</B> - סדנה פיזית או מקוונת</li>
-            <li><B>קורס דיגיטלי</B> - 16 שיעורי וידאו ב-8 מודולים</li>
             <li><B>פגישת אסטרטגיה</B> - פגישה אישית עם הדר דנן</li>
             <li><B>פרימיום</B> - ליווי אישי מורחב</li>
             <li><B>הכוורת</B> - מנוי קהילה חודשי בשלוש רמות (Starter, Pro, Elite)</li>
@@ -68,10 +67,6 @@ export default function TermsPage() {
             <div>
               <p style={{ color: "#EDE9E1", fontWeight: 700, marginBottom: 4 }}>סדנה יום אחד (1,080 ש"ח)</p>
               <p>ביטול עד 48 שעות לפני מועד הסדנה - החזר מלא. ביטול פחות מ-48 שעות לפני המועד - אין החזר, אך ניתן להעביר את המקום לאדם אחר.</p>
-            </div>
-            <div>
-              <p style={{ color: "#EDE9E1", fontWeight: 700, marginBottom: 4 }}>קורס דיגיטלי (1,800 ש"ח)</p>
-              <p>ביטול תוך 48 שעות מרגע הרכישה - החזר מלא, בתנאי שנצפו פחות מ-3 שיעורים. לאחר 48 שעות או לאחר צפייה ב-3 שיעורים ומעלה - אין החזר.</p>
             </div>
             <div>
               <p style={{ color: "#EDE9E1", fontWeight: 700, marginBottom: 4 }}>פגישת אסטרטגיה (4,000 ש"ח)</p>

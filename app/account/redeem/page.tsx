@@ -10,7 +10,6 @@ const HIVE_PRODUCTS = new Set(["hive_starter_160", "hive_pro_280", "hive_elite_4
 const PRODUCT_MAP = [
   { key: "challenge_197",  name: "אתגר 7 ימים",      price: 197,   href: "/challenge" },
   { key: "workshop_1080",  name: "סדנה יום אחד",      price: 1080,  href: "/workshop" },
-  { key: "course_1800",    name: "קורס דיגיטלי",      price: 1800,  href: "/course" },
   { key: "strategy_4000",  name: "פגישת אסטרטגיה",   price: 4000,  href: "/strategy" },
   { key: "premium_14000",  name: "פרימיום",            price: 14000, href: "/premium" },
 ];

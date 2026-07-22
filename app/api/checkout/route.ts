@@ -57,7 +57,6 @@ const BodySchema = z.object({
     "signal_hive_590",
     "signal_hive_en_149",
     "workshop_1080",
-    "course_1800",
     "strategy_4000",
     "premium_14000",
     "test_1",

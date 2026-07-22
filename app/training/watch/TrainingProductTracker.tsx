@@ -9,7 +9,6 @@ function gtag(...args: unknown[]) {
 const PRODUCT_PATHS: Record<string, string> = {
   '/challenge':   'challenge',
   '/workshop':    'workshop',
-  '/course':      'course',
   '/strategy':    'strategy',
   '/premium':     'premium',
   '/partnership': 'partnership',

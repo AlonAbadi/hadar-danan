@@ -41,7 +41,6 @@ export const PROTECTED_STATUSES = new Set([
 export const PRODUCT_LABELS: Record<string, string> = {
   challenge:   "אתגר 7 ימים",
   workshop:    "סדנה יום אחד",
-  course:      "קורס דיגיטלי",
   strategy:    "פגישת אסטרטגיה",
   premium:     "יום צילום פרמיום",
   partnership: "שותפות אסטרטגית",
@@ -207,7 +206,6 @@ export async function applyQuizSideEffects(
     const WA_LABELS: Record<string, string> = {
       challenge:   "אתגר 7 ימים",
       workshop:    "סדנה יום אחד",
-      course:      "קורס דיגיטלי",
       strategy:    "פגישת אסטרטגיה",
       premium:     "יום צילום פרמיום",
       partnership: "שותפות אסטרטגית",

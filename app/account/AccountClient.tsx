@@ -81,14 +81,15 @@ const HIVE_TIER_MAP: Record<string, { label: string; color: string }> = {
 
 const CONTENT_LINKS: Record<string, string> = {
   challenge_197: "/challenge/content",
-  course_1800:   "/course/content",
 };
 
 // Maps completed purchase product → content route (null = no content, show badge instead)
+// course_1800 deliberately absent: the digital course was retired from the
+// lineup 2026-07-22 including access for past buyers — the purchase row stays
+// as a record, with no content link.
 function getContentRoute(product: string): string | null {
   const map: Record<string, string> = {
     challenge_197:    "/challenge/content",
-    course_1800:      "/course/content",
     hive_starter_160: "/hive/members",
     hive_pro_280:     "/hive/members",
     hive_elite_480:   "/hive/members",
@@ -107,7 +108,6 @@ const QUIZ_PRODUCT_NAMES: Record<string, string> = {
   free_training: "הדרכה חינמית",
   challenge:     "אתגר 7 הימים",
   workshop:      "סדנה יום אחד",
-  course:        "קורס דיגיטלי",
   strategy:      "פגישת אסטרטגיה",
   premium:       "יום צילום פרמיום",
   partnership:   "שותפות אסטרטגית",
@@ -117,7 +117,6 @@ const QUIZ_PRODUCT_HREF: Record<string, string> = {
   free_training: "/training",
   challenge:     "/challenge",
   workshop:      "/workshop",
-  course:        "/course",
   strategy:      "/strategy",
   premium:       "/premium",
   partnership:   "/partnership",
@@ -125,9 +124,8 @@ const QUIZ_PRODUCT_HREF: Record<string, string> = {
 
 const RECOMMENDED = [
   { label: "אתגר 7 ימים - ₪197",    href: "/challenge", product: "challenge_197"  },
-  { label: "סדנה יום אחד - ₪1,080", href: "/workshop",  product: "workshop_1080"  },
-  { label: "קורס דיגיטלי - ₪1,800", href: "/course",    product: "course_1800"    },
   { label: "כוורת האות - ₪590",      href: "/signal-hive", product: null            },
+  { label: "סדנה יום אחד - ₪1,080", href: "/workshop",  product: "workshop_1080"  },
 ];
 
 // ── Styles ────────────────────────────────────────────────────
@@ -917,8 +915,9 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
         </div>
       </div>
 
-      {/* Quiz recommendation */}
-      {quizResult ? (
+      {/* Quiz recommendation — old results that recommended the retired
+          digital course fall back to the quiz CTA instead of a dead card */}
+      {quizResult && quizResult.recommended_product !== "course" ? (
         <QuizRecommendationCard quizResult={quizResult} />
       ) : (
         <QuizCTACard />
@@ -1158,7 +1157,7 @@ export default function AccountClient({ authUser, userData, completedPurchases, 
             עדיין לא רכשת כלום
           </p>
           <p style={{ fontSize: 13, color: "#AAB0BD", lineHeight: 1.6, maxWidth: 280, margin: "0 0 24px" }}>
-            כשתרכשי מסלול - אתגר, סדנה, קורס או כוורת האות - הוא יופיע כאן ותקבלי גישה לתוכן.
+            כשתרכשי מסלול - אתגר, כוורת האות או סדנה - הוא יופיע כאן ותקבלי גישה לתוכן.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 280 }}>
             <Link
