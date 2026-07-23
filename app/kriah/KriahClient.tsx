@@ -627,6 +627,7 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
   // Meta campaigns optimize on QuizComplete (carried over from the old /quiz).
   // Fired once, on successful extraction — the moment the diagnosis is done.
   const quizCompleteFired = useRef(false);
+  const completeTracked = useRef(false); // primary A/B conversion — fire exactly once
   const fireQuizComplete = (ending: string | undefined, regEventId?: string) => {
     if (quizCompleteFired.current || isTest) return;
     quizCompleteFired.current = true;
@@ -692,6 +693,13 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
         typeof data.v2_ending === "string" ? data.v2_ending : undefined,
         typeof data.reg_event_id === "string" ? data.reg_event_id : undefined,
       );
+
+      // Primary A/B conversion — the diagnosis is generated (== a row in
+      // signal_extractions, the same thing the daily trend counts). Fired here,
+      // once, on EVERY completion path: it precedes the sendgate/kaveret/s16
+      // branch, so kaveret-routed completions (which redirect away and never
+      // reach s16_full_reading) are counted too. sendBeacon survives the redirect.
+      if (!completeTracked.current) { completeTracked.current = true; track("kriah_complete"); }
 
       if (dest === "sendgate") {
         goTo("sendgate", "sendgate");

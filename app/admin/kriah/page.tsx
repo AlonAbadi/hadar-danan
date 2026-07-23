@@ -240,7 +240,10 @@ export default async function AdminKriahPage() {
     return {
       entries: s.filter((e) => e.metadata?.step === "s1").length,
       emails:  s.filter((e) => e.metadata?.step === "email_captured").length,
-      letters: s.filter((e) => e.metadata?.step === "s16_full_reading").length,
+      // Completion = the diagnosis generated (kriah_complete), the SAME event the
+      // daily trend counts as "אבחונים". NOT s16_full_reading — kaveret-routed
+      // completions redirect away and never fire it, which read as a false 0.
+      letters: s.filter((e) => e.metadata?.step === "kriah_complete").length,
     };
   };
   const armCtl = armMetric("control");
@@ -379,7 +382,7 @@ export default async function AdminKriahPage() {
                 </span>
               </div>
               <p style={{ fontSize: 12.5, color: C.muted, margin: "0 0 18px", lineHeight: 1.7 }}>
-                המקור = התזרים הקיים בדיוק. הוריאנט: מוותר על שאלת &rdquo;מה ישתנה&ldquo;, ממזג את מסך הקריאה והמזלג לאחד, ומעביר את בקשת המייל להופיע רק אחרי התשובה הפתוחה הראשונה. המדד המרכזי: <b style={{ color: C.fg }}>האות נשלח (סיום) חלקי כניסה</b>.
+                המקור = התזרים הקיים בדיוק. הוריאנט: מוותר על שאלת &rdquo;מה ישתנה&ldquo;, ממזג את מסך הקריאה והמזלג לאחד, ומעביר את בקשת המייל להופיע רק אחרי התשובה הפתוחה הראשונה. המדד המרכזי: <b style={{ color: C.fg }}>אבחון הושלם חלקי כניסה</b> (אותה ספירה כמו &rdquo;אבחונים&ldquo; ביום-יום).
               </p>
 
               {/* per-arm metric columns */}
@@ -400,7 +403,7 @@ export default async function AdminKriahPage() {
                         {a.m.entries > 0 ? `${a.r.toFixed(1)}%` : "—"}
                       </div>
                       <div style={{ fontSize: 11.5, color: C.muted, marginTop: 3 }}>
-                        האות נשלח · {a.m.letters}/{a.m.entries}
+                        אבחון הושלם · {a.m.letters}/{a.m.entries}
                       </div>
                       <div style={{ display: "flex", gap: 16, marginTop: 12, borderTop: `1px solid ${C.line}`, paddingTop: 10 }}>
                         <div>
