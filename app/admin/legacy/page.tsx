@@ -26,8 +26,12 @@ function relTime(iso: string): string {
 export default async function LegacyPage() {
   const supabase = createServerClient() as any;
 
-  const [{ data: legacyEvents }, { data: converted }] = await Promise.all([
-    supabase
+  // Supabase caps every select at 1,000 rows regardless of .limit() — the
+  // legacy event log crossed that on wave 6, silently freezing this page on
+  // the oldest rows (same trap as the email-report audit). Paginate.
+  const legacyEvents: { type: string; metadata: Record<string, unknown>; created_at: string }[] = [];
+  for (let off = 0; ; off += 1000) {
+    const { data } = await supabase
       .from('events')
       .select('type, metadata, created_at')
       .in('type', [
@@ -35,13 +39,16 @@ export default async function LegacyPage() {
         'LEGACY_EMAIL_COMPLAINED', 'LEGACY_EMAIL_CLICKED', 'LEGACY_UNSUBSCRIBED',
       ])
       .order('created_at', { ascending: true })
-      .limit(10000),
-    supabase
-      .from('users')
-      .select('id, email, name, status, created_at, signal_extractions(bucket, created_at), purchases(product, amount, status)')
-      .eq('utm_source', 'legacy')
-      .order('created_at', { ascending: false }),
-  ]);
+      .range(off, off + 999);
+    legacyEvents.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+
+  const { data: converted } = await supabase
+    .from('users')
+    .select('id, email, name, status, created_at, signal_extractions(bucket, created_at), purchases(product, amount, status)')
+    .eq('utm_source', 'legacy')
+    .order('created_at', { ascending: false });
 
   const evs = (legacyEvents ?? []) as { type: string; metadata: Record<string, unknown>; created_at: string }[];
   const waves = evs.filter((e) => e.type === 'LEGACY_WAVE_SENT')
