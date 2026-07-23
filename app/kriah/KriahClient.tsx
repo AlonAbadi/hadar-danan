@@ -287,8 +287,13 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
   // Gender of address — restores the original /signal solution: auto-detected
   // from the first name, with an explicit radio the user can override. Passed to
   // the engine so the whole אות reads in one consistent gender (no mixed forms).
+  // Starts unselected — no radio pre-highlighted, no silent 'f' default sent
+  // to the server. Auto-sync from the name field fills it in as the user types;
+  // if it's still null at submit we block with a validation error. The old
+  // behavior defaulted to 'f' and silently mis-gendered male visitors named
+  // ambiguously (e.g. גל) whenever the auto-sync didn't fire before submit.
   // leadGenderTouched=true stops the auto-sync once the user picks manually.
-  const [leadGender, setLeadGender] = useState<Gender>(() => detectGender(""));
+  const [leadGender, setLeadGender] = useState<Gender | null>(null);
   const [leadGenderTouched, setLeadGenderTouched] = useState(false);
   const [email, setEmail]         = useState("");
   const [phone, setPhone]         = useState("");
@@ -413,9 +418,14 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
   }, []);
 
   // Re-detect gender from the first name as the user types, until they pick.
+  // Only sets when the name is long enough to be a real first name — an empty
+  // or 1-char input keeps leadGender null so the radio stays unselected and
+  // the send-gate validation forces an explicit pick.
   useEffect(() => {
     if (leadGenderTouched) return;
-    setLeadGender(detectGender(name.trim().split(" ")[0] ?? ""));
+    const first = name.trim().split(" ")[0] ?? "";
+    if (first.length < 2) { setLeadGender(null); return; }
+    setLeadGender(detectGender(first));
   }, [name, leadGenderTouched]);
 
   // ── S5 email gate → POST /api/signup (non-blocking) ────────────────────────
@@ -536,6 +546,10 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
     const em = email.trim().toLowerCase();
     if (nm.length < 2) { setGateErr("שם חייב להכיל לפחות 2 תווים"); return; }
     if (!em.includes("@") || !em.includes(".")) { setGateErr("כתובת אימייל לא תקינה"); return; }
+    // Gender must be picked before we can address the reader correctly in the
+    // letter. Without this the client used to default to 'f' silently and
+    // mis-gender male visitors whose name auto-detect didn't fire (e.g. גל).
+    if (!leadGender) { setGateErr("בחרו איך נכון לפנות אליכם"); return; }
     if (!consent) { setConsentErr(true); return; }
     setGateErr(null);
     setFinalizing(true);
@@ -651,12 +665,15 @@ export function KriahClient({ previewKey, isTest, initialUser }: Props) {
         email: email.trim().toLowerCase(),
         name: nm,
         first_name: nm.split(" ")[0],
-        gender: leadGender,
         marketing_consent: true,
         is_test: isTest,
         instrument_version: "v2_funnel",
         key1: stateKey,
       };
+      // Only send gender when the user actually picked (or auto-detect resolved).
+      // Server falls back to detectGender(firstName) when absent — much better
+      // than the old client-side silent 'f' default.
+      if (leadGender) payload.gender = leadGender;
       const occ = occupation.trim();
       if (occ) payload.occupation = occ;
       const ph = phone.trim();

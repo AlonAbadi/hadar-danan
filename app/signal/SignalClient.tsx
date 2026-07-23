@@ -97,11 +97,16 @@ export function SignalClient({
   const [leadOccupation, setLeadOccupation] = useState(prefillOccupation ?? "");
   const [leadConsent,   setLeadConsent]   = useState(false);
   const [leadConsentErr, setLeadConsentErr] = useState(false);
-  // Gender of address — defaults to detection from first name. Tracked
-  // separately so the explicit radio always reflects either the user's
-  // override or our current best guess. Once the user clicks a radio,
+  // Gender of address — starts unselected unless we already have a prefill
+  // (returning auth user) or a real first name to detect from. This prevents
+  // the old silent 'f' default from mis-gendering male visitors whose auto-
+  // detect didn't fire before submit (e.g. גל). Once the user clicks a radio,
   // leadGenderTouched=true stops the auto-sync from typing.
-  const [leadGender, setLeadGender] = useState<Gender>(() => prefillGender ?? detectGender(firstName ?? ""));
+  const [leadGender, setLeadGender] = useState<Gender | null>(() => {
+    if (prefillGender) return prefillGender;
+    const fn = (firstName ?? "").trim();
+    return fn.length >= 2 ? detectGender(fn) : null;
+  });
   const [leadGenderTouched, setLeadGenderTouched] = useState(false);
 
   // An authenticated user (e.g. signed up via Google) may be missing profile
@@ -114,10 +119,13 @@ export function SignalClient({
     (!firstName || !prefillPhone || !prefillOccupation || !prefillGender);
 
   // Re-detect from first name as the user types, until they manually pick.
+  // Short/empty names keep leadGender null so the radio stays unselected —
+  // the send-gate then forces an explicit pick instead of silently defaulting.
   useEffect(() => {
     if (leadGenderTouched) return;
-    if (leadFirstName.trim().length < 2) return;
-    setLeadGender(detectGender(leadFirstName));
+    const first = leadFirstName.trim().split(/\s+/)[0] ?? "";
+    if (first.length < 2) { setLeadGender(null); return; }
+    setLeadGender(detectGender(first));
   }, [leadFirstName, leadGenderTouched]);
 
   // Load any draft + check for an existing cached signal on mount.
@@ -214,7 +222,10 @@ export function SignalClient({
         payload.phone = leadPhone.trim();
         payload.occupation = leadOccupation.trim();
         payload.marketing_consent = leadConsent;
-        payload.gender = leadGender;
+        // Only send gender when the user actually picked (or auto-detect resolved
+        // from a real first name). Server falls back to detectGender(firstName)
+        // when absent — safer than the old client-side 'f' default.
+        if (leadGender) payload.gender = leadGender;
       }
       if (!isAuthenticated) {
         payload.email = leadEmail.trim().toLowerCase();
@@ -291,7 +302,7 @@ export function SignalClient({
         const res = await fetch("/api/signal/probe", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ answer: value, questionKey: current.key, gender: leadGender }),
+          body:    JSON.stringify({ answer: value, questionKey: current.key, ...(leadGender ? { gender: leadGender } : {}) }),
         });
         const data = await res.json().catch(() => ({}));
         setProbing(false);
@@ -1025,7 +1036,7 @@ interface LeadGateProps {
   email:         string;
   phone:         string;
   occupation:    string;
-  gender:        Gender;
+  gender:        Gender | null;
   consent:       boolean;
   consentErr:    boolean;
   setFirstName:  (v: string) => void;
@@ -1059,11 +1070,13 @@ function LeadGate({
   // without dashes / spaces / international prefix. Server re-validates.
   const validPhone   = /^[0-9+\-\s()]{9,20}$/.test(trimmedPhone);
   // Last name is optional (recovers gate friction); occupation stays required —
-  // it drives the bucket routing + per-lead recommendation.
+  // it drives the bucket routing + per-lead recommendation. Gender is required
+  // — without it we can't address the reader correctly in the generated letter.
   const canSubmit    = trimmedFirst.length >= 2
                     && validEmail
                     && validPhone
-                    && trimmedOcc.length >= 2;
+                    && trimmedOcc.length >= 2
+                    && gender !== null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
