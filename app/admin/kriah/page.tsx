@@ -183,6 +183,21 @@ export default async function AdminKriahPage() {
   const stepsNew = steps.filter((e) => e.metadata?.q_order === 3);
   const stepsOld = steps.filter((e) => e.metadata?.q_order !== 3);
 
+  // A completion == the diagnosis was generated (a signal_extractions row, the
+  // same thing the daily trend counts). It has no single historical event: the
+  // kaveret-routed completions redirect away and fire `kaveret_enter` (never
+  // s16), the rest fire `s16_full_reading`. From 2026-07-23 a unified
+  // `kriah_complete` fires on every path. Count the path-signals BEFORE the
+  // cutover and the unified signal AFTER it, so a single completion is counted
+  // exactly once across the transition.
+  const KRIAH_COMPLETE_LIVE = "2026-07-23T06:30:00Z";
+  const isCompletion = (e: Ev) => {
+    const step = e.metadata?.step;
+    if (step === "kriah_complete") return true;
+    if ((step === "kaveret_enter" || step === "s16_full_reading") && e.created_at < KRIAH_COMPLETE_LIVE) return true;
+    return false;
+  };
+
   // ── windows ──
   const inWindow = <T extends { [k: string]: unknown }>(rows: T[], field: string, since: string) =>
     rows.filter((r) => String(r[field]) >= since);
@@ -225,8 +240,12 @@ export default async function AdminKriahPage() {
   const testCount     = testCountRes.count ?? 0;
 
   // ── funnel rows with rates (two orders, split by q_order) ──
-  const rowsNew = STEP_ROWS_NEW.map((r) => ({ label: r.label, n: countIn(stepsNew, r.keys) }));
-  const rowsOld = STEP_ROWS.map((r) => ({ label: r.label, n: countIn(stepsOld, r.keys) }));
+  // The final "האות (סיום)" row counts real completions (kaveret + s16 + unified),
+  // not just the on-page s16 which misses every kaveret-routed completion.
+  const rowN = (arr: Ev[], r: { keys: string[] }) =>
+    r.keys.includes("s16_full_reading") ? arr.filter(isCompletion).length : countIn(arr, r.keys);
+  const rowsNew = STEP_ROWS_NEW.map((r) => ({ label: r.label, n: rowN(stepsNew, r) }));
+  const rowsOld = STEP_ROWS.map((r) => ({ label: r.label, n: rowN(stepsOld, r) }));
 
   // ── A/B experiment (kriah_flow_v1) — measured purely from tagged FUNNEL_STEP ──
   // events. Only events fired after the arm-tagging deploy carry metadata.arm,
@@ -240,10 +259,7 @@ export default async function AdminKriahPage() {
     return {
       entries: s.filter((e) => e.metadata?.step === "s1").length,
       emails:  s.filter((e) => e.metadata?.step === "email_captured").length,
-      // Completion = the diagnosis generated (kriah_complete), the SAME event the
-      // daily trend counts as "אבחונים". NOT s16_full_reading — kaveret-routed
-      // completions redirect away and never fire it, which read as a false 0.
-      letters: s.filter((e) => e.metadata?.step === "kriah_complete").length,
+      letters: s.filter(isCompletion).length,
     };
   };
   const armCtl = armMetric("control");
