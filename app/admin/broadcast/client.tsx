@@ -2,6 +2,7 @@
 
 import { PageHeader, KpiGrid, KpiCard, SectionCard, DataTable, Badge, PercentBar, EmptyState } from '@/components/admin/ui';
 import type { BroadcastOverviewStats, BroadcastPerScriptStat } from '@/lib/admin/queries';
+import type { BroadcastMaterials } from '@/lib/admin/broadcast-materials';
 
 // Canonical 7-video structure per shoot-day-engine.ts. Used to label rows even
 // when a video_number has 0 rows in the DB yet.
@@ -34,7 +35,7 @@ function activityVariant(e: string): 'default' | 'gold' | 'success' | 'warning' 
   return 'success';   // published
 }
 
-export default function BroadcastClient({ stats }: { stats: BroadcastOverviewStats }) {
+export default function BroadcastClient({ stats, materials }: { stats: BroadcastOverviewStats; materials: BroadcastMaterials }) {
   const {
     total_users, total_takes, total_edits_started, total_edits_ready, total_edits_failed,
     total_downloaded, total_published, overall_publish_rate, overall_takes_per_ready,
@@ -232,6 +233,80 @@ export default function BroadcastClient({ stats }: { stats: BroadcastOverviewSta
           />
         </SectionCard>
       )}
+
+      <SectionCard title="החומרים שצולמו · חדר השידור" titleEn="Member reels — watch them">
+        {materials.memberReels.length === 0 ? (
+          <EmptyState icon="🎥" title="עוד אין רילסים מוכנים" description="רילסים שיושלמו בחדר השידור יופיעו כאן לצפייה." />
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+            {materials.memberReels.map((r) => (
+              <div key={r.edit_id} style={{ background: '#141820', borderRadius: 12, overflow: 'hidden', border: '1px solid #2C323E' }}>
+                {r.video_url ? (
+                  <video src={r.video_url} controls playsInline preload="metadata" style={{ width: '100%', aspectRatio: '9/16', objectFit: 'cover', display: 'block', background: '#000' }} />
+                ) : (
+                  <div style={{ aspectRatio: '9/16', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5A5F6B' }}>אין קובץ</div>
+                )}
+                <div style={{ padding: '8px 10px', fontSize: 12 }}>
+                  <div style={{ fontWeight: 700 }}>{r.user_name || r.user_email || '—'}</div>
+                  <div style={{ color: '#9E9990', marginTop: 2 }}>
+                    {(VIDEO_LABELS[r.video_number]?.title ?? '') + ` · #${r.video_number}`}
+                  </div>
+                  <div style={{ color: '#9E9990', marginTop: 2 }}>
+                    {new Date(r.created_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    {r.published ? ' · ' : r.downloaded ? ' · ' : ''}
+                    {r.published ? <Badge variant="success">פורסם</Badge> : r.downloaded ? <Badge variant="warning">הורד</Badge> : null}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard title="הרילס הראשון בחינם" titleEn="Free first-reel — funnel + materials">
+        <KpiGrid cols={4}>
+          <KpiCard label="פתחו את העמוד" value={materials.firstReelFunnel.views.toLocaleString()} icon="👀" />
+          <KpiCard label="התחילו הקלטה" value={(materials.firstReelFunnel.record_started + (materials.firstReelFunnel.record_started === 0 ? materials.firstReelFunnel.recorded : 0)).toLocaleString()} icon="🎬" />
+          <KpiCard label="סיימו הקלטה" value={materials.firstReelFunnel.recorded.toLocaleString()} icon="🎞️" />
+          <KpiCard label="שלחו ← רילס מוכן" value={`${materials.firstReelFunnel.submitted} ← ${materials.firstReelFunnel.ready}`} icon="✅"
+            variant={materials.firstReelFunnel.ready > 0 ? 'success' : undefined} />
+        </KpiGrid>
+        {materials.firstReelFunnel.camera_denied > 0 ? (
+          <div style={{ marginTop: 8, fontSize: 12.5, color: '#FF8888' }}>
+            {materials.firstReelFunnel.camera_denied} דחיות הרשאת מצלמה
+          </div>
+        ) : null}
+        {materials.firstReels.length === 0 ? (
+          <EmptyState icon="🎬" title="עוד אין חומרים" description="מי שייכנס לחוויית הרילס הראשון יופיע כאן." />
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16, marginTop: 16 }}>
+            {materials.firstReels.map((r) => (
+              <div key={r.extraction_id} style={{ background: '#141820', borderRadius: 12, overflow: 'hidden', border: '1px solid #2C323E' }}>
+                {r.video_url ? (
+                  <video src={r.video_url} controls playsInline preload="metadata" style={{ width: '100%', aspectRatio: '9/16', objectFit: 'cover', display: 'block', background: '#000' }} />
+                ) : (
+                  <div style={{ aspectRatio: '9/16', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#5A5F6B', gap: 6, padding: 10, textAlign: 'center' }}>
+                    <span style={{ fontSize: 22 }}>🎬</span>
+                    <span style={{ fontSize: 12 }}>
+                      {r.render_status === 'failed' ? 'הרינדור נכשל'
+                        : r.render_status === 'processing' ? 'בעיבוד'
+                        : r.script_at ? 'קיבל תסריט, לא צילם' : 'נכנס, בלי תסריט'}
+                    </span>
+                  </div>
+                )}
+                <div style={{ padding: '8px 10px', fontSize: 12 }}>
+                  <div style={{ fontWeight: 700 }}>{r.user_name || r.user_email || '—'}</div>
+                  <div style={{ color: '#9E9990', direction: 'ltr', textAlign: 'right' }}>{r.user_email}</div>
+                  <div style={{ color: '#9E9990', marginTop: 2 }}>
+                    אבחון: {new Date(r.diagnosed_at).toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric' })}
+                    {r.render_at ? ` · רילס: ${new Date(r.render_at).toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric' })}` : ''}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
 
       <div style={{
         marginTop: 32, padding: '16px 20px',
