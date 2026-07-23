@@ -168,6 +168,20 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
 
   useEffect(() => () => { rec.releaseCamera(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Funnel instrumentation (Alon 2026-07-23): the observed drop is between
+  // opening the script and a finished take — mark every camera milestone so
+  // the drop point is visible in the events table.
+  const camTrackedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (rec.cameraState === camTrackedRef.current) return;
+    camTrackedRef.current = rec.cameraState;
+    if (rec.cameraState === "requesting") track("FIRST_REEL_CAMERA_REQUESTED", extractionId);
+    else if (rec.cameraState === "ready") track("FIRST_REEL_CAMERA_READY", extractionId);
+    else if (rec.cameraState === "denied") track("FIRST_REEL_CAMERA_DENIED", extractionId);
+    else if (rec.cameraState === "unsupported") track("FIRST_REEL_CAMERA_UNSUPPORTED", extractionId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rec.cameraState, extractionId]);
+
   // ── countdown + beeps: verbatim member-room behavior ──
   const audioCtxRef = useRef<AudioContext | null>(null);
   const beep = useCallback((freq: number, durationMs: number) => {
@@ -193,6 +207,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
 
   const beginCountdown = useCallback(() => {
     if (countdown !== null || rec.isRecording) return;
+    track("FIRST_REEL_RECORD_STARTED", extractionId);
     setBanner(null);
     setCountdown(3);
     beep(880, 130);
@@ -216,7 +231,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         setCountdown(n);
       }
     }, 1000);
-  }, [countdown, rec, beep, isDesktopUA]);
+  }, [countdown, rec, beep, isDesktopUA, extractionId]);
 
   const stopTake = useCallback(() => {
     prompterRef.current?.pause();
