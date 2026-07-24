@@ -18,6 +18,7 @@ import {
   buildWhisperPrompt,
   groupWordsIntoLines,
   transcriptLooksBroken,
+  alignScriptToWhisperWords,
   type CaptionLanguage,
   type CaptionLine,
   type CaptionWord,
@@ -117,8 +118,18 @@ export async function runFirstReelPipeline(
       .map((w) => ({ w: w.word.trim(), s: Math.round(w.start * 1000), e: Math.round(w.end * 1000) }))
       .filter((w) => w.w.length > 0);
     if (!words.length) throw new Error("empty_transcript");
-    const lines: CaptionLine[] = groupWordsIntoLines(words, language);
-    const broken = transcriptLooksBroken(words, lines, language);
+    // Alon 2026-07-24: the caller reads a polished script written by the
+    // engine — Whisper's raw transcription introduces spelling errors
+    // (בבנייה→בנייה, etc.) that leak into captions. Align the SCRIPT
+    // tokens to the whisper timings so captions carry clean text with
+    // accurate sync. Alignment is conservative (falls back to whisper
+    // when the transcript diverges significantly, e.g. improvisation).
+    const alignedWords = alignScriptToWhisperWords(script, words);
+    const lines: CaptionLine[] = groupWordsIntoLines(alignedWords, language);
+    // Broken-transcript check runs on the ORIGINAL whisper words so we
+    // don't mask a genuinely broken take by substituting nice script
+    // text over garbage timings.
+    const broken = transcriptLooksBroken(words, groupWordsIntoLines(words, language), language);
     if (broken) throw new Error(`broken_transcript:${broken}`);
 
     // ── trims: client RMS analysis wins, Whisper word bounds are the

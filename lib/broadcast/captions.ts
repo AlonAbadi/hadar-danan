@@ -59,6 +59,72 @@ const NO_TRAILING_EN = new Set([
 
 const endsSentence = (w: string) => /[.?!,:]$/.test(w);
 
+/**
+ * Substitute Whisper's transcribed text with the ORIGINAL script text,
+ * keeping Whisper's timings.
+ *
+ * Alon 2026-07-24: captions on the free /kaveret/first-reel were showing
+ * Whisper's spelling errors (בבנייה→בנייה, לגלות→לגלת, טכנית→טכניט) even
+ * though the user was reading Hadar's polished script verbatim. Fix:
+ * align script tokens 1-to-1 to whisper word timings so the captions
+ * carry the SCRIPT text (no misspellings) with WHISPER timings
+ * (accurate sync).
+ *
+ * Alignment strategy — deliberately conservative:
+ *   - Tokenize the script; if it lands within tolerance of the whisper
+ *     word count (max(3, 25% of script len)), do direct positional
+ *     substitution.
+ *   - If script has extra words (whisper missed them), extend the tail
+ *     at ~250ms/word so the missing words still get displayed.
+ *   - If word counts diverge past tolerance, the user probably
+ *     improvised — return whisper as-is rather than force-align
+ *     mismatched text onto their real timings.
+ */
+export function alignScriptToWhisperWords(
+  scriptText: string,
+  whisperWords: CaptionWord[],
+): CaptionWord[] {
+  if (!scriptText.trim() || whisperWords.length === 0) return whisperWords;
+
+  const scriptTokens = scriptText
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+
+  if (scriptTokens.length === 0) return whisperWords;
+
+  const lenDiff = Math.abs(scriptTokens.length - whisperWords.length);
+  const tolerance = Math.max(3, Math.round(scriptTokens.length * 0.25));
+  if (lenDiff > tolerance) return whisperWords;
+
+  const aligned: CaptionWord[] = [];
+  const n = Math.min(scriptTokens.length, whisperWords.length);
+  for (let i = 0; i < n; i++) {
+    aligned.push({ w: scriptTokens[i], s: whisperWords[i].s, e: whisperWords[i].e });
+  }
+
+  // Script has more tokens than whisper heard → keep every intended word
+  // by giving each missing tail-word its own slot (~250ms) after the
+  // last real timing.
+  if (scriptTokens.length > whisperWords.length) {
+    const lastEnd = whisperWords[whisperWords.length - 1].e;
+    const perWord = 250;
+    for (let i = whisperWords.length; i < scriptTokens.length; i++) {
+      const offset = i - whisperWords.length;
+      aligned.push({
+        w: scriptTokens[i],
+        s: lastEnd + offset * perWord,
+        e: lastEnd + (offset + 1) * perWord,
+      });
+    }
+  }
+  // Whisper heard more words than the script has (a stray 'אה' etc.) →
+  // we drop the trailing extras. Captions stay clean; the audio is
+  // unaffected.
+
+  return aligned;
+}
+
 export function groupWordsIntoLines(words: CaptionWord[], lang: CaptionLanguage = "he"): CaptionLine[] {
   const maxChars = maxLineChars(lang);
   const noTrailing = lang === "en" ? NO_TRAILING_EN : NO_TRAILING;

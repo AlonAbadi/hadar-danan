@@ -456,34 +456,83 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
           }}
           style={goldBtn}
         >
-          {busy ? "מכינה…" : "לשמור לסרטים שלי ⬇"}
+          {busy ? "מכינה…" : "שתף ↗"}
         </button>
       );
     }
 
     return (
       <>
-        <a href={downloadUrl} style={goldBtn}>להוריד את הרילס ⬇</a>
         {typeof navigator !== "undefined" && "share" in navigator ? (
-          <button style={ghostBtn} onClick={() => navigator.share({ url: finalUrl, title }).catch(() => {})}>
-            לשתף
+          <button style={goldBtn} onClick={() => navigator.share({ url: finalUrl, title }).catch(() => {})}>
+            שתף ↗
           </button>
-        ) : null}
+        ) : (
+          <a href={downloadUrl} style={goldBtn}>להוריד את הרילס ⬇</a>
+        )}
       </>
     );
   }
 
-  function FirstReelFooter() {
+  function BackToSignalPill({ token }: { token: string }) {
     return (
-      <footer style={{ marginTop: 40, paddingTop: 24, borderTop: "1px solid #2C323E", width: "100%", maxWidth: 480, color: "#9E9990", fontSize: 12, lineHeight: 1.7, textAlign: "center" }}>
-        <div style={{ marginBottom: 6 }}>
-          <span dir="ltr" style={{ unicodeBidi: "embed" as const, color: "#C9964A" }}>TrueSignal©</span>
-          <span> · אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך.</span>
+      <a
+        href={`/kaveret/i?t=${encodeURIComponent(token)}`}
+        style={{
+          position: "fixed",
+          top: "calc(env(safe-area-inset-top) + 74px)",
+          insetInlineEnd: 14,
+          zIndex: 60,
+          padding: "8px 14px",
+          borderRadius: 999,
+          background: "rgba(20, 24, 32, 0.9)",
+          border: "1px solid rgba(232,185,74,0.4)",
+          color: "#E8B94A",
+          fontSize: 13,
+          fontWeight: 600,
+          textDecoration: "none",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        ← חזרה לאות שלי
+      </a>
+    );
+  }
+
+  function FirstReelFooter() {
+    // Alon 2026-07-24: mirrors the full homepage footer — brand mark,
+    // TrueSignal microcopy, product links, legal links, and contact.
+    // The Santosha palette is intact so it sits inside the reel shell
+    // without needing a separate theme break.
+    const linkStyle: React.CSSProperties = { color: "#9E9990", textDecoration: "none", fontSize: 13, lineHeight: 2 };
+    const colLabel: React.CSSProperties = { color: "#C9964A", fontSize: 12, letterSpacing: 1, marginBottom: 6, fontWeight: 700 };
+    return (
+      <footer style={{ marginTop: 48, paddingTop: 28, borderTop: "1px solid #2C323E", width: "100%", maxWidth: 720, color: "#9E9990", fontSize: 13, lineHeight: 1.7, textAlign: "right", padding: "28px 4px 40px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 24, marginBottom: 24 }}>
+          <div>
+            <div style={colLabel}>המוצרים</div>
+            <div><a href="/signal" style={linkStyle}>אבחון האות</a></div>
+            <div><a href="/signal-hive" style={linkStyle}>כוורת האות</a></div>
+            <div><a href="/strategy" style={linkStyle}>פגישה עם הדר</a></div>
+          </div>
+          <div>
+            <div style={colLabel}>המערכת</div>
+            <div><a href="/method" style={linkStyle}>שיטת TrueSignal©</a></div>
+            <div><a href="/about" style={linkStyle}>על הדר</a></div>
+            <div><a href="/team" style={linkStyle}>צוות</a></div>
+          </div>
+          <div>
+            <div style={colLabel}>עזרה</div>
+            <div><a href={`https://wa.me/972539566961`} target="_blank" rel="noreferrer" style={linkStyle}>וואטסאפ</a></div>
+            <div><a href="/accessibility" style={linkStyle}>נגישות</a></div>
+            <div><a href="/privacy" style={linkStyle}>פרטיות</a></div>
+            <div><a href="/terms" style={linkStyle}>תנאי שימוש</a></div>
+          </div>
         </div>
-        <div>
-          <a href="/privacy" style={{ color: "#9E9990", textDecoration: "none", marginInline: 6 }}>פרטיות</a>·
-          <a href="/terms" style={{ color: "#9E9990", textDecoration: "none", marginInline: 6 }}>תנאי שימוש</a>·
-          <a href="/accessibility" style={{ color: "#9E9990", textDecoration: "none", marginInline: 6 }}>נגישות</a>
+        <div style={{ borderTop: "1px solid #2C323E", paddingTop: 18, textAlign: "center", fontSize: 12, color: "#7d786f", lineHeight: 1.8 }}>
+          <div style={{ marginBottom: 6, color: "#C9964A", fontWeight: 700, letterSpacing: 0.5 }}>הדר דנן · beegood</div>
+          <div>אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך. · <span dir="ltr" style={{ unicodeBidi: "embed" as const, color: "#C9964A" }}>TrueSignal©</span></div>
         </div>
       </footer>
     );
@@ -585,6 +634,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
           <FirstReelFooter />
         </div>
+        <BackToSignalPill token={token} />
       </div>
     </div>
   );
@@ -700,6 +750,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
           <FirstReelFooter />
         </div>
+        <BackToSignalPill token={token} />
       </div>
     </div>
   );
@@ -772,29 +823,32 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   );
 
   if (phase === "result") return (
-    // Alon 2026-07-24: result screen is content-heavy (video + buttons +
-    // Upsell + footer). Centered (`justify-content: center`) was cropping
-    // the top on shorter phones so the reel scrolled off-screen. Switched
-    // to top-aligned column with natural scroll so the whole page reaches.
     <div dir="rtl" style={{ ...shell, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 40px", textAlign: "center", WebkitOverflowScrolling: "touch" }}>
       <RoomStyles />
+      <BackToSignalPill token={token} />
       <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>הרילס הראשון שלך מוכן 🎉</h1>
       <p style={{ ...gold, fontSize: 14, marginBottom: 14 }}>{title} · עם כתוביות מסונכרנות</p>
-      {finalUrl ? (
-        <div style={{ ...frame, width: "min(320px, 82vw)", marginBottom: 16 }}>
+      {/* Alon 2026-07-24: repeated reports that the reel wasn't visible.
+          Swapped aspectRatio for the padding-bottom trick (177.78% =
+          16/9) — bulletproof cross-browser including iOS Safari, and
+          the container gets a real height even if the video src is
+          still loading. */}
+      <div style={{ position: "relative", width: "min(280px, 78vw)", marginBottom: 16, background: "#000", borderRadius: 20, overflow: "hidden", border: "1px solid #2C323E" }}>
+        <div style={{ paddingBottom: "177.78%" }} />
+        {finalUrl ? (
           <video
             src={finalUrl}
             controls
             playsInline
             preload="metadata"
-            style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
           />
-        </div>
-      ) : (
-        <div style={{ ...frame, width: "min(320px, 82vw)", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 13 }}>
-          מכינה את הצפייה…
-        </div>
-      )}
+        ) : (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 13 }}>
+            מכינה את הצפייה…
+          </div>
+        )}
+      </div>
       <div style={{ display: "flex", gap: 10, marginBottom: 26, flexWrap: "wrap", justifyContent: "center" }}>
         {finalUrl && <SaveReelButton finalUrl={finalUrl} downloadUrl={downloadUrl ?? finalUrl} title={title} />}
         <button onClick={anotherTake} style={ghostBtn}>לצלם שוב</button>
