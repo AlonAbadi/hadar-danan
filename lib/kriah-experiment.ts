@@ -13,7 +13,9 @@ export type KriahArm = "control" | "variant";
 
 export const KRIAH_EXP = {
   id: "kriah_flow_v1",
-  active: true, // ← kill switch: set false to send everyone to control
+  // Stopped 2026-07-24 (Alon): variant trended worse on completion (control
+  // ~11.3% vs variant ~6.9%, not significant but never ahead). Everyone -> control.
+  active: false, // ← kill switch: set false to send everyone to control
   variantShare: 0.5, // fraction assigned to variant (0..1)
 } as const;
 
