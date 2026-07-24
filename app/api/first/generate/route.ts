@@ -182,5 +182,12 @@ export async function POST(req: NextRequest) {
     await (db as any).from("signal_extractions").update({ signal: nextSignal }).eq("id", ext.id);
   }
 
-  return NextResponse.json({ script: finalScript, move, critique });
+  // IP protection: move name + why + frame + critique are proprietary and
+  // must never travel to the client. Persist them server-side (above) for
+  // Alon's admin view; return only the prospect-facing script + a bare
+  // meta indicator that a critique pass happened. Alon 2026-07-24.
+  return NextResponse.json({
+    script:            finalScript,
+    critique_happened: critique.revised !== null,
+  });
 }

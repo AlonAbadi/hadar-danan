@@ -22,15 +22,20 @@ import {
   FIRST_MIN_STORY_CHARS,
   type FirstQuestion,
 } from "@/lib/first/config";
-import type { FirstScript, FirstMoveChoice, FirstCritique } from "@/lib/first/prompts";
+import type { FirstScript } from "@/lib/first/prompts";
 
 type Phase = "landing" | "interview" | "generating" | "result" | "error";
+
+// The client only ever sees the prospect-facing script + a bare flag for
+// whether the critique pass revised the draft. Move name / rationale /
+// critique score are proprietary IP and stay server-side.
+type ResultPayload = { script: FirstScript; critique_happened: boolean };
 
 export function FirstClient({ userName }: { userName: string | null }) {
   const [phase, setPhase] = useState<Phase>("landing");
   const [answers, setAnswers] = useState({ story: "", stance: "", payoff: "" });
   const [probeVisible, setProbeVisible] = useState(false);
-  const [result, setResult] = useState<{ script: FirstScript; move: FirstMoveChoice; critique: FirstCritique | null } | null>(null);
+  const [result, setResult] = useState<ResultPayload | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function submitAnswers() {
@@ -203,11 +208,11 @@ function Generating() {
 // ── Result ──────────────────────────────────────────────────────────────
 
 function Result(props: {
-  result: { script: FirstScript; move: FirstMoveChoice; critique: FirstCritique | null };
+  result: ResultPayload;
   onTryAgain: () => void;
   onStartOver: () => void;
 }) {
-  const { script, move, critique } = props.result;
+  const { script } = props.result;
   const words = (script.hook + " " + script.body).trim().split(/\s+/).length;
 
   return (
@@ -240,35 +245,22 @@ function Result(props: {
         </div>
       </div>
 
-      <details style={styles.brainDetails}>
-        <summary style={styles.brainSummary}>המוח של הדר · איך היא הגיעה לזה</summary>
-        <div style={styles.brainContent}>
-          <div><strong>מהלך חתימה:</strong> {move.name}</div>
-          <div><strong>למה:</strong> {move.why}</div>
-          <div><strong>איך:</strong> {move.frame}</div>
-          {script.move_applied ? <div><strong>מה זה עשה בפועל:</strong> {script.move_applied}</div> : null}
-          {critique ? (
-            <div>
-              <strong>בקרת עורך:</strong> ציון {critique.score}/5 {critique.revised ? "· תוקן" : "· עבר"}
-              {critique.what_missed && critique.what_missed !== "critique_unavailable" ? ` · ${critique.what_missed}` : ""}
-            </div>
-          ) : null}
-        </div>
-      </details>
-
-      {/* Product preview — "this was one, the paid product gives you 7." */}
+      {/* Product preview — "this was one, the paid product gives you 7."
+          Method names / signature-move labels are proprietary IP and must
+          NEVER be surfaced to prospects. Copy here describes what the
+          prospect experiences, not the mechanism that produces it. */}
       <div style={styles.pitchBlock}>
         <div style={styles.pitchEyebrow}>זה פרק אחד</div>
-        <h2 style={styles.pitchTitle}>ביום צילום מלא של הדר, יש לך שבעה פרקים בעונה. כל אחד מהלך חתום אחר.</h2>
+        <h2 style={styles.pitchTitle}>ביום צילום מלא יש לך שבעה פרקים. כל אחד מאיר אותך מזווית אחרת.</h2>
         <div style={styles.moveGrid}>
-          <MoveCard name="Silent Authority Positioning" tagline="מנגנון שאף אחד לא רואה. אתה היחיד ששומע אותו." />
-          <MoveCard name="Category-Rename / Reclaim"    tagline="אל תעשו את מה שכולם עושים. תעשו את מה שלכם." />
-          <MoveCard name="Sacred-Path Protection"       tagline="אם נלך אחרי X, נאבד את Y — וזה למה התחלנו." />
+          <PreviewCard title="הבעיה שאתה רואה"      tagline="מה אתה קולט בתחום שלך שכולם מפספסים." />
+          <PreviewCard title="הסיפור האישי"          tagline="רגע אחד מהעבודה שלך שדרכו כל השאר מובן." />
+          <PreviewCard title="ההזמנה"                tagline="למי בדיוק העסק שלך, ומתי הזמן להתחיל." />
         </div>
         <button type="button" onClick={() => window.location.href = "/challenge"} style={styles.ctaBtn}>
           קבל את יום הצילום המלא
         </button>
-        <div style={styles.ctaSub}>שבעה פרקים · 6 עונות · מהלכי חתימה משתנים · הכל בקול שלך</div>
+        <div style={styles.ctaSub}>שבעה פרקים · שש עונות · הכל בקול שלך</div>
       </div>
 
       <div style={styles.resultActions}>
@@ -279,10 +271,10 @@ function Result(props: {
   );
 }
 
-function MoveCard({ name, tagline }: { name: string; tagline: string }) {
+function PreviewCard({ title, tagline }: { title: string; tagline: string }) {
   return (
     <div style={styles.moveCard}>
-      <div style={styles.moveCardName}>{name}</div>
+      <div style={styles.moveCardName}>{title}</div>
       <div style={styles.moveCardTagline}>{tagline}</div>
     </div>
   );
