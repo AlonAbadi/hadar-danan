@@ -45,6 +45,7 @@ export default async function ShootDayLabPage() {
       questions:          Array.isArray(slot.questions) ? slot.questions : null,
       answers:            Array.isArray(slot.answers)   ? slot.answers   : null,
       script:             slot.script ?? null,
+      move:               slot.move ?? null,
       questionsAt:        slot.questions_generated_at ?? null,
       scriptAt:           slot.script_generated_at ?? null,
     };

@@ -17,13 +17,14 @@
 
 import { useMemo, useState } from "react";
 import type { LabEpisode } from "@/lib/lab/episodes";
-import type { LabQuestion, LabScript } from "@/lib/lab/prompts";
+import type { LabQuestion, LabScript, LabMoveChoice } from "@/lib/lab/prompts";
 
 export type LabEpisodeState = {
   episode:     LabEpisode;
   questions:   LabQuestion[] | null;
   answers:     string[] | null;
   script:      LabScript | null;
+  move:        LabMoveChoice | null;
   questionsAt: string | null;
   scriptAt:    string | null;
 };
@@ -185,7 +186,7 @@ function EpisodeCard(props: {
       });
       const j2 = await r2.json();
       if (!r2.ok) throw new Error(j2?.error ?? "generate_failed");
-      onEpisodeUpdated(episode.number, { answers: cleaned, script: j2.script });
+      onEpisodeUpdated(episode.number, { answers: cleaned, script: j2.script, move: j2.move });
       setPhase("ready");
     } catch (e) { setErrorMsg(String((e as Error).message ?? "error")); setPhase("error"); }
   }
@@ -235,6 +236,7 @@ function EpisodeCard(props: {
           {phase === "ready" && script ? (
             <ScriptView
               script={script}
+              move={state.move}
               onReinterview={() => startInterview(true)}
               onRebuild={saveAnswersAndBuild}
             />
@@ -307,12 +309,35 @@ function InterviewForm(props: {
 
 function ScriptView(props: {
   script: LabScript;
+  move: LabMoveChoice | null;
   onReinterview: () => void;
   onRebuild: () => void;
 }) {
-  const { script } = props;
+  const { script, move } = props;
   return (
     <div style={styles.scriptWrap}>
+      {move ? (
+        <div style={styles.brainBox}>
+          <div style={styles.brainTitle}>המוח של הדר · הבחירה שלה לפרק הזה</div>
+          <div style={styles.brainRow}><span style={styles.brainLabel}>מהלך חתימה</span><strong>{move.name}</strong></div>
+          <div style={styles.brainRow}><span style={styles.brainLabel}>למה זה</span><span>{move.why}</span></div>
+          <div style={styles.brainRow}><span style={styles.brainLabel}>איך היא הפעילה</span><span>{move.frame}</span></div>
+          {script.move_applied ? (
+            <div style={styles.brainRow}><span style={styles.brainLabel}>מה זה עשה בפועל</span><span>{script.move_applied}</span></div>
+          ) : null}
+          {script.voice_devices_used?.length ? (
+            <div style={styles.brainRow}>
+              <span style={styles.brainLabel}>מכניקות קול</span>
+              <span style={styles.voiceDevices}>
+                {script.voice_devices_used.map((d, i) => (
+                  <span key={i} style={styles.voiceChip}>{d}</span>
+                ))}
+              </span>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <div style={styles.scriptTitle}>{script.title}</div>
 
       <div style={styles.scriptSection}>
@@ -404,6 +429,12 @@ const styles: Record<string, React.CSSProperties> = {
   interviewActions: { display: "flex", gap: 10, flexWrap: "wrap", marginTop: 6 },
 
   scriptWrap: { display: "flex", flexDirection: "column", gap: 16 },
+  brainBox: { background: "linear-gradient(145deg, #1F1A0F, #14110A)", border: "1px solid #6A5024", borderRadius: 10, padding: 16, display: "flex", flexDirection: "column", gap: 8 },
+  brainTitle: { color: "#E8B94A", fontSize: 13, letterSpacing: 1, marginBottom: 4 },
+  brainRow: { display: "flex", gap: 12, fontSize: 14, lineHeight: 1.5, color: "#EDE9E1", flexWrap: "wrap" },
+  brainLabel: { color: "#9E9990", minWidth: 110, fontSize: 13 },
+  voiceDevices: { display: "flex", gap: 6, flexWrap: "wrap" },
+  voiceChip: { background: "#2A2015", border: "1px solid #6A5024", color: "#E8B94A", padding: "2px 8px", borderRadius: 5, fontSize: 12, fontFamily: "monospace" },
   scriptTitle: { fontSize: 20, fontWeight: 700, color: "#EDE9E1" },
   scriptSection: {},
   scriptLabel: { color: "#C9964A", fontSize: 12, letterSpacing: 1, marginBottom: 6 },

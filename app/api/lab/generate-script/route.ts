@@ -1,10 +1,13 @@
 /**
  * POST /api/lab/generate-script
  * Body: { extraction_id, video_number }
- * → { script: { title, hook, body, cta?, preserved_phrases[] } }
+ * → { script, move }
  *
- * Uses the saved interview questions + user's answers to produce a script
- * that preserves the user's own words. Requires answers to exist first.
+ * Two internal Claude calls:
+ *   1. Select signature move (given signal + episode + user's answers)
+ *   2. Generate script (given signal + episode + answers + selected move)
+ *
+ * Both stored under signal.lab[n] alongside the interview state.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
@@ -12,19 +15,42 @@ import Anthropic from "@anthropic-ai/sdk";
 import { requireLabUser } from "@/lib/lab/gate";
 import { findLabEpisode } from "@/lib/lab/episodes";
 import { createServerClient } from "@/lib/supabase/server";
+import { APPROVED_MOVE_NAMES } from "@/lib/lab/hadar-brain";
 import {
   LAB_MODEL,
+  MOVE_SELECT_MAX_TOKENS,
   SCRIPT_MAX_TOKENS,
+  buildMoveSelectionSystem,
+  buildMoveSelectionUser,
   buildScriptSystem,
   buildScriptUser,
   type LabSignal,
+  type LabMoveChoice,
   type LabScript,
   type LabQuestion,
 } from "@/lib/lab/prompts";
 
 export const runtime     = "nodejs";
 export const dynamic     = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
+
+function stripFence(text: string): string {
+  return text.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+}
+
+async function claudeJson<T>(anthropic: Anthropic, opts: { system: string; user: string; maxTokens: number; temperature: number }): Promise<T> {
+  const rsp = await anthropic.messages.create({
+    model:       LAB_MODEL,
+    max_tokens:  opts.maxTokens,
+    system:      opts.system,
+    messages:    [{ role: "user", content: opts.user }],
+    temperature: opts.temperature,
+  });
+  const text = rsp.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text).join("").trim();
+  return JSON.parse(stripFence(text)) as T;
+}
 
 export async function POST(req: NextRequest) {
   const gate = await requireLabUser(req);
@@ -52,13 +78,9 @@ export async function POST(req: NextRequest) {
   const slot     = labState[String(videoNumber)] ?? {};
   const questions: LabQuestion[] = Array.isArray(slot.questions) ? slot.questions : [];
   const answers:   string[]      = Array.isArray(slot.answers) ? slot.answers : [];
-  if (!questions.length) {
-    return NextResponse.json({ error: "no_questions" }, { status: 400 });
-  }
+  if (!questions.length)  return NextResponse.json({ error: "no_questions" }, { status: 400 });
   const nonEmpty = answers.filter((a) => a && a.trim().length >= 5);
-  if (nonEmpty.length === 0) {
-    return NextResponse.json({ error: "no_answers" }, { status: 400 });
-  }
+  if (!nonEmpty.length)   return NextResponse.json({ error: "no_answers" }, { status: 400 });
 
   const s = ext.signal ?? {};
   const signal: LabSignal = {
@@ -75,47 +97,73 @@ export async function POST(req: NextRequest) {
   };
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
-  const rsp = await anthropic.messages.create({
-    model:       LAB_MODEL,
-    max_tokens:  SCRIPT_MAX_TOKENS,
-    system:      buildScriptSystem(episode),
-    messages:    [{ role: "user", content: buildScriptUser(signal, questions, answers) }],
-    temperature: 0.6,
-  });
 
-  const text = rsp.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text).join("").trim();
-
-  let parsed: Partial<LabScript>;
+  // ── Stage 2: Move selection ──────────────────────────────────────────
+  let moveRaw: Partial<LabMoveChoice>;
   try {
-    parsed = JSON.parse(text.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim());
-  } catch {
-    return NextResponse.json({ error: "parse_failed", raw: text.slice(0, 500) }, { status: 502 });
+    moveRaw = await claudeJson<Partial<LabMoveChoice>>(anthropic, {
+      system:      buildMoveSelectionSystem(episode),
+      user:        buildMoveSelectionUser(signal, questions, answers),
+      maxTokens:   MOVE_SELECT_MAX_TOKENS,
+      temperature: 0.5,
+    });
+  } catch (e) {
+    return NextResponse.json({ error: "move_parse_failed", detail: String((e as Error).message) }, { status: 502 });
+  }
+  const moveName = String(moveRaw.name ?? "").trim();
+  if (!moveName || !APPROVED_MOVE_NAMES.includes(moveName as typeof APPROVED_MOVE_NAMES[number])) {
+    return NextResponse.json({ error: "move_invalid", got: moveName }, { status: 502 });
+  }
+  const move: LabMoveChoice = {
+    name:  moveName as typeof APPROVED_MOVE_NAMES[number],
+    why:   String(moveRaw.why ?? "").trim(),
+    frame: String(moveRaw.frame ?? "").trim(),
+  };
+
+  // ── Stage 3: Script generation ───────────────────────────────────────
+  let scriptRaw: Partial<LabScript>;
+  try {
+    scriptRaw = await claudeJson<Partial<LabScript>>(anthropic, {
+      system:      buildScriptSystem(episode, move),
+      user:        buildScriptUser(signal, questions, answers),
+      maxTokens:   SCRIPT_MAX_TOKENS,
+      temperature: 0.65,
+    });
+  } catch (e) {
+    return NextResponse.json({ error: "script_parse_failed", detail: String((e as Error).message) }, { status: 502 });
   }
 
   const cleanStr = (v: unknown) => String(v ?? "").replace(/[—–]/g, ",").trim();
   const script: LabScript = {
-    title: cleanStr(parsed.title) || episode.title,
-    hook:  cleanStr(parsed.hook),
-    body:  cleanStr(parsed.body),
-    cta:   parsed.cta ? cleanStr(parsed.cta) : undefined,
-    preserved_phrases: Array.isArray(parsed.preserved_phrases)
-      ? parsed.preserved_phrases.map(cleanStr).filter(Boolean).slice(0, 8)
-      : [],
+    title:              cleanStr(scriptRaw.title) || episode.title,
+    hook:               cleanStr(scriptRaw.hook),
+    body:               cleanStr(scriptRaw.body),
+    cta:                scriptRaw.cta ? cleanStr(scriptRaw.cta) : undefined,
+    preserved_phrases:  Array.isArray(scriptRaw.preserved_phrases)
+                          ? scriptRaw.preserved_phrases.map(cleanStr).filter(Boolean).slice(0, 8)
+                          : [],
+    move_applied:       cleanStr(scriptRaw.move_applied),
+    voice_devices_used: Array.isArray(scriptRaw.voice_devices_used)
+                          ? scriptRaw.voice_devices_used.map(cleanStr).filter(Boolean).slice(0, 8)
+                          : [],
   };
   if (!script.hook || !script.body) {
-    return NextResponse.json({ error: "empty_script", raw: text.slice(0, 500) }, { status: 502 });
+    return NextResponse.json({ error: "empty_script" }, { status: 502 });
   }
 
   const nextSignal = {
     ...ext.signal,
     lab: {
       ...labState,
-      [String(videoNumber)]: { ...slot, script, script_generated_at: new Date().toISOString() },
+      [String(videoNumber)]: {
+        ...slot,
+        move,
+        script,
+        script_generated_at: new Date().toISOString(),
+      },
     },
   };
   await (db as any).from("signal_extractions").update({ signal: nextSignal }).eq("id", extractionId);
 
-  return NextResponse.json({ script });
+  return NextResponse.json({ script, move });
 }
