@@ -91,11 +91,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "answers_too_thin" }, { status: 400 });
   }
 
-  // ── Fetch signal (if the caller has one — the heart of the diagnosis
-  //     that makes /first-video life-changing per Alon). Threaded into
-  //     every pipeline stage as background context. Prospects without a
-  //     signal continue to work: signal becomes null, prompts degrade
-  //     gracefully to answers-only. ────────────────────────────────────
+  // ── Fetch signal. Hard requirement (Alon 2026-07-24): no signal, no
+  //     first-video. The page-level gate already redirects signal-less
+  //     callers to /signal, so this fetch existing is essentially
+  //     guaranteed — the check here is defensive against direct API
+  //     calls that bypass the page. ──────────────────────────────────
   const db = createServerClient();
   const { data: ext } = await (db as any)
     .from("signal_extractions")
@@ -105,8 +105,12 @@ export async function POST(req: NextRequest) {
     .limit(1)
     .maybeSingle();
 
-  const s = ext?.signal ?? {};
-  const signal: LabSignal | null = ext ? {
+  if (!ext?.signal?.signal) {
+    return NextResponse.json({ error: "signal_required", redirect: "/signal" }, { status: 400 });
+  }
+
+  const s = ext.signal;
+  const signal: LabSignal = {
     signal:         String(s.signal ?? ""),
     signal_promise: String(s.signal_promise ?? ""),
     pain_source:    String(s.pain_source ?? ""),
@@ -117,7 +121,7 @@ export async function POST(req: NextRequest) {
     occupation:     null,
     gender:         gate.user.gender,
     name:           gate.user.name,
-  } : null;
+  };
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 

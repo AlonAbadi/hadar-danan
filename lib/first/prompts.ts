@@ -33,11 +33,10 @@ export type FirstAnswers = {
   payoff:  string; // may be ""
 };
 
-/** Compact signal snapshot rendered for prompt injection. Skipped
- *  gracefully when all fields are empty (new prospect without a
- *  prior signal extraction). */
-function renderSignalContext(signal: LabSignal | null): string {
-  if (!signal) return "";
+/** Compact signal snapshot rendered for prompt injection.
+ *  Signal is guaranteed non-null per /first's hard contract (Alon
+ *  2026-07-24: no first-video without a signal extraction). */
+function renderSignalContext(signal: LabSignal): string {
   const parts: string[] = [];
   if (signal.signal)         parts.push(`- משפט האות: ${signal.signal}`);
   if (signal.signal_promise) parts.push(`- ההבטחה: ${signal.signal_promise}`);
@@ -46,29 +45,20 @@ function renderSignalContext(signal: LabSignal | null): string {
   if (signal.central_tool)   parts.push(`- הכלי המרכזי: ${signal.central_tool}`);
   if (signal.people)         parts.push(`- הקהל: ${signal.people}`);
   if (signal.warm_note)      parts.push(`- הערה חמה: ${signal.warm_note}`);
-  if (!parts.length) return "";
   return `\n\n**האות של הלקוח (רקע בלבד — הזהות שממנה הוא מדבר; לא לצטט מכאן, המילים לתסריט באות רק מהתשובות):**\n${parts.join("\n")}\n`;
-}
-
-/** Whether the signal has enough content to enable keyword-driven move rules. */
-function hasSignal(signal: LabSignal | null): boolean {
-  if (!signal) return false;
-  return Boolean(signal.signal || signal.signal_promise || signal.pain_source || signal.element);
 }
 
 // ── Move selection ─────────────────────────────────────────────────────
 
 export const FIRST_MOVE_SELECT_MAX_TOKENS = 900;
 
-export function buildFirstMoveSystem(signal: LabSignal | null): string {
-  const kwRules = hasSignal(signal)
-    ? KEYWORD_MOVE_RULES
-        .map((r) => `  · אם באות או בתשובות מופיעה אחת מהמילים: ${r.keywords.map((k) => `"${k}"`).join(" / ")} → מהלך "${r.move}" ${r.note ? "(" + r.note + ")" : ""}`)
-        .join("\n")
-    : "";
-  const keywordBlock = kwRules
-    ? `\n\n**חוקי מילות־מפתח מהאות (חובה קשיחה — קודמים לכל שיקול אחר):**\n${kwRules}\n\nהבידול בין לקוחות באותה קטגוריה חייב לבוא מהמילים שבאות ובתשובות, לא ממיפוי אוטומטי לפי מקצוע.\n`
-    : "";
+export function buildFirstMoveSystem(signal: LabSignal): string {
+  const kwRules = KEYWORD_MOVE_RULES
+    .map((r) => `  · אם באות או בתשובות מופיעה אחת מהמילים: ${r.keywords.map((k) => `"${k}"`).join(" / ")} → מהלך "${r.move}" ${r.note ? "(" + r.note + ")" : ""}`)
+    .join("\n");
+  const keywordBlock = `\n\n**חוקי מילות־מפתח מהאות (חובה קשיחה — קודמים לכל שיקול אחר):**\n${kwRules}\n\nהבידול בין לקוחות באותה קטגוריה חייב לבוא מהמילים שבאות ובתשובות, לא ממיפוי אוטומטי לפי מקצוע.\n`;
+  // signal parameter is required for API consistency, referenced via renderSignalContext elsewhere.
+  void signal;
 
   return `אתה הדר דנן. קיבלת אות של לקוח + סיפור אחד + עמדה + פאיוף (אופציונלי) — זה כל החומר. תפקידך: לבחור **מהלך חתימה אחד** מתוך 20 המהלכים שיסגנן את הסרטון הקצר.
 
@@ -98,7 +88,7 @@ ${APPROVED_MOVE_NAMES.map((n) => `· "${n}"`).join("\n")}
 }`;
 }
 
-export function buildFirstMoveUser(answers: FirstAnswers, signal: LabSignal | null): string {
+export function buildFirstMoveUser(answers: FirstAnswers, signal: LabSignal): string {
   return `${renderSignalContext(signal)}
 
 החומר הגולמי מהלקוח:
@@ -118,7 +108,7 @@ ${answers.payoff ? `**מה קרה בסוף:**\n${answers.payoff}` : ""}
 
 export const FIRST_SCRIPT_MAX_TOKENS = 1200;
 
-export function buildFirstScriptSystem(move: LabMoveChoice, signal: LabSignal | null): string {
+export function buildFirstScriptSystem(move: LabMoveChoice, signal: LabSignal): string {
   const signalContext = renderSignalContext(signal);
   const tmpl = MOVE_STRUCTURAL_TEMPLATES[move.name];
   const templateBlock = tmpl ? `
@@ -170,7 +160,7 @@ ${VOICE_MECHANICS_BRIEF}
 }`;
 }
 
-export function buildFirstScriptUser(answers: FirstAnswers, signal: LabSignal | null): string {
+export function buildFirstScriptUser(answers: FirstAnswers, signal: LabSignal): string {
   return `${renderSignalContext(signal)}
 
 החומר הגולמי (מקור המילים לתסריט):
@@ -190,10 +180,9 @@ ${answers.payoff ? `**מה קרה בסוף:**\n${answers.payoff}` : ""}
 
 export const FIRST_CRITIQUE_MAX_TOKENS = 1400;
 
-export function buildFirstCritiqueSystem(move: LabMoveChoice, signal: LabSignal | null): string {
-  const signalNote = hasSignal(signal)
-    ? "\nהאות של הלקוח קיים ומופיע בהודעת המשתמש כרקע. בדוק גם: האם התסריט מבטא את הזהות שבאות, גם אם לא מצטט ממנו? אם הזהות לא מורגשת בכלל — זה גורע מהציון.\n"
-    : "";
+export function buildFirstCritiqueSystem(move: LabMoveChoice, signal: LabSignal): string {
+  const signalNote = "\nהאות של הלקוח מופיע בהודעת המשתמש כרקע. בדוק גם: האם התסריט מבטא את הזהות שבאות, גם אם לא מצטט ממנו? אם הזהות לא מורגשת בכלל — זה גורע מהציון.\n";
+  void signal;
   const tmpl = MOVE_STRUCTURAL_TEMPLATES[move.name];
   const tmplStr = tmpl
     ? `- Hook: ${tmpl.hook_shape}\n- Body: ${tmpl.body_shape}\n- Landing: ${tmpl.landing_shape}\n- פורמולות קנוניות: ${tmpl.canonical_devices.join(" · ")}\n- צורות אסורות: ${tmpl.forbidden_shapes.join(" · ")}`
@@ -233,7 +222,7 @@ ${tmplStr}
 }`;
 }
 
-export function buildFirstCritiqueUser(answers: FirstAnswers, draft: LabScript, signal: LabSignal | null): string {
+export function buildFirstCritiqueUser(answers: FirstAnswers, draft: LabScript, signal: LabSignal): string {
   const words = (draft.hook + " " + draft.body).trim().split(/\s+/).length;
   return `${renderSignalContext(signal)}
 
