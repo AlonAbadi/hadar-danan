@@ -17,7 +17,7 @@
 
 import { useMemo, useState } from "react";
 import type { LabEpisode } from "@/lib/lab/episodes";
-import type { LabQuestion, LabScript, LabMoveChoice } from "@/lib/lab/prompts";
+import type { LabQuestion, LabScript, LabMoveChoice, LabCritique } from "@/lib/lab/prompts";
 
 export type LabEpisodeState = {
   episode:     LabEpisode;
@@ -25,6 +25,7 @@ export type LabEpisodeState = {
   answers:     string[] | null;
   script:      LabScript | null;
   move:        LabMoveChoice | null;
+  critique:    LabCritique | null;
   questionsAt: string | null;
   scriptAt:    string | null;
 };
@@ -186,7 +187,7 @@ function EpisodeCard(props: {
       });
       const j2 = await r2.json();
       if (!r2.ok) throw new Error(j2?.error ?? "generate_failed");
-      onEpisodeUpdated(episode.number, { answers: cleaned, script: j2.script, move: j2.move });
+      onEpisodeUpdated(episode.number, { answers: cleaned, script: j2.script, move: j2.move, critique: j2.critique ?? null });
       setPhase("ready");
     } catch (e) { setErrorMsg(String((e as Error).message ?? "error")); setPhase("error"); }
   }
@@ -237,6 +238,7 @@ function EpisodeCard(props: {
             <ScriptView
               script={script}
               move={state.move}
+              critique={state.critique}
               onReinterview={() => startInterview(true)}
               onRebuild={saveAnswersAndBuild}
             />
@@ -310,10 +312,11 @@ function InterviewForm(props: {
 function ScriptView(props: {
   script: LabScript;
   move: LabMoveChoice | null;
+  critique: LabCritique | null;
   onReinterview: () => void;
   onRebuild: () => void;
 }) {
-  const { script, move } = props;
+  const { script, move, critique } = props;
   return (
     <div style={styles.scriptWrap}>
       {move ? (
@@ -332,6 +335,18 @@ function ScriptView(props: {
                 {script.voice_devices_used.map((d, i) => (
                   <span key={i} style={styles.voiceChip}>{d}</span>
                 ))}
+              </span>
+            </div>
+          ) : null}
+          {critique ? (
+            <div style={styles.brainRow}>
+              <span style={styles.brainLabel}>בקרת עורך</span>
+              <span style={styles.critiqueLine}>
+                <span style={styles.critiqueScore}>ציון {critique.score}/5</span>
+                {critique.revised ? <span style={styles.critiqueRev}>· תוקן</span> : <span style={styles.critiquePass}>· עבר</span>}
+                {critique.what_missed && critique.what_missed !== "critique_unavailable" ? (
+                  <span style={styles.critiqueNote}>· {critique.what_missed}</span>
+                ) : null}
               </span>
             </div>
           ) : null}
@@ -435,6 +450,11 @@ const styles: Record<string, React.CSSProperties> = {
   brainLabel: { color: "#9E9990", minWidth: 110, fontSize: 13 },
   voiceDevices: { display: "flex", gap: 6, flexWrap: "wrap" },
   voiceChip: { background: "#2A2015", border: "1px solid #6A5024", color: "#E8B94A", padding: "2px 8px", borderRadius: 5, fontSize: 12, fontFamily: "monospace" },
+  critiqueLine: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", fontSize: 13, color: "#B5B0A6" },
+  critiqueScore: { color: "#E8B94A", fontWeight: 600 },
+  critiquePass: { color: "#7FD49B" },
+  critiqueRev: { color: "#E8B94A" },
+  critiqueNote: { color: "#9E9990", fontStyle: "italic" },
   scriptTitle: { fontSize: 20, fontWeight: 700, color: "#EDE9E1" },
   scriptSection: {},
   scriptLabel: { color: "#C9964A", fontSize: 12, letterSpacing: 1, marginBottom: 6 },

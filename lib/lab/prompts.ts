@@ -24,6 +24,7 @@ import {
   SIGNATURE_MOVES_CATALOG,
   VOICE_MECHANICS_BRIEF,
   KEYWORD_MOVE_RULES,
+  MOVE_STRUCTURAL_TEMPLATES,
   type SignatureMoveName,
 } from "./hadar-brain";
 
@@ -124,12 +125,17 @@ export function buildInterviewUser(signal: LabSignal): string {
 
 export const MOVE_SELECT_MAX_TOKENS = 900;
 
-export function buildMoveSelectionSystem(episode: LabEpisode): string {
+export function buildMoveSelectionSystem(episode: LabEpisode, siblingsUsed: SignatureMoveName[]): string {
   const kwRules = KEYWORD_MOVE_RULES
     .map((r) => `  · אם באות/בתשובות מופיע: ${r.keywords.map((k) => `"${k}"`).join(" / ")} → מהלך "${r.move}" ${r.note ? "(" + r.note + ")" : ""}`)
     .join("\n");
 
+  const diversityBlock = siblingsUsed.length
+    ? `\n**גיוון בין־פרקים (חובה):** בפרקים אחרים באותה עונה כבר נבחרו המהלכים הבאים: ${siblingsUsed.map((m) => `"${m}"`).join(", ")}. **הימנע מלבחור את אותם המהלכים שוב** אלא אם חוק־מילת־מפתח מכריח. אם החומר מאפשר שני מהלכים בעלי חוזק דומה, בחר את זה שעוד לא נעשה בו שימוש. הבידול בין פרקים הוא ליבת המוצר — אם המהלך חוזר, הפרקים ייראו כמו אותו סרטון בטעמים שונים.\n`
+    : "";
+
   return `אתה הדר דנן. קיבלת אות של לקוח, פרק ספציפי, ותשובות הלקוח לשאלות ראיון. תפקידך: לבחור **מהלך חתימה אחד** מתוך 20 המהלכים שיסגנן את הסרטון.
+${diversityBlock}
 
 הפרק:
 - מספר: ${episode.code}
@@ -190,12 +196,26 @@ ${qa}
 export const SCRIPT_MAX_TOKENS = 1600;
 
 export function buildScriptSystem(episode: LabEpisode, move: LabMoveChoice): string {
-  return `אתה הדר דנן בעריכה של סרטון אחרי ראיון עם לקוח. יש לך שלושה חומרים:
+  const tmpl = MOVE_STRUCTURAL_TEMPLATES[move.name];
+  const templateBlock = tmpl ? `
+**התבנית המבנית של המהלך הזה — חובה לפעול לפיה, זה מה שהופך את המהלך לחתום ולא לרמז:**
+
+- **צורת הפתיח (Hook):** ${tmpl.hook_shape}
+- **צורת הגוף (Body):** ${tmpl.body_shape}
+- **צורת הנחיתה (Landing):** ${tmpl.landing_shape}
+- **פורמולות קנוניות למהלך הזה:** ${tmpl.canonical_devices.join(" · ")}
+- **צורות אסורות:** ${tmpl.forbidden_shapes.join(" · ")}
+- **טווח משפטים כולל:** ${tmpl.total_sentences}
+
+התבנית קשוחה. אם התבנית אומרת "פתיחה בשלילה", ה־hook לא יכול להתחיל בהצהרה חיובית. אם התבנית אומרת "בדיוק שלושה פרמטרים", לא שני ולא ארבעה.` : "";
+
+  return `אתה הדר דנן בעריכה של סרטון אחרי ראיון עם לקוח. יש לך ארבעה חומרים:
 1. **התשובות הגולמיות** של הלקוח לשאלות הראיון (המילים שלו/ה)
 2. **מהלך חתימה שנבחר** לסרטון (איך זה יסגנן)
-3. **מכניקות הקול** של הדר (איך משפטים בונים)
+3. **התבנית המבנית של המהלך** (איך זה נראה מבנית — מה הפתיח, מה הגוף, מה הנחיתה)
+4. **מכניקות הקול** של הדר (איך משפטים בונים)
 
-תפקידך: לחלץ מתוך התשובות תסריט קצר, שממוסגר ע"פ מהלך החתימה, ומשתמש **במילים של הלקוח**, לא שלך.
+תפקידך: לחלץ מתוך התשובות תסריט קצר, שממוסגר ע"פ המהלך *ובפרט התבנית המבנית שלו*, ומשתמש **במילים של הלקוח**, לא שלך.
 
 הפרק:
 - מספר: ${episode.code}
@@ -207,8 +227,9 @@ export function buildScriptSystem(episode: LabEpisode, move: LabMoveChoice): str
 - למה: ${move.why}
 - איך להפעיל: ${move.frame}
 
-הגדרת המהלך (רלוונטית, מהקטלוג):
+הגדרת המהלך (מהקטלוג):
 ${extractMoveDefinition(move.name)}
+${templateBlock}
 
 ${VOICE_MECHANICS_BRIEF}
 
@@ -268,6 +289,83 @@ export function buildScriptUser(signal: LabSignal, questions: LabQuestion[], ans
 ${qa}
 
 בנה תסריט לפי המהלך שנבחר. שמור על המילים של הלקוח.`;
+}
+
+// ── Stage 4: Critique + revision ──────────────────────────────────────
+// A second Claude pass that reviews whether the move template was hit and
+// revises if not. This is what saves the abstract-move cases (Silent
+// Authority Positioning, Sacred-Path Protection) from under-delivering.
+
+export const CRITIQUE_MAX_TOKENS = 1800;
+
+export type LabCritique = {
+  score:         number;         // 1-5, how well the move template is applied
+  what_missed:   string;         // 1-2 sentences: what the template requires that the draft misses
+  revised:       LabScript | null; // populated only if score < 4
+};
+
+export function buildCritiqueSystem(episode: LabEpisode, move: LabMoveChoice): string {
+  const tmpl = MOVE_STRUCTURAL_TEMPLATES[move.name];
+  const tmplStr = tmpl
+    ? `- Hook shape: ${tmpl.hook_shape}\n- Body shape: ${tmpl.body_shape}\n- Landing shape: ${tmpl.landing_shape}\n- Canonical devices: ${tmpl.canonical_devices.join(" · ")}\n- Forbidden shapes: ${tmpl.forbidden_shapes.join(" · ")}\n- Sentence range: ${tmpl.total_sentences}`
+    : "(אין תבנית קונקרטית — סמוך על ההגדרה הכללית של המהלך)";
+
+  return `אתה הדר בעריכת פוסט־ראיון. קיבלת טיוטה של סרטון שנכתב מתוך תשובות הלקוח + המהלך שנבחר. תפקידך: לבדוק אם המהלך באמת הופעל במבנה, ואם לא, לתקן.
+
+הפרק: ${episode.code} — ${episode.title}
+המהלך: ${move.name}
+תבנית המהלך:
+${tmplStr}
+
+הבדיקה שלך בשלושה שלבים:
+
+1. **ציון (1-5):** כמה המהלך *נראה* בטיוטה בפועל?
+   - 5 = הפתיח הוא בדיוק צורת הפתיח של התבנית, והגוף הולך לפי, והנחיתה סוגרת נכון. הסרטון היה עובר "תסתכל, זה [שם המהלך]" בקריאה בלי לדעת מראש.
+   - 4 = כמעט הכל שם, פרט אחד שולי חסר.
+   - 3 = הרעיון של המהלך שם אבל המבנה שוטח או פזור.
+   - 1-2 = המהלך "מוזכר" אבל התסריט נראה כמו הסבר גנרי.
+
+2. **מה חסר (אם ציון < 4):** משפט אחד מפורש שאומר מה התבנית דורשת שהטיוטה מפספסת. לא ג'נרי — קונקרטי לטקסט.
+
+3. **תיקון (אם ציון < 4):** תסריט מתוקן שמפעיל את התבנית במלואה. **חובה קשיחה: המילים המשמרות של הלקוח חייבות להישאר** verbatim, אלא אם המהלך דורש הסרה שלהן. מותר לסדר מחדש, לגזור, לשלב פתיח קנוני של המהלך, לכתוב מחדש נחיתה. אסור להמציא רעיונות שלא היו בתשובות המקוריות.
+
+חוקי פלט:
+- אם ציון >= 4: החזר revised: null. הטיוטה עוברת.
+- אם ציון < 4: החזר טיוטה מתוקנת עם אותה סכימה של השלב הקודם, כולל preserved_phrases (רשימה מעודכנת לפי הגרסה המתוקנת), move_applied חדש, voice_devices_used מעודכן.
+- אין מקפים גדולים (—) בתסריט מתוקן.
+
+פורמט (JSON בלבד, בלי markdown):
+{
+  "score":       1-5,
+  "what_missed": "…",
+  "revised":     null  |  {
+    "title": "…", "hook": "…", "body": "…",
+    "cta": "…" | null,
+    "preserved_phrases":  ["…"],
+    "move_applied":       "…",
+    "voice_devices_used": ["…"]
+  }
+}`;
+}
+
+export function buildCritiqueUser(_signal: LabSignal, questions: LabQuestion[], answers: string[], draft: LabScript): string {
+  const qa = questions.map((q, i) => `שאלה ${i + 1}: ${q.q}\nתשובה: ${answers[i] ?? "(לא ענה/תה)"}`).join("\n\n");
+  return `תשובות הלקוח הגולמיות (מקור המילים):
+
+${qa}
+
+הטיוטה של הסרטון שנכתבה:
+
+Title: ${draft.title}
+Hook:  ${draft.hook}
+Body:  ${draft.body}
+${draft.cta ? `CTA:   ${draft.cta}` : ""}
+
+המילים שנטען שנשמרו: ${draft.preserved_phrases.join(" · ")}
+מה נטען שהמהלך עשה: ${draft.move_applied}
+מכניקות שנטען שהופעלו: ${(draft.voice_devices_used ?? []).join(" · ")}
+
+עכשיו — בדוק, תן ציון, וסגור.`;
 }
 
 // ── Utility: extract just the chosen move's definition from the catalog ─
