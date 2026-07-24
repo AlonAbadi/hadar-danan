@@ -67,7 +67,7 @@ const STEP_ROWS: { label: string; keys: string[] }[] = [
   { label: "שאלה 6",           keys: ["q6_message_to_past"] },
   { label: "שער טלפון",        keys: ["s15_phone_gate"] },
   { label: "מסך המשלוח",       keys: ["sendgate"] },
-  { label: "האות (סיום)",      keys: ["s16_full_reading"] },
+  { label: "האות (סיום)",      keys: ["complete"] },
 ];
 
 // New question order — live from 2026-07-19. New events carry metadata.q_order===2.
@@ -89,7 +89,7 @@ const STEP_ROWS_NEW: { label: string; keys: string[] }[] = [
   { label: "ש6 · משפט לעבר",    keys: ["q6_message_to_past"] },
   { label: "שער טלפון",         keys: ["s15_phone_gate"] },
   { label: "מסך המשלוח",        keys: ["sendgate"] },
-  { label: "האות (סיום)",       keys: ["s16_full_reading"] },
+  { label: "האות (סיום)",       keys: ["complete"] },
 ];
 
 const ENDING_LABELS: Record<string, { label: string; color: string }> = {
@@ -139,12 +139,13 @@ export default async function AdminKriahPage() {
   const supabase = createServerClient();
   const now = Date.now();
   const clamp = (iso: string) => (iso > REPORT_EPOCH ? iso : REPORT_EPOCH);
-  const dayAgo   = clamp(new Date(now - 24 * 60 * 60 * 1000).toISOString());
-  const weekAgo  = clamp(new Date(now - 7  * 24 * 60 * 60 * 1000).toISOString());
   const twoWeeks = clamp(new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString());
 
+  // Completion cutover (see migration 067 / the isCompletion note below).
+  const KRIAH_COMPLETE_LIVE = "2026-07-23T06:30:00Z";
+
   const reportPromise = getOrCreateDailyReport(supabase);
-  const [extRes, stepRes, offerJobsRes, welcomeLogsRes, testCountRes] = await Promise.all([
+  const [extRes, rpcRes, offerJobsRes, welcomeLogsRes, testCountRes] = await Promise.all([
     safeFrom(supabase, "signal_extractions")
       .select("id, user_id, routed_ending, evidence_score, key1_declared, truth_cell, source_utm, phone_given, generated_at")
       .eq("instrument_version", "v2_funnel")
@@ -152,12 +153,10 @@ export default async function AdminKriahPage() {
       .gte("generated_at", twoWeeks)
       .order("generated_at", { ascending: false })
       .limit(1000),
-    safeFrom(supabase, "events")
-      .select("metadata, created_at")
-      .eq("type", "FUNNEL_STEP")
-      .neq("is_test", true)
-      .gte("created_at", twoWeeks)
-      .limit(10000),
+    // Server-side aggregate — avoids the 1000-row PostgREST cap that silently
+    // truncated the old raw-events pull. Returns a few hundred grouped rows.
+    (supabase as unknown as { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> })
+      .rpc("kriah_funnel_counts", { p_since: twoWeeks, p_cutover: KRIAH_COMPLETE_LIVE }),
     safeFrom(supabase, "jobs")
       .select("status, payload")
       .eq("payload->>template_key", "kriah_hive_offer"),
@@ -175,50 +174,59 @@ export default async function AdminKriahPage() {
     source_utm: Record<string, string> | null; generated_at: string; truth_cell: string | null;
   };
   type Ev = { metadata: { step?: string; is_test?: boolean; q_order?: number; exp?: string; arm?: string } | null; created_at: string };
+  // One grouped row per (step, exp, arm, q_order, Israel-day). `step` already has
+  // completions normalised to 'complete' (see migration 067). `n` arrives as a
+  // string (bigint) over the wire — always coerce with Number().
+  type Row = { step: string; exp: string | null; arm: string | null; q_order: number | null; il_day: string; n: number };
 
-  const exts  = (extRes.data ?? []) as Ext[];
-  const steps = ((stepRes.data ?? []) as Ev[]).filter((e) => e.metadata?.is_test !== true);
-  // Split by question-order version so the two funnels never cross-count on the
-  // steps whose names are shared (q4-q6). New order tags q_order===2.
-  const stepsNew = steps.filter((e) => e.metadata?.q_order === 3);
-  const stepsOld = steps.filter((e) => e.metadata?.q_order !== 3);
+  const exts = (extRes.data ?? []) as Ext[];
 
-  // A completion == the diagnosis was generated (a signal_extractions row, the
-  // same thing the daily trend counts). It has no single historical event: the
-  // kaveret-routed completions redirect away and fire `kaveret_enter` (never
-  // s16), the rest fire `s16_full_reading`. From 2026-07-23 a unified
-  // `kriah_complete` fires on every path. Count the path-signals BEFORE the
-  // cutover and the unified signal AFTER it, so a single completion is counted
-  // exactly once across the transition.
-  const KRIAH_COMPLETE_LIVE = "2026-07-23T06:30:00Z";
-  const isCompletion = (e: Ev) => {
-    const step = e.metadata?.step;
-    if (step === "kriah_complete") return true;
-    if ((step === "kaveret_enter" || step === "s16_full_reading") && e.created_at < KRIAH_COMPLETE_LIVE) return true;
-    return false;
-  };
+  // Aggregated funnel counts. Prefer the RPC (accurate, uncapped); if it is not
+  // there yet (migration 067 not applied), fall back to a client-side rollup of
+  // a capped pull so the page still renders — same shape, just truncated until
+  // the migration lands.
+  let R: Row[];
+  if (!rpcRes.error && Array.isArray(rpcRes.data)) {
+    R = rpcRes.data as Row[];
+  } else {
+    const { data: raw } = await safeFrom(supabase, "events")
+      .select("metadata, created_at").eq("type", "FUNNEL_STEP").neq("is_test", true)
+      .gte("created_at", twoWeeks).limit(1000);
+    const agg = new Map<string, number>();
+    for (const e of ((raw ?? []) as Ev[])) {
+      const m = e.metadata ?? {};
+      if (m.is_test === true) continue;
+      let step = m.step ?? "";
+      if (step === "kriah_complete") step = "complete";
+      else if ((step === "kaveret_enter" || step === "s16_full_reading") && e.created_at < KRIAH_COMPLETE_LIVE) step = "complete";
+      const key = JSON.stringify([step, m.exp ?? null, m.arm ?? null, m.q_order ?? null, ilDate(new Date(e.created_at))]);
+      agg.set(key, (agg.get(key) ?? 0) + 1);
+    }
+    R = [...agg.entries()].map(([k, n]) => {
+      const [step, exp, arm, q_order, il_day] = JSON.parse(k) as [string, string | null, string | null, number | null, string];
+      return { step, exp, arm, q_order, il_day, n };
+    });
+  }
+  const sumR = (pred: (r: Row) => boolean) => R.reduce((a, r) => a + (pred(r) ? Number(r.n) : 0), 0);
 
-  // ── windows ──
-  const inWindow = <T extends { [k: string]: unknown }>(rows: T[], field: string, since: string) =>
-    rows.filter((r) => String(r[field]) >= since);
+  // ── windows (Israel calendar days) ──
+  const todayIL = ilDate(new Date(now));
+  const day7IL  = ilDate(new Date(now - 6 * 24 * 60 * 60 * 1000)); // last 7 calendar days incl. today
+  const inDay7 = (iso: string) => ilDate(new Date(iso)) >= day7IL;
+  const isToday = (iso: string) => ilDate(new Date(iso)) === todayIL;
 
-  const stepCount = (keys: string[], since?: string) =>
-    steps.filter((e) => keys.includes(e.metadata?.step ?? "") && (!since || e.created_at >= since)).length;
-  const countIn = (arr: Ev[], keys: string[]) =>
-    arr.filter((e) => keys.includes(e.metadata?.step ?? "")).length;
-
-  const entries14 = stepCount(["s1"]);
-  const entries7  = stepCount(["s1"], weekAgo);
-  const entries1  = stepCount(["s1"], dayAgo);
+  const entries14 = sumR((r) => r.step === "s1");
+  const entries7  = sumR((r) => r.step === "s1" && r.il_day >= day7IL);
+  const entries1  = sumR((r) => r.step === "s1" && r.il_day === todayIL);
   const exts14 = exts.length;
-  const exts7  = inWindow(exts, "generated_at", weekAgo).length;
-  const exts1  = inWindow(exts, "generated_at", dayAgo).length;
+  const exts7  = exts.filter((e) => inDay7(e.generated_at)).length;
+  const exts1  = exts.filter((e) => isToday(e.generated_at)).length;
   const completion = (e: number, x: number) => (e > 0 ? `${Math.round((x / e) * 100)}%` : "—");
 
   // ── endings + hot leads ──
   const endings: Record<string, number> = {};
   for (const e of exts) endings[e.routed_ending ?? "—"] = (endings[e.routed_ending ?? "—"] ?? 0) + 1;
-  const hot7 = inWindow(exts, "generated_at", weekAgo).filter((e) => e.routed_ending === "concierge").length;
+  const hot7 = exts.filter((e) => inDay7(e.generated_at) && e.routed_ending === "concierge").length;
   const phoneRate = exts14 > 0 ? Math.round((exts.filter((e) => e.phone_given).length / exts14) * 100) : null;
 
   // ── traffic sources ──
@@ -240,28 +248,22 @@ export default async function AdminKriahPage() {
   const testCount     = testCountRes.count ?? 0;
 
   // ── funnel rows with rates (two orders, split by q_order) ──
-  // The final "האות (סיום)" row counts real completions (kaveret + s16 + unified),
-  // not just the on-page s16 which misses every kaveret-routed completion.
-  const rowN = (arr: Ev[], r: { keys: string[] }) =>
-    r.keys.includes("s16_full_reading") ? arr.filter(isCompletion).length : countIn(arr, r.keys);
-  const rowsNew = STEP_ROWS_NEW.map((r) => ({ label: r.label, n: rowN(stepsNew, r) }));
-  const rowsOld = STEP_ROWS.map((r) => ({ label: r.label, n: rowN(stepsOld, r) }));
+  // The final "האות (סיום)" row is keyed on 'complete' (normalised in the RPC),
+  // so it counts real completions incl. the kaveret-routed ones the on-page s16
+  // event misses.
+  const countNew = (keys: string[]) => sumR((r) => r.q_order === 3 && keys.includes(r.step));
+  const countOld = (keys: string[]) => sumR((r) => r.q_order !== 3 && keys.includes(r.step));
+  const rowsNew = STEP_ROWS_NEW.map((r) => ({ label: r.label, n: countNew(r.keys) }));
+  const rowsOld = STEP_ROWS.map((r) => ({ label: r.label, n: countOld(r.keys) }));
 
-  // ── A/B experiment (kriah_flow_v1) — measured purely from tagged FUNNEL_STEP ──
-  // events. Only events fired after the arm-tagging deploy carry metadata.arm,
-  // so pre-experiment traffic is naturally excluded. Primary metric = the letter
-  // actually delivered (s16). Guardrail = early email capture rate (variant asks
-  // for the email later, so this must not crater).
-  const expSteps = (arm: string) =>
-    steps.filter((e) => e.metadata?.exp === KRIAH_EXP.id && e.metadata?.arm === arm);
-  const armMetric = (arm: string) => {
-    const s = expSteps(arm);
-    return {
-      entries: s.filter((e) => e.metadata?.step === "s1").length,
-      emails:  s.filter((e) => e.metadata?.step === "email_captured").length,
-      letters: s.filter(isCompletion).length,
-    };
-  };
+  // ── A/B experiment (kriah_flow_v1) — measured from arm-tagged FUNNEL_STEP ──
+  // events (only experiment traffic carries metadata.arm). Primary metric =
+  // completion ('complete'); guardrail = early email-capture rate.
+  const armMetric = (arm: string) => ({
+    entries: sumR((r) => r.exp === KRIAH_EXP.id && r.arm === arm && r.step === "s1"),
+    emails:  sumR((r) => r.exp === KRIAH_EXP.id && r.arm === arm && r.step === "email_captured"),
+    letters: sumR((r) => r.exp === KRIAH_EXP.id && r.arm === arm && r.step === "complete"),
+  });
   const armCtl = armMetric("control");
   const armVnt = armMetric("variant");
   const abGated = armCtl.entries < AB_SAMPLE_GATE || armVnt.entries < AB_SAMPLE_GATE;
@@ -279,7 +281,7 @@ export default async function AdminKriahPage() {
     const d = ilDate(new Date(now - i * 24 * 60 * 60 * 1000));
     trendDays.push({
       date: d,
-      entries:     steps.filter((e) => e.metadata?.step === "s1" && ilDate(new Date(e.created_at)) === d).length,
+      entries:     sumR((r) => r.step === "s1" && r.il_day === d),
       completions: exts.filter((e) => ilDate(new Date(e.generated_at)) === d).length,
       hot:         exts.filter((e) => e.routed_ending === "concierge" && ilDate(new Date(e.generated_at)) === d).length,
     });
