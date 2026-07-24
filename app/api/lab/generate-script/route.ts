@@ -79,11 +79,17 @@ function normalizeScript(raw: Partial<LabScript>, fallbackTitle: string): LabScr
   };
 }
 
-/** Collect signature moves already selected for the same season, so the
- *  selector can prefer variety. Excludes the current episode. */
-function collectSiblingMoves(labState: Record<string, any>, currentNumber: number, season: 1 | 2): SignatureMoveName[] {
+/** Collect signature moves already selected across ALL episodes (both
+ *  seasons), so the selector can prefer variety at the lab level, not
+ *  just per-season. Excludes the current episode.
+ *
+ *  Alon 2026-07-24: S1E2 and S2E2 both landed on Service Reframe because
+ *  within-season diversity treated the two seasons independently. Both
+ *  scripts collapsed to the same "tech vs. essence" reframe. Cross-season
+ *  diversity forces genuine variety across the whole lab. */
+function collectSiblingMoves(labState: Record<string, any>, currentNumber: number): SignatureMoveName[] {
   const siblingNumbers = LAB_EPISODES
-    .filter((e) => e.season === season && e.number !== currentNumber)
+    .filter((e) => e.number !== currentNumber)
     .map((e) => e.number);
   const out: SignatureMoveName[] = [];
   for (const n of siblingNumbers) {
@@ -140,7 +146,7 @@ export async function POST(req: NextRequest) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
   // ── Stage 2: Move selection (with cross-episode diversity) ────────────
-  const siblings = collectSiblingMoves(labState, videoNumber, episode.season);
+  const siblings = collectSiblingMoves(labState, videoNumber);
   let moveRaw: Partial<LabMoveChoice>;
   try {
     moveRaw = await claudeJson<Partial<LabMoveChoice>>(anthropic, {
