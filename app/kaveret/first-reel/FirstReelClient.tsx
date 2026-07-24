@@ -110,6 +110,12 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   const [phase, setPhase] = useState<Phase>("loading");
   const [title, setTitle] = useState("");
   const [script, setScript] = useState("");
+  // Alon 2026-07-24: prospect can edit the script before filming. `editing`
+  // toggles the prep-phase inline editor; the edited hook/body override the
+  // parsed shape both in the teleprompter and in the prep preview.
+  const [editing, setEditing] = useState(false);
+  const [editHook, setEditHook] = useState("");
+  const [editBody, setEditBody] = useState("");
   const [intakeAnswers, setIntakeAnswers] = useState({ story: "", stance: "", payoff: "" });
   const [intakeError, setIntakeError] = useState<string | null>(null);
   const [intakeProbeVisible, setIntakeProbeVisible] = useState(false);
@@ -394,8 +400,15 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
           אנחנו ממשיכים לייצר לכם תוכן, פוסטים וסרטונים, ב-<span dir="ltr">₪99</span> לחודש. מפסיקים מתי שרוצים.
         </p>
       </div>
-      <div style={{ textAlign: "center", marginTop: 16 }}>
+      <div style={{ textAlign: "center", marginTop: 16, display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
         <a href="/signal-hive" style={goldBtn}>לפתוח את הכוורת ←</a>
+        <a
+          href={`https://wa.me/972539566961?text=${encodeURIComponent("היי הדר, ראיתי את הרילס הראשון שיצא לי מהמערכת ורוצה לקבוע פגישה איתך.")}`}
+          target="_blank" rel="noreferrer"
+          style={{ ...ghostBtn, textDecoration: "none" }}
+        >
+          לקבוע פגישה עם הדר ←
+        </a>
       </div>
     </div>
   );
@@ -406,6 +419,75 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
       {children}
     </div>
   );
+
+  // Alon 2026-07-24: iOS Safari treats <a download> as a Files-only save;
+  // to reach the Photos library we hand the file to navigator.share as a
+  // File object so the native share sheet's "Save Video" option appears.
+  // On Android and desktop we fall through to a normal download link.
+  function SaveReelButton({ finalUrl, downloadUrl, title }: { finalUrl: string; downloadUrl: string; title: string }) {
+    const [busy, setBusy] = useState(false);
+    const isIOS = typeof navigator !== "undefined" && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const canShareFile = typeof navigator !== "undefined" &&
+      typeof (navigator as unknown as { canShare?: (data: { files: File[] }) => boolean }).canShare === "function";
+
+    if (isIOS && canShareFile) {
+      return (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              const r = await fetch(finalUrl);
+              const blob = await r.blob();
+              const file = new File([blob], "first-reel.mp4", { type: blob.type || "video/mp4" });
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const nav = navigator as any;
+              if (nav.canShare({ files: [file] })) {
+                await nav.share({ files: [file], title });
+              } else {
+                window.location.href = downloadUrl;
+              }
+            } catch {
+              window.location.href = downloadUrl;
+            } finally {
+              setBusy(false);
+            }
+          }}
+          style={goldBtn}
+        >
+          {busy ? "מכינה…" : "לשמור לסרטים שלי ⬇"}
+        </button>
+      );
+    }
+
+    return (
+      <>
+        <a href={downloadUrl} style={goldBtn}>להוריד את הרילס ⬇</a>
+        {typeof navigator !== "undefined" && "share" in navigator ? (
+          <button style={ghostBtn} onClick={() => navigator.share({ url: finalUrl, title }).catch(() => {})}>
+            לשתף
+          </button>
+        ) : null}
+      </>
+    );
+  }
+
+  function FirstReelFooter() {
+    return (
+      <footer style={{ marginTop: 40, paddingTop: 24, borderTop: "1px solid #2C323E", width: "100%", maxWidth: 480, color: "#9E9990", fontSize: 12, lineHeight: 1.7, textAlign: "center" }}>
+        <div style={{ marginBottom: 6 }}>
+          <span dir="ltr" style={{ unicodeBidi: "embed" as const, color: "#C9964A" }}>TrueSignal©</span>
+          <span> · אנחנו לא יוצרים תוכן. אנחנו בונים את האות שלך.</span>
+        </div>
+        <div>
+          <a href="/privacy" style={{ color: "#9E9990", textDecoration: "none", marginInline: 6 }}>פרטיות</a>·
+          <a href="/terms" style={{ color: "#9E9990", textDecoration: "none", marginInline: 6 }}>תנאי שימוש</a>·
+          <a href="/accessibility" style={{ color: "#9E9990", textDecoration: "none", marginInline: 6 }}>נגישות</a>
+        </div>
+      </footer>
+    );
+  }
 
   if (phase === "loading") return (
     <Centered>
@@ -500,6 +582,9 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
           </button>
           <div style={{ color: "#9E9990", fontSize: 13, marginTop: 10 }}>הדר לוקחת את המילים שלך + האות שלך + כותבת סרטון של 20-30 שניות.</div>
         </div>
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
+          <FirstReelFooter />
+        </div>
       </div>
     </div>
   );
@@ -520,13 +605,67 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         <div style={{ fontSize: 14, letterSpacing: 1, color: "#E8B94A", fontWeight: 700, marginBottom: 6 }}>הסרטון הראשון שלך · 15 שניות</div>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "0 0 4px" }}>{title}</h1>
         <div style={{ background: "#141820", border: "1px solid rgba(232,185,74,0.14)", borderRadius: 16, padding: 24, marginTop: 20 }}>
-          <p style={{ color: "#E8B94A", fontWeight: 700, fontSize: 20, lineHeight: 1.6, margin: 0 }}>{scriptShape.hook}</p>
-          {scriptShape.body ? (
-            <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8, marginTop: 12 }}>{scriptShape.body}</p>
-          ) : null}
-          {scriptShape.cta ? (
-            <p style={{ color: "#E8B94A", fontWeight: 700, fontSize: 18, marginTop: 12, marginBottom: 0 }}>{scriptShape.cta}</p>
-          ) : null}
+          {editing ? (
+            <>
+              <label style={{ color: "#9E9990", fontSize: 12, letterSpacing: 1, display: "block", marginBottom: 4 }}>פתיח</label>
+              <textarea
+                value={editHook}
+                onChange={(e) => setEditHook(e.target.value)}
+                rows={2}
+                style={{ width: "100%", background: "#0D1018", border: "1px solid #2C323E", borderRadius: 8, padding: "10px 12px", color: "#E8B94A", fontFamily: "inherit", fontSize: 17, fontWeight: 700, lineHeight: 1.5, resize: "vertical", outline: "none", direction: "rtl", boxSizing: "border-box", marginBottom: 14 }}
+              />
+              <label style={{ color: "#9E9990", fontSize: 12, letterSpacing: 1, display: "block", marginBottom: 4 }}>גוף</label>
+              <textarea
+                value={editBody}
+                onChange={(e) => setEditBody(e.target.value)}
+                rows={5}
+                style={{ width: "100%", background: "#0D1018", border: "1px solid #2C323E", borderRadius: 8, padding: "10px 12px", color: "#EDE9E1", fontFamily: "inherit", fontSize: 16, lineHeight: 1.7, resize: "vertical", outline: "none", direction: "rtl", boxSizing: "border-box" }}
+              />
+              <div style={{ display: "flex", gap: 10, marginTop: 14, justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  onClick={() => { setEditing(false); }}
+                  style={{ background: "transparent", color: "#9E9990", border: "1px solid #2C323E", borderRadius: 8, padding: "8px 16px", fontSize: 14, fontFamily: "inherit", cursor: "pointer" }}
+                >
+                  ביטול
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextScript = [editHook.trim(), editBody.trim()].filter(Boolean).join("\n");
+                    setScript(nextScript);
+                    setEditing(false);
+                  }}
+                  style={{ background: "#C9964A", color: "#0D1018", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 14, fontWeight: 700, fontFamily: "inherit", cursor: "pointer" }}
+                >
+                  שמור
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p style={{ color: "#E8B94A", fontWeight: 700, fontSize: 20, lineHeight: 1.6, margin: 0 }}>{scriptShape.hook}</p>
+              {scriptShape.body ? (
+                <p style={{ color: "#EDE9E1", fontSize: 17, lineHeight: 1.8, marginTop: 12 }}>{scriptShape.body}</p>
+              ) : null}
+              {scriptShape.cta ? (
+                <p style={{ color: "#E8B94A", fontWeight: 700, fontSize: 18, marginTop: 12, marginBottom: 0 }}>{scriptShape.cta}</p>
+              ) : null}
+              <div style={{ textAlign: "left", marginTop: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditHook(scriptShape.hook ?? "");
+                    setEditBody([scriptShape.body, scriptShape.cta].filter(Boolean).join("\n"));
+                    setEditing(true);
+                  }}
+                  style={{ background: "transparent", color: "#9E9990", border: "1px solid #2C323E", borderRadius: 6, padding: "6px 12px", fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}
+                >
+                  ✎ ערוך תסריט
+                </button>
+              </div>
+            </>
+          )}
         </div>
         <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
           {(["prep.tip.eyeline", "prep.tip.one_friend", "prep.tip.no_fixing"] as const).map((k) => (
@@ -557,6 +696,9 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
           >
             לצלם עכשיו 🎬
           </button>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
+          <FirstReelFooter />
         </div>
       </div>
     </div>
@@ -630,38 +772,36 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   );
 
   if (phase === "result") return (
-    <Centered>
+    // Alon 2026-07-24: result screen is content-heavy (video + buttons +
+    // Upsell + footer). Centered (`justify-content: center`) was cropping
+    // the top on shorter phones so the reel scrolled off-screen. Switched
+    // to top-aligned column with natural scroll so the whole page reaches.
+    <div dir="rtl" style={{ ...shell, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 40px", textAlign: "center", WebkitOverflowScrolling: "touch" }}>
+      <RoomStyles />
       <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>הרילס הראשון שלך מוכן 🎉</h1>
       <p style={{ ...gold, fontSize: 14, marginBottom: 14 }}>{title} · עם כתוביות מסונכרנות</p>
-      {/* Alon 2026-07-24: bumped the frame width so the reel is clearly
-          the hero of the completion screen. Previous "48dvh * 0.5625"
-          calc could shrink the video below visibility on shorter phones. */}
       {finalUrl ? (
-        <div style={{ ...frame, width: "min(340px, 88vw)", marginBottom: 16 }}>
+        <div style={{ ...frame, width: "min(320px, 82vw)", marginBottom: 16 }}>
           <video
             src={finalUrl}
             controls
             playsInline
             preload="metadata"
-            style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000" }}
+            style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
           />
         </div>
       ) : (
-        <div style={{ ...frame, width: "min(340px, 88vw)", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 13 }}>
+        <div style={{ ...frame, width: "min(320px, 82vw)", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 13 }}>
           מכינה את הצפייה…
         </div>
       )}
       <div style={{ display: "flex", gap: 10, marginBottom: 26, flexWrap: "wrap", justifyContent: "center" }}>
-        {downloadUrl && <a href={downloadUrl} style={goldBtn}>להוריד את הרילס ⬇</a>}
-        {typeof navigator !== "undefined" && "share" in navigator && finalUrl && (
-          <button style={ghostBtn} onClick={() => navigator.share({ url: finalUrl, title }).catch(() => {})}>
-            לשתף
-          </button>
-        )}
+        {finalUrl && <SaveReelButton finalUrl={finalUrl} downloadUrl={downloadUrl ?? finalUrl} title={title} />}
         <button onClick={anotherTake} style={ghostBtn}>לצלם שוב</button>
       </div>
       <Upsell />
-    </Centered>
+      <FirstReelFooter />
+    </div>
   );
 
   // ── phase === "room": the member room, verbatim ──

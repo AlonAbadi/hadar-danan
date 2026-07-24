@@ -127,7 +127,12 @@ export async function runFirstReelPipeline(
       ? clientTrims.durationMs
       : durationMs;
     const whisperStart = Math.max(0, words[0].s - 250);
-    const whisperEnd = words[words.length - 1].e + 350;
+    // Alon 2026-07-24: the 350ms tail padding was cutting the last
+    // word/second on iOS recordings where the codec finalizes slower
+    // than the speech ends. Bumped to 900ms — still short enough that
+    // silent tails don't feel long, generous enough to keep the final
+    // consonant + a beat of settle after it.
+    const whisperEnd = words[words.length - 1].e + 900;
     const rawStart = clientTrims.trimStartMs ?? whisperStart;
     const rawEnd = Math.min(
       clientTrims.trimEndMs ?? whisperEnd,
