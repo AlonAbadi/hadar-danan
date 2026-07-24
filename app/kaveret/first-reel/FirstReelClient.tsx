@@ -22,8 +22,16 @@ import { getBroadcastCopy } from "@/lib/broadcast-copy";
  */
 
 type Phase =
-  | "loading" | "prep" | "room" | "review"
+  | "loading" | "intake" | "refining" | "prep" | "room" | "review"
   | "uploading" | "processing" | "result" | "failed" | "error";
+
+// Alon 2026-07-24: BEFORE the prospect sees the auto-generated script,
+// Hadar asks 3 questions (story / stance / payoff). The answers refine
+// the script to be the prospect's OWN voice, not just their signal. The
+// intake is skipped on subsequent visits (localStorage guard) so a user
+// returning after a session doesn't re-answer.
+const INTAKE_MIN_STORY_CHARS = 40;
+const INTAKE_KEY = (id: string) => `first_reel_intake_done:${id}`;
 
 // Same guards as the member room; the script is ~15s so the min take drops
 // to a false-start filter rather than the member 10s floor.
@@ -102,6 +110,9 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   const [phase, setPhase] = useState<Phase>("loading");
   const [title, setTitle] = useState("");
   const [script, setScript] = useState("");
+  const [intakeAnswers, setIntakeAnswers] = useState({ story: "", stance: "", payoff: "" });
+  const [intakeError, setIntakeError] = useState<string | null>(null);
+  const [intakeProbeVisible, setIntakeProbeVisible] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [take, setTake] = useState<FinishedTake | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
@@ -157,7 +168,11 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
           setDownloadUrl(st.downloadUrl ?? st.url);
           setPhase("result");
         } else {
-          setPhase("prep");
+          // Alon 2026-07-24: fresh callers land in the intake (3 questions)
+          // before the prep screen. Returning callers who already completed
+          // the intake skip straight to prep (localStorage guard).
+          const intakeDone = typeof window !== "undefined" && localStorage.getItem(INTAKE_KEY(extractionId)) === "1";
+          setPhase(intakeDone ? "prep" : "intake");
         }
       } catch {
         setPhase("error");
@@ -408,6 +423,95 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     </Centered>
   );
 
+  // ── intake: 3 Hadar-style questions BEFORE the prep screen (Alon 2026-07-24) ──
+  const setIntakeAt = (id: "story" | "stance" | "payoff", v: string) => {
+    setIntakeAnswers((cur) => ({ ...cur, [id]: v }));
+    if (id === "story" && v.trim().length >= INTAKE_MIN_STORY_CHARS) setIntakeProbeVisible(false);
+  };
+  const submitIntake = async () => {
+    setIntakeError(null);
+    if (intakeAnswers.story.trim().length < INTAKE_MIN_STORY_CHARS) {
+      setIntakeProbeVisible(true); return;
+    }
+    if (intakeAnswers.stance.trim().length < 5) {
+      setIntakeError("צריך גם עמדה קצרה, לא רק את הסיפור."); return;
+    }
+    setPhase("refining");
+    try {
+      const r = await fetch(`/api/signal/${extractionId}/first-reel/refine?t=${encodeURIComponent(token)}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(intakeAnswers),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j?.error ?? "refine_failed");
+      setTitle(j.title);
+      setScript(j.script);
+      if (j.language === "en") setLanguage("en");
+      try { localStorage.setItem(INTAKE_KEY(extractionId), "1"); } catch { /* private mode */ }
+      setPhase("prep");
+    } catch (e) {
+      setIntakeError(String((e as Error).message ?? "error"));
+      setPhase("intake");
+    }
+  };
+
+  if (phase === "intake") return (
+    <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+      <RoomStyles />
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "26px 20px 120px" }}>
+        <div style={{ fontSize: 14, letterSpacing: 1, color: "#E8B94A", fontWeight: 700, marginBottom: 6 }}>לפני שהדר כותבת</div>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "0 0 6px" }}>שלוש שאלות. אחר כך תסריט שהוא אתה.</h1>
+        <p style={{ color: "#D6D2C9", fontSize: 15, lineHeight: 1.65, margin: "0 0 22px" }}>
+          תכתוב איך שאתה מדבר. חצי־שבור בסדר. הדר תסדר את זה.
+        </p>
+
+        {[
+          { id: "story"  as const, label: "שאלה 1", q: "לקוח אחד, פרויקט אחד, רגע ספציפי, שבו עשית או ראית משהו שאף אחד אחר בתחום שלך לא היה עושה או רואה.", hint: "שם, פרט קונקרטי, שני משפטים. לא צריך יותר.", rows: 5, probe: "רגע, תן לי משהו יותר ספציפי. מי היה הלקוח? מה בפועל אמרת או ראית שם?" },
+          { id: "stance" as const, label: "שאלה 2", q: "מה זה היה שאתה ראית שאחרים לא ראו?", hint: "כמו שהיית אומר ללקוח בפגישה, במשפט אחד־שניים.", rows: 3, probe: "" },
+          { id: "payoff" as const, label: "שאלה 3 · אופציונלית", q: "מה קרה בסוף? מה הלקוח הרגיש, אמר, או עשה?", hint: "אפשר לדלג.", rows: 3, probe: "" },
+        ].map((q) => (
+          <div key={q.id} style={{ marginTop: 22 }}>
+            <div style={{ color: "#C9964A", fontSize: 12, letterSpacing: 1, marginBottom: 6 }}>{q.label}</div>
+            <div style={{ fontSize: 18, lineHeight: 1.5, fontWeight: 600, color: "#EDE9E1", marginBottom: 4 }}>{q.q}</div>
+            <div style={{ color: "#9E9990", fontSize: 13, marginBottom: 10 }}>{q.hint}</div>
+            <textarea
+              value={intakeAnswers[q.id]}
+              onChange={(e) => setIntakeAt(q.id, e.target.value)}
+              rows={q.rows}
+              placeholder="ענה כאן במילים שלך"
+              style={{ width: "100%", background: "#0D1018", border: "1px solid #2C323E", borderRadius: 10, padding: "12px 14px", color: "#EDE9E1", fontFamily: "inherit", fontSize: 15, lineHeight: 1.6, resize: "vertical", outline: "none", direction: "rtl", boxSizing: "border-box" }}
+            />
+            {q.id === "story" && intakeProbeVisible && q.probe ? (
+              <div style={{ marginTop: 10, background: "#1F1A0F", border: "1px solid #6A5024", padding: "10px 12px", borderRadius: 8, fontSize: 14, color: "#E8B94A", lineHeight: 1.55 }}>
+                <strong style={{ color: "#C9964A", marginInlineEnd: 6 }}>הדר עצרה אותך.</strong>
+                {q.probe}
+              </div>
+            ) : null}
+          </div>
+        ))}
+
+        {intakeError ? (
+          <div style={{ color: "#E8B4B4", fontSize: 14, marginTop: 16 }}>{intakeError}</div>
+        ) : null}
+
+        <div style={{ textAlign: "center", marginTop: 28 }}>
+          <button type="button" onClick={submitIntake} style={goldBtn}>
+            בנה לי את הסרטון
+          </button>
+          <div style={{ color: "#9E9990", fontSize: 13, marginTop: 10 }}>הדר לוקחת את המילים שלך + האות שלך + כותבת סרטון של 20-30 שניות.</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (phase === "refining") return (
+    <Centered>
+      <div style={{ fontSize: 34, marginBottom: 14 }}>✨</div>
+      <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>הדר כותבת מהמילים שלך</h1>
+      <p style={{ color: "#D6D2C9", fontSize: 14 }}>בוחרת מהלך, מסדרת, עוברת עורך. עוד רגע.</p>
+    </Centered>
+  );
+
   // ── prep: the product's prep screen shape with the first-reel script ──
   if (phase === "prep" || rec.cameraState === "denied" || rec.cameraState === "unsupported") return (
     <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
@@ -529,9 +633,22 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     <Centered>
       <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>הרילס הראשון שלך מוכן 🎉</h1>
       <p style={{ ...gold, fontSize: 14, marginBottom: 14 }}>{title} · עם כתוביות מסונכרנות</p>
-      {finalUrl && (
-        <div style={{ ...frame, width: "min(400px, 92vw, calc(48dvh * 0.5625))", marginBottom: 16 }}>
-          <video src={finalUrl} controls playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      {/* Alon 2026-07-24: bumped the frame width so the reel is clearly
+          the hero of the completion screen. Previous "48dvh * 0.5625"
+          calc could shrink the video below visibility on shorter phones. */}
+      {finalUrl ? (
+        <div style={{ ...frame, width: "min(340px, 88vw)", marginBottom: 16 }}>
+          <video
+            src={finalUrl}
+            controls
+            playsInline
+            preload="metadata"
+            style={{ width: "100%", height: "100%", objectFit: "cover", background: "#000" }}
+          />
+        </div>
+      ) : (
+        <div style={{ ...frame, width: "min(340px, 88vw)", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 13 }}>
+          מכינה את הצפייה…
         </div>
       )}
       <div style={{ display: "flex", gap: 10, marginBottom: 26, flexWrap: "wrap", justifyContent: "center" }}>
