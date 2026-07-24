@@ -20,6 +20,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { requireLabUser } from "@/lib/lab/gate";
 import { createServerClient } from "@/lib/supabase/server";
 import { APPROVED_MOVE_NAMES, type SignatureMoveName } from "@/lib/lab/hadar-brain";
+import type { LabSignal } from "@/lib/lab/prompts";
 import {
   FIRST_MODEL,
   FIRST_MOVE_SELECT_MAX_TOKENS,
@@ -90,14 +91,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "answers_too_thin" }, { status: 400 });
   }
 
+  // ── Fetch signal (if the caller has one — the heart of the diagnosis
+  //     that makes /first-video life-changing per Alon). Threaded into
+  //     every pipeline stage as background context. Prospects without a
+  //     signal continue to work: signal becomes null, prompts degrade
+  //     gracefully to answers-only. ────────────────────────────────────
+  const db = createServerClient();
+  const { data: ext } = await (db as any)
+    .from("signal_extractions")
+    .select("id, signal")
+    .eq("user_id", gate.user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const s = ext?.signal ?? {};
+  const signal: LabSignal | null = ext ? {
+    signal:         String(s.signal ?? ""),
+    signal_promise: String(s.signal_promise ?? ""),
+    pain_source:    String(s.pain_source ?? ""),
+    element:        String(s.element ?? ""),
+    central_tool:   String(s.central_tool ?? ""),
+    people:         String(s.people ?? ""),
+    warm_note:      String(s.warm_note ?? ""),
+    occupation:     null,
+    gender:         gate.user.gender,
+    name:           gate.user.name,
+  } : null;
+
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-  // ── Stage 1: Move selection ──────────────────────────────────────────
+  // ── Stage 1: Move selection (signal enables keyword-driven rules) ────
   let moveRaw: Partial<FirstMoveChoice>;
   try {
     moveRaw = await claudeJson<Partial<FirstMoveChoice>>(anthropic, {
-      system:      buildFirstMoveSystem(),
-      user:        buildFirstMoveUser(answers),
+      system:      buildFirstMoveSystem(signal),
+      user:        buildFirstMoveUser(answers, signal),
       maxTokens:   FIRST_MOVE_SELECT_MAX_TOKENS,
       temperature: 0.6,
     });
@@ -114,12 +143,12 @@ export async function POST(req: NextRequest) {
     frame: String(moveRaw.frame ?? "").trim(),
   };
 
-  // ── Stage 2: Script draft ────────────────────────────────────────────
+  // ── Stage 2: Script draft (signal = background identity, not content) ─
   let draftRaw: Partial<FirstScript>;
   try {
     draftRaw = await claudeJson<Partial<FirstScript>>(anthropic, {
-      system:      buildFirstScriptSystem(move),
-      user:        buildFirstScriptUser(answers),
+      system:      buildFirstScriptSystem(move, signal),
+      user:        buildFirstScriptUser(answers, signal),
       maxTokens:   FIRST_SCRIPT_MAX_TOKENS,
       temperature: 0.65,
     });
@@ -131,12 +160,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "empty_script" }, { status: 502 });
   }
 
-  // ── Stage 3: Critique + optional revision ────────────────────────────
+  // ── Stage 3: Critique + optional revision (signal-aware) ─────────────
   let critique: FirstCritique = { score: 5, what_missed: "", revised: null };
   try {
     const raw = await claudeJson<Partial<FirstCritique>>(anthropic, {
-      system:      buildFirstCritiqueSystem(move),
-      user:        buildFirstCritiqueUser(answers, draft),
+      system:      buildFirstCritiqueSystem(move, signal),
+      user:        buildFirstCritiqueUser(answers, draft, signal),
       maxTokens:   FIRST_CRITIQUE_MAX_TOKENS,
       temperature: 0.4,
     });
@@ -154,26 +183,19 @@ export async function POST(req: NextRequest) {
     ? critique.revised
     : draft;
 
-  // ── Persist under signal.first on the caller's most recent extraction ─
-  const db = createServerClient();
-  const { data: ext } = await (db as any)
-    .from("signal_extractions")
-    .select("id, signal")
-    .eq("user_id", gate.user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
+  // ── Persist under signal.first on the caller's extraction (already
+  //     fetched at the top of the handler). ─────────────────────────────
   if (ext) {
     const firstState = (ext.signal?.first ?? {}) as Record<string, any>;
     const attempts   = Array.isArray(firstState.attempts) ? firstState.attempts : [];
     attempts.unshift({
       answers,
       move,
-      script:       finalScript,
-      draft_script: draft,
+      script:            finalScript,
+      draft_script:      draft,
       critique,
-      generated_at: new Date().toISOString(),
+      signal_used:       signal !== null,
+      generated_at:      new Date().toISOString(),
     });
     const nextSignal = {
       ...ext.signal,
