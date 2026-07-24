@@ -474,29 +474,53 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     );
   }
 
-  function BackToSignalPill({ token }: { token: string }) {
+  // Alon 2026-07-24: mirrors the existing floating tab bar from
+  // KaveretVisitorClient (kaveret.module.css .tabbar) — same glass +
+  // backdrop-blur + centered pill anchored to the safe-area bottom.
+  // Everything needed sits inside it: return to the signal page.
+  function BackToSignalBar({ token }: { token: string }) {
     return (
-      <a
-        href={`/kaveret/i?t=${encodeURIComponent(token)}`}
+      <nav
+        aria-label="ניווט"
+        dir="rtl"
         style={{
           position: "fixed",
-          top: "calc(env(safe-area-inset-top) + 74px)",
-          insetInlineEnd: 14,
+          left: 12,
+          right: 12,
+          bottom: "calc(10px + env(safe-area-inset-bottom))",
           zIndex: 60,
-          padding: "8px 14px",
+          maxWidth: 560,
+          margin: "0 auto",
+          display: "flex",
+          alignItems: "center",
+          padding: "7px 6px",
           borderRadius: 999,
-          background: "rgba(20, 24, 32, 0.9)",
-          border: "1px solid rgba(232,185,74,0.4)",
-          color: "#E8B94A",
-          fontSize: 13,
-          fontWeight: 600,
-          textDecoration: "none",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
+          background: "rgba(13,17,26,0.88)",
+          backdropFilter: "blur(30px) saturate(150%)",
+          WebkitBackdropFilter: "blur(30px) saturate(150%)",
+          border: "1px solid rgba(255,255,255,0.10)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 14px rgba(0,0,0,0.45), 0 14px 40px rgba(0,0,0,0.55)",
         }}
       >
-        ← חזרה לאות שלי
-      </a>
+        <a
+          href={`/kaveret/i?t=${encodeURIComponent(token)}`}
+          style={{
+            flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            textDecoration: "none", color: "#EDE9E1", padding: "8px 10px", minHeight: 52,
+          }}
+        >
+          <span style={{ textAlign: "right", minWidth: 0 }}>
+            <span style={{ display: "block", fontSize: 14, fontWeight: 800, lineHeight: 1.25 }}>חזרה לאות שלי</span>
+            <span style={{ display: "block", fontSize: 12, color: "#D6D2C9", lineHeight: 1.35 }}>לוח האות, הכוורת, הפגישה עם הדר</span>
+          </span>
+          <span style={{
+            flexShrink: 0, background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
+            color: "#0D1018", fontWeight: 800, fontSize: 14, borderRadius: 999, padding: "9px 17px", whiteSpace: "nowrap",
+          }}>
+            לפתוח ←
+          </span>
+        </a>
+      </nav>
     );
   }
 
@@ -589,7 +613,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   if (phase === "intake") return (
     <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
       <RoomStyles />
-      <div style={{ maxWidth: 640, margin: "0 auto", padding: "26px 20px 120px" }}>
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "26px 20px 160px" }}>
         <div style={{ fontSize: 14, letterSpacing: 1, color: "#E8B94A", fontWeight: 700, marginBottom: 6 }}>לפני שהדר כותבת</div>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "0 0 6px" }}>שלוש שאלות. אחר כך תסריט שהוא אתה.</h1>
         <p style={{ color: "#D6D2C9", fontSize: 15, lineHeight: 1.65, margin: "0 0 22px" }}>
@@ -634,7 +658,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
           <FirstReelFooter />
         </div>
-        <BackToSignalPill token={token} />
+        <BackToSignalBar token={token} />
       </div>
     </div>
   );
@@ -651,7 +675,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   if (phase === "prep" || rec.cameraState === "denied" || rec.cameraState === "unsupported") return (
     <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
       <RoomStyles />
-      <div style={{ maxWidth: 640, margin: "0 auto", padding: "26px 20px 120px" }}>
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "26px 20px 160px" }}>
         <div style={{ fontSize: 14, letterSpacing: 1, color: "#E8B94A", fontWeight: 700, marginBottom: 6 }}>הסרטון הראשון שלך · 15 שניות</div>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: "#EDE9E1", margin: "0 0 4px" }}>{title}</h1>
         <div style={{ background: "#141820", border: "1px solid rgba(232,185,74,0.14)", borderRadius: 16, padding: 24, marginTop: 20 }}>
@@ -750,7 +774,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
         <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
           <FirstReelFooter />
         </div>
-        <BackToSignalPill token={token} />
+        <BackToSignalBar token={token} />
       </div>
     </div>
   );
@@ -823,9 +847,9 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   );
 
   if (phase === "result") return (
-    <div dir="rtl" style={{ ...shell, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 40px", textAlign: "center", WebkitOverflowScrolling: "touch" }}>
+    <div dir="rtl" style={{ ...shell, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 140px", textAlign: "center", WebkitOverflowScrolling: "touch" }}>
       <RoomStyles />
-      <BackToSignalPill token={token} />
+      <BackToSignalBar token={token} />
       <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>הרילס הראשון שלך מוכן 🎉</h1>
       <p style={{ ...gold, fontSize: 14, marginBottom: 14 }}>{title} · עם כתוביות מסונכרנות</p>
       {/* Alon 2026-07-24: repeated reports that the reel wasn't visible.
