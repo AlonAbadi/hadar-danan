@@ -337,6 +337,17 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
     touchAction: "manipulation",
     overscrollBehavior: "none",
   };
+
+  // Alon 2026-07-24: for non-camera phases the fixed-position shell was
+  // hiding the site top nav (LayoutShell renders it at zIndex 1). Split
+  // into `pageShell` (regular flow, room for nav + footer) and keep the
+  // fixed `shell` only for the actual camera room/countdown.
+  const pageShell: React.CSSProperties = {
+    background: "#080C14",
+    color: "#EDE9E1",
+    fontFamily: 'var(--font-assistant), "Assistant", Arial, sans-serif',
+    minHeight: "100dvh",
+  };
   const gold = { color: "#E8B94A" };
   const goldBtn: React.CSSProperties = {
     background: "linear-gradient(135deg, #E8B94A, #C9964A, #9E7C3A)",
@@ -357,23 +368,24 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   const offerHref = `/kaveret/i?t=${encodeURIComponent(token)}#kaveret-offer`;
   const scriptShape = toScriptShape(script);
 
-  // The complete package, mirrored from /signal-hive (keep in sync with
-  // app/signal-hive/page.tsx FOLDERS) + the challenge live session.
+  // Alon 2026-07-24: renumbered 1-5 (was 0-4) and reworded the intro so
+  // it doesn't read as "video 1 of 5". These are FIVE DIFFERENT
+  // PRODUCTS in the same package, not five videos.
   const FOLDERS: [string, string, string][] = [
-    ["0", "לוח האות", "האות שלך, הכאב שהוא פותר, ההבטחה והקהל, במקום אחד"],
-    ["1", "אתגר האות · 7 ימים", "שבעה שיעורי עומק עם הדר, ממוסגרים סביב האות שלך + מפגש חי בזום"],
-    ["2", "ערכת תוכן", "7 כיווני-תוכן וספריית פתיחות, כולם נגזרים מהאות שלך"],
-    ["3", "ערכת ויזואל", "כרטיסי האות מוכנים לשיתוף + 7 כיווני-צילום"],
-    ["4", "הבמאית", "7 בימויים אישיים, בדיוק כמו הסרטון שרק עשית, עם הכתוביות"],
+    ["1", "לוח האות", "האות שלך, הכאב שהוא פותר, ההבטחה והקהל, במקום אחד"],
+    ["2", "אתגר האות · 7 ימים", "שבעה שיעורי עומק עם הדר, ממוסגרים סביב האות שלך + מפגש חי בזום"],
+    ["3", "ערכת תוכן", "7 כיווני-תוכן וספריית פתיחות, כולם נגזרים מהאות שלך"],
+    ["4", "ערכת ויזואל", "כרטיסי האות מוכנים לשיתוף + 7 כיווני-צילום"],
+    ["5", "הבמאית", "7 בימויים אישיים, בדיוק כמו הסרטון שרק עשית, עם הכתוביות"],
   ];
 
   const Upsell = () => (
     <div style={{ maxWidth: 460, width: "100%", background: "linear-gradient(145deg, #1D2430, #111620)", border: "1px solid #C9964A55", borderRadius: 16, padding: "24px 22px", textAlign: "right" }}>
       <div style={{ fontSize: 14, letterSpacing: 1, color: "#E8B94A", fontWeight: 700, marginBottom: 6, textAlign: "center" }}>כוורת האות</div>
       <p style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.7, margin: "0 0 14px", textAlign: "center" }}>
-        ככה עובדת הבמאית, על כל סרטון שלך.
+        הרילס הזה יצא לך מהבמאית, מוצר אחד מתוך חמישה בכוורת האות.
         <br />
-        <span style={gold}>וזה רק חלק אחד מחמישה.</span>
+        <span style={gold}>חמישה מוצרים שונים באותה חבילה, כולם נגזרים מהאות שלך.</span>
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
         {FOLDERS.map(([n, t, d]) => (
@@ -414,7 +426,9 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   );
 
   const Centered = ({ children }: { children: React.ReactNode }) => (
-    <div dir="rtl" style={{ ...shell, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
+    // pageShell (regular flow, not fixed) so the top nav from LayoutShell
+    // is visible above intake/refining/loading/error screens too.
+    <div dir="rtl" style={{ ...pageShell, minHeight: "calc(100dvh - 64px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
       <RoomStyles />
       {children}
     </div>
@@ -611,7 +625,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   };
 
   if (phase === "intake") return (
-    <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+    <div dir="rtl" style={{ ...pageShell, overflowY: "auto" }} className="font-assistant">
       <RoomStyles />
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "26px 20px 160px" }}>
         <div style={{ fontSize: 14, letterSpacing: 1, color: "#E8B94A", fontWeight: 700, marginBottom: 6 }}>לפני שהדר כותבת</div>
@@ -673,7 +687,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
 
   // ── prep: the product's prep screen shape with the first-reel script ──
   if (phase === "prep" || rec.cameraState === "denied" || rec.cameraState === "unsupported") return (
-    <div dir="rtl" style={{ ...shell, overflowY: "auto" }} className="font-assistant">
+    <div dir="rtl" style={{ ...pageShell, overflowY: "auto" }} className="font-assistant">
       <RoomStyles />
       <div style={{ maxWidth: 640, margin: "0 auto", padding: "26px 20px 160px" }}>
         <div style={{ fontSize: 14, letterSpacing: 1, color: "#E8B94A", fontWeight: 700, marginBottom: 6 }}>הסרטון הראשון שלך · 15 שניות</div>
@@ -780,7 +794,7 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   );
 
   if (phase === "review") return (
-    <div dir="rtl" style={{ ...shell, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
+    <div dir="rtl" style={{ ...pageShell, minHeight: "calc(100dvh - 64px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, textAlign: "center" }}>
       <RoomStyles />
       <h1 style={{ fontSize: 20, fontWeight: 800, marginBottom: 12 }}>איך יצא?</h1>
       {blobUrl && (
@@ -847,28 +861,26 @@ export function FirstReelClient({ extractionId, token }: { extractionId: string;
   );
 
   if (phase === "result") return (
-    <div dir="rtl" style={{ ...shell, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 20px 140px", textAlign: "center", WebkitOverflowScrolling: "touch" }}>
+    <div dir="rtl" style={{ ...pageShell, display: "flex", flexDirection: "column", alignItems: "center", padding: "20px 16px 140px", textAlign: "center" }}>
       <RoomStyles />
       <BackToSignalBar token={token} />
       <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>הרילס הראשון שלך מוכן 🎉</h1>
       <p style={{ ...gold, fontSize: 14, marginBottom: 14 }}>{title} · עם כתוביות מסונכרנות</p>
-      {/* Alon 2026-07-24: repeated reports that the reel wasn't visible.
-          Swapped aspectRatio for the padding-bottom trick (177.78% =
-          16/9) — bulletproof cross-browser including iOS Safari, and
-          the container gets a real height even if the video src is
-          still loading. */}
-      <div style={{ position: "relative", width: "min(280px, 78vw)", marginBottom: 16, background: "#000", borderRadius: 20, overflow: "hidden", border: "1px solid #2C323E" }}>
-        <div style={{ paddingBottom: "177.78%" }} />
+      {/* Alon 2026-07-24: repeated invisibility reports. Fixed pixel
+          dimensions (240×427 = 9/16 portrait) that don't depend on
+          aspect-ratio or padding-bottom tricks, and don't shrink to
+          zero on any layout. maxWidth caps on narrow phones only. */}
+      <div style={{ width: 240, height: 427, maxWidth: "78vw", background: "#000", borderRadius: 20, overflow: "hidden", border: "1px solid #2C323E", marginBottom: 16, position: "relative" }}>
         {finalUrl ? (
           <video
             src={finalUrl}
             controls
             playsInline
             preload="metadata"
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+            style={{ width: "100%", height: "100%", display: "block", objectFit: "contain", background: "#000" }}
           />
         ) : (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 13 }}>
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#9E9990", fontSize: 13 }}>
             מכינה את הצפייה…
           </div>
         )}
